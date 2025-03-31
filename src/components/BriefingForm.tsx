@@ -9,7 +9,12 @@ const BriefingForm: React.FC = () => {
     occasion: "",
     style: "",
     story: "",
+    name: "",
+    phone: "",
+    email: "",
+    contactPreference: "whatsapp",
   });
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
@@ -18,24 +23,108 @@ const BriefingForm: React.FC = () => {
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    console.log("Form submitted:", formData);
+    setIsSubmitting(true);
     
-    toast({
-      title: "Formulário enviado com sucesso!",
-      description: "Entraremos em contato em breve para discutir seu projeto musical.",
-    });
-    
-    setFormData({
-      occasion: "",
-      style: "",
-      story: "",
-    });
+    // Simulate API call
+    setTimeout(() => {
+      console.log("Form submitted:", formData);
+      
+      toast({
+        title: "Formulário enviado com sucesso!",
+        description: "Entraremos em contato em breve para discutir seu projeto musical.",
+      });
+      
+      setFormData({
+        occasion: "",
+        style: "",
+        story: "",
+        name: "",
+        phone: "",
+        email: "",
+        contactPreference: "whatsapp",
+      });
+      
+      setIsSubmitting(false);
+      
+      // If contactPreference is whatsapp, open WhatsApp
+      if (formData.contactPreference === "whatsapp" && formData.phone) {
+        const phoneNumber = formData.phone.replace(/\D/g, '');
+        const message = `Olá! Acabo de enviar um briefing para a HarmonIA. Meu nome é ${formData.name} e gostaria de criar uma música para ${formData.occasion}. Aguardo contato!`;
+        window.open(`https://wa.me/5511999999999?text=${encodeURIComponent(message)}`, '_blank');
+      }
+    }, 1500);
   };
 
   return (
     <div className="bg-card border border-border rounded-lg p-8">
       <h3 className="text-xl font-semibold mb-6">Formulário de Briefing</h3>
       <form onSubmit={handleSubmit} className="space-y-4">
+        <div>
+          <label htmlFor="name" className="block text-sm font-medium mb-1">
+            Seu nome completo
+          </label>
+          <input
+            id="name"
+            name="name"
+            type="text"
+            value={formData.name}
+            onChange={handleChange}
+            className="w-full bg-secondary border border-border rounded-md p-2 focus:border-harmonia-green focus:outline-none"
+            placeholder="Digite seu nome"
+            required
+          />
+        </div>
+        
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div>
+            <label htmlFor="email" className="block text-sm font-medium mb-1">
+              Seu e-mail
+            </label>
+            <input
+              id="email"
+              name="email"
+              type="email"
+              value={formData.email}
+              onChange={handleChange}
+              className="w-full bg-secondary border border-border rounded-md p-2 focus:border-harmonia-green focus:outline-none"
+              placeholder="email@exemplo.com"
+              required
+            />
+          </div>
+          
+          <div>
+            <label htmlFor="phone" className="block text-sm font-medium mb-1">
+              Seu WhatsApp
+            </label>
+            <input
+              id="phone"
+              name="phone"
+              type="tel"
+              value={formData.phone}
+              onChange={handleChange}
+              className="w-full bg-secondary border border-border rounded-md p-2 focus:border-harmonia-green focus:outline-none"
+              placeholder="(11) 99999-9999"
+              required
+            />
+          </div>
+        </div>
+        
+        <div>
+          <label htmlFor="contactPreference" className="block text-sm font-medium mb-1">
+            Preferência de contato
+          </label>
+          <select
+            id="contactPreference"
+            name="contactPreference"
+            value={formData.contactPreference}
+            onChange={handleChange}
+            className="w-full bg-secondary border border-border rounded-md p-2 focus:border-harmonia-green focus:outline-none"
+          >
+            <option value="whatsapp">WhatsApp (resposta em até 2h)</option>
+            <option value="email">E-mail (resposta em até 24h)</option>
+          </select>
+        </div>
+        
         <div>
           <label htmlFor="occasion" className="block text-sm font-medium mb-1">
             Qual é a ocasião?
@@ -89,8 +178,12 @@ const BriefingForm: React.FC = () => {
           />
         </div>
         
-        <Button type="submit" className="w-full bg-harmonia-green hover:bg-harmonia-green/90">
-          Enviar Briefing
+        <Button 
+          type="submit" 
+          className="w-full bg-harmonia-green hover:bg-harmonia-green/90"
+          disabled={isSubmitting}
+        >
+          {isSubmitting ? "Enviando..." : "Enviar Briefing"}
         </Button>
       </form>
     </div>

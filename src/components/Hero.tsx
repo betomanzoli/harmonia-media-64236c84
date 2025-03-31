@@ -4,6 +4,22 @@ import { Button } from "@/components/ui/button";
 import { Play } from 'lucide-react';
 
 const Hero: React.FC = () => {
+  const handleCreateMusic = () => {
+    // Scroll to the briefing form
+    const briefingSection = document.getElementById('briefing');
+    if (briefingSection) {
+      briefingSection.scrollIntoView({ behavior: 'smooth' });
+    }
+  };
+
+  const handleHowItWorks = () => {
+    // Scroll to the process section
+    const processSection = document.getElementById('processo');
+    if (processSection) {
+      processSection.scrollIntoView({ behavior: 'smooth' });
+    }
+  };
+
   return (
     <section className="pt-32 pb-20 px-6 md:px-10 max-w-7xl mx-auto">
       <div className="space-y-8 max-w-3xl">
@@ -16,10 +32,17 @@ const Hero: React.FC = () => {
           Composições musicais personalizadas, potencializadas por inteligência artificial e finalizadas por músicos profissionais.
         </p>
         <div className="flex flex-col sm:flex-row gap-4">
-          <Button className="bg-harmonia-green hover:bg-harmonia-green/90 text-white h-12 px-6 rounded-md">
+          <Button 
+            onClick={handleCreateMusic}
+            className="bg-harmonia-green hover:bg-harmonia-green/90 text-white h-12 px-6 rounded-md"
+          >
             Criar Minha Música
           </Button>
-          <Button variant="outline" className="flex items-center gap-2 h-12 px-6 rounded-md">
+          <Button 
+            onClick={handleHowItWorks}
+            variant="outline" 
+            className="flex items-center gap-2 h-12 px-6 rounded-md"
+          >
             <Play className="w-4 h-4" /> Como Funciona
           </Button>
         </div>

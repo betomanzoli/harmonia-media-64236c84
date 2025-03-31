@@ -2,6 +2,7 @@
 import React from 'react';
 import { Button } from "@/components/ui/button";
 import { Check } from 'lucide-react';
+import { useToast } from "@/components/ui/use-toast";
 
 interface ServiceCardProps {
   title: string;
@@ -18,6 +19,21 @@ const ServiceCard: React.FC<ServiceCardProps> = ({
   features, 
   recommended = false 
 }) => {
+  const { toast } = useToast();
+  
+  const handleChoosePackage = () => {
+    // Scroll to the briefing form
+    const briefingSection = document.getElementById('briefing');
+    if (briefingSection) {
+      briefingSection.scrollIntoView({ behavior: 'smooth' });
+      
+      toast({
+        title: `Pacote ${title} selecionado!`,
+        description: "Preencha o formulário de briefing para continuar.",
+      });
+    }
+  };
+  
   return (
     <div className={`
       rounded-lg p-6 border transition-all duration-300
@@ -43,7 +59,10 @@ const ServiceCard: React.FC<ServiceCardProps> = ({
           </li>
         ))}
       </ul>
-      <Button className={`w-full ${recommended ? 'bg-harmonia-green hover:bg-harmonia-green/90' : 'bg-secondary hover:bg-secondary/90'}`}>
+      <Button 
+        onClick={handleChoosePackage}
+        className={`w-full ${recommended ? 'bg-harmonia-green hover:bg-harmonia-green/90' : 'bg-secondary hover:bg-secondary/90'}`}
+      >
         Escolher Pacote
       </Button>
     </div>
