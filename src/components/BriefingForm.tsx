@@ -21,38 +21,58 @@ const BriefingForm: React.FC = () => {
     setFormData(prev => ({ ...prev, [name]: value }));
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsSubmitting(true);
     
-    // Simulate API call
-    setTimeout(() => {
-      console.log("Form submitted:", formData);
+    try {
+      // Google Sheets integration via Google Forms
+      // This simulates the submission to a Google Form webhook that populates a Google Sheet
+      const googleFormsEndpoint = "https://docs.google.com/forms/u/0/d/e/YOUR_FORM_ID/formResponse";
       
+      // In a real implementation, you would use your actual Google Form parameters and make a POST request
+      console.log("Form data to be sent to Google Sheets:", formData);
+      
+      // Simulate successful submission
+      setTimeout(() => {
+        toast({
+          title: "Formulário enviado com sucesso!",
+          description: "Entraremos em contato em breve para discutir seu projeto musical.",
+        });
+        
+        setFormData({
+          occasion: "",
+          style: "",
+          story: "",
+          name: "",
+          phone: "",
+          email: "",
+          contactPreference: "whatsapp",
+        });
+        
+        setIsSubmitting(false);
+        
+        // Simulate Zapier/Make.com automation flow - this would happen on the server side in a real implementation
+        console.log("Zapier automation: Creating Trello card for new project");
+        console.log("Zapier automation: Initiating Suno AI music generation task");
+        console.log("Zapier automation: Scheduling Moises mastering task");
+        
+        // If contactPreference is whatsapp, open WhatsApp
+        if (formData.contactPreference === "whatsapp" && formData.phone) {
+          const phoneNumber = formData.phone.replace(/\D/g, '');
+          const message = `Olá! Acabo de enviar um briefing para a harmonIA. Meu nome é ${formData.name} e gostaria de criar uma música para ${formData.occasion}. Aguardo contato!`;
+          window.open(`https://wa.me/5511999999999?text=${encodeURIComponent(message)}`, '_blank');
+        }
+      }, 1500);
+    } catch (error) {
+      console.error("Error submitting form:", error);
       toast({
-        title: "Formulário enviado com sucesso!",
-        description: "Entraremos em contato em breve para discutir seu projeto musical.",
+        title: "Erro ao enviar formulário",
+        description: "Ocorreu um erro ao enviar seu briefing. Por favor, tente novamente.",
+        variant: "destructive"
       });
-      
-      setFormData({
-        occasion: "",
-        style: "",
-        story: "",
-        name: "",
-        phone: "",
-        email: "",
-        contactPreference: "whatsapp",
-      });
-      
       setIsSubmitting(false);
-      
-      // If contactPreference is whatsapp, open WhatsApp
-      if (formData.contactPreference === "whatsapp" && formData.phone) {
-        const phoneNumber = formData.phone.replace(/\D/g, '');
-        const message = `Olá! Acabo de enviar um briefing para a HarmonIA. Meu nome é ${formData.name} e gostaria de criar uma música para ${formData.occasion}. Aguardo contato!`;
-        window.open(`https://wa.me/5511999999999?text=${encodeURIComponent(message)}`, '_blank');
-      }
-    }, 1500);
+    }
   };
 
   return (

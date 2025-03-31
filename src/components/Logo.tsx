@@ -7,7 +7,7 @@ const Logo: React.FC = () => {
     <div className="flex items-center gap-2">
       <BarChart2 className="w-6 h-6 text-harmonia-green" />
       <span className="font-bold text-xl">
-        Harmon<span className="text-harmonia-green">IA</span>
+        harmon<span className="text-harmonia-green">IA</span>
       </span>
     </div>
   );

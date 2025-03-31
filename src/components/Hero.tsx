@@ -1,7 +1,7 @@
 
 import React from 'react';
 import { Button } from "@/components/ui/button";
-import { Play } from 'lucide-react';
+import { Play, ArrowUp } from 'lucide-react';
 
 const Hero: React.FC = () => {
   const handleCreateMusic = () => {
@@ -19,9 +19,16 @@ const Hero: React.FC = () => {
       processSection.scrollIntoView({ behavior: 'smooth' });
     }
   };
+  
+  const scrollToTop = () => {
+    window.scrollTo({
+      top: 0,
+      behavior: 'smooth'
+    });
+  };
 
   return (
-    <section className="pt-32 pb-20 px-6 md:px-10 max-w-7xl mx-auto">
+    <section className="pt-32 pb-20 px-6 md:px-10 max-w-7xl mx-auto relative">
       <div className="space-y-8 max-w-3xl">
         <h1 className="text-5xl md:text-6xl font-bold tracking-tight">
           Música feita por{" "}
@@ -29,7 +36,8 @@ const Hero: React.FC = () => {
           <span className="text-white">perfeita para você.</span>
         </h1>
         <p className="text-lg text-gray-300 max-w-2xl">
-          Composições musicais personalizadas, potencializadas por inteligência artificial e finalizadas por músicos profissionais.
+          A harmon<span className="text-harmonia-green font-semibold">IA</span> combina inteligência artificial e talento humano para criar músicas personalizadas 
+          perfeitas para qualquer ocasião, entregando composições únicas em poucos dias.
         </p>
         <div className="flex flex-col sm:flex-row gap-4">
           <Button 
@@ -61,6 +69,14 @@ const Hero: React.FC = () => {
           </div>
         </div>
       </div>
+      
+      <button 
+        onClick={scrollToTop}
+        className="fixed bottom-6 right-6 bg-harmonia-green hover:bg-harmonia-green/90 text-white p-3 rounded-full shadow-lg z-50"
+        aria-label="Voltar ao topo"
+      >
+        <ArrowUp className="w-5 h-5" />
+      </button>
     </section>
   );
 };
