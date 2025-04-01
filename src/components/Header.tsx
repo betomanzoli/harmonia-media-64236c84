@@ -95,7 +95,7 @@ const Header: React.FC = () => {
             onClick={scrollToTop}
             variant="outline" 
             size="icon"
-            className="fixed bottom-6 right-6 z-50 rounded-full h-12 w-12 shadow-lg bg-harmonia-green/90 hover:bg-harmonia-green text-white border-none"
+            className="fixed bottom-16 right-6 z-50 rounded-full h-12 w-12 shadow-lg bg-harmonia-green/90 hover:bg-harmonia-green text-white border-none"
           >
             <ChevronUp className="h-6 w-6" />
           </Button>
