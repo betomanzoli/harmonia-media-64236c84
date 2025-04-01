@@ -5,8 +5,10 @@ import Logo from './Logo';
 import { MessageCircle, ChevronUp, DollarSign, Mail, Phone } from 'lucide-react';
 import NavLink from './NavLink';
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
+import { useNavigate } from 'react-router-dom';
 
 const Header: React.FC = () => {
+  const navigate = useNavigate();
   const [chatType, setChatType] = useState<'email' | 'whatsapp' | null>(null);
 
   const handleWhatsAppChat = () => {
@@ -18,11 +20,7 @@ const Header: React.FC = () => {
   };
 
   const handlePriceCalculation = () => {
-    // Scroll to the services section
-    const servicesSection = document.getElementById('servicos');
-    if (servicesSection) {
-      servicesSection.scrollIntoView({ behavior: 'smooth' });
-    }
+    navigate('/calculadora');
   };
 
   const scrollToTop = () => {
@@ -36,7 +34,9 @@ const Header: React.FC = () => {
     <header className="py-4 px-6 md:px-10 border-b border-border fixed w-full top-0 left-0 backdrop-blur-md bg-background/95 z-50">
       <div className="flex items-center justify-between max-w-7xl mx-auto">
         <div className="flex items-center gap-10">
-          <Logo />
+          <div onClick={() => navigate('/')} className="cursor-pointer">
+            <Logo />
+          </div>
           <nav className="hidden md:flex items-center space-x-6">
             <NavLink href="#servicos">Serviços</NavLink>
             <NavLink href="#processo">Processo</NavLink>
