@@ -5,8 +5,6 @@ import Hero from '@/components/Hero';
 import Services from '@/components/Services';
 import Process from '@/components/Process';
 import Portfolio from '@/components/Portfolio';
-import Testimonials from '@/components/Testimonials';
-import Partnership from '@/components/Partnership';
 import Footer from '@/components/Footer';
 import BriefingForm from '@/components/BriefingForm';
 
@@ -19,7 +17,6 @@ const Index: React.FC = () => {
         <Services />
         <Process />
         <Portfolio />
-        <Testimonials />
         <section id="briefing" className="py-20 px-6 md:px-10 max-w-7xl mx-auto">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-10">
             <div>
@@ -53,7 +50,6 @@ const Index: React.FC = () => {
             <BriefingForm />
           </div>
         </section>
-        <Partnership />
       </main>
       <Footer />
     </div>

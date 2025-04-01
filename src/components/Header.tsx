@@ -41,8 +41,6 @@ const Header: React.FC = () => {
             <NavLink href="#servicos">Serviços</NavLink>
             <NavLink href="#processo">Processo</NavLink>
             <NavLink href="#portfolio">Portfólio</NavLink>
-            <NavLink href="#depoimentos">Depoimentos</NavLink>
-            <NavLink href="#parceiro" className="text-harmonia-green">Seja Nosso Parceiro</NavLink>
           </nav>
         </div>
         <div className="flex items-center gap-3">

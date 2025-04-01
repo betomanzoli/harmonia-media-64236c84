@@ -56,16 +56,16 @@ const Hero: React.FC = () => {
         </div>
         <div className="flex flex-col sm:flex-row items-center gap-8 pt-8 border-t border-border">
           <div className="text-center">
-            <p className="text-3xl font-bold text-harmonia-green">100+</p>
-            <p className="text-sm text-gray-400">Músicas Registradas</p>
-          </div>
-          <div className="text-center">
-            <p className="text-3xl font-bold text-harmonia-green">48h</p>
+            <p className="text-3xl font-bold text-harmonia-green">2-3 dias</p>
             <p className="text-sm text-gray-400">Tempo Médio de Entrega</p>
           </div>
           <div className="text-center">
-            <p className="text-3xl font-bold text-harmonia-green">4.9/5</p>
-            <p className="text-sm text-gray-400">Avaliação dos Clientes</p>
+            <p className="text-3xl font-bold text-harmonia-green">Personalizado</p>
+            <p className="text-sm text-gray-400">Cada Projeto é Único</p>
+          </div>
+          <div className="text-center">
+            <p className="text-3xl font-bold text-harmonia-green">Registro</p>
+            <p className="text-sm text-gray-400">Proteção Legal Opcional</p>
           </div>
         </div>
       </div>
