@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Button } from "@/components/ui/button";
 import Logo from './Logo';
@@ -6,32 +5,25 @@ import { MessageCircle, ChevronUp, DollarSign, Mail, Phone } from 'lucide-react'
 import NavLink from './NavLink';
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { useNavigate } from 'react-router-dom';
-
 const Header: React.FC = () => {
   const navigate = useNavigate();
   const [chatType, setChatType] = useState<'email' | 'whatsapp' | null>(null);
-
   const handleWhatsAppChat = () => {
     window.open('https://wa.me/5511999999999', '_blank');
   };
-
   const handleEmailChat = () => {
     window.open('mailto:contato@harmonia.media', '_blank');
   };
-
   const handlePriceCalculation = () => {
     navigate('/calculadora');
   };
-
   const scrollToTop = () => {
     window.scrollTo({
       top: 0,
       behavior: 'smooth'
     });
   };
-
-  return (
-    <header className="py-4 px-6 md:px-10 border-b border-border fixed w-full top-0 left-0 backdrop-blur-md bg-background/95 z-50">
+  return <header className="py-4 px-6 md:px-10 border-b border-border fixed w-full top-0 left-0 backdrop-blur-md bg-background/95 z-50">
       <div className="flex items-center justify-between max-w-7xl mx-auto">
         <div className="flex items-center gap-10">
           <div onClick={() => navigate('/')} className="cursor-pointer">
@@ -57,19 +49,12 @@ const Header: React.FC = () => {
                 <p className="text-gray-400 mb-8">Escolha como prefere falar com nossa equipe:</p>
                 
                 <div className="grid gap-4">
-                  <Button 
-                    onClick={handleWhatsAppChat} 
-                    className="bg-green-600 hover:bg-green-700 text-white flex items-center gap-2"
-                  >
+                  <Button onClick={handleWhatsAppChat} className="bg-green-600 hover:bg-green-700 text-white flex items-center gap-2">
                     <Phone className="w-4 h-4" />
                     WhatsApp (Resposta em até 2h)
                   </Button>
                   
-                  <Button 
-                    onClick={handleEmailChat}
-                    variant="outline" 
-                    className="flex items-center gap-2"
-                  >
+                  <Button onClick={handleEmailChat} variant="outline" className="flex items-center gap-2">
                     <Mail className="w-4 h-4" />
                     Email (Resposta em até 24h)
                   </Button>
@@ -83,26 +68,14 @@ const Header: React.FC = () => {
             </SheetContent>
           </Sheet>
           
-          <Button 
-            onClick={handlePriceCalculation}
-            className="bg-harmonia-green hover:bg-harmonia-green/90 text-white flex items-center gap-1"
-          >
+          <Button onClick={handlePriceCalculation} className="bg-harmonia-green hover:bg-harmonia-green/90 text-white flex items-center gap-1">
             <DollarSign className="w-4 h-4" />
             Calcular Preço
           </Button>
 
-          <Button 
-            onClick={scrollToTop}
-            variant="outline" 
-            size="icon"
-            className="fixed bottom-16 right-6 z-50 rounded-full h-12 w-12 shadow-lg bg-harmonia-green/90 hover:bg-harmonia-green text-white border-none"
-          >
-            <ChevronUp className="h-6 w-6" />
-          </Button>
+          
         </div>
       </div>
-    </header>
-  );
+    </header>;
 };
-
 export default Header;
