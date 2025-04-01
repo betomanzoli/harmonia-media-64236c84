@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import Header from '@/components/Header';
@@ -8,7 +7,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/components/ui/use-toast";
-import { ArrowLeft, Check, Calculator, Info } from 'lucide-react';
+import { ArrowLeft, Check, CalculatorIcon, Info } from 'lucide-react';
 
 const Calculator: React.FC = () => {
   const navigate = useNavigate();
