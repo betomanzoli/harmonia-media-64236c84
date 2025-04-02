@@ -2,7 +2,7 @@
 import React, { useState, useEffect } from 'react';
 import { Button } from "@/components/ui/button";
 import Logo from './Logo';
-import { MessageCircle, ChevronUp, DollarSign, Mail, Phone } from 'lucide-react';
+import { MessageCircle, ChevronUp, DollarSign, Mail, Phone, FileText } from 'lucide-react';
 import NavLink from './NavLink';
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { useNavigate } from 'react-router-dom';
@@ -22,6 +22,10 @@ const Header: React.FC = () => {
   
   const handlePriceCalculation = () => {
     navigate('/calculadora');
+  };
+  
+  const handleBriefing = () => {
+    navigate('/briefing');
   };
   
   const scrollToTop = () => {
@@ -60,6 +64,11 @@ const Header: React.FC = () => {
             </nav>
           </div>
           <div className="flex items-center gap-3">
+            <Button onClick={handleBriefing} variant="ghost" size="sm" className="hidden md:flex items-center gap-1">
+              <FileText className="w-4 h-4" />
+              Briefing
+            </Button>
+            
             <Sheet>
               <SheetTrigger asChild>
                 <Button variant="ghost" size="sm" className="hidden md:flex items-center gap-1">
