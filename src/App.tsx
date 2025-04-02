@@ -8,6 +8,7 @@ import Index from "./pages/Index";
 import Calculator from "./pages/Calculator";
 import Briefing from "./pages/Briefing";
 import NotFound from "./pages/NotFound";
+import AudioDatabase from "./pages/AudioDatabase";
 
 const queryClient = new QueryClient();
 
@@ -21,6 +22,7 @@ const App = () => (
           <Route path="/" element={<Index />} />
           <Route path="/calculadora" element={<Calculator />} />
           <Route path="/briefing" element={<Briefing />} />
+          <Route path="/audio" element={<AudioDatabase />} />
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />
         </Routes>
