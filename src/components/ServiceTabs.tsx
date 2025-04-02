@@ -33,10 +33,12 @@ const ServiceTabs: React.FC<ServiceTabsProps> = ({ activeTab, setActiveTab }) =>
           price="R$219"
           description="Ideal para presentes emocionais rápidos."
           features={[
-            "Música gerada por IA + revisão humana",
-            "Certificado digital incluso",
+            "1 composição musical via IA + supervisão/revisão humana",
+            "1 revisão gratuita",
+            "Arquivo digital em alta qualidade (MP3/WAV)",
+            "Certificado digital de autoria",
             "Entrega em até 48 horas",
-            "1 revisão gratuita"
+            "Uso permitido: Apenas pessoal, sem direitos comerciais"
           ]}
         />
         <ServiceCard 
@@ -44,11 +46,14 @@ const ServiceTabs: React.FC<ServiceTabsProps> = ({ activeTab, setActiveTab }) =>
           price="R$479"
           description="Perfeito para criadores de conteúdo e pequenos negócios."
           features={[
-            "3 variações + stems separados",
-            "Registro blockchain CBL incluso",
-            "Entrega em até 72 horas",
+            "3 variações/propostas em estilos diferentes",
+            "Masterização básica IA",
+            "Stems separados (vocais + instrumentação)",
+            "Registro blockchain CBL",
             "3 revisões gratuitas",
-            "Formato adequado para plataformas digitais"
+            "Entrega em até 72 horas",
+            "Formato adequado para plataformas digitais",
+            "Uso permitido: Uso em conteúdo digital próprio"
           ]}
           recommended={true}
         />
@@ -57,11 +62,15 @@ const ServiceTabs: React.FC<ServiceTabsProps> = ({ activeTab, setActiveTab }) =>
           price="R$969"
           description="Melhor opção para empresas e projetos corporativos."
           features={[
-            "5 variações + registro BN e partitura MusicXML",
-            "Suporte pós-venda por 30 dias",
+            "5 variações/propostas de composição",
+            "Masterização profissional IA",
+            "Registro oficial na Biblioteca Nacional",
+            "Partitura em formato MusicXML",
+            "Stems completos separados",
+            "Revisões ilimitadas (em 30 dias)",
+            "Licença comercial completa",
             "Entrega prioritária",
-            "Revisões ilimitadas",
-            "Licença comercial completa"
+            "Suporte pós-venda por 30 dias"
           ]}
         />
       </TabsContent>
@@ -72,10 +81,12 @@ const ServiceTabs: React.FC<ServiceTabsProps> = ({ activeTab, setActiveTab }) =>
           price="R$219"
           description="Ideal para presentes emocionais rápidos."
           features={[
-            "Música gerada por IA + revisão humana",
-            "Certificado digital incluso",
+            "1 composição musical via IA + supervisão/revisão humana",
+            "1 revisão gratuita",
+            "Arquivo digital em alta qualidade (MP3/WAV)",
+            "Certificado digital de autoria",
             "Entrega em até 48 horas",
-            "1 revisão gratuita"
+            "Uso permitido: Apenas pessoal, sem direitos comerciais"
           ]}
           recommended={true}
         />
@@ -87,11 +98,14 @@ const ServiceTabs: React.FC<ServiceTabsProps> = ({ activeTab, setActiveTab }) =>
           price="R$479"
           description="Perfeito para criadores de conteúdo e pequenos negócios."
           features={[
-            "3 variações + stems separados",
-            "Registro blockchain CBL incluso",
-            "Entrega em até 72 horas",
+            "3 variações/propostas em estilos diferentes",
+            "Masterização básica IA",
+            "Stems separados (vocais + instrumentação)",
+            "Registro blockchain CBL",
             "3 revisões gratuitas",
-            "Formato adequado para plataformas digitais"
+            "Entrega em até 72 horas",
+            "Formato adequado para plataformas digitais",
+            "Uso permitido: Uso em conteúdo digital próprio"
           ]}
           recommended={true}
         />
@@ -103,11 +117,15 @@ const ServiceTabs: React.FC<ServiceTabsProps> = ({ activeTab, setActiveTab }) =>
           price="R$969"
           description="Melhor opção para empresas e projetos corporativos."
           features={[
-            "5 variações + registro BN e partitura MusicXML",
-            "Suporte pós-venda por 30 dias",
+            "5 variações/propostas de composição",
+            "Masterização profissional IA",
+            "Registro oficial na Biblioteca Nacional",
+            "Partitura em formato MusicXML",
+            "Stems completos separados",
+            "Revisões ilimitadas (em 30 dias)",
+            "Licença comercial completa",
             "Entrega prioritária",
-            "Revisões ilimitadas",
-            "Licença comercial completa"
+            "Suporte pós-venda por 30 dias"
           ]}
           recommended={true}
         />
