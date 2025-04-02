@@ -1,10 +1,13 @@
 
 import React from 'react';
 import Logo from './Logo';
-import { Phone, Mail, Shield, ChevronUp } from 'lucide-react';
+import { Phone, Mail, Shield, ChevronUp, FileText } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { useNavigate } from 'react-router-dom';
 
 const Footer: React.FC = () => {
+  const navigate = useNavigate();
+  
   const scrollToTop = () => {
     window.scrollTo({
       top: 0,
@@ -37,7 +40,9 @@ const Footer: React.FC = () => {
               <li><a href="#servicos" className="text-gray-400 hover:text-harmonia-green transition-colors">Serviços</a></li>
               <li><a href="#processo" className="text-gray-400 hover:text-harmonia-green transition-colors">Processo</a></li>
               <li><a href="#portfolio" className="text-gray-400 hover:text-harmonia-green transition-colors">Portfólio</a></li>
-              <li><a href="#briefing" className="text-gray-400 hover:text-harmonia-green transition-colors">Criar Música</a></li>
+              <li><a onClick={() => navigate('/briefing')} className="text-gray-400 hover:text-harmonia-green transition-colors cursor-pointer flex items-center gap-1">
+                <FileText className="w-4 h-4" /> Briefing
+              </a></li>
             </ul>
           </div>
           
