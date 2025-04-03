@@ -6,6 +6,7 @@ import BriefingForm from '@/components/BriefingForm';
 import { Button } from "@/components/ui/button";
 import { ArrowLeft } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
+import { Link } from 'react-router-dom';
 
 const Briefing: React.FC = () => {
   const navigate = useNavigate();
@@ -48,13 +49,14 @@ const Briefing: React.FC = () => {
                 <p className="text-gray-400 text-sm mb-4">
                   Escute exemplos das músicas que criamos para nossos clientes.
                 </p>
-                <Button 
-                  variant="outline" 
-                  className="w-full"
-                  onClick={() => navigate('/#portfolio')}
-                >
-                  Ver portfólio
-                </Button>
+                <Link to="/portfolio">
+                  <Button 
+                    variant="outline" 
+                    className="w-full"
+                  >
+                    Ver portfólio
+                  </Button>
+                </Link>
               </div>
               
               <div className="bg-card border border-border rounded-lg p-6">
@@ -62,13 +64,14 @@ const Briefing: React.FC = () => {
                 <p className="text-gray-400 text-sm mb-4">
                   Conheça nossos pacotes e escolha o que melhor atende suas necessidades.
                 </p>
-                <Button 
-                  variant="outline" 
-                  className="w-full"
-                  onClick={() => navigate('/#servicos')}
-                >
-                  Ver pacotes
-                </Button>
+                <Link to="/pacotes">
+                  <Button 
+                    variant="outline" 
+                    className="w-full"
+                  >
+                    Ver pacotes
+                  </Button>
+                </Link>
               </div>
             </div>
             

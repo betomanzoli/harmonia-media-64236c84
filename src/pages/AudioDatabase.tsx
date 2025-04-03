@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useToast } from "@/components/ui/use-toast";
 import { Button } from "@/components/ui/button";
@@ -18,7 +17,8 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
-import { FileAudio, Info } from "lucide-react";
+import { FileAudio, Info, Music, ArrowLeft } from 'lucide-react';
+import { Link } from 'react-router-dom';
 
 interface AudioSample {
   id: string;
@@ -125,10 +125,17 @@ const AudioDatabase: React.FC = () => {
           </p>
         </div>
         
-        <div className="mt-4 md:mt-0">
+        <div className="mt-4 md:mt-0 flex gap-2">
+          <Link to="/admin-j28s7d1k/portfolio">
+            <Button variant="outline" className="flex items-center gap-1">
+              <Music className="w-4 h-4 mr-1" />
+              Portfólio
+            </Button>
+          </Link>
+          
           <Dialog>
             <DialogTrigger asChild>
-              <Button variant="outline" className="ml-auto">
+              <Button variant="outline">
                 <Info className="w-4 h-4 mr-2" />
                 Como usar
               </Button>
@@ -165,6 +172,13 @@ const AudioDatabase: React.FC = () => {
               </div>
             </DialogContent>
           </Dialog>
+          
+          <Link to="/">
+            <Button variant="outline" className="flex items-center gap-1">
+              <ArrowLeft className="w-4 h-4 mr-1" />
+              Página Inicial
+            </Button>
+          </Link>
         </div>
       </div>
       

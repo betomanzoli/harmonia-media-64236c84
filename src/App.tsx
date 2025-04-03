@@ -9,6 +9,9 @@ import Calculator from "./pages/Calculator";
 import Briefing from "./pages/Briefing";
 import NotFound from "./pages/NotFound";
 import AudioDatabase from "./pages/AudioDatabase";
+import AdminPortfolio from "./pages/admin/AdminPortfolio";
+import Packages from "./pages/Packages";
+import Portfolio from "./pages/Portfolio";
 
 const queryClient = new QueryClient();
 
@@ -22,7 +25,10 @@ const App = () => (
           <Route path="/" element={<Index />} />
           <Route path="/calculadora" element={<Calculator />} />
           <Route path="/briefing" element={<Briefing />} />
-          <Route path="/audio" element={<AudioDatabase />} />
+          <Route path="/portfolio" element={<Portfolio />} />
+          <Route path="/pacotes" element={<Packages />} />
+          <Route path="/admin-j28s7d1k/audio-database" element={<AudioDatabase />} />
+          <Route path="/admin-j28s7d1k/portfolio" element={<AdminPortfolio />} />
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />
         </Routes>
