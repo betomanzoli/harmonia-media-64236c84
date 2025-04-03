@@ -41,27 +41,55 @@ const ServiceExtras: React.FC<ServiceExtrasProps> = ({ onExtraServiceClick }) =>
           </Button>
         </div>
 
-        {/* Registro BN */}
+        {/* Registro BN (Somente Letra) */}
         <div className="bg-card border border-border hover:border-harmonia-green/50 rounded-lg p-6 transition-colors">
           <div className="flex justify-between items-start mb-4">
             <div className="flex items-center gap-2">
               <Award className="text-harmonia-green w-5 h-5" />
-              <h3 className="font-semibold">Registro na BN</h3>
+              <h3 className="font-semibold">Registro na BN (Letra)</h3>
+            </div>
+            <span className="text-harmonia-green font-bold">R$99</span>
+          </div>
+          <p className="text-gray-400 text-sm mb-4">
+            Proteja legalmente a letra da sua música com registro na Biblioteca Nacional.
+          </p>
+          <ul className="space-y-2 mb-6">
+            <li className="text-sm text-gray-300">• Não protege melodia, arranjos ou gravações</li>
+            <li className="text-sm text-gray-300">• Não gera royalties</li>
+            <li className="text-sm text-gray-300">• Ideal para proteção sem intenção comercial imediata</li>
+            <li className="text-sm text-gray-300">• Prazo: Até 30 dias úteis</li>
+          </ul>
+          <Button 
+            onClick={() => onExtraServiceClick("Registro na BN (Letra)")}
+            className="w-full bg-secondary hover:bg-secondary/90"
+          >
+            Solicitar Registro BN
+          </Button>
+        </div>
+
+        {/* Registro UBC */}
+        <div className="bg-card border border-border hover:border-harmonia-green/50 rounded-lg p-6 transition-colors">
+          <div className="flex justify-between items-start mb-4">
+            <div className="flex items-center gap-2">
+              <Award className="text-harmonia-green w-5 h-5" />
+              <h3 className="font-semibold">Registro UBC</h3>
             </div>
             <span className="text-harmonia-green font-bold">R$199</span>
           </div>
           <p className="text-gray-400 text-sm mb-4">
-            Garanta proteção legal com o registro tradicional na BN, além do blockchain CBL.
+            Registro completo na UBC (letra, melodia, arranjo) com código ISWC para direitos de execução pública.
           </p>
           <ul className="space-y-2 mb-6">
-            <li className="text-sm text-gray-300">• Prazo: Até 30 dias úteis</li>
-            <li className="text-sm text-gray-300">• Apenas para pacotes Profissional e Premium</li>
+            <li className="text-sm text-gray-300">• Proteção integral (letra + melodia + arranjo)</li>
+            <li className="text-sm text-gray-300">• Direitos autorais em execuções públicas</li>
+            <li className="text-sm text-gray-300">• Essencial para receber royalties</li>
+            <li className="text-sm text-gray-300">• Ideal para uso comercial da música</li>
           </ul>
           <Button 
-            onClick={() => onExtraServiceClick("Registro na BN")}
+            onClick={() => onExtraServiceClick("Registro UBC")}
             className="w-full bg-secondary hover:bg-secondary/90"
           >
-            Solicitar Registro BN
+            Solicitar Registro UBC
           </Button>
         </div>
 

@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import Header from '@/components/Header';
@@ -23,7 +24,8 @@ const Calculator: React.FC = () => {
   // Valores dos extras
   const EXTRA_PRICES = {
     revision: 99,
-    bnRegistration: 199,
+    bnRegistration: 99,
+    ubcRegistration: 199,
     masteringPremium: 149,
     stems: 129,
     expressDelivery: 199,
@@ -35,6 +37,7 @@ const Calculator: React.FC = () => {
   const [extras, setExtras] = useState({
     revision: false,
     bnRegistration: false,
+    ubcRegistration: false,
     masteringPremium: false,
     stems: false,
     expressDelivery: false,
@@ -59,7 +62,6 @@ const Calculator: React.FC = () => {
   
   // Função para verificar se um extra está disponível para o pacote selecionado
   const isExtraAvailable = (extra: string): boolean => {
-    if (extra === 'bnRegistration' && selectedPackage === 'essential') return false;
     return true;
   };
   
@@ -170,7 +172,7 @@ const Calculator: React.FC = () => {
                   <div className="grid gap-1.5">
                     <Label htmlFor="professional" className="font-medium">Pacote Profissional - R${PACKAGE_PRICES.professional}</Label>
                     <p className="text-sm text-gray-400">
-                      Perfeito para criadores de conteúdo e pequenos negócios. Inclui 3 variações, stems separados, registro blockchain CBL e 3 revisões gratuitas.
+                      Perfeito para criadores de conteúdo e pequenos negócios. Inclui 3 variações, stems separados e 3 revisões gratuitas.
                     </p>
                   </div>
                 </div>
@@ -209,17 +211,17 @@ const Calculator: React.FC = () => {
                   </div>
                 </div>
                 
-                {/* Registro BN */}
-                <div className={`flex items-start space-x-2 border border-border rounded-lg p-4 hover:border-harmonia-green/50 transition-colors ${!isExtraAvailable('bnRegistration') ? 'opacity-50' : ''} ${isExtraIncluded('bnRegistration') ? 'bg-harmonia-green/10' : ''}`}>
+                {/* Registro BN (Letra) */}
+                <div className={`flex items-start space-x-2 border border-border rounded-lg p-4 hover:border-harmonia-green/50 transition-colors ${isExtraIncluded('bnRegistration') ? 'bg-harmonia-green/10' : ''}`}>
                   <Checkbox 
                     id="bnRegistration" 
                     checked={extras.bnRegistration || isExtraIncluded('bnRegistration')}
                     onCheckedChange={(checked) => setExtras({...extras, bnRegistration: checked === true})}
-                    disabled={!isExtraAvailable('bnRegistration') || isExtraIncluded('bnRegistration')}
+                    disabled={isExtraIncluded('bnRegistration')}
                   />
                   <div className="grid gap-1.5 w-full">
                     <div className="flex justify-between">
-                      <Label htmlFor="bnRegistration" className="font-medium">Registro na Biblioteca Nacional</Label>
+                      <Label htmlFor="bnRegistration" className="font-medium">Registro na BN (Letra)</Label>
                       {isExtraIncluded('bnRegistration') ? (
                         <span className="text-harmonia-green font-semibold flex items-center">
                           <Check className="w-4 h-4 mr-1" /> Incluso
@@ -229,13 +231,31 @@ const Calculator: React.FC = () => {
                       )}
                     </div>
                     <p className="text-sm text-gray-400">
-                      Garanta proteção legal com o registro tradicional na BN, além do blockchain CBL.
-                      {!isExtraAvailable('bnRegistration') && (
-                        <span className="block mt-1 text-amber-400">* Disponível apenas para pacotes Profissional e Premium</span>
-                      )}
+                      Proteja legalmente a letra da sua música com registro na Biblioteca Nacional.
+                      <span className="block mt-1 text-amber-400">• Não protege melodia, arranjos ou gravações.</span>
+                      <span className="block text-amber-400">• Não gera royalties.</span>
                       {isExtraIncluded('bnRegistration') && (
                         <span className="block mt-1 text-harmonia-green">* Já incluído no pacote Premium</span>
                       )}
+                    </p>
+                  </div>
+                </div>
+
+                {/* Registro UBC */}
+                <div className="flex items-start space-x-2 border border-border rounded-lg p-4 hover:border-harmonia-green/50 transition-colors">
+                  <Checkbox 
+                    id="ubcRegistration" 
+                    checked={extras.ubcRegistration}
+                    onCheckedChange={(checked) => setExtras({...extras, ubcRegistration: checked === true})}
+                  />
+                  <div className="grid gap-1.5 w-full">
+                    <div className="flex justify-between">
+                      <Label htmlFor="ubcRegistration" className="font-medium">Registro UBC</Label>
+                      <span className="text-harmonia-green font-semibold">+R${EXTRA_PRICES.ubcRegistration}</span>
+                    </div>
+                    <p className="text-sm text-gray-400">
+                      Registro completo na UBC (letra, melodia, arranjo) com código ISWC para direitos de execução pública.
+                      <span className="block mt-1 text-amber-400">• Ideal para receber royalties e uso comercial.</span>
                     </p>
                   </div>
                 </div>

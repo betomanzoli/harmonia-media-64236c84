@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { Gift, Briefcase, Building } from 'lucide-react';
@@ -49,7 +48,6 @@ const ServiceTabs: React.FC<ServiceTabsProps> = ({ activeTab, setActiveTab }) =>
             "3 variações/propostas em estilos diferentes",
             "Masterização básica IA",
             "Stems separados (vocais + instrumentação)",
-            "Registro blockchain CBL",
             "3 revisões gratuitas",
             "Entrega em até 72 horas",
             "Formato adequado para plataformas digitais",
@@ -101,7 +99,6 @@ const ServiceTabs: React.FC<ServiceTabsProps> = ({ activeTab, setActiveTab }) =>
             "3 variações/propostas em estilos diferentes",
             "Masterização básica IA",
             "Stems separados (vocais + instrumentação)",
-            "Registro blockchain CBL",
             "3 revisões gratuitas",
             "Entrega em até 72 horas",
             "Formato adequado para plataformas digitais",
