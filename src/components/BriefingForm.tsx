@@ -22,7 +22,7 @@ import {
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { FileUpload, X, Upload } from "lucide-react";
+import { File, X, Upload } from "lucide-react";
 
 const formSchema = z.object({
   name: z.string().min(2, { message: "Nome é obrigatório" }),
@@ -335,7 +335,7 @@ const BriefingForm: React.FC = () => {
                     {referenceFiles.map((file, index) => (
                       <li key={index} className="flex items-center justify-between bg-secondary/50 p-2 rounded-md">
                         <div className="flex items-center">
-                          <FileUpload className="w-4 h-4 mr-2 text-gray-400" />
+                          <File className="w-4 h-4 mr-2 text-gray-400" />
                           <span className="text-sm truncate max-w-[200px]">{file.name}</span>
                         </div>
                         <Button 
