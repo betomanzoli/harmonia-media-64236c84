@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import Header from '@/components/Header';
@@ -30,7 +29,10 @@ const Calculator: React.FC = () => {
     stems: 129,
     expressDelivery: 199,
     musicXml: 149,
-    storage: 49
+    storage: 49,
+    humanCompositionLyrics: 499,
+    humanCompositionMelody: 1499,
+    humanCompositionComplete: 0 // Valor a consultar
   };
   
   const [selectedPackage, setSelectedPackage] = useState('essential');
@@ -42,7 +44,10 @@ const Calculator: React.FC = () => {
     stems: false,
     expressDelivery: false,
     musicXml: false,
-    storage: false
+    storage: false,
+    humanCompositionLyrics: false,
+    humanCompositionMelody: false,
+    humanCompositionComplete: false
   });
   const [couponCode, setCouponCode] = useState('');
   const [discount, setDiscount] = useState(0);
@@ -193,6 +198,7 @@ const Calculator: React.FC = () => {
             <div className="bg-card border border-border rounded-lg p-6">
               <h2 className="text-xl font-semibold mb-4">Serviços Extras</h2>
               <div className="grid gap-4">
+                
                 {/* Revisão Extra */}
                 <div className="flex items-start space-x-2 border border-border rounded-lg p-4 hover:border-harmonia-green/50 transition-colors">
                   <Checkbox 
@@ -377,6 +383,80 @@ const Calculator: React.FC = () => {
                     <p className="text-sm text-gray-400">
                       Mantenha seus arquivos seguros por mais tempo. Por padrão, os arquivos do projeto ficam disponíveis por até 7 dias após a entrega final.
                     </p>
+                  </div>
+                </div>
+                
+                {/* Composição sem IA (letra) */}
+                <div className="flex items-start space-x-2 border border-border rounded-lg p-4 hover:border-harmonia-green/50 transition-colors">
+                  <Checkbox 
+                    id="humanCompositionLyrics" 
+                    checked={extras.humanCompositionLyrics}
+                    onCheckedChange={(checked) => setExtras({...extras, humanCompositionLyrics: checked === true})}
+                  />
+                  <div className="grid gap-1.5 w-full">
+                    <div className="flex justify-between">
+                      <Label htmlFor="humanCompositionLyrics" className="font-medium">Composição sem IA (letra)</Label>
+                      <span className="text-harmonia-green font-semibold">+R${EXTRA_PRICES.humanCompositionLyrics}</span>
+                    </div>
+                    <p className="text-sm text-gray-400">
+                      Composição 100% humana da letra da sua música, criada por um de nossos letristas profissionais.
+                    </p>
+                  </div>
+                </div>
+                
+                {/* Composição sem IA (letra + melodia com partitura) */}
+                <div className="flex items-start space-x-2 border border-border rounded-lg p-4 hover:border-harmonia-green/50 transition-colors">
+                  <Checkbox 
+                    id="humanCompositionMelody" 
+                    checked={extras.humanCompositionMelody}
+                    onCheckedChange={(checked) => setExtras({...extras, humanCompositionMelody: checked === true})}
+                  />
+                  <div className="grid gap-1.5 w-full">
+                    <div className="flex justify-between">
+                      <Label htmlFor="humanCompositionMelody" className="font-medium">Composição sem IA (letra + melodia)</Label>
+                      <span className="text-harmonia-green font-semibold">+R${EXTRA_PRICES.humanCompositionMelody}</span>
+                    </div>
+                    <p className="text-sm text-gray-400">
+                      Composição 100% humana da letra e melodia da sua música, incluindo partitura completa (sem gravação).
+                    </p>
+                  </div>
+                </div>
+                
+                {/* Composição sem IA (letra + melodia + gravação) */}
+                <div className="flex items-start space-x-2 border border-border rounded-lg p-4 hover:border-harmonia-green/50 transition-colors">
+                  <Checkbox 
+                    id="humanCompositionComplete" 
+                    checked={extras.humanCompositionComplete}
+                    onCheckedChange={(checked) => setExtras({...extras, humanCompositionComplete: checked === true})}
+                    disabled={true}
+                  />
+                  <div className="grid gap-1.5 w-full">
+                    <div className="flex justify-between">
+                      <Label htmlFor="humanCompositionComplete" className="font-medium">Composição sem IA (completa)</Label>
+                      <span className="text-amber-400 font-semibold">Consultar</span>
+                    </div>
+                    <p className="text-sm text-gray-400">
+                      Composição 100% humana com letra, melodia e gravação profissional da sua música.
+                      <span className="block mt-1 text-amber-400">• Entre em contato para um orçamento personalizado</span>
+                    </p>
+                    <Button 
+                      onClick={() => {
+                        toast({
+                          title: "Serviço Premium",
+                          description: "Entre em contato conosco para um orçamento personalizado.",
+                        });
+                        
+                        const briefingSection = document.getElementById('briefing');
+                        if (briefingSection) {
+                          briefingSection.scrollIntoView({ behavior: 'smooth' });
+                        }
+                      }}
+                      variant="outline" 
+                      size="sm" 
+                      className="mt-2"
+                    >
+                      Solicitar Orçamento
+                    </Button>
                   </div>
                 </div>
               </div>
