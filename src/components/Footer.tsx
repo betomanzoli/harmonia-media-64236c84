@@ -3,7 +3,7 @@ import React from 'react';
 import Logo from './Logo';
 import { Phone, Mail, Shield, ChevronUp, FileText } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
 
 const Footer: React.FC = () => {
   const navigate = useNavigate();
@@ -37,12 +37,12 @@ const Footer: React.FC = () => {
           <div>
             <h3 className="font-semibold mb-4">Links Rápidos</h3>
             <ul className="space-y-2">
-              <li><a href="#servicos" className="text-gray-400 hover:text-harmonia-green transition-colors">Serviços</a></li>
-              <li><a href="#processo" className="text-gray-400 hover:text-harmonia-green transition-colors">Processo</a></li>
-              <li><a href="#portfolio" className="text-gray-400 hover:text-harmonia-green transition-colors">Portfólio</a></li>
-              <li><a onClick={() => navigate('/briefing')} className="text-gray-400 hover:text-harmonia-green transition-colors cursor-pointer flex items-center gap-1">
+              <li><Link to="/pacotes" className="text-gray-400 hover:text-harmonia-green transition-colors">Serviços</Link></li>
+              <li><a href="/#processo" className="text-gray-400 hover:text-harmonia-green transition-colors">Processo</a></li>
+              <li><Link to="/portfolio" className="text-gray-400 hover:text-harmonia-green transition-colors">Portfólio</Link></li>
+              <li><Link to="/briefing" className="text-gray-400 hover:text-harmonia-green transition-colors cursor-pointer flex items-center gap-1">
                 <FileText className="w-4 h-4" /> Briefing
-              </a></li>
+              </Link></li>
             </ul>
           </div>
           
@@ -61,12 +61,12 @@ const Footer: React.FC = () => {
             <div className="mt-6">
               <h3 className="font-semibold mb-4">Informações Legais</h3>
               <ul className="space-y-2">
-                <li><a href="#" className="text-gray-400 hover:text-harmonia-green transition-colors flex items-center gap-1">
+                <li><Link to="/privacidade" className="text-gray-400 hover:text-harmonia-green transition-colors flex items-center gap-1">
                   <Shield className="w-4 h-4" /> Política de Privacidade
-                </a></li>
-                <li><a href="#" className="text-gray-400 hover:text-harmonia-green transition-colors flex items-center gap-1">
+                </Link></li>
+                <li><Link to="/termos" className="text-gray-400 hover:text-harmonia-green transition-colors flex items-center gap-1">
                   <Shield className="w-4 h-4" /> Termos de Serviço
-                </a></li>
+                </Link></li>
               </ul>
             </div>
           </div>

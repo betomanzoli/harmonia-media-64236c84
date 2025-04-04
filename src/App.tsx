@@ -12,6 +12,8 @@ import AudioDatabase from "./pages/AudioDatabase";
 import AdminPortfolio from "./pages/admin/AdminPortfolio";
 import Packages from "./pages/Packages";
 import Portfolio from "./pages/Portfolio";
+import PrivacyPolicy from "./pages/PrivacyPolicy";
+import Terms from "./pages/Terms";
 
 const queryClient = new QueryClient();
 
@@ -27,6 +29,8 @@ const App = () => (
           <Route path="/briefing" element={<Briefing />} />
           <Route path="/portfolio" element={<Portfolio />} />
           <Route path="/pacotes" element={<Packages />} />
+          <Route path="/privacidade" element={<PrivacyPolicy />} />
+          <Route path="/termos" element={<Terms />} />
           <Route path="/admin-j28s7d1k/audio-database" element={<AudioDatabase />} />
           <Route path="/admin-j28s7d1k/portfolio" element={<AdminPortfolio />} />
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
