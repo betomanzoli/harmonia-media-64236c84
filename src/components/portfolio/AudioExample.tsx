@@ -7,13 +7,15 @@ interface AudioExampleProps {
   subtitle: string;
   audioSrc: string;
   genre?: string;
+  type?: string;
 }
 
 const AudioExample: React.FC<AudioExampleProps> = ({ 
   title, 
   subtitle, 
   audioSrc,
-  genre
+  genre,
+  type
 }) => {
   return (
     <div className="mb-6">
