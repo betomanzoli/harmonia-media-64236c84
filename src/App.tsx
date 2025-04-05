@@ -14,6 +14,7 @@ import Packages from "./pages/Packages";
 import Portfolio from "./pages/Portfolio";
 import PrivacyPolicy from "./pages/PrivacyPolicy";
 import Terms from "./pages/Terms";
+import OrderTracking from "./pages/OrderTracking";
 
 const queryClient = new QueryClient();
 
@@ -31,6 +32,7 @@ const App = () => (
           <Route path="/pacotes" element={<Packages />} />
           <Route path="/privacidade" element={<PrivacyPolicy />} />
           <Route path="/termos" element={<Terms />} />
+          <Route path="/acompanhar-pedido" element={<OrderTracking />} />
           <Route path="/admin-j28s7d1k/audio-database" element={<AudioDatabase />} />
           <Route path="/admin-j28s7d1k/portfolio" element={<AdminPortfolio />} />
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}

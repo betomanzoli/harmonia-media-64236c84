@@ -2,7 +2,7 @@
 import React, { useState, useEffect } from 'react';
 import { Button } from "@/components/ui/button";
 import Logo from './Logo';
-import { MessageCircle, ChevronUp, DollarSign, Mail, Phone, Menu } from 'lucide-react';
+import { MessageCircle, ChevronUp, DollarSign, Mail, Phone, Menu, Clock } from 'lucide-react';
 import NavLink from './NavLink';
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { useNavigate, Link } from 'react-router-dom';
@@ -70,6 +70,7 @@ const Header: React.FC = () => {
                 </>
               )}
               <NavLink href="/briefing">Briefing</NavLink>
+              <NavLink href="/acompanhar-pedido">Acompanhar Pedido</NavLink>
             </nav>
           </div>
           <div className="flex items-center gap-3">
@@ -130,6 +131,9 @@ const Header: React.FC = () => {
                     )}
                     <NavLink href="/briefing">Briefing</NavLink>
                     <NavLink href="/calculadora">Calculadora</NavLink>
+                    <NavLink href="/acompanhar-pedido" className="flex items-center gap-1">
+                      <Clock className="w-4 h-4" /> Acompanhar Pedido
+                    </NavLink>
                   </nav>
                   
                   <div className="mt-8 pt-8 border-t border-border">

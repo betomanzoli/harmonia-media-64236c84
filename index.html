@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="en">
   <head>
@@ -22,5 +23,27 @@
     <!-- IMPORTANT: DO NOT REMOVE THIS SCRIPT TAG OR THIS VERY COMMENT! -->
     <script src="https://cdn.gpteng.co/gptengineer.js" type="module"></script>
     <script type="module" src="/src/main.tsx"></script>
+    
+    <!-- Chatbot harmonIA -->
+    <script>
+    (function() {
+      // Criar elemento de script
+      var script = document.createElement('script');
+      script.src = 'https://seu-servidor-webhook.herokuapp.com/widget.js';
+      script.async = true;
+      
+      // Adicionar script ao final do body
+      document.body.appendChild(script);
+      
+      // Configurar chatbot após carregamento
+      script.onload = function() {
+        window.harmonIAChatbot.init({
+          dialogflowProjectId: 'seu-project-id',
+          primaryColor: '#00c853',
+          widgetTitle: 'Assistente harmonIA'
+        });
+      };
+    })();
+    </script>
   </body>
 </html>

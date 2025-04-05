@@ -1,7 +1,7 @@
 
 import React from 'react';
 import Logo from './Logo';
-import { Phone, Mail, Shield, ChevronUp, FileText } from 'lucide-react';
+import { Phone, Mail, Shield, ChevronUp, FileText, Clock } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useNavigate, Link } from 'react-router-dom';
 
@@ -42,6 +42,9 @@ const Footer: React.FC = () => {
               <li><Link to="/portfolio" className="text-gray-400 hover:text-harmonia-green transition-colors">Portfólio</Link></li>
               <li><Link to="/briefing" className="text-gray-400 hover:text-harmonia-green transition-colors cursor-pointer flex items-center gap-1">
                 <FileText className="w-4 h-4" /> Briefing
+              </Link></li>
+              <li><Link to="/acompanhar-pedido" className="text-gray-400 hover:text-harmonia-green transition-colors cursor-pointer flex items-center gap-1">
+                <Clock className="w-4 h-4" /> Acompanhar Pedido
               </Link></li>
             </ul>
           </div>
