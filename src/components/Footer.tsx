@@ -1,7 +1,7 @@
 
 import React from 'react';
 import Logo from './Logo';
-import { Phone, Mail, Shield, ChevronUp, FileText, Clock } from 'lucide-react';
+import { Phone, Mail, Shield, ChevronUp, Clock } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useNavigate, Link } from 'react-router-dom';
 
@@ -37,15 +37,13 @@ const Footer: React.FC = () => {
           <div>
             <h3 className="font-semibold mb-4">Links Rápidos</h3>
             <ul className="space-y-2">
-              <li><Link to="/pacotes" className="text-gray-400 hover:text-harmonia-green transition-colors">Serviços</Link></li>
-              <li><a href="/#processo" className="text-gray-400 hover:text-harmonia-green transition-colors">Processo</a></li>
-              <li><Link to="/portfolio" className="text-gray-400 hover:text-harmonia-green transition-colors">Portfólio</Link></li>
-              <li><Link to="/briefing" className="text-gray-400 hover:text-harmonia-green transition-colors cursor-pointer flex items-center gap-1">
-                <FileText className="w-4 h-4" /> Briefing
-              </Link></li>
               <li><Link to="/acompanhar-pedido" className="text-gray-400 hover:text-harmonia-green transition-colors cursor-pointer flex items-center gap-1">
                 <Clock className="w-4 h-4" /> Acompanhar Pedido
               </Link></li>
+              <li><Link to="/briefing" className="text-gray-400 hover:text-harmonia-green transition-colors">Briefing</Link></li>
+              <li><Link to="/pacotes" className="text-gray-400 hover:text-harmonia-green transition-colors">Pacotes</Link></li>
+              <li><Link to="/portfolio" className="text-gray-400 hover:text-harmonia-green transition-colors">Portfólio</Link></li>
+              <li><a href="/#processo" className="text-gray-400 hover:text-harmonia-green transition-colors">Processo</a></li>
             </ul>
           </div>
           
