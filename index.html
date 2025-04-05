@@ -25,25 +25,15 @@
     <script type="module" src="/src/main.tsx"></script>
     
     <!-- Chatbot harmonIA -->
+    <script src="/widget/chatbot.js"></script>
     <script>
-    (function() {
-      // Criar elemento de script
-      var script = document.createElement('script');
-      script.src = 'https://seu-servidor-webhook.herokuapp.com/widget.js';
-      script.async = true;
-      
-      // Adicionar script ao final do body
-      document.body.appendChild(script);
-      
-      // Configurar chatbot após carregamento
-      script.onload = function() {
+      document.addEventListener('DOMContentLoaded', function() {
         window.harmonIAChatbot.init({
-          dialogflowProjectId: 'seu-project-id',
+          dialogflowProjectId: 'seu-project-id',  // Substituir pelo ID real quando configurado
           primaryColor: '#00c853',
           widgetTitle: 'Assistente harmonIA'
         });
-      };
-    })();
+      });
     </script>
   </body>
 </html>
