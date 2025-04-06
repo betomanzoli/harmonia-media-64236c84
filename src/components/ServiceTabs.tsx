@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { Gift, Briefcase, Building } from 'lucide-react';
@@ -32,7 +33,7 @@ const ServiceTabs: React.FC<ServiceTabsProps> = ({ activeTab, setActiveTab }) =>
           price="R$219"
           description="Ideal para presentes emocionais rápidos."
           features={[
-            "1 composição musical via IA + supervisão/revisão humana",
+            "3 variações/propostas em único estilo",
             "1 revisão gratuita",
             "Arquivo digital em alta qualidade (MP3/WAV)",
             "Certificado digital de autoria",
@@ -79,7 +80,7 @@ const ServiceTabs: React.FC<ServiceTabsProps> = ({ activeTab, setActiveTab }) =>
           price="R$219"
           description="Ideal para presentes emocionais rápidos."
           features={[
-            "1 composição musical via IA + supervisão/revisão humana",
+            "3 variações/propostas em único estilo",
             "1 revisão gratuita",
             "Arquivo digital em alta qualidade (MP3/WAV)",
             "Certificado digital de autoria",

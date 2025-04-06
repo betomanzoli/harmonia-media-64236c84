@@ -18,6 +18,7 @@ import {
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { BriefingFormValues } from './formSchema';
+import { siteConfig } from '@/config/site';
 
 const ProjectInfoSection: React.FC = () => {
   const form = useFormContext<BriefingFormValues>();
@@ -40,14 +41,14 @@ const ProjectInfoSection: React.FC = () => {
                 </SelectTrigger>
               </FormControl>
               <SelectContent>
-                <SelectItem value="essencial">Pacote Essencial - R$219</SelectItem>
-                <SelectItem value="profissional">Pacote Profissional - R$479</SelectItem>
-                <SelectItem value="premium">Pacote Premium - R$969</SelectItem>
+                <SelectItem value="essencial">Pacote Essencial - R${siteConfig.pricing.basePrice}</SelectItem>
+                <SelectItem value="profissional">Pacote Profissional - R${siteConfig.pricing.professionalPrice}</SelectItem>
+                <SelectItem value="premium">Pacote Premium - R${siteConfig.pricing.premiumPrice}</SelectItem>
                 <SelectItem value="personalizado">Pacote Personalizado (a consultar)</SelectItem>
               </SelectContent>
             </Select>
             <FormDescription>
-              Você pode ver os detalhes dos pacotes <a href="/pacotes" className="text-harmonia-green underline">aqui</a>
+              Você pode ver os detalhes dos pacotes <a href={siteConfig.urls.packages} className="text-harmonia-green underline">aqui</a>
             </FormDescription>
           </FormItem>
         )}

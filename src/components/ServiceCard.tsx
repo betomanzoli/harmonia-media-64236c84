@@ -3,6 +3,7 @@ import React from 'react';
 import { Button } from "@/components/ui/button";
 import { Check } from 'lucide-react';
 import { useToast } from "@/components/ui/use-toast";
+import { cn } from "@/lib/utils";
 
 interface ServiceCardProps {
   title: string;
@@ -35,12 +36,12 @@ const ServiceCard: React.FC<ServiceCardProps> = ({
   };
   
   return (
-    <div className={`
-      rounded-lg p-6 border transition-all duration-300
-      ${recommended 
+    <div className={cn(
+      "rounded-lg p-6 border transition-all duration-300 h-full flex flex-col",
+      recommended 
         ? 'border-harmonia-green bg-gradient-to-b from-harmonia-green/10 to-transparent shadow-lg' 
-        : 'border-border hover:border-harmonia-green/50 bg-card hover:bg-card/80'}
-    `}>
+        : 'border-border hover:border-harmonia-green/50 bg-card hover:bg-card/80'
+    )}>
       {recommended && (
         <div className="bg-harmonia-green text-black text-xs font-semibold uppercase tracking-wide py-1 px-3 rounded-full inline-block mb-4">
           Mais Popular
@@ -51,7 +52,7 @@ const ServiceCard: React.FC<ServiceCardProps> = ({
         <span className="text-3xl font-bold">{price}</span>
       </div>
       <p className="text-gray-400 mb-6">{description}</p>
-      <ul className="space-y-3 mb-6">
+      <ul className="space-y-3 mb-6 flex-grow">
         {features.map((feature, index) => (
           <li key={index} className="flex items-start gap-2">
             <Check className="w-5 h-5 text-harmonia-green shrink-0 mt-0.5" />
@@ -61,7 +62,10 @@ const ServiceCard: React.FC<ServiceCardProps> = ({
       </ul>
       <Button 
         onClick={handleChoosePackage}
-        className={`w-full ${recommended ? 'bg-harmonia-green hover:bg-harmonia-green/90' : 'bg-secondary hover:bg-secondary/90'}`}
+        className={cn(
+          "w-full", 
+          recommended ? 'bg-harmonia-green hover:bg-harmonia-green/90' : 'bg-secondary hover:bg-secondary/90'
+        )}
       >
         Escolher Pacote
       </Button>

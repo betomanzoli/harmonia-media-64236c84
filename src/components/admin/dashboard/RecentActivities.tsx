@@ -2,9 +2,17 @@
 import React from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
+import { cn } from "@/lib/utils";
+
+interface Activity {
+  id: number;
+  timestamp: string;
+  description: string;
+  type: string;
+}
 
 // Dados das atividades recentes
-const recentActivities = [
+const recentActivities: Activity[] = [
   {
     id: 1,
     timestamp: 'Hoje, 14:30',
@@ -63,24 +71,55 @@ const getActivityColor = (type: string) => {
   }
 };
 
-const RecentActivities = () => {
+interface ActivityItemProps {
+  activity: Activity;
+  isLast: boolean;
+}
+
+const ActivityItem: React.FC<ActivityItemProps> = ({ activity, isLast }) => (
+  <React.Fragment>
+    <div className="flex items-start py-2">
+      <div className={cn("w-2 h-2 rounded-full mt-2 mr-3", getActivityColor(activity.type))}></div>
+      <div className="flex flex-col space-y-1">
+        <p className="text-sm text-gray-500">{activity.timestamp}</p>
+        <p className="text-sm">{activity.description}</p>
+      </div>
+    </div>
+    {!isLast && <Separator className="my-1" />}
+  </React.Fragment>
+);
+
+interface RecentActivitiesProps {
+  activities?: Activity[];
+  maxItems?: number;
+  showTitle?: boolean;
+  className?: string;
+}
+
+const RecentActivities: React.FC<RecentActivitiesProps> = ({ 
+  activities = recentActivities,
+  maxItems = 6,
+  showTitle = true,
+  className
+}) => {
+  const displayActivities = activities.slice(0, maxItems);
+
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle>Atividades Recentes</CardTitle>
-        <CardDescription>Últimas ações no sistema</CardDescription>
-      </CardHeader>
+    <Card className={className}>
+      {showTitle && (
+        <CardHeader>
+          <CardTitle>Atividades Recentes</CardTitle>
+          <CardDescription>Últimas ações no sistema</CardDescription>
+        </CardHeader>
+      )}
       <CardContent>
-        <div className="space-y-4">
-          {recentActivities.map((activity) => (
-            <React.Fragment key={activity.id}>
-              <div className="flex items-center">
-                <div className={`w-2 h-2 rounded-full mr-2 ${getActivityColor(activity.type)}`}></div>
-                <p className="text-sm text-gray-500">{activity.timestamp}</p>
-                <p className="ml-4">{activity.description}</p>
-              </div>
-              {activity.id !== recentActivities.length && <Separator />}
-            </React.Fragment>
+        <div className="space-y-1">
+          {displayActivities.map((activity, index) => (
+            <ActivityItem 
+              key={activity.id} 
+              activity={activity} 
+              isLast={index === displayActivities.length - 1} 
+            />
           ))}
         </div>
       </CardContent>

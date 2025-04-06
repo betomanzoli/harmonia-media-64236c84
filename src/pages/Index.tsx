@@ -7,6 +7,23 @@ import Process from '@/components/Process';
 import Portfolio from '@/components/Portfolio';
 import Footer from '@/components/Footer';
 import BriefingForm from '@/components/BriefingForm';
+import { Card } from '@/components/ui/card';
+
+// Benefits displayed on the briefing section
+const briefingBenefits = [
+  {
+    title: "Processo simples e rápido",
+    description: "Após o envio do formulário, você receberá um contato em até 24 horas para confirmar detalhes e realizar o pagamento. A produção começa imediatamente após a confirmação."
+  },
+  {
+    title: "Garantia de satisfação",
+    description: "Oferecemos revisões gratuitas (quantidade varia conforme o pacote) para garantir que você fique 100% satisfeito com sua música."
+  },
+  {
+    title: "Entrega segura",
+    description: "Todas as músicas são entregues em formato digital de alta qualidade, com certificados e registros conforme o pacote escolhido."
+  }
+];
 
 const Index: React.FC = () => {
   return (
@@ -26,25 +43,12 @@ const Index: React.FC = () => {
                 entrar em contato para discutir os próximos passos.
               </p>
               <div className="space-y-6">
-                <div className="bg-card border border-border rounded-lg p-6">
-                  <h3 className="font-semibold mb-2">Processo simples e rápido</h3>
-                  <p className="text-gray-400">
-                    Após o envio do formulário, você receberá um contato em até 24 horas para confirmar detalhes e realizar o pagamento.
-                    A produção começa imediatamente após a confirmação.
-                  </p>
-                </div>
-                <div className="bg-card border border-border rounded-lg p-6">
-                  <h3 className="font-semibold mb-2">Garantia de satisfação</h3>
-                  <p className="text-gray-400">
-                    Oferecemos revisões gratuitas (quantidade varia conforme o pacote) para garantir que você fique 100% satisfeito com sua música.
-                  </p>
-                </div>
-                <div className="bg-card border border-border rounded-lg p-6">
-                  <h3 className="font-semibold mb-2">Entrega segura</h3>
-                  <p className="text-gray-400">
-                    Todas as músicas são entregues em formato digital de alta qualidade, com certificados e registros conforme o pacote escolhido.
-                  </p>
-                </div>
+                {briefingBenefits.map((benefit, index) => (
+                  <Card key={index} className="p-6">
+                    <h3 className="font-semibold mb-2">{benefit.title}</h3>
+                    <p className="text-gray-400">{benefit.description}</p>
+                  </Card>
+                ))}
               </div>
             </div>
             <BriefingForm />
