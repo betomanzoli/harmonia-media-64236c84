@@ -11,7 +11,8 @@ Este guia fornece instruções passo a passo para implementar e configurar o cha
 │   └── widget/
 │       └── chatbot.js     # Script do widget frontend
 ├── webhook/
-│   └── server.js          # Servidor Node.js para webhook do Dialogflow
+│   ├── server.js          # Servidor Node.js para webhook do Dialogflow
+│   └── chatbot-service.js # Serviço de processamento de mensagens do chatbot
 └── CHATBOT_README.md      # Esta documentação
 ```
 
@@ -23,7 +24,7 @@ Este guia fornece instruções passo a passo para implementar e configurar o cha
 - Projeto criado no GCP
 - API do Dialogflow ES habilitada
 
-### Passos para Configuração
+### Passo a Passo para Configuração
 
 1. Acesse o [Console do Dialogflow](https://dialogflow.cloud.google.com/)
 2. Crie um novo agente chamado "harmonIA"
@@ -40,44 +41,66 @@ Este guia fornece instruções passo a passo para implementar e configurar o cha
 5. Para cada intent, adicione frases de treinamento relevantes
 6. Configure o webhook para todas as intents (exceto Fallback)
 
-### Exemplo de Configuração de Intent
+### Exemplos de Frases de Treinamento por Intent
 
 **Intent: Informações sobre Pacotes**
-
-Frases de treinamento:
 - Quais são os pacotes disponíveis?
 - Quero conhecer os serviços
 - Me fale sobre os preços
 - Quais são as opções de pacotes?
 
-Parâmetros:
-- package (tipo: string, opcional)
+**Intent: Amostras de Músicas**
+- Quero ouvir exemplos
+- Tem alguma amostra?
+- Posso escutar alguma música?
+- Mostre exemplos do seu trabalho
 
-Respostas:
-- [Habilitar webhook]
+**Intent: Calcular Preço**
+- Quanto custa uma música?
+- Quero calcular o preço
+- Como funciona o orçamento?
+- Qual o valor para uma composição?
 
-## 2. Configuração do Servidor Webhook
+**Intent: Iniciar Briefing**
+- Quero criar uma música
+- Como faço para começar?
+- Desejo iniciar um projeto
+- Como é o processo de criação?
+
+**Intent: Verificar Status**
+- Como está meu pedido?
+- Quero acompanhar meu projeto
+- Status do meu pedido
+- Quando fica pronto?
+
+**Intent: Falar com Atendente**
+- Quero falar com uma pessoa
+- Preciso de atendimento humano
+- Transferir para atendente
+- Contato com suporte
+
+## 2. Configuração do Webhook
 
 ### Pré-requisitos
 
-- Node.js instalado
-- npm ou yarn instalado
+- Node.js (versão 14 ou superior)
+- NPM ou Yarn
 - Conta em um serviço de hospedagem (Heroku, Google Cloud Run, etc.)
 
-### Instalação Local
+### Instalação e Execução Local
 
 1. Navegue até a pasta `webhook`
 2. Instale as dependências:
    ```
-   npm install express cors body-parser
+   npm install
    ```
 3. Execute o servidor localmente:
    ```
-   node server.js
+   npm start
    ```
 4. O servidor estará disponível em `http://localhost:3000`
 
-### Implantação no Heroku
+### Deploy no Heroku
 
 1. Crie uma conta no [Heroku](https://heroku.com) (se ainda não tiver)
 2. Instale o [Heroku CLI](https://devcenter.heroku.com/articles/heroku-cli)
@@ -97,14 +120,30 @@ Respostas:
    ```
 6. Implante o código:
    ```
-   git push heroku master
+   git push heroku main
    ```
 7. O servidor webhook estará disponível em `https://tunealchemy-chatbot.herokuapp.com`
 
+### Deploy no Google Cloud Functions (alternativa)
+
+1. No console do GCP, vá para Cloud Functions
+2. Clique em "Criar função"
+3. Configure a função:
+   - Nome: harmonIAWebhook
+   - Tipo de acionador: HTTP
+   - Permissões: Permitir acesso sem autenticação
+4. Para o código, selecione Node.js 14 ou superior
+5. Carregue os arquivos do diretório webhook (server.js, chatbot-service.js, package.json)
+6. Defina o ponto de entrada como "app" (que exporta a app Express)
+7. Clique em "Implantar"
+8. Use a URL fornecida como seu endpoint de webhook no Dialogflow
+
 ## 3. Integração do Widget no Site
 
-1. Copie o arquivo `public/widget/chatbot.js` para o diretório de arquivos estáticos do seu site
-2. No HTML do site, adicione os seguintes scripts:
+O widget do chatbot já está incluído no site. Você só precisa garantir que:
+
+1. O arquivo `public/widget/chatbot.js` esteja disponível no servidor web
+2. O código de integração esteja no HTML do site (já incluído no index.html)
 
 ```html
 <!-- Chatbot harmonIA -->
@@ -112,7 +151,7 @@ Respostas:
 <script>
   document.addEventListener('DOMContentLoaded', function() {
     window.harmonIAChatbot.init({
-      dialogflowProjectId: 'seu-project-id',  // ID do projeto no GCP
+      dialogflowProjectId: 'seu-project-id',  // Substituir pelo ID real
       primaryColor: '#00c853',
       widgetTitle: 'Assistente harmonIA'
     });
@@ -120,92 +159,115 @@ Respostas:
 </script>
 ```
 
-3. Substitua `seu-project-id` pelo ID real do seu projeto no Google Cloud Platform
+3. Substitua `'seu-project-id'` pelo ID real do seu projeto no Google Cloud Platform
 
-## 4. Conexão com Dialogflow
+## 4. Configurações Avançadas
 
-Para integrar completamente o widget com o Dialogflow, você precisará:
+### Personalização Visual
 
-1. Obter credenciais de autenticação do GCP:
-   - No console do GCP, vá para IAM & Admin > Service Accounts
-   - Crie uma nova conta de serviço com permissões "Dialogflow API Client"
-   - Crie e baixe uma chave JSON para esta conta
+Você pode personalizar a aparência do chatbot editando o arquivo `chatbot.js`. Procure pela função `injectStyles()` e modifique as propriedades CSS conforme desejado.
 
-2. No arquivo `chatbot.js`, implemente a função para comunicar com o Dialogflow:
+### Integração com Sistemas Externos
 
-```javascript
-// Exemplo de implementação (simplificado)
-async function sendToDialogflow(text) {
-  const response = await fetch('https://tunealchemy-chatbot.herokuapp.com/dialogflow', {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json'
-    },
-    body: JSON.stringify({
-      text: text,
-      sessionId: sessionId
-    })
-  });
-  
-  return await response.json();
-}
-```
+Para integrar o chatbot com sistemas externos (como CRM, plataformas de e-mail, etc.):
 
-3. No servidor webhook, adicione um endpoint para processar as requisições do widget:
+1. Adicione as funções de integração no arquivo `webhook/chatbot-service.js`
+2. Configure webhooks adicionais para enviar dados para APIs externas
+3. Implemente funções de callback para processar respostas
+
+Exemplo de integração com um sistema CRM:
 
 ```javascript
-app.post('/dialogflow', async (req, res) => {
-  const text = req.body.text;
-  const sessionId = req.body.sessionId;
-  
-  // Código para se comunicar com a API do Dialogflow usando o pacote dialogflow
-  // ...
-  
-  res.json(result);
-});
-```
-
-## 5. Personalização
-
-### Cores e Estilo
-
-Você pode personalizar a aparência do chatbot editando as variáveis CSS no início do arquivo `chatbot.js`:
-
-```javascript
-const styles = `
-  .harmonia-button {
-    background-color: ${config.primaryColor};
-    /* outras propriedades */
+// Em chatbot-service.js
+async function registerLeadInCRM(name, email, phone, interest) {
+  try {
+    const response = await fetch('https://seu-crm.com/api/leads', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': 'Bearer YOUR_API_KEY'
+      },
+      body: JSON.stringify({
+        name,
+        email,
+        phone,
+        interest,
+        source: 'chatbot'
+      })
+    });
+    
+    return await response.json();
+  } catch (error) {
+    console.error('Erro ao registrar lead no CRM:', error);
+    return null;
   }
-  /* outros estilos */
-`;
+}
+
+// Exporte a função
+module.exports.registerLeadInCRM = registerLeadInCRM;
 ```
 
-### Mensagens e Fluxos
+## 5. Testes e Validação
 
-Para personalizar as mensagens e fluxos de conversa:
+### Testando o Webhook
 
-1. Edite as intents no console do Dialogflow
-2. Atualize as respostas no servidor webhook
-3. Teste todas as interações para garantir consistência
+1. Use uma ferramenta como Postman para enviar requisições POST para seu endpoint
+2. Simule requisições do Dialogflow com um corpo JSON que inclua:
+   ```json
+   {
+     "queryResult": {
+       "intent": {
+         "displayName": "Informações sobre Pacotes"
+       },
+       "parameters": {
+         // parâmetros da intent
+       }
+     }
+   }
+   ```
+3. Verifique se as respostas estão formatadas corretamente
 
-## 6. Testes e Validação
+### Testando o Widget
 
-Antes de colocar em produção:
+1. Acesse o site onde o widget está integrado
+2. Abra o chatbot e teste todas as interações principais
+3. Verifique se os estilos estão corretos em diferentes tamanhos de tela
+4. Teste a funcionalidade em diferentes navegadores
 
-1. Teste todas as intents no console do Dialogflow
-2. Verifique se o webhook responde corretamente
-3. Teste o widget em diferentes navegadores e dispositivos
-4. Verifique casos de erro e respostas de fallback
+## 6. Monitoramento e Manutenção
 
-## Suporte e Manutenção
+### Logs e Monitoramento
 
-Para atualizar o chatbot no futuro:
+1. Configure logs detalhados no servidor webhook
+2. Use o Google Cloud Monitoring para acompanhar o desempenho do agente Dialogflow
+3. Implemente métricas de uso do chatbot para avaliar a eficácia
 
-1. Adicione novas intents no Dialogflow conforme necessário
-2. Atualize o servidor webhook para processar novas intents
-3. Mantenha as credenciais seguras e atualizadas
-4. Monitore logs para identificar problemas ou oportunidades de melhoria
+### Atualizações e Melhorias
+
+1. Analise regularmente as conversas para identificar novos padrões de perguntas
+2. Atualize as intents do Dialogflow com novas frases de treinamento
+3. Melhore as respostas com base no feedback dos usuários
+4. Considere implementar funcionalidades avançadas como análise de sentimento ou personalização por usuário
+
+## 7. Resolução de Problemas Comuns
+
+### O chatbot não aparece no site
+
+- Verifique se o arquivo chatbot.js está sendo carregado corretamente (veja o Console do navegador)
+- Confirme que a função init() está sendo chamada após o carregamento da página
+- Verifique se há conflitos de CSS que possam estar ocultando o widget
+
+### Respostas incorretas ou não relacionadas
+
+- Revise as frases de treinamento da intent no Dialogflow
+- Verifique se há intents muito similares que possam estar confundindo o agente
+- Adicione mais exemplos de frases para melhorar o reconhecimento
+
+### Problemas com o webhook
+
+- Verifique se a URL do webhook está correta no Dialogflow
+- Confirme que o servidor webhook está rodando e acessível
+- Analise os logs do servidor para identificar erros específicos
 
 ---
 
