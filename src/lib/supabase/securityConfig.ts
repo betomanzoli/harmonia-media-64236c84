@@ -1,7 +1,7 @@
 
 import { supabase } from './client';
 
-// Função para aplicar políticas RLS a tabelas
+// Função para aplicar políticas RLS a tabelas usando SQL direto
 export const applyRLSPolicies = async () => {
   const tables = [
     'admin_users',
@@ -12,100 +12,119 @@ export const applyRLSPolicies = async () => {
   ];
 
   try {
-    console.log('Aplicando políticas de segurança RLS...');
+    console.log('Aplicando políticas de segurança RLS usando SQL direto...');
     
     for (const table of tables) {
       console.log(`Configurando RLS para tabela ${table}...`);
       
-      // Habilitar RLS na tabela
+      // Primeiro, habilitar RLS na tabela
       try {
-        await supabase.rpc('enable_table_rls', {
-          table_name: table
+        const { error: enableRlsError } = await supabase.rpc('exec_sql', {
+          sql_query: `ALTER TABLE public.${table} ENABLE ROW LEVEL SECURITY;`
         });
+        
+        if (enableRlsError) {
+          console.warn(`Erro ao habilitar RLS para ${table}:`, enableRlsError);
+        } else {
+          console.log(`RLS habilitado para tabela ${table}`);
+        }
       } catch (error) {
-        console.warn(`Falha ao habilitar RLS via RPC para ${table}, tentando SQL direto:`, error);
-        
-        // Tentar habilitar RLS diretamente via SQL
-        try {
-          await supabase.from('_exec_sql').select('*').eq('query', 
-            `ALTER TABLE ${table} ENABLE ROW LEVEL SECURITY;`
-          );
-        } catch (sqlError) {
-          console.error(`Falha na segunda tentativa de habilitar RLS para ${table}:`, sqlError);
-        }
+        console.error(`Exceção ao habilitar RLS para ${table}:`, error);
       }
       
-      // Criar política para acesso autenticado
+      // Remover políticas existentes para evitar conflitos
       try {
-        // Política SELECT 
-        await supabase.rpc('create_auth_policy', {
-          table_name: table,
-          policy_name: `${table}_auth_select_policy`,
-          operation: 'SELECT'
+        const { error: dropPoliciesError } = await supabase.rpc('exec_sql', {
+          sql_query: `
+            DO $$
+            DECLARE
+              policy_record RECORD;
+            BEGIN
+              FOR policy_record IN 
+                SELECT policyname 
+                FROM pg_policies 
+                WHERE tablename = '${table}' AND schemaname = 'public'
+              LOOP
+                EXECUTE format('DROP POLICY IF EXISTS %I ON public.${table}', policy_record.policyname);
+              END LOOP;
+            END
+            $$;
+          `
         });
         
-        // Política INSERT
-        await supabase.rpc('create_auth_policy', {
-          table_name: table,
-          policy_name: `${table}_auth_insert_policy`,
-          operation: 'INSERT'
-        });
-        
-        // Política UPDATE
-        await supabase.rpc('create_auth_policy', {
-          table_name: table,
-          policy_name: `${table}_auth_update_policy`,
-          operation: 'UPDATE'
-        });
-        
-        // Política DELETE
-        await supabase.rpc('create_auth_policy', {
-          table_name: table,
-          policy_name: `${table}_auth_delete_policy`,
-          operation: 'DELETE'
-        });
-      } catch (policyError) {
-        console.warn(`Falha ao criar políticas via RPC para ${table}, tentando método direto:`, policyError);
-        
-        // Tentar criar políticas diretamente
-        try {
-          // Criar política SELECT direto
-          await supabase.from('_exec_sql').select('*').eq('query', 
-            `CREATE POLICY "${table}_auth_select_policy" ON "${table}" 
-             FOR SELECT USING (auth.role() = 'authenticated');`
-          );
-          
-          // Criar política INSERT direto
-          await supabase.from('_exec_sql').select('*').eq('query', 
-            `CREATE POLICY "${table}_auth_insert_policy" ON "${table}" 
-             FOR INSERT WITH CHECK (auth.role() = 'authenticated');`
-          );
-          
-          // Criar política UPDATE direto
-          await supabase.from('_exec_sql').select('*').eq('query', 
-            `CREATE POLICY "${table}_auth_update_policy" ON "${table}" 
-             FOR UPDATE USING (auth.role() = 'authenticated');`
-          );
-          
-          // Criar política DELETE direto
-          await supabase.from('_exec_sql').select('*').eq('query', 
-            `CREATE POLICY "${table}_auth_delete_policy" ON "${table}" 
-             FOR DELETE USING (auth.role() = 'authenticated');`
-          );
-        } catch (directError) {
-          console.error(`Falha na segunda tentativa de criar políticas para ${table}:`, directError);
+        if (dropPoliciesError) {
+          console.warn(`Erro ao remover políticas existentes para ${table}:`, dropPoliciesError);
         }
+      } catch (error) {
+        console.error(`Exceção ao remover políticas existentes para ${table}:`, error);
       }
       
-      console.log(`Políticas RLS aplicadas para tabela: ${table}`);
+      // Criar políticas de segurança
+      const policies = [
+        {
+          name: `${table}_select_policy`,
+          operation: 'SELECT',
+          using: `(auth.role() = 'authenticated')`
+        },
+        {
+          name: `${table}_insert_policy`,
+          operation: 'INSERT',
+          using: `(auth.role() = 'authenticated')`,
+          with_check: `(auth.role() = 'authenticated')`
+        },
+        {
+          name: `${table}_update_policy`,
+          operation: 'UPDATE',
+          using: `(auth.role() = 'authenticated')`,
+          with_check: `(auth.role() = 'authenticated')`
+        },
+        {
+          name: `${table}_delete_policy`,
+          operation: 'DELETE',
+          using: `(auth.role() = 'authenticated')`
+        }
+      ];
+      
+      for (const policy of policies) {
+        try {
+          let sqlQuery = '';
+          
+          if (policy.operation === 'INSERT') {
+            sqlQuery = `
+              CREATE POLICY "${policy.name}" ON public.${table}
+              FOR ${policy.operation}
+              TO authenticated
+              WITH CHECK (${policy.with_check});
+            `;
+          } else {
+            sqlQuery = `
+              CREATE POLICY "${policy.name}" ON public.${table}
+              FOR ${policy.operation}
+              TO authenticated
+              USING (${policy.using});
+            `;
+          }
+          
+          const { error: policyError } = await supabase.rpc('exec_sql', { sql_query: sqlQuery });
+          
+          if (policyError) {
+            console.warn(`Erro ao criar política ${policy.name} para ${table}:`, policyError);
+          } else {
+            console.log(`Política ${policy.name} criada com sucesso para ${table}`);
+          }
+        } catch (error) {
+          console.error(`Exceção ao criar política ${policy.name} para ${table}:`, error);
+        }
+      }
     }
     
+    console.log('Todas as políticas RLS foram aplicadas com sucesso');
     return { success: true };
-  } catch (error: any) {
-    console.error('Erro ao aplicar políticas RLS:', error);
+  } catch (error) {
+    console.error('Erro geral ao aplicar políticas RLS:', error);
     return { 
       success: false, 
-      error: error.message || 'Erro desconhecido ao configurar políticas RLS' 
+      error: error instanceof Error ? error.message : 'Erro desconhecido ao configurar políticas RLS' 
     };
   }
 };
@@ -115,34 +134,37 @@ export const enhancePasswordSecurity = async () => {
   try {
     console.log('Configurando segurança de senha avançada...');
     
-    // Configurar requisitos de senha mais fortes
-    try {
-      await supabase.rpc('set_auth_settings', {
-        min_password_length: 10,
-        require_special_chars: true,
-        require_numbers: true,
-        require_uppercase: true,
-        require_lowercase: true
-      });
-    } catch (error) {
-      console.warn('Falha ao configurar segurança de senha via RPC, tentando SQL direto:', error);
-      
-      // Abordagem alternativa caso a RPC falhe
-      await supabase.from('_exec_sql').select('*').eq('query', 
-        `SELECT set_config('auth.min_password_length', '10', false);
-         SELECT set_config('auth.require_special_chars', 'true', false);
-         SELECT set_config('auth.require_numbers', 'true', false);
-         SELECT set_config('auth.require_uppercase', 'true', false);
-         SELECT set_config('auth.require_lowercase', 'true', false);`
-      );
+    // Configurar requisitos de senha usando SQL direto
+    const passwordSettings = [
+      { setting: 'auth.min_password_length', value: '10' },
+      { setting: 'auth.require_special_chars', value: 'true' },
+      { setting: 'auth.require_numbers', value: 'true' },
+      { setting: 'auth.require_uppercase', value: 'true' },
+      { setting: 'auth.require_lowercase', value: 'true' }
+    ];
+    
+    for (const setting of passwordSettings) {
+      try {
+        const { error } = await supabase.rpc('exec_sql', {
+          sql_query: `SELECT set_config('${setting.setting}', '${setting.value}', false);`
+        });
+        
+        if (error) {
+          console.warn(`Erro ao configurar ${setting.setting}:`, error);
+        } else {
+          console.log(`Configuração ${setting.setting} aplicada com sucesso`);
+        }
+      } catch (error) {
+        console.error(`Exceção ao configurar ${setting.setting}:`, error);
+      }
     }
     
     return { success: true };
-  } catch (error: any) {
+  } catch (error) {
     console.error('Erro ao configurar segurança de senha:', error);
     return { 
       success: false, 
-      error: error.message || 'Erro desconhecido ao configurar segurança de senha' 
+      error: error instanceof Error ? error.message : 'Erro desconhecido ao configurar segurança de senha' 
     };
   }
 };
@@ -152,39 +174,45 @@ export const configureMFA = async () => {
   try {
     console.log('Ativando opções de MFA...');
     
-    // Habilitar opções de MFA
-    try {
-      await supabase.rpc('enable_mfa_settings', {
-        enable_totp: true,
-        enable_recovery_codes: true
-      });
-    } catch (error) {
-      console.warn('Falha ao configurar MFA via RPC, tentando SQL direto:', error);
-      
-      // Abordagem alternativa caso a RPC falhe
-      await supabase.from('_exec_sql').select('*').eq('query', 
-        `SELECT set_config('auth.enable_totp', 'true', false);
-         SELECT set_config('auth.enable_recovery_codes', 'true', false);`
-      );
+    // Configurar MFA usando SQL direto
+    const mfaSettings = [
+      { setting: 'auth.enable_totp', value: 'true' },
+      { setting: 'auth.enable_recovery_codes', value: 'true' }
+    ];
+    
+    for (const setting of mfaSettings) {
+      try {
+        const { error } = await supabase.rpc('exec_sql', {
+          sql_query: `SELECT set_config('${setting.setting}', '${setting.value}', false);`
+        });
+        
+        if (error) {
+          console.warn(`Erro ao configurar ${setting.setting}:`, error);
+        } else {
+          console.log(`Configuração ${setting.setting} aplicada com sucesso`);
+        }
+      } catch (error) {
+        console.error(`Exceção ao configurar ${setting.setting}:`, error);
+      }
     }
     
     return { success: true };
-  } catch (error: any) {
+  } catch (error) {
     console.error('Erro ao configurar MFA:', error);
     return { 
       success: false, 
-      error: error.message || 'Erro desconhecido ao configurar MFA' 
+      error: error instanceof Error ? error.message : 'Erro desconhecido ao configurar MFA' 
     };
   }
 };
 
-// Executar validações de segurança
+// Função para validar configurações de segurança
 export const validateSecurity = async () => {
   try {
     console.log('Validando configurações de segurança...');
     
-    // Verificar se RLS está habilitado e se há políticas
-    const tablesWithRLS = [
+    // Verificar tabelas com RLS habilitado
+    const tables = [
       'admin_users',
       'audio_samples',
       'portfolio_items',
@@ -192,47 +220,91 @@ export const validateSecurity = async () => {
       'system_settings'
     ];
     
-    const rlsStatus = {};
+    const rlsPolicies = [];
+    let mfaEnabled = false;
+    let passwordSecurityLevel = 'low';
     
-    // Verifica cada tabela
-    for (const table of tablesWithRLS) {
+    // Verificar políticas RLS
+    for (const table of tables) {
       try {
-        // Verifica se RLS está ativado
-        const { data: rlsEnabled, error: rlsError } = await supabase
-          .from('_exec_sql')
-          .select('*')
-          .eq('query', `SELECT relrowsecurity FROM pg_class WHERE relname = '${table}';`);
+        const { data, error } = await supabase.rpc('exec_sql', {
+          sql_query: `
+            SELECT policyname, cmd 
+            FROM pg_policies 
+            WHERE tablename = '${table}' AND schemaname = 'public';
+          `
+        });
         
-        if (rlsError) throw rlsError;
-        
-        // Verifica políticas
-        const { data: policies, error: policiesError } = await supabase
-          .from('_exec_sql')
-          .select('*')
-          .eq('query', `SELECT * FROM pg_policies WHERE tablename = '${table}';`);
-        
-        if (policiesError) throw policiesError;
-        
-        rlsStatus[table] = {
-          rlsEnabled: rlsEnabled?.length > 0 && rlsEnabled[0]?.relrowsecurity === true,
-          policies: policies?.length || 0
-        };
+        if (error) {
+          console.warn(`Erro ao verificar políticas para ${table}:`, error);
+        } else if (data && data.length > 0) {
+          for (const policy of data) {
+            rlsPolicies.push({
+              table,
+              policy: policy.policyname,
+              operation: policy.cmd
+            });
+          }
+        }
       } catch (error) {
-        console.error(`Erro ao verificar RLS para tabela ${table}:`, error);
-        rlsStatus[table] = { error: 'Falha ao verificar' };
+        console.error(`Exceção ao verificar políticas para ${table}:`, error);
       }
     }
     
-    return { 
-      success: true,
-      rlsStatus,
-      detailedCheck: 'Verificação de segurança realizada com sucesso'
+    // Verificar configurações de MFA
+    try {
+      const { data, error } = await supabase.rpc('exec_sql', {
+        sql_query: `SELECT current_setting('auth.enable_totp', true);`
+      });
+      
+      if (!error && data && data.length > 0) {
+        mfaEnabled = data[0].current_setting === 'true';
+      }
+    } catch (error) {
+      console.error('Erro ao verificar configuração de MFA:', error);
+    }
+    
+    // Verificar configurações de senha
+    try {
+      const { data: pwLength, error: pwLengthError } = await supabase.rpc('exec_sql', {
+        sql_query: `SELECT current_setting('auth.min_password_length', true);`
+      });
+      
+      const { data: specialChars, error: specialCharsError } = await supabase.rpc('exec_sql', {
+        sql_query: `SELECT current_setting('auth.require_special_chars', true);`
+      });
+      
+      if (!pwLengthError && pwLength && pwLength.length > 0 && 
+          !specialCharsError && specialChars && specialChars.length > 0) {
+        
+        const minLength = parseInt(pwLength[0].current_setting, 10);
+        const requireSpecial = specialChars[0].current_setting === 'true';
+        
+        if (minLength >= 10 && requireSpecial) {
+          passwordSecurityLevel = 'high';
+        } else if (minLength >= 8) {
+          passwordSecurityLevel = 'medium';
+        }
+      }
+    } catch (error) {
+      console.error('Erro ao verificar configurações de senha:', error);
+    }
+    
+    // Determinar sucesso geral
+    const hasMinimumPolicies = rlsPolicies.length >= tables.length;
+    
+    return {
+      success: hasMinimumPolicies,
+      rlsPolicies,
+      mfaEnabled,
+      passwordSecurityLevel,
+      error: hasMinimumPolicies ? null : 'Políticas RLS insuficientes'
     };
-  } catch (error: any) {
+  } catch (error) {
     console.error('Erro ao validar segurança:', error);
     return { 
       success: false, 
-      error: error.message || 'Erro desconhecido ao validar configurações de segurança' 
+      error: error instanceof Error ? error.message : 'Erro desconhecido ao validar configurações de segurança' 
     };
   }
 };

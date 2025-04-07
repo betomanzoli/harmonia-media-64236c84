@@ -54,9 +54,19 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children }) => {
             }
           } else {
             console.warn("Problemas ao aplicar configurações:", result.error);
+            toast({
+              title: "Aviso de segurança",
+              description: "Algumas configurações de segurança não puderam ser aplicadas automaticamente.",
+              variant: "destructive",
+            });
           }
         } catch (error) {
           console.error("Erro ao verificar/aplicar configurações de segurança:", error);
+          toast({
+            title: "Erro de segurança",
+            description: "Houve um problema ao configurar as políticas de segurança.",
+            variant: "destructive",
+          });
         }
       }
     };
