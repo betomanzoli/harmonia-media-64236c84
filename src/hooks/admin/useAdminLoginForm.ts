@@ -45,7 +45,7 @@ export function useAdminLoginForm() {
     loadDebugInfo
   });
 
-  // Function to enable offline mode with void return type
+  // Function to enable online mode - make sure it returns Promise<void> not Promise<boolean>
   const enableOfflineMode = useCallback(async (): Promise<void> => {
     try {
       sessionStorage.setItem('offline-admin-mode', 'true');

@@ -71,7 +71,7 @@ const AdminLoginContainer: React.FC = () => {
     }
   }, [loadDebugInfo, isOfflineMode]);
 
-  // Handle enabling offline mode
+  // Handle enabling offline mode - now using the fixed function
   const handleEnableOfflineMode = async () => {
     await enableOfflineMode();
     navigate('/admin-j28s7d1k/dashboard');

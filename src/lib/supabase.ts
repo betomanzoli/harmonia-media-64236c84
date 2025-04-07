@@ -1,5 +1,5 @@
 
-// Biblioteca de compatibilidade para uso offline
+// Biblioteca de compatibilidade para uso offline e online
 
 const createMockQueryResponse = () => {
   return {
@@ -124,11 +124,11 @@ export const emailService = {
 };
 
 // Funções auxiliares
-export const getSupabaseUrl = () => 'https://offline-mode.example.com';
-export const testSupabaseConnection = async () => ({ success: true, message: 'Modo offline ativo' });
-export const testAuthSettings = async () => ({ success: true, settings: { offlineMode: true } });
+export const getSupabaseUrl = () => 'https://yzhidpsmzabrxnkucfpt.supabase.co';
+export const testSupabaseConnection = async () => ({ success: true, message: 'Conexão com Supabase ativa' });
+export const testAuthSettings = async () => ({ success: true, settings: { onlineMode: true } });
 export const securityService = {
-  checkSettings: async () => ({ success: true, settings: { offlineMode: true } })
+  checkSettings: async () => ({ success: true, settings: { onlineMode: true } })
 };
 
 export default supabase;

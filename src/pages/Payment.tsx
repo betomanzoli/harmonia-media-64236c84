@@ -74,8 +74,9 @@ const Payment: React.FC = () => {
   const handlePaymentMethod = async (method: string) => {
     setIsLoading(true);
     
-    // Processo de pagamento
+    // Simular processo de pagamento (em um ambiente real, redirecionaria para gateway)
     try {
+      // Simulação de processamento de pagamento
       await new Promise(resolve => setTimeout(resolve, 1500));
       
       // Armazenar dados do pagamento no localStorage

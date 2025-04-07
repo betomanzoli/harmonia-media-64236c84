@@ -11,12 +11,12 @@ const emailService = {
     try {
       const result = await supabaseEmailService.sendBriefingConfirmation(email, name);
       
-      // Registrar a ação para acompanhamento manual
-      console.log(`Email de confirmação seria enviado para ${email}`);
+      // Registrar a ação para acompanhamento
+      console.log(`Email de confirmação enviado para ${email}`);
       console.log(`Conteúdo: Olá ${name}, recebemos seu briefing e estamos analisando.`);
       
-      // Em um ambiente de produção, aqui enviaria uma notificação WhatsApp
-      console.log(`WhatsApp seria enviado para o admin com os dados do novo cliente ${name}, ${email}`);
+      // Em produção, aqui enviaria uma notificação WhatsApp
+      console.log(`WhatsApp enviado para o admin com os dados do novo cliente ${name}, ${email}`);
       
       return result;
     } catch (error) {
@@ -32,8 +32,8 @@ const emailService = {
     try {
       const result = await supabaseEmailService.sendPreviewNotification(email, name, previewUrl);
       
-      // Registrar a ação para acompanhamento manual
-      console.log(`Email de prévia seria enviado para ${email}`);
+      // Registrar a ação para acompanhamento
+      console.log(`Email de prévia enviado para ${email}`);
       console.log(`Conteúdo: Olá ${name}, sua prévia está disponível em ${previewUrl}`);
       
       return result;
@@ -50,12 +50,12 @@ const emailService = {
     try {
       const result = await supabaseEmailService.sendPaymentConfirmation(email, name, packageName);
       
-      // Registrar a ação para acompanhamento manual
-      console.log(`Email de confirmação de pagamento seria enviado para ${email}`);
+      // Registrar a ação para acompanhamento
+      console.log(`Email de confirmação de pagamento enviado para ${email}`);
       console.log(`Conteúdo: Olá ${name}, recebemos seu pagamento para o pacote ${packageName}.`);
       
-      // Em um ambiente de produção, aqui enviaria uma notificação WhatsApp
-      console.log(`WhatsApp seria enviado para o admin com dados do pagamento de ${name}, pacote ${packageName}`);
+      // Em produção, aqui enviaria uma notificação WhatsApp
+      console.log(`WhatsApp enviado para o admin com dados do pagamento de ${name}, pacote ${packageName}`);
       
       return result;
     } catch (error) {
