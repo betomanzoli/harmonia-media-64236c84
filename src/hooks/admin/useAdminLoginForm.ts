@@ -1,5 +1,5 @@
 
-import { useState } from 'react';
+import { useState, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAdminAuth } from '@/hooks/admin/useAdminAuth';
 import { useToast } from '@/hooks/use-toast';
@@ -45,6 +45,28 @@ export function useAdminLoginForm() {
     loadDebugInfo
   });
 
+  // Function to enable offline mode
+  const enableOfflineMode = useCallback(() => {
+    try {
+      sessionStorage.setItem('offline-admin-mode', 'true');
+      console.log('Modo offline ativado via sessionStorage');
+      
+      toast.toast({
+        title: "Modo demonstrativo ativado",
+        description: "Você está usando o modo offline com funcionalidades limitadas.",
+      });
+      
+      // Navigate is handled by the component
+    } catch (error) {
+      console.error('Erro ao ativar modo offline:', error);
+      toast.toast({
+        title: "Erro",
+        description: "Não foi possível ativar o modo offline.",
+        variant: "destructive",
+      });
+    }
+  }, [toast]);
+
   return {
     isLoading,
     loginError,
@@ -58,6 +80,7 @@ export function useAdminLoginForm() {
     handleRetryConnection,
     runDiagnostics,
     handlePasswordReset,
-    loadDebugInfo
+    loadDebugInfo,
+    enableOfflineMode
   };
 }

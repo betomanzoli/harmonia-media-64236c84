@@ -39,8 +39,14 @@ const LoginForm: React.FC<LoginFormProps> = ({
     await onSubmit(values);
   };
 
-  // Determinar se o formulário deve ser desativado 
-  const formDisabled = isLoading || !connectionStatus.connected;
+  // Determine if the form should be disabled
+  const formDisabled = isLoading || (!connectionStatus.connected && !connectionStatus.tested);
+
+  // Admin demo credentials (for demonstration purposes)
+  const useDemoCredentials = () => {
+    form.setValue('email', 'admin@harmonia.com');
+    form.setValue('password', 'admin123456');
+  };
 
   return (
     <Form {...form}>
@@ -101,22 +107,36 @@ const LoginForm: React.FC<LoginFormProps> = ({
           )}
         </Button>
         
-        {!connectionStatus.connected && (
+        {!connectionStatus.connected && connectionStatus.tested && (
           <div className="text-xs text-amber-600 bg-amber-50 p-2 rounded border border-amber-200">
             <p className="font-medium">Login temporariamente indisponível</p>
-            <p className="mt-1">O sistema não consegue se conectar ao Supabase neste momento. Tente novamente quando a conexão for restabelecida.</p>
+            <p className="mt-1">O sistema não consegue se conectar ao Supabase neste momento. Você pode usar o modo de demonstração ou tentar novamente quando a conexão for restabelecida.</p>
           </div>
         )}
         
-        <Button
-          type="button"
-          variant="ghost"
-          className="w-full text-sm"
-          onClick={onPasswordReset}
-          disabled={formDisabled}
-        >
-          Esqueceu sua senha?
-        </Button>
+        <div className="flex flex-col space-y-2">
+          <Button
+            type="button"
+            variant="ghost"
+            className="w-full text-sm"
+            onClick={onPasswordReset}
+            disabled={formDisabled}
+          >
+            Esqueceu sua senha?
+          </Button>
+          
+          {!connectionStatus.connected && (
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              className="w-full text-xs"
+              onClick={useDemoCredentials}
+            >
+              Preencher com credenciais de demonstração
+            </Button>
+          )}
+        </div>
       </form>
     </Form>
   );

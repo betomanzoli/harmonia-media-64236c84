@@ -21,26 +21,31 @@ export const validateConfiguration = () => {
   };
 };
 
-// Teste de conectividade básica para o endpoint Supabase
+// Basic connectivity test for the Supabase endpoint
 const testEndpointConnectivity = async () => {
   try {
     const supabaseUrl = getSupabaseUrl();
-    const testUrl = `${supabaseUrl}/.well-known/ready?ts=${Date.now()}`;
+    // Use a more reliable endpoint
+    const testUrl = `${supabaseUrl}/rest/v1/?apikey=public-anon-key`;
     
     console.log('Testando disponibilidade básica do endpoint Supabase:', testUrl);
     
     const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 5000); // 5 second timeout
+    const timeoutId = setTimeout(() => controller.abort(), 8000); // Extended timeout
     
     const response = await fetch(testUrl, {
       method: 'GET',
+      headers: {
+        'Content-Type': 'application/json',
+        'apikey': 'public-anon-key'
+      },
       mode: 'cors',
       signal: controller.signal
     });
     
     clearTimeout(timeoutId);
     
-    if (response.ok) {
+    if (response.ok || response.status === 404) { // 404 is actually fine for this test
       return { 
         success: true, 
         message: `Endpoint do Supabase está respondendo (status ${response.status})` 
@@ -61,46 +66,17 @@ const testEndpointConnectivity = async () => {
   }
 };
 
-// RPC test for connection checking
-const testRpcConnection = async () => {
+// Simple test for connection checking
+const testSimpleConnection = async () => {
   try {
-    const { data, error } = await supabase.rpc('version');
+    const { data, error } = await supabase.from('system_settings').select('count(*)', { count: 'exact', head: true });
     
     if (error) {
-      console.error('Erro ao verificar versão do Supabase:', error);
+      console.error('Erro ao verificar tabela do Supabase:', error);
       return { success: false, error, message: error.message };
     }
     
-    return { success: true, data, message: 'RPC funcionando corretamente' };
-  } catch (err) {
-    console.error('Exceção ao chamar RPC:', err);
-    return { 
-      success: false, 
-      error: err, 
-      message: err instanceof Error ? err.message : 'Erro desconhecido no teste RPC' 
-    };
-  }
-};
-
-// Table test for connection checking
-const testTableConnection = async () => {
-  try {
-    const { data, error } = await supabase.from('system_settings').select('count(*)', { count: 'exact' });
-    
-    if (error) {
-      console.error('Erro de conexão com o Supabase (tabela):', error);
-      return { 
-        success: false, 
-        error, 
-        message: `Falha ao acessar tabela: ${error.message}. Código: ${error.code}` 
-      };
-    }
-    
-    return { 
-      success: true, 
-      data, 
-      message: 'Conexão com tabela system_settings bem-sucedida' 
-    };
+    return { success: true, data, message: 'Conexão com tabela system_settings bem-sucedida' };
   } catch (err) {
     console.error('Exceção ao testar conexão com tabela:', err);
     return { 
@@ -111,12 +87,12 @@ const testTableConnection = async () => {
   }
 };
 
-// Adicionando função para diagnóstico de conexão
+// Export function for connection diagnostics
 export const testSupabaseConnection = async () => {
   try {
     console.log('Testando conexão com o Supabase...');
     
-    // Verificação básica de internet
+    // Basic internet connectivity check
     if (typeof navigator !== 'undefined' && !navigator.onLine) {
       return {
         connected: false,
@@ -125,7 +101,7 @@ export const testSupabaseConnection = async () => {
       };
     }
     
-    // Verificar configuração
+    // Check configuration
     const config = validateConfiguration();
     if (!config.isValid) {
       return { 
@@ -135,9 +111,28 @@ export const testSupabaseConnection = async () => {
       };
     }
     
-    // Teste básico de conectividade do endpoint
+    // Basic endpoint connectivity test
     const endpointTest = await testEndpointConnectivity();
     if (!endpointTest.success) {
+      // Special handling for CORS issues
+      if (endpointTest.error && (
+          endpointTest.error.includes('CORS') || 
+          endpointTest.error.includes('Failed to fetch')
+      )) {
+        console.log('Possível problema de CORS detectado, tentando teste simples...');
+        // Try the simple test anyway as it might work despite CORS issues with the raw endpoint
+        const simpleTest = await testSimpleConnection();
+        if (simpleTest.success) {
+          console.log('Teste simples bem-sucedido apesar do problema CORS!');
+          return {
+            connected: true,
+            data: simpleTest.data,
+            method: 'simple',
+            corsWarning: true
+          };
+        }
+      }
+      
       return {
         connected: false,
         error: `Falha no acesso ao endpoint Supabase: ${endpointTest.error}`,
@@ -146,38 +141,26 @@ export const testSupabaseConnection = async () => {
       };
     }
     
-    // Testar RPC primeiro
-    const rpcResult = await testRpcConnection();
+    // If endpoint test passes, try the simple test
+    console.log('Teste de endpoint bem-sucedido, tentando teste simples...');
+    const simpleResult = await testSimpleConnection();
     
-    if (rpcResult.success) {
-      console.log('Conexão RPC com o Supabase bem-sucedida!');
-      return { 
-        connected: true, 
-        data: rpcResult.data,
-        method: 'rpc'
-      };
-    }
-    
-    // Se RPC falhar, testar tabela
-    console.log('Teste RPC falhou, tentando teste de tabela...');
-    const tableResult = await testTableConnection();
-    
-    if (tableResult.success) {
+    if (simpleResult.success) {
       console.log('Conexão com tabela bem-sucedida!');
       return { 
         connected: true, 
-        data: tableResult.data,
-        method: 'table'
+        data: simpleResult.data,
+        method: 'simple'
       };
     }
     
-    // Ambos os testes falharam
+    // If simple test fails but endpoint test passed
     return { 
       connected: false, 
-      error: `Falha em ambos os métodos: ${rpcResult.message}, ${tableResult.message}`,
+      error: `Endpoint acessível, mas falha na operação com a tabela: ${simpleResult.message}`,
       methods: {
-        rpc: rpcResult,
-        table: tableResult
+        endpoint: endpointTest,
+        simple: simpleResult
       }
     };
     

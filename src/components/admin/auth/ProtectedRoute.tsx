@@ -14,38 +14,57 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children }) => {
   const { isAuthenticated, isLoading, connectionStatus } = useAdminAuth();
   const [isOfflineMode, setIsOfflineMode] = useState(false);
   const [securityChecked, setSecurityChecked] = useState(false);
+  const [offlineInitialized, setOfflineInitialized] = useState(false);
   const { toast } = useToast();
   
+  // Effect to check if offline mode is active
   useEffect(() => {
-    // Check if offline mode is active
-    const offlineMode = sessionStorage.getItem('offline-admin-mode');
-    if (offlineMode === 'true') {
-      setIsOfflineMode(true);
-      toast({
-        title: "Modo offline ativo",
-        description: "Você está navegando no modo demonstrativo com funcionalidades limitadas.",
-        duration: 5000,
-      });
-    }
-  }, [toast]);
+    const checkOfflineMode = () => {
+      const offlineMode = sessionStorage.getItem('offline-admin-mode');
+      const isOffline = offlineMode === 'true';
+      setIsOfflineMode(isOffline);
+      
+      if (isOffline && !offlineInitialized) {
+        console.log('Modo offline ativo na área administrativa');
+        toast({
+          title: "Modo demonstrativo ativo",
+          description: "Você está navegando no modo demonstrativo com funcionalidades limitadas.",
+          duration: 5000,
+        });
+        setOfflineInitialized(true);
+      }
+    };
+    
+    checkOfflineMode();
+    
+    // Listen for storage changes (in case offline mode is toggled elsewhere)
+    const handleStorageChange = (event: StorageEvent) => {
+      if (event.key === 'offline-admin-mode') {
+        checkOfflineMode();
+      }
+    };
+    
+    window.addEventListener('storage', handleStorageChange);
+    return () => window.removeEventListener('storage', handleStorageChange);
+  }, [toast, offlineInitialized]);
 
   // Effect to check and apply security configurations once when authenticated
   useEffect(() => {
     const checkAndApplySecurity = async () => {
-      if (isAuthenticated && !securityChecked) {
+      if (isAuthenticated && !securityChecked && !isOfflineMode) {
         setSecurityChecked(true);
         
         try {
-          // Verificar e aplicar configurações de segurança
+          // Check and apply security settings
           console.log("Verificando e aplicando configurações de segurança...");
           
-          // Tenta aplicar políticas RLS e outras configurações
+          // Try to apply RLS policies and other configurations
           const result = await applyAllSecurityConfigurations();
           
           if (result.success) {
             console.log("Configurações de segurança aplicadas com sucesso");
             
-            // Notificar usuário apenas se alguma mudança foi feita
+            // Notify user only if some changes were made
             if (!result.rlsConfigured || !result.passwordConfigured || !result.mfaConfigured) {
               toast({
                 title: "Segurança atualizada",
@@ -74,7 +93,19 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children }) => {
     checkAndApplySecurity();
   }, [isAuthenticated, securityChecked, isOfflineMode, toast]);
 
-  if (isLoading) {
+  // Add a special handler for when connection status changes
+  useEffect(() => {
+    if (connectionStatus && !connectionStatus.connected && !isOfflineMode) {
+      console.log("Conexão com Supabase perdida na área protegida");
+      toast({
+        title: "Problema de conexão",
+        description: "A conexão com o Supabase foi perdida. Algumas funcionalidades podem não estar disponíveis.",
+        variant: "destructive",
+      });
+    }
+  }, [connectionStatus, toast, isOfflineMode]);
+
+  if (isLoading && !isOfflineMode) {
     return (
       <div className="flex items-center justify-center min-h-screen">
         <div className="flex flex-col items-center gap-2">
