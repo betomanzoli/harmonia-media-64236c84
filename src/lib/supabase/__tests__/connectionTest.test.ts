@@ -1,3 +1,4 @@
+
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { testSupabaseConnection } from '../connectionTest';
 import { supabase } from '../client';
@@ -93,18 +94,22 @@ describe('testSupabaseConnection', () => {
 
   it('should detect success via RPC method', async () => {
     // Mock successful RPC call
-    supabase.rpc.mockReturnValue(createPostgrestMock({
-      data: { version: '15.1.0' },
-      error: null
-    }));
+    (supabase.rpc as any) = vi.fn().mockImplementation(() => 
+      createPostgrestMock({
+        data: { version: '15.1.0' },
+        error: null
+      })
+    );
 
     // Mock failed "from" call to ensure RPC is preferred
-    supabase.from.mockReturnValue({
-      select: vi.fn().mockReturnValue(createPostgrestMock({
-        data: null,
-        error: { message: 'Table not found', code: '404' }
-      }))
-    });
+    (supabase.from as any) = vi.fn().mockImplementation(() => ({
+      select: vi.fn().mockImplementation(() => 
+        createPostgrestMock({
+          data: null,
+          error: { message: 'Table not found', code: '404' }
+        })
+      )
+    }));
 
     // Mock successful fetch call
     (global.fetch as any).mockResolvedValueOnce(createResponse(true, 200, { version: '15.1.0' }));
@@ -117,18 +122,22 @@ describe('testSupabaseConnection', () => {
 
   it('should fall back to table method if RPC fails', async () => {
     // Mock failed RPC call
-    supabase.rpc.mockReturnValue(createPostgrestMock({
-      data: null,
-      error: { message: 'RPC function not found', code: '404' }
-    }));
+    (supabase.rpc as any) = vi.fn().mockImplementation(() =>
+      createPostgrestMock({
+        data: null,
+        error: { message: 'RPC function not found', code: '404' }
+      })
+    );
 
     // Mock successful "from" call
-    supabase.from.mockReturnValue({
-      select: vi.fn().mockReturnValue(createPostgrestMock({
-        data: [{ exists: true }],
-        error: null
-      }))
-    });
+    (supabase.from as any) = vi.fn().mockImplementation(() => ({
+      select: vi.fn().mockImplementation(() =>
+        createPostgrestMock({
+          data: [{ exists: true }],
+          error: null
+        })
+      )
+    }));
 
     // Mock successful fetch call
     (global.fetch as any).mockResolvedValueOnce(createResponse(true, 200, { status: 'ok' }));
@@ -141,18 +150,22 @@ describe('testSupabaseConnection', () => {
 
   it('should detect failure when all methods fail', async () => {
     // Mock failed RPC call
-    supabase.rpc.mockReturnValue(createPostgrestMock({
-      data: null,
-      error: { message: 'RPC function not found', code: '404' }
-    }));
+    (supabase.rpc as any) = vi.fn().mockImplementation(() =>
+      createPostgrestMock({
+        data: null,
+        error: { message: 'RPC function not found', code: '404' }
+      })
+    );
 
     // Mock failed "from" call
-    supabase.from.mockReturnValue({
-      select: vi.fn().mockReturnValue(createPostgrestMock({
-        data: null,
-        error: { message: 'Table not found', code: '404' }
-      }))
-    });
+    (supabase.from as any) = vi.fn().mockImplementation(() => ({
+      select: vi.fn().mockImplementation(() =>
+        createPostgrestMock({
+          data: null,
+          error: { message: 'Table not found', code: '404' }
+        })
+      )
+    }));
 
     // Mock failed fetch call
     (global.fetch as any).mockRejectedValueOnce(new Error('Network error'));

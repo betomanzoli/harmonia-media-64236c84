@@ -20,7 +20,7 @@ export function useAdminLoginForm() {
   const [loginError, setLoginError] = useState<string | null>(null);
   const [showPasswordReset, setShowPasswordReset] = useState(false);
   const [detailedErrorInfo, setDetailedErrorInfo] = useState<string>('');
-  const { toast } = useToast();
+  const toast = useToast();
 
   // Import diagnostic functionality
   const { 

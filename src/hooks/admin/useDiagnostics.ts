@@ -15,7 +15,7 @@ export function useDiagnostics() {
     supabaseUrl: '',
     storageInfo: '',
   });
-  const { toast } = useToast();
+  const toast = useToast();
   const [isLoading, setIsLoading] = useState(false);
 
   const loadDebugInfo = useCallback(async () => {
@@ -87,7 +87,7 @@ export function useDiagnostics() {
         authSettings: JSON.stringify(authTest, null, 2),
       }));
       
-      toast({
+      toast.toast({
         title: 'Diagnóstico concluído',
         description: connectionTest.connected 
           ? 'Conexão com o Supabase estabelecida com sucesso!' 
@@ -95,7 +95,7 @@ export function useDiagnostics() {
       });
     } catch (err) {
       console.error('Erro ao executar diagnóstico:', err);
-      toast({
+      toast.toast({
         title: 'Erro',
         description: 'Falha ao executar diagnóstico completo.',
         variant: 'destructive',
