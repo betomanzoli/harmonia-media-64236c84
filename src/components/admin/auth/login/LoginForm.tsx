@@ -39,6 +39,9 @@ const LoginForm: React.FC<LoginFormProps> = ({
     await onSubmit(values);
   };
 
+  // Determinar se o formulário deve ser desativado 
+  const formDisabled = isLoading || !connectionStatus.connected;
+
   return (
     <Form {...form}>
       <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-4">
@@ -52,7 +55,8 @@ const LoginForm: React.FC<LoginFormProps> = ({
                 <Input
                   placeholder="admin@example.com"
                   {...field}
-                  disabled={isLoading || !connectionStatus.connected}
+                  disabled={formDisabled}
+                  className={formDisabled ? "bg-gray-100" : ""}
                 />
               </FormControl>
               <FormMessage />
@@ -70,17 +74,19 @@ const LoginForm: React.FC<LoginFormProps> = ({
                   type="password"
                   placeholder="******"
                   {...field}
-                  disabled={isLoading || !connectionStatus.connected}
+                  disabled={formDisabled}
+                  className={formDisabled ? "bg-gray-100" : ""}
                 />
               </FormControl>
               <FormMessage />
             </FormItem>
           )}
         />
+        
         <Button
           type="submit"
           className="w-full"
-          disabled={isLoading || !connectionStatus.connected}
+          disabled={formDisabled}
         >
           {isLoading ? (
             <>
@@ -95,11 +101,19 @@ const LoginForm: React.FC<LoginFormProps> = ({
           )}
         </Button>
         
+        {!connectionStatus.connected && (
+          <div className="text-xs text-amber-600 bg-amber-50 p-2 rounded border border-amber-200">
+            <p className="font-medium">Login temporariamente indisponível</p>
+            <p className="mt-1">O sistema não consegue se conectar ao Supabase neste momento. Tente novamente quando a conexão for restabelecida.</p>
+          </div>
+        )}
+        
         <Button
           type="button"
           variant="ghost"
           className="w-full text-sm"
           onClick={onPasswordReset}
+          disabled={formDisabled}
         >
           Esqueceu sua senha?
         </Button>

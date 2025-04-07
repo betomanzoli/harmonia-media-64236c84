@@ -8,12 +8,14 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { toast } from "@/hooks/use-toast";
 import { Loader2 } from 'lucide-react';
 import { emailService } from '@/lib/supabase';
+import { Alert, AlertDescription } from "@/components/ui/alert";
 
 const EmailTestCard: React.FC = () => {
   const [testEmail, setTestEmail] = useState('');
   const [testName, setTestName] = useState('');
   const [emailType, setEmailType] = useState('briefing');
   const [isSending, setIsSending] = useState(false);
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
   const handleSendTestEmail = async () => {
     if (!testEmail) {
@@ -26,6 +28,7 @@ const EmailTestCard: React.FC = () => {
     }
 
     setIsSending(true);
+    setErrorMessage(null);
     
     try {
       let result;
@@ -58,17 +61,19 @@ const EmailTestCard: React.FC = () => {
           description: "O email de teste foi enviado com sucesso.",
         });
       } else {
+        setErrorMessage(result.error?.message || "Falha na edge function. Verifique as configurações do Supabase.");
         toast({
           title: "Falha no envio",
-          description: result.error?.message || "Não foi possível enviar o email de teste.",
+          description: "Não foi possível enviar o email de teste. Veja os detalhes abaixo.",
           variant: "destructive",
         });
       }
     } catch (error: any) {
       console.error("Erro ao enviar email de teste:", error);
+      setErrorMessage(error.message || "Ocorreu um erro ao enviar o email.");
       toast({
         title: "Erro",
-        description: error.message || "Ocorreu um erro ao enviar o email.",
+        description: "Ocorreu um erro ao enviar o email.",
         variant: "destructive",
       });
     } finally {
@@ -85,6 +90,16 @@ const EmailTestCard: React.FC = () => {
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-4">
+        {errorMessage && (
+          <Alert variant="destructive" className="mb-4">
+            <AlertDescription className="text-xs">
+              <p className="font-medium mb-1">Erro ao enviar email:</p>
+              <p>{errorMessage}</p>
+              <p className="mt-2 text-xs">Nota: Este erro pode ocorrer porque a Edge Function no Supabase não está configurada. Para resolver, acesse o Supabase Dashboard e certifique-se de que a função "send-email" está criada e configurada corretamente.</p>
+            </AlertDescription>
+          </Alert>
+        )}
+        
         <div className="space-y-2">
           <Label htmlFor="test-email">Email para Teste</Label>
           <Input
@@ -137,6 +152,10 @@ const EmailTestCard: React.FC = () => {
             'Enviar Email de Teste'
           )}
         </Button>
+        
+        <p className="text-xs text-muted-foreground mt-2">
+          Nota: Para utilizar este recurso, é necessário ter uma Edge Function "send-email" configurada no Supabase. Consulte o arquivo de exemplo em src/services/edgeFunctionExample.js.
+        </p>
       </CardContent>
     </Card>
   );

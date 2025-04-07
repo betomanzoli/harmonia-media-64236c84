@@ -38,13 +38,23 @@ const ConnectionAlert: React.FC<ConnectionAlertProps> = ({
         ) : (
           <div className="space-y-2">
             <p>Não foi possível conectar ao backend: {connectionStatus.error}</p>
-            <div className="text-xs mt-1">
-              <p>Possíveis causas:</p>
+            <div className="text-xs mt-1 bg-gray-50 p-2 rounded">
+              <p className="font-medium">Possíveis soluções:</p>
               <ul className="list-disc pl-5 mt-1">
-                <li>Servidor Supabase pode estar temporariamente indisponível</li>
-                <li>Problemas de rede ou firewall</li>
-                <li>Configurações incorretas de API</li>
+                <li>Verifique se há algum bloqueador de conteúdo (ad-blocker, firewall) impedindo conexões</li>
+                <li>Desative extensões de navegador que possam estar interferindo</li>
+                <li>Tente acessar usando uma rede diferente</li>
+                <li>Se o problema persistir, pode haver manutenção no servidor Supabase</li>
               </ul>
+            </div>
+            
+            <div className="bg-amber-50 border border-amber-200 p-2 rounded mt-3">
+              <p className="text-amber-800 text-xs mb-1 font-medium">Informações de diagnóstico:</p>
+              <p className="text-amber-700 text-xs break-all">
+                URL: {connectionStatus.details?.url || "Desconhecida"}<br/>
+                Erro: {connectionStatus.details?.error || "Desconhecido"}<br/>
+                Tipo: {connectionStatus.details?.errorType || "Desconhecido"}
+              </p>
             </div>
           </div>
         )}
@@ -52,7 +62,7 @@ const ConnectionAlert: React.FC<ConnectionAlertProps> = ({
         <Button 
           variant="outline" 
           size="sm" 
-          className="mt-2 w-full"
+          className="mt-3 w-full"
           onClick={onRetry}
           disabled={isLoading}
         >

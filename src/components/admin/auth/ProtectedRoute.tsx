@@ -32,7 +32,7 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children }) => {
   // Effect to check and apply security configurations once when authenticated
   useEffect(() => {
     const checkAndApplySecurity = async () => {
-      if (isAuthenticated && !securityChecked && !isOfflineMode) {
+      if (isAuthenticated && !securityChecked) {
         setSecurityChecked(true);
         
         try {
@@ -75,7 +75,7 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children }) => {
     );
   }
 
-  // Allow access in offline mode
+  // Allow access in offline mode only if explicitly set
   if (isOfflineMode) {
     return <>{children}</>;
   }

@@ -10,12 +10,10 @@ import PasswordResetDialog from '@/components/admin/auth/login/PasswordResetDial
 import ConnectionAlert from '@/components/admin/auth/login/ConnectionAlert';
 import LoginError from '@/components/admin/auth/login/LoginError';
 import DiagnosticsPanel from '@/components/admin/auth/login/DiagnosticsPanel';
-import { AlertTriangle } from 'lucide-react';
 
 const AdminLoginContainer: React.FC = () => {
   const navigate = useNavigate();
   const { testConnection } = useAdminAuth();
-  const [offlineMode, setOfflineMode] = useState(false);
   
   const {
     isLoading,
@@ -57,13 +55,6 @@ const AdminLoginContainer: React.FC = () => {
     loadDebugInfo();
   }, [loadDebugInfo]);
 
-  const enterOfflineMode = () => {
-    setOfflineMode(true);
-    // Simulate authentication for demonstration purposes (not secure)
-    sessionStorage.setItem('offline-admin-mode', 'true');
-    navigate('/admin-j28s7d1k/dashboard');
-  };
-
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-100 p-4">
       <Card className="w-full max-w-md">
@@ -79,28 +70,6 @@ const AdminLoginContainer: React.FC = () => {
             onRetry={handleRetryConnection}
             isLoading={isLoading}
           />
-          
-          {!offlineMode && connectionStatus.tested && !connectionStatus.connected && (
-            <div className="mb-4 p-3 bg-amber-50 border border-amber-200 rounded-md">
-              <div className="flex items-start gap-2">
-                <AlertTriangle className="h-5 w-5 text-amber-500 mt-0.5" />
-                <div>
-                  <h3 className="font-medium text-amber-900">Modo demonstrativo disponível</h3>
-                  <p className="text-sm text-amber-700 mt-1">
-                    Você pode continuar no modo offline para demonstração com funcionalidades limitadas.
-                  </p>
-                  <Button 
-                    variant="outline" 
-                    size="sm" 
-                    className="mt-2 bg-amber-100 border-amber-300 hover:bg-amber-200"
-                    onClick={enterOfflineMode}
-                  >
-                    Continuar no modo offline
-                  </Button>
-                </div>
-              </div>
-            </div>
-          )}
           
           <LoginError 
             error={loginError} 
