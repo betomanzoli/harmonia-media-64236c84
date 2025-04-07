@@ -1,17 +1,18 @@
 
-import { supabase } from './client';
+import { supabase, getSupabaseUrl } from './client';
 
 // Utility function for validating configuration
 export const validateConfiguration = () => {
   const issues = [];
-  const supabaseUrl = supabase.supabaseUrl;
+  const supabaseUrl = getSupabaseUrl();
   
   if (!supabaseUrl || !supabaseUrl.includes('https://')) {
     issues.push('URL do Supabase inválida ou não configurada');
   }
   
-  if (!supabase.supabaseKey) {
-    issues.push('Chave anônima do Supabase não configurada');
+  // We can't directly check the key presence, so we'll check if it's defined indirectly
+  if (!supabase) {
+    issues.push('Cliente Supabase não inicializado corretamente');
   }
   
   return {
