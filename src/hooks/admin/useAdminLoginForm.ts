@@ -45,7 +45,7 @@ export function useAdminLoginForm() {
     loadDebugInfo
   });
 
-  // Function to enable offline mode
+  // Function to enable offline mode - alterado para void
   const enableOfflineMode = useCallback(() => {
     try {
       sessionStorage.setItem('offline-admin-mode', 'true');
@@ -56,7 +56,7 @@ export function useAdminLoginForm() {
         description: "Você está usando o modo offline com funcionalidades limitadas.",
       });
       
-      // Navigate is handled by the component
+      // Nenhum retorno necessário
     } catch (error) {
       console.error('Erro ao ativar modo offline:', error);
       toast.toast({

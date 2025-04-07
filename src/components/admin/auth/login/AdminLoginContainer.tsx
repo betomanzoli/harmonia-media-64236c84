@@ -71,7 +71,7 @@ const AdminLoginContainer: React.FC = () => {
     }
   }, [loadDebugInfo, isOfflineMode]);
 
-  // Handle enabling offline mode
+  // Handle enabling offline mode - mudando o tipo de retorno
   const handleEnableOfflineMode = () => {
     enableOfflineMode();
     navigate('/admin-j28s7d1k/dashboard');
