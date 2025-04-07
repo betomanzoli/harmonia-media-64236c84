@@ -5,7 +5,7 @@ import LoginForm from './LoginForm';
 import PasswordResetDialog from './PasswordResetDialog';
 import LoginError from './LoginError';
 import ConnectionAlert from './ConnectionAlert';
-import DiagnosticsPanel, { DiagnosticInfo } from './DiagnosticsPanel';
+import DiagnosticsPanel from './DiagnosticsPanel';
 import { useConnectionTest } from '@/hooks/admin/useConnectionTest';
 import { useDiagnostics } from '@/hooks/admin/useDiagnostics';
 import { AlertTriangle } from 'lucide-react';
@@ -17,6 +17,7 @@ const AdminLoginContainer: React.FC = () => {
   const { connectionStatus, errorDetails, testConnection } = useConnectionTest();
   const { diagnosticInfo, loadDebugInfo, runDiagnostics } = useDiagnostics();
   const [showDiagnostics, setShowDiagnostics] = useState(false);
+  const [detailedErrorInfo, setDetailedErrorInfo] = useState('');
   
   // Generate diagnostic information on first load
   useEffect(() => {
@@ -26,6 +27,10 @@ const AdminLoginContainer: React.FC = () => {
 
   const toggleDiagnostics = () => {
     setShowDiagnostics(!showDiagnostics);
+  };
+
+  const handleRetryConnection = async () => {
+    await testConnection();
   };
 
   return (
@@ -42,7 +47,7 @@ const AdminLoginContainer: React.FC = () => {
           {connectionStatus === 'error' && (
             <ConnectionAlert 
               connectionStatus={errorDetails || 'Erro desconhecido'} 
-              retryConnection={testConnection}
+              retryConnection={handleRetryConnection}
               toggleDiagnostics={toggleDiagnostics}
             />
           )}
@@ -50,6 +55,7 @@ const AdminLoginContainer: React.FC = () => {
           {formState.error && (
             <LoginError 
               error={formState.error}
+              detailedError={detailedErrorInfo}
               toggleDiagnostics={toggleDiagnostics}
             />
           )}

@@ -32,7 +32,6 @@ export interface DiagnosticInfo {
     effectiveType?: string;
     saveData?: boolean;
   };
-  // Adding missing required properties
   authSettings: string;
   supabaseUrl: string;
 }

@@ -5,7 +5,7 @@ import { useToast } from '@/hooks/use-toast';
 export function useConnectionTest() {
   const { toast } = useToast();
   const [connectionStatus, setConnectionStatus] = useState('untested');
-  const [errorDetails, setErrorDetails] = useState(null);
+  const [errorDetails, setErrorDetails] = useState<string | null>(null);
 
   // Function to test connection
   const testConnection = useCallback(async (): Promise<void> => {

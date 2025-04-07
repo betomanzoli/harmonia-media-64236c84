@@ -3,7 +3,7 @@ import { useState, useCallback } from 'react';
 import { DiagnosticInfo } from '@/components/admin/auth/login/DiagnosticsPanel';
 
 export function useDiagnostics() {
-  const [debugInfo, setDebugInfo] = useState<DiagnosticInfo>({
+  const [diagnosticInfo, setDiagnosticInfo] = useState<DiagnosticInfo>({
     environment: 'development',
     supportsIndexedDB: typeof indexedDB !== 'undefined',
     supportsFetch: typeof fetch !== 'undefined',
@@ -47,8 +47,8 @@ export function useDiagnostics() {
       const authUser = localStorage.getItem('harmonia-admin-auth-user');
       
       // Update the diagnostic info
-      setDebugInfo({
-        ...debugInfo,
+      setDiagnosticInfo(prevInfo => ({
+        ...prevInfo,
         storageInfo: {
           localStorageSize: getStorageEstimate('localStorage'),
           sessionStorageSize: getStorageEstimate('sessionStorage')
@@ -59,11 +59,11 @@ export function useDiagnostics() {
           offlineMode: sessionStorage.getItem('offline-admin-mode') === 'true'
         }, null, 2),
         connectionDetails: getConnectionDetails()
-      });
+      }));
     } catch (error) {
       console.error('Error loading diagnostic information:', error);
     }
-  }, [debugInfo]);
+  }, []);
 
   const runDiagnostics = useCallback(async () => {
     try {
@@ -76,7 +76,7 @@ export function useDiagnostics() {
   }, [loadDebugInfo]);
 
   return {
-    diagnosticInfo: debugInfo,
+    diagnosticInfo,
     loadDebugInfo,
     runDiagnostics
   };
@@ -160,7 +160,10 @@ function getStorageEstimate(type: 'localStorage' | 'sessionStorage') {
 }
 
 function getConnectionDetails() {
-  const connection = navigator.connection as any;
+  // Use a safer approach to check navigator.connection
+  const nav = navigator as any;
+  const connection = nav.connection || nav.mozConnection || nav.webkitConnection;
+  
   if (!connection) return {
     rtt: undefined,
     downlink: undefined,

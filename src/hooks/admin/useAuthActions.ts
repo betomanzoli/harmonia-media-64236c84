@@ -23,13 +23,8 @@ export function useAuthActions({
     offlineMode 
   });
   
-  // Use the connection test hook
-  const { testConnection } = useConnectionTest({
-    setIsLoading,
-    setConnectionStatus,
-    checkSecurityStatus,
-    offlineMode
-  });
+  // The issue is here - we need to use the hook without parameters
+  const { connectionStatus, errorDetails, testConnection } = useConnectionTest();
   
   // Use the authentication hook
   const { login, logout } = useAuthentication({
