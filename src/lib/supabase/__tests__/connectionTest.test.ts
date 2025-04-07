@@ -97,10 +97,12 @@ describe('testSupabaseConnection', () => {
     } as Response);
     
     // Mock successful RPC call
-    vi.mocked(supabase.rpc).mockReturnValueOnce({
+    const mockRpcResponse = {
       data: { version: '1.0.0' },
       error: null,
-    });
+    };
+    
+    vi.mocked(supabase.rpc).mockReturnValueOnce(mockRpcResponse);
     
     const result = await testSupabaseConnection();
     
@@ -117,18 +119,23 @@ describe('testSupabaseConnection', () => {
     } as Response);
     
     // Mock failed RPC call
-    vi.mocked(supabase.rpc).mockReturnValueOnce({
+    const mockRpcResponse = {
       data: null,
       error: { message: 'RPC error', code: 'ERROR' },
-    });
+    };
     
-    // Mock successful table call
+    vi.mocked(supabase.rpc).mockReturnValueOnce(mockRpcResponse);
+    
+    // Mock successful table call with select method
+    const mockSelectResponse = {
+      data: { count: 5 },
+      error: null,
+    };
+    
+    const mockSelectFn = vi.fn().mockReturnValue(mockSelectResponse);
     vi.mocked(supabase.from).mockReturnValueOnce({
-      select: vi.fn().mockReturnValue({
-        data: { count: 5 },
-        error: null,
-      }),
-    });
+      select: mockSelectFn,
+    } as any);
     
     const result = await testSupabaseConnection();
     
@@ -145,18 +152,23 @@ describe('testSupabaseConnection', () => {
     } as Response);
     
     // Mock failed RPC call
-    vi.mocked(supabase.rpc).mockReturnValueOnce({
+    const mockRpcResponse = {
       data: null,
       error: { message: 'RPC error', code: 'ERROR' },
-    });
+    };
     
-    // Mock failed table call
+    vi.mocked(supabase.rpc).mockReturnValueOnce(mockRpcResponse);
+    
+    // Mock failed table call with select method
+    const mockSelectResponse = {
+      data: null,
+      error: { message: 'Table error', code: 'ERROR' },
+    };
+    
+    const mockSelectFn = vi.fn().mockReturnValue(mockSelectResponse);
     vi.mocked(supabase.from).mockReturnValueOnce({
-      select: vi.fn().mockReturnValue({
-        data: null,
-        error: { message: 'Table error', code: 'ERROR' },
-      }),
-    });
+      select: mockSelectFn,
+    } as any);
     
     const result = await testSupabaseConnection();
     
