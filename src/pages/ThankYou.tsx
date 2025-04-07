@@ -68,7 +68,7 @@ const ThankYou: React.FC = () => {
     essencial: {
       title: 'Pacote Essencial',
       subtitle: 'Ideal para uso pessoal',
-      price: 'A partir de R$199',
+      price: `A partir de R$${siteConfig.pricing.basePrice}`,
       features: [
         'Composição musical única',
         'Uma revisão gratuita',
@@ -81,7 +81,7 @@ const ThankYou: React.FC = () => {
     profissional: {
       title: 'Pacote Profissional',
       subtitle: 'Para uso em projetos pessoais e profissionais',
-      price: 'A partir de R$399',
+      price: `A partir de R$${siteConfig.pricing.professionalPrice}`,
       features: [
         'Composição musical personalizada',
         'Até três revisões gratuitas',
@@ -97,7 +97,7 @@ const ThankYou: React.FC = () => {
     premium: {
       title: 'Pacote Premium',
       subtitle: 'Total controle e propriedade sobre a obra',
-      price: 'A partir de R$699',
+      price: `A partir de R$${siteConfig.pricing.premiumPrice}`,
       features: [
         'Composição totalmente personalizada',
         'Revisões ilimitadas (até aprovação)',
@@ -197,7 +197,7 @@ const ThankYou: React.FC = () => {
             </Button>
             <Button 
               className="bg-harmonia-green hover:bg-harmonia-green/90"
-              onClick={() => window.open('https://wa.me/5511999999999', '_blank')}
+              onClick={() => window.open(`https://wa.me/${siteConfig.contact.whatsapp}`, '_blank')}
             >
               Falar com um consultor
             </Button>

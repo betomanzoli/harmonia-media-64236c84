@@ -3,6 +3,7 @@ import React from 'react';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { Gift, Briefcase, Building } from 'lucide-react';
 import ServiceCard from './ServiceCard';
+import { siteConfig } from "@/config/site";
 
 interface ServiceTabsProps {
   activeTab: string;
@@ -30,49 +31,49 @@ const ServiceTabs: React.FC<ServiceTabsProps> = ({ activeTab, setActiveTab }) =>
       <TabsContent value="todos" className="grid grid-cols-1 md:grid-cols-3 gap-6">
         <ServiceCard 
           title="Pacote Essencial" 
-          price="R$219"
+          price={`R$${siteConfig.pricing.basePrice}`}
           description="Ideal para presentes emocionais rápidos."
           features={[
-            "3 variações/propostas em único estilo",
-            "1 revisão gratuita",
+            "Composição musical única",
+            "Uma revisão gratuita",
+            "Uso exclusivamente pessoal",
+            "Entrega digital em até 7 dias",
+            "Suporte por e-mail",
             "Arquivo digital em alta qualidade (MP3/WAV)",
-            "Certificado digital de autoria",
-            "Entrega em até 48 horas",
-            "Uso permitido: Apenas pessoal, sem direitos comerciais",
-            "1 composição musical final (IA + revisão humana)"
+            "Certificado digital de autoria"
           ]}
         />
         <ServiceCard 
           title="Pacote Profissional" 
-          price="R$479"
+          price={`R$${siteConfig.pricing.professionalPrice}`}
           description="Perfeito para criadores de conteúdo e pequenos negócios."
           features={[
-            "3 variações/propostas em estilos diferentes",
+            "Composição musical personalizada",
+            "Até três revisões gratuitas",
+            "Licença para uso em conteúdo digital próprio",
+            "Três versões para escolha",
+            "Entrega em até 5 dias",
+            "Suporte prioritário",
             "Masterização básica IA",
-            "Stems separados (vocais + instrumentação)",
-            "3 revisões gratuitas",
-            "Entrega em até 72 horas",
-            "Formato adequado para plataformas digitais",
-            "Uso permitido: Uso em conteúdo digital próprio",
-            "1 composição musical final (IA + revisão humana)"
+            "Stems separados (vocais + instrumentação)"
           ]}
           recommended={true}
         />
         <ServiceCard 
           title="Pacote Premium" 
-          price="R$969"
+          price={`R$${siteConfig.pricing.premiumPrice}`}
           description="Melhor opção para empresas e projetos corporativos."
           features={[
-            "5 variações/propostas de composição",
-            "Masterização profissional IA",
-            "Registro oficial na Biblioteca Nacional",
-            "Partitura em formato MusicXML",
-            "Stems completos separados",
-            "Revisões ilimitadas (em 30 dias)",
-            "Licença comercial completa",
+            "Composição totalmente personalizada",
+            "Revisões ilimitadas (até aprovação)",
+            "Cessão total dos direitos autorais",
+            "Cinco versões para escolha",
+            "Registro na Biblioteca Nacional",
+            "Certificado blockchain",
+            "Consultoria de 30 minutos",
             "Entrega prioritária",
-            "Suporte pós-venda por 30 dias",
-            "1 composição musical final (IA + revisão humana)"
+            "Suporte VIP por WhatsApp",
+            "Partitura em formato MusicXML"
           ]}
         />
       </TabsContent>
@@ -80,16 +81,16 @@ const ServiceTabs: React.FC<ServiceTabsProps> = ({ activeTab, setActiveTab }) =>
       <TabsContent value="presentes" className="grid grid-cols-1 md:grid-cols-3 gap-6">
         <ServiceCard 
           title="Pacote Essencial" 
-          price="R$219"
+          price={`R$${siteConfig.pricing.basePrice}`}
           description="Ideal para presentes emocionais rápidos."
           features={[
-            "3 variações/propostas em único estilo",
-            "1 revisão gratuita",
+            "Composição musical única",
+            "Uma revisão gratuita",
+            "Uso exclusivamente pessoal",
+            "Entrega digital em até 7 dias",
+            "Suporte por e-mail",
             "Arquivo digital em alta qualidade (MP3/WAV)",
-            "Certificado digital de autoria",
-            "Entrega em até 48 horas",
-            "Uso permitido: Apenas pessoal, sem direitos comerciais",
-            "1 composição musical final (IA + revisão humana)"
+            "Certificado digital de autoria"
           ]}
           recommended={true}
         />
@@ -98,17 +99,17 @@ const ServiceTabs: React.FC<ServiceTabsProps> = ({ activeTab, setActiveTab }) =>
       <TabsContent value="profissionais" className="grid grid-cols-1 md:grid-cols-3 gap-6">
         <ServiceCard 
           title="Pacote Profissional" 
-          price="R$479"
+          price={`R$${siteConfig.pricing.professionalPrice}`}
           description="Perfeito para criadores de conteúdo e pequenos negócios."
           features={[
-            "3 variações/propostas em estilos diferentes",
+            "Composição musical personalizada",
+            "Até três revisões gratuitas",
+            "Licença para uso em conteúdo digital próprio",
+            "Três versões para escolha",
+            "Entrega em até 5 dias",
+            "Suporte prioritário",
             "Masterização básica IA",
-            "Stems separados (vocais + instrumentação)",
-            "3 revisões gratuitas",
-            "Entrega em até 72 horas",
-            "Formato adequado para plataformas digitais",
-            "Uso permitido: Uso em conteúdo digital próprio",
-            "1 composição musical final (IA + revisão humana)"
+            "Stems separados (vocais + instrumentação)"
           ]}
           recommended={true}
         />
@@ -117,19 +118,19 @@ const ServiceTabs: React.FC<ServiceTabsProps> = ({ activeTab, setActiveTab }) =>
       <TabsContent value="enterprise" className="grid grid-cols-1 md:grid-cols-3 gap-6">
         <ServiceCard 
           title="Pacote Premium" 
-          price="R$969"
+          price={`R$${siteConfig.pricing.premiumPrice}`}
           description="Melhor opção para empresas e projetos corporativos."
           features={[
-            "5 variações/propostas de composição",
-            "Masterização profissional IA",
-            "Registro oficial na Biblioteca Nacional",
-            "Partitura em formato MusicXML",
-            "Stems completos separados",
-            "Revisões ilimitadas (em 30 dias)",
-            "Licença comercial completa",
+            "Composição totalmente personalizada",
+            "Revisões ilimitadas (até aprovação)",
+            "Cessão total dos direitos autorais",
+            "Cinco versões para escolha",
+            "Registro na Biblioteca Nacional",
+            "Certificado blockchain",
+            "Consultoria de 30 minutos",
             "Entrega prioritária",
-            "Suporte pós-venda por 30 dias",
-            "1 composição musical final (IA + revisão humana)"
+            "Suporte VIP por WhatsApp",
+            "Partitura em formato MusicXML"
           ]}
           recommended={true}
         />

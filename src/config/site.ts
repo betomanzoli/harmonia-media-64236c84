@@ -12,8 +12,8 @@ export const siteConfig = {
   // Informações de contato
   contact: {
     email: "contato@harmonia.media",
-    phone: "+55 11 99999-9999",
-    whatsapp: "5511999999999",
+    phone: "+55 11 92058-5072",
+    whatsapp: "5511920585072",
     address: "São Paulo, SP - Brasil",
   },
   

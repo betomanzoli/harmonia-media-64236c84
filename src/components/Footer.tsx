@@ -4,6 +4,7 @@ import Logo from './Logo';
 import { Phone, Mail, Shield, ChevronUp, Clock } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useNavigate, Link } from 'react-router-dom';
+import { siteConfig } from '@/config/site';
 
 const Footer: React.FC = () => {
   const navigate = useNavigate();
@@ -16,11 +17,11 @@ const Footer: React.FC = () => {
   };
 
   const handleWhatsAppContact = () => {
-    window.open('https://wa.me/5511999999999', '_blank');
+    window.open(`https://wa.me/${siteConfig.contact.whatsapp}`, '_blank');
   };
 
   const handleEmailContact = () => {
-    window.open('mailto:contato@harmonia.media', '_blank');
+    window.open(`mailto:${siteConfig.contact.email}`, '_blank');
   };
 
   return (
@@ -52,11 +53,11 @@ const Footer: React.FC = () => {
             <ul className="space-y-3">
               <li className="flex gap-2 text-gray-400 cursor-pointer hover:text-harmonia-green transition-colors" onClick={handleWhatsAppContact}>
                 <Phone className="w-5 h-5 text-harmonia-green shrink-0" />
-                <span>+55 11 99999-9999</span>
+                <span>{siteConfig.contact.phone}</span>
               </li>
               <li className="flex gap-2 text-gray-400 cursor-pointer hover:text-harmonia-green transition-colors" onClick={handleEmailContact}>
                 <Mail className="w-5 h-5 text-harmonia-green shrink-0" />
-                <span>contato@harmonia.media</span>
+                <span>{siteConfig.contact.email}</span>
               </li>
             </ul>
             <div className="mt-6">
