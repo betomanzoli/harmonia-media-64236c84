@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card } from "@/components/ui/card";
 import { toast } from "@/hooks/use-toast";
-import { ArrowRight, Search, MessageSquare } from 'lucide-react';
+import { ArrowRight, Search, MessageSquare, FileText, Package, CreditCard, Music, Headphones, FileCheck, Settings } from 'lucide-react';
 import OrderDetails from '@/components/order-tracking/OrderDetails';
 import OrderNotification from '@/components/order-tracking/OrderNotification'; 
 import { siteConfig } from '@/config/site';

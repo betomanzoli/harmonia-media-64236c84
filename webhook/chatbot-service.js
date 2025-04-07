@@ -17,8 +17,8 @@ const handleWelcomeIntent = (req, res) => {
         quickReplies: {
           title: "Escolha uma opção:",
           quickReplies: [
-            "Informações sobre pacotes",
-            "Ver amostras de músicas",
+            "Ver pacotes",
+            "Ouvir amostras",
             "Iniciar briefing"
           ]
         }
@@ -35,16 +35,16 @@ const handlePackageInfoIntent = (req, res) => {
     fulfillmentMessages: [
       {
         text: {
-          text: ["Oferecemos 3 pacotes principais:"]
+          text: ["Oferecemos 3 pacotes principais para criação de músicas personalizadas:"]
         }
       },
       {
         card: {
           title: "Pacote Essencial - R$219",
-          subtitle: "Ideal para presentes emocionais rápidos",
+          subtitle: "Ideal para presentes emocionais",
           buttons: [
             {
-              text: "Ver detalhes",
+              text: "Mais detalhes",
               postback: "https://harmonia.media/pacotes"
             }
           ]
@@ -56,7 +56,7 @@ const handlePackageInfoIntent = (req, res) => {
           subtitle: "Perfeito para criadores de conteúdo",
           buttons: [
             {
-              text: "Ver detalhes",
+              text: "Mais detalhes",
               postback: "https://harmonia.media/pacotes"
             }
           ]
@@ -68,7 +68,7 @@ const handlePackageInfoIntent = (req, res) => {
           subtitle: "Melhor opção para empresas",
           buttons: [
             {
-              text: "Ver detalhes",
+              text: "Mais detalhes",
               postback: "https://harmonia.media/pacotes"
             }
           ]
@@ -76,11 +76,11 @@ const handlePackageInfoIntent = (req, res) => {
       },
       {
         quickReplies: {
-          title: "O que você gostaria?",
+          title: "O que gostaria de saber agora?",
           quickReplies: [
-            "Calcular preço personalizado",
-            "Ver amostras",
-            "Iniciar briefing"
+            "Calcular preço",
+            "Ver exemplos",
+            "Começar briefing"
           ]
         }
       }
@@ -96,16 +96,16 @@ const handleCalculatePriceIntent = (req, res) => {
     fulfillmentMessages: [
       {
         text: {
-          text: ["Para calcular o preço exato para sua necessidade, você pode usar nossa calculadora online ou me contar mais sobre seu projeto."]
+          text: ["Para calcular o preço personalizado para sua necessidade específica:"]
         }
       },
       {
         card: {
           title: "Calculadora de Preços",
-          subtitle: "Calcule o valor para sua música personalizada",
+          subtitle: "Obtenha um orçamento personalizado",
           buttons: [
             {
-              text: "Abrir Calculadora",
+              text: "Usar Calculadora",
               postback: "https://harmonia.media/calculadora"
             }
           ]
@@ -113,7 +113,7 @@ const handleCalculatePriceIntent = (req, res) => {
       },
       {
         quickReplies: {
-          title: "Sobre seu projeto:",
+          title: "Ou conte-me sobre seu projeto:",
           quickReplies: [
             "Para casamento",
             "Para aniversário",
@@ -134,16 +134,16 @@ const handleMusicSamplesIntent = (req, res) => {
     fulfillmentMessages: [
       {
         text: {
-          text: ["Você pode ouvir exemplos de nossos trabalhos anteriores em nosso portfólio online."]
+          text: ["Temos diversos exemplos de músicas que já criamos para outros clientes:"]
         }
       },
       {
         card: {
-          title: "Portfólio de Músicas",
-          subtitle: "Ouça exemplos de nossos trabalhos",
+          title: "Portfólio Musical",
+          subtitle: "Ouça nossas criações",
           buttons: [
             {
-              text: "Ver Portfólio",
+              text: "Explorar Portfólio",
               postback: "https://harmonia.media/portfolio"
             }
           ]
@@ -151,11 +151,11 @@ const handleMusicSamplesIntent = (req, res) => {
       },
       {
         quickReplies: {
-          title: "E agora?",
+          title: "Próximos passos:",
           quickReplies: [
             "Iniciar projeto",
-            "Ver pacotes",
-            "Falar com atendente"
+            "Conhecer pacotes",
+            "Falar com humano"
           ]
         }
       }
@@ -171,16 +171,16 @@ const handleStartBriefingIntent = (req, res) => {
     fulfillmentMessages: [
       {
         text: {
-          text: ["Ótimo! Vamos começar seu briefing para criar sua música personalizada. Você pode preencher nosso formulário online ou, se preferir, posso te guiar por algumas perguntas básicas."]
+          text: ["Ótimo! Vamos começar a criar sua música personalizada. Você pode escolher como deseja prosseguir:"]
         }
       },
       {
         card: {
           title: "Formulário de Briefing",
-          subtitle: "Preencha online para iniciar seu projeto",
+          subtitle: "Método completo e detalhado",
           buttons: [
             {
-              text: "Preencher Briefing",
+              text: "Iniciar Briefing",
               postback: "https://harmonia.media/briefing"
             }
           ]
@@ -188,11 +188,11 @@ const handleStartBriefingIntent = (req, res) => {
       },
       {
         quickReplies: {
-          title: "Prefere:",
+          title: "Como prefere continuar?",
           quickReplies: [
-            "Briefing guiado",
+            "Briefing guiado por chat",
             "Ver exemplos primeiro",
-            "Falar com atendente"
+            "Falar com consultor"
           ]
         }
       }
@@ -208,13 +208,13 @@ const handleCheckStatusIntent = (req, res) => {
     fulfillmentMessages: [
       {
         text: {
-          text: ["Para verificar o status do seu pedido, você pode acessar nossa página de acompanhamento com seu código de pedido."]
+          text: ["Para verificar o status atual do seu projeto musical:"]
         }
       },
       {
         card: {
           title: "Acompanhar Pedido",
-          subtitle: "Verifique o status do seu projeto",
+          subtitle: "Verificar progresso do projeto",
           buttons: [
             {
               text: "Verificar Status",
@@ -228,7 +228,7 @@ const handleCheckStatusIntent = (req, res) => {
           title: "Precisa de ajuda?",
           quickReplies: [
             "Perdi meu código",
-            "Falar com atendente"
+            "Falar com suporte"
           ]
         }
       }
@@ -244,13 +244,13 @@ const handleTalkToAgentIntent = (req, res) => {
     fulfillmentMessages: [
       {
         text: {
-          text: ["Entendo que você prefere falar com um atendente humano. Vou transferir você para nossa equipe de atendimento."]
+          text: ["Sem problema! Vou conectar você com nossa equipe de atendimento humano para melhor assistência."]
         }
       },
       {
         card: {
           title: "Atendimento Personalizado",
-          subtitle: "Fale diretamente com nossa equipe",
+          subtitle: "Fale com nossa equipe",
           buttons: [
             {
               text: "WhatsApp",
@@ -275,15 +275,15 @@ const handleFallbackIntent = (req, res) => {
     fulfillmentMessages: [
       {
         text: {
-          text: ["Desculpe, não entendi completamente. Como posso ajudar com sua música personalizada?"]
+          text: ["Desculpe, não entendi completamente. Posso ajudar você com alguma destas opções:"]
         }
       },
       {
         quickReplies: {
-          title: "Posso ajudar com:",
+          title: "Como posso ajudar?",
           quickReplies: [
-            "Informações sobre pacotes",
-            "Ver amostras",
+            "Ver pacotes",
+            "Ouvir amostras",
             "Iniciar projeto",
             "Falar com atendente"
           ]
