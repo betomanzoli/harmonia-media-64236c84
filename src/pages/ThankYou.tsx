@@ -4,49 +4,11 @@ import { useNavigate } from 'react-router-dom';
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
 import { Button } from "@/components/ui/button";
-import { Card } from "@/components/ui/card";
-import { CheckCircle2, ArrowRight, Package } from 'lucide-react';
+import { CheckCircle2 } from 'lucide-react';
 import { siteConfig } from '@/config/site';
-
-interface QualificationData {
-  name: string;
-  email: string;
-  phone: string;
-  referralSource: string;
-  purpose: string[];
-  otherPurpose?: string;
-  timeline: string;
-  description: string;
-  budget: string;
-  features: string[];
-}
-
-// Function to determine recommended package based on form data
-const getRecommendedPackage = (data: QualificationData): 'essencial' | 'profissional' | 'premium' => {
-  // Logic to determine the recommended package
-  
-  // If user selected premium features
-  if (
-    data.features.includes('legal-registration') || 
-    data.features.includes('full-rights') ||
-    data.budget === 'above-500'
-  ) {
-    return 'premium';
-  }
-  
-  // If user selected professional features
-  if (
-    data.features.includes('commercial-use') ||
-    data.purpose.includes('professional-use') ||
-    data.purpose.includes('corporate-use') ||
-    data.budget === '200-500'
-  ) {
-    return 'profissional';
-  }
-  
-  // Default to essencial
-  return 'essencial';
-};
+import { QualificationData } from '@/types/qualification';
+import { getRecommendedPackage } from '@/utils/packageRecommendation';
+import PackageRecommendations from '@/components/thankyou/PackageRecommendations';
 
 const ThankYou: React.FC = () => {
   const navigate = useNavigate();
@@ -62,58 +24,6 @@ const ThankYou: React.FC = () => {
       setRecommendedPackage(getRecommendedPackage(parsedData));
     }
   }, []);
-  
-  // Package details
-  const packages = {
-    essencial: {
-      title: 'Pacote Essencial',
-      subtitle: 'Ideal para uso pessoal',
-      price: `A partir de R$${siteConfig.pricing.basePrice}`,
-      features: [
-        'Composição musical única',
-        'Uma revisão gratuita',
-        'Uso exclusivamente pessoal',
-        'Entrega digital em até 7 dias',
-        'Suporte por e-mail'
-      ],
-      highlight: userData?.budget === 'under-200' || userData?.purpose.includes('personal-gift')
-    },
-    profissional: {
-      title: 'Pacote Profissional',
-      subtitle: 'Para uso em projetos pessoais e profissionais',
-      price: `A partir de R$${siteConfig.pricing.professionalPrice}`,
-      features: [
-        'Composição musical personalizada',
-        'Até três revisões gratuitas',
-        'Licença para uso em conteúdo digital próprio',
-        'Três versões para escolha',
-        'Entrega em até 5 dias',
-        'Suporte prioritário'
-      ],
-      highlight: userData?.budget === '200-500' || 
-                userData?.features.includes('commercial-use') || 
-                userData?.purpose.includes('professional-use')
-    },
-    premium: {
-      title: 'Pacote Premium',
-      subtitle: 'Total controle e propriedade sobre a obra',
-      price: `A partir de R$${siteConfig.pricing.premiumPrice}`,
-      features: [
-        'Composição totalmente personalizada',
-        'Revisões ilimitadas (até aprovação)',
-        'Cessão total dos direitos autorais',
-        'Cinco versões para escolha',
-        'Registro na Biblioteca Nacional',
-        'Certificado blockchain',
-        'Consultoria de 30 minutos',
-        'Entrega prioritária',
-        'Suporte VIP por WhatsApp'
-      ],
-      highlight: userData?.budget === 'above-500' || 
-                userData?.features.includes('legal-registration') || 
-                userData?.features.includes('full-rights')
-    }
-  };
 
   return (
     <div className="min-h-screen bg-background text-foreground">
@@ -132,57 +42,10 @@ const ThankYou: React.FC = () => {
           </p>
         </div>
         
-        <div className="mb-16">
-          <h2 className="text-2xl font-bold mb-8 text-center">Pacote Recomendado para Você</h2>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-            {Object.entries(packages).map(([key, pkg]) => {
-              const isRecommended = key === recommendedPackage;
-              return (
-                <Card 
-                  key={key}
-                  className={`p-6 relative overflow-hidden border ${
-                    isRecommended ? 'border-harmonia-green' : 'border-border'
-                  } ${pkg.highlight ? 'ring-2 ring-harmonia-green/50' : ''}`}
-                >
-                  {isRecommended && (
-                    <div className="absolute top-0 right-0 bg-harmonia-green text-black text-xs font-bold px-3 py-1">
-                      Recomendado
-                    </div>
-                  )}
-                  
-                  <div className="mb-4">
-                    <Package className="w-8 h-8 text-harmonia-green mb-2" />
-                    <h3 className="text-xl font-bold">{pkg.title}</h3>
-                    <p className="text-sm text-gray-400">{pkg.subtitle}</p>
-                  </div>
-                  
-                  <div className="text-xl font-bold mb-4">{pkg.price}</div>
-                  
-                  <ul className="space-y-2 mb-6">
-                    {pkg.features.map((feature, index) => (
-                      <li key={index} className="flex items-start">
-                        <span className="text-harmonia-green mr-2">✓</span>
-                        <span className="text-sm">{feature}</span>
-                      </li>
-                    ))}
-                  </ul>
-                  
-                  <Button 
-                    className={`w-full ${
-                      isRecommended 
-                        ? 'bg-harmonia-green hover:bg-harmonia-green/90' 
-                        : 'bg-card hover:bg-card/90 border border-border'
-                    }`}
-                    onClick={() => navigate(siteConfig.urls.packages)}
-                  >
-                    Ver detalhes
-                    <ArrowRight className="w-4 h-4 ml-2" />
-                  </Button>
-                </Card>
-              );
-            })}
-          </div>
-        </div>
+        <PackageRecommendations 
+          userData={userData} 
+          recommendedPackage={recommendedPackage} 
+        />
         
         <div className="text-center">
           <p className="text-gray-400 mb-6">

@@ -7,6 +7,11 @@ import ServiceNotices from '@/components/ServiceNotices';
 const ServicesList: React.FC = () => {
   const [activeTab, setActiveTab] = useState('todos');
 
+  const handleExtraServiceClick = (serviceId: string) => {
+    console.log('Extra service clicked:', serviceId);
+    // Handle the extra service click, e.g., navigate to a specific page
+  };
+
   return (
     <div>
       <ServiceTabs 
@@ -15,7 +20,7 @@ const ServicesList: React.FC = () => {
       />
       
       <div className="mt-16">
-        <ServiceExtras />
+        <ServiceExtras onExtraServiceClick={handleExtraServiceClick} />
       </div>
       
       <div className="mt-16">
