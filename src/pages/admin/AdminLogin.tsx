@@ -8,7 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
-import { useAdminAuth } from '@/context/AdminAuthContext';
+import { useAdminAuth } from '@/hooks/admin/useAdminAuth';
 import { Loader2, AlertTriangle, Info, Bug, RefreshCw, Shield } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
@@ -74,8 +74,8 @@ const AdminLogin: React.FC = () => {
   }, [connectionStatus.tested, testConnection]);
 
   const loadDebugInfo = async () => {
-    // Carregar URL do Supabase
-    const supabaseUrlInfo = supabase.getUrl();
+    // Carregar URL do Supabase - Corrigido para não usar getUrl()
+    const supabaseUrlInfo = supabase.supabaseUrl || 'URL não disponível';
     
     // Verificar storage local
     let storageInfo = 'Não disponível';

@@ -4,7 +4,7 @@ import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
-import { AdminAuthProvider } from "@/context/AdminAuthContext";
+import AdminAuthProvider from "@/components/admin/auth/AdminAuthProvider";
 import ProtectedRoute from "@/components/admin/auth/ProtectedRoute";
 import Index from "./pages/Index";
 import Calculator from "./pages/Calculator";
