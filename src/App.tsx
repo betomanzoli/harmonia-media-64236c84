@@ -50,6 +50,7 @@ const App = () => (
             <Route path="/termos" element={<Terms />} />
             <Route path={siteConfig.urls.orderTracking} element={<OrderTracking />} />
             <Route path="/admin-login" element={<AdminLogin />} />
+            <Route path="/admin-reset-password" element={<AdminLogin />} />
             
             {/* Rotas administrativas protegidas */}
             <Route path="/admin-j28s7d1k/dashboard" element={

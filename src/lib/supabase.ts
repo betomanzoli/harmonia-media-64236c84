@@ -22,31 +22,82 @@ export const testSupabaseConnection = async () => {
   try {
     console.log('Testando conexão com o Supabase...');
     
-    // Primeiro teste: verificar conexão básica
-    const { data: versionData, error: versionError } = await supabase.rpc('version');
-    
-    if (versionError) {
-      console.error('Erro ao verificar versão do Supabase:', versionError);
-      
-      // Tentar um teste alternativo se o primeiro falhar
-      const { data, error } = await supabase.from('system_settings').select('count(*)', { count: 'exact' });
-      
-      if (error) {
-        console.error('Erro de conexão com o Supabase (tabela):', error);
-        return { 
-          connected: false, 
-          error: `Falha na conexão: ${error.message}. Código: ${error.code}`
-        };
-      }
-      
-      console.log('Conexão com tabela system_settings bem-sucedida!');
-      return { connected: true, data };
+    // Verificar se a URL está correta
+    if (!supabaseUrl || !supabaseUrl.includes('https://')) {
+      return { 
+        connected: false, 
+        error: 'URL do Supabase inválida ou não configurada'
+      };
     }
     
-    console.log('Conexão com o Supabase bem-sucedida! Versão:', versionData);
-    return { connected: true, data: versionData };
+    // Verificar se a chave anônima está presente
+    if (!supabaseAnonKey) {
+      return { 
+        connected: false, 
+        error: 'Chave anônima do Supabase não configurada'
+      };
+    }
+    
+    // Teste simples: buscar a versão do Supabase
+    try {
+      const { data: versionData, error: versionError } = await supabase.rpc('version');
+      
+      if (versionError) {
+        console.error('Erro ao verificar versão do Supabase:', versionError);
+        
+        // Tentar um teste alternativo com uma tabela
+        try {
+          const { data, error } = await supabase.from('system_settings').select('count(*)', { count: 'exact' });
+          
+          if (error) {
+            console.error('Erro de conexão com o Supabase (tabela):', error);
+            return { 
+              connected: false, 
+              error: `Falha na conexão: ${error.message}. Código: ${error.code}`
+            };
+          }
+          
+          console.log('Conexão com tabela system_settings bem-sucedida!');
+          return { connected: true, data };
+        } catch (tableErr) {
+          console.error('Exceção ao testar conexão com tabela:', tableErr);
+          return { 
+            connected: false, 
+            error: tableErr instanceof Error ? tableErr.message : 'Erro ao testar tabela' 
+          };
+        }
+      }
+      
+      console.log('Conexão com o Supabase bem-sucedida! Versão:', versionData);
+      return { connected: true, data: versionData };
+      
+    } catch (rpcErr) {
+      console.error('Exceção ao chamar RPC:', rpcErr);
+      
+      // Falhou com RPC, tentar com tabela
+      try {
+        const { data, error } = await supabase.from('system_settings').select('count(*)', { count: 'exact' });
+        
+        if (error) {
+          console.error('Também falhou com tabela:', error);
+          return { 
+            connected: false, 
+            error: `Falha em ambos os métodos: ${error.message}` 
+          };
+        }
+        
+        console.log('Conexão bem-sucedida via tabela!');
+        return { connected: true, data };
+      } catch (finalErr) {
+        console.error('Todas as tentativas falharam:', finalErr);
+        return { 
+          connected: false, 
+          error: 'Todas as tentativas de conexão falharam' 
+        };
+      }
+    }
   } catch (err) {
-    console.error('Exceção ao testar conexão:', err);
+    console.error('Exceção geral ao testar conexão:', err);
     return { 
       connected: false, 
       error: err instanceof Error ? err.message : 'Erro desconhecido' 
@@ -59,16 +110,49 @@ export const testAuthSettings = async () => {
   try {
     console.log('Verificando configurações de autenticação...');
     
-    // Tentar obter configurações do projeto, isso requer um usuário admin
-    // Isso é apenas para diagnóstico e será removido em produção
-    const { data, error } = await supabase.auth.admin.listUsers();
+    // Primeiro, verificar se já existe uma sessão
+    const { data: sessionData, error: sessionError } = await supabase.auth.getSession();
     
-    if (error) {
-      console.error('Erro ao verificar configurações de autenticação:', error);
-      return { success: false, error: error.message };
+    if (sessionError) {
+      console.error('Erro ao verificar sessão:', sessionError);
+      return { 
+        success: false, 
+        error: `Problema com sessão: ${sessionError.message}` 
+      };
     }
     
-    return { success: true, data };
+    // Se não houver sessão ativa, testar o serviço de autenticação
+    if (!sessionData?.session) {
+      try {
+        // Apenas verificar se o serviço de autenticação responde
+        const { data, error } = await supabase.auth.getUser();
+        
+        if (error && error.status !== 401) {  // 401 é esperado quando não autenticado
+          console.error('Erro ao verificar serviço de autenticação:', error);
+          return { 
+            success: false, 
+            error: `Serviço de autenticação com problema: ${error.message}` 
+          };
+        }
+        
+        return { 
+          success: true, 
+          message: 'Serviço de autenticação está respondendo normalmente' 
+        };
+      } catch (authErr) {
+        console.error('Exceção ao verificar autenticação:', authErr);
+        return { 
+          success: false, 
+          error: 'Falha ao acessar o serviço de autenticação' 
+        };
+      }
+    }
+    
+    return { 
+      success: true, 
+      message: 'Usuário autenticado', 
+      user: sessionData.session.user.email 
+    };
   } catch (err) {
     console.error('Exceção ao verificar configurações de autenticação:', err);
     return { 

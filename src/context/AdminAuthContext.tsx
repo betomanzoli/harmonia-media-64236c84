@@ -34,24 +34,33 @@ export const AdminAuthProvider: React.FC<{ children: ReactNode }> = ({ children 
   
   // Função para testar a conexão com o Supabase
   const testConnection = async (): Promise<void> => {
-    const result = await testSupabaseConnection();
-    setConnectionStatus({
-      tested: true,
-      connected: result.connected,
-      error: result.error
-    });
-    
-    if (!result.connected) {
-      toast({
-        title: 'Problema de conexão',
-        description: `Não foi possível conectar ao Supabase: ${result.error}`,
-        variant: 'destructive',
+    try {
+      const result = await testSupabaseConnection();
+      setConnectionStatus({
+        tested: true,
+        connected: result.connected,
+        error: result.error
       });
-    }
-    
-    console.log('Status da conexão após teste:', result.connected ? 'Conectado' : 'Desconectado');
-    if (!result.connected) {
-      console.error('Erro de conexão:', result.error);
+      
+      if (!result.connected) {
+        toast({
+          title: 'Problema de conexão',
+          description: `Não foi possível conectar ao Supabase: ${result.error}`,
+          variant: 'destructive',
+        });
+      }
+      
+      console.log('Status da conexão após teste:', result.connected ? 'Conectado' : 'Desconectado');
+      if (!result.connected) {
+        console.error('Erro de conexão:', result.error);
+      }
+    } catch (error) {
+      console.error('Erro ao testar conexão:', error);
+      setConnectionStatus({
+        tested: true,
+        connected: false,
+        error: error instanceof Error ? error.message : 'Erro desconhecido'
+      });
     }
   };
   
@@ -192,7 +201,7 @@ export const AdminAuthProvider: React.FC<{ children: ReactNode }> = ({ children 
   );
 };
 
-// Renomeando o hook de useAuth para useAdminAuth para consistência
+// Hook para usar o contexto de autenticação
 export const useAdminAuth = () => {
   const context = useContext(AuthContext);
   if (context === undefined) {
@@ -201,7 +210,7 @@ export const useAdminAuth = () => {
   return context;
 };
 
-// Mantendo useAuth para compatibilidade com o código existente
+// Manter useAuth para compatibilidade com código existente
 export const useAuth = useAdminAuth;
 
 export default AuthContext;
