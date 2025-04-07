@@ -9,9 +9,10 @@ import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { useAdminAuth } from '@/context/AdminAuthContext';
-import { Loader2, AlertTriangle, Info } from 'lucide-react';
+import { Loader2, AlertTriangle, Info, Bug } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { testSupabaseConnection, testAuthSettings } from '@/lib/supabase';
 
 const formSchema = z.object({
   email: z.string().email({ message: 'Email inválido' }),
@@ -23,6 +24,14 @@ const AdminLogin: React.FC = () => {
   const navigate = useNavigate();
   const [isLoading, setIsLoading] = useState(false);
   const [loginError, setLoginError] = useState<string | null>(null);
+  const [debugInfo, setDebugInfo] = useState<{
+    connectionDetails: string;
+    authSettings: string;
+  }>({
+    connectionDetails: 'Não testado',
+    authSettings: 'Não testado',
+  });
+  const [showDebug, setShowDebug] = useState(false);
   const { toast } = useToast();
 
   const form = useForm<z.infer<typeof formSchema>>({
@@ -36,6 +45,7 @@ const AdminLogin: React.FC = () => {
   // Testar conexão ao inicializar
   useEffect(() => {
     const checkConnection = async () => {
+      console.log('AdminLogin: Verificando conexão...');
       if (!connectionStatus.tested) {
         await testConnection();
       }
@@ -79,6 +89,35 @@ const AdminLogin: React.FC = () => {
 
   const handleRetryConnection = async () => {
     await testConnection();
+  };
+
+  const runDiagnostics = async () => {
+    setIsLoading(true);
+    
+    try {
+      // Executar testes de diagnóstico
+      const connectionTest = await testSupabaseConnection();
+      const authTest = await testAuthSettings();
+      
+      setDebugInfo({
+        connectionDetails: JSON.stringify(connectionTest, null, 2),
+        authSettings: JSON.stringify(authTest, null, 2),
+      });
+      
+      toast({
+        title: 'Diagnóstico concluído',
+        description: 'Informações de diagnóstico foram atualizadas',
+      });
+    } catch (err) {
+      console.error('Erro ao executar diagnóstico:', err);
+      toast({
+        title: 'Erro',
+        description: 'Falha ao executar diagnóstico',
+        variant: 'destructive',
+      });
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (
@@ -174,9 +213,47 @@ const AdminLogin: React.FC = () => {
           <Alert className="mt-4">
             <Info className="h-4 w-4" />
             <AlertTitle>Informações de diagnóstico</AlertTitle>
-            <AlertDescription className="text-xs">
+            <AlertDescription className="text-xs space-y-2">
               <p>Status da conexão: {connectionStatus.connected ? 'Conectado' : 'Desconectado'}</p>
               <p>Versão do cliente Supabase: 2.49.4</p>
+              <Button 
+                variant="outline" 
+                size="sm" 
+                className="mt-1 w-full"
+                onClick={() => setShowDebug(!showDebug)}
+              >
+                {showDebug ? 'Ocultar detalhes' : 'Mostrar detalhes avançados'}
+              </Button>
+              {showDebug && (
+                <Button 
+                  variant="outline" 
+                  size="sm" 
+                  className="mt-1 w-full"
+                  onClick={runDiagnostics}
+                  disabled={isLoading}
+                >
+                  {isLoading ? (
+                    <>
+                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                      Executando diagnóstico...
+                    </>
+                  ) : (
+                    <>
+                      <Bug className="mr-2 h-4 w-4" />
+                      Executar diagnóstico completo
+                    </>
+                  )}
+                </Button>
+              )}
+              {showDebug && (
+                <div className="mt-2 space-y-2 bg-slate-100 p-2 rounded text-xs">
+                  <h4 className="font-bold">Detalhes da conexão:</h4>
+                  <pre className="whitespace-pre-wrap break-all">{debugInfo.connectionDetails}</pre>
+                  
+                  <h4 className="font-bold">Configurações de autenticação:</h4>
+                  <pre className="whitespace-pre-wrap break-all">{debugInfo.authSettings}</pre>
+                </div>
+              )}
             </AlertDescription>
           </Alert>
         </CardContent>

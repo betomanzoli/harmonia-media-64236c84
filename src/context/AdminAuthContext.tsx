@@ -33,7 +33,7 @@ export const AdminAuthProvider: React.FC<{ children: ReactNode }> = ({ children 
   const { toast } = useToast();
   
   // Função para testar a conexão com o Supabase
-  const testConnection = async () => {
+  const testConnection = async (): Promise<void> => {
     const result = await testSupabaseConnection();
     setConnectionStatus({
       tested: true,
@@ -49,7 +49,10 @@ export const AdminAuthProvider: React.FC<{ children: ReactNode }> = ({ children 
       });
     }
     
-    return result;
+    console.log('Status da conexão após teste:', result.connected ? 'Conectado' : 'Desconectado');
+    if (!result.connected) {
+      console.error('Erro de conexão:', result.error);
+    }
   };
   
   useEffect(() => {
@@ -58,6 +61,7 @@ export const AdminAuthProvider: React.FC<{ children: ReactNode }> = ({ children 
       setIsLoading(true);
       
       try {
+        console.log('Verificando sessão de autenticação...');
         const { data, error } = await supabase.auth.getSession();
         
         if (error) {
@@ -112,14 +116,16 @@ export const AdminAuthProvider: React.FC<{ children: ReactNode }> = ({ children 
       console.log("Tentando fazer login com email:", email);
       
       // Verificar conexão primeiro
-      const connectionTest = await testConnection();
-      if (!connectionTest.connected) {
+      await testConnection();
+      
+      if (!connectionStatus.connected) {
         return { 
           success: false, 
-          error: `Problema de conexão com o Supabase: ${connectionTest.error}` 
+          error: `Problema de conexão com o Supabase: ${connectionStatus.error}` 
         };
       }
       
+      console.log('Executando login com Supabase...');
       const { data, error } = await supabase.auth.signInWithPassword({
         email,
         password,

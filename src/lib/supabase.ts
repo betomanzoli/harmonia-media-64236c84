@@ -5,6 +5,7 @@ const supabaseUrl = 'https://thqxrpvbnrbdcyjtcgwo.supabase.co';
 const supabaseAnonKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRocXhycHZibm5yYmRjeWp0Y2d3byIsInJvbGUiOiJhbm9uIiwiaWF0IjoxNzEyNTEzMjEzLCJleHAiOjIwMjgwODkyMTN9.C4-pzdZ59Nd0z_jVBTxpPyxX1WD1FLOjEUSNL1eDZR8';
 
 console.warn('⚠️ Usando chaves padrão do Supabase. Configure as variáveis de ambiente para produção.');
+console.log('URL Supabase:', supabaseUrl);
 
 // Inicializar o cliente Supabase
 export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
@@ -20,18 +21,60 @@ export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
 export const testSupabaseConnection = async () => {
   try {
     console.log('Testando conexão com o Supabase...');
-    const { data, error } = await supabase.from('system_settings').select('count(*)', { count: 'exact' });
     
-    if (error) {
-      console.error('Erro de conexão com o Supabase:', error);
-      return { connected: false, error: error.message };
+    // Primeiro teste: verificar conexão básica
+    const { data: versionData, error: versionError } = await supabase.rpc('version');
+    
+    if (versionError) {
+      console.error('Erro ao verificar versão do Supabase:', versionError);
+      
+      // Tentar um teste alternativo se o primeiro falhar
+      const { data, error } = await supabase.from('system_settings').select('count(*)', { count: 'exact' });
+      
+      if (error) {
+        console.error('Erro de conexão com o Supabase (tabela):', error);
+        return { 
+          connected: false, 
+          error: `Falha na conexão: ${error.message}. Código: ${error.code}`
+        };
+      }
+      
+      console.log('Conexão com tabela system_settings bem-sucedida!');
+      return { connected: true, data };
     }
     
-    console.log('Conexão com o Supabase bem-sucedida!');
-    return { connected: true, data };
+    console.log('Conexão com o Supabase bem-sucedida! Versão:', versionData);
+    return { connected: true, data: versionData };
   } catch (err) {
     console.error('Exceção ao testar conexão:', err);
-    return { connected: false, error: err instanceof Error ? err.message : 'Erro desconhecido' };
+    return { 
+      connected: false, 
+      error: err instanceof Error ? err.message : 'Erro desconhecido' 
+    };
+  }
+};
+
+// Testar autenticação específica
+export const testAuthSettings = async () => {
+  try {
+    console.log('Verificando configurações de autenticação...');
+    
+    // Tentar obter configurações do projeto, isso requer um usuário admin
+    // Isso é apenas para diagnóstico e será removido em produção
+    const { data, error } = await supabase.auth.admin.listUsers();
+    
+    if (error) {
+      console.error('Erro ao verificar configurações de autenticação:', error);
+      return { success: false, error: error.message };
+    }
+    
+    return { success: true, data };
+  } catch (err) {
+    console.error('Exceção ao verificar configurações de autenticação:', err);
+    return { 
+      success: false, 
+      error: err instanceof Error ? err.message : 'Erro desconhecido' 
+    };
   }
 };
 
