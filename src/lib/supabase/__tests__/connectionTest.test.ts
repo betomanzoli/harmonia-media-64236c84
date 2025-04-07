@@ -102,7 +102,7 @@ describe('testSupabaseConnection', () => {
       error: null,
     };
     
-    vi.mocked(supabase.rpc).mockReturnValueOnce(mockRpcResponse);
+    vi.mocked(supabase.rpc).mockReturnValue(mockRpcResponse);
     
     const result = await testSupabaseConnection();
     
@@ -124,7 +124,7 @@ describe('testSupabaseConnection', () => {
       error: { message: 'RPC error', code: 'ERROR' },
     };
     
-    vi.mocked(supabase.rpc).mockReturnValueOnce(mockRpcResponse);
+    vi.mocked(supabase.rpc).mockReturnValue(mockRpcResponse);
     
     // Mock successful table call with select method
     const mockSelectResponse = {
@@ -133,9 +133,11 @@ describe('testSupabaseConnection', () => {
     };
     
     const mockSelectFn = vi.fn().mockReturnValue(mockSelectResponse);
-    vi.mocked(supabase.from).mockReturnValueOnce({
+    const mockFrom = {
       select: mockSelectFn,
-    } as any);
+    };
+    
+    vi.mocked(supabase.from).mockReturnValue(mockFrom as any);
     
     const result = await testSupabaseConnection();
     
@@ -157,7 +159,7 @@ describe('testSupabaseConnection', () => {
       error: { message: 'RPC error', code: 'ERROR' },
     };
     
-    vi.mocked(supabase.rpc).mockReturnValueOnce(mockRpcResponse);
+    vi.mocked(supabase.rpc).mockReturnValue(mockRpcResponse);
     
     // Mock failed table call with select method
     const mockSelectResponse = {
@@ -166,9 +168,11 @@ describe('testSupabaseConnection', () => {
     };
     
     const mockSelectFn = vi.fn().mockReturnValue(mockSelectResponse);
-    vi.mocked(supabase.from).mockReturnValueOnce({
+    const mockFrom = {
       select: mockSelectFn,
-    } as any);
+    };
+    
+    vi.mocked(supabase.from).mockReturnValue(mockFrom as any);
     
     const result = await testSupabaseConnection();
     
