@@ -4,10 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Loader2 } from "lucide-react";
 import { useIntegrationConfig } from '@/hooks/admin/useIntegrationConfig';
-import webhookService from '@/services/webhookService';
-
-// Definir os tipos aceitáveis de notificação
-type NotificationType = 'new_portfolio_item' | 'test_message' | 'feedback_received';
+import webhookService, { NotificationType } from '@/services/webhookService';
 
 interface IntegrationConfigProps {
   portfolioItems: any[];

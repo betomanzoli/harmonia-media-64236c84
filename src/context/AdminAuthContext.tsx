@@ -1,148 +1,148 @@
 
-import React, { createContext, useContext, useState, useEffect } from 'react';
+import React, { createContext, useState, useContext, useEffect, ReactNode } from 'react';
 import { supabase } from '@/lib/supabase';
 import { useToast } from '@/hooks/use-toast';
 
-type AdminAuthContextType = {
+interface AuthContextType {
+  user: any;
   isAuthenticated: boolean;
-  login: (email: string, password: string) => Promise<boolean>;
-  logout: () => Promise<void>;
   isLoading: boolean;
-};
+  login: (email: string, password: string) => Promise<{ success: boolean; error?: string }>;
+  logout: () => Promise<void>;
+}
 
-const AdminAuthContext = createContext<AdminAuthContextType | undefined>(undefined);
+const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
-export const AdminAuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const [isAuthenticated, setIsAuthenticated] = useState<boolean>(false);
-  const [isLoading, setIsLoading] = useState<boolean>(true);
+export const AdminAuthProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
+  const [user, setUser] = useState<any>(null);
+  const [isLoading, setIsLoading] = useState(true);
   const { toast } = useToast();
-
-  // Verificar se o usuário já está autenticado quando o componente monta
+  
   useEffect(() => {
+    // Verificar se há uma sessão ativa
     const checkSession = async () => {
+      setIsLoading(true);
+      
       try {
-        const { data } = await supabase.auth.getSession();
+        const { data, error } = await supabase.auth.getSession();
         
-        if (data.session) {
-          // Verificar se o usuário tem papel de administrador
-          const { data: userData } = await supabase
-            .from('admin_users')
-            .select('*')
-            .eq('user_id', data.session.user.id)
-            .single();
-            
-          if (userData) {
-            setIsAuthenticated(true);
-          }
+        if (error) {
+          console.error("Erro ao verificar sessão:", error);
+          throw error;
         }
-      } catch (error) {
-        console.error('Erro ao verificar sessão:', error);
+        
+        if (data?.session) {
+          console.log("Sessão encontrada:", data.session.user.email);
+          setUser(data.session.user);
+        } else {
+          console.log("Nenhuma sessão encontrada");
+          setUser(null);
+        }
+      } catch (err) {
+        console.error("Erro ao checar autenticação:", err);
+        setUser(null);
       } finally {
         setIsLoading(false);
       }
     };
-
+    
+    // Executar verificação inicial
     checkSession();
     
     // Configurar listener para mudanças de autenticação
     const { data: authListener } = supabase.auth.onAuthStateChange(
       async (event, session) => {
-        if (event === 'SIGNED_IN' && session) {
-          // Verificar se o usuário é administrador
-          const { data: userData } = await supabase
-            .from('admin_users')
-            .select('*')
-            .eq('user_id', session.user.id)
-            .single();
-            
-          if (userData) {
-            setIsAuthenticated(true);
-          }
-        } else if (event === 'SIGNED_OUT') {
-          setIsAuthenticated(false);
+        console.log("Evento de autenticação:", event);
+        if (session?.user) {
+          console.log("Usuário autenticado:", session.user.email);
+          setUser(session.user);
+        } else {
+          console.log("Usuário desconectado");
+          setUser(null);
         }
       }
     );
-
+    
+    // Limpar listener ao desmontar
     return () => {
-      authListener.subscription.unsubscribe();
+      authListener?.subscription.unsubscribe();
     };
   }, []);
-
-  const login = async (email: string, password: string): Promise<boolean> => {
+  
+  const login = async (email: string, password: string): Promise<{ success: boolean; error?: string }> => {
     try {
-      setIsLoading(true);
+      console.log("Tentando fazer login com email:", email);
+      
       const { data, error } = await supabase.auth.signInWithPassword({
         email,
         password,
       });
-
+      
       if (error) {
-        toast({
-          title: "Erro de autenticação",
-          description: error.message,
-          variant: "destructive",
-        });
-        return false;
-      }
-
-      if (data.user) {
-        // Verificar se o usuário é administrador
-        const { data: userData, error: userError } = await supabase
-          .from('admin_users')
-          .select('*')
-          .eq('user_id', data.user.id)
-          .single();
-          
-        if (userError || !userData) {
-          toast({
-            title: "Acesso negado",
-            description: "Você não tem permissão de administrador",
-            variant: "destructive",
-          });
-          await supabase.auth.signOut();
-          return false;
-        }
-
-        toast({
-          title: "Login bem-sucedido",
-          description: "Você está autenticado como administrador.",
-        });
-        return true;
+        console.error("Erro de autenticação:", error);
+        return { 
+          success: false, 
+          error: error.message || 'Falha na autenticação' 
+        };
       }
       
-      return false;
-    } catch (error) {
-      console.error('Erro ao fazer login:', error);
-      return false;
-    } finally {
-      setIsLoading(false);
+      console.log("Login bem-sucedido:", data.user);
+      setUser(data.user);
+      
+      toast({
+        title: 'Login bem-sucedido',
+        description: `Bem-vindo, ${data.user?.email}!`,
+      });
+      
+      return { success: true };
+    } catch (err: any) {
+      console.error("Exceção durante login:", err);
+      return { 
+        success: false, 
+        error: err.message || 'Ocorreu um erro durante o login' 
+      };
     }
   };
-
-  const logout = async (): Promise<void> => {
+  
+  const logout = async () => {
     try {
-      setIsLoading(true);
       await supabase.auth.signOut();
-      setIsAuthenticated(false);
-    } catch (error) {
-      console.error('Erro ao fazer logout:', error);
-    } finally {
-      setIsLoading(false);
+      setUser(null);
+      toast({
+        title: 'Logout',
+        description: 'Você foi desconectado com sucesso.',
+      });
+    } catch (err) {
+      console.error("Erro ao fazer logout:", err);
+      toast({
+        title: 'Erro',
+        description: 'Falha ao desconectar. Tente novamente.',
+        variant: 'destructive',
+      });
     }
   };
-
+  
   return (
-    <AdminAuthContext.Provider value={{ isAuthenticated, login, logout, isLoading }}>
+    <AuthContext.Provider 
+      value={{ 
+        user, 
+        isAuthenticated: !!user, 
+        isLoading, 
+        login, 
+        logout 
+      }}
+    >
       {children}
-    </AdminAuthContext.Provider>
+    </AuthContext.Provider>
   );
 };
 
-export const useAdminAuth = (): AdminAuthContextType => {
-  const context = useContext(AdminAuthContext);
+export const useAuth = () => {
+  const context = useContext(AuthContext);
   if (context === undefined) {
-    throw new Error('useAdminAuth must be used within an AdminAuthProvider');
+    throw new Error('useAuth deve ser usado dentro de um AdminAuthProvider');
   }
   return context;
 };
+
+export default AuthContext;

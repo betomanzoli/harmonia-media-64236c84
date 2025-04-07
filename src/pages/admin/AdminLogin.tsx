@@ -1,99 +1,134 @@
 
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useAdminAuth } from '@/context/AdminAuthContext';
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
+import { useForm } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+import * as z from 'zod';
 import { Button } from "@/components/ui/button";
-import { Label } from "@/components/ui/label";
-import { Alert, AlertDescription } from "@/components/ui/alert";
-import { Lock, Shield, Mail } from 'lucide-react';
+import { Input } from "@/components/ui/input";
+import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
+import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
+import { useAuth } from '@/context/AdminAuthContext';
+import { Loader2 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 
+const formSchema = z.object({
+  email: z.string().email({ message: 'Email inválido' }),
+  password: z.string().min(6, { message: 'A senha deve ter pelo menos 6 caracteres' }),
+});
+
 const AdminLogin: React.FC = () => {
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
-  const [error, setError] = useState(false);
-  const { login, isLoading } = useAdminAuth();
+  const { login } = useAuth();
   const navigate = useNavigate();
+  const [isLoading, setIsLoading] = useState(false);
   const { toast } = useToast();
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setError(false);
+  const form = useForm<z.infer<typeof formSchema>>({
+    resolver: zodResolver(formSchema),
+    defaultValues: {
+      email: '',
+      password: '',
+    },
+  });
+
+  const handleSubmit = async (values: z.infer<typeof formSchema>) => {
+    setIsLoading(true);
     
-    const success = await login(email, password);
-    if (success) {
-      navigate('/admin-j28s7d1k/dashboard');
-    } else {
-      setError(true);
+    console.log("Tentando fazer login com:", { email: values.email });
+    
+    try {
+      const { success, error } = await login(values.email, values.password);
+      
+      if (success) {
+        navigate('/admin-j28s7d1k/dashboard');
+      } else {
+        console.error("Erro de login:", error);
+        toast({
+          title: 'Falha no login',
+          description: error || 'Credenciais inválidas. Por favor, tente novamente.',
+          variant: 'destructive',
+        });
+      }
+    } catch (error) {
+      console.error("Erro durante login:", error);
+      toast({
+        title: 'Erro',
+        description: 'Ocorreu um erro durante o login. Por favor, tente novamente.',
+        variant: 'destructive',
+      });
+    } finally {
+      setIsLoading(false);
     }
   };
 
   return (
-    <div className="flex items-center justify-center min-h-screen bg-gray-50">
+    <div className="min-h-screen flex items-center justify-center bg-gray-100 p-4">
       <Card className="w-full max-w-md">
         <CardHeader className="space-y-1">
-          <div className="flex justify-center mb-4">
-            <Shield className="w-12 h-12 text-harmonia-green" />
-          </div>
-          <CardTitle className="text-2xl text-center">Área Administrativa</CardTitle>
-          <CardDescription className="text-center">
-            Entre com suas credenciais para acessar a área administrativa da harmonIA
+          <CardTitle className="text-2xl font-bold">harmonIA</CardTitle>
+          <CardDescription>
+            Área Administrativa
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <form onSubmit={handleSubmit}>
-            {error && (
-              <Alert className="mb-4 border-red-200 bg-red-50 text-red-800">
-                <AlertDescription>
-                  Credenciais inválidas. Por favor, tente novamente.
-                </AlertDescription>
-              </Alert>
-            )}
-            <div className="space-y-4">
-              <div className="space-y-2">
-                <Label htmlFor="email">E-mail</Label>
-                <div className="relative">
-                  <Input
-                    id="email"
-                    type="email"
-                    placeholder="Digite seu e-mail de administrador"
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                    className="pl-10"
-                    required
-                  />
-                  <Mail className="absolute left-3 top-2.5 h-5 w-5 text-gray-400" />
-                </div>
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="password">Senha</Label>
-                <div className="relative">
-                  <Input
-                    id="password"
-                    type="password"
-                    placeholder="Digite sua senha de administrador"
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
-                    className="pl-10"
-                    required
-                  />
-                  <Lock className="absolute left-3 top-2.5 h-5 w-5 text-gray-400" />
-                </div>
-              </div>
-              <Button 
-                type="submit" 
-                className="w-full bg-harmonia-green hover:bg-harmonia-green/90"
+          <Form {...form}>
+            <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-4">
+              <FormField
+                control={form.control}
+                name="email"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Email</FormLabel>
+                    <FormControl>
+                      <Input
+                        placeholder="admin@example.com"
+                        {...field}
+                        disabled={isLoading}
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={form.control}
+                name="password"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Senha</FormLabel>
+                    <FormControl>
+                      <Input
+                        type="password"
+                        placeholder="******"
+                        {...field}
+                        disabled={isLoading}
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <Button
+                type="submit"
+                className="w-full"
                 disabled={isLoading}
               >
-                {isLoading ? 'Autenticando...' : 'Entrar'}
+                {isLoading ? (
+                  <>
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    Entrando...
+                  </>
+                ) : (
+                  'Entrar'
+                )}
               </Button>
-            </div>
-          </form>
+            </form>
+          </Form>
         </CardContent>
-        <CardFooter className="text-center text-sm text-gray-500">
-          Esta área é restrita aos administradores da harmonIA
+        <CardFooter className="flex flex-col">
+          <p className="text-sm text-muted-foreground text-center">
+            Área restrita para administradores do harmonIA.
+          </p>
         </CardFooter>
       </Card>
     </div>

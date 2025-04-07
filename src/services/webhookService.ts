@@ -1,97 +1,77 @@
 
+// Serviço para gerenciar webhooks
 import { supabase } from '@/lib/supabase';
 
-// Tipos de notificações que o sistema pode enviar
-export type NotificationType = 
-  | 'new_qualification'
-  | 'new_payment'
-  | 'new_briefing'
-  | 'feedback_received'
-  | 'preview_approved';
+// Definir os tipos aceitáveis de notificação
+export type NotificationType = 'new_portfolio_item' | 'test_message' | 'feedback_received';
 
-// Interface para dados de webhook
-export interface WebhookData {
+interface WebhookPayload {
   type: NotificationType;
   data: any;
   timestamp: string;
 }
 
-// Serviço de webhook para integrações externas (Zapier, Make, etc.)
-export const webhookService = {
-  /**
-   * Envia dados para um webhook configurado
-   */
-  sendToWebhook: async (webhookUrl: string, data: WebhookData) => {
-    if (!webhookUrl) {
-      console.warn('URL de webhook não fornecida');
-      return { success: false, error: 'URL não fornecida' };
-    }
-
-    try {
-      const response = await fetch(webhookUrl, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(data),
-        mode: 'no-cors', // Para evitar problemas de CORS com webhooks externos
-      });
-
-      // Como estamos usando mode: 'no-cors', não podemos verificar o status
-      // Assumimos que a solicitação foi bem-sucedida
-      return { success: true };
-    } catch (error) {
-      console.error('Erro ao enviar para webhook:', error);
-      return { success: false, error };
-    }
-  },
-
-  /**
-   * Obtém a URL do webhook configurada no sistema
-   */
-  getWebhookUrl: async (): Promise<string | null> => {
-    try {
-      const { data, error } = await supabase
-        .from('system_settings')
-        .select('value')
-        .eq('key', 'webhook_url')
-        .single();
-
-      if (error || !data) {
-        console.error('Erro ao obter URL do webhook:', error);
-        return null;
-      }
-
-      return data.value;
-    } catch (error) {
-      console.error('Erro ao consultar configurações:', error);
+const getWebhookUrl = async (): Promise<string | null> => {
+  try {
+    const { data, error } = await supabase
+      .from('system_settings')
+      .select('value')
+      .eq('key', 'webhook_url')
+      .single();
+      
+    if (error) {
+      console.error('Erro ao buscar URL do webhook:', error);
       return null;
     }
-  },
-
-  /**
-   * Salva uma nova URL de webhook no sistema
-   */
-  saveWebhookUrl: async (url: string): Promise<boolean> => {
-    try {
-      const { error } = await supabase
-        .from('system_settings')
-        .upsert(
-          { key: 'webhook_url', value: url },
-          { onConflict: 'key' }
-        );
-
-      if (error) {
-        console.error('Erro ao salvar URL do webhook:', error);
-        return false;
-      }
-
-      return true;
-    } catch (error) {
-      console.error('Erro ao atualizar configurações:', error);
-      return false;
-    }
+    
+    return data?.value || null;
+  } catch (err) {
+    console.error('Erro ao obter URL do webhook:', err);
+    return null;
   }
 };
 
-export default webhookService;
+const saveWebhookUrl = async (url: string): Promise<boolean> => {
+  try {
+    const { error } = await supabase
+      .from('system_settings')
+      .upsert({ key: 'webhook_url', value: url }, { onConflict: 'key' });
+      
+    if (error) {
+      console.error('Erro ao salvar URL do webhook:', error);
+      return false;
+    }
+    
+    return true;
+  } catch (err) {
+    console.error('Erro ao salvar URL do webhook:', err);
+    return false;
+  }
+};
+
+const sendToWebhook = async (webhookUrl: string, payload: WebhookPayload): Promise<boolean> => {
+  try {
+    // Enviar dados para o webhook configurado
+    const response = await fetch(webhookUrl, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(payload),
+      mode: 'no-cors', // Necessário para alguns serviços de webhook
+    });
+    
+    // Como estamos usando no-cors, não podemos verificar o status da resposta
+    console.log('Webhook enviado:', payload);
+    return true;
+  } catch (err) {
+    console.error('Erro ao enviar para webhook:', err);
+    return false;
+  }
+};
+
+export default {
+  getWebhookUrl,
+  saveWebhookUrl,
+  sendToWebhook,
+};
