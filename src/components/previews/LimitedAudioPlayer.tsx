@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect, useRef } from 'react';
 import { Play, Pause, Volume2, VolumeX } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -8,10 +9,16 @@ interface LimitedAudioPlayerProps {
   audioUrl: string;
   previewDuration?: number; // Duration in seconds
   className?: string;
+  title?: string;
+  subtitle?: string;
+  audioSrc?: string;
 }
 
 const LimitedAudioPlayer: React.FC<LimitedAudioPlayerProps> = ({
   audioUrl,
+  audioSrc,
+  title,
+  subtitle,
   previewDuration = 30, // Default to 30 seconds preview
   className,
 }) => {
@@ -24,8 +31,11 @@ const LimitedAudioPlayer: React.FC<LimitedAudioPlayerProps> = ({
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const animationRef = useRef<number>(0);
 
+  // Use audioSrc as fallback if audioUrl is not provided
+  const finalAudioUrl = audioUrl || audioSrc || '';
+
   useEffect(() => {
-    const audio = new Audio(audioUrl);
+    const audio = new Audio(finalAudioUrl);
     audioRef.current = audio;
     
     audio.addEventListener('loadedmetadata', () => {
@@ -48,7 +58,7 @@ const LimitedAudioPlayer: React.FC<LimitedAudioPlayerProps> = ({
       audio.removeEventListener('ended', () => {});
       cancelAnimationFrame(animationRef.current);
     };
-  }, [audioUrl, previewDuration]);
+  }, [finalAudioUrl, previewDuration]);
   
   const togglePlayPause = () => {
     if (!audioRef.current) return;
@@ -123,6 +133,13 @@ const LimitedAudioPlayer: React.FC<LimitedAudioPlayerProps> = ({
   
   return (
     <div className={cn("w-full p-4 bg-card rounded-md border border-border", className)}>
+      {(title || subtitle) && (
+        <div className="mb-4">
+          {title && <h3 className="font-semibold text-lg">{title}</h3>}
+          {subtitle && <p className="text-gray-400 text-sm">{subtitle}</p>}
+        </div>
+      )}
+      
       <div className="flex items-center gap-4">
         <Button 
           variant="ghost" 

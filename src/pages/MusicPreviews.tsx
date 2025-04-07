@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import Header from '@/components/Header';
@@ -8,7 +7,7 @@ import { ArrowLeft, Check, ThumbsUp, ThumbsDown } from 'lucide-react';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/components/ui/use-toast";
-import LimitedAudioPlayer from '@/components/previews/LimitedAudioPlayer';
+import LimitedAudioPlayer from '@/components/LimitedAudioPlayer';
 import { PreviewFeedbackForm } from '@/components/previews/PreviewFeedbackForm';
 
 interface MusicPreview {
@@ -18,7 +17,6 @@ interface MusicPreview {
   audioUrl: string;
 }
 
-// Mock data - In a real scenario, this would come from the backend
 const MOCK_PREVIEWS: Record<string, {
   clientName: string;
   projectTitle: string;
@@ -81,11 +79,9 @@ const MusicPreviews: React.FC = () => {
   const [previewData, setPreviewData] = useState<typeof MOCK_PREVIEWS[string] | null>(null);
   
   useEffect(() => {
-    // In a real scenario, this would be an API call
     if (previewId && MOCK_PREVIEWS[previewId]) {
       setPreviewData(MOCK_PREVIEWS[previewId]);
     } else {
-      // Handle invalid preview ID
       toast({
         title: "Preview não encontrado",
         description: "O código de preview fornecido não é válido.",
@@ -116,13 +112,11 @@ const MusicPreviews: React.FC = () => {
       return;
     }
     
-    // In a real scenario, this would be an API call
     toast({
       title: "Feedback enviado!",
       description: "Obrigado pelo seu feedback. Nossa equipe já está trabalhando nas modificações.",
     });
     
-    // Mock update of the status
     setPreviewData(prev => prev ? {...prev, status: 'feedback' as const} : null);
   };
   
@@ -136,13 +130,11 @@ const MusicPreviews: React.FC = () => {
       return;
     }
     
-    // In a real scenario, this would be an API call
     toast({
       title: "Música aprovada!",
       description: "Estamos felizes que você gostou! Vamos finalizar sua música e entregar em breve.",
     });
     
-    // Mock update of the status
     setPreviewData(prev => prev ? {...prev, status: 'approved' as const} : null);
   };
   
