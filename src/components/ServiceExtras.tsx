@@ -2,7 +2,6 @@
 import React from 'react';
 import { Button } from "@/components/ui/button";
 import { Music, Award, Clock, FileMusic, Sliders, Edit, MusicIcon, Headphones } from 'lucide-react';
-import { useToast } from "@/components/ui/use-toast";
 
 interface ServiceExtrasProps {
   onExtraServiceClick: (service: string) => void;
@@ -84,6 +83,7 @@ const ServiceExtras: React.FC<ServiceExtrasProps> = ({ onExtraServiceClick }) =>
             <li className="text-sm text-gray-300">• Direitos autorais em execuções públicas</li>
             <li className="text-sm text-gray-300">• Essencial para receber royalties</li>
             <li className="text-sm text-gray-300">• Ideal para uso comercial da música</li>
+            <li className="text-sm text-gray-300">• Disponível para todos os pacotes</li>
           </ul>
           <Button 
             onClick={() => onExtraServiceClick("Registro UBC")}

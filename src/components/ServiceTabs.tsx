@@ -38,7 +38,8 @@ const ServiceTabs: React.FC<ServiceTabsProps> = ({ activeTab, setActiveTab }) =>
             "Arquivo digital em alta qualidade (MP3/WAV)",
             "Certificado digital de autoria",
             "Entrega em até 48 horas",
-            "Uso permitido: Apenas pessoal, sem direitos comerciais"
+            "Uso permitido: Apenas pessoal, sem direitos comerciais",
+            "1 composição musical final (IA + revisão humana)"
           ]}
         />
         <ServiceCard 
@@ -52,7 +53,8 @@ const ServiceTabs: React.FC<ServiceTabsProps> = ({ activeTab, setActiveTab }) =>
             "3 revisões gratuitas",
             "Entrega em até 72 horas",
             "Formato adequado para plataformas digitais",
-            "Uso permitido: Uso em conteúdo digital próprio"
+            "Uso permitido: Uso em conteúdo digital próprio",
+            "1 composição musical final (IA + revisão humana)"
           ]}
           recommended={true}
         />
@@ -69,7 +71,8 @@ const ServiceTabs: React.FC<ServiceTabsProps> = ({ activeTab, setActiveTab }) =>
             "Revisões ilimitadas (em 30 dias)",
             "Licença comercial completa",
             "Entrega prioritária",
-            "Suporte pós-venda por 30 dias"
+            "Suporte pós-venda por 30 dias",
+            "1 composição musical final (IA + revisão humana)"
           ]}
         />
       </TabsContent>
@@ -85,7 +88,8 @@ const ServiceTabs: React.FC<ServiceTabsProps> = ({ activeTab, setActiveTab }) =>
             "Arquivo digital em alta qualidade (MP3/WAV)",
             "Certificado digital de autoria",
             "Entrega em até 48 horas",
-            "Uso permitido: Apenas pessoal, sem direitos comerciais"
+            "Uso permitido: Apenas pessoal, sem direitos comerciais",
+            "1 composição musical final (IA + revisão humana)"
           ]}
           recommended={true}
         />
@@ -103,7 +107,8 @@ const ServiceTabs: React.FC<ServiceTabsProps> = ({ activeTab, setActiveTab }) =>
             "3 revisões gratuitas",
             "Entrega em até 72 horas",
             "Formato adequado para plataformas digitais",
-            "Uso permitido: Uso em conteúdo digital próprio"
+            "Uso permitido: Uso em conteúdo digital próprio",
+            "1 composição musical final (IA + revisão humana)"
           ]}
           recommended={true}
         />
@@ -123,7 +128,8 @@ const ServiceTabs: React.FC<ServiceTabsProps> = ({ activeTab, setActiveTab }) =>
             "Revisões ilimitadas (em 30 dias)",
             "Licença comercial completa",
             "Entrega prioritária",
-            "Suporte pós-venda por 30 dias"
+            "Suporte pós-venda por 30 dias",
+            "1 composição musical final (IA + revisão humana)"
           ]}
           recommended={true}
         />

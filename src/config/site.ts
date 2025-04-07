@@ -40,9 +40,11 @@ export const siteConfig = {
     portfolio: "/portfolio",
     packages: "/pacotes",
     orderTracking: "/acompanhar-pedido",
+    previews: "/previews",
     admin: {
       audioDatabase: "/admin-j28s7d1k/audio-database",
       portfolio: "/admin-j28s7d1k/portfolio",
+      dashboard: "/admin-j28s7d1k/dashboard",
     }
   },
   
@@ -53,4 +55,3 @@ export const siteConfig = {
     premiumPrice: 969,
   }
 };
-
