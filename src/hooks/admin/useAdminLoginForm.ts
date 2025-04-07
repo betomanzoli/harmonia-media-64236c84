@@ -1,221 +1,176 @@
-import { useState, useEffect, useCallback } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { useToast } from '@/hooks/use-toast';
+
+import { useState, useCallback } from 'react';
 import { supabase } from '@/lib/supabase';
-import { AdminLoginFormData } from '@/types/admin';
-import { testSupabaseConnection, testAuthSettings, securityService } from '@/lib/supabase';
+import { useToast } from '@/hooks/use-toast';
+import { LoginFormData } from '@/types/admin-auth';
 
-interface ConnectionStatus {
-  tested: boolean;
-  connected: boolean;
-  message: string;
-}
-
-interface DiagnosticInfo {
-  supabaseUrl: string;
-  authSettings: any;
-  securitySettings: any;
-}
-
-export function useAdminLoginForm() {
-  const [isLoading, setIsLoading] = useState(false);
-  const [loginError, setLoginError] = useState<string | null>(null);
+export const useAdminLoginForm = () => {
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [loading, setLoading] = useState(false);
+  const [success, setSuccess] = useState(false);
+  const [error, setError] = useState<string | null>(null);
   const [showPasswordReset, setShowPasswordReset] = useState(false);
-  const [detailedErrorInfo, setDetailedErrorInfo] = useState<any>(null);
-  const [debugInfo, setDebugInfo] = useState<DiagnosticInfo>({
-    supabaseUrl: '',
-    authSettings: null,
-    securitySettings: null,
-  });
-  const [connectionStatus, setConnectionStatus] = useState<ConnectionStatus>({
-    tested: false,
-    connected: false,
-    message: 'Aguardando teste de conexão...',
-  });
-  const [isAuthenticated, setIsAuthenticated] = useState(false);
-  const navigate = useNavigate();
+  const [resetEmail, setResetEmail] = useState('');
+  const [resetLoading, setResetLoading] = useState(false);
+  const [resetSuccess, setResetSuccess] = useState(false);
+  const [resetError, setResetError] = useState<string | null>(null);
   const { toast } = useToast();
 
-  // Function to test the connection to Supabase
-  const testConnection = useCallback(async () => {
-    setIsLoading(true);
-    setConnectionStatus({ tested: false, connected: false, message: 'Testando conexão...' });
+  const resetForm = useCallback(() => {
+    setEmail('');
+    setPassword('');
+    setError(null);
+    setSuccess(false);
+  }, []);
+
+  const handleEmailChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
+    setEmail(e.target.value);
+  }, []);
+
+  const handlePasswordChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
+    setPassword(e.target.value);
+  }, []);
+
+  const handleResetEmailChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
+    setResetEmail(e.target.value);
+  }, []);
+
+  const handleSubmit = useCallback(async (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    setLoading(true);
+    setError(null);
     
     try {
-      const result = await testSupabaseConnection();
-      if (result.success) {
-        setConnectionStatus({ tested: true, connected: true, message: result.message });
-      } else {
-        setConnectionStatus({ tested: true, connected: false, message: 'Falha ao conectar: ' + result.message });
+      // Validação simples
+      if (!email || !password) {
+        throw new Error('Por favor, preencha todos os campos.');
       }
-    } catch (error: any) {
-      console.error('Erro ao testar conexão:', error);
-      setConnectionStatus({
-        tested: true,
-        connected: false,
-        message: 'Erro ao testar conexão: ' + (error.message || 'Erro desconhecido'),
-      });
-    } finally {
-      setIsLoading(false);
-    }
-  }, []);
-
-  // Function to handle form submission
-  const handleSubmit = async (data: AdminLoginFormData) => {
-    setIsLoading(true);
-    setLoginError(null);
-    setDetailedErrorInfo(null);
-
-    try {
-      const { data: authResponse, error } = await supabase.auth.signInWithPassword({
-        email: data.email,
-        password: data.password,
-      });
-
-      if (error) {
-        console.error('Erro de login:', error);
-        setLoginError('Credenciais inválidas. Verifique seu email e senha.');
-        setDetailedErrorInfo(error);
-        toast({
-          title: "Erro ao logar",
-          description: "Verifique suas credenciais e tente novamente.",
-          variant: "destructive",
-        });
-      } else {
-        setIsAuthenticated(true);
-        localStorage.setItem('harmonia-admin-auth-token', authResponse.session?.access_token || '');
-        localStorage.setItem('harmonia-admin-auth-user', JSON.stringify(authResponse.session?.user));
-        navigate('/admin-j28s7d1k/dashboard');
-        toast({
-          title: "Login realizado com sucesso!",
-          description: `Bem-vindo(a) ${authResponse.session?.user.email}`,
-        });
+      
+      // Simulação de login para o ambiente de desenvolvimento local
+      // Em produção, este bloco seria substituído pela autenticação real
+      if (process.env.NODE_ENV === 'development') {
+        // Credenciais de teste para desenvolvimento
+        if (email === 'admin@harmonia.ai' && password === 'senha123') {
+          localStorage.setItem('adminAuth', JSON.stringify({
+            user: { email },
+            session: { expires_at: Date.now() + 3600000, access_token: 'fake-token-for-development' },
+          }));
+          
+          setSuccess(true);
+          setTimeout(() => {
+            window.location.href = '/admin-j28s7d1k/dashboard';
+          }, 1500);
+          return;
+        }
       }
+      
+      // Autenticação real com Supabase (não executada em desenvolvimento com as credenciais acima)
+      const auth = supabase.auth;
+      const { error: loginError } = await auth.signInWithPassword({
+        email,
+        password,
+      });
+      
+      if (loginError) throw loginError;
+      
+      setSuccess(true);
+      setTimeout(() => {
+        window.location.href = '/admin-j28s7d1k/dashboard';
+      }, 1500);
+      
     } catch (err: any) {
-      console.error('Erro durante o login:', err);
-      setLoginError('Ocorreu um erro ao processar o login. Tente novamente mais tarde.');
-      setDetailedErrorInfo(err);
-      toast({
-        title: "Erro inesperado",
-        description: "Ocorreu um erro ao processar o login. Tente novamente mais tarde.",
-        variant: "destructive",
-      });
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  // Function to retry the connection
-  const handleRetryConnection = async () => {
-    await testConnection();
-  };
-
-  // Function to run diagnostics
-  const runDiagnostics = async () => {
-    setIsLoading(true);
-    try {
-      const auth = await testAuthSettings();
-      const security = await securityService.checkSettings();
-      setDebugInfo(prev => ({
-        ...prev,
-        authSettings: auth.settings,
-        securitySettings: security.settings
-      }));
-      toast({
-        title: "Diagnóstico completo",
-        description: "As configurações foram verificadas com sucesso.",
-      });
-    } catch (error: any) {
-      console.error('Erro ao executar diagnóstico:', error);
-      toast({
-        title: "Erro no diagnóstico",
-        description: "Ocorreu um erro ao executar o diagnóstico. Verifique o console para mais detalhes.",
-        variant: "destructive",
-      });
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  // Function to handle password reset
-  const handlePasswordReset = async (email: string) => {
-    setIsLoading(true);
-    try {
-      const { error } = await supabase.auth.resetPasswordForEmail(email, {
-        redirectTo: `${window.location.origin}/admin-j28s7d1k/atualizar-senha`,
-      });
-
-      if (error) {
-        console.error('Erro ao solicitar reset de senha:', error);
-        toast({
-          title: "Erro ao resetar senha",
-          description: "Ocorreu um erro ao solicitar o reset de senha. Verifique o email e tente novamente.",
-          variant: "destructive",
-        });
-      } else {
-        toast({
-          title: "Email enviado",
-          description: "Enviamos um link para resetar sua senha. Verifique sua caixa de entrada e spam.",
-        });
-        setShowPasswordReset(false);
+      console.error('Login error:', err);
+      const errorMessage = err.message || 'Ocorreu um erro durante o login.';
+      
+      // Melhorar mensagens de erro para o usuário
+      let userFriendlyMessage = errorMessage;
+      if (errorMessage.includes('Invalid login credentials')) {
+        userFriendlyMessage = 'Credenciais inválidas. Verifique seu email e senha.';
+      } else if (errorMessage.includes('Email not confirmed')) {
+        userFriendlyMessage = 'Seu email ainda não foi confirmado. Verifique sua caixa de entrada.';
       }
-    } catch (error: any) {
-      console.error('Erro ao enviar email de reset:', error);
-      toast({
-        title: "Erro inesperado",
-        description: "Ocorreu um erro ao enviar o email de reset. Tente novamente mais tarde.",
-        variant: "destructive",
-      });
+      
+      setError(userFriendlyMessage);
     } finally {
-      setIsLoading(false);
+      setLoading(false);
     }
+  }, [email, password]);
+
+  const handleResetPassword = useCallback(async () => {
+    setResetLoading(true);
+    setResetError(null);
+    setResetSuccess(false);
+    
+    try {
+      if (!resetEmail) {
+        throw new Error('Por favor, informe seu email.');
+      }
+      
+      const { error: resetError } = await supabase.auth.resetPasswordForEmail(resetEmail, {
+        redirectTo: `${window.location.origin}/admin-reset-password`,
+      });
+      
+      if (resetError) throw resetError;
+      
+      setResetSuccess(true);
+      toast({
+        title: 'Email enviado!',
+        description: 'Verifique sua caixa de entrada para redefinir sua senha.',
+        variant: 'default',
+      });
+      
+      setTimeout(() => {
+        setShowPasswordReset(false);
+        // Limpar o estado após fechar o diálogo
+        setTimeout(() => {
+          setResetSuccess(false);
+          setResetEmail('');
+        }, 300);
+      }, 3000);
+      
+    } catch (err: any) {
+      console.error('Password reset error:', err);
+      setResetError(err.message || 'Ocorreu um erro ao solicitar a redefinição de senha.');
+    } finally {
+      setResetLoading(false);
+    }
+  }, [resetEmail, toast]);
+
+  const closeResetDialog = useCallback(() => {
+    setShowPasswordReset(false);
+    setResetEmail('');
+    setResetError(null);
+    setResetSuccess(false);
+  }, []);
+
+  const openResetDialog = useCallback(() => {
+    setShowPasswordReset(true);
+  }, []);
+
+  const formState: LoginFormData = {
+    email,
+    password,
+    loading,
+    success,
+    error,
+    resetEmail,
+    resetLoading,
+    resetSuccess,
+    resetError,
+    showPasswordReset,
   };
 
-  // Function to load debug information
-  const loadDebugInfo = useCallback(() => {
-    setDebugInfo(prev => ({
-      ...prev,
-      supabaseUrl: supabase.getUrl ? supabase.getUrl() : 'URL não disponível',
-    }));
-  }, []);
-  
-  const enableOfflineMode = async (): Promise<void> => {
-    try {
-      sessionStorage.setItem('offline-admin-mode', 'true');
-      localStorage.setItem('harmonia-admin-auth-token', 'DEMO_TOKEN');
-      
-      const demoUser = {
-        id: 'demo-user',
-        email: 'demo@harmonia.ai',
-        role: 'admin',
-        name: 'Usuário Demo'
-      };
-      
-      localStorage.setItem('harmonia-admin-auth-user', JSON.stringify(demoUser));
-      console.log('Modo offline ativado');
-      
-      // Usando void para garantir que o tipo de retorno é Promise<void>
-      return Promise.resolve();
-    } catch (error) {
-      console.error('Erro ao ativar modo offline:', error);
-      return Promise.resolve();
-    }
-  };
-  
-  return {
-    isLoading,
-    loginError,
-    showPasswordReset,
-    setShowPasswordReset,
-    detailedErrorInfo,
-    debugInfo,
-    connectionStatus,
-    isAuthenticated,
+  const formHandlers = {
+    handleEmailChange,
+    handlePasswordChange,
     handleSubmit,
-    handleRetryConnection,
-    runDiagnostics,
-    handlePasswordReset,
-    loadDebugInfo,
-    enableOfflineMode,
+    resetForm,
+    handleResetEmailChange,
+    handleResetPassword,
+    openResetDialog,
+    closeResetDialog,
   };
-}
+
+  return { formState, formHandlers };
+};
