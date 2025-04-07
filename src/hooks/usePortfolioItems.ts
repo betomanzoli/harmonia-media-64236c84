@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { supabase } from '@/lib/supabase';
 import { useToast } from "@/hooks/use-toast";
@@ -36,7 +35,7 @@ export function usePortfolioItems() {
         .select('count')
         .limit(1);
       
-      if (countResponse?.data !== null) {
+      if (countResponse.data !== null) {
         // Tabela existe, buscar dados
         const response = await supabase
           .from('portfolio_items')

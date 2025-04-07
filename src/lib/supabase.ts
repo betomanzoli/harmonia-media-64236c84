@@ -25,9 +25,7 @@ const createQueryBuilder = (tableName: string) => {
         },
         order: (column: string, options: any) => {
           console.log(`Simulando ordenação por ${column}`);
-          return {
-            limit: async (limit: number) => createMockQueryResponse()
-          };
+          return createQueryBuilder(tableName);
         },
         limit: async (limit: number) => createMockQueryResponse()
       };

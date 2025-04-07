@@ -27,7 +27,7 @@ export const useAudioSamples = () => {
         .select('count')
         .limit(1);
       
-      if (countResponse?.data !== null) {
+      if (countResponse.data !== null) {
         // Tabela existe, buscar dados
         const response = await supabase
           .from('audio_samples')
