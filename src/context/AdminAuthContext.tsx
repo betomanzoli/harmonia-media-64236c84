@@ -1,12 +1,16 @@
 
-import React, { createContext } from 'react';
+import React from 'react';
 import { AdminAuthContextType } from '@/types/admin-auth';
 
-// Create context with undefined as default value
-const AdminAuthContext = createContext<AdminAuthContextType | undefined>(undefined);
-
-// For backward compatibility
-export { useAdminAuth } from '@/hooks/admin/useAdminAuth';
-export { useAdminAuth as useAuth } from '@/hooks/admin/useAdminAuth';
+// Create the context with a default value
+const AdminAuthContext = React.createContext<AdminAuthContextType>({
+  user: null,
+  isAuthenticated: false,
+  isLoading: true,
+  connectionStatus: { tested: false, connected: false },
+  login: async () => ({ success: false, error: 'Context not initialized' }),
+  logout: async () => {},
+  testConnection: async () => {},
+});
 
 export default AdminAuthContext;

@@ -14,7 +14,7 @@ export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
     storageKey: 'harmonia-admin-auth', // Dedicated key for admin session
   },
   global: {
-    fetch: (...args) => {
+    fetch: (...args: Parameters<typeof fetch>) => {
       return fetch(...args);
     }
   }
