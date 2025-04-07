@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React from 'react';
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Loader2, Info } from 'lucide-react';
@@ -19,8 +19,8 @@ const PasswordResetDialog: React.FC<PasswordResetDialogProps> = ({
   onSubmit,
   isLoading
 }) => {
-  const [resetEmail, setResetEmail] = useState('');
-  const [resetSent, setResetSent] = useState(false);
+  const [resetEmail, setResetEmail] = React.useState('');
+  const [resetSent, setResetSent] = React.useState(false);
 
   const handleSubmit = async () => {
     await onSubmit(resetEmail);

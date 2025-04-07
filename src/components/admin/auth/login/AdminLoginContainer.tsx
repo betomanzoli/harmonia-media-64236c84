@@ -5,56 +5,24 @@ import LoginForm from './LoginForm';
 import PasswordResetDialog from './PasswordResetDialog';
 import LoginError from './LoginError';
 import ConnectionAlert from './ConnectionAlert';
-import DiagnosticsPanel from './DiagnosticsPanel';
+import DiagnosticsPanel, { DiagnosticInfo } from './DiagnosticsPanel';
 import { useConnectionTest } from '@/hooks/admin/useConnectionTest';
 import { useDiagnostics } from '@/hooks/admin/useDiagnostics';
 import { AlertTriangle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 
-// Extensão do tipo DiagnosticInfo para incluir todas as propriedades necessárias
-interface DiagnosticInfo {
-  environment: string;
-  supportsIndexedDB: boolean;
-  supportsFetch: boolean;
-  supportsWebSockets: boolean;
-  browserName: string;
-  browserVersion: string;
-  operatingSystem: string;
-  cookiesEnabled: boolean;
-  localStorageAvailable: boolean;
-  sessionStorageAvailable: boolean;
-  timezone: string;
-  language: string;
-  userAgent: string;
-  screenResolution: string;
-  connectionType?: string;
-  connectionSpeed?: string;
-  storageInfo: {
-    localStorageSize: string;
-    sessionStorageSize: string;
-  };
-  connectionDetails: {
-    rtt?: number;
-    downlink?: number;
-    effectiveType?: string;
-    saveData?: boolean;
-  };
-}
-
 const AdminLoginContainer: React.FC = () => {
   const { formState, formHandlers } = useAdminLoginForm();
   const { connectionStatus, errorDetails, testConnection } = useConnectionTest();
-  const { getDiagnostics } = useDiagnostics();
+  const { diagnosticInfo, loadDebugInfo, runDiagnostics } = useDiagnostics();
   const [showDiagnostics, setShowDiagnostics] = useState(false);
-  const [diagnosticInfo, setDiagnosticInfo] = useState<DiagnosticInfo | null>(null);
   
-  // Gerar informações de diagnóstico no primeiro carregamento
+  // Generate diagnostic information on first load
   useEffect(() => {
     testConnection();
-    const diagnostics = getDiagnostics();
-    setDiagnosticInfo(diagnostics);
-  }, [testConnection, getDiagnostics]);
+    loadDebugInfo();
+  }, [testConnection, loadDebugInfo]);
 
   const toggleDiagnostics = () => {
     setShowDiagnostics(!showDiagnostics);
@@ -73,7 +41,7 @@ const AdminLoginContainer: React.FC = () => {
           
           {connectionStatus === 'error' && (
             <ConnectionAlert 
-              errorDetails={errorDetails} 
+              connectionStatus={errorDetails || 'Erro desconhecido'} 
               retryConnection={testConnection}
               toggleDiagnostics={toggleDiagnostics}
             />
@@ -81,8 +49,7 @@ const AdminLoginContainer: React.FC = () => {
           
           {formState.error && (
             <LoginError 
-              error={formState.error} 
-              onDismiss={() => formHandlers.resetForm()}
+              error={formState.error}
               toggleDiagnostics={toggleDiagnostics}
             />
           )}
@@ -130,12 +97,8 @@ const AdminLoginContainer: React.FC = () => {
       <PasswordResetDialog
         open={formState.showPasswordReset}
         onOpenChange={formHandlers.closeResetDialog}
-        email={formState.resetEmail}
-        onEmailChange={formHandlers.handleResetEmailChange}
-        onReset={formHandlers.handleResetPassword}
-        loading={formState.resetLoading}
-        success={formState.resetSuccess}
-        error={formState.resetError}
+        onSubmit={formHandlers.handleResetPassword}
+        isLoading={formState.resetLoading}
       />
     </div>
   );

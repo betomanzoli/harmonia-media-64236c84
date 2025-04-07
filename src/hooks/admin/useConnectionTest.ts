@@ -1,80 +1,41 @@
 
+import { useState, useCallback } from 'react';
 import { useToast } from '@/hooks/use-toast';
-import { ConnectionStatus } from '@/types/admin-auth';
 
-interface UseConnectionTestProps {
-  setIsLoading: (loading: boolean) => void;
-  setConnectionStatus: (status: ConnectionStatus) => void;
-  checkSecurityStatus: () => Promise<void>;
-  offlineMode?: boolean;
-}
-
-export function useConnectionTest({
-  setIsLoading,
-  setConnectionStatus,
-  checkSecurityStatus,
-  offlineMode = false
-}: UseConnectionTestProps) {
+export function useConnectionTest() {
   const { toast } = useToast();
+  const [connectionStatus, setConnectionStatus] = useState('untested');
+  const [errorDetails, setErrorDetails] = useState(null);
 
-  // Function to test connection - now simplified without Supabase
-  const testConnection = async (): Promise<void> => {
-    if (offlineMode) {
-      // In offline mode, simulate a successful connection
-      setConnectionStatus({
-        tested: true,
-        connected: true,
-        details: { offlineMode: true },
-        networkOnline: true,
-        endpointStatus: 'offline_mode'
-      });
-      return;
-    }
-    
+  // Function to test connection
+  const testConnection = useCallback(async (): Promise<void> => {
     try {
-      console.log('Testando conexão à internet...');
+      console.log('Testing internet connection...');
       
-      // Verificar conectividade básica da rede
+      // Basic network connectivity check
       if (typeof navigator !== 'undefined' && !navigator.onLine) {
-        setConnectionStatus({
-          tested: true,
-          connected: false,
-          error: 'Sem conexão com a internet. Verifique sua rede antes de continuar.',
-          endpointStatus: 'offline'
-        });
+        setConnectionStatus('error');
+        setErrorDetails('No internet connection. Please check your network before continuing.');
         return;
       }
       
       // In our local auth implementation, we're always connected if we have internet
-      setConnectionStatus({
-        tested: true,
-        connected: true,
-        details: { localAuth: true },
-        networkOnline: true,
-        endpointStatus: 'available'
-      });
+      setConnectionStatus('connected');
+      setErrorDetails(null);
       
-      console.log('Conexão local estabelecida com sucesso');
-      // If connected, check security status
-      checkSecurityStatus();
+      console.log('Local connection established successfully');
     } catch (error) {
-      console.error('Erro ao testar conexão:', error);
-      setConnectionStatus({
-        tested: true,
-        connected: false,
-        error: error instanceof Error 
-          ? `Erro ao testar conexão: ${error.message}` 
-          : 'Erro desconhecido ao testar conexão',
-        endpointStatus: 'error'
-      });
+      console.error('Error testing connection:', error);
+      setConnectionStatus('error');
+      setErrorDetails(error instanceof Error ? error.message : 'Unknown error testing connection');
       
       toast({
-        title: 'Erro',
-        description: 'Ocorreu um erro ao verificar a conexão.',
+        title: 'Error',
+        description: 'An error occurred while checking the connection.',
         variant: 'destructive',
       });
     }
-  };
+  }, [toast]);
 
-  return { testConnection };
+  return { connectionStatus, errorDetails, testConnection };
 }

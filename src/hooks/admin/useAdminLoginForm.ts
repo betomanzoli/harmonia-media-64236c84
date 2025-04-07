@@ -2,7 +2,19 @@
 import { useState, useCallback } from 'react';
 import { supabase } from '@/lib/supabase';
 import { useToast } from '@/hooks/use-toast';
-import { LoginFormData } from '@/types/admin-auth';
+
+interface LoginFormState {
+  email: string;
+  password: string;
+  loading: boolean;
+  success: boolean;
+  error: string | null;
+  showPasswordReset: boolean;
+  resetEmail: string;
+  resetLoading: boolean;
+  resetSuccess: boolean;
+  resetError: string | null;
+}
 
 export const useAdminLoginForm = () => {
   const [email, setEmail] = useState('');
@@ -42,15 +54,14 @@ export const useAdminLoginForm = () => {
     setError(null);
     
     try {
-      // Validação simples
+      // Simple validation
       if (!email || !password) {
-        throw new Error('Por favor, preencha todos os campos.');
+        throw new Error('Please fill in all fields.');
       }
       
-      // Simulação de login para o ambiente de desenvolvimento local
-      // Em produção, este bloco seria substituído pela autenticação real
+      // Simulation of login for local development environment
       if (process.env.NODE_ENV === 'development') {
-        // Credenciais de teste para desenvolvimento
+        // Test credentials for development
         if (email === 'admin@harmonia.ai' && password === 'senha123') {
           localStorage.setItem('adminAuth', JSON.stringify({
             user: { email },
@@ -65,9 +76,8 @@ export const useAdminLoginForm = () => {
         }
       }
       
-      // Autenticação real com Supabase (não executada em desenvolvimento com as credenciais acima)
-      const auth = supabase.auth;
-      const { error: loginError } = await auth.signInWithPassword({
+      // Real authentication with Supabase (not executed in development with credentials above)
+      const { error: loginError } = await supabase.auth.signInWithEmailAndPassword({
         email,
         password,
       });
@@ -81,14 +91,14 @@ export const useAdminLoginForm = () => {
       
     } catch (err: any) {
       console.error('Login error:', err);
-      const errorMessage = err.message || 'Ocorreu um erro durante o login.';
+      const errorMessage = err.message || 'An error occurred during login.';
       
-      // Melhorar mensagens de erro para o usuário
+      // Improve error messages for the user
       let userFriendlyMessage = errorMessage;
       if (errorMessage.includes('Invalid login credentials')) {
-        userFriendlyMessage = 'Credenciais inválidas. Verifique seu email e senha.';
+        userFriendlyMessage = 'Invalid credentials. Please check your email and password.';
       } else if (errorMessage.includes('Email not confirmed')) {
-        userFriendlyMessage = 'Seu email ainda não foi confirmado. Verifique sua caixa de entrada.';
+        userFriendlyMessage = 'Your email has not been confirmed. Please check your inbox.';
       }
       
       setError(userFriendlyMessage);
@@ -104,7 +114,7 @@ export const useAdminLoginForm = () => {
     
     try {
       if (!resetEmail) {
-        throw new Error('Por favor, informe seu email.');
+        throw new Error('Please provide your email.');
       }
       
       const { error: resetError } = await supabase.auth.resetPasswordForEmail(resetEmail, {
@@ -115,14 +125,14 @@ export const useAdminLoginForm = () => {
       
       setResetSuccess(true);
       toast({
-        title: 'Email enviado!',
-        description: 'Verifique sua caixa de entrada para redefinir sua senha.',
+        title: 'Email sent!',
+        description: 'Check your inbox to reset your password.',
         variant: 'default',
       });
       
       setTimeout(() => {
         setShowPasswordReset(false);
-        // Limpar o estado após fechar o diálogo
+        // Clear state after closing dialog
         setTimeout(() => {
           setResetSuccess(false);
           setResetEmail('');
@@ -131,7 +141,7 @@ export const useAdminLoginForm = () => {
       
     } catch (err: any) {
       console.error('Password reset error:', err);
-      setResetError(err.message || 'Ocorreu um erro ao solicitar a redefinição de senha.');
+      setResetError(err.message || 'An error occurred while requesting password reset.');
     } finally {
       setResetLoading(false);
     }
@@ -148,7 +158,7 @@ export const useAdminLoginForm = () => {
     setShowPasswordReset(true);
   }, []);
 
-  const formState: LoginFormData = {
+  const formState: LoginFormState = {
     email,
     password,
     loading,
