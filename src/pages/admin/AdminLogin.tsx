@@ -8,7 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
-import { useAuth } from '@/context/AdminAuthContext';
+import { useAdminAuth } from '@/context/AdminAuthContext';
 import { Loader2 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 
@@ -18,7 +18,7 @@ const formSchema = z.object({
 });
 
 const AdminLogin: React.FC = () => {
-  const { login } = useAuth();
+  const { login } = useAdminAuth();
   const navigate = useNavigate();
   const [isLoading, setIsLoading] = useState(false);
   const { toast } = useToast();

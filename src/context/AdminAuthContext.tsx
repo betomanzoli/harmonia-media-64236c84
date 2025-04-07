@@ -137,12 +137,16 @@ export const AdminAuthProvider: React.FC<{ children: ReactNode }> = ({ children 
   );
 };
 
-export const useAuth = () => {
+// Renomeando o hook de useAuth para useAdminAuth para consistência
+export const useAdminAuth = () => {
   const context = useContext(AuthContext);
   if (context === undefined) {
-    throw new Error('useAuth deve ser usado dentro de um AdminAuthProvider');
+    throw new Error('useAdminAuth deve ser usado dentro de um AdminAuthProvider');
   }
   return context;
 };
+
+// Mantendo useAuth para compatibilidade com o código existente
+export const useAuth = useAdminAuth;
 
 export default AuthContext;
