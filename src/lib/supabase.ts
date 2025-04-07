@@ -47,6 +47,14 @@ const createQueryBuilder = (tableName: string) => {
       console.log('Opções:', options);
       return createMockQueryResponse();
     },
+    update: async (data: any) => {
+      console.log('Simulando atualização de dados:', data);
+      return createMockQueryResponse();
+    },
+    delete: async () => {
+      console.log(`Simulando exclusão na tabela ${tableName}`);
+      return createMockQueryResponse();
+    },
     count: async () => {
       console.log(`Simulando contagem na tabela ${tableName}`);
       return createMockQueryResponse();
@@ -104,16 +112,19 @@ export const supabase = {
 export const emailService = {
   sendBriefingConfirmation: async (email: string, name: string) => {
     console.log(`Simulando envio de confirmação de briefing para ${email} (${name})`);
+    console.log('Modo demonstrativo: Em produção, um email seria enviado com os dados do briefing');
     return { success: true };
   },
   
   sendPreviewNotification: async (email: string, name: string, previewUrl: string) => {
     console.log(`Simulando envio de notificação de prévia para ${email} (${name}): ${previewUrl}`);
+    console.log('Modo demonstrativo: Em produção, um email seria enviado com o link para as prévias');
     return { success: true };
   },
   
   sendPaymentConfirmation: async (email: string, name: string, packageName: string) => {
     console.log(`Simulando envio de confirmação de pagamento para ${email} (${name}): ${packageName}`);
+    console.log('Modo demonstrativo: Em produção, um email seria enviado com a confirmação do pagamento');
     return { success: true };
   }
 };
