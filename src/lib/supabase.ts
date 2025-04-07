@@ -13,19 +13,27 @@ const createMockQueryResponse = () => {
 const createQueryBuilder = (tableName: string) => {
   console.log(`Acessando tabela: ${tableName}`);
   
-  return {
+  // Criando um objeto que mantém as propriedades data e error em toda a cadeia
+  const baseQueryResponse = createMockQueryResponse();
+  
+  const queryChain = {
     select: (columns: string) => {
       console.log(`Simulando seleção de colunas: ${columns}`);
       return {
+        ...baseQueryResponse,
         eq: (column: string, value: any) => {
           console.log(`Simulando filtro WHERE ${column} = ${value}`);
           return {
+            ...baseQueryResponse,
             single: async () => createMockQueryResponse()
           };
         },
         order: (column: string, options: any) => {
           console.log(`Simulando ordenação por ${column}`);
-          return createQueryBuilder(tableName);
+          return {
+            ...baseQueryResponse,
+            ...queryChain
+          };
         },
         limit: async (limit: number) => createMockQueryResponse()
       };
@@ -51,6 +59,11 @@ const createQueryBuilder = (tableName: string) => {
       console.log(`Simulando contagem na tabela ${tableName}`);
       return createMockQueryResponse();
     }
+  };
+
+  return {
+    ...baseQueryResponse,
+    ...queryChain
   };
 };
 
