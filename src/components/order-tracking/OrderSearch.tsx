@@ -6,7 +6,7 @@ import { Card } from "@/components/ui/card";
 import { Search, AlertCircle } from 'lucide-react';
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { mockOrderData } from './mockOrderData';
-import { OrderData } from './types';
+import { OrderData, OrderProgressStatus } from './types';
 
 interface OrderSearchProps {
   onSearch: (order: OrderData) => void;
@@ -76,7 +76,7 @@ const OrderSearch: React.FC<OrderSearchProps> = ({ onSearch }) => {
         title: "Briefing Recebido",
         description: "Seu briefing foi recebido e está sendo analisado pela nossa equipe.",
         date: today,
-        status: "completed",
+        status: "completed" as OrderProgressStatus,
         icon: "FileText"
       },
       {
@@ -84,7 +84,7 @@ const OrderSearch: React.FC<OrderSearchProps> = ({ onSearch }) => {
         title: "Análise Inicial",
         description: "Nossa equipe está analisando seu briefing e definindo a abordagem criativa.",
         date: null,
-        status: "current",
+        status: "current" as OrderProgressStatus,
         icon: "Package"
       },
       {
@@ -92,7 +92,7 @@ const OrderSearch: React.FC<OrderSearchProps> = ({ onSearch }) => {
         title: "Composição",
         description: "Nossos compositores estão trabalhando na sua música personalizada.",
         date: null,
-        status: "pending",
+        status: "pending" as OrderProgressStatus,
         icon: "Music"
       },
       {
@@ -100,7 +100,7 @@ const OrderSearch: React.FC<OrderSearchProps> = ({ onSearch }) => {
         title: "Produção",
         description: "Fase de arranjo e produção musical da sua composição.",
         date: null,
-        status: "pending",
+        status: "pending" as OrderProgressStatus,
         icon: "Settings"
       },
       {
@@ -108,7 +108,7 @@ const OrderSearch: React.FC<OrderSearchProps> = ({ onSearch }) => {
         title: "Apresentação",
         description: "Prévias da sua música estão prontas para sua avaliação.",
         date: null,
-        status: "pending",
+        status: "pending" as OrderProgressStatus,
         icon: "Headphones"
       }
     ];

@@ -7,14 +7,14 @@ import { Link } from 'react-router-dom';
 
 interface OrderNotificationProps {
   orderId: string;
-  hasPreview: boolean;
+  hasPreview?: boolean;
   previewLink: string | null;
   pendingAction: 'feedback' | null;
 }
 
 const OrderNotification: React.FC<OrderNotificationProps> = ({ 
   orderId, 
-  hasPreview, 
+  hasPreview = false, 
   previewLink, 
   pendingAction 
 }) => {

@@ -3,7 +3,7 @@ import React from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
-import { Loader2, CreditCard, QrCode, DollarSign } from 'lucide-react';
+import { Loader2, CreditCard, QrCode, Receipt } from 'lucide-react';
 
 interface PaymentMethodsProps {
   isLoading: boolean;
@@ -21,10 +21,9 @@ const PaymentMethods: React.FC<PaymentMethodsProps> = ({ isLoading, onSelectMeth
       </CardHeader>
       <CardContent>
         <Tabs defaultValue="cartao" className="w-full">
-          <TabsList className="grid grid-cols-4 mb-4">
+          <TabsList className="grid grid-cols-3 mb-4">
             <TabsTrigger value="cartao">Cartão</TabsTrigger>
             <TabsTrigger value="pix">PIX</TabsTrigger>
-            <TabsTrigger value="paypal">PayPal</TabsTrigger>
             <TabsTrigger value="boleto">Boleto</TabsTrigger>
           </TabsList>
           
@@ -83,33 +82,10 @@ const PaymentMethods: React.FC<PaymentMethodsProps> = ({ isLoading, onSelectMeth
             </div>
           </TabsContent>
           
-          <TabsContent value="paypal" className="space-y-4">
-            <div className="p-4 border border-gray-200 rounded-md bg-gray-50 text-center">
-              <div className="flex items-center justify-center mb-4">
-                <DollarSign className="w-12 h-12 text-blue-500" />
-              </div>
-              <p className="mb-4">Pagamento seguro via PayPal para clientes internacionais</p>
-              <Button 
-                onClick={() => onSelectMethod('PayPal')}
-                disabled={isLoading}
-                className="bg-blue-500 hover:bg-blue-600 text-white"
-              >
-                {isLoading ? (
-                  <>
-                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                    Processando...
-                  </>
-                ) : (
-                  "Pagar com PayPal"
-                )}
-              </Button>
-            </div>
-          </TabsContent>
-          
           <TabsContent value="boleto" className="space-y-4">
             <div className="p-4 border border-gray-200 rounded-md bg-gray-50 text-center">
               <div className="flex items-center justify-center mb-4">
-                <DollarSign className="w-12 h-12 text-gray-600" />
+                <Receipt className="w-12 h-12 text-gray-600" />
               </div>
               <p className="mb-4">Pagamento via boleto bancário (compensação em 1-3 dias úteis)</p>
               <Button 
