@@ -1,6 +1,6 @@
 
 import React, { useState, useEffect } from 'react';
-import { supabase, testSupabaseConnection } from '@/lib/supabase';
+import { supabase, testSupabaseConnection, securityService } from '@/lib/supabase';
 import { useToast } from '@/hooks/use-toast';
 import AdminAuthContext from '@/context/AdminAuthContext';
 import { AdminAuthProviderProps, ConnectionStatus } from '@/types/admin-auth';
@@ -12,6 +12,14 @@ export const AdminAuthProvider: React.FC<AdminAuthProviderProps> = ({ children }
   const [connectionStatus, setConnectionStatus] = useState<ConnectionStatus>({
     tested: false,
     connected: false
+  });
+  const [securityStatus, setSecurityStatus] = useState<{
+    checked: boolean;
+    hasIssues: boolean;
+    details?: any;
+  }>({
+    checked: false,
+    hasIssues: false
   });
   const { toast } = useToast();
   
@@ -36,6 +44,9 @@ export const AdminAuthProvider: React.FC<AdminAuthProviderProps> = ({ children }
       console.log('Status da conexão após teste:', result.connected ? 'Conectado' : 'Desconectado');
       if (!result.connected) {
         console.error('Erro de conexão:', result.error);
+      } else {
+        // Se conectado, verificar status de segurança
+        checkSecurityStatus();
       }
     } catch (error) {
       console.error('Erro ao testar conexão:', error);
@@ -43,6 +54,37 @@ export const AdminAuthProvider: React.FC<AdminAuthProviderProps> = ({ children }
         tested: true,
         connected: false,
         error: error instanceof Error ? error.message : 'Erro desconhecido'
+      });
+    }
+  };
+  
+  // Função para verificar o status de segurança
+  const checkSecurityStatus = async () => {
+    try {
+      const result = await securityService.validateSecurity();
+      
+      setSecurityStatus({
+        checked: true,
+        hasIssues: !result.success,
+        details: result
+      });
+      
+      if (!result.success) {
+        console.warn('Problemas de segurança detectados:', result.error);
+        toast({
+          title: 'Alerta de Segurança',
+          description: 'Foram detectados problemas de segurança no Supabase. Acesse as configurações de segurança para resolver.',
+          variant: 'destructive',
+        });
+      }
+    } catch (error) {
+      console.error('Erro ao verificar status de segurança:', error);
+      setSecurityStatus({
+        checked: true,
+        hasIssues: true,
+        details: {
+          error: error instanceof Error ? error.message : 'Erro desconhecido'
+        }
       });
     }
   };
@@ -134,6 +176,9 @@ export const AdminAuthProvider: React.FC<AdminAuthProviderProps> = ({ children }
       console.log("Login bem-sucedido:", data.user);
       setUser(data.user);
       
+      // Verificar configurações de segurança após login
+      checkSecurityStatus();
+      
       toast({
         title: 'Login bem-sucedido',
         description: `Bem-vindo, ${data.user?.email}!`,
@@ -174,9 +219,11 @@ export const AdminAuthProvider: React.FC<AdminAuthProviderProps> = ({ children }
         isAuthenticated: !!user, 
         isLoading, 
         connectionStatus,
+        securityStatus,
         login, 
         logout,
-        testConnection
+        testConnection,
+        checkSecurityStatus
       }}
     >
       {children}

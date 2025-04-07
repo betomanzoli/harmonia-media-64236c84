@@ -1,10 +1,20 @@
 
 import { User } from '@supabase/supabase-js';
 
+export interface AdminAuthProviderProps {
+  children: React.ReactNode;
+}
+
 export interface ConnectionStatus {
   tested: boolean;
   connected: boolean;
   error?: string;
+}
+
+export interface SecurityStatus {
+  checked: boolean;
+  hasIssues: boolean;
+  details?: any;
 }
 
 export interface AdminAuthContextType {
@@ -12,16 +22,9 @@ export interface AdminAuthContextType {
   isAuthenticated: boolean;
   isLoading: boolean;
   connectionStatus: ConnectionStatus;
+  securityStatus?: SecurityStatus;
   login: (email: string, password: string) => Promise<{ success: boolean; error?: string }>;
   logout: () => Promise<void>;
   testConnection: () => Promise<void>;
-}
-
-export interface LoginResponse {
-  success: boolean;
-  error?: string;
-}
-
-export interface AdminAuthProviderProps {
-  children: React.ReactNode;
+  checkSecurityStatus?: () => Promise<void>;
 }

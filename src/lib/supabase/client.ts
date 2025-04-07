@@ -22,3 +22,18 @@ export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
 export const getSupabaseUrl = () => supabaseUrl;
 
 console.log('🔌 Cliente Supabase inicializado.');
+
+// Verificar configurações de segurança ao inicializar
+(async () => {
+  try {
+    const { error } = await supabase.from('system_settings').select('count').limit(1);
+    if (error) {
+      if (error.code === 'PGRST301') {
+        console.warn('⚠️ AVISO DE SEGURANÇA: As tabelas estão com RLS habilitado mas sem políticas.');
+        console.warn('ℹ️ Use o componente SecuritySettingsCard para configurar as políticas de segurança.');
+      }
+    }
+  } catch (err) {
+    console.error('Erro ao verificar configurações de segurança:', err);
+  }
+})();
