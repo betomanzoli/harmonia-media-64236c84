@@ -110,7 +110,8 @@ const MusicPreviewSystem: React.FC = () => {
       />
       
       <PreviewFeedbackForm 
-        selectedVersion={selectedVersion}
+        projectId={projectId}
+        selectedPreview={selectedVersion}
         feedback={feedback}
         setFeedback={setFeedback}
         handleSubmit={handleSubmit}

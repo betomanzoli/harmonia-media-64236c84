@@ -1,11 +1,10 @@
-
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
-import { useToast } from "@/components/ui/use-toast";
+import { useToast } from "@/hooks/use-toast";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
-import { PreviewFeedbackForm } from '@/components/previews/PreviewFeedbackForm';
+import PreviewFeedbackForm from '@/components/previews/PreviewFeedbackForm';
 import PreviewHeader from '@/components/previews/PreviewHeader';
 import PreviewInstructions from '@/components/previews/PreviewInstructions';
 import PreviewPlayerList from '@/components/previews/PreviewPlayerList';
@@ -176,10 +175,10 @@ const MusicPreviews: React.FC = () => {
                 selectedPreview={selectedPreview}
                 feedback={feedback}
                 setFeedback={setFeedback}
-                onSubmitFeedback={handleSubmitFeedback}
-                onApprove={handleApprove}
-                isApproved={previewData.status === 'approved'}
-                previews={previewData.previews}
+                handleSubmit={handleSubmitFeedback}
+                handleApprove={handleApprove}
+                status={previewData.status}
+                versionTitle={previewData.previews.find(p => p.id === selectedPreview)?.title}
               />
             </TabsContent>
           </Tabs>
