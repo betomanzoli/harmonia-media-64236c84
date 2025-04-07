@@ -9,12 +9,13 @@ import { Button } from "@/components/ui/button";
 import { Loader2, CreditCard, QrCode, Info, DollarSign, CheckCircle } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import emailService from '@/services/emailService';
+import { siteConfig } from '@/config/site';
 
-// Dados dos pacotes
+// Dados dos pacotes com preços atualizados do siteConfig
 const packageData = {
   'essencial': {
     name: 'Pacote Essencial',
-    price: 'R$ 499,00',
+    price: `R$ ${siteConfig.pricing.basePrice},00`,
     priceUSD: 'US$ 99.00',
     features: [
       'Composição musical personalizada',
@@ -25,7 +26,7 @@ const packageData = {
   },
   'profissional': {
     name: 'Pacote Profissional',
-    price: 'R$ 899,00',
+    price: `R$ ${siteConfig.pricing.professionalPrice},00`,
     priceUSD: 'US$ 179.00',
     features: [
       'Composição musical personalizada premium',
@@ -37,7 +38,7 @@ const packageData = {
   },
   'premium': {
     name: 'Pacote Premium',
-    price: 'R$ 1499,00',
+    price: `R$ ${siteConfig.pricing.premiumPrice},00`,
     priceUSD: 'US$ 299.00',
     features: [
       'Composição musical personalizada de alto nível',
