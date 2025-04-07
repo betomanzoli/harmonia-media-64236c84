@@ -37,7 +37,7 @@ export const supabase = {
       }
     }
   },
-  // Adicionar método from para simulação de consultas de banco de dados
+  // Implementação do método from para consultas de banco de dados
   from: (table: string) => {
     console.log(`Simulando consulta na tabela: ${table}`);
     return {
@@ -76,6 +76,10 @@ export const supabase = {
         console.log('Simulando upsert de dados:', data);
         console.log('Opções:', options);
         return { data: null, error: null };
+      },
+      count: async () => {
+        console.log(`Simulando contagem na tabela ${table}`);
+        return { data: 0, error: null };
       }
     };
   },

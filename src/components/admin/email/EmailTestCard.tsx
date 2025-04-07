@@ -61,7 +61,7 @@ const EmailTestCard: React.FC = () => {
           description: "O email de teste foi enviado com sucesso.",
         });
       } else {
-        setErrorMessage(result.error?.message || "Falha na edge function. Verifique as configurações do Supabase.");
+        setErrorMessage("Falha na edge function. Verifique as configurações do Supabase.");
         toast({
           title: "Falha no envio",
           description: "Não foi possível enviar o email de teste. Veja os detalhes abaixo.",

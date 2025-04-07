@@ -89,7 +89,7 @@ export function QualificationForm() {
           emailService.sendBriefingConfirmation(data.email, data.name || "Cliente")
             .then(result => {
               if (!result.success) {
-                console.warn("Falha ao enviar email de confirmação:", result.error);
+                console.warn("Falha ao enviar email de confirmação");
               }
             });
         } catch (err) {
