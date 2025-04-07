@@ -1,5 +1,5 @@
 
-import { useState } from 'react';
+import { useState, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAdminAuth } from '@/hooks/admin/useAdminAuth';
 import { useToast } from '@/hooks/use-toast';
@@ -27,24 +27,28 @@ export function useAdminLoginForm() {
   });
   const { toast } = useToast();
 
-  const loadDebugInfo = async () => {
-    const supabaseUrlInfo = getSupabaseUrl() || 'URL não disponível';
-    
-    let storageInfo = 'Não disponível';
+  const loadDebugInfo = useCallback(async () => {
     try {
-      const storageTested = localStorage.getItem('harmonia-admin-auth-tested');
-      const storageSession = localStorage.getItem('harmonia-admin-auth');
-      storageInfo = `Teste: ${storageTested ? 'Presente' : 'Ausente'}, Sessão: ${storageSession ? 'Presente' : 'Ausente'}`;
+      const supabaseUrlInfo = getSupabaseUrl() || 'URL não disponível';
+      
+      let storageInfo = 'Não disponível';
+      try {
+        const storageTested = localStorage.getItem('harmonia-admin-auth-tested');
+        const storageSession = localStorage.getItem('harmonia-admin-auth');
+        storageInfo = `Teste: ${storageTested ? 'Presente' : 'Ausente'}, Sessão: ${storageSession ? 'Presente' : 'Ausente'}`;
+      } catch (e) {
+        storageInfo = `Erro ao acessar localStorage: ${e instanceof Error ? e.message : 'Desconhecido'}`;
+      }
+      
+      setDebugInfo(prev => ({
+        ...prev,
+        supabaseUrl: supabaseUrlInfo,
+        storageInfo
+      }));
     } catch (e) {
-      storageInfo = `Erro ao acessar localStorage: ${e instanceof Error ? e.message : 'Desconhecido'}`;
+      console.error('Erro ao carregar informações de diagnóstico:', e);
     }
-    
-    setDebugInfo(prev => ({
-      ...prev,
-      supabaseUrl: supabaseUrlInfo,
-      storageInfo
-    }));
-  };
+  }, []);
 
   const handleSubmit = async (values: { email: string; password: string }) => {
     setIsLoading(true);
@@ -89,15 +93,82 @@ export function useAdminLoginForm() {
 
   const handleRetryConnection = async () => {
     setIsLoading(true);
-    await testConnection();
-    await loadDebugInfo();
-    setIsLoading(false);
+    try {
+      // Limpar erros anteriores
+      setLoginError(null);
+      setDetailedErrorInfo('');
+
+      // Verifica se há internet
+      if (!navigator.onLine) {
+        throw new Error('Sem conexão com a internet. Verifique sua rede e tente novamente.');
+      }
+
+      // Testa a conexão com o Supabase
+      console.log('Tentando reconectar com o Supabase...');
+      await testConnection();
+      
+      // Atualiza informações de diagnóstico
+      await loadDebugInfo();
+      
+      // Se chegou até aqui sem erros, mostra um toast de sucesso
+      if (connectionStatus.connected) {
+        toast({
+          title: 'Conexão reestabelecida',
+          description: 'Conexão com o Supabase foi restaurada com sucesso.',
+        });
+      }
+    } catch (error) {
+      console.error('Erro ao reconectar:', error);
+      setLoginError('Falha ao tentar reconectar');
+      setDetailedErrorInfo(error instanceof Error ? error.message : 'Erro desconhecido');
+      
+      toast({
+        title: 'Falha na reconexão',
+        description: 'Não foi possível restabelecer a conexão. Verifique sua rede.',
+        variant: 'destructive',
+      });
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   const runDiagnostics = async () => {
     setIsLoading(true);
     
     try {
+      // Verificação básica de conectividade com a internet
+      if (!navigator.onLine) {
+        throw new Error('Sem conexão com a internet. Verifique sua rede.');
+      }
+
+      // Teste do endpoint do Supabase
+      const supabaseUrl = getSupabaseUrl();
+      
+      // Adicionar timestamp para evitar cache
+      const testUrl = `${supabaseUrl}/.well-known/ready?ts=${Date.now()}`;
+      console.log('Testando disponibilidade do Supabase via fetch direto:', testUrl);
+      
+      try {
+        const response = await fetch(testUrl, { 
+          method: 'GET',
+          mode: 'cors',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          // Tempo limite de 5 segundos
+          signal: AbortSignal.timeout(5000)
+        });
+        
+        const connectivityStatus = response.ok 
+          ? 'Endpoint do Supabase está respondendo' 
+          : `Endpoint responde com status ${response.status}`;
+        
+        console.log('Resposta do teste de disponibilidade:', connectivityStatus);
+      } catch (fetchErr) {
+        console.error('Erro no teste direto do endpoint:', fetchErr);
+      }
+      
+      // Testes padrão
       const connectionTest = await testSupabaseConnection();
       const authTest = await testAuthSettings();
       
@@ -109,15 +180,27 @@ export function useAdminLoginForm() {
       
       toast({
         title: 'Diagnóstico concluído',
-        description: 'Informações de diagnóstico foram atualizadas',
+        description: connectionTest.connected 
+          ? 'Conexão com o Supabase estabelecida com sucesso!' 
+          : 'Problemas de conexão detectados. Verifique os detalhes.',
       });
     } catch (err) {
       console.error('Erro ao executar diagnóstico:', err);
       toast({
         title: 'Erro',
-        description: 'Falha ao executar diagnóstico',
+        description: 'Falha ao executar diagnóstico completo.',
         variant: 'destructive',
       });
+      
+      // Atualiza as informações de erro para exibição
+      setDebugInfo(prev => ({
+        ...prev,
+        connectionDetails: JSON.stringify({
+          error: err instanceof Error ? err.message : 'Erro desconhecido',
+          timestamp: new Date().toISOString(),
+          online: navigator.onLine
+        }, null, 2)
+      }));
     } finally {
       setIsLoading(false);
     }

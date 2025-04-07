@@ -2,7 +2,7 @@
 import React, { useState } from 'react';
 import { Alert, AlertTitle, AlertDescription } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
-import { Info, Bug, Loader2 } from 'lucide-react';
+import { Info, Bug, Loader2, Wifi, WifiOff, RefreshCw } from 'lucide-react';
 
 interface DiagnosticInfo {
   connectionDetails: string;
@@ -25,15 +25,38 @@ const DiagnosticsPanel: React.FC<DiagnosticsPanelProps> = ({
   isLoading
 }) => {
   const [showDebug, setShowDebug] = useState(false);
+  const isOnline = typeof navigator !== 'undefined' && navigator.onLine;
 
   return (
     <Alert className="mt-4">
       <Info className="h-4 w-4" />
       <AlertTitle>Informações de diagnóstico</AlertTitle>
       <AlertDescription className="text-xs space-y-2">
-        <p>Status da conexão: {connectionStatus.connected ? 'Conectado' : 'Desconectado'}</p>
+        <div className="flex items-center">
+          <span className="mr-2">Status da conexão:</span>
+          {connectionStatus.connected ? (
+            <span className="text-green-600 font-medium flex items-center">
+              <Wifi className="h-3 w-3 mr-1" /> Conectado
+            </span>
+          ) : (
+            <span className="text-red-600 font-medium flex items-center">
+              <WifiOff className="h-3 w-3 mr-1" /> Desconectado
+            </span>
+          )}
+        </div>
+        
+        <div className="flex items-center">
+          <span className="mr-2">Internet:</span>
+          {isOnline ? (
+            <span className="text-green-600 font-medium">Disponível</span>
+          ) : (
+            <span className="text-red-600 font-medium">Indisponível</span>
+          )}
+        </div>
+        
         <p>URL do Supabase: {diagnosticInfo.supabaseUrl || 'Não disponível'}</p>
         <p>Local Storage: {diagnosticInfo.storageInfo}</p>
+        
         <Button 
           variant="outline" 
           size="sm" 
@@ -42,6 +65,7 @@ const DiagnosticsPanel: React.FC<DiagnosticsPanelProps> = ({
         >
           {showDebug ? 'Ocultar detalhes' : 'Mostrar detalhes avançados'}
         </Button>
+        
         {showDebug && (
           <Button 
             variant="outline" 
@@ -63,6 +87,7 @@ const DiagnosticsPanel: React.FC<DiagnosticsPanelProps> = ({
             )}
           </Button>
         )}
+        
         {showDebug && (
           <div className="mt-2 space-y-2 bg-slate-100 p-2 rounded text-xs">
             <h4 className="font-bold">Detalhes da conexão:</h4>
@@ -70,6 +95,16 @@ const DiagnosticsPanel: React.FC<DiagnosticsPanelProps> = ({
             
             <h4 className="font-bold">Configurações de autenticação:</h4>
             <pre className="whitespace-pre-wrap break-all">{diagnosticInfo.authSettings}</pre>
+            
+            <h4 className="font-bold">Informações do navegador:</h4>
+            <pre className="whitespace-pre-wrap break-all">
+              {JSON.stringify({
+                userAgent: navigator.userAgent,
+                online: navigator.onLine,
+                language: navigator.language,
+                timestamp: new Date().toISOString()
+              }, null, 2)}
+            </pre>
           </div>
         )}
       </AlertDescription>

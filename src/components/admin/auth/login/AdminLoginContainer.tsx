@@ -29,24 +29,29 @@ const AdminLoginContainer: React.FC = () => {
     loadDebugInfo
   } = useAdminLoginForm();
 
+  // Effect to redirect if already authenticated
   useEffect(() => {
     if (isAuthenticated) {
       navigate('/admin-j28s7d1k/dashboard');
     }
   }, [isAuthenticated, navigate]);
 
+  // Effect to test connection when component mounts
   useEffect(() => {
     const checkConnection = async () => {
       console.log('AdminLogin: Verificando conexão...');
       if (!connectionStatus.tested) {
         await testConnection();
       }
-      
-      loadDebugInfo();
     };
     
     checkConnection();
-  }, [connectionStatus.tested, testConnection, loadDebugInfo]);
+  }, [connectionStatus.tested, testConnection]);
+
+  // Separate effect for loading debug info (prevents loops)
+  useEffect(() => {
+    loadDebugInfo();
+  }, [loadDebugInfo]);
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-100 p-4">

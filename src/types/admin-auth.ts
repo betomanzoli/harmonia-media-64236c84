@@ -9,6 +9,8 @@ export interface ConnectionStatus {
   tested: boolean;
   connected: boolean;
   error?: string;
+  details?: any;
+  networkOnline?: boolean;
 }
 
 export interface SecurityStatus {
