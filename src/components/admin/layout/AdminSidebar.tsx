@@ -1,11 +1,26 @@
 
 import React from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { SidebarProvider, Sidebar, SidebarContent, SidebarHeader, SidebarFooter, SidebarMenu, SidebarMenuItem, SidebarMenuButton, SidebarGroup, SidebarGroupLabel } from "@/components/ui/sidebar";
 import { Database, Music, Users, FileAudio, BarChart, Settings, LogOut, Home } from 'lucide-react';
 import { siteConfig } from '@/config/site';
+import { useAdminAuth } from '@/context/AdminAuthContext';
+import { useToast } from '@/hooks/use-toast';
 
 const AdminSidebar: React.FC = () => {
+  const { logout } = useAdminAuth();
+  const navigate = useNavigate();
+  const { toast } = useToast();
+
+  const handleLogout = () => {
+    logout();
+    toast({
+      title: "Desconectado",
+      description: "Você saiu da área administrativa."
+    });
+    navigate('/admin-login');
+  };
+
   return (
     <Sidebar>
       <SidebarHeader className="flex items-center justify-center py-4">
@@ -85,9 +100,15 @@ const AdminSidebar: React.FC = () => {
             </SidebarMenuButton>
           </SidebarMenuItem>
           <SidebarMenuItem>
+            <SidebarMenuButton onClick={handleLogout}>
+              <LogOut className="w-4 h-4" />
+              <span>Sair</span>
+            </SidebarMenuButton>
+          </SidebarMenuItem>
+          <SidebarMenuItem>
             <SidebarMenuButton asChild>
               <Link to="/">
-                <LogOut className="w-4 h-4" />
+                <Home className="w-4 h-4" />
                 <span>Voltar ao Site</span>
               </Link>
             </SidebarMenuButton>
