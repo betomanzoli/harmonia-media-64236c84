@@ -1,7 +1,7 @@
 
 import React from 'react';
 import Logo from './Logo';
-import { Phone, Mail, Shield, ChevronUp, Clock } from 'lucide-react';
+import { Phone, Mail, Shield, ChevronUp, Clock, FileCheck, Music, Package } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useNavigate, Link } from 'react-router-dom';
 import { siteConfig } from '@/config/site';
@@ -50,33 +50,33 @@ const Footer: React.FC = () => {
               <li>
                 <NavLink 
                   href="/qualificacao" 
-                  className="text-gray-400 hover:text-harmonia-green transition-colors"
+                  className="text-gray-400 hover:text-harmonia-green transition-colors flex items-center gap-1"
                 >
-                  Qualificação
+                  <FileCheck className="w-4 h-4" /> Qualificação
                 </NavLink>
               </li>
               <li>
                 <NavLink 
                   href="/pacotes" 
-                  className="text-gray-400 hover:text-harmonia-green transition-colors"
+                  className="text-gray-400 hover:text-harmonia-green transition-colors flex items-center gap-1"
                 >
-                  Pacotes
+                  <Package className="w-4 h-4" /> Pacotes
                 </NavLink>
               </li>
               <li>
                 <NavLink 
                   href="/portfolio" 
-                  className="text-gray-400 hover:text-harmonia-green transition-colors"
+                  className="text-gray-400 hover:text-harmonia-green transition-colors flex items-center gap-1"
                 >
-                  Portfólio
+                  <Music className="w-4 h-4" /> Portfólio
                 </NavLink>
               </li>
               <li>
                 <NavLink 
                   href="/#processo" 
-                  className="text-gray-400 hover:text-harmonia-green transition-colors"
+                  className="text-gray-400 hover:text-harmonia-green transition-colors flex items-center gap-1"
                 >
-                  Processo
+                  <Clock className="w-4 h-4" /> Processo
                 </NavLink>
               </li>
             </ul>

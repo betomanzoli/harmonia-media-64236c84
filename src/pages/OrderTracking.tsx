@@ -1,158 +1,267 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { useToast } from "@/components/ui/use-toast";
+import { Card } from "@/components/ui/card";
+import { toast } from "@/hooks/use-toast";
+import { ArrowRight, Search, FileText, Package, CreditCard, MessageSquare, Music, Headphones, FileCheck, Settings, CheckCircle2 } from 'lucide-react';
+import OrderDetails from '@/components/order-tracking/OrderDetails';
+
+// Dados mockados para demonstração
+const MOCK_ORDERS = {
+  'HAR2025001': {
+    orderId: 'HAR-2025-0001',
+    clientName: 'João Silva',
+    packageType: 'Profissional',
+    orderDate: '05/04/2025',
+    currentStep: 5,
+    status: 'Aguardando Aprovação',
+    expectedDelivery: '20/04/2025',
+    previewLink: '/previews/preview123',
+    progress: [
+      {
+        step: 1,
+        status: 'completed' as const,
+        title: 'Qualificação Inicial',
+        description: 'Formulário preenchido e necessidades identificadas',
+        icon: <FileText />,
+        date: '05/04/2025'
+      },
+      {
+        step: 2,
+        status: 'completed' as const,
+        title: 'Escolha do Pacote',
+        description: 'Pacote Profissional selecionado',
+        icon: <Package />,
+        date: '05/04/2025'
+      },
+      {
+        step: 3,
+        status: 'completed' as const,
+        title: 'Pagamento',
+        description: 'Pagamento aprovado',
+        icon: <CreditCard />,
+        date: '05/04/2025'
+      },
+      {
+        step: 4,
+        status: 'completed' as const,
+        title: 'Briefing Detalhado',
+        description: 'Detalhes do projeto fornecidos',
+        icon: <MessageSquare />,
+        date: '06/04/2025'
+      },
+      {
+        step: 5,
+        status: 'completed' as const,
+        title: 'Criação com IA',
+        description: 'Versões iniciais geradas',
+        icon: <Music />,
+        date: '08/04/2025'
+      },
+      {
+        step: 6,
+        status: 'current' as const,
+        title: 'Refinamento Humano',
+        description: 'Músicos aprimorando a composição',
+        icon: <Headphones />,
+        date: '10/04/2025'
+      },
+      {
+        step: 7,
+        status: 'pending' as const,
+        title: 'Apresentação',
+        description: 'Prévias enviadas para avaliação',
+        icon: <FileCheck />
+      },
+      {
+        step: 8,
+        status: 'pending' as const,
+        title: 'Revisões',
+        description: 'Ajustes conforme seu feedback',
+        icon: <Settings />
+      },
+      {
+        step: 9,
+        status: 'pending' as const,
+        title: 'Entrega Final',
+        description: 'Música finalizada com documentação',
+        icon: <Music />
+      }
+    ]
+  },
+  'HAR2025002': {
+    orderId: 'HAR-2025-0002',
+    clientName: 'Maria Oliveira',
+    packageType: 'Premium',
+    orderDate: '03/04/2025',
+    currentStep: 7,
+    status: 'Esperando Feedback',
+    expectedDelivery: '18/04/2025',
+    previewLink: '/previews/preview456',
+    progress: [
+      {
+        step: 1,
+        status: 'completed' as const,
+        title: 'Qualificação Inicial',
+        description: 'Formulário preenchido e necessidades identificadas',
+        icon: <FileText />,
+        date: '03/04/2025'
+      },
+      {
+        step: 2,
+        status: 'completed' as const,
+        title: 'Escolha do Pacote',
+        description: 'Pacote Premium selecionado',
+        icon: <Package />,
+        date: '03/04/2025'
+      },
+      {
+        step: 3,
+        status: 'completed' as const,
+        title: 'Pagamento',
+        description: 'Pagamento aprovado',
+        icon: <CreditCard />,
+        date: '03/04/2025'
+      },
+      {
+        step: 4,
+        status: 'completed' as const,
+        title: 'Briefing Detalhado',
+        description: 'Detalhes do projeto fornecidos',
+        icon: <MessageSquare />,
+        date: '04/04/2025'
+      },
+      {
+        step: 5,
+        status: 'completed' as const,
+        title: 'Criação com IA',
+        description: 'Versões iniciais geradas',
+        icon: <Music />,
+        date: '05/04/2025'
+      },
+      {
+        step: 6,
+        status: 'completed' as const,
+        title: 'Refinamento Humano',
+        description: 'Músicos aprimoraram a composição',
+        icon: <Headphones />,
+        date: '07/04/2025'
+      },
+      {
+        step: 7,
+        status: 'current' as const,
+        title: 'Apresentação',
+        description: 'Prévias enviadas para avaliação',
+        icon: <FileCheck />,
+        date: '08/04/2025'
+      },
+      {
+        step: 8,
+        status: 'pending' as const,
+        title: 'Revisões',
+        description: 'Ajustes conforme seu feedback',
+        icon: <Settings />
+      },
+      {
+        step: 9,
+        status: 'pending' as const,
+        title: 'Entrega Final',
+        description: 'Música finalizada com documentação',
+        icon: <Music />
+      }
+    ]
+  }
+};
 
 const OrderTracking: React.FC = () => {
-  const [orderId, setOrderId] = useState('');
-  const [email, setEmail] = useState('');
-  const [loading, setLoading] = useState(false);
-  const [orderDetails, setOrderDetails] = useState<null | {
-    status: string;
-    currentStage: string;
-    estimatedDelivery: string;
-    lastUpdate: string;
-  }>(null);
-  
-  const { toast } = useToast();
+  const [orderCode, setOrderCode] = useState('');
+  const [orderData, setOrderData] = useState<any>(null);
+  const [isLoading, setIsLoading] = useState(false);
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const handleSearch = () => {
+    // Remove hifens e espaços para a busca
+    const cleanCode = orderCode.replace(/[^a-zA-Z0-9]/g, '').toUpperCase();
     
-    if (!orderId || !email) {
-      toast({
-        title: "Erro",
-        description: "Por favor, preencha todos os campos",
-        variant: "destructive",
-      });
-      return;
-    }
+    setIsLoading(true);
     
-    setLoading(true);
-    
-    try {
-      // Simulação de chamada de API
-      // Em produção, substitua por uma chamada real para seu backend
-      await new Promise(resolve => setTimeout(resolve, 1500));
+    // Simulando chamada de API
+    setTimeout(() => {
+      const foundOrder = MOCK_ORDERS[cleanCode];
       
-      // Dados simulados - substitua pela resposta real da API
-      setOrderDetails({
-        status: "Em andamento",
-        currentStage: "Mixagem final",
-        estimatedDelivery: "15/04/2025",
-        lastUpdate: "03/04/2025"
-      });
+      if (foundOrder) {
+        setOrderData(foundOrder);
+      } else {
+        toast({
+          title: "Pedido não encontrado",
+          description: "Verifique o código e tente novamente ou entre em contato conosco.",
+          variant: "destructive"
+        });
+      }
       
-      toast({
-        title: "Sucesso",
-        description: "Informações do pedido encontradas",
-      });
-    } catch (error) {
-      console.error("Erro ao buscar informações do pedido:", error);
-      toast({
-        title: "Erro",
-        description: "Não foi possível encontrar seu pedido. Verifique os dados e tente novamente.",
-        variant: "destructive",
-      });
-    } finally {
-      setLoading(false);
-    }
+      setIsLoading(false);
+    }, 800);
   };
 
   return (
-    <div className="min-h-screen bg-background text-foreground flex flex-col">
+    <div className="min-h-screen bg-background">
       <Header />
-      <main className="flex-grow pt-32 pb-20 px-6 md:px-10">
-        <div className="max-w-3xl mx-auto">
-          <h1 className="text-3xl font-bold mb-8">Acompanhar Pedido</h1>
+      <main className="pt-24 pb-20 px-6 md:px-10">
+        <div className="max-w-5xl mx-auto">
+          <h1 className="text-3xl font-bold mb-2">Acompanhar Pedido</h1>
+          <p className="text-gray-400 mb-10">
+            Insira o código do seu pedido para verificar seu status e progresso
+          </p>
           
-          <div className="bg-card border border-border rounded-lg p-6 mb-8">
-            <form onSubmit={handleSubmit} className="space-y-4">
-              <div>
-                <label htmlFor="orderId" className="block text-sm font-medium mb-1">
-                  Número do Pedido
-                </label>
+          <Card className="p-6 mb-10">
+            <div className="flex flex-col md:flex-row gap-4 mb-4">
+              <div className="flex-1">
                 <Input
-                  id="orderId"
-                  placeholder="Ex: HAR-12345"
-                  value={orderId}
-                  onChange={(e) => setOrderId(e.target.value)}
+                  placeholder="Digite o código do pedido (Ex: HAR-2025-001)"
+                  value={orderCode}
+                  onChange={(e) => setOrderCode(e.target.value)}
+                  className="w-full"
                 />
               </div>
-              
-              <div>
-                <label htmlFor="email" className="block text-sm font-medium mb-1">
-                  E-mail utilizado na compra
-                </label>
-                <Input
-                  id="email"
-                  type="email"
-                  placeholder="seuemail@exemplo.com"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                />
-              </div>
-              
-              <Button type="submit" className="w-full bg-harmonia-green hover:bg-harmonia-green/90" disabled={loading}>
-                {loading ? "Buscando..." : "Verificar Status"}
+              <Button 
+                onClick={handleSearch} 
+                disabled={isLoading || !orderCode.trim()}
+                className="bg-harmonia-green hover:bg-harmonia-green/90"
+              >
+                {isLoading ? 'Buscando...' : (
+                  <>
+                    <Search className="w-4 h-4 mr-2" />
+                    Buscar Pedido
+                  </>
+                )}
               </Button>
-            </form>
-          </div>
+            </div>
+            <p className="text-sm text-gray-500">
+              Você recebeu o código do pedido por email após a confirmação do pagamento.
+              Se não encontrar, verifique sua caixa de spam ou entre em contato conosco.
+            </p>
+          </Card>
           
-          {orderDetails && (
-            <div className="bg-card border border-border rounded-lg p-6">
-              <h2 className="text-xl font-bold mb-4">Detalhes do Pedido</h2>
-              
-              <div className="space-y-4">
-                <div className="flex justify-between border-b border-border pb-3">
-                  <span className="text-gray-400">Status:</span>
-                  <span className="font-medium">{orderDetails.status}</span>
-                </div>
-                
-                <div className="flex justify-between border-b border-border pb-3">
-                  <span className="text-gray-400">Etapa atual:</span>
-                  <span className="font-medium">{orderDetails.currentStage}</span>
-                </div>
-                
-                <div className="flex justify-between border-b border-border pb-3">
-                  <span className="text-gray-400">Previsão de entrega:</span>
-                  <span className="font-medium">{orderDetails.estimatedDelivery}</span>
-                </div>
-                
-                <div className="flex justify-between">
-                  <span className="text-gray-400">Última atualização:</span>
-                  <span className="font-medium">{orderDetails.lastUpdate}</span>
-                </div>
-              </div>
+          {orderData ? (
+            <OrderDetails {...orderData} />
+          ) : (
+            <div className="text-center py-10">
+              <h3 className="text-xl font-semibold mb-4">Não encontrou seu pedido?</h3>
+              <p className="text-gray-400 mb-6 max-w-lg mx-auto">
+                Se você está tendo dificuldades para localizar seu pedido ou precisa de assistência adicional,
+                entre em contato com nossa equipe de suporte.
+              </p>
+              <Button 
+                onClick={() => window.open('https://wa.me/5511920585072?text=Olá,%20preciso%20de%20ajuda%20para%20localizar%20meu%20pedido', '_blank')}
+                className="bg-harmonia-green hover:bg-harmonia-green/90"
+              >
+                Entrar em Contato
+                <ArrowRight className="w-4 h-4 ml-2" />
+              </Button>
             </div>
           )}
-          
-          <div className="mt-8 bg-card border border-border rounded-lg p-6">
-            <h2 className="text-xl font-bold mb-4">Precisa de ajuda?</h2>
-            <p className="text-gray-400 mb-4">
-              Se você está com algum problema para acompanhar seu pedido ou precisa de informações adicionais, 
-              nossa equipe está pronta para ajudar.
-            </p>
-            <div className="flex flex-col sm:flex-row gap-3">
-              <Button 
-                variant="outline" 
-                onClick={() => window.open('https://wa.me/5511999999999', '_blank')}
-                className="flex items-center gap-2"
-              >
-                WhatsApp
-              </Button>
-              <Button 
-                variant="outline" 
-                onClick={() => window.open('mailto:contato@harmonia.media', '_blank')}
-                className="flex items-center gap-2"
-              >
-                E-mail
-              </Button>
-            </div>
-          </div>
         </div>
       </main>
       <Footer />

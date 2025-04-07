@@ -11,12 +11,16 @@ import NotFound from "./pages/NotFound";
 import AudioDatabase from "./pages/AudioDatabase";
 import AdminPortfolio from "./pages/admin/AdminPortfolio";
 import AdminDashboard from "./pages/admin/Dashboard";
+import AdminPreviews from "./pages/admin/AdminPreviews";
 import Packages from "./pages/Packages";
 import Portfolio from "./pages/Portfolio";
 import PrivacyPolicy from "./pages/PrivacyPolicy";
 import Terms from "./pages/Terms";
 import OrderTracking from "./pages/OrderTracking";
 import MusicPreviews from "./pages/MusicPreviews";
+import MusicPreviewSystem from "./components/previews/MusicPreviewSystem";
+import FeedbackConfirmation from "./pages/FeedbackConfirmation";
+import ApprovalConfirmation from "./pages/ApprovalConfirmation";
 import Qualification from "./pages/Qualification";
 import ThankYou from "./pages/ThankYou";
 import { siteConfig } from "./config/site";
@@ -38,12 +42,23 @@ const App = () => (
           <Route path="/privacidade" element={<PrivacyPolicy />} />
           <Route path="/termos" element={<Terms />} />
           <Route path={siteConfig.urls.orderTracking} element={<OrderTracking />} />
+          
+          {/* Rotas administrativas */}
           <Route path="/admin-j28s7d1k/dashboard" element={<AdminDashboard />} />
+          <Route path="/admin-j28s7d1k/previews" element={<AdminPreviews />} />
           <Route path={siteConfig.urls.admin.audioDatabase} element={<AudioDatabase />} />
           <Route path={siteConfig.urls.admin.portfolio} element={<AdminPortfolio />} />
+          
+          {/* Sistema de prévias musicais */}
           <Route path="/previews/:previewId" element={<MusicPreviews />} />
+          <Route path="/cliente/previews/:projectId" element={<MusicPreviewSystem />} />
+          <Route path="/feedback-confirmacao" element={<FeedbackConfirmation />} />
+          <Route path="/aprovacao-confirmacao" element={<ApprovalConfirmation />} />
+          
+          {/* Qualificação e agradecimento */}
           <Route path="/qualificacao" element={<Qualification />} />
           <Route path="/agradecimento" element={<ThankYou />} />
+          
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />
         </Routes>
