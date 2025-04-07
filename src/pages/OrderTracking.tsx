@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
@@ -5,10 +6,9 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card } from "@/components/ui/card";
 import { toast } from "@/hooks/use-toast";
-import { ArrowRight, Search, FileText, Package, CreditCard, MessageSquare, Music, Headphones, FileCheck, Settings, CheckCircle2 } from 'lucide-react';
+import { ArrowRight, Search, MessageSquare } from 'lucide-react';
 import OrderDetails from '@/components/order-tracking/OrderDetails';
 import OrderNotification from '@/components/order-tracking/OrderNotification'; 
-import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { siteConfig } from '@/config/site';
 
 const MOCK_ORDERS = {
@@ -227,7 +227,7 @@ const OrderTracking: React.FC = () => {
             setTimeout(() => {
               window.harmonIAChatbot.addBotMessage(
                 "Posso ajudar você a localizar seu pedido. Você tem o código do pedido?",
-                ["Sim, tenho o código", "Não tenho o código", "Falar com atendente"]
+                ["Sim, tenho o código", "Não tenho o código", "Preciso de outro tipo de ajuda"]
               );
             }, 500);
           }
@@ -298,9 +298,10 @@ const OrderTracking: React.FC = () => {
                 entre em contato com nossa equipe de suporte.
               </p>
               <Button 
-                className="bg-harmonia-green hover:bg-harmonia-green/90"
+                className="bg-harmonia-green hover:bg-harmonia-green/90 flex items-center"
                 onClick={openChatAssistant}
               >
+                <MessageSquare className="w-4 h-4 mr-2" />
                 Falar com o Assistente
                 <ArrowRight className="w-4 h-4 ml-2" />
               </Button>

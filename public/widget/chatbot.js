@@ -23,7 +23,9 @@ window.harmonIAChatbot = (function() {
     isOpen: false,
     messages: [],
     sessionId: generateSessionId(),
-    isTyping: false
+    isTyping: false,
+    lastQuery: '',
+    recentQueries: []
   };
   
   // Elementos do DOM
@@ -56,7 +58,11 @@ window.harmonIAChatbot = (function() {
     injectStyles();
     
     // Adiciona mensagem de boas-vindas
-    addBotMessage(config.welcomeMessage, ['Informações sobre pacotes', 'Ver amostras', 'Iniciar briefing', 'Falar com atendente']);
+    addBotMessage(config.welcomeMessage, [
+      'Informações sobre pacotes', 
+      'Ver amostras', 
+      'Iniciar briefing'
+    ]);
     
     console.log('harmonIA Chatbot inicializado com sucesso!');
   }
@@ -249,28 +255,41 @@ window.harmonIAChatbot = (function() {
       .harmonia-quick-replies {
         display: flex;
         flex-wrap: wrap;
-        gap: 5px;
-        margin-top: 5px;
+        gap: 8px;
+        margin-top: 10px;
       }
       
       .harmonia-quick-reply {
-        background-color: #f1f1f1;
-        border: 1px solid #ddd;
-        border-radius: 15px;
-        padding: 5px 10px;
-        font-size: 12px;
+        background-color: white;
+        border: 1px solid ${config.primaryColor};
+        color: ${config.primaryColor};
+        border-radius: 20px;
+        padding: 8px 15px;
+        font-size: 13px;
+        font-weight: 500;
         cursor: pointer;
         transition: all 0.2s ease;
+        text-align: center;
       }
       
       .harmonia-quick-reply:hover {
-        background-color: #e0e0e0;
+        background-color: ${config.primaryColor};
+        color: white;
       }
       
       @media (max-width: 480px) {
         .harmonia-chat-window {
           width: 300px;
           height: 450px;
+        }
+        
+        .harmonia-quick-replies {
+          gap: 6px;
+        }
+        
+        .harmonia-quick-reply {
+          padding: 6px 12px;
+          font-size: 12px;
         }
       }
     `;
@@ -296,8 +315,22 @@ window.harmonIAChatbot = (function() {
     const userMessage = elements.inputField.value.trim();
     
     if (userMessage) {
+      // Evita processamento de mensagens idênticas consecutivas
+      if (userMessage === state.lastQuery) {
+        return;
+      }
+      
       // Adiciona mensagem do usuário à UI
       addUserMessage(userMessage);
+      
+      // Atualiza última consulta
+      state.lastQuery = userMessage;
+      
+      // Mantém um histórico das consultas recentes
+      state.recentQueries.push(userMessage);
+      if (state.recentQueries.length > 5) {
+        state.recentQueries.shift();
+      }
       
       // Limpa o campo de input
       elements.inputField.value = '';
@@ -318,7 +351,7 @@ window.harmonIAChatbot = (function() {
       setTimeout(() => {
         hideTypingIndicator();
         simulateResponse(text);
-      }, 1000);
+      }, 800);
     } else {
       // Em produção, tenta usar o webhook
       callWebhook(text);
@@ -338,7 +371,10 @@ window.harmonIAChatbot = (function() {
       },
       body: JSON.stringify({
         text: text,
-        sessionId: state.sessionId
+        sessionId: state.sessionId,
+        context: {
+          recentQueries: state.recentQueries
+        }
       })
     })
     .then(response => {
@@ -381,7 +417,7 @@ window.harmonIAChatbot = (function() {
   
   // Simula uma resposta do bot (fallback)
   function simulateResponse(userMessage) {
-    // Lógica de resposta simulada
+    // Lógica de resposta simulada com variações para evitar repetições
     let response;
     let quickReplies = [];
     
@@ -389,32 +425,42 @@ window.harmonIAChatbot = (function() {
     const lowerMessage = userMessage.toLowerCase();
     
     if (lowerMessage.includes('olá') || lowerMessage.includes('oi') || lowerMessage.includes('bom dia') || lowerMessage.includes('boa tarde') || lowerMessage.includes('boa noite')) {
-      response = 'Olá! Sou o assistente virtual da harmonIA. Como posso ajudar com sua música personalizada hoje?';
-      quickReplies = ['Informações sobre pacotes', 'Ver amostras', 'Iniciar briefing', 'Falar com atendente'];
+      const greetings = [
+        'Olá! Como posso ajudar com sua música personalizada hoje?',
+        'Oi! Que bom te ver! Como posso ajudar com seu projeto musical?',
+        'Olá! Bem-vindo à harmonIA. Como posso auxiliar com sua composição?'
+      ];
+      response = greetings[Math.floor(Math.random() * greetings.length)];
+      quickReplies = ['Pacotes disponíveis', 'Ver amostras', 'Iniciar briefing'];
     } 
     else if (lowerMessage.includes('pacote') || lowerMessage.includes('preço') || lowerMessage.includes('valor') || lowerMessage.includes('plano')) {
-      response = 'Oferecemos 3 pacotes principais: Essencial (R$219), Profissional (R$479) e Premium (R$969). Cada um tem características específicas para diferentes necessidades.';
-      quickReplies = ['Detalhes do Essencial', 'Detalhes do Profissional', 'Detalhes do Premium', 'Calcular preço'];
+      response = 'Temos 3 pacotes principais: Essencial (R$219), Profissional (R$479) e Premium (R$969). Cada um oferece diferentes níveis de personalização para sua música.';
+      quickReplies = ['Detalhes dos pacotes', 'Calcular preço', 'Iniciar projeto'];
     }
     else if (lowerMessage.includes('amostra') || lowerMessage.includes('exemplo') || lowerMessage.includes('portfólio') || lowerMessage.includes('portfolio')) {
-      response = 'Você pode conferir nosso portfólio completo em nosso site ou posso te mostrar algumas amostras populares.';
-      quickReplies = ['Ver portfólio completo', 'Amostras de casamento', 'Amostras corporativas', 'Iniciar briefing'];
+      response = 'Você pode conferir exemplos de nosso trabalho no portfólio. Temos músicas para diferentes ocasiões e estilos.';
+      quickReplies = ['Portfólio completo', 'Música para eventos', 'Músicas corporativas'];
     }
     else if (lowerMessage.includes('briefing') || lowerMessage.includes('começar') || lowerMessage.includes('iniciar') || lowerMessage.includes('criar')) {
-      response = 'Ótimo! Para iniciar seu projeto musical, você pode preencher nosso formulário de briefing ou posso te guiar com algumas perguntas para entender melhor o que você precisa.';
-      quickReplies = ['Preencher formulário', 'Iniciar briefing guiado', 'Ver exemplos primeiro'];
+      response = 'Para iniciar seu projeto musical personalizado, podemos começar com algumas perguntas sobre o que você deseja ou você pode preencher nosso formulário de briefing.';
+      quickReplies = ['Preencher formulário', 'Briefing guiado', 'Ver exemplos'];
     }
     else if (lowerMessage.includes('status') || lowerMessage.includes('acompanhar') || lowerMessage.includes('pedido')) {
-      response = 'Para verificar o status do seu pedido, acesse nossa página de acompanhamento com seu código de pedido ou me informe o código aqui.';
-      quickReplies = ['Acessar acompanhamento', 'Informar código', 'Falar com atendente'];
+      response = 'Para verificar o status do seu pedido, informe o código que recebeu por email ou acesse nossa página de acompanhamento.';
+      quickReplies = ['Informar código', 'Página de acompanhamento', 'Falar com atendente'];
     }
     else if (lowerMessage.includes('atendente') || lowerMessage.includes('pessoa') || lowerMessage.includes('humano') || lowerMessage.includes('whatsapp')) {
-      response = 'Entendo que você prefere falar com um atendente humano. Posso transferir você para nossa equipe de atendimento via WhatsApp ou e-mail.';
-      quickReplies = ['WhatsApp', 'E-mail', 'Continuar com o bot'];
+      response = 'Posso transferir você para nossa equipe de atendimento. Eles poderão ajudar com questões mais específicas sobre seu projeto.';
+      quickReplies = ['WhatsApp', 'E-mail', 'Continuar aqui'];
     }
     else {
-      response = 'Desculpe, não entendi completamente. Posso ajudar com informações sobre nossos pacotes, amostras de música, processo de briefing ou colocar você em contato com nossa equipe.';
-      quickReplies = ['Informações sobre pacotes', 'Ver amostras', 'Iniciar briefing', 'Falar com atendente'];
+      const fallbacks = [
+        'Desculpe, não entendi completamente. Posso ajudar com informações sobre nossos pacotes, amostras de música ou colocar você em contato com nossa equipe.',
+        'Não tenho certeza se compreendi corretamente. Posso auxiliar com informações sobre nossos serviços, exemplos de trabalhos ou iniciar seu projeto.',
+        'Hmm, não consegui entender. Posso mostrar nossos pacotes, exemplos de músicas ou ajudar você a iniciar um briefing.'
+      ];
+      response = fallbacks[Math.floor(Math.random() * fallbacks.length)];
+      quickReplies = ['Pacotes disponíveis', 'Ver exemplos', 'Falar com atendente'];
     }
     
     // Adiciona a resposta do bot
@@ -451,12 +497,20 @@ window.harmonIAChatbot = (function() {
     
     elements.messageList.appendChild(messageElement);
     
+    // Limita número de quick replies para evitar sobrecarga visual
+    if (quickReplies.length > 4) {
+      quickReplies = quickReplies.slice(0, 4);
+    }
+    
     // Adiciona quick replies se houver
     if (quickReplies.length > 0) {
       const quickRepliesContainer = document.createElement('div');
       quickRepliesContainer.className = 'harmonia-quick-replies';
       
-      quickReplies.forEach(reply => {
+      // Remove duplicatas
+      const uniqueReplies = [...new Set(quickReplies)];
+      
+      uniqueReplies.forEach(reply => {
         const quickReplyElement = document.createElement('div');
         quickReplyElement.className = 'harmonia-quick-reply';
         quickReplyElement.textContent = reply;
