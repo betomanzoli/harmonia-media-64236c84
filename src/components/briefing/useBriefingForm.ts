@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from 'react';
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -99,6 +100,20 @@ export const useBriefingForm = () => {
           description: "Entraremos em contato em breve para discutir seu projeto musical.",
         });
         
+        // Criar um ID de pedido fictício para simulação
+        const orderId = `HAR-${new Date().getFullYear()}-${Math.floor(1000 + Math.random() * 9000)}`;
+        
+        // Armazenar dados do pedido para rastreamento
+        localStorage.setItem('orderData', JSON.stringify({
+          orderId,
+          clientName: data.name,
+          packageType: selectedPackage === 'essencial' ? 'Essencial' : 
+                       selectedPackage === 'profissional' ? 'Profissional' : 'Premium',
+          status: 'Em Análise',
+          dateSubmitted: new Date().toISOString(),
+          contactPreference: data.contactPreference
+        }));
+        
         form.reset();
         setReferenceFiles([]);
         setIsSubmitting(false);
@@ -107,12 +122,7 @@ export const useBriefingForm = () => {
         console.log("Zapier automation: Initiating Suno AI music generation task");
         console.log("Zapier automation: Scheduling Moises mastering task");
         
-        if (data.contactPreference === "whatsapp" && data.phone) {
-          const phoneNumber = data.phone.replace(/\D/g, '');
-          const message = `Olá! Acabo de enviar um briefing para a harmonIA. Meu nome é ${data.name} e estou criando uma música personalizada. Aguardo contato!`;
-          window.open(`https://wa.me/5511999999999?text=${encodeURIComponent(message)}`, '_blank');
-        }
-        
+        // Redirecionar para a página de agradecimento ao invés de abrir o WhatsApp
         navigate('/agradecimento');
       }, 1500);
     } catch (error) {

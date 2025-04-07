@@ -78,6 +78,15 @@ Quando um cliente aprova uma versão:
 2. A equipe é notificada para finalizar a produção
 3. O projeto avança para a fase de entrega final
 
+## Proteção do Conteúdo
+
+Para proteger o conteúdo musical durante a fase de avaliação:
+
+1. Arquivos de áudio são apresentados em formato de prévia limitada (30 segundos)
+2. Downloads diretos são bloqueados durante a fase de avaliação
+3. A página contém proteção contra botão direito do mouse e outras medidas anti-cópia
+4. O cliente só recebe a versão completa após aprovação final
+
 ## Boas Práticas
 
 1. **Qualidade das prévias**: Envie versões em qualidade média (128kbps) para proteção do conteúdo
@@ -90,3 +99,4 @@ Quando um cliente aprova uma versão:
 - **Cliente não recebeu o email**: Verifique na tabela de projetos e clique no botão de reenvio
 - **Link expirado**: Estenda o prazo criando um novo projeto ou atualizando a data de expiração
 - **Problemas com arquivos**: Verifique se o formato é compatível (MP3 recomendado) e não ultrapassa 20MB
+- **Cliente não consegue ouvir as prévias**: Verifique se o cliente está usando um navegador compatível e tem conexão estável

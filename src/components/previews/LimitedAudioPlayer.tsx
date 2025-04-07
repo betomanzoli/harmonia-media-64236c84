@@ -1,127 +1,106 @@
 
-import React, { useState, useEffect, useRef } from 'react';
-import { Play, Pause, Volume2, VolumeX } from 'lucide-react';
-import { Button } from '@/components/ui/button';
-import { Slider } from '@/components/ui/slider';
-import { cn } from '@/lib/utils';
+import React, { useState, useRef, useEffect } from 'react';
+import { Card } from "@/components/ui/card";
+import { Slider } from "@/components/ui/slider";
+import { Play, Pause, Lock } from 'lucide-react';
 
 interface LimitedAudioPlayerProps {
-  audioUrl: string;
-  previewDuration?: number; // Duration in seconds
-  className?: string;
-  title?: string;
-  subtitle?: string;
-  audioSrc?: string;
+  audioSrc: string;
+  title: string;
+  subtitle: string;
+  previewDuration?: number; // duração da prévia em segundos (padrão: 30s)
 }
 
-const LimitedAudioPlayer: React.FC<LimitedAudioPlayerProps> = ({
-  audioUrl,
-  audioSrc,
+const LimitedAudioPlayer: React.FC<LimitedAudioPlayerProps> = ({ 
+  audioSrc, 
   title,
   subtitle,
-  previewDuration = 30, // Default to 30 seconds preview
-  className,
+  previewDuration = 30
 }) => {
   const [isPlaying, setIsPlaying] = useState(false);
   const [currentTime, setCurrentTime] = useState(0);
   const [duration, setDuration] = useState(0);
-  const [volume, setVolume] = useState(0.7);
-  const [isMuted, setIsMuted] = useState(false);
-  const [isLoaded, setIsLoaded] = useState(false);
+  const [isLimited, setIsLimited] = useState(true);
   const audioRef = useRef<HTMLAudioElement | null>(null);
-  const animationRef = useRef<number>(0);
-
-  // Use audioSrc as fallback if audioUrl is not provided
-  const finalAudioUrl = audioUrl || audioSrc || '';
-
+  
   useEffect(() => {
-    const audio = new Audio(finalAudioUrl);
+    const audio = new Audio(audioSrc);
     audioRef.current = audio;
     
-    audio.addEventListener('loadedmetadata', () => {
-      setDuration(Math.min(audio.duration, previewDuration));
-      setIsLoaded(true);
-    });
+    const handleLoadedMetadata = () => {
+      setDuration(audio.duration);
+      setIsLimited(audio.duration > previewDuration);
+    };
     
-    audio.addEventListener('ended', () => {
+    const handleTimeUpdate = () => {
+      setCurrentTime(audio.currentTime);
+      
+      // Se estiver limitado e passar do tempo de prévia, pause o áudio
+      if (isLimited && audio.currentTime >= previewDuration) {
+        audio.pause();
+        audio.currentTime = 0;
+        setIsPlaying(false);
+      }
+    };
+    
+    const handleEnded = () => {
       setIsPlaying(false);
       setCurrentTime(0);
-      cancelAnimationFrame(animationRef.current);
-    });
+      audio.currentTime = 0;
+    };
     
-    audio.volume = volume;
+    audio.addEventListener('loadedmetadata', handleLoadedMetadata);
+    audio.addEventListener('timeupdate', handleTimeUpdate);
+    audio.addEventListener('ended', handleEnded);
+    
+    // Prevenir download do áudio
+    document.addEventListener('contextmenu', preventContextMenu);
     
     return () => {
       audio.pause();
-      audio.src = '';
-      audio.removeEventListener('loadedmetadata', () => {});
-      audio.removeEventListener('ended', () => {});
-      cancelAnimationFrame(animationRef.current);
+      audio.removeEventListener('loadedmetadata', handleLoadedMetadata);
+      audio.removeEventListener('timeupdate', handleTimeUpdate);
+      audio.removeEventListener('ended', handleEnded);
+      document.removeEventListener('contextmenu', preventContextMenu);
     };
-  }, [finalAudioUrl, previewDuration]);
+  }, [audioSrc, previewDuration, isLimited]);
+  
+  const preventContextMenu = (e: MouseEvent) => {
+    if ((e.target as HTMLElement)?.closest('audio')) {
+      e.preventDefault();
+    }
+  };
   
   const togglePlayPause = () => {
     if (!audioRef.current) return;
     
     if (isPlaying) {
       audioRef.current.pause();
-      cancelAnimationFrame(animationRef.current);
     } else {
+      // Se atingiu o limite, reinicie do início
+      if (isLimited && currentTime >= previewDuration) {
+        audioRef.current.currentTime = 0;
+        setCurrentTime(0);
+      }
+      
       audioRef.current.play();
-      animationRef.current = requestAnimationFrame(updateProgress);
     }
     
     setIsPlaying(!isPlaying);
   };
   
-  const updateProgress = () => {
-    if (!audioRef.current) return;
-    
-    const currentTime = audioRef.current.currentTime;
-    setCurrentTime(currentTime);
-    
-    if (currentTime >= previewDuration) {
-      audioRef.current.pause();
-      audioRef.current.currentTime = 0;
-      setIsPlaying(false);
-      setCurrentTime(0);
-      return;
-    }
-    
-    animationRef.current = requestAnimationFrame(updateProgress);
-  };
-  
-  const handleTimeChange = (value: number[]) => {
+  const handleSliderChange = (value: number[]) => {
     if (!audioRef.current) return;
     
     const newTime = value[0];
-    audioRef.current.currentTime = newTime;
-    setCurrentTime(newTime);
-  };
-  
-  const handleVolumeChange = (value: number[]) => {
-    if (!audioRef.current) return;
     
-    const newVolume = value[0];
-    audioRef.current.volume = newVolume;
-    setVolume(newVolume);
-    
-    if (newVolume === 0) {
-      setIsMuted(true);
+    // Se estiver limitado, não permita deslizar além do tempo de prévia
+    if (isLimited && newTime > previewDuration) {
+      audioRef.current.currentTime = previewDuration;
+      setCurrentTime(previewDuration);
     } else {
-      setIsMuted(false);
-    }
-  };
-  
-  const toggleMute = () => {
-    if (!audioRef.current) return;
-    
-    if (isMuted) {
-      audioRef.current.volume = volume || 0.7;
-      setIsMuted(false);
-    } else {
-      audioRef.current.volume = 0;
-      setIsMuted(true);
+      audioRef.current.currentTime = newTime;
+      setCurrentTime(newTime);
     }
   };
   
@@ -131,66 +110,49 @@ const LimitedAudioPlayer: React.FC<LimitedAudioPlayerProps> = ({
     return `${minutes}:${seconds < 10 ? '0' : ''}${seconds}`;
   };
   
+  const maxTime = isLimited ? previewDuration : duration;
+
   return (
-    <div className={cn("w-full p-4 bg-card rounded-md border border-border", className)}>
+    <Card className="p-4 space-y-3">
       {(title || subtitle) && (
-        <div className="mb-4">
-          {title && <h3 className="font-semibold text-lg">{title}</h3>}
-          {subtitle && <p className="text-gray-400 text-sm">{subtitle}</p>}
+        <div className="mb-2">
+          {title && <h3 className="font-medium">{title}</h3>}
+          {subtitle && <p className="text-sm text-gray-500">{subtitle}</p>}
         </div>
       )}
       
-      <div className="flex items-center gap-4">
-        <Button 
-          variant="ghost" 
-          size="icon" 
-          className="h-10 w-10 rounded-full bg-primary/10 hover:bg-primary/20 text-primary"
+      <div className="flex items-center gap-3">
+        <button
           onClick={togglePlayPause}
-          disabled={!isLoaded}
+          className="w-10 h-10 rounded-full bg-harmonia-green text-white flex items-center justify-center hover:bg-harmonia-green/90 transition-colors"
         >
-          {isPlaying ? <Pause className="h-5 w-5" /> : <Play className="h-5 w-5" />}
-        </Button>
+          {isPlaying ? <Pause className="w-5 h-5" /> : <Play className="w-5 h-5" />}
+        </button>
         
-        <div className="flex-1">
-          <div className="flex justify-between text-xs text-muted-foreground mb-1">
-            <span>{formatTime(currentTime)}</span>
-            <span>{formatTime(duration)}</span>
-          </div>
+        <div className="flex-grow space-y-1">
           <Slider
             value={[currentTime]}
-            min={0}
-            max={duration}
-            step={0.01}
-            onValueChange={handleTimeChange}
-            disabled={!isLoaded}
+            max={maxTime}
+            step={0.1}
+            onValueChange={handleSliderChange}
             className="cursor-pointer"
           />
-        </div>
-        
-        <div className="flex items-center gap-2">
-          <Button 
-            variant="ghost" 
-            size="icon" 
-            className="h-8 w-8 rounded-full"
-            onClick={toggleMute}
-          >
-            {isMuted ? <VolumeX className="h-4 w-4" /> : <Volume2 className="h-4 w-4" />}
-          </Button>
-          <Slider
-            value={[isMuted ? 0 : volume]}
-            min={0}
-            max={1}
-            step={0.01}
-            onValueChange={handleVolumeChange}
-            className="w-20 cursor-pointer"
-          />
+          
+          <div className="flex justify-between text-xs text-gray-500">
+            <span>{formatTime(currentTime)}</span>
+            <div className="flex items-center gap-1">
+              {isLimited && (
+                <>
+                  <Lock className="w-3 h-3" />
+                  <span className="text-xs">Prévia limitada</span>
+                </>
+              )}
+              <span className="ml-1">{formatTime(maxTime)}</span>
+            </div>
+          </div>
         </div>
       </div>
-      
-      <div className="mt-2 text-xs text-muted-foreground">
-        <p>Prévia limitada a {previewDuration} segundos</p>
-      </div>
-    </div>
+    </Card>
   );
 };
 
