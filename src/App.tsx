@@ -42,13 +42,13 @@ const App = () => (
         <AdminAuthProvider>
           <Routes>
             <Route path="/" element={<Index />} />
-            <Route path={siteConfig.urls.calculator} element={<Calculator />} />
+            <Route path="/calculadora" element={<Calculator />} />
             <Route path={siteConfig.urls.briefing} element={<Briefing />} />
-            <Route path={siteConfig.urls.portfolio} element={<Portfolio />} />
-            <Route path={siteConfig.urls.packages} element={<Packages />} />
+            <Route path="/portfolio" element={<Portfolio />} />
+            <Route path="/pacotes" element={<Packages />} />
             <Route path="/privacidade" element={<PrivacyPolicy />} />
             <Route path="/termos" element={<Terms />} />
-            <Route path={siteConfig.urls.orderTracking} element={<OrderTracking />} />
+            <Route path="/acompanhar-pedido" element={<OrderTracking />} />
             <Route path="/admin-login" element={<AdminLogin />} />
             <Route path="/admin-reset-password" element={<AdminLogin />} />
             

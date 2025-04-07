@@ -3,93 +3,75 @@ import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { testSupabaseConnection } from '../connectionTest';
 import { supabase } from '../client';
 
-// Mock the supabase client
+// Mock para o cliente Supabase
 vi.mock('../client', () => ({
   supabase: {
     rpc: vi.fn(),
     from: vi.fn(),
-  },
-  getSupabaseUrl: vi.fn().mockReturnValue('https://example.supabase.co'),
-}));
-
-// Mock the fetch API
-global.fetch = vi.fn();
-
-// Mock the AbortSignal
-vi.mock('./mocks/abortControllerMock', () => ({
-  AbortSignal: {
-    timeout: vi.fn().mockReturnValue({}),
+    auth: {
+      getSession: vi.fn(),
+    },
   },
 }));
+
+// Helpers para criar mock de resposta do PostgrestBuilder
+function createPostgrestMock(response: { data: any; error: any }) {
+  return {
+    then: (callback: any) => Promise.resolve(callback(response)),
+    data: response.data,
+    error: response.error,
+    throwOnError: vi.fn().mockReturnThis(),
+  };
+}
+
+// Helper para criar uma resposta de fetch
+function createResponse(ok: boolean, status: number, data: any) {
+  return {
+    ok,
+    status,
+    json: () => Promise.resolve(data),
+    text: () => Promise.resolve(JSON.stringify(data)),
+  };
+}
 
 describe('testSupabaseConnection', () => {
-  // Create a response factory for fetch mocks
-  const createResponse = (ok: boolean, status = 200, json = {}) => {
-    return {
-      ok,
-      status,
-      json: () => Promise.resolve(json),
-    };
-  };
-
-  // Helper to create PostgrestFilterBuilder mocks
-  const createPostgrestMock = (response: any) => {
-    // Create a mock object that has all the methods of PostgrestFilterBuilder
-    const mock = {
-      eq: vi.fn().mockReturnThis(),
-      neq: vi.fn().mockReturnThis(),
-      gt: vi.fn().mockReturnThis(),
-      gte: vi.fn().mockReturnThis(),
-      lt: vi.fn().mockReturnThis(),
-      lte: vi.fn().mockReturnThis(),
-      like: vi.fn().mockReturnThis(),
-      ilike: vi.fn().mockReturnThis(),
-      is: vi.fn().mockReturnThis(),
-      in: vi.fn().mockReturnThis(),
-      contains: vi.fn().mockReturnThis(),
-      containedBy: vi.fn().mockReturnThis(),
-      rangeGt: vi.fn().mockReturnThis(),
-      rangeGte: vi.fn().mockReturnThis(),
-      rangeLt: vi.fn().mockReturnThis(),
-      rangeLte: vi.fn().mockReturnThis(),
-      rangeAdjacent: vi.fn().mockReturnThis(),
-      overlaps: vi.fn().mockReturnThis(),
-      textSearch: vi.fn().mockReturnThis(),
-      filter: vi.fn().mockReturnThis(),
-      not: vi.fn().mockReturnThis(),
-      or: vi.fn().mockReturnThis(),
-      and: vi.fn().mockReturnThis(),
-      order: vi.fn().mockReturnThis(),
-      limit: vi.fn().mockReturnThis(),
-      range: vi.fn().mockReturnThis(),
-      single: vi.fn().mockReturnThis(),
-      maybeSingle: vi.fn().mockReturnThis(),
-      select: vi.fn().mockReturnThis(),
-      // Add the then method to simulate the Promise-like behavior
-      then: (callback: any) => Promise.resolve(callback(response)),
-      catch: (callback: any) => Promise.resolve(callback(response)),
-      finally: (callback: any) => Promise.resolve(callback()),
-      // Other required methods
-      throwOnError: vi.fn().mockReturnThis(),
-      match: vi.fn().mockReturnThis(),
-      abortSignal: vi.fn().mockReturnThis(),
-      csv: vi.fn().mockReturnThis(),
-      explain: vi.fn().mockReturnThis(),
-      values: vi.fn().mockReturnThis(),
-      returns: vi.fn().mockReturnThis(),
-      options: vi.fn().mockReturnThis(),
-      headers: vi.fn().mockReturnThis(),
-    };
-    
-    return mock;
-  };
-
+  // Mock global fetch
   beforeEach(() => {
+    global.fetch = vi.fn();
     vi.clearAllMocks();
   });
 
   afterEach(() => {
     vi.resetAllMocks();
+  });
+
+  it('should detect Supabase connection when all methods succeed', async () => {
+    // Mock for direct fetch
+    (global.fetch as any).mockResolvedValueOnce(createResponse(true, 200, { version: '15.1.0' }));
+
+    // Mock for RPC
+    (supabase.rpc as any) = vi.fn().mockImplementation(() => 
+      createPostgrestMock({
+        data: { version: '15.1.0' },
+        error: null
+      })
+    );
+
+    // Mock for table access
+    (supabase.from as any) = vi.fn().mockImplementation(() => ({
+      select: vi.fn().mockImplementation(() => 
+        createPostgrestMock({
+          data: [{ exists: true }],
+          error: null
+        })
+      )
+    }));
+
+    const result = await testSupabaseConnection();
+
+    expect(result.connected).toBe(true);
+    expect(result.endpointStatus).toBe('reachable');
+    expect(result.error).toBeNull();
   });
 
   it('should detect success via RPC method', async () => {
@@ -115,9 +97,10 @@ describe('testSupabaseConnection', () => {
     (global.fetch as any).mockResolvedValueOnce(createResponse(true, 200, { version: '15.1.0' }));
 
     const result = await testSupabaseConnection();
+
     expect(result.connected).toBe(true);
-    expect(result.method).toBe('rpc');
-    expect(supabase.rpc).toHaveBeenCalledWith('get_pg_version');
+    expect(result.endpointStatus).toBe('reachable');
+    expect(result.apiAccessMethod).toBe('rpc');
   });
 
   it('should fall back to table method if RPC fails', async () => {
@@ -143,9 +126,10 @@ describe('testSupabaseConnection', () => {
     (global.fetch as any).mockResolvedValueOnce(createResponse(true, 200, { status: 'ok' }));
 
     const result = await testSupabaseConnection();
+
     expect(result.connected).toBe(true);
-    expect(result.method).toBe('table');
-    expect(supabase.from).toHaveBeenCalledWith('_system_status');
+    expect(result.endpointStatus).toBe('reachable');
+    expect(result.apiAccessMethod).toBe('table');
   });
 
   it('should detect failure when all methods fail', async () => {
@@ -171,7 +155,9 @@ describe('testSupabaseConnection', () => {
     (global.fetch as any).mockRejectedValueOnce(new Error('Network error'));
 
     const result = await testSupabaseConnection();
+
     expect(result.connected).toBe(false);
-    expect(result.error).toBeDefined();
+    expect(result.endpointStatus).toBe('unreachable');
+    expect(result.error).not.toBeNull();
   });
 });
