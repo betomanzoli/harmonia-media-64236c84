@@ -1,14 +1,17 @@
 
-import React from 'react';
+import React, { useState } from 'react';
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
 import { Button } from "@/components/ui/button";
-import { ArrowLeft } from 'lucide-react';
+import { ArrowLeft, ChevronDown, ChevronUp } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { siteConfig } from '@/config/site';
+import RevisionPolicy from '@/components/legal/RevisionPolicy';
+import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
 
 const Terms: React.FC = () => {
   const navigate = useNavigate();
+  const [showRevisionPolicy, setShowRevisionPolicy] = useState(false);
 
   return (
     <div className="min-h-screen bg-background text-foreground">
@@ -30,6 +33,17 @@ const Terms: React.FC = () => {
             <h1 className="text-3xl md:text-4xl font-bold mb-4">Termos de Serviço</h1>
             <p className="text-gray-400">Última atualização: {new Date().toLocaleDateString('pt-BR')}</p>
           </div>
+
+          <Accordion type="single" collapsible className="mb-10">
+            <AccordionItem value="revision-policy">
+              <AccordionTrigger className="text-xl font-semibold text-harmonia-green">
+                Política de Revisões e Reembolso
+              </AccordionTrigger>
+              <AccordionContent>
+                <RevisionPolicy />
+              </AccordionContent>
+            </AccordionItem>
+          </Accordion>
 
           <div className="prose prose-invert max-w-none">
             <h2>1. Natureza do Serviço</h2>
