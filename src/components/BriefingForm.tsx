@@ -65,7 +65,8 @@ const BriefingForm: React.FC = () => {
           {/* Package-specific fields */}
           {renderPackageFields()}
           
-          {/* Referências */}
+          {/* Referências - now appears for all packages */}
+          <h3 className="text-lg font-semibold pt-4">Referências</h3>
           <ReferencesSection 
             referenceFiles={referenceFiles} 
             setReferenceFiles={setReferenceFiles} 

@@ -1,7 +1,7 @@
 
 import React, { useRef } from 'react';
 import { Button } from "@/components/ui/button";
-import { File, X, Upload } from "lucide-react";
+import { File, X, Upload, Music, Image, FileVideo, FileText } from "lucide-react";
 
 interface FileUploaderProps {
   referenceFiles: File[];
@@ -25,6 +25,24 @@ const FileUploader: React.FC<FileUploaderProps> = ({ referenceFiles, setReferenc
   const openFileDialog = () => {
     if (fileInputRef.current) {
       fileInputRef.current.click();
+    }
+  };
+
+  // Get appropriate icon based on file type
+  const getFileIcon = (file: File) => {
+    const type = file.type.split('/')[0];
+    
+    switch (type) {
+      case 'audio':
+        return <Music className="w-4 h-4 mr-2 text-blue-400" />;
+      case 'image':
+        return <Image className="w-4 h-4 mr-2 text-green-400" />;
+      case 'video':
+        return <FileVideo className="w-4 h-4 mr-2 text-purple-400" />;
+      case 'application':
+        return <FileText className="w-4 h-4 mr-2 text-amber-400" />;
+      default:
+        return <File className="w-4 h-4 mr-2 text-gray-400" />;
     }
   };
 
@@ -60,7 +78,7 @@ const FileUploader: React.FC<FileUploaderProps> = ({ referenceFiles, setReferenc
             {referenceFiles.map((file, index) => (
               <li key={index} className="flex items-center justify-between bg-secondary/50 p-2 rounded-md">
                 <div className="flex items-center">
-                  <File className="w-4 h-4 mr-2 text-gray-400" />
+                  {getFileIcon(file)}
                   <span className="text-sm truncate max-w-[200px]">{file.name}</span>
                 </div>
                 <Button 
