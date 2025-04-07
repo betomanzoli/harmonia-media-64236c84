@@ -5,6 +5,7 @@ import Footer from '@/components/Footer';
 import { Button } from "@/components/ui/button";
 import { ArrowLeft } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
+import { siteConfig } from '@/config/site';
 
 const Terms: React.FC = () => {
   const navigate = useNavigate();
@@ -31,130 +32,134 @@ const Terms: React.FC = () => {
           </div>
 
           <div className="prose prose-invert max-w-none">
+            <h2>1. Natureza do Serviço</h2>
+            <h3>1.1 Definições</h3>
             <p>
-              Bem-vindo à harmonIA. Ao usar nosso site e serviços, você concorda com estes Termos de Serviço. 
-              Por favor, leia-os cuidadosamente.
+              <strong>PRESTADORA:</strong> harmonIA
+            </p>
+            <p>
+              <strong>CLIENTE:</strong> Pessoa física ou jurídica contratante dos serviços.
+            </p>
+            <p>
+              <strong>OBRA MUSICAL:</strong> Composição musical criada utilizando tecnologia de IA com intervenção humana.
             </p>
 
-            <h2>1. Aceitação dos Termos</h2>
+            <h3>1.2 Escopo do Serviço</h3>
             <p>
-              Ao acessar ou usar nossos serviços, você concorda em ficar vinculado a estes Termos de Serviço, 
-              nossa Política de Privacidade e quaisquer termos adicionais aplicáveis.
+              A harmonIA atua como "despachante musical", intermediando o acesso do CLIENTE a tecnologias de inteligência artificial para criação musical. 
+              O serviço inclui orientação técnica, curadoria, refinamento humano especializado e documentação legal conforme o pacote contratado.
             </p>
 
-            <h2>2. Descrição dos Serviços</h2>
+            <h2>2. Pacotes e Direitos Concedidos</h2>
+            <h3>2.1 Pacote Essencial</h3>
             <p>
-              A harmonIA fornece serviços de composição musical personalizada utilizando inteligência artificial 
-              e músicos profissionais. Nossos serviços incluem:
+              <strong>Direitos concedidos:</strong> Licença não-exclusiva, intransferível, para uso EXCLUSIVAMENTE PESSOAL E NÃO-COMERCIAL da OBRA MUSICAL.
+            </p>
+            <p>
+              A harmonIA mantém direitos sobre melodia, harmonia e arranjos.
+            </p>
+
+            <h3>2.2 Pacote Profissional</h3>
+            <p>
+              <strong>Direitos concedidos:</strong> Licença limitada para uso em conteúdo digital próprio, monetização em plataformas do CLIENTE e execução em eventos particulares ou corporativos do CLIENTE.
+            </p>
+            <p>
+              Vedado sublicenciar, revender ou ceder a obra a terceiros.
+            </p>
+
+            <h3>2.3 Pacote Premium</h3>
+            <p>
+              <strong>Direitos concedidos:</strong> Cessão total dos direitos patrimoniais sobre a OBRA MUSICAL, conforme Termo de Cessão de Direitos Autorais específico.
+            </p>
+
+            <h2>3. Limitações de Responsabilidade</h2>
+            <h3>3.1 Originalidade e Verificações</h3>
+            <p>
+              A harmonIA realiza verificações técnicas de similaridade conforme o pacote contratado, mas não garante a originalidade absoluta das composições geradas por IA.
+            </p>
+            <p>
+              Tais verificações representam o melhor esforço técnico disponível, não constituindo garantia absoluta contra eventuais reivindicações de terceiros.
+            </p>
+
+            <h3>3.2 Responsabilidade do Cliente</h3>
+            <p>
+              O CLIENTE assume integral e exclusiva responsabilidade por qualquer uso da OBRA MUSICAL que exceda os limites estabelecidos no contrato específico do seu pacote.
+            </p>
+            <p>
+              A harmonIA NÃO ASSUME RESPONSABILIDADE, em nenhuma hipótese, por usos da OBRA MUSICAL que excedam os limites estabelecidos no contrato.
+            </p>
+
+            <h2>4. Registros e Proteção Legal</h2>
+            <h3>4.1 Limitações de Registro</h3>
+            <p>
+              O registro na Biblioteca Nacional incluído no Pacote Premium limita-se exclusivamente à letra da OBRA MUSICAL.
+            </p>
+            <p>
+              O registro em blockchain oferecido serve apenas como comprovação de precedência temporal (timestamp), não substituindo registros oficiais de proteção autoral.
+            </p>
+            <p>
+              Quaisquer registros adicionais de melodia, arranjo ou fonograma em órgãos como UBC, ECAD ou similares são de responsabilidade exclusiva do CLIENTE.
+            </p>
+
+            <h2>5. Processo de Mitigação de Riscos</h2>
+            <p>
+              A harmonIA implementa as seguintes medidas para mitigação de riscos de similaridade:
             </p>
             <ul>
-              <li>Composição de músicas personalizadas</li>
-              <li>Produção musical e arranjos</li>
-              <li>Masterização de áudio</li>
-              <li>Licenciamento musical</li>
-            </ul>
-            <p>
-              Todos os nossos pacotes incluem a entrega de 1 (uma) composição musical final, criada via IA com 
-              supervisão e revisão humana. O processo criativo pode incluir variações e propostas para escolha, 
-              mas a entrega final será de uma única composição musical.
-            </p>
-
-            <h2>3. Direitos Autorais e Licenciamento</h2>
-            <p>
-              Quando você contrata nossos serviços, recebe uma licença para uso da música conforme especificado 
-              no pacote escolhido. Os direitos específicos variam por pacote:
-            </p>
-            <ul>
-              <li><strong>Pacote Essencial:</strong> Licença pessoal, não-comercial.</li>
-              <li><strong>Pacote Profissional:</strong> Licença para uso comercial limitado.</li>
-              <li><strong>Pacote Premium:</strong> Licença comercial ampla com direitos de exclusividade.</li>
-            </ul>
-            <p>
-              A harmonIA mantém os direitos de propriedade intelectual subjacentes, exceto quando explicitamente 
-              transferidos como parte do pacote Premium.
-            </p>
-
-            <h2>4. Limitação de Responsabilidade sobre Direitos Autorais</h2>
-            <p>
-              <strong>Isenção de responsabilidade:</strong> A harmonIA não se responsabiliza por eventuais disputas 
-              de direitos autorais que possam surgir no futuro em relação às composições criadas através de nossos serviços.
-            </p>
-            <p>
-              Esclarecemos que:
-            </p>
-            <ul>
-              <li>
-                Embora utilizemos processos de verificação para mitigar riscos de plágio, não é possível garantir 
-                com 100% de certeza que uma composição criada por IA não contenha similaridades com obras existentes.
-              </li>
-              <li>
-                Os diferentes pacotes oferecem níveis variados de proteção legal (como registro na Biblioteca Nacional 
-                no pacote Premium), que podem reduzir os riscos, mas não eliminá-los completamente.
-              </li>
-              <li>
-                Recomendamos sempre a opção pelo pacote que oferece maior proteção legal para usos comerciais ou públicos.
-              </li>
-              <li>
-                A harmonIA realiza verificações técnicas para reduzir o risco de similaridades com obras existentes, 
-                mas o cliente reconhece que composições musicais podem naturalmente conter elementos similares a outras obras.
-              </li>
-            </ul>
-            <p>
-              Ao contratar nossos serviços, o cliente reconhece estes riscos inerentes à criação musical assistida 
-              por IA e concorda que a responsabilidade final pelo uso da composição é do próprio cliente.
-            </p>
-
-            <h2>5. Conteúdo do Usuário</h2>
-            <p>
-              Ao enviar conteúdo para nossa plataforma (texto, áudio, imagens), você:
-            </p>
-            <ul>
-              <li>Garante que possui os direitos necessários sobre este conteúdo.</li>
-              <li>Concede à harmonIA permissão para usar esse conteúdo apenas para criar sua composição.</li>
-              <li>Entende que não usaremos seu conteúdo para outros fins sem sua autorização explícita.</li>
+              <li>Verificação por algoritmos automatizados de comparação musical</li>
+              <li>Documentação detalhada do processo criativo</li>
+              <li>Parametrização específica para minimizar citações diretas</li>
             </ul>
 
-            <h2>6. Pagamentos e Reembolsos</h2>
+            <h2>6. Política de Revisões</h2>
+            <h3>6.1 Revisões Incluídas</h3>
             <p>
-              Os preços são apresentados antes da conclusão do pedido. Oferecemos:
-            </p>
-            <ul>
-              <li>Reembolso total se cancelar antes do início da produção.</li>
-              <li>Reembolso parcial se cancelar durante o processo criativo, dependendo do estágio.</li>
-              <li>Revisões gratuitas conforme especificado em cada pacote.</li>
-            </ul>
-
-            <h2>7. Processo de Aprovação e Entregas</h2>
-            <p>
-              Nosso processo de trabalho inclui:
-            </p>
-            <ul>
-              <li>
-                Apresentação de versões iniciais para aprovação através de nossa plataforma de avaliação online, 
-                onde o cliente poderá ouvir as opções sem download.
-              </li>
-              <li>
-                O cliente seleciona uma versão para continuidade e pode fornecer comentários para ajustes.
-              </li>
-              <li>
-                Após aprovação final, a versão escolhida será entregue conforme o formato especificado no pacote contratado.
-              </li>
-              <li>
-                As versões não escolhidas não serão enviadas ao cliente, permanecendo como propriedade da harmonIA.
-              </li>
-            </ul>
-
-            <h2>8. Alterações aos Termos</h2>
-            <p>
-              Podemos modificar estes termos a qualquer momento. As alterações entrarão em vigor após a 
-              publicação no site. O uso contínuo dos serviços após as alterações constitui aceitação dos novos termos.
+              Cada pacote inclui um número específico de revisões com prazos determinados para solicitação. Os detalhes completos são fornecidos no contrato específico de cada pacote.
             </p>
 
-            <h2>9. Contato</h2>
+            <h3>6.2 Disponibilidade de Arquivos</h3>
             <p>
-              Se você tiver dúvidas sobre estes termos, entre em contato conosco pelo e-mail: 
-              <a href="mailto:contato@harmonia.media" className="text-harmonia-green hover:underline ml-1">
-                contato@harmonia.media
+              Os arquivos e projetos da OBRA MUSICAL ficarão disponíveis para revisões por tempo limitado após a entrega final, após o qual serão arquivados.
+            </p>
+            <p>
+              Revisões adicionais além das incluídas no pacote estão sujeitas a custos adicionais e disponibilidade técnica.
+            </p>
+
+            <h2>7. Política de Reembolso</h2>
+            <h3>7.1 Condições de Reembolso</h3>
+            <p>
+              As condições de reembolso variam conforme o estágio do projeto e estão detalhadas nos contratos específicos.
+            </p>
+
+            <h3>7.2 Similaridade Significativa</h3>
+            <p>
+              Em caso de comprovada similaridade significativa com obras preexistentes, identificada por ferramentas automáticas de verificação ou reclamação formal, a harmonIA oferece soluções variadas conforme o pacote contratado. Os detalhes completos estão especificados nos contratos.
+            </p>
+
+            <h2>8. Direitos de Propriedade Intelectual</h2>
+            <h3>8.1 Propriedade da harmonIA</h3>
+            <p>
+              A harmonIA mantém todos os direitos sobre sua metodologia, processos, ferramentas e tecnologia utilizados na criação das obras musicais.
+            </p>
+            <p>
+              A harmonIA reserva-se o direito de utilizar a OBRA MUSICAL em seu portfólio, para fins promocionais, preservando o contexto original da criação.
+            </p>
+
+            <h3>8.2 Atribuição</h3>
+            <p>
+              O uso da OBRA MUSICAL exige atribuição conforme especificado no contrato do pacote adquirido.
+            </p>
+
+            <h2>9. Alterações nos Termos</h2>
+            <p>
+              A harmonIA pode modificar estes Termos de Serviço a qualquer momento, publicando os termos modificados no site. O uso continuado dos serviços após tais modificações constitui aceitação dos novos termos.
+            </p>
+
+            <h2>10. Contato</h2>
+            <p>
+              Para questões relacionadas a estes Termos de Serviço, entre em contato através do e-mail:
+              <a href={`mailto:${siteConfig.contact.email}`} className="text-harmonia-green hover:underline ml-1">
+                {siteConfig.contact.email}
               </a>
             </p>
           </div>

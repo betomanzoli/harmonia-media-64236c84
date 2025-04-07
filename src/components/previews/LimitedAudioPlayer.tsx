@@ -61,7 +61,7 @@ export const LimitedAudioPlayer: React.FC<LimitedAudioPlayerProps> = ({
           value={[currentTime]}
           max={Math.min(duration, previewDuration)}
           step={0.1}
-          onValueChange={(value) => handleSliderChange(value[0])}
+          onValueChange={(values) => handleSliderChange(values[0])}
         />
         <div className="flex justify-between text-xs text-gray-400">
           <span>{formatTime(currentTime)}</span>

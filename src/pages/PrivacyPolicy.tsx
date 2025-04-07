@@ -5,6 +5,7 @@ import Footer from '@/components/Footer';
 import { Button } from "@/components/ui/button";
 import { ArrowLeft } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
+import { siteConfig } from '@/config/site';
 
 const PrivacyPolicy: React.FC = () => {
   const navigate = useNavigate();
@@ -31,72 +32,120 @@ const PrivacyPolicy: React.FC = () => {
           </div>
 
           <div className="prose prose-invert max-w-none">
+            <h2>1. Introdução</h2>
             <p>
-              A harmonIA valoriza a privacidade dos seus usuários e está comprometida em proteger as informações pessoais que você compartilha conosco. Esta política descreve como coletamos, usamos e protegemos suas informações quando você utiliza nosso site e serviços.
+              A harmonIA ("nós", "nosso" ou "empresa") está comprometida com a proteção da sua privacidade. 
+              Esta Política de Privacidade explica como coletamos, usamos, compartilhamos e protegemos suas 
+              informações pessoais quando você utiliza nosso site e serviços de criação musical assistida por 
+              inteligência artificial.
             </p>
 
-            <h2>1. Informações que Coletamos</h2>
-            <p>
-              Podemos coletar os seguintes tipos de informações:
-            </p>
+            <h2>2. Informações Coletadas</h2>
+            <h3>2.1 Informações fornecidas diretamente por você:</h3>
             <ul>
-              <li><strong>Informações pessoais:</strong> Nome, e-mail, telefone e outras informações de contato que você fornecer voluntariamente.</li>
-              <li><strong>Dados de briefing:</strong> Informações sobre o projeto musical que você deseja criar.</li>
-              <li><strong>Arquivos enviados:</strong> Arquivos de áudio, textos ou outros materiais que você enviar para referência.</li>
-              <li><strong>Informações de uso:</strong> Dados sobre como você interage com nosso site, incluindo páginas visitadas e recursos utilizados.</li>
+              <li>Dados cadastrais (nome, e-mail, telefone, CPF/CNPJ)</li>
+              <li>Dados de pagamento (processados por gateways de pagamento seguros)</li>
+              <li>Conteúdo do briefing musical (histórias pessoais, preferências musicais, referências)</li>
+              <li>Feedback sobre os serviços e obras entregues</li>
             </ul>
 
-            <h2>2. Como Usamos Suas Informações</h2>
+            <h3>2.2 Informações coletadas automaticamente:</h3>
+            <ul>
+              <li>Dados de uso do site (páginas visitadas, tempo de permanência)</li>
+              <li>Informações do dispositivo (tipo, sistema operacional, navegador)</li>
+              <li>Endereço IP e localização aproximada</li>
+              <li>Cookies e tecnologias similares</li>
+            </ul>
+
+            <h2>3. Uso das Informações</h2>
             <p>
               Utilizamos suas informações para:
             </p>
             <ul>
-              <li>Fornecer e personalizar nossos serviços de composição musical.</li>
-              <li>Comunicar sobre seu projeto e responder a suas solicitações.</li>
-              <li>Processar pagamentos e gerenciar sua conta.</li>
-              <li>Melhorar e desenvolver nossos serviços.</li>
-              <li>Cumprir obrigações legais e proteger direitos legais.</li>
+              <li>Criar e entregar as composições musicais solicitadas</li>
+              <li>Processar pagamentos e gerenciar sua conta</li>
+              <li>Realizar o registro legal das obras quando aplicável</li>
+              <li>Comunicar sobre o andamento do seu projeto</li>
+              <li>Melhorar nossos serviços e experiência do usuário</li>
+              <li>Cumprir obrigações legais e regulatórias</li>
             </ul>
 
-            <h2>3. Compartilhamento de Informações</h2>
+            <h2>4. Compartilhamento de Informações</h2>
             <p>
-              Não vendemos suas informações pessoais. Podemos compartilhar informações com:
+              Suas informações podem ser compartilhadas com:
+            </p>
+            <h3>4.1 Prestadores de serviços:</h3>
+            <ul>
+              <li>Plataformas de IA musical (apenas os parâmetros necessários, sem dados pessoais)</li>
+              <li>Profissionais envolvidos na produção musical (sob acordos de confidencialidade)</li>
+              <li>Serviços de hospedagem e tecnologia</li>
+              <li>Processadores de pagamento</li>
+            </ul>
+
+            <h3>4.2 Para fins legais:</h3>
+            <ul>
+              <li>Registro na Biblioteca Nacional (apenas quando incluído no pacote contratado)</li>
+              <li>Autoridades governamentais quando obrigatório por lei</li>
+            </ul>
+
+            <h2>5. Segurança das Informações</h2>
+            <p>
+              Implementamos medidas técnicas e organizacionais para proteger suas informações pessoais, incluindo:
             </p>
             <ul>
-              <li>Músicos e produtores que trabalham em seu projeto, com sua autorização prévia.</li>
-              <li>Prestadores de serviços que nos ajudam a operar o site e fornecer serviços.</li>
-              <li>Quando exigido por lei ou para proteger nossos direitos legais.</li>
+              <li>Criptografia de dados sensíveis</li>
+              <li>Acesso restrito a colaboradores que necessitam da informação</li>
+              <li>Monitoramento regular de nossos sistemas</li>
+              <li>Política de retenção de dados com períodos definidos</li>
             </ul>
 
-            <h2>4. Segurança de Dados</h2>
+            <h2>6. Seus Direitos (LGPD)</h2>
             <p>
-              Implementamos medidas de segurança para proteger suas informações contra acesso não autorizado ou alteração.
-              No entanto, nenhum método de transmissão pela internet é 100% seguro.
-            </p>
-
-            <h2>5. Seus Direitos</h2>
-            <p>
-              Você tem direito a:
+              Conforme a Lei Geral de Proteção de Dados (Lei nº 13.709/2018), você tem direito a:
             </p>
             <ul>
-              <li>Acessar suas informações pessoais.</li>
-              <li>Corrigir informações imprecisas.</li>
-              <li>Solicitar exclusão de seus dados (sujeito a obrigações legais).</li>
-              <li>Opor-se ou restringir certos tipos de processamento.</li>
+              <li>Confirmação da existência de tratamento de seus dados</li>
+              <li>Acesso aos seus dados</li>
+              <li>Correção de dados incompletos ou desatualizados</li>
+              <li>Portabilidade dos dados</li>
+              <li>Eliminação dos dados (com exceções legais)</li>
+              <li>Informação sobre compartilhamento</li>
+              <li>Revogação do consentimento</li>
             </ul>
-
-            <h2>6. Cookies e Tecnologias Semelhantes</h2>
             <p>
-              Utilizamos cookies e tecnologias semelhantes para melhorar a experiência do usuário, 
-              analisar o uso do site e personalizar conteúdo. Você pode gerenciar suas preferências 
+              Para exercer estes direitos, entre em contato através do e-mail oficial disponível em nossa página de contato.
+            </p>
+
+            <h2>7. Período de Retenção</h2>
+            <p>
+              Mantemos suas informações pessoais pelo tempo necessário para:
+            </p>
+            <ul>
+              <li>Cumprir com as finalidades descritas nesta política</li>
+              <li>Atender obrigações legais e regulatórias</li>
+            </ul>
+            <p>
+              Os períodos específicos de retenção de dados estão definidos em nossos contratos.
+            </p>
+
+            <h2>8. Cookies e Tecnologias Similares</h2>
+            <p>
+              Utilizamos cookies para melhorar sua experiência em nosso site. Você pode gerenciar as preferências 
               de cookies através das configurações do seu navegador.
             </p>
 
-            <h2>7. Contato</h2>
+            <h2>9. Alterações nesta Política</h2>
             <p>
-              Se você tiver dúvidas sobre esta política de privacidade, entre em contato conosco pelo e-mail: 
-              <a href="mailto:contato@harmonia.media" className="text-harmonia-green hover:underline ml-1">
-                contato@harmonia.media
+              Podemos atualizar esta Política de Privacidade periodicamente. A versão mais recente estará sempre 
+              disponível em nosso site, com a data da última atualização.
+            </p>
+
+            <h2>10. Contato</h2>
+            <p>
+              Para questões relacionadas à privacidade de seus dados, entre em contato com nosso Encarregado de 
+              Proteção de Dados através do e-mail:
+              <a href={`mailto:${siteConfig.contact.email}`} className="text-harmonia-green hover:underline ml-1">
+                {siteConfig.contact.email}
               </a>
             </p>
           </div>
