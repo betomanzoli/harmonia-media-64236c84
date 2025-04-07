@@ -13,12 +13,6 @@ const createMockQueryResponse = () => {
 const createQueryBuilder = (tableName: string) => {
   console.log(`Acessando tabela: ${tableName}`);
   
-  const queryResponse = {
-    data: null,
-    error: null,
-    count: 0
-  };
-  
   return {
     select: (columns: string) => {
       console.log(`Simulando seleção de colunas: ${columns}`);
@@ -32,16 +26,10 @@ const createQueryBuilder = (tableName: string) => {
         order: (column: string, options: any) => {
           console.log(`Simulando ordenação por ${column}`);
           return {
-            limit: async (limit: number) => {
-              console.log(`Simulando limitação a ${limit} resultados`);
-              return createMockQueryResponse();
-            }
+            limit: async (limit: number) => createMockQueryResponse()
           };
         },
-        limit: async (limit: number) => {
-          console.log(`Simulando limitação a ${limit} resultados`);
-          return createMockQueryResponse();
-        }
+        limit: async (limit: number) => createMockQueryResponse()
       };
     },
     insert: async (data: any, options?: any) => {
@@ -63,7 +51,7 @@ const createQueryBuilder = (tableName: string) => {
     },
     count: async () => {
       console.log(`Simulando contagem na tabela ${tableName}`);
-      return queryResponse;
+      return createMockQueryResponse();
     }
   };
 };
@@ -118,19 +106,19 @@ export const supabase = {
 export const emailService = {
   sendBriefingConfirmation: async (email: string, name: string) => {
     console.log(`Simulando envio de confirmação de briefing para ${email} (${name})`);
-    console.log('Modo demonstrativo: Em produção, um email seria enviado com os dados do briefing');
+    console.log('Em produção, um email seria enviado com os dados do briefing');
     return { success: true };
   },
   
   sendPreviewNotification: async (email: string, name: string, previewUrl: string) => {
     console.log(`Simulando envio de notificação de prévia para ${email} (${name}): ${previewUrl}`);
-    console.log('Modo demonstrativo: Em produção, um email seria enviado com o link para as prévias');
+    console.log('Em produção, um email seria enviado com o link para as prévias');
     return { success: true };
   },
   
   sendPaymentConfirmation: async (email: string, name: string, packageName: string) => {
     console.log(`Simulando envio de confirmação de pagamento para ${email} (${name}): ${packageName}`);
-    console.log('Modo demonstrativo: Em produção, um email seria enviado com a confirmação do pagamento');
+    console.log('Em produção, um email seria enviado com a confirmação do pagamento');
     return { success: true };
   }
 };

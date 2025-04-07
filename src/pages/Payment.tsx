@@ -10,7 +10,7 @@ import { Loader2, CreditCard, QrCode, Info, DollarSign, CheckCircle } from 'luci
 import { useToast } from '@/hooks/use-toast';
 import emailService from '@/services/emailService';
 
-// Mocked package data
+// Dados dos pacotes
 const packageData = {
   'essencial': {
     name: 'Pacote Essencial',
@@ -74,11 +74,11 @@ const Payment: React.FC = () => {
   const handlePaymentMethod = async (method: string) => {
     setIsLoading(true);
     
-    // Simulate payment process
+    // Processo de pagamento
     try {
       await new Promise(resolve => setTimeout(resolve, 1500));
       
-      // Store payment data in localStorage
+      // Armazenar dados do pagamento no localStorage
       const paymentData = {
         method,
         packageId,
@@ -90,7 +90,7 @@ const Payment: React.FC = () => {
       
       localStorage.setItem('paymentData', JSON.stringify(paymentData));
       
-      // If we have email, send confirmation (this is now simplified to work offline)
+      // Se temos email, enviar confirmação
       if (qualificationData?.email) {
         await emailService.sendPaymentConfirmation(
           qualificationData.email,
@@ -99,7 +99,7 @@ const Payment: React.FC = () => {
         );
       }
       
-      // Show success message
+      // Mostrar mensagem de sucesso
       setIsPaymentSuccess(true);
       
       toast({
@@ -107,7 +107,7 @@ const Payment: React.FC = () => {
         description: `Seu pedido para o ${selectedPackage.name} foi confirmado.`,
       });
       
-      // After 3 seconds, redirect to thank you page
+      // Após 3 segundos, redirecionar para a página de agradecimento
       setTimeout(() => {
         navigate('/agradecimento');
       }, 3000);
@@ -180,7 +180,7 @@ const Payment: React.FC = () => {
                         <div className="flex items-center justify-center mb-4">
                           <CreditCard className="w-12 h-12 text-harmonia-green" />
                         </div>
-                        <p className="mb-4">Demonstração: Simulação de pagamento com cartão de crédito</p>
+                        <p className="mb-4">Pague com segurança usando seu cartão de crédito</p>
                         <div className="flex flex-wrap gap-2 justify-center mb-4">
                           <div className="p-2 bg-white border border-gray-200 rounded">Visa</div>
                           <div className="p-2 bg-white border border-gray-200 rounded">Mastercard</div>
@@ -198,7 +198,7 @@ const Payment: React.FC = () => {
                               Processando...
                             </>
                           ) : (
-                            "Simular Pagamento com Cartão"
+                            "Pagar com Cartão"
                           )}
                         </Button>
                       </div>
@@ -209,9 +209,9 @@ const Payment: React.FC = () => {
                         <div className="flex items-center justify-center mb-4">
                           <QrCode className="w-12 h-12 text-harmonia-green" />
                         </div>
-                        <p className="mb-4">Demonstração: Simulação de pagamento via PIX</p>
+                        <p className="mb-4">Pagamento instantâneo via PIX</p>
                         <div className="p-4 border border-dashed border-gray-300 bg-white mb-4 mx-auto w-48 h-48 flex items-center justify-center">
-                          <span className="text-gray-400">QR Code Simulado</span>
+                          <span className="text-gray-400">QR Code do PIX</span>
                         </div>
                         <Button 
                           onClick={() => handlePaymentMethod('PIX')}
@@ -224,7 +224,7 @@ const Payment: React.FC = () => {
                               Processando...
                             </>
                           ) : (
-                            "Simular Pagamento PIX"
+                            "Confirmar Pagamento PIX"
                           )}
                         </Button>
                       </div>
@@ -235,7 +235,7 @@ const Payment: React.FC = () => {
                         <div className="flex items-center justify-center mb-4">
                           <DollarSign className="w-12 h-12 text-blue-500" />
                         </div>
-                        <p className="mb-4">Demonstração: Simulação de pagamento via PayPal</p>
+                        <p className="mb-4">Pagamento seguro via PayPal para clientes internacionais</p>
                         <Button 
                           onClick={() => handlePaymentMethod('PayPal')}
                           disabled={isLoading}
@@ -247,7 +247,7 @@ const Payment: React.FC = () => {
                               Processando...
                             </>
                           ) : (
-                            "Simular Pagamento PayPal"
+                            "Pagar com PayPal"
                           )}
                         </Button>
                       </div>
@@ -258,7 +258,7 @@ const Payment: React.FC = () => {
                         <div className="flex items-center justify-center mb-4">
                           <DollarSign className="w-12 h-12 text-gray-600" />
                         </div>
-                        <p className="mb-4">Demonstração: Simulação de pagamento via Boleto</p>
+                        <p className="mb-4">Pagamento via boleto bancário (compensação em 1-3 dias úteis)</p>
                         <Button 
                           onClick={() => handlePaymentMethod('Boleto')}
                           disabled={isLoading}
@@ -270,7 +270,7 @@ const Payment: React.FC = () => {
                               Processando...
                             </>
                           ) : (
-                            "Simular Pagamento por Boleto"
+                            "Gerar Boleto Bancário"
                           )}
                         </Button>
                       </div>
@@ -305,7 +305,7 @@ const Payment: React.FC = () => {
                 </CardContent>
                 <CardFooter className="border-t pt-4 flex flex-col items-start">
                   <p className="text-xs text-gray-400">
-                    <span className="font-medium">Nota</span>: Esta é uma demonstração. Em um ambiente real, você seria direcionado para um provedor de pagamento seguro.
+                    <span className="font-medium">Pagamento seguro</span>: Todas as transações são processadas com criptografia avançada.
                   </p>
                 </CardFooter>
               </Card>

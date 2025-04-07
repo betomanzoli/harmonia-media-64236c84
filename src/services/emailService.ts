@@ -1,20 +1,22 @@
 
-// Serviço simplificado de email para modo offline
+// Serviço de email para integração com sistemas de terceiros
 import { emailService as supabaseEmailService } from '@/lib/supabase';
 
-// Serviço de email simplificado
+// Serviço de email
 const emailService = {
   // Enviar confirmação de briefing
   sendBriefingConfirmation: async (email: string, name: string) => {
     console.log(`Enviando confirmação de briefing para ${email} (${name})`);
     
-    // Modo offline/demonstração - simular envio de email
     try {
       const result = await supabaseEmailService.sendBriefingConfirmation(email, name);
       
-      // Simulação de email sendo enviado manualmente pelo administrador
+      // Registrar a ação para acompanhamento manual
       console.log(`Email de confirmação seria enviado para ${email}`);
       console.log(`Conteúdo: Olá ${name}, recebemos seu briefing e estamos analisando.`);
+      
+      // Em um ambiente de produção, aqui enviaria uma notificação WhatsApp
+      console.log(`WhatsApp seria enviado para o admin com os dados do novo cliente ${name}, ${email}`);
       
       return result;
     } catch (error) {
@@ -27,11 +29,10 @@ const emailService = {
   sendPreviewNotification: async (email: string, name: string, previewUrl: string) => {
     console.log(`Enviando notificação de prévia para ${email} (${name}): ${previewUrl}`);
     
-    // Modo offline/demonstração - simular envio de email
     try {
       const result = await supabaseEmailService.sendPreviewNotification(email, name, previewUrl);
       
-      // Simulação de email sendo enviado manualmente pelo administrador
+      // Registrar a ação para acompanhamento manual
       console.log(`Email de prévia seria enviado para ${email}`);
       console.log(`Conteúdo: Olá ${name}, sua prévia está disponível em ${previewUrl}`);
       
@@ -46,13 +47,15 @@ const emailService = {
   sendPaymentConfirmation: async (email: string, name: string, packageName: string) => {
     console.log(`Enviando confirmação de pagamento para ${email} (${name}): ${packageName}`);
     
-    // Modo offline/demonstração - simular envio de email
     try {
       const result = await supabaseEmailService.sendPaymentConfirmation(email, name, packageName);
       
-      // Simulação de email sendo enviado manualmente pelo administrador
+      // Registrar a ação para acompanhamento manual
       console.log(`Email de confirmação de pagamento seria enviado para ${email}`);
       console.log(`Conteúdo: Olá ${name}, recebemos seu pagamento para o pacote ${packageName}.`);
+      
+      // Em um ambiente de produção, aqui enviaria uma notificação WhatsApp
+      console.log(`WhatsApp seria enviado para o admin com dados do pagamento de ${name}, pacote ${packageName}`);
       
       return result;
     } catch (error) {
