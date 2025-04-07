@@ -21,3 +21,7 @@ export interface OrderData {
   previewLink?: string;
   progress: OrderProgress[];
 }
+
+export interface OrderSearchProps {
+  onSearch: (orderData: OrderData) => void;
+}

@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { BellRing, Bell, Check, X } from 'lucide-react';
+import { BellRing, X } from 'lucide-react';
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { useNavigate } from 'react-router-dom';

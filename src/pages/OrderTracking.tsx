@@ -7,7 +7,7 @@ import OrderDetails from '@/components/order-tracking/OrderDetails';
 import OrderNotification from '@/components/order-tracking/OrderNotification';
 import OrderNotFound from '@/components/order-tracking/OrderNotFound';
 import { openChatAssistant } from '@/components/order-tracking/ChatbotHelper';
-import { OrderData } from '@/components/order-tracking/OrderTracking.interface';
+import { OrderData } from '@/components/order-tracking/types';
 
 const OrderTracking: React.FC = () => {
   const [orderData, setOrderData] = useState<OrderData | null>(null);

@@ -6,37 +6,12 @@ import { Button } from "@/components/ui/button";
 import { Link } from 'react-router-dom';
 import { 
   Clock, 
-  FileText, 
-  Package, 
-  CreditCard, 
-  MessageSquare, 
-  Music, 
-  Headphones, 
-  FileCheck,
-  ArrowRight,
-  CheckCircle2
+  CheckCircle2,
+  ArrowRight
 } from 'lucide-react';
+import { OrderData } from './types';
 
-interface OrderProgress {
-  step: number;
-  status: 'completed' | 'current' | 'pending';
-  title: string;
-  description: string;
-  icon: React.ReactNode;
-  date?: string;
-}
-
-interface OrderDetailsProps {
-  orderId: string;
-  clientName: string;
-  packageType: string;
-  orderDate: string;
-  currentStep: number;
-  status: string;
-  expectedDelivery: string;
-  progress: OrderProgress[];
-  previewLink?: string;
-}
+type OrderDetailsProps = OrderData;
 
 const OrderDetails: React.FC<OrderDetailsProps> = ({
   orderId,
