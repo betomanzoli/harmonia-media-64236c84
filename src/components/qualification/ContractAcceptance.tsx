@@ -2,15 +2,14 @@
 import React from "react";
 import { Checkbox } from "@/components/ui/checkbox";
 import { FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
-import { useFormContext } from "react-hook-form";
-import { z } from "zod";
-import { qualificationFormSchema } from "./qualificationFormSchema";
+import { UseFormReturn } from "react-hook-form";
+import { FormValues } from "./qualificationFormSchema";
 
-type FormValues = z.infer<typeof qualificationFormSchema>;
+interface ContractAcceptanceProps {
+  form: UseFormReturn<FormValues>;
+}
 
-const ContractAcceptance: React.FC = () => {
-  const form = useFormContext<FormValues>();
-
+const ContractAcceptance: React.FC<ContractAcceptanceProps> = ({ form }) => {
   return (
     <div className="border border-border rounded-lg p-6 mt-8 bg-card">
       <h3 className="text-lg font-semibold mb-4">Termos de Serviço</h3>

@@ -25,11 +25,11 @@ const BudgetSection: React.FC<BudgetSectionProps> = ({ form }) => {
             >
               {budgetOptions.map((option) => (
                 <FormItem
-                  key={option.id}
+                  key={option.value}
                   className="flex items-center space-x-3 space-y-0"
                 >
                   <FormControl>
-                    <RadioGroupItem value={option.id} />
+                    <RadioGroupItem value={option.value} />
                   </FormControl>
                   <FormLabel className="font-normal">
                     {option.label}

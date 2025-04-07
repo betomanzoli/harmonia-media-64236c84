@@ -22,24 +22,24 @@ const FeaturesSection: React.FC<FeaturesSectionProps> = ({ form }) => {
           </div>
           {featureOptions.map((option) => (
             <FormField
-              key={option.id}
+              key={option.value}
               control={form.control}
               name="features"
               render={({ field }) => {
                 return (
                   <FormItem
-                    key={option.id}
+                    key={option.value}
                     className="flex flex-row items-start space-x-3 space-y-0 mb-1"
                   >
                     <FormControl>
                       <Checkbox
-                        checked={field.value?.includes(option.id)}
+                        checked={field.value?.includes(option.value)}
                         onCheckedChange={(checked) => {
                           return checked
-                            ? field.onChange([...field.value, option.id])
+                            ? field.onChange([...field.value, option.value])
                             : field.onChange(
                                 field.value?.filter(
-                                  (value) => value !== option.id
+                                  (value) => value !== option.value
                                 )
                               );
                         }}
