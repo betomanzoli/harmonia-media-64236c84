@@ -2,7 +2,13 @@
 import React from 'react';
 import TestimonialCard from './TestimonialCard';
 
-const Testimonials: React.FC = () => {
+interface TestimonialsProps {
+  showTestimonials?: boolean;
+}
+
+const Testimonials: React.FC<TestimonialsProps> = ({ showTestimonials = true }) => {
+  if (!showTestimonials) return null;
+  
   return (
     <section id="depoimentos" className="py-20 px-6 md:px-10 bg-secondary">
       <div className="max-w-7xl mx-auto">

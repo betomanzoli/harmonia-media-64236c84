@@ -5,16 +5,18 @@ import Logo from './Logo';
 import { MessageCircle, ChevronUp, DollarSign, Mail, Phone, Menu, Clock } from 'lucide-react';
 import NavLink from './NavLink';
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
-import { useNavigate, Link } from 'react-router-dom';
+import { useNavigate, Link, useLocation } from 'react-router-dom';
+import { siteConfig } from '@/config/site';
 
 const Header: React.FC = () => {
   const navigate = useNavigate();
+  const location = useLocation();
   const [showBackToTop, setShowBackToTop] = useState(false);
   const [isHome, setIsHome] = useState(true);
   
   useEffect(() => {
     // Verificar se estamos na página inicial
-    setIsHome(window.location.pathname === '/' || window.location.pathname === '');
+    setIsHome(location.pathname === '/' || location.pathname === '');
     
     const handleScroll = () => {
       if (window.scrollY > 300) {
@@ -26,18 +28,24 @@ const Header: React.FC = () => {
     
     window.addEventListener('scroll', handleScroll);
     return () => window.removeEventListener('scroll', handleScroll);
-  }, []);
+  }, [location]);
+  
+  // Efeito para rolar para o topo quando a rota muda
+  useEffect(() => {
+    window.scrollTo(0, 0);
+  }, [location.pathname]);
   
   const handleWhatsAppChat = () => {
-    window.open('https://wa.me/5511999999999', '_blank');
+    window.open(`https://wa.me/${siteConfig.contact.whatsapp}`, '_blank');
   };
   
   const handleEmailChat = () => {
-    window.open('mailto:contato@harmonia.media', '_blank');
+    window.open(`mailto:${siteConfig.contact.email}`, '_blank');
   };
   
   const handlePriceCalculation = () => {
     navigate('/calculadora');
+    window.scrollTo(0, 0);
   };
   
   const scrollToTop = () => {
@@ -47,12 +55,17 @@ const Header: React.FC = () => {
     });
   };
   
+  const handleNavigation = (path: string) => {
+    navigate(path);
+    window.scrollTo(0, 0);
+  };
+  
   return (
     <>
       <header className="py-4 px-6 md:px-10 border-b border-border fixed w-full top-0 left-0 backdrop-blur-md bg-background/95 z-50">
         <div className="flex items-center justify-between max-w-7xl mx-auto">
           <div className="flex items-center gap-10">
-            <Link to="/" className="cursor-pointer">
+            <Link to="/" className="cursor-pointer" onClick={() => window.scrollTo(0, 0)}>
               <Logo />
             </Link>
             <nav className="hidden md:flex items-center space-x-6">
@@ -69,7 +82,7 @@ const Header: React.FC = () => {
                   <NavLink href="/portfolio">Portfólio</NavLink>
                 </>
               )}
-              <NavLink href="/briefing">Briefing</NavLink>
+              <NavLink href="/qualificacao">Qualificação</NavLink>
               <NavLink href="/acompanhar-pedido">Acompanhar Pedido</NavLink>
             </nav>
           </div>
@@ -129,7 +142,7 @@ const Header: React.FC = () => {
                         <NavLink href="/portfolio">Portfólio</NavLink>
                       </>
                     )}
-                    <NavLink href="/briefing">Briefing</NavLink>
+                    <NavLink href="/qualificacao">Qualificação</NavLink>
                     <NavLink href="/calculadora">Calculadora</NavLink>
                     <NavLink href="/acompanhar-pedido" className="flex items-center gap-1">
                       <Clock className="w-4 h-4" /> Acompanhar Pedido

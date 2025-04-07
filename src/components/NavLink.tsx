@@ -1,6 +1,6 @@
 
-import React from 'react';
-import { Link } from 'react-router-dom';
+import React, { useEffect } from 'react';
+import { Link, useLocation } from 'react-router-dom';
 import { cn } from '@/lib/utils';
 
 interface NavLinkProps {
@@ -12,8 +12,32 @@ interface NavLinkProps {
 }
 
 const NavLink: React.FC<NavLinkProps> = ({ href, children, className, onClick, external = false }) => {
+  const location = useLocation();
+  
+  // Scroll to top on route change
+  useEffect(() => {
+    window.scrollTo(0, 0);
+  }, [location.pathname]);
+  
+  const handleClick = () => {
+    // If it's a link to an anchor on the same page
+    if (href.startsWith('#')) {
+      const element = document.getElementById(href.substring(1));
+      if (element) {
+        element.scrollIntoView({ behavior: 'smooth' });
+      }
+    } else if (onClick) {
+      onClick();
+    }
+    
+    // If it's a regular link (not anchor or external), scroll to top
+    if (!href.startsWith('#') && !external && !href.startsWith('http')) {
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+  };
+  
   // Se o link começar com # ou for para a página atual com uma âncora
-  if (href.startsWith('#') || (href.includes('#') && href.startsWith('/'))) {
+  if (href.startsWith('#')) {
     return (
       <a 
         href={href} 
@@ -21,7 +45,7 @@ const NavLink: React.FC<NavLinkProps> = ({ href, children, className, onClick, e
           "text-foreground hover:text-harmonia-green transition-colors duration-200 font-medium",
           className
         )}
-        onClick={onClick}
+        onClick={handleClick}
       >
         {children}
       </a>
@@ -54,7 +78,7 @@ const NavLink: React.FC<NavLinkProps> = ({ href, children, className, onClick, e
         "text-foreground hover:text-harmonia-green transition-colors duration-200 font-medium",
         className
       )}
-      onClick={onClick}
+      onClick={handleClick}
     >
       {children}
     </Link>

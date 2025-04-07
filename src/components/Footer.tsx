@@ -23,6 +23,11 @@ const Footer: React.FC = () => {
   const handleEmailContact = () => {
     window.open(`mailto:${siteConfig.contact.email}`, '_blank');
   };
+  
+  const handleNavigation = (path: string) => {
+    navigate(path);
+    window.scrollTo(0, 0);
+  };
 
   return (
     <footer className="bg-black pt-16 pb-8 px-6 md:px-10 relative">
@@ -38,13 +43,51 @@ const Footer: React.FC = () => {
           <div>
             <h3 className="font-semibold mb-4">Links Rápidos</h3>
             <ul className="space-y-2">
-              <li><Link to="/acompanhar-pedido" className="text-gray-400 hover:text-harmonia-green transition-colors cursor-pointer flex items-center gap-1">
-                <Clock className="w-4 h-4" /> Acompanhar Pedido
-              </Link></li>
-              <li><Link to="/briefing" className="text-gray-400 hover:text-harmonia-green transition-colors">Briefing</Link></li>
-              <li><Link to="/pacotes" className="text-gray-400 hover:text-harmonia-green transition-colors">Pacotes</Link></li>
-              <li><Link to="/portfolio" className="text-gray-400 hover:text-harmonia-green transition-colors">Portfólio</Link></li>
-              <li><a href="/#processo" className="text-gray-400 hover:text-harmonia-green transition-colors">Processo</a></li>
+              <li>
+                <Link 
+                  to="/acompanhar-pedido" 
+                  className="text-gray-400 hover:text-harmonia-green transition-colors cursor-pointer flex items-center gap-1"
+                  onClick={() => window.scrollTo(0, 0)}
+                >
+                  <Clock className="w-4 h-4" /> Acompanhar Pedido
+                </Link>
+              </li>
+              <li>
+                <Link 
+                  to="/qualificacao" 
+                  className="text-gray-400 hover:text-harmonia-green transition-colors"
+                  onClick={() => window.scrollTo(0, 0)}
+                >
+                  Qualificação
+                </Link>
+              </li>
+              <li>
+                <Link 
+                  to="/pacotes" 
+                  className="text-gray-400 hover:text-harmonia-green transition-colors"
+                  onClick={() => window.scrollTo(0, 0)}
+                >
+                  Pacotes
+                </Link>
+              </li>
+              <li>
+                <Link 
+                  to="/portfolio" 
+                  className="text-gray-400 hover:text-harmonia-green transition-colors"
+                  onClick={() => window.scrollTo(0, 0)}
+                >
+                  Portfólio
+                </Link>
+              </li>
+              <li>
+                <a 
+                  href="/#processo" 
+                  className="text-gray-400 hover:text-harmonia-green transition-colors"
+                  onClick={() => window.scrollTo(0, 0)}
+                >
+                  Processo
+                </a>
+              </li>
             </ul>
           </div>
           
@@ -63,12 +106,24 @@ const Footer: React.FC = () => {
             <div className="mt-6">
               <h3 className="font-semibold mb-4">Informações Legais</h3>
               <ul className="space-y-2">
-                <li><Link to="/privacidade" className="text-gray-400 hover:text-harmonia-green transition-colors flex items-center gap-1">
-                  <Shield className="w-4 h-4" /> Política de Privacidade
-                </Link></li>
-                <li><Link to="/termos" className="text-gray-400 hover:text-harmonia-green transition-colors flex items-center gap-1">
-                  <Shield className="w-4 h-4" /> Termos de Serviço
-                </Link></li>
+                <li>
+                  <Link 
+                    to="/privacidade" 
+                    className="text-gray-400 hover:text-harmonia-green transition-colors flex items-center gap-1"
+                    onClick={() => window.scrollTo(0, 0)}
+                  >
+                    <Shield className="w-4 h-4" /> Política de Privacidade
+                  </Link>
+                </li>
+                <li>
+                  <Link 
+                    to="/termos" 
+                    className="text-gray-400 hover:text-harmonia-green transition-colors flex items-center gap-1"
+                    onClick={() => window.scrollTo(0, 0)}
+                  >
+                    <Shield className="w-4 h-4" /> Termos de Serviço
+                  </Link>
+                </li>
               </ul>
             </div>
           </div>
