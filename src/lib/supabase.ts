@@ -13,6 +13,12 @@ const createMockQueryResponse = () => {
 const createQueryBuilder = (tableName: string) => {
   console.log(`Acessando tabela: ${tableName}`);
   
+  const queryResponse = {
+    data: null,
+    error: null,
+    count: 0
+  };
+  
   return {
     select: (columns: string) => {
       console.log(`Simulando seleção de colunas: ${columns}`);
@@ -57,7 +63,7 @@ const createQueryBuilder = (tableName: string) => {
     },
     count: async () => {
       console.log(`Simulando contagem na tabela ${tableName}`);
-      return createMockQueryResponse();
+      return queryResponse;
     }
   };
 };

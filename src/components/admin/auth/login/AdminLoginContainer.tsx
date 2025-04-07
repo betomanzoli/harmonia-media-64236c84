@@ -1,3 +1,4 @@
+
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
@@ -70,7 +71,7 @@ const AdminLoginContainer: React.FC = () => {
     }
   }, [loadDebugInfo, isOfflineMode]);
 
-  // Handle enabling offline mode - corrigido para não retornar valor
+  // Handle enabling offline mode
   const handleEnableOfflineMode = async () => {
     await enableOfflineMode();
     navigate('/admin-j28s7d1k/dashboard');
