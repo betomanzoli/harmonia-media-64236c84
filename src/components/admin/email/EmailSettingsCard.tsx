@@ -11,6 +11,7 @@ import { Loader2 } from 'lucide-react';
 
 const EmailSettingsCard: React.FC = () => {
   const { settings, isLoading, saveSetting } = useSystemSettings();
+  const { toast } = useToast();
   const [adminEmail, setAdminEmail] = useState(settings.admin_email || '');
   const [emailEnabled, setEmailEnabled] = useState(settings.email_notifications_enabled === 'true');
   const [isSaving, setIsSaving] = useState(false);

@@ -6,6 +6,9 @@ import { Loader2 } from "lucide-react";
 import { useIntegrationConfig } from '@/hooks/admin/useIntegrationConfig';
 import webhookService from '@/services/webhookService';
 
+// Definir os tipos aceitáveis de notificação
+type NotificationType = 'new_portfolio_item' | 'test_message' | 'feedback_received';
+
 interface IntegrationConfigProps {
   portfolioItems: any[];
 }
@@ -93,7 +96,7 @@ const IntegrationConfig: React.FC<IntegrationConfigProps> = ({
               const url = await webhookService.getWebhookUrl();
               if (url) {
                 webhookService.sendToWebhook(url, {
-                  type: 'new_portfolio_item',
+                  type: 'test_message' as NotificationType,
                   data: { testMessage: "Este é um teste de webhook" },
                   timestamp: new Date().toISOString()
                 });

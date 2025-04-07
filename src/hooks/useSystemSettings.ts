@@ -39,7 +39,7 @@ export function useSystemSettings() {
       
       // Converter a lista de pares chave-valor em um objeto
       const settingsObj: Partial<SystemSettings> = {};
-      data.forEach(item => {
+      data?.forEach(item => {
         settingsObj[item.key as keyof SystemSettings] = item.value;
       });
       
