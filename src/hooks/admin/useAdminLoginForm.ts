@@ -45,8 +45,8 @@ export function useAdminLoginForm() {
     loadDebugInfo
   });
 
-  // Function to enable offline mode
-  const enableOfflineMode = useCallback(() => {
+  // Function to enable offline mode - fixed return type
+  const enableOfflineMode = useCallback((): Promise<void> => {
     try {
       sessionStorage.setItem('offline-admin-mode', 'true');
       console.log('Modo offline ativado via sessionStorage');
@@ -55,6 +55,9 @@ export function useAdminLoginForm() {
         title: "Modo demonstrativo ativado",
         description: "Você está usando o modo offline com funcionalidades limitadas.",
       });
+      
+      // Convertendo o Promise<boolean> para Promise<void>
+      return Promise.resolve();
     } catch (error) {
       console.error('Erro ao ativar modo offline:', error);
       toast.toast({
@@ -62,6 +65,8 @@ export function useAdminLoginForm() {
         description: "Não foi possível ativar o modo offline.",
         variant: "destructive",
       });
+      
+      return Promise.resolve();
     }
   }, [toast]);
 

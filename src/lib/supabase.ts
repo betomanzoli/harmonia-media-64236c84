@@ -1,6 +1,59 @@
 
 // Biblioteca de compatibilidade para uso offline
 
+const createMockQueryResponse = () => {
+  return {
+    data: null,
+    error: null,
+    count: 0
+  };
+};
+
+// Função auxiliar para criar métodos de consulta consistentes
+const createQueryBuilder = (tableName: string) => {
+  console.log(`Acessando tabela: ${tableName}`);
+  
+  return {
+    select: (columns: string) => {
+      console.log(`Simulando seleção de colunas: ${columns}`);
+      return {
+        eq: (column: string, value: any) => {
+          console.log(`Simulando filtro WHERE ${column} = ${value}`);
+          return {
+            single: async () => createMockQueryResponse()
+          };
+        },
+        order: (column: string, options: any) => {
+          console.log(`Simulando ordenação por ${column}`);
+          return {
+            limit: async (limit: number) => {
+              console.log(`Simulando limitação a ${limit} resultados`);
+              return createMockQueryResponse();
+            }
+          };
+        },
+        limit: async (limit: number) => {
+          console.log(`Simulando limitação a ${limit} resultados`);
+          return createMockQueryResponse();
+        }
+      };
+    },
+    insert: async (data: any, options?: any) => {
+      console.log('Simulando inserção de dados:', data);
+      return createMockQueryResponse();
+    },
+    upsert: async (data: any, options?: any) => {
+      console.log('Simulando upsert de dados:', data);
+      console.log('Opções:', options);
+      return createMockQueryResponse();
+    },
+    count: async () => {
+      console.log(`Simulando contagem na tabela ${tableName}`);
+      return createMockQueryResponse();
+    }
+  };
+};
+
 export const supabase = {
   auth: {
     resetPasswordForEmail: async (email: string, options: any) => {
@@ -38,55 +91,11 @@ export const supabase = {
     }
   },
   // Implementação do método from para consultas de banco de dados
-  from: (table: string) => {
-    console.log(`Simulando consulta na tabela: ${table}`);
-    return {
-      select: (columns: string) => {
-        console.log(`Simulando seleção de colunas: ${columns}`);
-        return {
-          eq: (column: string, value: any) => {
-            console.log(`Simulando filtro WHERE ${column} = ${value}`);
-            return {
-              single: async () => {
-                console.log('Simulando retorno de resultado único');
-                return { data: null, error: null };
-              }
-            };
-          },
-          order: (column: string, options: any) => {
-            console.log(`Simulando ordenação por ${column}`);
-            return {
-              limit: async (limit: number) => {
-                console.log(`Simulando limitação a ${limit} resultados`);
-                return { data: [], error: null };
-              }
-            };
-          },
-          limit: async (limit: number) => {
-            console.log(`Simulando limitação a ${limit} resultados`);
-            return { data: [], error: null };
-          }
-        };
-      },
-      insert: async (data: any, options?: any) => {
-        console.log('Simulando inserção de dados:', data);
-        return { data: null, error: null };
-      },
-      upsert: async (data: any, options?: any) => {
-        console.log('Simulando upsert de dados:', data);
-        console.log('Opções:', options);
-        return { data: null, error: null };
-      },
-      count: async () => {
-        console.log(`Simulando contagem na tabela ${table}`);
-        return { data: 0, error: null };
-      }
-    };
-  },
+  from: (table: string) => createQueryBuilder(table),
   functions: {
     invoke: async (functionName: string, options?: any) => {
       console.log(`Simulando invocação da função ${functionName}:`, options);
-      return { data: null, error: null };
+      return createMockQueryResponse();
     }
   }
 };
