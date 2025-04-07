@@ -1,6 +1,7 @@
 
 import { useToast } from '@/hooks/use-toast';
-import { supabase, testSupabaseConnection, securityService } from '@/lib/supabase';
+import { supabase, testSupabaseConnection } from '@/lib/supabase';
+import { securityService } from '@/lib/supabase/securityConfig';
 import { ConnectionStatus, SecurityStatus } from '@/types/admin-auth';
 
 interface UseAuthActionsProps {

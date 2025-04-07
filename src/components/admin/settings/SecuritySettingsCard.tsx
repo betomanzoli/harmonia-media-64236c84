@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
 import { ShieldCheck, ShieldAlert, RefreshCw } from "lucide-react";
-import { securityService } from '@/lib/supabase';
+import { securityService } from '@/lib/supabase/securityConfig';
 import { useToast } from '@/hooks/use-toast';
 import applyAllSecurityConfigurations from '@/lib/supabase/applySecurityConfig';
 
