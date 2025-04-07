@@ -3,12 +3,29 @@ import { useParams, useNavigate } from 'react-router-dom';
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
 import { Button } from "@/components/ui/button";
-import { ArrowLeft, Check, ThumbsUp, ThumbsDown } from 'lucide-react';
+import { 
+  ArrowLeft, 
+  Check, 
+  ThumbsUp, 
+  ThumbsDown, 
+  Share2, 
+  Copy, 
+  CheckCheck
+} from 'lucide-react';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/components/ui/use-toast";
 import LimitedAudioPlayer from '@/components/LimitedAudioPlayer';
 import { PreviewFeedbackForm } from '@/components/previews/PreviewFeedbackForm';
+import { 
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
 
 interface MusicPreview {
   id: string;
@@ -77,6 +94,7 @@ const MusicPreviews: React.FC = () => {
   const [selectedPreview, setSelectedPreview] = useState<string | null>(null);
   const [feedback, setFeedback] = useState('');
   const [previewData, setPreviewData] = useState<typeof MOCK_PREVIEWS[string] | null>(null);
+  const [isCopied, setIsCopied] = useState(false);
   
   useEffect(() => {
     if (previewId && MOCK_PREVIEWS[previewId]) {
@@ -138,6 +156,21 @@ const MusicPreviews: React.FC = () => {
     setPreviewData(prev => prev ? {...prev, status: 'approved' as const} : null);
   };
   
+  const handleSharePreview = () => {
+    if (!previewId) return;
+    
+    const shareUrl = window.location.href;
+    navigator.clipboard.writeText(shareUrl);
+    
+    setIsCopied(true);
+    setTimeout(() => setIsCopied(false), 2000);
+    
+    toast({
+      title: "Link copiado!",
+      description: "O link para esta prévia musical foi copiado para a área de transferência.",
+    });
+  };
+  
   return (
     <div className="min-h-screen bg-background text-foreground">
       <Header />
@@ -154,14 +187,65 @@ const MusicPreviews: React.FC = () => {
             </Button>
           </div>
           
-          <div className="mb-10">
-            <h1 className="text-3xl md:text-4xl font-bold mb-2">{previewData.projectTitle}</h1>
-            <p className="text-xl text-gray-300">Olá, {previewData.clientName}!</p>
-            <p className="text-gray-400 mt-4">
-              Estamos animados para apresentar as primeiras versões da sua música. 
-              Por favor, ouça cada uma delas e nos informe qual você prefere.
-              As prévias têm duração limitada para proteção dos direitos autorais.
-            </p>
+          <div className="mb-10 flex justify-between items-start">
+            <div>
+              <h1 className="text-3xl md:text-4xl font-bold mb-2">{previewData.projectTitle}</h1>
+              <p className="text-xl text-gray-300">Olá, {previewData.clientName}!</p>
+              <p className="text-gray-400 mt-4">
+                Estamos animados para apresentar as primeiras versões da sua música. 
+                Por favor, ouça cada uma delas e nos informe qual você prefere.
+                As prévias têm duração limitada para proteção dos direitos autorais.
+              </p>
+            </div>
+            
+            {previewData.status !== 'approved' && (
+              <Dialog>
+                <DialogTrigger asChild>
+                  <Button 
+                    variant="outline" 
+                    className="flex items-center gap-2"
+                  >
+                    <Share2 className="w-4 h-4" />
+                    Compartilhar
+                  </Button>
+                </DialogTrigger>
+                <DialogContent className="sm:max-w-md">
+                  <DialogHeader>
+                    <DialogTitle>Compartilhar prévia</DialogTitle>
+                    <DialogDescription>
+                      Compartilhe este link com colaboradores para obter feedback adicional.
+                    </DialogDescription>
+                  </DialogHeader>
+                  <div className="flex items-center space-x-2 mt-4">
+                    <Input
+                      readOnly
+                      value={window.location.href}
+                      className="flex-1"
+                    />
+                    <Button 
+                      variant="secondary" 
+                      onClick={handleSharePreview}
+                      className="flex items-center gap-2"
+                    >
+                      {isCopied ? (
+                        <>
+                          <CheckCheck className="w-4 h-4" />
+                          Copiado!
+                        </>
+                      ) : (
+                        <>
+                          <Copy className="w-4 h-4" />
+                          Copiar
+                        </>
+                      )}
+                    </Button>
+                  </div>
+                  <p className="text-sm text-muted-foreground mt-4">
+                    Nota: Este link permanecerá válido por 7 dias ou até a aprovação final.
+                  </p>
+                </DialogContent>
+              </Dialog>
+            )}
           </div>
           
           {previewData.status === 'approved' ? (

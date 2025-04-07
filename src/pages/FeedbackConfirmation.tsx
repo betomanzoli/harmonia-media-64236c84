@@ -5,10 +5,24 @@ import Header from '@/components/Header';
 import Footer from '@/components/Footer';
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import { CheckCircle2, ArrowRight, Clock } from 'lucide-react';
+import { CheckCircle2, ArrowRight, Clock, Calendar, Bell } from 'lucide-react';
 
 const FeedbackConfirmation: React.FC = () => {
   const navigate = useNavigate();
+  
+  // Calcular data estimada (3 dias úteis a partir de hoje)
+  const getEstimatedDate = () => {
+    const date = new Date();
+    let businessDays = 3;
+    while (businessDays > 0) {
+      date.setDate(date.getDate() + 1);
+      // Pular fins de semana (0 = domingo, 6 = sábado)
+      if (date.getDay() !== 0 && date.getDay() !== 6) {
+        businessDays--;
+      }
+    }
+    return date.toLocaleDateString('pt-BR');
+  };
   
   return (
     <div className="min-h-screen bg-background text-foreground">
@@ -28,11 +42,20 @@ const FeedbackConfirmation: React.FC = () => {
               estiver disponível.
             </p>
             
-            <div className="flex items-center justify-center gap-2 mb-8">
-              <Clock className="text-harmonia-green h-5 w-5" />
-              <span className="font-medium">
-                Previsão para entrega: <span className="text-harmonia-green font-bold">3 dias úteis</span>
-              </span>
+            <div className="flex flex-col sm:flex-row items-center justify-center gap-6 mb-8">
+              <div className="flex items-center gap-2">
+                <Clock className="text-harmonia-green h-5 w-5" />
+                <span className="font-medium">
+                  Previsão para entrega: <span className="text-harmonia-green font-bold">3 dias úteis</span>
+                </span>
+              </div>
+              
+              <div className="flex items-center gap-2">
+                <Calendar className="text-harmonia-green h-5 w-5" />
+                <span className="font-medium">
+                  Data estimada: <span className="text-harmonia-green font-bold">{getEstimatedDate()}</span>
+                </span>
+              </div>
             </div>
             
             <div className="bg-card border border-border rounded-lg p-6 text-left mb-8">
@@ -44,13 +67,31 @@ const FeedbackConfirmation: React.FC = () => {
                 </li>
                 <li className="flex items-start gap-2">
                   <span className="bg-harmonia-green/20 text-harmonia-green rounded-full w-6 h-6 flex items-center justify-center flex-shrink-0">2</span>
-                  <span>Você receberá um email quando a versão revisada estiver pronta</span>
+                  <span>Você receberá uma notificação por email quando a versão revisada estiver pronta</span>
                 </li>
                 <li className="flex items-start gap-2">
                   <span className="bg-harmonia-green/20 text-harmonia-green rounded-full w-6 h-6 flex items-center justify-center flex-shrink-0">3</span>
                   <span>Após aprovação final, enviaremos todos os arquivos e documentação conforme seu pacote</span>
                 </li>
               </ol>
+            </div>
+            
+            <div className="p-4 bg-blue-500/10 border border-blue-500/30 rounded-lg mb-8 flex items-start gap-3">
+              <Bell className="text-blue-500 h-5 w-5 mt-0.5 flex-shrink-0" />
+              <div className="text-left">
+                <h4 className="font-medium text-blue-500 mb-1">Ativar notificações</h4>
+                <p className="text-sm text-gray-400">
+                  Mantenha-se informado sobre atualizações do seu projeto. Além do email,
+                  podemos enviar notificações via WhatsApp quando houver novidades.
+                </p>
+                <Button
+                  variant="link"
+                  className="p-0 h-auto text-blue-500"
+                  onClick={() => window.open('https://wa.me/5511920585072?text=Olá,%20quero%20ativar%20notificações%20para%20meu%20projeto%20via%20WhatsApp', '_blank')}
+                >
+                  Ativar notificações por WhatsApp →
+                </Button>
+              </div>
             </div>
             
             <div className="flex flex-col sm:flex-row gap-4 justify-center">

@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
@@ -8,6 +7,7 @@ import { Card } from "@/components/ui/card";
 import { toast } from "@/hooks/use-toast";
 import { ArrowRight, Search, FileText, Package, CreditCard, MessageSquare, Music, Headphones, FileCheck, Settings, CheckCircle2 } from 'lucide-react';
 import OrderDetails from '@/components/order-tracking/OrderDetails';
+import OrderNotification from '@/components/order-tracking/OrderNotification'; 
 
 // Dados mockados para demonstração
 const MOCK_ORDERS = {
@@ -180,6 +180,17 @@ const OrderTracking: React.FC = () => {
   const [orderCode, setOrderCode] = useState('');
   const [orderData, setOrderData] = useState<any>(null);
   const [isLoading, setIsLoading] = useState(false);
+  const [hasNotification, setHasNotification] = useState(false);
+
+  useEffect(() => {
+    // Check for notifications on existing order data
+    if (orderData) {
+      const currentStep = orderData.progress.find((step: any) => step.status === 'current');
+      if (currentStep && (currentStep.step === 7 || currentStep.step === 8)) {
+        setHasNotification(true);
+      }
+    }
+  }, [orderData]);
 
   const handleSearch = () => {
     // Remove hifens e espaços para a busca
@@ -245,7 +256,18 @@ const OrderTracking: React.FC = () => {
           </Card>
           
           {orderData ? (
-            <OrderDetails {...orderData} />
+            <>
+              {hasNotification && (
+                <OrderNotification 
+                  orderId={orderData.orderId}
+                  hasPreview={true}
+                  previewLink={orderData.previewLink}
+                  pendingAction={orderData.currentStep === 7 ? 'feedback' : null}
+                />
+              )}
+              
+              <OrderDetails {...orderData} />
+            </>
           ) : (
             <div className="text-center py-10">
               <h3 className="text-xl font-semibold mb-4">Não encontrou seu pedido?</h3>

@@ -5,10 +5,20 @@ import Header from '@/components/Header';
 import Footer from '@/components/Footer';
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import { CheckCircle2, ArrowRight, Clock, Download } from 'lucide-react';
+import { CheckCircle2, ArrowRight, Clock, Download, FileText } from 'lucide-react';
+import { useToast } from "@/hooks/use-toast";
 
 const ApprovalConfirmation: React.FC = () => {
   const navigate = useNavigate();
+  const { toast } = useToast();
+  
+  const handleDownloadPreview = () => {
+    // Em produção, este seria um link real para o arquivo de prévia
+    toast({
+      title: "Download iniciado",
+      description: "O arquivo de prévia de baixa qualidade começou a ser baixado.",
+    });
+  };
   
   return (
     <div className="min-h-screen bg-background text-foreground">
@@ -52,21 +62,45 @@ const ApprovalConfirmation: React.FC = () => {
               </ol>
             </div>
             
-            <div className="flex flex-col sm:flex-row gap-4 justify-center">
-              <Button 
-                variant="outline" 
-                onClick={() => navigate('/acompanhar-pedido')}
-                className="flex items-center gap-2"
-              >
-                Acompanhar Pedido
-              </Button>
-              <Button 
-                onClick={() => navigate('/')}
-                className="bg-harmonia-green hover:bg-harmonia-green/90 flex items-center gap-2"
-              >
-                Voltar à Página Inicial
-                <ArrowRight className="w-4 h-4" />
-              </Button>
+            <div className="flex flex-col gap-6">
+              <div className="p-6 border border-dashed border-gray-500 rounded-lg">
+                <h3 className="font-semibold mb-3 flex items-center gap-2">
+                  <FileText className="h-5 w-5 text-harmonia-green" />
+                  Versão de Prévia Disponível
+                </h3>
+                <p className="text-gray-400 mb-4 text-sm">
+                  Enquanto trabalhamos na versão final, você pode baixar uma versão de prévia (qualidade limitada) 
+                  da música aprovada para uso interno e planejamento.
+                </p>
+                <Button 
+                  variant="outline" 
+                  onClick={handleDownloadPreview}
+                  className="w-full flex items-center justify-center gap-2"
+                >
+                  <Download className="w-4 h-4" />
+                  Baixar Versão de Prévia
+                </Button>
+                <p className="text-xs text-gray-500 mt-2">
+                  Nota: Esta versão é protegida por direitos autorais e apenas para uso pessoal.
+                </p>
+              </div>
+            
+              <div className="flex flex-col sm:flex-row gap-4 justify-center">
+                <Button 
+                  variant="outline" 
+                  onClick={() => navigate('/acompanhar-pedido')}
+                  className="flex items-center gap-2"
+                >
+                  Acompanhar Pedido
+                </Button>
+                <Button 
+                  onClick={() => navigate('/')}
+                  className="bg-harmonia-green hover:bg-harmonia-green/90 flex items-center gap-2"
+                >
+                  Voltar à Página Inicial
+                  <ArrowRight className="w-4 h-4" />
+                </Button>
+              </div>
             </div>
           </Card>
         </div>
