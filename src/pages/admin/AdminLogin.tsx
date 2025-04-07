@@ -1,24 +1,15 @@
 
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useForm } from 'react-hook-form';
-import { zodResolver } from '@hookform/resolvers/zod';
-import * as z from 'zod';
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
-import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { useAdminAuth } from '@/hooks/admin/useAdminAuth';
-import { Loader2, AlertTriangle, Info, Bug, RefreshCw, Shield } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
-import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { testSupabaseConnection, testAuthSettings, supabase } from '@/lib/supabase';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
-
-const formSchema = z.object({
-  email: z.string().email({ message: 'Email inválido' }),
-  password: z.string().min(6, { message: 'A senha deve ter pelo menos 6 caracteres' }),
-});
+import LoginForm from '@/components/admin/auth/login/LoginForm';
+import PasswordResetDialog from '@/components/admin/auth/login/PasswordResetDialog';
+import ConnectionAlert from '@/components/admin/auth/login/ConnectionAlert';
+import LoginError from '@/components/admin/auth/login/LoginError';
+import DiagnosticsPanel from '@/components/admin/auth/login/DiagnosticsPanel';
 
 const AdminLogin: React.FC = () => {
   const { login, connectionStatus, testConnection, isAuthenticated } = useAdminAuth();
@@ -26,8 +17,7 @@ const AdminLogin: React.FC = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [loginError, setLoginError] = useState<string | null>(null);
   const [showPasswordReset, setShowPasswordReset] = useState(false);
-  const [resetEmail, setResetEmail] = useState('');
-  const [resetSent, setResetSent] = useState(false);
+  const [detailedErrorInfo, setDetailedErrorInfo] = useState<string>('');
   const [debugInfo, setDebugInfo] = useState<{
     connectionDetails: string;
     authSettings: string;
@@ -39,17 +29,7 @@ const AdminLogin: React.FC = () => {
     supabaseUrl: '',
     storageInfo: '',
   });
-  const [showDebug, setShowDebug] = useState(false);
-  const [detailedErrorInfo, setDetailedErrorInfo] = useState<string>('');
   const { toast } = useToast();
-
-  const form = useForm<z.infer<typeof formSchema>>({
-    resolver: zodResolver(formSchema),
-    defaultValues: {
-      email: '',
-      password: '',
-    },
-  });
 
   // Verificar se já está autenticado
   useEffect(() => {
@@ -74,7 +54,7 @@ const AdminLogin: React.FC = () => {
   }, [connectionStatus.tested, testConnection]);
 
   const loadDebugInfo = async () => {
-    // Carregar URL do Supabase - Corrigido para não usar getUrl()
+    // Carregar URL do Supabase - Usando a URL em string diretamente
     const supabaseUrlInfo = supabase.supabaseUrl || 'URL não disponível';
     
     // Verificar storage local
@@ -94,7 +74,7 @@ const AdminLogin: React.FC = () => {
     }));
   };
 
-  const handleSubmit = async (values: z.infer<typeof formSchema>) => {
+  const handleSubmit = async (values: { email: string; password: string }) => {
     setIsLoading(true);
     setLoginError(null);
     setDetailedErrorInfo('');
@@ -173,8 +153,8 @@ const AdminLogin: React.FC = () => {
     }
   };
   
-  const handlePasswordReset = async () => {
-    if (!resetEmail || !resetEmail.includes('@')) {
+  const handlePasswordReset = async (email: string) => {
+    if (!email || !email.includes('@')) {
       toast({
         title: 'Email inválido',
         description: 'Por favor, forneça um email válido para redefinir a senha.',
@@ -186,7 +166,7 @@ const AdminLogin: React.FC = () => {
     setIsLoading(true);
     
     try {
-      const { error } = await supabase.auth.resetPasswordForEmail(resetEmail, {
+      const { error } = await supabase.auth.resetPasswordForEmail(email, {
         redirectTo: window.location.origin + '/admin-reset-password',
       });
       
@@ -194,7 +174,6 @@ const AdminLogin: React.FC = () => {
         throw error;
       }
       
-      setResetSent(true);
       toast({
         title: 'Email enviado',
         description: 'Verifique sua caixa de entrada para instruções de redefinição de senha.',
@@ -221,164 +200,30 @@ const AdminLogin: React.FC = () => {
           </CardDescription>
         </CardHeader>
         <CardContent>
-          {connectionStatus.tested && !connectionStatus.connected && (
-            <Alert variant="destructive" className="mb-4">
-              <AlertTriangle className="h-4 w-4" />
-              <AlertTitle>Problema de conexão</AlertTitle>
-              <AlertDescription>
-                Não foi possível conectar ao backend: {connectionStatus.error}
-                <Button 
-                  variant="outline" 
-                  size="sm" 
-                  className="mt-2 w-full"
-                  onClick={handleRetryConnection}
-                  disabled={isLoading}
-                >
-                  {isLoading ? (
-                    <>
-                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                      Verificando...
-                    </>
-                  ) : (
-                    <>
-                      <RefreshCw className="mr-2 h-4 w-4" />
-                      Tentar novamente
-                    </>
-                  )}
-                </Button>
-              </AlertDescription>
-            </Alert>
-          )}
+          <ConnectionAlert 
+            connectionStatus={connectionStatus}
+            onRetry={handleRetryConnection}
+            isLoading={isLoading}
+          />
           
-          {loginError && (
-            <Alert variant="destructive" className="mb-4">
-              <AlertTriangle className="h-4 w-4" />
-              <AlertTitle>Erro de autenticação</AlertTitle>
-              <AlertDescription>
-                {loginError}
-                {detailedErrorInfo && (
-                  <div className="mt-2 text-xs bg-red-50 p-2 rounded">
-                    <p className="font-medium">Detalhes técnicos:</p>
-                    <p className="break-all">{detailedErrorInfo}</p>
-                  </div>
-                )}
-              </AlertDescription>
-            </Alert>
-          )}
+          <LoginError 
+            error={loginError} 
+            detailedError={detailedErrorInfo}
+          />
 
-          <Form {...form}>
-            <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-4">
-              <FormField
-                control={form.control}
-                name="email"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Email</FormLabel>
-                    <FormControl>
-                      <Input
-                        placeholder="admin@example.com"
-                        {...field}
-                        disabled={isLoading || !connectionStatus.connected}
-                      />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              <FormField
-                control={form.control}
-                name="password"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Senha</FormLabel>
-                    <FormControl>
-                      <Input
-                        type="password"
-                        placeholder="******"
-                        {...field}
-                        disabled={isLoading || !connectionStatus.connected}
-                      />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              <Button
-                type="submit"
-                className="w-full"
-                disabled={isLoading || !connectionStatus.connected}
-              >
-                {isLoading ? (
-                  <>
-                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                    Entrando...
-                  </>
-                ) : (
-                  <>
-                    <Shield className="mr-2 h-4 w-4" />
-                    Entrar
-                  </>
-                )}
-              </Button>
-              
-              <Button
-                type="button"
-                variant="ghost"
-                className="w-full text-sm"
-                onClick={() => setShowPasswordReset(true)}
-              >
-                Esqueceu sua senha?
-              </Button>
-            </form>
-          </Form>
+          <LoginForm 
+            onSubmit={handleSubmit}
+            isLoading={isLoading}
+            connectionStatus={connectionStatus}
+            onPasswordReset={() => setShowPasswordReset(true)}
+          />
 
-          <Alert className="mt-4">
-            <Info className="h-4 w-4" />
-            <AlertTitle>Informações de diagnóstico</AlertTitle>
-            <AlertDescription className="text-xs space-y-2">
-              <p>Status da conexão: {connectionStatus.connected ? 'Conectado' : 'Desconectado'}</p>
-              <p>URL do Supabase: {debugInfo.supabaseUrl || 'Não disponível'}</p>
-              <p>Local Storage: {debugInfo.storageInfo}</p>
-              <Button 
-                variant="outline" 
-                size="sm" 
-                className="mt-1 w-full"
-                onClick={() => setShowDebug(!showDebug)}
-              >
-                {showDebug ? 'Ocultar detalhes' : 'Mostrar detalhes avançados'}
-              </Button>
-              {showDebug && (
-                <Button 
-                  variant="outline" 
-                  size="sm" 
-                  className="mt-1 w-full"
-                  onClick={runDiagnostics}
-                  disabled={isLoading}
-                >
-                  {isLoading ? (
-                    <>
-                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                      Executando diagnóstico...
-                    </>
-                  ) : (
-                    <>
-                      <Bug className="mr-2 h-4 w-4" />
-                      Executar diagnóstico completo
-                    </>
-                  )}
-                </Button>
-              )}
-              {showDebug && (
-                <div className="mt-2 space-y-2 bg-slate-100 p-2 rounded text-xs">
-                  <h4 className="font-bold">Detalhes da conexão:</h4>
-                  <pre className="whitespace-pre-wrap break-all">{debugInfo.connectionDetails}</pre>
-                  
-                  <h4 className="font-bold">Configurações de autenticação:</h4>
-                  <pre className="whitespace-pre-wrap break-all">{debugInfo.authSettings}</pre>
-                </div>
-              )}
-            </AlertDescription>
-          </Alert>
+          <DiagnosticsPanel 
+            diagnosticInfo={debugInfo}
+            connectionStatus={connectionStatus}
+            onRunDiagnostics={runDiagnostics}
+            isLoading={isLoading}
+          />
         </CardContent>
         <CardFooter className="flex flex-col">
           <p className="text-sm text-muted-foreground text-center">
@@ -387,71 +232,12 @@ const AdminLogin: React.FC = () => {
         </CardFooter>
       </Card>
       
-      {/* Dialog de redefinição de senha */}
-      <Dialog open={showPasswordReset} onOpenChange={setShowPasswordReset}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Redefinir senha</DialogTitle>
-            <DialogDescription>
-              Insira seu email para receber instruções de redefinição de senha.
-            </DialogDescription>
-          </DialogHeader>
-          
-          {resetSent ? (
-            <div className="space-y-4 py-4">
-              <Alert>
-                <Info className="h-4 w-4" />
-                <AlertTitle>Email enviado</AlertTitle>
-                <AlertDescription>
-                  Verifique sua caixa de entrada para as instruções de redefinição de senha.
-                </AlertDescription>
-              </Alert>
-              <Button 
-                className="w-full" 
-                onClick={() => setShowPasswordReset(false)}
-              >
-                Fechar
-              </Button>
-            </div>
-          ) : (
-            <div className="space-y-4 py-4">
-              <div className="space-y-2">
-                <label className="text-sm font-medium">Email</label>
-                <Input
-                  type="email"
-                  value={resetEmail}
-                  onChange={(e) => setResetEmail(e.target.value)}
-                  placeholder="seu@email.com"
-                />
-              </div>
-              <div className="flex space-x-2">
-                <Button
-                  variant="outline"
-                  className="flex-1"
-                  onClick={() => setShowPasswordReset(false)}
-                  disabled={isLoading}
-                >
-                  Cancelar
-                </Button>
-                <Button
-                  className="flex-1"
-                  onClick={handlePasswordReset}
-                  disabled={isLoading}
-                >
-                  {isLoading ? (
-                    <>
-                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                      Enviando...
-                    </>
-                  ) : (
-                    'Enviar'
-                  )}
-                </Button>
-              </div>
-            </div>
-          )}
-        </DialogContent>
-      </Dialog>
+      <PasswordResetDialog
+        open={showPasswordReset}
+        onOpenChange={setShowPasswordReset}
+        onSubmit={handlePasswordReset}
+        isLoading={isLoading}
+      />
     </div>
   );
 };
