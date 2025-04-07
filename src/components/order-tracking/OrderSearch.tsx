@@ -3,7 +3,7 @@ import React, { useState } from 'react';
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card } from "@/components/ui/card";
-import { toast } from "@/hooks/use-toast";
+import { useToast } from "@/hooks/use-toast";
 import { Search } from 'lucide-react';
 import { OrderSearchProps } from './types';
 import { MOCK_ORDERS } from './mockOrderData';
@@ -11,6 +11,7 @@ import { MOCK_ORDERS } from './mockOrderData';
 const OrderSearch: React.FC<OrderSearchProps> = ({ onSearch }) => {
   const [orderCode, setOrderCode] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+  const { toast } = useToast();
 
   const handleSearch = () => {
     const cleanCode = orderCode.replace(/[^a-zA-Z0-9]/g, '').toUpperCase();
@@ -67,5 +68,4 @@ const OrderSearch: React.FC<OrderSearchProps> = ({ onSearch }) => {
   );
 };
 
-export { MOCK_ORDERS };
 export default OrderSearch;

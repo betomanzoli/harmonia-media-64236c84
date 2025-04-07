@@ -2,7 +2,7 @@
 import React from 'react';
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
-import { OrderData } from './types';
+import { OrderDetailsProps } from './types';
 import { FileText, Package, CreditCard, MessageSquare, Music, Headphones, FileCheck, Settings } from 'lucide-react';
 import { Link } from 'react-router-dom';
 
@@ -17,10 +17,6 @@ const iconComponents: Record<string, React.ElementType> = {
   'FileCheck': FileCheck,
   'Settings': Settings
 };
-
-interface OrderDetailsProps {
-  order: OrderData;
-}
 
 const OrderDetails: React.FC<OrderDetailsProps> = ({ order }) => {
   return (

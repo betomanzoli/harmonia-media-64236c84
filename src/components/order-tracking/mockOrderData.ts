@@ -1,19 +1,5 @@
 
 import { OrderData } from './types';
-import React from 'react';
-import { FileText, Package, CreditCard, MessageSquare, Music, Headphones, FileCheck, Settings } from 'lucide-react';
-
-// Função auxiliar para criar elementos de ícone de forma segura
-const iconMap = {
-  fileText: 'FileText',
-  package: 'Package',
-  creditCard: 'CreditCard',
-  messageSquare: 'MessageSquare',
-  music: 'Music',
-  headphones: 'Headphones',
-  fileCheck: 'FileCheck',
-  settings: 'Settings'
-};
 
 // Mock data (this would normally be fetched from an API)
 export const MOCK_ORDERS: Record<string, OrderData> = {
@@ -32,7 +18,7 @@ export const MOCK_ORDERS: Record<string, OrderData> = {
         status: 'completed' as const,
         title: 'Qualificação Inicial',
         description: 'Formulário preenchido e necessidades identificadas',
-        icon: iconMap.fileText,
+        icon: 'FileText',
         date: '05/04/2025'
       },
       {
@@ -40,7 +26,7 @@ export const MOCK_ORDERS: Record<string, OrderData> = {
         status: 'completed' as const,
         title: 'Escolha do Pacote',
         description: 'Pacote Profissional selecionado',
-        icon: iconMap.package,
+        icon: 'Package',
         date: '05/04/2025'
       },
       {
@@ -48,7 +34,7 @@ export const MOCK_ORDERS: Record<string, OrderData> = {
         status: 'completed' as const,
         title: 'Pagamento',
         description: 'Pagamento aprovado',
-        icon: iconMap.creditCard,
+        icon: 'CreditCard',
         date: '05/04/2025'
       },
       {
@@ -56,7 +42,7 @@ export const MOCK_ORDERS: Record<string, OrderData> = {
         status: 'completed' as const,
         title: 'Briefing Detalhado',
         description: 'Detalhes do projeto fornecidos',
-        icon: iconMap.messageSquare,
+        icon: 'MessageSquare',
         date: '06/04/2025'
       },
       {
@@ -64,7 +50,7 @@ export const MOCK_ORDERS: Record<string, OrderData> = {
         status: 'completed' as const,
         title: 'Criação com IA',
         description: 'Versões iniciais geradas',
-        icon: iconMap.music,
+        icon: 'Music',
         date: '08/04/2025'
       },
       {
@@ -72,7 +58,7 @@ export const MOCK_ORDERS: Record<string, OrderData> = {
         status: 'current' as const,
         title: 'Refinamento Humano',
         description: 'Músicos aprimorando a composição',
-        icon: iconMap.headphones,
+        icon: 'Headphones',
         date: '10/04/2025'
       },
       {
@@ -80,21 +66,21 @@ export const MOCK_ORDERS: Record<string, OrderData> = {
         status: 'pending' as const,
         title: 'Apresentação',
         description: 'Prévias enviadas para avaliação',
-        icon: iconMap.fileCheck
+        icon: 'FileCheck'
       },
       {
         step: 8,
         status: 'pending' as const,
         title: 'Revisões',
         description: 'Ajustes conforme seu feedback',
-        icon: iconMap.settings
+        icon: 'Settings'
       },
       {
         step: 9,
         status: 'pending' as const,
         title: 'Entrega Final',
         description: 'Música finalizada com documentação',
-        icon: iconMap.music
+        icon: 'Music'
       }
     ]
   },
@@ -113,7 +99,7 @@ export const MOCK_ORDERS: Record<string, OrderData> = {
         status: 'completed' as const,
         title: 'Qualificação Inicial',
         description: 'Formulário preenchido e necessidades identificadas',
-        icon: iconMap.fileText,
+        icon: 'FileText',
         date: '03/04/2025'
       },
       {
@@ -121,7 +107,7 @@ export const MOCK_ORDERS: Record<string, OrderData> = {
         status: 'completed' as const,
         title: 'Escolha do Pacote',
         description: 'Pacote Premium selecionado',
-        icon: iconMap.package,
+        icon: 'Package',
         date: '03/04/2025'
       },
       {
@@ -129,7 +115,7 @@ export const MOCK_ORDERS: Record<string, OrderData> = {
         status: 'completed' as const,
         title: 'Pagamento',
         description: 'Pagamento aprovado',
-        icon: iconMap.creditCard,
+        icon: 'CreditCard',
         date: '03/04/2025'
       },
       {
@@ -137,7 +123,7 @@ export const MOCK_ORDERS: Record<string, OrderData> = {
         status: 'completed' as const,
         title: 'Briefing Detalhado',
         description: 'Detalhes do projeto fornecidos',
-        icon: iconMap.messageSquare,
+        icon: 'MessageSquare',
         date: '04/04/2025'
       },
       {
@@ -145,7 +131,7 @@ export const MOCK_ORDERS: Record<string, OrderData> = {
         status: 'completed' as const,
         title: 'Criação com IA',
         description: 'Versões iniciais geradas',
-        icon: iconMap.music,
+        icon: 'Music',
         date: '05/04/2025'
       },
       {
@@ -153,7 +139,7 @@ export const MOCK_ORDERS: Record<string, OrderData> = {
         status: 'completed' as const,
         title: 'Refinamento Humano',
         description: 'Músicos aprimoraram a composição',
-        icon: iconMap.headphones,
+        icon: 'Headphones',
         date: '07/04/2025'
       },
       {
@@ -161,7 +147,7 @@ export const MOCK_ORDERS: Record<string, OrderData> = {
         status: 'current' as const,
         title: 'Apresentação',
         description: 'Prévias enviadas para avaliação',
-        icon: iconMap.fileCheck,
+        icon: 'FileCheck',
         date: '08/04/2025'
       },
       {
@@ -169,14 +155,14 @@ export const MOCK_ORDERS: Record<string, OrderData> = {
         status: 'pending' as const,
         title: 'Revisões',
         description: 'Ajustes conforme seu feedback',
-        icon: iconMap.settings
+        icon: 'Settings'
       },
       {
         step: 9,
         status: 'pending' as const,
         title: 'Entrega Final',
         description: 'Música finalizada com documentação',
-        icon: iconMap.music
+        icon: 'Music'
       }
     ]
   }

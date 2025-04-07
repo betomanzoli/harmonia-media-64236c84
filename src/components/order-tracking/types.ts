@@ -23,5 +23,9 @@ export interface OrderData {
 }
 
 export interface OrderSearchProps {
-  onOrderFound: (order: OrderData) => void;
+  onSearch: (order: OrderData) => void;
+}
+
+export interface OrderDetailsProps {
+  order: OrderData;
 }

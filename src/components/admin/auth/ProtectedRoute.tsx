@@ -4,6 +4,7 @@ import { Navigate } from 'react-router-dom';
 import { useAdminAuth } from '@/context/AdminAuthContext';
 import { Loader2 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
+import applyAllSecurityConfigurations from '@/lib/supabase/applySecurityConfig';
 
 interface ProtectedRouteProps {
   children: React.ReactNode;
@@ -12,6 +13,7 @@ interface ProtectedRouteProps {
 const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children }) => {
   const { isAuthenticated, isLoading, connectionStatus } = useAdminAuth();
   const [isOfflineMode, setIsOfflineMode] = useState(false);
+  const [securityChecked, setSecurityChecked] = useState(false);
   const { toast } = useToast();
   
   useEffect(() => {
@@ -26,6 +28,41 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children }) => {
       });
     }
   }, [toast]);
+
+  // Effect to check and apply security configurations once when authenticated
+  useEffect(() => {
+    const checkAndApplySecurity = async () => {
+      if (isAuthenticated && !securityChecked && !isOfflineMode) {
+        setSecurityChecked(true);
+        
+        try {
+          // Verificar e aplicar configurações de segurança
+          console.log("Verificando e aplicando configurações de segurança...");
+          
+          // Tenta aplicar políticas RLS e outras configurações
+          const result = await applyAllSecurityConfigurations();
+          
+          if (result.success) {
+            console.log("Configurações de segurança aplicadas com sucesso");
+            
+            // Notificar usuário apenas se alguma mudança foi feita
+            if (!result.rlsConfigured || !result.passwordConfigured || !result.mfaConfigured) {
+              toast({
+                title: "Segurança atualizada",
+                description: "Configurações de segurança do Supabase foram atualizadas.",
+              });
+            }
+          } else {
+            console.warn("Problemas ao aplicar configurações:", result.error);
+          }
+        } catch (error) {
+          console.error("Erro ao verificar/aplicar configurações de segurança:", error);
+        }
+      }
+    };
+    
+    checkAndApplySecurity();
+  }, [isAuthenticated, securityChecked, isOfflineMode, toast]);
 
   if (isLoading) {
     return (

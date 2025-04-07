@@ -2,7 +2,7 @@
 import React, { useState, useEffect } from 'react';
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
-import OrderSearch, { MOCK_ORDERS } from '@/components/order-tracking/OrderSearch';
+import OrderSearch from '@/components/order-tracking/OrderSearch';
 import OrderDetails from '@/components/order-tracking/OrderDetails';
 import OrderNotification from '@/components/order-tracking/OrderNotification';
 import OrderNotFound from '@/components/order-tracking/OrderNotFound';
@@ -49,7 +49,7 @@ const OrderTracking: React.FC = () => {
                 />
               )}
               
-              <OrderDetails {...orderData} />
+              <OrderDetails order={orderData} />
             </>
           ) : (
             <OrderNotFound onChatAssistant={openChatAssistant} />
