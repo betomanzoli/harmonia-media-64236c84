@@ -1,6 +1,6 @@
 
 import { supabase } from '@/lib/supabase';
-import { UseToastReturn } from '@/hooks/use-toast';
+import { useToast } from '@/hooks/use-toast';
 import { NavigateFunction } from 'react-router-dom';
 
 interface LoginOperationsProps {
@@ -10,7 +10,7 @@ interface LoginOperationsProps {
   setIsLoading: (loading: boolean) => void;
   setLoginError: (error: string | null) => void;
   setDetailedErrorInfo: (info: string) => void;
-  toast: UseToastReturn;
+  toast: ReturnType<typeof useToast>;
   loadDebugInfo: () => Promise<void>;
 }
 
