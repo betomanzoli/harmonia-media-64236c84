@@ -29,17 +29,17 @@ export function useSystemSettings() {
     setError(null);
     
     try {
-      const { data, error } = await supabase
+      const response = await supabase
         .from('system_settings')
         .select('key, value');
         
-      if (error) {
-        throw error;
+      if (response.error) {
+        throw response.error;
       }
       
       // Converter a lista de pares chave-valor em um objeto
       const settingsObj: Partial<SystemSettings> = {};
-      data?.forEach(item => {
+      response.data?.forEach(item => {
         settingsObj[item.key as keyof SystemSettings] = item.value;
       });
       

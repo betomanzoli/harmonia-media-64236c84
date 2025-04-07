@@ -31,22 +31,22 @@ export function usePortfolioItems() {
       setIsLoading(true);
       
       // Primeiro, verificar se a tabela existe
-      const { data: tableExists } = await supabase
+      const countResponse = await supabase
         .from('portfolio_items')
         .select('count')
         .limit(1);
       
-      if (tableExists !== null) {
+      if (countResponse?.data !== null) {
         // Tabela existe, buscar dados
-        const { data, error } = await supabase
+        const response = await supabase
           .from('portfolio_items')
           .select('*')
           .order('created_at', { ascending: false });
 
-        if (error) throw error;
+        if (response.error) throw response.error;
         
-        if (data && data.length > 0) {
-          setPortfolioItems(data);
+        if (response.data && response.data.length > 0) {
+          setPortfolioItems(response.data);
         } else {
           // Se não houver dados, inicializar com dados de exemplo
           initializePortfolioItems();
