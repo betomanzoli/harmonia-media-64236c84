@@ -12,8 +12,28 @@ export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
     persistSession: true,
     autoRefreshToken: true,
     detectSessionInUrl: true,
+    storageKey: 'harmonia-admin-auth', // Chave dedicada para sessão administrativa
   },
 });
+
+// Adicionando função para diagnóstico de conexão
+export const testSupabaseConnection = async () => {
+  try {
+    console.log('Testando conexão com o Supabase...');
+    const { data, error } = await supabase.from('system_settings').select('count(*)', { count: 'exact' });
+    
+    if (error) {
+      console.error('Erro de conexão com o Supabase:', error);
+      return { connected: false, error: error.message };
+    }
+    
+    console.log('Conexão com o Supabase bem-sucedida!');
+    return { connected: true, data };
+  } catch (err) {
+    console.error('Exceção ao testar conexão:', err);
+    return { connected: false, error: err instanceof Error ? err.message : 'Erro desconhecido' };
+  }
+};
 
 console.log('🔌 Cliente Supabase inicializado.');
 
@@ -27,7 +47,7 @@ export const emailService = {
         body: {
           to: email,
           subject: 'Briefing Recebido - harmonIA',
-          content: `
+          html: `
             <h1>Olá ${name},</h1>
             <p>Recebemos seu briefing com sucesso! Nossa equipe já está analisando suas informações.</p>
             <p>Entraremos em contato em breve para discutir os próximos passos.</p>

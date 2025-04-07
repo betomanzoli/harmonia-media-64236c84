@@ -1,14 +1,20 @@
 
 import React, { createContext, useState, useContext, useEffect, ReactNode } from 'react';
-import { supabase } from '@/lib/supabase';
+import { supabase, testSupabaseConnection } from '@/lib/supabase';
 import { useToast } from '@/hooks/use-toast';
 
 interface AuthContextType {
   user: any;
   isAuthenticated: boolean;
   isLoading: boolean;
+  connectionStatus: {
+    tested: boolean;
+    connected: boolean;
+    error?: string;
+  };
   login: (email: string, password: string) => Promise<{ success: boolean; error?: string }>;
   logout: () => Promise<void>;
+  testConnection: () => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -16,7 +22,35 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 export const AdminAuthProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
   const [user, setUser] = useState<any>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [connectionStatus, setConnectionStatus] = useState<{
+    tested: boolean;
+    connected: boolean;
+    error?: string;
+  }>({
+    tested: false,
+    connected: false
+  });
   const { toast } = useToast();
+  
+  // Função para testar a conexão com o Supabase
+  const testConnection = async () => {
+    const result = await testSupabaseConnection();
+    setConnectionStatus({
+      tested: true,
+      connected: result.connected,
+      error: result.error
+    });
+    
+    if (!result.connected) {
+      toast({
+        title: 'Problema de conexão',
+        description: `Não foi possível conectar ao Supabase: ${result.error}`,
+        variant: 'destructive',
+      });
+    }
+    
+    return result;
+  };
   
   useEffect(() => {
     // Verificar se há uma sessão ativa
@@ -38,6 +72,10 @@ export const AdminAuthProvider: React.FC<{ children: ReactNode }> = ({ children 
           console.log("Nenhuma sessão encontrada");
           setUser(null);
         }
+        
+        // Testar a conexão com o banco de dados
+        await testConnection();
+        
       } catch (err) {
         console.error("Erro ao checar autenticação:", err);
         setUser(null);
@@ -72,6 +110,15 @@ export const AdminAuthProvider: React.FC<{ children: ReactNode }> = ({ children 
   const login = async (email: string, password: string): Promise<{ success: boolean; error?: string }> => {
     try {
       console.log("Tentando fazer login com email:", email);
+      
+      // Verificar conexão primeiro
+      const connectionTest = await testConnection();
+      if (!connectionTest.connected) {
+        return { 
+          success: false, 
+          error: `Problema de conexão com o Supabase: ${connectionTest.error}` 
+        };
+      }
       
       const { data, error } = await supabase.auth.signInWithPassword({
         email,
@@ -128,8 +175,10 @@ export const AdminAuthProvider: React.FC<{ children: ReactNode }> = ({ children 
         user, 
         isAuthenticated: !!user, 
         isLoading, 
+        connectionStatus,
         login, 
-        logout 
+        logout,
+        testConnection
       }}
     >
       {children}

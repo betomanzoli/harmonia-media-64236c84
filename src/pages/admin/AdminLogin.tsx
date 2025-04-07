@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -9,8 +9,9 @@ import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { useAdminAuth } from '@/context/AdminAuthContext';
-import { Loader2 } from 'lucide-react';
+import { Loader2, AlertTriangle, Info } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 
 const formSchema = z.object({
   email: z.string().email({ message: 'Email inválido' }),
@@ -18,9 +19,10 @@ const formSchema = z.object({
 });
 
 const AdminLogin: React.FC = () => {
-  const { login } = useAdminAuth();
+  const { login, connectionStatus, testConnection } = useAdminAuth();
   const navigate = useNavigate();
   const [isLoading, setIsLoading] = useState(false);
+  const [loginError, setLoginError] = useState<string | null>(null);
   const { toast } = useToast();
 
   const form = useForm<z.infer<typeof formSchema>>({
@@ -31,8 +33,20 @@ const AdminLogin: React.FC = () => {
     },
   });
 
+  // Testar conexão ao inicializar
+  useEffect(() => {
+    const checkConnection = async () => {
+      if (!connectionStatus.tested) {
+        await testConnection();
+      }
+    };
+    
+    checkConnection();
+  }, [connectionStatus.tested, testConnection]);
+
   const handleSubmit = async (values: z.infer<typeof formSchema>) => {
     setIsLoading(true);
+    setLoginError(null);
     
     console.log("Tentando fazer login com:", { email: values.email });
     
@@ -43,14 +57,16 @@ const AdminLogin: React.FC = () => {
         navigate('/admin-j28s7d1k/dashboard');
       } else {
         console.error("Erro de login:", error);
+        setLoginError(error || 'Credenciais inválidas. Por favor, tente novamente.');
         toast({
           title: 'Falha no login',
           description: error || 'Credenciais inválidas. Por favor, tente novamente.',
           variant: 'destructive',
         });
       }
-    } catch (error) {
+    } catch (error: any) {
       console.error("Erro durante login:", error);
+      setLoginError(error.message || 'Ocorreu um erro durante o login');
       toast({
         title: 'Erro',
         description: 'Ocorreu um erro durante o login. Por favor, tente novamente.',
@@ -59,6 +75,10 @@ const AdminLogin: React.FC = () => {
     } finally {
       setIsLoading(false);
     }
+  };
+
+  const handleRetryConnection = async () => {
+    await testConnection();
   };
 
   return (
@@ -71,6 +91,32 @@ const AdminLogin: React.FC = () => {
           </CardDescription>
         </CardHeader>
         <CardContent>
+          {connectionStatus.tested && !connectionStatus.connected && (
+            <Alert variant="destructive" className="mb-4">
+              <AlertTriangle className="h-4 w-4" />
+              <AlertTitle>Problema de conexão</AlertTitle>
+              <AlertDescription>
+                Não foi possível conectar ao backend: {connectionStatus.error}
+                <Button 
+                  variant="outline" 
+                  size="sm" 
+                  className="mt-2 w-full"
+                  onClick={handleRetryConnection}
+                >
+                  Tentar novamente
+                </Button>
+              </AlertDescription>
+            </Alert>
+          )}
+          
+          {loginError && (
+            <Alert variant="destructive" className="mb-4">
+              <AlertTriangle className="h-4 w-4" />
+              <AlertTitle>Erro de autenticação</AlertTitle>
+              <AlertDescription>{loginError}</AlertDescription>
+            </Alert>
+          )}
+
           <Form {...form}>
             <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-4">
               <FormField
@@ -83,7 +129,7 @@ const AdminLogin: React.FC = () => {
                       <Input
                         placeholder="admin@example.com"
                         {...field}
-                        disabled={isLoading}
+                        disabled={isLoading || !connectionStatus.connected}
                       />
                     </FormControl>
                     <FormMessage />
@@ -101,7 +147,7 @@ const AdminLogin: React.FC = () => {
                         type="password"
                         placeholder="******"
                         {...field}
-                        disabled={isLoading}
+                        disabled={isLoading || !connectionStatus.connected}
                       />
                     </FormControl>
                     <FormMessage />
@@ -111,7 +157,7 @@ const AdminLogin: React.FC = () => {
               <Button
                 type="submit"
                 className="w-full"
-                disabled={isLoading}
+                disabled={isLoading || !connectionStatus.connected}
               >
                 {isLoading ? (
                   <>
@@ -124,6 +170,15 @@ const AdminLogin: React.FC = () => {
               </Button>
             </form>
           </Form>
+
+          <Alert className="mt-4">
+            <Info className="h-4 w-4" />
+            <AlertTitle>Informações de diagnóstico</AlertTitle>
+            <AlertDescription className="text-xs">
+              <p>Status da conexão: {connectionStatus.connected ? 'Conectado' : 'Desconectado'}</p>
+              <p>Versão do cliente Supabase: 2.49.4</p>
+            </AlertDescription>
+          </Alert>
         </CardContent>
         <CardFooter className="flex flex-col">
           <p className="text-sm text-muted-foreground text-center">
