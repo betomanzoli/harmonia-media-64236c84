@@ -13,4 +13,15 @@ const AdminAuthContext = React.createContext<AdminAuthContextType>({
   testConnection: async () => {},
 });
 
+// Export the useAdminAuth hook directly from the context file
+export const useAdminAuth = () => {
+  const context = React.useContext(AdminAuthContext);
+  
+  if (context === undefined) {
+    throw new Error('useAdminAuth deve ser usado dentro de um AdminAuthProvider');
+  }
+  
+  return context;
+};
+
 export default AdminAuthContext;
