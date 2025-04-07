@@ -87,7 +87,7 @@ const SecuritySettingsCard = () => {
             <div className="grid grid-cols-2 gap-2">
               <div className="bg-card border rounded p-3">
                 <h3 className="text-sm font-medium mb-1">Políticas RLS</h3>
-                <Badge variant={securityStatus.rlsPolicies?.length > 0 ? "success" : "destructive"}>
+                <Badge variant={securityStatus.rlsPolicies?.length > 0 ? "default" : "destructive"}>
                   {securityStatus.rlsPolicies?.length > 0 ? 
                     `${securityStatus.rlsPolicies.length} políticas configuradas` : 
                     "Sem políticas"}
@@ -96,7 +96,7 @@ const SecuritySettingsCard = () => {
               
               <div className="bg-card border rounded p-3">
                 <h3 className="text-sm font-medium mb-1">MFA</h3>
-                <Badge variant={securityStatus.mfaEnabled ? "success" : "destructive"}>
+                <Badge variant={securityStatus.mfaEnabled ? "default" : "destructive"}>
                   {securityStatus.mfaEnabled ? "Ativado" : "Desativado"}
                 </Badge>
               </div>
@@ -105,8 +105,8 @@ const SecuritySettingsCard = () => {
                 <h3 className="text-sm font-medium mb-1">Segurança de Senha</h3>
                 <Badge 
                   variant={
-                    securityStatus.passwordSecurityLevel === 'high' ? "success" : 
-                    securityStatus.passwordSecurityLevel === 'medium' ? "warning" : 
+                    securityStatus.passwordSecurityLevel === 'high' ? "default" : 
+                    securityStatus.passwordSecurityLevel === 'medium' ? "secondary" : 
                     "destructive"
                   }
                 >
@@ -119,7 +119,7 @@ const SecuritySettingsCard = () => {
               <div className="bg-card border rounded p-3">
                 <h3 className="text-sm font-medium mb-1">Status Geral</h3>
                 <Badge 
-                  variant={securityStatus.success ? "success" : "destructive"}
+                  variant={securityStatus.success ? "default" : "destructive"}
                 >
                   {securityStatus.success ? "Configurado" : "Problemas Detectados"}
                 </Badge>
