@@ -5,15 +5,27 @@ import { supabase, testSupabaseConnection } from '@/lib/supabase';
 interface UseAuthenticationProps {
   testConnection: () => Promise<void>;
   checkSecurityStatus: () => Promise<void>;
+  offlineMode?: boolean;
 }
 
 export function useAuthentication({ 
   testConnection, 
-  checkSecurityStatus 
+  checkSecurityStatus,
+  offlineMode = false
 }: UseAuthenticationProps) {
   const { toast } = useToast();
 
   const login = async (email: string, password: string) => {
+    if (offlineMode) {
+      // In offline mode, always succeed with demo user
+      console.log("Login offline simulado com:", email);
+      toast({
+        title: 'Login simulado',
+        description: 'Você entrou no modo de demonstração.',
+      });
+      return { success: true };
+    }
+    
     try {
       console.log("Tentando fazer login com email:", email);
       
@@ -63,6 +75,16 @@ export function useAuthentication({
   };
   
   const logout = async () => {
+    if (offlineMode) {
+      // In offline mode, just clear the session storage
+      sessionStorage.removeItem('offline-admin-mode');
+      toast({
+        title: 'Logout',
+        description: 'Você saiu do modo de demonstração.',
+      });
+      return;
+    }
+    
     try {
       await supabase.auth.signOut();
       toast({

@@ -9,6 +9,17 @@ export const testSupabaseConnection = async () => {
   try {
     console.log('Testando conexão com Supabase...');
     
+    // Check if offline mode is active
+    if (sessionStorage.getItem('offline-admin-mode') === 'true') {
+      return {
+        connected: true,
+        tested: true,
+        networkOnline: true,
+        url: getSupabaseUrl(),
+        endpointStatus: 'offline_mode'
+      };
+    }
+    
     // Definir um timeout para a requisição
     const controller = new AbortController();
     const timeoutId = setTimeout(() => controller.abort(), 10000); // 10 segundos

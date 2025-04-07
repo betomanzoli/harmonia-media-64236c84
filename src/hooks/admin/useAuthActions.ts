@@ -8,29 +8,34 @@ interface UseAuthActionsProps {
   setIsLoading: (loading: boolean) => void;
   setConnectionStatus: (status: ConnectionStatus) => void;
   setSecurityStatus: (status: SecurityStatus) => void;
+  offlineMode?: boolean;
 }
 
 export function useAuthActions({
   setIsLoading,
   setConnectionStatus,
-  setSecurityStatus
+  setSecurityStatus,
+  offlineMode = false
 }: UseAuthActionsProps) {
   // Use the security check hook
   const { checkSecurityStatus } = useSecurityCheck({ 
-    setSecurityStatus 
+    setSecurityStatus,
+    offlineMode 
   });
   
   // Use the connection test hook
   const { testConnection } = useConnectionTest({
     setIsLoading,
     setConnectionStatus,
-    checkSecurityStatus
+    checkSecurityStatus,
+    offlineMode
   });
   
   // Use the authentication hook
   const { login, logout } = useAuthentication({
     testConnection,
-    checkSecurityStatus
+    checkSecurityStatus,
+    offlineMode
   });
 
   return {

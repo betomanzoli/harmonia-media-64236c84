@@ -1,11 +1,37 @@
 
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import AdminAuthContext from '@/context/AdminAuthContext';
 import { AdminAuthProviderProps } from '@/types/admin-auth';
 import { useAuthState } from '@/hooks/admin/useAuthState';
 import { useAuthActions } from '@/hooks/admin/useAuthActions';
+import { useToast } from '@/hooks/use-toast';
 
 export const AdminAuthProvider: React.FC<AdminAuthProviderProps> = ({ children }) => {
+  const [offlineMode, setOfflineMode] = useState<boolean>(false);
+  const { toast } = useToast();
+
+  useEffect(() => {
+    // Check if offline mode is active from session storage
+    const isOffline = sessionStorage.getItem('offline-admin-mode') === 'true';
+    setOfflineMode(isOffline);
+    
+    if (isOffline) {
+      console.log('Aplicação funcionando em modo offline/demo');
+    }
+    
+    // Listen for storage changes
+    const handleStorageChange = (event: StorageEvent) => {
+      if (event.key === 'offline-admin-mode') {
+        setOfflineMode(event.newValue === 'true');
+      }
+    };
+    
+    window.addEventListener('storage', handleStorageChange);
+    return () => {
+      window.removeEventListener('storage', handleStorageChange);
+    };
+  }, []);
+  
   const {
     user,
     isLoading,
@@ -15,7 +41,7 @@ export const AdminAuthProvider: React.FC<AdminAuthProviderProps> = ({ children }
     securityStatus,
     setSecurityStatus,
     isAuthenticated
-  } = useAuthState();
+  } = useAuthState(offlineMode);
   
   const { 
     login, 
@@ -25,7 +51,8 @@ export const AdminAuthProvider: React.FC<AdminAuthProviderProps> = ({ children }
   } = useAuthActions({
     setIsLoading,
     setConnectionStatus,
-    setSecurityStatus
+    setSecurityStatus,
+    offlineMode
   });
   
   return (

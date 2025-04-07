@@ -7,17 +7,31 @@ interface UseConnectionTestProps {
   setIsLoading: (loading: boolean) => void;
   setConnectionStatus: (status: ConnectionStatus) => void;
   checkSecurityStatus: () => Promise<void>;
+  offlineMode?: boolean;
 }
 
 export function useConnectionTest({
   setIsLoading,
   setConnectionStatus,
-  checkSecurityStatus
+  checkSecurityStatus,
+  offlineMode = false
 }: UseConnectionTestProps) {
   const { toast } = useToast();
 
   // Function to test connection to Supabase
   const testConnection = async (): Promise<void> => {
+    if (offlineMode) {
+      // In offline mode, simulate a successful connection
+      setConnectionStatus({
+        tested: true,
+        connected: true,
+        details: { offlineMode: true },
+        networkOnline: true,
+        endpointStatus: 'offline_mode'
+      });
+      return;
+    }
+    
     try {
       console.log('Testando conexão com o Supabase...');
       
@@ -26,7 +40,8 @@ export function useConnectionTest({
         setConnectionStatus({
           tested: true,
           connected: false,
-          error: 'Sem conexão com a internet. Verifique sua rede antes de continuar.'
+          error: 'Sem conexão com a internet. Verifique sua rede antes de continuar.',
+          endpointStatus: 'offline'
         });
         return;
       }
@@ -38,7 +53,8 @@ export function useConnectionTest({
         tested: true,
         connected: result.connected,
         error: result.error,
-        details: result
+        details: result,
+        endpointStatus: result.endpointStatus || 'unknown'
       });
       
       if (!result.connected) {
@@ -60,7 +76,8 @@ export function useConnectionTest({
         connected: false,
         error: error instanceof Error 
           ? `Erro ao testar conexão: ${error.message}` 
-          : 'Erro desconhecido ao testar conexão'
+          : 'Erro desconhecido ao testar conexão',
+        endpointStatus: 'error'
       });
       
       toast({

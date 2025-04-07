@@ -5,13 +5,27 @@ import { SecurityStatus } from '@/types/admin-auth';
 
 interface UseSecurityCheckProps {
   setSecurityStatus: (status: SecurityStatus) => void;
+  offlineMode?: boolean;
 }
 
-export function useSecurityCheck({ setSecurityStatus }: UseSecurityCheckProps) {
+export function useSecurityCheck({ 
+  setSecurityStatus, 
+  offlineMode = false 
+}: UseSecurityCheckProps) {
   const { toast } = useToast();
 
   // Function to check security status
   const checkSecurityStatus = async () => {
+    if (offlineMode) {
+      // In offline mode, just set a mock security status
+      setSecurityStatus({
+        checked: true,
+        hasIssues: false,
+        details: { offlineMode: true }
+      });
+      return;
+    }
+    
     try {
       const result = await securityService.validateSecurity();
       

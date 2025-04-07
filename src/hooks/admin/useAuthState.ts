@@ -4,7 +4,7 @@ import { User } from '@supabase/supabase-js';
 import { supabase } from '@/lib/supabase';
 import { ConnectionStatus, SecurityStatus } from '@/types/admin-auth';
 
-export function useAuthState() {
+export function useAuthState(offlineMode: boolean = false) {
   const [user, setUser] = useState<User | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [connectionStatus, setConnectionStatus] = useState<ConnectionStatus>({
@@ -18,6 +18,26 @@ export function useAuthState() {
 
   // Effect to verify authentication session on mount
   useEffect(() => {
+    // If in offline mode, set a mock user and skip real auth
+    if (offlineMode) {
+      console.log('Usando modo offline - simulando autenticação');
+      setUser({
+        id: 'offline-user-id',
+        email: 'demo@example.com',
+        app_metadata: { provider: 'offline' },
+        user_metadata: { name: 'Demo User' },
+        aud: 'authenticated',
+        created_at: new Date().toISOString()
+      } as User);
+      setIsLoading(false);
+      setConnectionStatus({
+        tested: true,
+        connected: true, // Pretend we're connected in offline mode
+        details: { offlineMode: true }
+      });
+      return;
+    }
+    
     // Check for active session
     const checkSession = async () => {
       setIsLoading(true);
@@ -67,7 +87,7 @@ export function useAuthState() {
     return () => {
       authListener?.subscription.unsubscribe();
     };
-  }, []);
+  }, [offlineMode]);
 
   return {
     user,
@@ -77,6 +97,6 @@ export function useAuthState() {
     setConnectionStatus,
     securityStatus,
     setSecurityStatus,
-    isAuthenticated: !!user
+    isAuthenticated: offlineMode ? true : !!user
   };
 }

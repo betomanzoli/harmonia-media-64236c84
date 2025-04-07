@@ -1,7 +1,7 @@
 
 import React, { useEffect, useState } from 'react';
 import { Navigate } from 'react-router-dom';
-import { useAdminAuth } from '@/context/AdminAuthContext';
+import { useAdminAuth } from '@/hooks/admin/useAdminAuth';
 import { Loader2 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import applyAllSecurityConfigurations from '@/lib/supabase/applySecurityConfig';
