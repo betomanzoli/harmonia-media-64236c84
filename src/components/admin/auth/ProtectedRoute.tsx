@@ -4,7 +4,6 @@ import { Navigate } from 'react-router-dom';
 import { useAdminAuth } from '@/hooks/admin/useAdminAuth';
 import { Loader2 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
-import applyAllSecurityConfigurations from '@/lib/supabase/applySecurityConfig';
 
 interface ProtectedRouteProps {
   children: React.ReactNode;
@@ -48,58 +47,13 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children }) => {
     return () => window.removeEventListener('storage', handleStorageChange);
   }, [toast, offlineInitialized]);
 
-  // Effect to check and apply security configurations once when authenticated
-  useEffect(() => {
-    const checkAndApplySecurity = async () => {
-      if (isAuthenticated && !securityChecked && !isOfflineMode) {
-        setSecurityChecked(true);
-        
-        try {
-          // Check and apply security settings
-          console.log("Verificando e aplicando configurações de segurança...");
-          
-          // Try to apply RLS policies and other configurations
-          const result = await applyAllSecurityConfigurations();
-          
-          if (result.success) {
-            console.log("Configurações de segurança aplicadas com sucesso");
-            
-            // Notify user only if some changes were made
-            if (!result.rlsConfigured || !result.passwordConfigured || !result.mfaConfigured) {
-              toast({
-                title: "Segurança atualizada",
-                description: "Configurações de segurança do Supabase foram atualizadas.",
-              });
-            }
-          } else {
-            console.warn("Problemas ao aplicar configurações:", result.error);
-            toast({
-              title: "Aviso de segurança",
-              description: "Algumas configurações de segurança não puderam ser aplicadas automaticamente.",
-              variant: "destructive",
-            });
-          }
-        } catch (error) {
-          console.error("Erro ao verificar/aplicar configurações de segurança:", error);
-          toast({
-            title: "Erro de segurança",
-            description: "Houve um problema ao configurar as políticas de segurança.",
-            variant: "destructive",
-          });
-        }
-      }
-    };
-    
-    checkAndApplySecurity();
-  }, [isAuthenticated, securityChecked, isOfflineMode, toast]);
-
   // Add a special handler for when connection status changes
   useEffect(() => {
     if (connectionStatus && !connectionStatus.connected && !isOfflineMode) {
-      console.log("Conexão com Supabase perdida na área protegida");
+      console.log("Conexão perdida na área protegida");
       toast({
         title: "Problema de conexão",
-        description: "A conexão com o Supabase foi perdida. Algumas funcionalidades podem não estar disponíveis.",
+        description: "A conexão foi perdida. Algumas funcionalidades podem não estar disponíveis.",
         variant: "destructive",
       });
     }

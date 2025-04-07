@@ -1,6 +1,6 @@
 
 import { useToast } from '@/hooks/use-toast';
-import { supabase, testSupabaseConnection } from '@/lib/supabase';
+import { localAuthService } from '@/lib/auth/localAuthService';
 
 interface UseAuthenticationProps {
   testConnection: () => Promise<void>;
@@ -16,52 +16,31 @@ export function useAuthentication({
   const { toast } = useToast();
 
   const login = async (email: string, password: string) => {
-    if (offlineMode) {
-      // In offline mode, always succeed with demo user
-      console.log("Login offline simulado com:", email);
-      toast({
-        title: 'Login simulado',
-        description: 'Você entrou no modo de demonstração.',
-      });
-      return { success: true };
-    }
-    
     try {
       console.log("Tentando fazer login com email:", email);
       
       // Check connection first
       await testConnection();
       
-      const connectionStatus = await testSupabaseConnection();
-      if (!connectionStatus.connected) {
-        return { 
-          success: false, 
-          error: `Problema de conexão com o Supabase: ${connectionStatus.error}` 
-        };
-      }
+      console.log('Executando login local...');
+      const { success, error, user } = await localAuthService.login(email, password);
       
-      console.log('Executando login com Supabase...');
-      const { data, error } = await supabase.auth.signInWithPassword({
-        email,
-        password,
-      });
-      
-      if (error) {
+      if (!success || !user) {
         console.error("Erro de autenticação:", error);
         return { 
           success: false, 
-          error: error.message || 'Falha na autenticação' 
+          error: error || 'Falha na autenticação' 
         };
       }
       
-      console.log("Login bem-sucedido:", data.user);
+      console.log("Login bem-sucedido:", user);
       
       // Check security settings after login
       checkSecurityStatus();
       
       toast({
         title: 'Login bem-sucedido',
-        description: `Bem-vindo, ${data.user?.email}!`,
+        description: `Bem-vindo, ${user.email}!`,
       });
       
       return { success: true };
@@ -75,18 +54,8 @@ export function useAuthentication({
   };
   
   const logout = async () => {
-    if (offlineMode) {
-      // In offline mode, just clear the session storage
-      sessionStorage.removeItem('offline-admin-mode');
-      toast({
-        title: 'Logout',
-        description: 'Você saiu do modo de demonstração.',
-      });
-      return;
-    }
-    
     try {
-      await supabase.auth.signOut();
+      await localAuthService.logout();
       toast({
         title: 'Logout',
         description: 'Você foi desconectado com sucesso.',

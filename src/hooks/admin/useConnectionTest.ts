@@ -1,6 +1,5 @@
 
 import { useToast } from '@/hooks/use-toast';
-import { testSupabaseConnection } from '@/lib/supabase';
 import { ConnectionStatus } from '@/types/admin-auth';
 
 interface UseConnectionTestProps {
@@ -18,7 +17,7 @@ export function useConnectionTest({
 }: UseConnectionTestProps) {
   const { toast } = useToast();
 
-  // Function to test connection to Supabase
+  // Function to test connection - now simplified without Supabase
   const testConnection = async (): Promise<void> => {
     if (offlineMode) {
       // In offline mode, simulate a successful connection
@@ -33,7 +32,7 @@ export function useConnectionTest({
     }
     
     try {
-      console.log('Testando conexão com o Supabase...');
+      console.log('Testando conexão à internet...');
       
       // Verificar conectividade básica da rede
       if (typeof navigator !== 'undefined' && !navigator.onLine) {
@@ -46,29 +45,18 @@ export function useConnectionTest({
         return;
       }
       
-      const result = await testSupabaseConnection();
-      console.log('Resultado do teste de conexão:', result);
-      
+      // In our local auth implementation, we're always connected if we have internet
       setConnectionStatus({
         tested: true,
-        connected: result.connected,
-        error: result.error,
-        details: result,
-        endpointStatus: result.endpointStatus || 'unknown'
+        connected: true,
+        details: { localAuth: true },
+        networkOnline: true,
+        endpointStatus: 'available'
       });
       
-      if (!result.connected) {
-        console.error('Erro de conexão detalhado:', result);
-        toast({
-          title: 'Problema de conexão',
-          description: `Não foi possível conectar ao Supabase: ${result.error}`,
-          variant: 'destructive',
-        });
-      } else {
-        console.log('Conexão com Supabase estabelecida com sucesso');
-        // If connected, check security status
-        checkSecurityStatus();
-      }
+      console.log('Conexão local estabelecida com sucesso');
+      // If connected, check security status
+      checkSecurityStatus();
     } catch (error) {
       console.error('Erro ao testar conexão:', error);
       setConnectionStatus({
@@ -82,7 +70,7 @@ export function useConnectionTest({
       
       toast({
         title: 'Erro',
-        description: 'Ocorreu um erro ao verificar a conexão com o Supabase.',
+        description: 'Ocorreu um erro ao verificar a conexão.',
         variant: 'destructive',
       });
     }

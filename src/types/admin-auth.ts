@@ -1,6 +1,4 @@
 
-import { User } from '@supabase/supabase-js';
-
 export interface AdminAuthProviderProps {
   children: React.ReactNode;
 }
@@ -20,8 +18,16 @@ export interface SecurityStatus {
   details?: any;
 }
 
+export interface AdminUser {
+  id: string;
+  email: string;
+  name?: string;
+  role: string;
+  createdAt: string;
+}
+
 export interface AdminAuthContextType {
-  user: User | null;
+  user: AdminUser | null;
   isAuthenticated: boolean;
   isLoading: boolean;
   connectionStatus: ConnectionStatus;

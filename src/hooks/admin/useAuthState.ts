@@ -1,11 +1,10 @@
 
 import { useState, useEffect } from 'react';
-import { User } from '@supabase/supabase-js';
-import { supabase } from '@/lib/supabase';
-import { ConnectionStatus, SecurityStatus } from '@/types/admin-auth';
+import { AdminUser, ConnectionStatus, SecurityStatus } from '@/types/admin-auth';
+import { localAuthService } from '@/lib/auth/localAuthService';
 
 export function useAuthState(offlineMode: boolean = false) {
-  const [user, setUser] = useState<User | null>(null);
+  const [user, setUser] = useState<AdminUser | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [connectionStatus, setConnectionStatus] = useState<ConnectionStatus>({
     tested: false,
@@ -24,11 +23,10 @@ export function useAuthState(offlineMode: boolean = false) {
       setUser({
         id: 'offline-user-id',
         email: 'demo@example.com',
-        app_metadata: { provider: 'offline' },
-        user_metadata: { name: 'Demo User' },
-        aud: 'authenticated',
-        created_at: new Date().toISOString()
-      } as User);
+        name: 'Demo User',
+        role: 'admin',
+        createdAt: new Date().toISOString()
+      });
       setIsLoading(false);
       setConnectionStatus({
         tested: true,
@@ -44,16 +42,12 @@ export function useAuthState(offlineMode: boolean = false) {
       
       try {
         console.log('Verificando sessão de autenticação...');
-        const { data, error } = await supabase.auth.getSession();
+        const currentUser = localAuthService.getUser();
+        const isAuthenticated = localAuthService.isAuthenticated();
         
-        if (error) {
-          console.error("Erro ao verificar sessão:", error);
-          throw error;
-        }
-        
-        if (data?.session) {
-          console.log("Sessão encontrada:", data.session.user.email);
-          setUser(data.session.user);
+        if (currentUser && isAuthenticated) {
+          console.log("Sessão encontrada:", currentUser.email);
+          setUser(currentUser);
         } else {
           console.log("Nenhuma sessão encontrada");
           setUser(null);
@@ -69,23 +63,18 @@ export function useAuthState(offlineMode: boolean = false) {
     // Execute initial verification
     checkSession();
     
-    // Set up listener for auth state changes
-    const { data: authListener } = supabase.auth.onAuthStateChange(
-      async (event, session) => {
-        console.log("Evento de autenticação:", event);
-        if (session?.user) {
-          console.log("Usuário autenticado:", session.user.email);
-          setUser(session.user);
-        } else {
-          console.log("Usuário desconectado");
-          setUser(null);
-        }
+    // Set up event listener for storage changes (for multi-tab support)
+    const handleStorageChange = (event: StorageEvent) => {
+      if (event.key === 'harmonia-admin-auth-user' || event.key === 'harmonia-admin-auth-token') {
+        checkSession();
       }
-    );
+    };
+    
+    window.addEventListener('storage', handleStorageChange);
     
     // Clean up listener when unmounting
     return () => {
-      authListener?.subscription.unsubscribe();
+      window.removeEventListener('storage', handleStorageChange);
     };
   }, [offlineMode]);
 
