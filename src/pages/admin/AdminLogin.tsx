@@ -1,10 +1,9 @@
-
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { useAdminAuth } from '@/hooks/admin/useAdminAuth';
 import { useToast } from '@/hooks/use-toast';
-import { testSupabaseConnection, testAuthSettings, supabase } from '@/lib/supabase';
+import { testSupabaseConnection, testAuthSettings, supabase, getSupabaseUrl } from '@/lib/supabase';
 import LoginForm from '@/components/admin/auth/login/LoginForm';
 import PasswordResetDialog from '@/components/admin/auth/login/PasswordResetDialog';
 import ConnectionAlert from '@/components/admin/auth/login/ConnectionAlert';
@@ -31,14 +30,12 @@ const AdminLogin: React.FC = () => {
   });
   const { toast } = useToast();
 
-  // Verificar se já está autenticado
   useEffect(() => {
     if (isAuthenticated) {
       navigate('/admin-j28s7d1k/dashboard');
     }
   }, [isAuthenticated, navigate]);
 
-  // Testar conexão ao inicializar
   useEffect(() => {
     const checkConnection = async () => {
       console.log('AdminLogin: Verificando conexão...');
@@ -46,7 +43,6 @@ const AdminLogin: React.FC = () => {
         await testConnection();
       }
       
-      // Carregar informações de debug
       loadDebugInfo();
     };
     
@@ -54,10 +50,8 @@ const AdminLogin: React.FC = () => {
   }, [connectionStatus.tested, testConnection]);
 
   const loadDebugInfo = async () => {
-    // Carregar URL do Supabase - Usando a URL em string diretamente
-    const supabaseUrlInfo = supabase.supabaseUrl || 'URL não disponível';
+    const supabaseUrlInfo = getSupabaseUrl() || 'URL não disponível';
     
-    // Verificar storage local
     let storageInfo = 'Não disponível';
     try {
       const storageTested = localStorage.getItem('harmonia-admin-auth-tested');
@@ -81,7 +75,6 @@ const AdminLogin: React.FC = () => {
     
     console.log("Tentando fazer login com:", { email: values.email });
     
-    // Registrar tentativa no localStorage para diagnóstico
     try {
       localStorage.setItem('harmonia-admin-auth-tested', 'true');
     } catch (e) {
@@ -127,7 +120,6 @@ const AdminLogin: React.FC = () => {
     setIsLoading(true);
     
     try {
-      // Executar testes de diagnóstico
       const connectionTest = await testSupabaseConnection();
       const authTest = await testAuthSettings();
       
