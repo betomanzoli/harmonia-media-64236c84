@@ -7,32 +7,26 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { Lock, Shield } from 'lucide-react';
+import { Lock, Shield, Mail } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 
 const AdminLogin: React.FC = () => {
+  const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState(false);
-  const { login } = useAdminAuth();
+  const { login, isLoading } = useAdminAuth();
   const navigate = useNavigate();
   const { toast } = useToast();
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    setError(false);
     
-    if (login(password)) {
-      toast({
-        title: "Login bem-sucedido",
-        description: "Você está autenticado como administrador.",
-      });
+    const success = await login(email, password);
+    if (success) {
       navigate('/admin-j28s7d1k/dashboard');
     } else {
       setError(true);
-      toast({
-        title: "Erro de autenticação",
-        description: "Senha incorreta. Tente novamente.",
-        variant: "destructive",
-      });
     }
   };
 
@@ -45,7 +39,7 @@ const AdminLogin: React.FC = () => {
           </div>
           <CardTitle className="text-2xl text-center">Área Administrativa</CardTitle>
           <CardDescription className="text-center">
-            Entre com sua senha para acessar a área administrativa da harmonIA
+            Entre com suas credenciais para acessar a área administrativa da harmonIA
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -53,18 +47,33 @@ const AdminLogin: React.FC = () => {
             {error && (
               <Alert className="mb-4 border-red-200 bg-red-50 text-red-800">
                 <AlertDescription>
-                  Senha incorreta. Por favor, tente novamente.
+                  Credenciais inválidas. Por favor, tente novamente.
                 </AlertDescription>
               </Alert>
             )}
             <div className="space-y-4">
+              <div className="space-y-2">
+                <Label htmlFor="email">E-mail</Label>
+                <div className="relative">
+                  <Input
+                    id="email"
+                    type="email"
+                    placeholder="Digite seu e-mail de administrador"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    className="pl-10"
+                    required
+                  />
+                  <Mail className="absolute left-3 top-2.5 h-5 w-5 text-gray-400" />
+                </div>
+              </div>
               <div className="space-y-2">
                 <Label htmlFor="password">Senha</Label>
                 <div className="relative">
                   <Input
                     id="password"
                     type="password"
-                    placeholder="Digite a senha de administrador"
+                    placeholder="Digite sua senha de administrador"
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
                     className="pl-10"
@@ -73,8 +82,12 @@ const AdminLogin: React.FC = () => {
                   <Lock className="absolute left-3 top-2.5 h-5 w-5 text-gray-400" />
                 </div>
               </div>
-              <Button type="submit" className="w-full bg-harmonia-green hover:bg-harmonia-green/90">
-                Entrar
+              <Button 
+                type="submit" 
+                className="w-full bg-harmonia-green hover:bg-harmonia-green/90"
+                disabled={isLoading}
+              >
+                {isLoading ? 'Autenticando...' : 'Entrar'}
               </Button>
             </div>
           </form>
