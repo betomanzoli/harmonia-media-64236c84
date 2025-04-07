@@ -4,8 +4,11 @@ import { Button } from "@/components/ui/button";
 import { Form } from "@/components/ui/form";
 import { useBriefingForm } from './briefing/useBriefingForm';
 import PersonalInfoSection from './briefing/PersonalInfoSection';
-import ProjectInfoSection from './briefing/ProjectInfoSection';
 import ReferencesSection from './briefing/ReferencesSection';
+import EssentialPackageFields from './briefing/EssentialPackageFields';
+import ProfessionalPackageFields from './briefing/ProfessionalPackageFields';
+import PremiumPackageFields from './briefing/PremiumPackageFields';
+import { Music } from 'lucide-react';
 
 const BriefingForm: React.FC = () => {
   const { 
@@ -13,20 +16,54 @@ const BriefingForm: React.FC = () => {
     isSubmitting, 
     referenceFiles, 
     setReferenceFiles, 
-    onSubmit 
+    onSubmit,
+    selectedPackage
   } = useBriefingForm();
+
+  // Render different package titles based on selected package
+  const renderPackageTitle = () => {
+    switch (selectedPackage) {
+      case 'essencial':
+        return "Briefing - Pacote Essencial";
+      case 'profissional':
+        return "Briefing - Pacote Profissional";
+      case 'premium':
+        return "Briefing - Pacote Premium";
+      default:
+        return "Formulário de Briefing";
+    }
+  };
+
+  // Render fields based on selected package
+  const renderPackageFields = () => {
+    switch (selectedPackage) {
+      case 'essencial':
+        return <EssentialPackageFields />;
+      case 'profissional':
+        return <ProfessionalPackageFields />;
+      case 'premium':
+        return <PremiumPackageFields />;
+      default:
+        return <EssentialPackageFields />;
+    }
+  };
 
   return (
     <div className="bg-card border border-border rounded-lg p-8">
-      <h3 className="text-xl font-semibold mb-6">Formulário de Briefing</h3>
+      <div className="flex items-center gap-3 mb-6">
+        <div className="bg-harmonia-green/20 p-2 rounded-full">
+          <Music className="w-5 h-5 text-harmonia-green" />
+        </div>
+        <h3 className="text-xl font-semibold">{renderPackageTitle()}</h3>
+      </div>
       
       <Form {...form}>
-        <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+        <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
           {/* Dados pessoais */}
           <PersonalInfoSection />
           
-          {/* Informações do projeto */}
-          <ProjectInfoSection />
+          {/* Package-specific fields */}
+          {renderPackageFields()}
           
           {/* Referências */}
           <ReferencesSection 

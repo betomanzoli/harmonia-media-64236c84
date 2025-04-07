@@ -5,21 +5,21 @@
 
 const handleStartBriefingIntent = (req, res) => {
   const response = {
-    fulfillmentText: "Ótimo! Vamos começar seu briefing para criar sua música personalizada.",
+    fulfillmentText: "Para criar sua música personalizada, primeiro você precisa escolher um de nossos pacotes.",
     fulfillmentMessages: [
       {
         text: {
-          text: ["Ótimo! Vamos começar a criar sua música personalizada. Você pode escolher como deseja prosseguir:"]
+          text: ["Para criar sua música personalizada, primeiro você precisa escolher um de nossos pacotes. Após a confirmação do pagamento, você terá acesso ao formulário de briefing."]
         }
       },
       {
         card: {
-          title: "Formulário de Briefing",
-          subtitle: "Método completo e detalhado",
+          title: "Pacotes de Música Personalizada",
+          subtitle: "Escolha o pacote ideal para sua necessidade",
           buttons: [
             {
-              text: "Iniciar Briefing",
-              postback: "https://harmonia.media/briefing"
+              text: "Ver Pacotes",
+              postback: "https://harmonia.media/pacotes"
             }
           ]
         }
@@ -28,8 +28,8 @@ const handleStartBriefingIntent = (req, res) => {
         quickReplies: {
           title: "Como prefere continuar?",
           quickReplies: [
-            "Briefing guiado por chat",
-            "Ver exemplos primeiro",
+            "Detalhes dos pacotes",
+            "Ver exemplos",
             "Falar com consultor"
           ]
         }

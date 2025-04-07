@@ -1,35 +1,90 @@
-
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useToast } from "@/hooks/use-toast";
-import { briefingFormSchema, BriefingFormValues } from './formSchema';
+import { 
+  briefingFormSchema, 
+  BriefingFormValues,
+  essentialPackageSchema,
+  professionalPackageSchema,
+  premiumPackageSchema 
+} from './formSchema';
+import { useLocation, useNavigate } from 'react-router-dom';
 
 export const useBriefingForm = () => {
   const { toast } = useToast();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [referenceFiles, setReferenceFiles] = useState<File[]>([]);
+  const location = useLocation();
+  const navigate = useNavigate();
+
+  const getInitialPackage = (): 'essencial' | 'profissional' | 'premium' => {
+    const paymentData = localStorage.getItem('paymentData');
+    if (paymentData) {
+      const { packageId } = JSON.parse(paymentData);
+      if (['essencial', 'profissional', 'premium'].includes(packageId)) {
+        return packageId as 'essencial' | 'profissional' | 'premium';
+      }
+    }
+    
+    const params = new URLSearchParams(location.search);
+    const packageParam = params.get('package');
+    if (packageParam && ['essencial', 'profissional', 'premium'].includes(packageParam)) {
+      return packageParam as 'essencial' | 'profissional' | 'premium';
+    }
+    
+    return 'essencial';
+  };
+
+  const selectedPackage = getInitialPackage();
+
+  const getSchemaResolver = () => {
+    switch (selectedPackage) {
+      case 'essencial':
+        return zodResolver(essentialPackageSchema);
+      case 'profissional':
+        return zodResolver(professionalPackageSchema);
+      case 'premium':
+        return zodResolver(premiumPackageSchema);
+      default:
+        return zodResolver(essentialPackageSchema);
+    }
+  };
 
   const form = useForm<BriefingFormValues>({
-    resolver: zodResolver(briefingFormSchema),
+    resolver: getSchemaResolver(),
     defaultValues: {
+      selectedPackage,
       name: "",
       email: "",
       phone: "",
       contactPreference: "whatsapp",
-      occasion: "",
-      style: "",
-      story: "",
-      selectedPackage: "",
       referenceDescription: "",
     },
   });
+
+  useEffect(() => {
+    form.setValue('selectedPackage', selectedPackage);
+  }, [selectedPackage, form]);
+
+  useEffect(() => {
+    const userData = localStorage.getItem('qualificationData');
+    if (userData) {
+      try {
+        const data = JSON.parse(userData);
+        if (data.name) form.setValue('name', data.name);
+        if (data.email) form.setValue('email', data.email);
+        if (data.phone) form.setValue('phone', data.phone);
+      } catch (e) {
+        console.error('Error parsing user data from localStorage:', e);
+      }
+    }
+  }, [form]);
 
   const onSubmit = async (data: BriefingFormValues) => {
     setIsSubmitting(true);
     
     try {
-      // Prepare form data to include files
       const formDataToSend = {
         ...data,
         referenceFilesCount: referenceFiles.length,
@@ -38,7 +93,6 @@ export const useBriefingForm = () => {
       console.log("Form data to be sent:", formDataToSend);
       console.log("Reference files:", referenceFiles);
       
-      // Simulate successful submission
       setTimeout(() => {
         toast({
           title: "Formulário enviado com sucesso!",
@@ -49,17 +103,17 @@ export const useBriefingForm = () => {
         setReferenceFiles([]);
         setIsSubmitting(false);
         
-        // Simulate Zapier/Make.com automation flow
         console.log("Zapier automation: Creating Trello card for new project");
         console.log("Zapier automation: Initiating Suno AI music generation task");
         console.log("Zapier automation: Scheduling Moises mastering task");
         
-        // If contactPreference is whatsapp, open WhatsApp
         if (data.contactPreference === "whatsapp" && data.phone) {
           const phoneNumber = data.phone.replace(/\D/g, '');
-          const message = `Olá! Acabo de enviar um briefing para a harmonIA. Meu nome é ${data.name} e gostaria de criar uma música para ${data.occasion}. Aguardo contato!`;
+          const message = `Olá! Acabo de enviar um briefing para a harmonIA. Meu nome é ${data.name} e estou criando uma música personalizada. Aguardo contato!`;
           window.open(`https://wa.me/5511999999999?text=${encodeURIComponent(message)}`, '_blank');
         }
+        
+        navigate('/agradecimento');
       }, 1500);
     } catch (error) {
       console.error("Error submitting form:", error);
@@ -78,5 +132,6 @@ export const useBriefingForm = () => {
     referenceFiles,
     setReferenceFiles,
     onSubmit,
+    selectedPackage
   };
 };
