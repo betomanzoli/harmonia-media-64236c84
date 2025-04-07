@@ -1,6 +1,8 @@
 
 // Re-export the useAdminAuth hook from the context file
-export { useAdminAuth } from '@/context/AdminAuthContext';
+import { useAdminAuth } from '@/context/AdminAuthContext';
+
+export { useAdminAuth };
 
 // For backward compatibility
 export default useAdminAuth;

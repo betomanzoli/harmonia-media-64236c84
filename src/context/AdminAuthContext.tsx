@@ -18,7 +18,7 @@ export const useAdminAuth = () => {
   const context = React.useContext(AdminAuthContext);
   
   if (context === undefined) {
-    throw new Error('useAdminAuth deve ser usado dentro de um AdminAuthProvider');
+    throw new Error('useAdminAuth must be used within an AdminAuthProvider');
   }
   
   return context;
