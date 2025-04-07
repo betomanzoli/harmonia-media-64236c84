@@ -17,6 +17,8 @@ import PrivacyPolicy from "./pages/PrivacyPolicy";
 import Terms from "./pages/Terms";
 import OrderTracking from "./pages/OrderTracking";
 import MusicPreviews from "./pages/MusicPreviews";
+import Qualification from "./pages/Qualification";
+import ThankYou from "./pages/ThankYou";
 import { siteConfig } from "./config/site";
 
 const queryClient = new QueryClient();
@@ -40,6 +42,8 @@ const App = () => (
           <Route path={siteConfig.urls.admin.audioDatabase} element={<AudioDatabase />} />
           <Route path={siteConfig.urls.admin.portfolio} element={<AdminPortfolio />} />
           <Route path="/previews/:previewId" element={<MusicPreviews />} />
+          <Route path="/qualificacao" element={<Qualification />} />
+          <Route path="/agradecimento" element={<ThankYou />} />
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />
         </Routes>
