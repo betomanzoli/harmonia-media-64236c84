@@ -22,17 +22,17 @@ const Calculator: React.FC = () => {
   
   // Valores dos extras
   const EXTRA_PRICES = {
-    revision: 99,
+    revision: 79,
     bnRegistration: 99,
-    ubcRegistration: 199,
+    ubcRegistration: 249,
     masteringPremium: 149,
     stems: 129,
-    expressDelivery: 199,
+    expressDelivery: 149,
     musicXml: 149,
     storage: 49,
     humanCompositionLyrics: 499,
     humanCompositionMelody: 1499,
-    humanCompositionComplete: 0 // Valor a consultar
+    humanCompositionComplete: 0
   };
   
   const [selectedPackage, setSelectedPackage] = useState('essential');
@@ -56,7 +56,6 @@ const Calculator: React.FC = () => {
   const [finalPrice, setFinalPrice] = useState(PACKAGE_PRICES.essential);
   const [showCouponInput, setShowCouponInput] = useState(false);
   
-  // Função para verificar se alguns extras estão inclusos em pacotes específicos
   const isExtraIncluded = (extra: string): boolean => {
     if (extra === 'stems' && selectedPackage !== 'essential') return true;
     if (extra === 'masteringPremium' && selectedPackage === 'premium') return true;
@@ -65,14 +64,11 @@ const Calculator: React.FC = () => {
     return false;
   };
   
-  // Função para verificar se um extra está disponível para o pacote selecionado
   const isExtraAvailable = (extra: string): boolean => {
     return true;
   };
   
-  // Função para validar o cupom e aplicar desconto
   const applyCoupon = () => {
-    // Simulação de validação de cupom
     const validCoupons = {
       'PROMO10': 10,
       'HARMON15': 15,
@@ -98,13 +94,10 @@ const Calculator: React.FC = () => {
     }
   };
   
-  // Calcular preço total quando houver mudanças
   useEffect(() => {
-    // Preço base do pacote
     const packagePrice = PACKAGE_PRICES[selectedPackage as keyof typeof PACKAGE_PRICES];
     setBasePrice(packagePrice);
     
-    // Calcular extras
     let extrasTotal = 0;
     Object.entries(extras).forEach(([key, isSelected]) => {
       if (isSelected && !isExtraIncluded(key)) {
@@ -113,21 +106,17 @@ const Calculator: React.FC = () => {
     });
     setExtrasPrice(extrasTotal);
     
-    // Calcular preço final com desconto
     const total = packagePrice + extrasTotal;
     const discountAmount = (total * discount) / 100;
     setFinalPrice(total - discountAmount);
   }, [selectedPackage, extras, discount]);
   
-  // Função para prosseguir para o briefing
   const proceedToBriefing = () => {
-    // Aqui poderia salvar o pacote selecionado e extras em um estado global ou localStorage
     toast({
       title: "Configuração salva!",
       description: "Você será redirecionado para preencher o briefing.",
     });
     
-    // Redirecionar para a página inicial e rolar até o formulário de briefing
     navigate('/');
     setTimeout(() => {
       const briefingSection = document.getElementById('briefing');
@@ -151,7 +140,6 @@ const Calculator: React.FC = () => {
         
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
           <div className="lg:col-span-2 space-y-8">
-            {/* Seleção de Pacote */}
             <div className="bg-card border border-border rounded-lg p-6">
               <h2 className="text-xl font-semibold mb-4">Escolha o Pacote</h2>
               <RadioGroup 
@@ -194,12 +182,10 @@ const Calculator: React.FC = () => {
               </RadioGroup>
             </div>
             
-            {/* Serviços Extras */}
             <div className="bg-card border border-border rounded-lg p-6">
               <h2 className="text-xl font-semibold mb-4">Serviços Extras</h2>
               <div className="grid gap-4">
                 
-                {/* Revisão Extra */}
                 <div className="flex items-start space-x-2 border border-border rounded-lg p-4 hover:border-harmonia-green/50 transition-colors">
                   <Checkbox 
                     id="revision" 
@@ -217,7 +203,6 @@ const Calculator: React.FC = () => {
                   </div>
                 </div>
                 
-                {/* Registro BN (Letra) */}
                 <div className={`flex items-start space-x-2 border border-border rounded-lg p-4 hover:border-harmonia-green/50 transition-colors ${isExtraIncluded('bnRegistration') ? 'bg-harmonia-green/10' : ''}`}>
                   <Checkbox 
                     id="bnRegistration" 
@@ -246,8 +231,7 @@ const Calculator: React.FC = () => {
                     </p>
                   </div>
                 </div>
-
-                {/* Registro UBC */}
+                
                 <div className="flex items-start space-x-2 border border-border rounded-lg p-4 hover:border-harmonia-green/50 transition-colors">
                   <Checkbox 
                     id="ubcRegistration" 
@@ -266,7 +250,6 @@ const Calculator: React.FC = () => {
                   </div>
                 </div>
                 
-                {/* Masterização Premium */}
                 <div className={`flex items-start space-x-2 border border-border rounded-lg p-4 hover:border-harmonia-green/50 transition-colors ${isExtraIncluded('masteringPremium') ? 'bg-harmonia-green/10' : ''}`}>
                   <Checkbox 
                     id="masteringPremium" 
@@ -294,7 +277,6 @@ const Calculator: React.FC = () => {
                   </div>
                 </div>
                 
-                {/* Stems Separados */}
                 <div className={`flex items-start space-x-2 border border-border rounded-lg p-4 hover:border-harmonia-green/50 transition-colors ${isExtraIncluded('stems') ? 'bg-harmonia-green/10' : ''}`}>
                   <Checkbox 
                     id="stems" 
@@ -322,7 +304,6 @@ const Calculator: React.FC = () => {
                   </div>
                 </div>
                 
-                {/* Entrega Expressa */}
                 <div className="flex items-start space-x-2 border border-border rounded-lg p-4 hover:border-harmonia-green/50 transition-colors">
                   <Checkbox 
                     id="expressDelivery" 
@@ -340,7 +321,6 @@ const Calculator: React.FC = () => {
                   </div>
                 </div>
                 
-                {/* Partituras MusicXML/PDF */}
                 <div className={`flex items-start space-x-2 border border-border rounded-lg p-4 hover:border-harmonia-green/50 transition-colors ${isExtraIncluded('musicXml') ? 'bg-harmonia-green/10' : ''}`}>
                   <Checkbox 
                     id="musicXml" 
@@ -368,7 +348,6 @@ const Calculator: React.FC = () => {
                   </div>
                 </div>
                 
-                {/* Armazenamento Premium */}
                 <div className="flex items-start space-x-2 border border-border rounded-lg p-4 hover:border-harmonia-green/50 transition-colors">
                   <Checkbox 
                     id="storage" 
@@ -386,7 +365,6 @@ const Calculator: React.FC = () => {
                   </div>
                 </div>
                 
-                {/* Composição sem IA (letra) */}
                 <div className="flex items-start space-x-2 border border-border rounded-lg p-4 hover:border-harmonia-green/50 transition-colors">
                   <Checkbox 
                     id="humanCompositionLyrics" 
@@ -404,7 +382,6 @@ const Calculator: React.FC = () => {
                   </div>
                 </div>
                 
-                {/* Composição sem IA (letra + melodia com partitura) */}
                 <div className="flex items-start space-x-2 border border-border rounded-lg p-4 hover:border-harmonia-green/50 transition-colors">
                   <Checkbox 
                     id="humanCompositionMelody" 
@@ -422,7 +399,6 @@ const Calculator: React.FC = () => {
                   </div>
                 </div>
                 
-                {/* Composição sem IA (letra + melodia + gravação) */}
                 <div className="flex items-start space-x-2 border border-border rounded-lg p-4 hover:border-harmonia-green/50 transition-colors">
                   <Checkbox 
                     id="humanCompositionComplete" 
@@ -462,7 +438,6 @@ const Calculator: React.FC = () => {
               </div>
             </div>
             
-            {/* Cupom de Desconto */}
             <div className="bg-card border border-border rounded-lg p-6">
               <div className="flex justify-between items-center mb-4">
                 <h2 className="text-xl font-semibold">Cupom de Desconto</h2>
@@ -497,7 +472,6 @@ const Calculator: React.FC = () => {
             </div>
           </div>
           
-          {/* Resumo */}
           <div className="lg:sticky lg:top-24 h-fit">
             <div className="bg-card border border-border rounded-lg p-6">
               <h2 className="text-xl font-semibold mb-4">Resumo do Pedido</h2>

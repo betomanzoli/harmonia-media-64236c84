@@ -23,7 +23,7 @@ const ServiceExtras: React.FC<ServiceExtrasProps> = ({ onExtraServiceClick }) =>
               <Music className="text-harmonia-green w-5 h-5" />
               <h3 className="font-semibold">Revisão Extra</h3>
             </div>
-            <span className="text-harmonia-green font-bold">R$99</span>
+            <span className="text-harmonia-green font-bold">R$79</span>
           </div>
           <p className="text-gray-400 text-sm mb-4">
             Peça uma revisão adicional para ajustar a letra ou melodia da sua música.
@@ -73,7 +73,7 @@ const ServiceExtras: React.FC<ServiceExtrasProps> = ({ onExtraServiceClick }) =>
               <Award className="text-harmonia-green w-5 h-5" />
               <h3 className="font-semibold">Registro UBC</h3>
             </div>
-            <span className="text-harmonia-green font-bold">R$199</span>
+            <span className="text-harmonia-green font-bold">R$249</span>
           </div>
           <p className="text-gray-400 text-sm mb-4">
             Registro completo na UBC (letra, melodia, arranjo) com código ISWC para direitos de execução pública.
@@ -148,7 +148,7 @@ const ServiceExtras: React.FC<ServiceExtrasProps> = ({ onExtraServiceClick }) =>
               <Clock className="text-harmonia-green w-5 h-5" />
               <h3 className="font-semibold">Entrega Expressa (48h)</h3>
             </div>
-            <span className="text-harmonia-green font-bold">R$199</span>
+            <span className="text-harmonia-green font-bold">R$149</span>
           </div>
           <p className="text-gray-400 text-sm mb-4">
             Priorize seu projeto e receba sua música finalizada em até 48 horas.
