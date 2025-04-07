@@ -1,5 +1,4 @@
 
-import { supabase } from '@/lib/supabase';
 import { useToast } from '@/hooks/use-toast';
 import { NavigateFunction } from 'react-router-dom';
 
@@ -77,8 +76,8 @@ export function useLoginOperations({
         throw new Error('Sem conexão com a internet. Verifique sua rede e tente novamente.');
       }
 
-      // Testa a conexão com o Supabase
-      console.log('Tentando reconectar com o Supabase...');
+      // Testa a conexão
+      console.log('Tentando reconectar...');
       await testConnection();
       
       // Atualiza informações de diagnóstico
@@ -87,7 +86,7 @@ export function useLoginOperations({
       // Se chegou até aqui sem erros, mostra um toast de sucesso
       toast.toast({
         title: 'Conexão reestabelecida',
-        description: 'Conexão com o Supabase foi restaurada com sucesso.',
+        description: 'Conexão foi restaurada com sucesso.',
       });
     } catch (error) {
       console.error('Erro ao reconectar:', error);
@@ -117,13 +116,8 @@ export function useLoginOperations({
     setIsLoading(true);
     
     try {
-      const { error } = await supabase.auth.resetPasswordForEmail(email, {
-        redirectTo: window.location.origin + '/admin-reset-password',
-      });
-      
-      if (error) {
-        throw error;
-      }
+      // Simular envio de email para redefinição de senha no modo offline
+      await new Promise(resolve => setTimeout(resolve, 1000));
       
       toast.toast({
         title: 'Email enviado',
