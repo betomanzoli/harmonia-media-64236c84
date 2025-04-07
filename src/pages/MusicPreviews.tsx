@@ -8,7 +8,7 @@ import { ArrowLeft, Check, ThumbsUp, ThumbsDown } from 'lucide-react';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/components/ui/use-toast";
-import { LimitedAudioPlayer } from '@/components/previews/LimitedAudioPlayer';
+import LimitedAudioPlayer from '@/components/previews/LimitedAudioPlayer';
 import { PreviewFeedbackForm } from '@/components/previews/PreviewFeedbackForm';
 
 interface MusicPreview {

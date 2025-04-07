@@ -3,6 +3,7 @@ import React from 'react';
 import PlayButton from './audio/PlayButton';
 import AudioProgress from './audio/AudioProgress';
 import { useAudioPlayer } from '@/hooks/use-audio-player';
+import { getAmplitudeArray } from './LimitedAudioPlayerPatch';
 
 interface LimitedAudioPlayerProps {
   title: string;
@@ -46,7 +47,7 @@ const LimitedAudioPlayer: React.FC<LimitedAudioPlayerProps> = ({
         currentTime={currentTime}
         duration={duration}
         previewDuration={previewDuration}
-        onSliderChange={handleSliderChange}
+        onSliderChange={(values) => handleSliderChange(Array.isArray(values) ? values : [values])}
       />
       
       <audio 

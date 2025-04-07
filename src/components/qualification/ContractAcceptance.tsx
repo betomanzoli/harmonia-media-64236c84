@@ -1,49 +1,49 @@
 
 import React from "react";
-import { FormField, FormItem, FormLabel, FormControl, FormMessage } from "@/components/ui/form";
 import { Checkbox } from "@/components/ui/checkbox";
-import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
-import { UseFormReturn } from "react-hook-form";
-import { FormValues } from "./qualificationFormSchema";
+import { FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
+import { useFormContext } from "react-hook-form";
+import { z } from "zod";
+import { qualificationFormSchema } from "./qualificationFormSchema";
 
-interface ContractAcceptanceProps {
-  form: UseFormReturn<FormValues>;
-}
+type FormValues = z.infer<typeof qualificationFormSchema>;
 
-const ContractAcceptance: React.FC<ContractAcceptanceProps> = ({ form }) => {
+const ContractAcceptance: React.FC = () => {
+  const form = useFormContext<FormValues>();
+
   return (
-    <div className="mb-6">
-      <Collapsible>
-        <CollapsibleTrigger className="text-sm text-harmonia-green underline">
-          Ver termos e condições
-        </CollapsibleTrigger>
-        <CollapsibleContent className="mt-2 p-4 bg-background/60 text-xs border border-border rounded-md max-h-40 overflow-y-auto">
-          <div className="space-y-2">
-            <p>Ao enviar este formulário, você concorda com nossa política de privacidade e termos de uso.</p>
-            <p>Seus dados serão utilizados apenas para contato relacionado ao serviço de criação musical.</p>
-            <p>Após a análise do seu formulário, entraremos em contato para apresentar a recomendação de pacote mais adequada às suas necessidades.</p>
-          </div>
-        </CollapsibleContent>
-      </Collapsible>
+    <div className="border border-border rounded-lg p-6 mt-8 bg-card">
+      <h3 className="text-lg font-semibold mb-4">Termos de Serviço</h3>
       
-      {/* Aceite dos termos */}
+      <div className="mb-6 text-sm text-gray-400 max-h-60 overflow-y-auto p-4 bg-background rounded-md">
+        <p className="mb-4">
+          Ao prosseguir, você reconhece que leu e concorda com os Termos de Serviço e a Política de Reembolso e Revisões da harmonIA.
+        </p>
+        <p className="mb-4">
+          A harmonIA atuará como "despachante musical", intermediando o acesso a tecnologias de inteligência artificial 
+          para criação musical, com intervenção humana especializada.
+        </p>
+        <p>
+          Os direitos sobre a música criada variam conforme o pacote escolhido, 
+          conforme detalhado nos contratos específicos disponíveis em nossa página de Termos.
+        </p>
+      </div>
+      
       <FormField
         control={form.control}
         name="termsAccepted"
         render={({ field }) => (
-          <FormItem className="flex flex-row items-start space-x-3 space-y-0 mt-2">
+          <FormItem className="flex flex-row items-start space-x-3 space-y-0">
             <FormControl>
-              <Checkbox
-                checked={field.value}
+              <Checkbox 
+                checked={field.value} 
                 onCheckedChange={field.onChange}
               />
             </FormControl>
-            <div className="space-y-1 leading-none">
-              <FormLabel className="text-sm font-normal">
-                Concordo com os termos de serviço e política de privacidade
-              </FormLabel>
-              <FormMessage />
-            </div>
+            <FormLabel className="text-sm font-normal">
+              Eu li e concordo com os Termos de Serviço e reconheço as limitações de cada pacote
+            </FormLabel>
+            <FormMessage />
           </FormItem>
         )}
       />

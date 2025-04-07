@@ -10,6 +10,7 @@ export interface QualificationData {
   description: string;
   budget: string;
   features: string[];
+  termsAccepted: boolean;
 }
 
 export interface QualificationFormData extends QualificationData {
