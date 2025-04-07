@@ -11,6 +11,7 @@ import Testimonials from '@/components/Testimonials';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { ArrowRight, CheckCircle2 } from 'lucide-react';
+import NavLink from '@/components/NavLink';
 
 // Benefits displayed on the qualification section
 const qualificationBenefits = [
@@ -37,7 +38,7 @@ const Index: React.FC = () => {
         <Services />
         <Process />
         <Portfolio />
-        <Testimonials />
+        <Testimonials showTestimonials={false} />
 
         {/* Call to Action for Qualification Form */}
         <section className="py-16 px-6 md:px-10 bg-gradient-to-b from-background to-gray-900">
@@ -91,12 +92,12 @@ const Index: React.FC = () => {
             </div>
             
             <div className="text-center">
-              <Link to="/qualificacao">
+              <NavLink href="/qualificacao">
                 <Button className="bg-harmonia-green hover:bg-harmonia-green/90 flex items-center gap-2">
                   Iniciar Qualificação
                   <ArrowRight className="h-4 w-4" />
                 </Button>
-              </Link>
+              </NavLink>
             </div>
           </div>
         </section>
@@ -125,11 +126,11 @@ const Index: React.FC = () => {
                   Preencha nosso formulário de qualificação para receber uma recomendação personalizada
                   baseada nas suas necessidades específicas.
                 </p>
-                <Link to="/qualificacao">
+                <NavLink href="/qualificacao">
                   <Button className="w-full bg-harmonia-green hover:bg-harmonia-green/90">
                     Iniciar Qualificação
                   </Button>
-                </Link>
+                </NavLink>
               </div>
             </div>
           </div>

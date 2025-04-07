@@ -5,6 +5,7 @@ import { Phone, Mail, Shield, ChevronUp, Clock } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useNavigate, Link } from 'react-router-dom';
 import { siteConfig } from '@/config/site';
+import NavLink from './NavLink';
 
 const Footer: React.FC = () => {
   const navigate = useNavigate();
@@ -23,11 +24,6 @@ const Footer: React.FC = () => {
   const handleEmailContact = () => {
     window.open(`mailto:${siteConfig.contact.email}`, '_blank');
   };
-  
-  const handleNavigation = (path: string) => {
-    navigate(path);
-    window.scrollTo(0, 0);
-  };
 
   return (
     <footer className="bg-black pt-16 pb-8 px-6 md:px-10 relative">
@@ -44,49 +40,44 @@ const Footer: React.FC = () => {
             <h3 className="font-semibold mb-4">Links Rápidos</h3>
             <ul className="space-y-2">
               <li>
-                <Link 
-                  to="/acompanhar-pedido" 
+                <NavLink 
+                  href="/acompanhar-pedido" 
                   className="text-gray-400 hover:text-harmonia-green transition-colors cursor-pointer flex items-center gap-1"
-                  onClick={() => window.scrollTo(0, 0)}
                 >
                   <Clock className="w-4 h-4" /> Acompanhar Pedido
-                </Link>
+                </NavLink>
               </li>
               <li>
-                <Link 
-                  to="/qualificacao" 
+                <NavLink 
+                  href="/qualificacao" 
                   className="text-gray-400 hover:text-harmonia-green transition-colors"
-                  onClick={() => window.scrollTo(0, 0)}
                 >
                   Qualificação
-                </Link>
+                </NavLink>
               </li>
               <li>
-                <Link 
-                  to="/pacotes" 
+                <NavLink 
+                  href="/pacotes" 
                   className="text-gray-400 hover:text-harmonia-green transition-colors"
-                  onClick={() => window.scrollTo(0, 0)}
                 >
                   Pacotes
-                </Link>
+                </NavLink>
               </li>
               <li>
-                <Link 
-                  to="/portfolio" 
+                <NavLink 
+                  href="/portfolio" 
                   className="text-gray-400 hover:text-harmonia-green transition-colors"
-                  onClick={() => window.scrollTo(0, 0)}
                 >
                   Portfólio
-                </Link>
+                </NavLink>
               </li>
               <li>
-                <a 
+                <NavLink 
                   href="/#processo" 
                   className="text-gray-400 hover:text-harmonia-green transition-colors"
-                  onClick={() => window.scrollTo(0, 0)}
                 >
                   Processo
-                </a>
+                </NavLink>
               </li>
             </ul>
           </div>
@@ -107,22 +98,20 @@ const Footer: React.FC = () => {
               <h3 className="font-semibold mb-4">Informações Legais</h3>
               <ul className="space-y-2">
                 <li>
-                  <Link 
-                    to="/privacidade" 
+                  <NavLink 
+                    href="/privacidade" 
                     className="text-gray-400 hover:text-harmonia-green transition-colors flex items-center gap-1"
-                    onClick={() => window.scrollTo(0, 0)}
                   >
                     <Shield className="w-4 h-4" /> Política de Privacidade
-                  </Link>
+                  </NavLink>
                 </li>
                 <li>
-                  <Link 
-                    to="/termos" 
+                  <NavLink 
+                    href="/termos" 
                     className="text-gray-400 hover:text-harmonia-green transition-colors flex items-center gap-1"
-                    onClick={() => window.scrollTo(0, 0)}
                   >
                     <Shield className="w-4 h-4" /> Termos de Serviço
-                  </Link>
+                  </NavLink>
                 </li>
               </ul>
             </div>
