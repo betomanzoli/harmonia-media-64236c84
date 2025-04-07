@@ -11,6 +11,7 @@ export interface ConnectionStatus {
   error?: string;
   details?: any;
   networkOnline?: boolean;
+  endpointStatus?: string;
 }
 
 export interface SecurityStatus {
