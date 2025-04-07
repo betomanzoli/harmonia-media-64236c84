@@ -1,9 +1,9 @@
-
 import React from 'react';
 import { Button } from "@/components/ui/button";
 import { Info } from 'lucide-react';
 import { useToast } from "@/components/ui/use-toast";
 import { useNavigate } from 'react-router-dom';
+import { siteConfig } from '@/config/site';
 
 interface OrderSummaryProps {
   basePrice: number;
@@ -26,16 +26,10 @@ const OrderSummary: React.FC<OrderSummaryProps> = ({
   const proceedToBriefing = () => {
     toast({
       title: "Configuração salva!",
-      description: "Você será redirecionado para preencher o briefing.",
+      description: "Você será redirecionado para a página de briefing.",
     });
     
-    navigate('/');
-    setTimeout(() => {
-      const briefingSection = document.getElementById('briefing');
-      if (briefingSection) {
-        briefingSection.scrollIntoView({ behavior: 'smooth' });
-      }
-    }, 100);
+    navigate(siteConfig.urls.briefing || '/briefing');
   };
   
   return (
