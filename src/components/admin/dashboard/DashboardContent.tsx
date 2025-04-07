@@ -7,7 +7,7 @@ import RecentActivities from '@/components/admin/dashboard/RecentActivities';
 
 const DashboardContent: React.FC = () => {
   return (
-    <div className="flex-grow p-6">
+    <div className="p-6">
       <div className="max-w-7xl mx-auto">
         <h1 className="text-3xl font-bold mb-8">Dashboard Administrativo</h1>
         <StatsSummary />

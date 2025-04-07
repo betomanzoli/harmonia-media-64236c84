@@ -16,7 +16,7 @@ const AdminPreviews: React.FC = () => {
   const [showHelp, setShowHelp] = useState(false);
   
   const scrollToNewForm = () => {
-    window.scrollTo({ top: document.body.scrollHeight, behavior: 'smooth' });
+    document.getElementById('new-project-form')?.scrollIntoView({ behavior: 'smooth' });
   };
   
   const toggleHelp = () => {
@@ -32,7 +32,7 @@ const AdminPreviews: React.FC = () => {
   return (
     <AdminLayout>
       <div className="flex-1 flex flex-col h-screen">
-        <div className="flex items-center justify-between p-4 border-b">
+        <div className="flex items-center justify-between p-4 border-b bg-white">
           <h1 className="text-xl font-bold">Painel de Prévias Musicais</h1>
           <Button 
             variant="outline" 
@@ -44,11 +44,11 @@ const AdminPreviews: React.FC = () => {
             {showHelp ? 'Desativar ajuda' : 'Ativar ajuda'}
           </Button>
         </div>
-        <ScrollArea className="flex-1 p-8">
+        <div className="flex-1 overflow-auto p-8">
           <PreviewsHeader scrollToNewForm={scrollToNewForm} />
           <ProjectsListCard projects={projects} />
           <NewProjectForm />
-        </ScrollArea>
+        </div>
       </div>
     </AdminLayout>
   );

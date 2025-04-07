@@ -1,7 +1,7 @@
 
 import React from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { SidebarProvider, Sidebar, SidebarContent, SidebarHeader, SidebarFooter, SidebarMenu, SidebarMenuItem, SidebarMenuButton, SidebarGroup, SidebarGroupLabel } from "@/components/ui/sidebar";
+import { Sidebar, SidebarContent, SidebarHeader, SidebarFooter, SidebarMenu, SidebarMenuItem, SidebarMenuButton, SidebarGroup, SidebarGroupLabel } from "@/components/ui/sidebar";
 import { Database, Music, Users, FileAudio, BarChart, Settings, LogOut, Home, Link2 } from 'lucide-react';
 import { siteConfig } from '@/config/site';
 import { useAdminAuth } from '@/context/AdminAuthContext';
@@ -22,7 +22,7 @@ const AdminSidebar: React.FC = () => {
   };
 
   return (
-    <Sidebar>
+    <Sidebar className="border-r border-gray-200 bg-white">
       <SidebarHeader className="flex items-center justify-center py-4">
         <h2 className="text-xl font-bold text-harmonia-green">harmonIA Admin</h2>
       </SidebarHeader>
