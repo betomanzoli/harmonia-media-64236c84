@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
@@ -8,6 +9,8 @@ import { toast } from "@/hooks/use-toast";
 import { ArrowRight, Search, FileText, Package, CreditCard, MessageSquare, Music, Headphones, FileCheck, Settings, CheckCircle2 } from 'lucide-react';
 import OrderDetails from '@/components/order-tracking/OrderDetails';
 import OrderNotification from '@/components/order-tracking/OrderNotification'; 
+import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
+import { siteConfig } from '@/config/site';
 
 // Dados mockados para demonstração
 const MOCK_ORDERS = {
@@ -216,6 +219,16 @@ const OrderTracking: React.FC = () => {
     }, 800);
   };
 
+  const openChatAssistant = () => {
+    // Aqui você pode integrar com o chatbot da harmonIA
+    // Esta é uma implementação simulada para abrir um modal de chat
+    const chatModal = document.getElementById('chat-assistant-modal');
+    if (chatModal) {
+      // @ts-ignore
+      chatModal.showModal();
+    }
+  };
+
   return (
     <div className="min-h-screen bg-background">
       <Header />
@@ -275,13 +288,45 @@ const OrderTracking: React.FC = () => {
                 Se você está tendo dificuldades para localizar seu pedido ou precisa de assistência adicional,
                 entre em contato com nossa equipe de suporte.
               </p>
-              <Button 
-                onClick={() => window.open('https://wa.me/5511920585072?text=Olá,%20preciso%20de%20ajuda%20para%20localizar%20meu%20pedido', '_blank')}
-                className="bg-harmonia-green hover:bg-harmonia-green/90"
-              >
-                Entrar em Contato
-                <ArrowRight className="w-4 h-4 ml-2" />
-              </Button>
+              <Sheet>
+                <SheetTrigger asChild>
+                  <Button 
+                    className="bg-harmonia-green hover:bg-harmonia-green/90"
+                  >
+                    Entrar em Contato
+                    <ArrowRight className="w-4 h-4 ml-2" />
+                  </Button>
+                </SheetTrigger>
+                <SheetContent>
+                  <div className="flex flex-col h-full p-6">
+                    <h2 className="text-xl font-bold mb-6">Fale com o Assistente</h2>
+                    <p className="text-gray-400 mb-8">Nosso assistente virtual pode ajudar a localizar seu pedido ou responder suas dúvidas:</p>
+                    
+                    <div className="mt-2 space-y-4">
+                      <div className="bg-gray-800 p-4 rounded-lg">
+                        <p className="text-sm text-gray-300">
+                          Olá! Sou o assistente virtual da harmonIA. Como posso ajudar com seu pedido hoje?
+                        </p>
+                      </div>
+                      
+                      <div className="flex gap-2 flex-wrap">
+                        <Button size="sm" variant="outline">Não encontro meu pedido</Button>
+                        <Button size="sm" variant="outline">Status do pagamento</Button>
+                        <Button size="sm" variant="outline">Falar com atendente humano</Button>
+                      </div>
+                    </div>
+                    
+                    <div className="mt-auto">
+                      <Button 
+                        onClick={() => window.open(`https://wa.me/${siteConfig.contact.whatsapp}?text=Olá,%20preciso%20de%20ajuda%20para%20localizar%20meu%20pedido`, '_blank')}
+                        className="w-full"
+                      >
+                        Falar via WhatsApp
+                      </Button>
+                    </div>
+                  </div>
+                </SheetContent>
+              </Sheet>
             </div>
           )}
         </div>

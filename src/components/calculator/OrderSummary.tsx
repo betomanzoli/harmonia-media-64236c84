@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { Button } from "@/components/ui/button";
 import { Info } from 'lucide-react';
@@ -23,13 +24,13 @@ const OrderSummary: React.FC<OrderSummaryProps> = ({
   const { toast } = useToast();
   const navigate = useNavigate();
   
-  const proceedToBriefing = () => {
+  const proceedToPayment = () => {
     toast({
       title: "Configuração salva!",
-      description: "Você será redirecionado para a página de briefing.",
+      description: "Você será redirecionado para a página de pagamento.",
     });
     
-    navigate(siteConfig.urls.briefing || '/briefing');
+    navigate(`/pagamento/${selectedPackage}`);
   };
   
   return (
@@ -66,16 +67,16 @@ const OrderSummary: React.FC<OrderSummaryProps> = ({
         <div className="space-y-4">
           <Button 
             className="w-full bg-harmonia-green hover:bg-harmonia-green/90 text-white h-12"
-            onClick={proceedToBriefing}
+            onClick={proceedToPayment}
           >
-            Prosseguir para Briefing
+            Prosseguir para Pagamento
           </Button>
           
           <div className="flex items-start gap-2 text-sm text-gray-400 p-3 bg-background rounded-md">
             <Info className="w-5 h-5 flex-shrink-0 mt-0.5" />
             <div>
               <p>Os preços são em reais (BRL) e incluem todos os impostos aplicáveis.</p>
-              <p className="mt-1">O pagamento será solicitado após a aprovação do briefing.</p>
+              <p className="mt-1">O briefing completo será preenchido após a confirmação do pagamento.</p>
             </div>
           </div>
         </div>

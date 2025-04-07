@@ -1,16 +1,16 @@
+
 import React from 'react';
 import { Button } from "@/components/ui/button";
 import { Play, ArrowUp } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
+
 const Hero: React.FC = () => {
+  const navigate = useNavigate();
+  
   const handleCreateMusic = () => {
-    // Scroll to the briefing form
-    const briefingSection = document.getElementById('briefing');
-    if (briefingSection) {
-      briefingSection.scrollIntoView({
-        behavior: 'smooth'
-      });
-    }
+    navigate('/qualificacao');
   };
+  
   const handleHowItWorks = () => {
     // Scroll to the process section
     const processSection = document.getElementById('processo');
@@ -20,12 +20,14 @@ const Hero: React.FC = () => {
       });
     }
   };
+  
   const scrollToTop = () => {
     window.scrollTo({
       top: 0,
       behavior: 'smooth'
     });
   };
+  
   return <section className="pt-32 pb-20 px-6 md:px-10 max-w-7xl mx-auto relative">
       <div className="space-y-8 max-w-3xl">
         <h1 className="text-5xl md:text-6xl font-bold tracking-tight">
@@ -66,4 +68,5 @@ const Hero: React.FC = () => {
       </button>
     </section>;
 };
+
 export default Hero;

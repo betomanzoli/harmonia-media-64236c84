@@ -16,6 +16,7 @@ import BudgetSection from "./BudgetSection";
 import FeaturesSection from "./FeaturesSection";
 import ContractAcceptance from "./ContractAcceptance";
 import * as z from "zod";
+import { getRecommendedPackage } from "@/utils/packageRecommendation";
 
 // Extend the form schema to include terms acceptance
 const extendedFormSchema = formSchema.extend({
@@ -59,12 +60,15 @@ export function QualificationForm() {
     // Show success toast
     toast({
       title: "Formulário enviado com sucesso!",
-      description: "Obrigado pelo seu interesse. Estamos redirecionando você para a página de recomendações.",
+      description: "Você será redirecionado para a página de pagamento.",
     });
     
-    // Redirect to thank you page
+    // Determinar pacote recomendado
+    const recommendedPackage = getRecommendedPackage(qualificationData);
+    
+    // Redirect to payment page with recommended package
     setTimeout(() => {
-      navigate("/agradecimento");
+      navigate(`/pagamento/${recommendedPackage}`);
     }, 1500);
   }
 
