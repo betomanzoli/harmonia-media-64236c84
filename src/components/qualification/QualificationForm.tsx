@@ -17,6 +17,8 @@ import FeaturesSection from "./FeaturesSection";
 import ContractAcceptance from "./ContractAcceptance";
 import * as z from "zod";
 import { getRecommendedPackage } from "@/utils/packageRecommendation";
+import { supabase } from "@/lib/supabase";
+import emailService from "@/services/emailService";
 
 // Extend the form schema to include terms acceptance
 const extendedFormSchema = formSchema.extend({
@@ -48,34 +50,75 @@ export function QualificationForm() {
     },
   });
 
-  function onSubmit(data: ExtendedFormValues) {
+  async function onSubmit(data: ExtendedFormValues) {
     console.log("Form data:", data);
     
     // Remove the termsAccepted field before storing the qualification data
     const { termsAccepted, ...qualificationData } = data;
     
-    // Store form data in localStorage to use it on the thank you page
-    localStorage.setItem("qualificationData", JSON.stringify({
-      ...qualificationData,
-      termsAccepted // Include termsAccepted to match QualificationData type
-    }));
-    
-    // Show success toast
-    toast({
-      title: "Formulário enviado com sucesso!",
-      description: "Você será redirecionado para a página de pagamento.",
-    });
-    
-    // Determinar pacote recomendado
-    const recommendedPackage = getRecommendedPackage({
-      ...qualificationData,
-      termsAccepted // Include termsAccepted to match QualificationData type
-    });
-    
-    // Redirect to payment page with recommended package
-    setTimeout(() => {
-      navigate(`/pagamento/${recommendedPackage}`);
-    }, 1500);
+    try {
+      // 1. Salvar os dados na tabela do Supabase
+      const { error } = await supabase
+        .from('qualification_submissions')
+        .insert([
+          { 
+            ...qualificationData,
+            status: 'pending', 
+            created_at: new Date().toISOString()
+          }
+        ]);
+
+      if (error) {
+        console.error("Erro ao salvar qualificação:", error);
+        toast({
+          title: "Erro ao enviar formulário",
+          description: "Houve um problema ao salvar seus dados. Por favor, tente novamente.",
+          variant: "destructive",
+        });
+        return;
+      }
+
+      // 2. Enviar email de confirmação para o cliente
+      if (data.email) {
+        // Envio assíncrono (não esperamos a conclusão)
+        emailService.sendBriefingConfirmation(data.email, data.name || "Cliente")
+          .then(result => {
+            if (!result.success) {
+              console.warn("Falha ao enviar email de confirmação:", result.error);
+            }
+          });
+      }
+      
+      // Store form data in localStorage to use it on the thank you page
+      localStorage.setItem("qualificationData", JSON.stringify({
+        ...qualificationData,
+        termsAccepted // Include termsAccepted to match QualificationData type
+      }));
+      
+      // Show success toast
+      toast({
+        title: "Formulário enviado com sucesso!",
+        description: "Você será redirecionado para a página de pagamento.",
+      });
+      
+      // Determinar pacote recomendado
+      const recommendedPackage = getRecommendedPackage({
+        ...qualificationData,
+        termsAccepted // Include termsAccepted to match QualificationData type
+      });
+      
+      // Redirect to payment page with recommended package
+      setTimeout(() => {
+        navigate(`/pagamento/${recommendedPackage}`);
+      }, 1500);
+    } catch (err) {
+      console.error("Erro na submissão:", err);
+      toast({
+        title: "Erro inesperado",
+        description: "Ocorreu um erro ao processar sua solicitação. Por favor, tente novamente.",
+        variant: "destructive",
+      });
+    }
   }
 
   return (

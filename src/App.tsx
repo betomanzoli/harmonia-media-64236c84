@@ -15,6 +15,7 @@ import AdminLogin from "./pages/admin/AdminLogin";
 import AdminPortfolio from "./pages/admin/AdminPortfolio";
 import AdminDashboard from "./pages/admin/Dashboard";
 import AdminPreviews from "./pages/admin/AdminPreviews";
+import AdminIntegrations from "./pages/admin/AdminIntegrations";
 import Packages from "./pages/Packages";
 import Portfolio from "./pages/Portfolio";
 import PrivacyPolicy from "./pages/PrivacyPolicy";
@@ -59,6 +60,11 @@ const App = () => (
             <Route path="/admin-j28s7d1k/previews" element={
               <ProtectedRoute>
                 <AdminPreviews />
+              </ProtectedRoute>
+            } />
+            <Route path="/admin-j28s7d1k/integrations" element={
+              <ProtectedRoute>
+                <AdminIntegrations />
               </ProtectedRoute>
             } />
             <Route path={siteConfig.urls.admin.audioDatabase} element={
