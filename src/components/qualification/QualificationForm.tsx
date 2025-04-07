@@ -1,5 +1,5 @@
 
-import React from "react";
+import React, { useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useNavigate } from "react-router-dom";
@@ -19,6 +19,7 @@ import * as z from "zod";
 import { getRecommendedPackage } from "@/utils/packageRecommendation";
 import { supabase } from "@/lib/supabase";
 import emailService from "@/services/emailService";
+import { Loader2 } from "lucide-react";
 
 // Extend the form schema to include terms acceptance
 const extendedFormSchema = formSchema.extend({
@@ -32,6 +33,7 @@ type ExtendedFormValues = z.infer<typeof extendedFormSchema>;
 export function QualificationForm() {
   const navigate = useNavigate();
   const { toast } = useToast();
+  const [isSubmitting, setIsSubmitting] = useState(false);
   
   const form = useForm<ExtendedFormValues>({
     resolver: zodResolver(extendedFormSchema),
@@ -52,41 +54,47 @@ export function QualificationForm() {
 
   async function onSubmit(data: ExtendedFormValues) {
     console.log("Form data:", data);
+    setIsSubmitting(true);
     
     // Remove the termsAccepted field before storing the qualification data
     const { termsAccepted, ...qualificationData } = data;
     
     try {
-      // 1. Salvar os dados na tabela do Supabase
-      const { error } = await supabase
-        .from('qualification_submissions')
-        .insert([
-          { 
-            ...qualificationData,
-            status: 'pending', 
-            created_at: new Date().toISOString()
-          }
-        ]);
+      let saveSuccess = true;
+      
+      try {
+        // 1. Salvar os dados na tabela do Supabase
+        const { error } = await supabase
+          .from('qualification_submissions')
+          .insert([
+            { 
+              ...qualificationData,
+              status: 'pending', 
+              created_at: new Date().toISOString()
+            }
+          ]);
 
-      if (error) {
-        console.error("Erro ao salvar qualificação:", error);
-        toast({
-          title: "Erro ao enviar formulário",
-          description: "Houve um problema ao salvar seus dados. Por favor, tente novamente.",
-          variant: "destructive",
-        });
-        return;
+        if (error) {
+          console.error("Erro ao salvar qualificação:", error);
+          saveSuccess = false;
+        }
+      } catch (err) {
+        console.error("Erro na conexão com o Supabase:", err);
+        saveSuccess = false;
       }
 
-      // 2. Enviar email de confirmação para o cliente
+      // 2. Enviar email de confirmação para o cliente (assíncrono)
       if (data.email) {
-        // Envio assíncrono (não esperamos a conclusão)
-        emailService.sendBriefingConfirmation(data.email, data.name || "Cliente")
-          .then(result => {
-            if (!result.success) {
-              console.warn("Falha ao enviar email de confirmação:", result.error);
-            }
-          });
+        try {
+          emailService.sendBriefingConfirmation(data.email, data.name || "Cliente")
+            .then(result => {
+              if (!result.success) {
+                console.warn("Falha ao enviar email de confirmação:", result.error);
+              }
+            });
+        } catch (err) {
+          console.warn("Erro ao tentar enviar email:", err);
+        }
       }
       
       // Store form data in localStorage to use it on the thank you page
@@ -98,7 +106,9 @@ export function QualificationForm() {
       // Show success toast
       toast({
         title: "Formulário enviado com sucesso!",
-        description: "Você será redirecionado para a página de pagamento.",
+        description: saveSuccess 
+          ? "Você será redirecionado para a página de pagamento."
+          : "Dados salvos localmente. Redirecionando para pagamento.",
       });
       
       // Determinar pacote recomendado
@@ -118,6 +128,7 @@ export function QualificationForm() {
         description: "Ocorreu um erro ao processar sua solicitação. Por favor, tente novamente.",
         variant: "destructive",
       });
+      setIsSubmitting(false);
     }
   }
 
@@ -138,8 +149,16 @@ export function QualificationForm() {
           <Button 
             type="submit" 
             className="w-full bg-harmonia-green hover:bg-harmonia-green/90"
+            disabled={isSubmitting}
           >
-            Enviar
+            {isSubmitting ? (
+              <>
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                Enviando...
+              </>
+            ) : (
+              "Enviar"
+            )}
           </Button>
         </form>
       </Form>

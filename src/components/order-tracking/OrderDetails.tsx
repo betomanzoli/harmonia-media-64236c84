@@ -1,124 +1,128 @@
 
 import React from 'react';
-import { Card } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
+import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
-import { Link } from 'react-router-dom';
-import { 
-  Clock, 
-  CheckCircle2,
-  ArrowRight
-} from 'lucide-react';
 import { OrderData } from './types';
+import { FileText, Package, CreditCard, MessageSquare, Music, Headphones, FileCheck, Settings } from 'lucide-react';
+import { Link } from 'react-router-dom';
 
-type OrderDetailsProps = OrderData;
+// Mapeamento de strings de ícones para componentes de ícones reais
+const iconComponents: Record<string, React.ElementType> = {
+  'FileText': FileText,
+  'Package': Package,
+  'CreditCard': CreditCard,
+  'MessageSquare': MessageSquare,
+  'Music': Music,
+  'Headphones': Headphones,
+  'FileCheck': FileCheck,
+  'Settings': Settings
+};
 
-const OrderDetails: React.FC<OrderDetailsProps> = ({
-  orderId,
-  clientName,
-  packageType,
-  orderDate,
-  currentStep,
-  status,
-  expectedDelivery,
-  progress,
-  previewLink
-}) => {
-  // Função para determinar a cor do status
-  const getStatusColor = (status: string) => {
-    switch (status.toLowerCase()) {
-      case 'concluído':
-        return 'bg-green-500';
-      case 'em andamento':
-        return 'bg-blue-500';
-      case 'aguardando aprovação':
-        return 'bg-yellow-500';
-      case 'esperando feedback':
-        return 'bg-purple-500';
-      default:
-        return 'bg-gray-500';
-    }
-  };
+interface OrderDetailsProps {
+  order: OrderData;
+}
 
+const OrderDetails: React.FC<OrderDetailsProps> = ({ order }) => {
   return (
-    <Card className="p-6">
-      <div className="flex flex-col md:flex-row md:items-center justify-between mb-6 border-b pb-4">
-        <div>
-          <h2 className="text-xl font-bold">{orderId}</h2>
-          <p className="text-gray-500">Cliente: {clientName}</p>
+    <div className="space-y-6">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+        <div className="bg-white shadow rounded-lg p-4">
+          <h3 className="text-sm font-medium text-gray-500">Número do Pedido</h3>
+          <p className="text-lg font-bold">{order.orderId}</p>
         </div>
-        <div className="mt-4 md:mt-0 flex flex-wrap gap-2">
-          <Badge variant="outline" className="font-normal">{packageType}</Badge>
-          <Badge variant="outline" className="font-normal">Pedido em: {orderDate}</Badge>
-          <Badge className={`${getStatusColor(status)} text-white`}>{status}</Badge>
+        <div className="bg-white shadow rounded-lg p-4">
+          <h3 className="text-sm font-medium text-gray-500">Cliente</h3>
+          <p className="text-lg font-bold">{order.clientName}</p>
+        </div>
+        <div className="bg-white shadow rounded-lg p-4">
+          <h3 className="text-sm font-medium text-gray-500">Pacote</h3>
+          <p className="text-lg font-bold">{order.packageType}</p>
+        </div>
+        <div className="bg-white shadow rounded-lg p-4">
+          <h3 className="text-sm font-medium text-gray-500">Status</h3>
+          <p className="text-lg font-bold">{order.status}</p>
         </div>
       </div>
-
-      <div className="flex items-center gap-2 mb-6">
-        <Clock className="text-harmonia-green h-5 w-5" />
-        <span>
-          Previsão de entrega: <span className="font-bold">{expectedDelivery}</span>
-        </span>
-      </div>
-
-      {/* Timeline de progresso */}
-      <div className="space-y-6 mb-8">
-        {progress.map((item, index) => (
-          <div key={index} className="flex gap-4">
-            <div className="flex flex-col items-center">
-              <div className={`w-10 h-10 rounded-full flex items-center justify-center ${
-                item.status === 'completed' 
-                  ? 'bg-harmonia-green text-white' 
-                  : item.status === 'current'
-                    ? 'bg-harmonia-green/20 text-harmonia-green border-2 border-harmonia-green'
-                    : 'bg-gray-200 text-gray-500'
-              }`}>
-                {item.status === 'completed' ? <CheckCircle2 className="w-5 h-5" /> : index + 1}
-              </div>
-              {index < progress.length - 1 && (
-                <div className={`w-0.5 h-full my-1 ${
-                  item.status === 'completed' ? 'bg-harmonia-green' : 'bg-gray-200'
-                }`}></div>
-              )}
-            </div>
-            <div className="flex-1">
-              <div className="flex items-start justify-between">
-                <div>
-                  <h3 className={`font-medium ${
-                    item.status === 'current' ? 'text-harmonia-green' : ''
-                  }`}>{item.title}</h3>
-                  <p className="text-gray-500 text-sm">{item.description}</p>
-                </div>
-                {item.date && (
-                  <span className="text-xs text-gray-500 whitespace-nowrap">{item.date}</span>
+      
+      <div className="bg-white shadow rounded-lg p-6">
+        <h2 className="text-xl font-bold mb-6">Acompanhamento do Processo</h2>
+        <div className="space-y-8">
+          {order.progress.map((step, index) => {
+            // Determinar o ícone a ser usado
+            const IconComponent = iconComponents[step.icon] || Music;
+            
+            // Definir as cores e estilos com base no status
+            const isCompleted = step.status === 'completed';
+            const isCurrent = step.status === 'current';
+            
+            const circleColorClasses = cn(
+              "h-10 w-10 rounded-full flex items-center justify-center",
+              {
+                "bg-harmonia-green text-white": isCompleted,
+                "bg-amber-500 text-white": isCurrent,
+                "bg-gray-200 text-gray-500": !isCompleted && !isCurrent
+              }
+            );
+            
+            const lineClasses = cn(
+              "absolute h-full w-0.5 left-5 -ml-px top-10 transform",
+              {
+                "bg-harmonia-green": isCompleted,
+                "bg-gray-200": !isCompleted
+              }
+            );
+            
+            return (
+              <div key={step.step} className="relative">
+                {index < order.progress.length - 1 && (
+                  <div className={lineClasses}></div>
                 )}
+                <div className="flex items-start">
+                  <div className={circleColorClasses}>
+                    <IconComponent className="w-5 h-5" />
+                  </div>
+                  <div className="ml-4 flex-1">
+                    <div className="flex justify-between items-center mb-1">
+                      <h3 className={cn(
+                        "font-medium",
+                        {
+                          "text-harmonia-green": isCompleted,
+                          "text-amber-500": isCurrent,
+                          "text-gray-500": !isCompleted && !isCurrent
+                        }
+                      )}>
+                        {step.title}
+                      </h3>
+                      {step.date && (
+                        <span className="text-sm text-gray-500">{step.date}</span>
+                      )}
+                    </div>
+                    <p className="text-gray-600">{step.description}</p>
+                    
+                    {/* Botões de ação baseados no status */}
+                    {isCurrent && step.title === "Apresentação" && order.previewLink && (
+                      <div className="mt-2">
+                        <Link to={order.previewLink}>
+                          <Button className="bg-harmonia-green hover:bg-harmonia-green/90 text-white">
+                            Ver Prévias
+                          </Button>
+                        </Link>
+                      </div>
+                    )}
+                  </div>
+                </div>
               </div>
-            </div>
-          </div>
-        ))}
+            );
+          })}
+        </div>
       </div>
-
-      {/* Ações disponíveis */}
-      <div className="flex flex-wrap gap-3 justify-end">
-        {previewLink && (
-          <Button 
-            variant="outline" 
-            className="border-harmonia-green text-harmonia-green hover:bg-harmonia-green/10"
-          >
-            <Link to={previewLink} className="flex items-center gap-2">
-              Ouvir Prévias
-              <ArrowRight className="w-4 h-4" />
-            </Link>
-          </Button>
-        )}
-        <Button 
-          variant="outline"
-          onClick={() => window.open('https://wa.me/5511920585072?text=Olá,%20gostaria%20de%20obter%20mais%20informações%20sobre%20meu%20pedido%20' + orderId, '_blank')}
-        >
-          Entrar em Contato
-        </Button>
+      
+      <div className="p-4 border border-dashed border-gray-300 rounded-lg bg-gray-50">
+        <p className="text-sm text-center text-gray-600">
+          Previsão de entrega final: <span className="font-medium">{order.expectedDelivery}</span>
+        </p>
       </div>
-    </Card>
+    </div>
   );
 };
 

@@ -1,12 +1,12 @@
 
-import { ReactNode } from 'react';
+export type OrderProgressStatus = 'pending' | 'current' | 'completed';
 
-export interface OrderProgress {
+export interface OrderProgressStep {
   step: number;
-  status: 'completed' | 'current' | 'pending';
+  status: OrderProgressStatus;
   title: string;
   description: string;
-  icon: ReactNode;
+  icon: string;
   date?: string;
 }
 
@@ -19,9 +19,9 @@ export interface OrderData {
   status: string;
   expectedDelivery: string;
   previewLink?: string;
-  progress: OrderProgress[];
+  progress: OrderProgressStep[];
 }
 
 export interface OrderSearchProps {
-  onSearch: (orderData: OrderData) => void;
+  onOrderFound: (order: OrderData) => void;
 }
