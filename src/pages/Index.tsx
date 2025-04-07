@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Link } from 'react-router-dom';
 import Header from '@/components/Header';
@@ -14,24 +13,18 @@ import { ArrowRight, CheckCircle2 } from 'lucide-react';
 import NavLink from '@/components/NavLink';
 
 // Benefits displayed on the qualification section
-const qualificationBenefits = [
-  {
-    title: "Processo simples e personalizado",
-    description: "Após preencher o formulário de qualificação, você receberá recomendações personalizadas e poderá escolher o pacote ideal para seu projeto."
-  },
-  {
-    title: "Economize tempo e dinheiro",
-    description: "Nosso processo de qualificação garante que você receba o pacote mais adequado às suas necessidades, sem gastar mais do que o necessário."
-  },
-  {
-    title: "Entrega garantida",
-    description: "Após o pagamento, você terá acesso ao briefing completo e acompanhamento dedicado de todo o processo de produção da sua música."
-  }
-];
-
+const qualificationBenefits = [{
+  title: "Processo simples e personalizado",
+  description: "Após preencher o formulário de qualificação, você receberá recomendações personalizadas e poderá escolher o pacote ideal para seu projeto."
+}, {
+  title: "Economize tempo e dinheiro",
+  description: "Nosso processo de qualificação garante que você receba o pacote mais adequado às suas necessidades, sem gastar mais do que o necessário."
+}, {
+  title: "Entrega garantida",
+  description: "Após o pagamento, você terá acesso ao briefing completo e acompanhamento dedicado de todo o processo de produção da sua música."
+}];
 const Index: React.FC = () => {
-  return (
-    <div className="min-h-screen bg-background text-foreground">
+  return <div className="min-h-screen bg-background text-foreground">
       <Header />
       <main>
         <Hero />
@@ -44,7 +37,7 @@ const Index: React.FC = () => {
         <section className="py-16 px-6 md:px-10 bg-gradient-to-b from-background to-gray-900">
           <div className="max-w-7xl mx-auto">
             <div className="text-center mb-12">
-              <h2 className="text-3xl font-bold mb-4">Nosso Novo Fluxo de Trabalho</h2>
+              <h2 className="text-3xl font-bold mb-4">Nosso Fluxo de Trabalho</h2>
               <p className="text-gray-400 max-w-2xl mx-auto">
                 Simplificamos nosso processo para oferecer a melhor experiência:
               </p>
@@ -111,12 +104,10 @@ const Index: React.FC = () => {
                 e recomendar o pacote ideal para seu projeto musical.
               </p>
               <div className="space-y-6">
-                {qualificationBenefits.map((benefit, index) => (
-                  <Card key={index} className="p-6">
+                {qualificationBenefits.map((benefit, index) => <Card key={index} className="p-6">
                     <h3 className="font-semibold mb-2">{benefit.title}</h3>
                     <p className="text-gray-400">{benefit.description}</p>
-                  </Card>
-                ))}
+                  </Card>)}
               </div>
             </div>
             <div className="flex flex-col justify-center">
@@ -137,8 +128,6 @@ const Index: React.FC = () => {
         </section>
       </main>
       <Footer />
-    </div>
-  );
+    </div>;
 };
-
 export default Index;
