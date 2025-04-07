@@ -14,14 +14,16 @@ window.harmonIAChatbot = (function() {
     position: 'right',
     welcomeMessage: 'Olá! Sou o assistente virtual da harmonIA. Como posso ajudar hoje?',
     placeholderText: 'Digite sua mensagem...',
-    sendButtonText: 'Enviar'
+    sendButtonText: 'Enviar',
+    webhookUrl: '/api/dialogflow'  // URL padrão para o webhook local
   };
   
   // Estado do chatbot
   let state = {
     isOpen: false,
     messages: [],
-    sessionId: generateSessionId()
+    sessionId: generateSessionId(),
+    isTyping: false
   };
   
   // Elementos do DOM
@@ -54,7 +56,7 @@ window.harmonIAChatbot = (function() {
     injectStyles();
     
     // Adiciona mensagem de boas-vindas
-    addBotMessage(config.welcomeMessage);
+    addBotMessage(config.welcomeMessage, ['Informações sobre pacotes', 'Ver amostras', 'Iniciar briefing', 'Falar com atendente']);
     
     console.log('harmonIA Chatbot inicializado com sucesso!');
   }
@@ -300,9 +302,144 @@ window.harmonIAChatbot = (function() {
       // Limpa o campo de input
       elements.inputField.value = '';
       
-      // Simula o processamento da mensagem
-      // Em produção, substitua por uma chamada real para o Dialogflow
-      simulateProcessing(userMessage);
+      // Processa a mensagem através do webhook
+      processMessage(userMessage);
+    }
+  }
+  
+  // Processa a mensagem e obtém resposta
+  function processMessage(text) {
+    // Adiciona indicador de digitação
+    showTypingIndicator();
+    
+    // Decide se usar o webhook real ou simulação local
+    if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
+      // Em ambiente de desenvolvimento, simula processamento
+      setTimeout(() => {
+        hideTypingIndicator();
+        simulateResponse(text);
+      }, 1000);
+    } else {
+      // Em produção, tenta usar o webhook
+      callWebhook(text);
+    }
+  }
+  
+  // Chama o webhook (servidor backend)
+  function callWebhook(text) {
+    // URL para o webhook
+    const webhookUrl = config.webhookUrl || '/api/dialogflow';
+    
+    // Faz a chamada ao webhook
+    fetch(webhookUrl, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        text: text,
+        sessionId: state.sessionId
+      })
+    })
+    .then(response => {
+      if (!response.ok) {
+        throw new Error('Erro na comunicação com o servidor');
+      }
+      return response.json();
+    })
+    .then(data => {
+      hideTypingIndicator();
+      
+      // Processa a resposta do webhook
+      if (data.fulfillmentText) {
+        // Extrai quick replies dos fulfillmentMessages se existirem
+        let quickReplies = [];
+        if (data.fulfillmentMessages) {
+          data.fulfillmentMessages.forEach(msg => {
+            if (msg.quickReplies && msg.quickReplies.quickReplies) {
+              quickReplies = msg.quickReplies.quickReplies;
+            }
+          });
+        }
+        
+        // Adiciona a resposta ao chat
+        addBotMessage(data.fulfillmentText, quickReplies);
+      } else {
+        // Fallback para quando não há texto de resposta
+        addBotMessage("Desculpe, não consegui processar sua solicitação no momento.", 
+                    ["Tentar novamente", "Falar com atendente"]);
+      }
+    })
+    .catch(error => {
+      console.error('Erro ao chamar webhook:', error);
+      hideTypingIndicator();
+      
+      // Fallback para simulação em caso de erro
+      simulateResponse(text);
+    });
+  }
+  
+  // Simula uma resposta do bot (fallback)
+  function simulateResponse(userMessage) {
+    // Lógica de resposta simulada
+    let response;
+    let quickReplies = [];
+    
+    // Respostas baseadas em palavras-chave simples
+    const lowerMessage = userMessage.toLowerCase();
+    
+    if (lowerMessage.includes('olá') || lowerMessage.includes('oi') || lowerMessage.includes('bom dia') || lowerMessage.includes('boa tarde') || lowerMessage.includes('boa noite')) {
+      response = 'Olá! Sou o assistente virtual da harmonIA. Como posso ajudar com sua música personalizada hoje?';
+      quickReplies = ['Informações sobre pacotes', 'Ver amostras', 'Iniciar briefing', 'Falar com atendente'];
+    } 
+    else if (lowerMessage.includes('pacote') || lowerMessage.includes('preço') || lowerMessage.includes('valor') || lowerMessage.includes('plano')) {
+      response = 'Oferecemos 3 pacotes principais: Essencial (R$219), Profissional (R$479) e Premium (R$969). Cada um tem características específicas para diferentes necessidades.';
+      quickReplies = ['Detalhes do Essencial', 'Detalhes do Profissional', 'Detalhes do Premium', 'Calcular preço'];
+    }
+    else if (lowerMessage.includes('amostra') || lowerMessage.includes('exemplo') || lowerMessage.includes('portfólio') || lowerMessage.includes('portfolio')) {
+      response = 'Você pode conferir nosso portfólio completo em nosso site ou posso te mostrar algumas amostras populares.';
+      quickReplies = ['Ver portfólio completo', 'Amostras de casamento', 'Amostras corporativas', 'Iniciar briefing'];
+    }
+    else if (lowerMessage.includes('briefing') || lowerMessage.includes('começar') || lowerMessage.includes('iniciar') || lowerMessage.includes('criar')) {
+      response = 'Ótimo! Para iniciar seu projeto musical, você pode preencher nosso formulário de briefing ou posso te guiar com algumas perguntas para entender melhor o que você precisa.';
+      quickReplies = ['Preencher formulário', 'Iniciar briefing guiado', 'Ver exemplos primeiro'];
+    }
+    else if (lowerMessage.includes('status') || lowerMessage.includes('acompanhar') || lowerMessage.includes('pedido')) {
+      response = 'Para verificar o status do seu pedido, acesse nossa página de acompanhamento com seu código de pedido ou me informe o código aqui.';
+      quickReplies = ['Acessar acompanhamento', 'Informar código', 'Falar com atendente'];
+    }
+    else if (lowerMessage.includes('atendente') || lowerMessage.includes('pessoa') || lowerMessage.includes('humano') || lowerMessage.includes('whatsapp')) {
+      response = 'Entendo que você prefere falar com um atendente humano. Posso transferir você para nossa equipe de atendimento via WhatsApp ou e-mail.';
+      quickReplies = ['WhatsApp', 'E-mail', 'Continuar com o bot'];
+    }
+    else {
+      response = 'Desculpe, não entendi completamente. Posso ajudar com informações sobre nossos pacotes, amostras de música, processo de briefing ou colocar você em contato com nossa equipe.';
+      quickReplies = ['Informações sobre pacotes', 'Ver amostras', 'Iniciar briefing', 'Falar com atendente'];
+    }
+    
+    // Adiciona a resposta do bot
+    addBotMessage(response, quickReplies);
+  }
+  
+  // Exibe indicador de digitação
+  function showTypingIndicator() {
+    if (state.isTyping) return;
+    
+    state.isTyping = true;
+    const typingElement = document.createElement('div');
+    typingElement.className = 'harmonia-message harmonia-bot-message harmonia-typing';
+    typingElement.innerHTML = '<span>.</span><span>.</span><span>.</span>';
+    typingElement.id = 'typing-indicator';
+    elements.messageList.appendChild(typingElement);
+    scrollToBottom();
+  }
+  
+  // Remove indicador de digitação
+  function hideTypingIndicator() {
+    state.isTyping = false;
+    const typingElement = document.getElementById('typing-indicator');
+    if (typingElement) {
+      elements.messageList.removeChild(typingElement);
     }
   }
   
@@ -326,7 +463,7 @@ window.harmonIAChatbot = (function() {
         
         quickReplyElement.addEventListener('click', () => {
           addUserMessage(reply);
-          simulateProcessing(reply);
+          processMessage(reply);
         });
         
         quickRepliesContainer.appendChild(quickReplyElement);
@@ -369,94 +506,6 @@ window.harmonIAChatbot = (function() {
     elements.messageList.scrollTop = elements.messageList.scrollHeight;
   }
   
-  // Simula o processamento de mensagem (para desenvolvimento)
-  // Em produção, substitua por uma chamada real para o Dialogflow
-  function simulateProcessing(userMessage) {
-    // Adiciona indicador de digitação
-    const typingElement = document.createElement('div');
-    typingElement.className = 'harmonia-message harmonia-bot-message';
-    typingElement.textContent = '...';
-    elements.messageList.appendChild(typingElement);
-    scrollToBottom();
-    
-    // Simula o tempo de resposta do bot
-    setTimeout(() => {
-      // Remove o indicador de digitação
-      elements.messageList.removeChild(typingElement);
-      
-      // Lógica de resposta simulada
-      let response;
-      let quickReplies = [];
-      
-      // Respostas baseadas em palavras-chave simples
-      const lowerMessage = userMessage.toLowerCase();
-      
-      if (lowerMessage.includes('olá') || lowerMessage.includes('oi') || lowerMessage.includes('bom dia') || lowerMessage.includes('boa tarde') || lowerMessage.includes('boa noite')) {
-        response = 'Olá! Sou o assistente virtual da harmonIA. Como posso ajudar com sua música personalizada hoje?';
-        quickReplies = ['Informações sobre pacotes', 'Ver amostras', 'Iniciar briefing', 'Falar com atendente'];
-      } 
-      else if (lowerMessage.includes('pacote') || lowerMessage.includes('preço') || lowerMessage.includes('valor') || lowerMessage.includes('plano')) {
-        response = 'Oferecemos 3 pacotes principais: Essencial (R$219), Profissional (R$479) e Premium (R$969). Cada um tem características específicas para diferentes necessidades.';
-        quickReplies = ['Detalhes do Essencial', 'Detalhes do Profissional', 'Detalhes do Premium', 'Calcular preço'];
-      }
-      else if (lowerMessage.includes('amostra') || lowerMessage.includes('exemplo') || lowerMessage.includes('portfólio') || lowerMessage.includes('portfolio')) {
-        response = 'Você pode conferir nosso portfólio completo em nosso site ou posso te mostrar algumas amostras populares.';
-        quickReplies = ['Ver portfólio completo', 'Amostras de casamento', 'Amostras corporativas', 'Iniciar briefing'];
-      }
-      else if (lowerMessage.includes('briefing') || lowerMessage.includes('começar') || lowerMessage.includes('iniciar') || lowerMessage.includes('criar')) {
-        response = 'Ótimo! Para iniciar seu projeto musical, você pode preencher nosso formulário de briefing ou posso te guiar com algumas perguntas para entender melhor o que você precisa.';
-        quickReplies = ['Preencher formulário', 'Iniciar briefing guiado', 'Ver exemplos primeiro'];
-      }
-      else if (lowerMessage.includes('status') || lowerMessage.includes('acompanhar') || lowerMessage.includes('pedido')) {
-        response = 'Para verificar o status do seu pedido, acesse nossa página de acompanhamento com seu código de pedido ou me informe o código aqui.';
-        quickReplies = ['Acessar acompanhamento', 'Informar código', 'Falar com atendente'];
-      }
-      else if (lowerMessage.includes('atendente') || lowerMessage.includes('pessoa') || lowerMessage.includes('humano') || lowerMessage.includes('whatsapp')) {
-        response = 'Entendo que você prefere falar com um atendente humano. Posso transferir você para nossa equipe de atendimento via WhatsApp ou e-mail.';
-        quickReplies = ['WhatsApp', 'E-mail', 'Continuar com o bot'];
-      }
-      else {
-        response = 'Desculpe, não entendi completamente. Posso ajudar com informações sobre nossos pacotes, amostras de música, processo de briefing ou colocar você em contato com nossa equipe.';
-        quickReplies = ['Informações sobre pacotes', 'Ver amostras', 'Iniciar briefing', 'Falar com atendente'];
-      }
-      
-      // Adiciona a resposta do bot
-      addBotMessage(response, quickReplies);
-    }, 1500);
-  }
-  
-  // Função para enviar mensagem ao Dialogflow (implementação futura)
-  function sendToDialogflow(text) {
-    // Esta é apenas uma estrutura para implementação futura
-    // Em um ambiente de produção, você precisará implementar a
-    // comunicação real com a API do Dialogflow ou com seu servidor webhook
-    
-    console.log('Enviando para Dialogflow:', text);
-    
-    // Exemplo de como a implementação pode ser:
-    /*
-    fetch('/api/dialogflow', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify({
-        text: text,
-        sessionId: state.sessionId
-      })
-    })
-    .then(response => response.json())
-    .then(data => {
-      // Processar a resposta do Dialogflow
-      addBotMessage(data.fulfillmentText, data.quickReplies);
-    })
-    .catch(error => {
-      console.error('Erro ao comunicar com Dialogflow:', error);
-      addBotMessage('Desculpe, tive um problema de comunicação. Pode tentar novamente?');
-    });
-    */
-  }
-  
   // Interface pública
   return {
     init,
@@ -465,13 +514,3 @@ window.harmonIAChatbot = (function() {
     addUserMessage
   };
 })();
-
-// Implementação futura para comunicação com backend/Dialogflow
-// document.addEventListener('DOMContentLoaded', function() {
-//   // Inicialização com configurações específicas do site
-//   window.harmonIAChatbot.init({
-//     dialogflowProjectId: 'seu-project-id',
-//     primaryColor: '#00c853',
-//     widgetTitle: 'Assistente harmonIA'
-//   });
-// });

@@ -29,9 +29,9 @@
     <script>
       document.addEventListener('DOMContentLoaded', function() {
         window.harmonIAChatbot.init({
-          dialogflowProjectId: 'harmonia-chatbot',  // Substituir pelo ID real quando configurado
           primaryColor: '#00c853',
-          widgetTitle: 'Assistente harmonIA'
+          widgetTitle: 'Assistente harmonIA',
+          webhookUrl: 'https://tunealchemy-chatbot.herokuapp.com/dialogflow'  // URL do servidor webhook em produção
         });
       });
     </script>
