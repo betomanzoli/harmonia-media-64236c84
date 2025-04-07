@@ -10,24 +10,14 @@ const AdminPortfolio: React.FC = () => {
   const {
     portfolioItems,
     isLoading,
-    webhookUrl,
-    setWebhookUrl,
-    saveWebhookUrl,
-    handleAddItem,
-    copyToClipboard
+    handleAddItem
   } = usePortfolioItems();
 
   return (
     <div className="container mx-auto py-20 px-4">
       <PortfolioHeader />
       
-      <IntegrationConfig
-        webhookUrl={webhookUrl}
-        setWebhookUrl={setWebhookUrl}
-        saveWebhookUrl={saveWebhookUrl}
-        copyToClipboard={copyToClipboard}
-        portfolioItems={portfolioItems}
-      />
+      <IntegrationConfig portfolioItems={portfolioItems} />
       
       <PortfolioTable
         portfolioItems={portfolioItems}

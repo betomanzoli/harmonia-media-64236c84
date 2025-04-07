@@ -1,11 +1,11 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
-import { toast } from "@/hooks/use-toast";
+import { useToast } from "@/hooks/use-toast";
 import { useSystemSettings } from '@/hooks/useSystemSettings';
 import { Loader2 } from 'lucide-react';
 
@@ -14,6 +14,14 @@ const EmailSettingsCard: React.FC = () => {
   const [adminEmail, setAdminEmail] = useState(settings.admin_email || '');
   const [emailEnabled, setEmailEnabled] = useState(settings.email_notifications_enabled === 'true');
   const [isSaving, setIsSaving] = useState(false);
+
+  // Atualizar os estados quando as configurações carregarem
+  useEffect(() => {
+    if (settings) {
+      setAdminEmail(settings.admin_email || '');
+      setEmailEnabled(settings.email_notifications_enabled === 'true');
+    }
+  }, [settings]);
 
   const handleSaveSettings = async () => {
     setIsSaving(true);

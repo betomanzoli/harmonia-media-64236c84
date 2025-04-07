@@ -2,7 +2,7 @@
 import React from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { SidebarProvider, Sidebar, SidebarContent, SidebarHeader, SidebarFooter, SidebarMenu, SidebarMenuItem, SidebarMenuButton, SidebarGroup, SidebarGroupLabel } from "@/components/ui/sidebar";
-import { Database, Music, Users, FileAudio, BarChart, Settings, LogOut, Home } from 'lucide-react';
+import { Database, Music, Users, FileAudio, BarChart, Settings, LogOut, Home, Link2 } from 'lucide-react';
 import { siteConfig } from '@/config/site';
 import { useAdminAuth } from '@/context/AdminAuthContext';
 import { useToast } from '@/hooks/use-toast';
@@ -52,6 +52,14 @@ const AdminSidebar: React.FC = () => {
                 <Link to={siteConfig.urls.admin.portfolio}>
                   <Music className="w-4 h-4" />
                   <span>Portfólio</span>
+                </Link>
+              </SidebarMenuButton>
+            </SidebarMenuItem>
+            <SidebarMenuItem>
+              <SidebarMenuButton asChild>
+                <Link to="/admin-j28s7d1k/integrations">
+                  <Link2 className="w-4 h-4" />
+                  <span>Integrações</span>
                 </Link>
               </SidebarMenuButton>
             </SidebarMenuItem>

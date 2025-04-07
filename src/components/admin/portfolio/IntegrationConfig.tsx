@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Loader2 } from "lucide-react";
 import { useIntegrationConfig } from '@/hooks/admin/useIntegrationConfig';
+import webhookService from '@/services/webhookService';
 
 interface IntegrationConfigProps {
   portfolioItems: any[];
@@ -89,9 +90,9 @@ const IntegrationConfig: React.FC<IntegrationConfigProps> = ({
             variant="default" 
             className="w-full"
             onClick={async () => {
-              const webhookUrl = await webhookService.getWebhookUrl();
-              if (webhookUrl) {
-                webhookService.sendToWebhook(webhookUrl, {
+              const url = await webhookService.getWebhookUrl();
+              if (url) {
+                webhookService.sendToWebhook(url, {
                   type: 'new_portfolio_item',
                   data: { testMessage: "Este é um teste de webhook" },
                   timestamp: new Date().toISOString()

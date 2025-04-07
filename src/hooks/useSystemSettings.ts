@@ -5,10 +5,16 @@ import { supabase } from '@/lib/supabase';
 // Interface para as configurações do sistema
 export interface SystemSettings {
   webhook_url: string;
-  email_notifications_enabled: boolean;
-  chat_bot_enabled: boolean;
-  whatsapp_integration_enabled: boolean;
+  email_notifications_enabled: string;
+  chat_bot_enabled: string;
+  whatsapp_integration_enabled: string;
   admin_email: string;
+  [key: string]: string; // Índice dinâmico para permitir acessar qualquer propriedade
+}
+
+interface SaveSettingResult {
+  success: boolean;
+  error?: string;
 }
 
 // Hook personalizado para gerenciar configurações do sistema
@@ -47,7 +53,7 @@ export function useSystemSettings() {
   };
   
   // Salvar uma configuração específica
-  const saveSetting = async (key: keyof SystemSettings, value: any) => {
+  const saveSetting = async (key: keyof SystemSettings, value: string): Promise<SaveSettingResult> => {
     try {
       const { error } = await supabase
         .from('system_settings')
