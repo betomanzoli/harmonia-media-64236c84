@@ -20,7 +20,7 @@ const Payment: React.FC = () => {
   const [selectedPackage, setSelectedPackage] = useState<any>(null);
   const [qualificationData, setQualificationData] = useState<any>(null);
   const [selectedExtras, setSelectedExtras] = useState<string[]>([]);
-  const [activeTab, setActiveTab] = useState<string>("payment");
+  const [activeTab, setActiveTab] = useState<string>("package");
   
   useEffect(() => {
     // Get the package data based on the ID
@@ -73,7 +73,7 @@ const Payment: React.FC = () => {
           <div className="text-center mb-8">
             <h1 className="text-3xl md:text-4xl font-bold mb-4">Finalizar Pagamento</h1>
             <p className="text-gray-400 max-w-2xl mx-auto">
-              Revise seu pacote, adicione serviços extras se desejar, e escolha seu método de pagamento preferido.
+              Revise seu pacote, adicione serviços extras se desejar, e prossiga para o pagamento.
             </p>
           </div>
           
