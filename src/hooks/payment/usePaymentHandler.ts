@@ -134,11 +134,11 @@ export function usePaymentHandler(
       
       // Se temos email, enviar confirmação
       if (qualificationData?.email) {
+        // Fixed to use only 3 parameters as expected by the function
         await emailService.sendPaymentConfirmation(
           qualificationData.email,
           qualificationData.name || 'Cliente',
-          selectedPackage.name,
-          selectedExtras.length > 0 ? `+ ${selectedExtras.length} serviços extras` : ''
+          `${selectedPackage.name}${selectedExtras.length > 0 ? ` + ${selectedExtras.length} serviços extras` : ''}`
         );
       }
       

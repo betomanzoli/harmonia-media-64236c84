@@ -32,12 +32,14 @@ const OrderSearch: React.FC<OrderSearchProps> = ({ onSearch }) => {
         const parsedData = JSON.parse(localOrderData);
         if (parsedData.orderId === orderId.trim()) {
           // Converter dados locais para o formato OrderData
+          const today = new Date().toLocaleDateString('pt-BR');
           const formattedOrder: OrderData = {
             orderId: parsedData.orderId,
             clientName: parsedData.clientName,
             packageType: parsedData.packageType,
             status: 'Em Análise',
             currentStep: 1,
+            orderDate: today, // Adding the missing orderDate property
             expectedDelivery: getExpectedDeliveryDate(),
             previewLink: null,
             progress: generateProgressSteps(),
