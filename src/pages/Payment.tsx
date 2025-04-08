@@ -10,18 +10,21 @@ import PaymentSuccess from '@/components/payment/PaymentSuccess';
 import { packageData, PackageId } from '@/lib/payment/packageData';
 import { usePaymentHandler } from '@/hooks/payment/usePaymentHandler';
 import { Card } from "@/components/ui/card";
+import PackageSwitch from '@/components/payment/PackageSwitch';
 
 const Payment: React.FC = () => {
   const navigate = useNavigate();
   const { packageId = 'essencial' } = useParams<{ packageId: string }>();
+  const [selectedPackageId, setSelectedPackageId] = useState<PackageId>(packageId as PackageId);
   const [selectedPackage, setSelectedPackage] = useState<any>(null);
   const [qualificationData, setQualificationData] = useState<any>(null);
   // We won't allow selection of extras in this version
   const selectedExtras: string[] = [];
   
+  // Update the package when the ID changes
   useEffect(() => {
     // Get the package data based on the ID
-    const packageInfo = packageData[packageId as PackageId] || packageData.essencial;
+    const packageInfo = packageData[selectedPackageId] || packageData.essencial;
     setSelectedPackage(packageInfo);
     
     // Retrieve qualification data from localStorage
@@ -29,14 +32,21 @@ const Payment: React.FC = () => {
     if (storedData) {
       setQualificationData(JSON.parse(storedData));
     }
-  }, [packageId]);
+  }, [selectedPackageId]);
+  
+  // Handle package change
+  const handlePackageChange = (newPackageId: PackageId) => {
+    setSelectedPackageId(newPackageId);
+    // Update the URL without reloading the page
+    navigate(`/pagamento/${newPackageId}`, { replace: true });
+  };
   
   const {
     isLoading,
     isPaymentSuccess,
     handlePaymentMethod
   } = usePaymentHandler(
-    packageId as PackageId,
+    selectedPackageId,
     selectedPackage,
     qualificationData,
     selectedExtras
@@ -65,18 +75,27 @@ const Payment: React.FC = () => {
           {isPaymentSuccess ? (
             <PaymentSuccess />
           ) : (
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-              <PaymentMethods 
-                isLoading={isLoading}
-                onSelectMethod={handlePaymentMethod}
-                packageId={packageId as PackageId}
-              />
+            <>
+              <Card className="p-6 mb-6">
+                <PackageSwitch 
+                  currentPackageId={selectedPackageId} 
+                  onPackageChange={handlePackageChange} 
+                />
+              </Card>
               
-              <PackageDetails 
-                selectedPackage={selectedPackage}
-                selectedExtras={selectedExtras}
-              />
-            </div>
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                <PaymentMethods 
+                  isLoading={isLoading}
+                  onSelectMethod={handlePaymentMethod}
+                  packageId={selectedPackageId}
+                />
+                
+                <PackageDetails 
+                  selectedPackage={selectedPackage}
+                  selectedExtras={selectedExtras}
+                />
+              </div>
+            </>
           )}
           
           <Card className="p-6 mt-8">

@@ -7,6 +7,7 @@ export function useIntegrationConfig() {
   const [webhookUrl, setWebhookUrl] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [isTesting, setIsTesting] = useState(false);
+  const [isUrlSaved, setIsUrlSaved] = useState(false);
   const { toast } = useToast();
 
   // Carregar a URL do webhook ao inicializar
@@ -16,6 +17,7 @@ export function useIntegrationConfig() {
       const url = await webhookService.getWebhookUrl();
       if (url) {
         setWebhookUrl(url);
+        setIsUrlSaved(true);
       }
       setIsLoading(false);
     }
@@ -31,6 +33,7 @@ export function useIntegrationConfig() {
       const success = await webhookService.saveWebhookUrl(webhookUrl);
       
       if (success) {
+        setIsUrlSaved(true);
         toast({
           title: 'Configuração salva',
           description: 'URL do webhook foi atualizada com sucesso.',
@@ -68,14 +71,20 @@ export function useIntegrationConfig() {
         return;
       }
       
-      const success = await webhookService.sendToWebhook(webhookUrl, {
+      // Send test ping
+      const testPayload = {
         type: 'test_message',
         data: { 
           testMessage: "Este é um teste de configuração do webhook da harmonIA",
           timestamp: new Date().toISOString()
         },
         timestamp: new Date().toISOString()
-      });
+      };
+      
+      console.log('Enviando ping de teste para:', webhookUrl);
+      console.log('Payload:', testPayload);
+      
+      const success = await webhookService.sendToWebhook(webhookUrl, testPayload);
       
       if (success) {
         toast({
@@ -118,6 +127,7 @@ export function useIntegrationConfig() {
     sendTestPing,
     isLoading,
     isTesting,
+    isUrlSaved,
     copyToClipboard
   };
 }

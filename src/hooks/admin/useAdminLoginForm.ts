@@ -2,6 +2,7 @@
 import { useState, useCallback } from 'react';
 import { supabase } from '@/lib/supabase';
 import { useToast } from '@/hooks/use-toast';
+import { useNavigate } from 'react-router-dom';
 
 interface LoginFormState {
   email: string;
@@ -28,6 +29,7 @@ export const useAdminLoginForm = () => {
   const [resetSuccess, setResetSuccess] = useState(false);
   const [resetError, setResetError] = useState<string | null>(null);
   const { toast } = useToast();
+  const navigate = useNavigate();
 
   const resetForm = useCallback(() => {
     setEmail('');
@@ -71,9 +73,8 @@ export const useAdminLoginForm = () => {
           description: 'Redirecionando para o painel administrativo...'
         });
         
-        setTimeout(() => {
-          window.location.href = '/admin-j28s7d1k/dashboard';
-        }, 1000);
+        // Redirecionar para o dashboard administrativo
+        navigate('/admin-j28s7d1k/dashboard');
         return;
       }
       
@@ -87,7 +88,7 @@ export const useAdminLoginForm = () => {
     } finally {
       setLoading(false);
     }
-  }, [email, password, toast]);
+  }, [email, password, toast, navigate]);
 
   const handleResetPassword = useCallback(async () => {
     setResetLoading(true);

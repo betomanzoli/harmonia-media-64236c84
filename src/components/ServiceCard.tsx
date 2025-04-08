@@ -6,6 +6,7 @@ import TermsDialog from './service-card/TermsDialog';
 import FeatureList from './service-card/FeatureList';
 import ServiceCardHeader from './service-card/ServiceCardHeader';
 import { useServiceTerms } from '@/hooks/service-card/useServiceTerms';
+import { useNavigate } from 'react-router-dom';
 
 interface ServiceCardProps {
   title: string;
@@ -22,13 +23,14 @@ const ServiceCard: React.FC<ServiceCardProps> = ({
   features, 
   recommended = false 
 }) => {
+  const navigate = useNavigate();
+  
   const {
     isTermsDialogOpen,
     setIsTermsDialogOpen,
     acceptedTerms,
     setAcceptedTerms,
-    handleChoosePackage,
-    handleProceedToBriefing
+    handleChoosePackage
   } = useServiceTerms(title);
   
   // Determine package ID from title
@@ -43,7 +45,7 @@ const ServiceCard: React.FC<ServiceCardProps> = ({
   const handleAcceptTerms = () => {
     // Route directly to payment with the package ID
     const packageId = getPackageId();
-    window.location.href = `/pagamento/${packageId}`;
+    navigate(`/pagamento/${packageId}`);
   };
   
   return (

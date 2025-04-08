@@ -6,6 +6,7 @@ import { Separator } from "@/components/ui/separator";
 import { ExternalLink, CreditCard, Percent } from 'lucide-react';
 import { PackageId } from '@/lib/payment/packageData';
 import { packagePaymentLinks } from '@/lib/payment/paymentLinks';
+import { toast } from '@/hooks/use-toast';
 
 interface PaymentMethodsProps {
   isLoading: boolean;
@@ -28,10 +29,18 @@ const PaymentMethods: React.FC<PaymentMethodsProps> = ({ isLoading, onSelectMeth
     // If we're showing the coupon field, validate the code
     if (showCouponField) {
       if (couponCode.toUpperCase() === validDiscountCode) {
+        toast({
+          title: "Cupom aplicado!",
+          description: `Cupom ${validDiscountCode} aplicado com sucesso!`,
+        });
         onSelectMethod('MercadoPageDiscount', true);
       } else {
         // Invalid coupon code
-        alert(`Código de cupom inválido. Use ${validDiscountCode} para este pacote.`);
+        toast({
+          title: "Código inválido",
+          description: `Código de cupom inválido. Use ${validDiscountCode} para este pacote.`,
+          variant: "destructive"
+        });
       }
     } else {
       // Just show the coupon field

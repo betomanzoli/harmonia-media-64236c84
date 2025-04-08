@@ -1,164 +1,122 @@
 
-import React from 'react';
+import React, { useState } from 'react';
+import { Card } from "@/components/ui/card";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import LoginForm from './LoginForm';
+import LoginError from './LoginError';
+import ConnectionAlert from './ConnectionAlert';
+import DiagnosticsPanel from './DiagnosticsPanel';
+import PasswordResetDialog from './PasswordResetDialog';
+import { motion } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
-import { Alert, AlertDescription } from "@/components/ui/alert";
-import { AlertCircle, Loader2, Info } from 'lucide-react';
-import Logo from '@/components/Logo';
-import { useAdminLoginForm } from '@/hooks/admin/useAdminLoginForm';
 
-const AdminLoginContainer: React.FC = () => {
+const MotionCard = motion(Card);
+
+interface AdminLoginContainerProps {
+  onAuthenticate?: (email: string, password: string) => boolean;
+}
+
+const AdminLoginContainer: React.FC<AdminLoginContainerProps> = ({ onAuthenticate }) => {
+  const [activeTab, setActiveTab] = useState("login");
+  const [showConnectionStatus, setShowConnectionStatus] = useState(false);
+  const [isPasswordResetOpen, setIsPasswordResetOpen] = useState(false);
+  const [loginErrorMessage, setLoginErrorMessage] = useState<string | null>(null);
   const navigate = useNavigate();
-  const { formState, formHandlers } = useAdminLoginForm();
   
-  const { 
-    email, password, loading, success, error, 
-    showPasswordReset, resetEmail, resetLoading, resetSuccess, resetError 
-  } = formState;
-  
-  const {
-    handleEmailChange,
-    handlePasswordChange,
-    handleSubmit,
-    handleResetEmailChange,
-    handleResetPassword,
-    openResetDialog,
-    closeResetDialog
-  } = formHandlers;
+  const handleLogin = (email: string, password: string) => {
+    // Use the provided authentication function if available
+    if (onAuthenticate) {
+      const success = onAuthenticate(email, password);
+      if (success) {
+        // Navigate after successful login
+        navigate('/admin-j28s7d1k/dashboard');
+        return true;
+      } else {
+        setLoginErrorMessage('Credenciais inválidas. Por favor, verifique seu email e senha.');
+        return false;
+      }
+    }
+    
+    // Fallback authentication logic
+    if (email === 'contato@harmonia.media' && password === 'i9!_b!ThA;2H6/bt') {
+      // Store authentication information
+      localStorage.setItem('harmonia-admin-auth-token', 'admin-token-for-development');
+      localStorage.setItem('harmonia-admin-auth-user', JSON.stringify({ email, role: 'admin' }));
+      
+      // Navigate to dashboard
+      navigate('/admin-j28s7d1k/dashboard');
+      return true;
+    } else {
+      setLoginErrorMessage('Credenciais inválidas. Por favor, verifique seu email e senha.');
+      return false;
+    }
+  };
   
   return (
-    <div className="flex items-center justify-center min-h-screen bg-slate-50">
-      <Card className="w-[380px] shadow-lg">
-        <CardHeader className="space-y-2 text-center">
-          <div className="flex justify-center mb-6">
-            <Logo />
-          </div>
-          <CardTitle className="text-2xl">
-            {showPasswordReset ? 'Redefinir Senha' : 'Admin Login'}
-          </CardTitle>
-          <CardDescription>
-            {showPasswordReset 
-              ? 'Insira seu email para receber instruções de redefinição de senha' 
-              : 'Acesse o painel administrativo da harmonIA'}
-          </CardDescription>
-        </CardHeader>
+    <div className="min-h-screen flex flex-col items-center justify-center px-4 bg-gradient-to-b from-slate-900 to-slate-800">
+      <MotionCard 
+        className="w-full max-w-md p-6"
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.5 }}
+      >
+        <div className="text-center mb-6">
+          <h1 className="text-2xl font-bold">Painel harmonIA</h1>
+          <p className="text-gray-500 text-sm">Área administrativa restrita</p>
+        </div>
         
-        <CardContent>
-          {error && (
-            <Alert variant="destructive" className="mb-4">
-              <AlertCircle className="h-4 w-4" />
-              <AlertDescription>{error}</AlertDescription>
-            </Alert>
-          )}
+        <Tabs value={activeTab} onValueChange={setActiveTab}>
+          <TabsList className="grid grid-cols-1 mb-4">
+            <TabsTrigger value="login">Login</TabsTrigger>
+          </TabsList>
           
-          {resetSuccess && (
-            <Alert className="mb-4 border-green-200 bg-green-50 text-green-800">
-              <Info className="h-4 w-4" />
-              <AlertDescription>
-                Email de redefinição enviado. Verifique sua caixa de entrada.
-              </AlertDescription>
-            </Alert>
-          )}
-          
-          {resetError && (
-            <Alert variant="destructive" className="mb-4">
-              <AlertCircle className="h-4 w-4" />
-              <AlertDescription>{resetError}</AlertDescription>
-            </Alert>
-          )}
-          
-          {showPasswordReset ? (
-            <form onSubmit={(e) => { e.preventDefault(); handleResetPassword(); }}>
-              <div className="space-y-4">
-                <div className="space-y-2">
-                  <label className="text-sm font-medium">Email</label>
-                  <Input
-                    required
-                    type="email"
-                    placeholder="seu@email.com"
-                    value={resetEmail}
-                    onChange={handleResetEmailChange}
-                    disabled={resetLoading}
-                  />
-                </div>
-                
-                <Button 
-                  type="submit" 
-                  className="w-full bg-harmonia-green hover:bg-harmonia-green/90"
-                  disabled={resetLoading}
-                >
-                  {resetLoading ? (
-                    <>
-                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                      Enviando...
-                    </>
-                  ) : (
-                    'Enviar Link de Recuperação'
-                  )}
-                </Button>
+          <TabsContent value="login" className="space-y-4">
+            {loginErrorMessage && (
+              <LoginError 
+                message={loginErrorMessage} 
+                onClose={() => setLoginErrorMessage(null)}
+              />
+            )}
+            
+            <LoginForm 
+              onSubmit={handleLogin}
+              onForgotPassword={() => setIsPasswordResetOpen(true)}
+            />
+            
+            {showConnectionStatus && (
+              <div className="mt-6">
+                <ConnectionAlert />
               </div>
-            </form>
-          ) : (
-            <form onSubmit={handleSubmit}>
-              <div className="space-y-4">
-                <div className="space-y-2">
-                  <label className="text-sm font-medium">Email</label>
-                  <Input
-                    required
-                    type="email"
-                    placeholder="seu@email.com"
-                    value={email}
-                    onChange={handleEmailChange}
-                    disabled={loading}
-                  />
-                </div>
-                
-                <div className="space-y-2">
-                  <div className="flex justify-between items-center">
-                    <label className="text-sm font-medium">Senha</label>
-                  </div>
-                  <Input
-                    required
-                    type="password"
-                    placeholder="••••••••"
-                    value={password}
-                    onChange={handlePasswordChange}
-                    disabled={loading}
-                  />
-                </div>
-                
-                <Button 
-                  type="submit" 
-                  className="w-full bg-harmonia-green hover:bg-harmonia-green/90"
-                  disabled={loading}
-                >
-                  {loading ? (
-                    <>
-                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                      Processando...
-                    </>
-                  ) : (
-                    'Entrar'
-                  )}
-                </Button>
-              </div>
-            </form>
-          )}
-        </CardContent>
+            )}
+          </TabsContent>
+        </Tabs>
         
-        <CardFooter className="flex flex-col space-y-4">
-          <Button 
-            variant="link" 
-            className="text-sm text-slate-500 hover:text-slate-900 px-0"
-            onClick={showPasswordReset ? closeResetDialog : openResetDialog}
-            disabled={loading || resetLoading}
+        <div className="mt-6 text-center">
+          <button 
+            className="text-xs text-gray-500 hover:text-gray-400 transition-colors"
+            onClick={() => setShowConnectionStatus(!showConnectionStatus)}
           >
-            {showPasswordReset ? 'Voltar para o login' : 'Esqueceu sua senha?'}
-          </Button>
-        </CardFooter>
-      </Card>
+            {showConnectionStatus ? "Ocultar diagnóstico" : "Verificar conexão"}
+          </button>
+        </div>
+        
+        {showConnectionStatus && (
+          <motion.div
+            initial={{ opacity: 0, height: 0 }}
+            animate={{ opacity: 1, height: 'auto' }}
+            exit={{ opacity: 0, height: 0 }}
+            transition={{ duration: 0.3 }}
+            className="mt-4 overflow-hidden"
+          >
+            <DiagnosticsPanel />
+          </motion.div>
+        )}
+      </MotionCard>
+      
+      <PasswordResetDialog 
+        open={isPasswordResetOpen}
+        onOpenChange={setIsPasswordResetOpen}
+      />
     </div>
   );
 };
