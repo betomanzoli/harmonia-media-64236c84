@@ -15,7 +15,7 @@ const PaymentMethods: React.FC<PaymentMethodsProps> = ({ isLoading, onSelectMeth
     <div className="md:col-span-2">
       <Card className="p-6 mb-6">
         <h2 className="text-xl font-semibold mb-4">Forma de Pagamento</h2>
-        <p className="text-gray-400 mb-6">Escolha uma forma de pagamento para continuar</p>
+        <p className="text-gray-400 mb-6">Prossiga para efetuar o pagamento</p>
         
         <div className="space-y-4">
           <div className="border border-border rounded-lg p-4 hover:border-blue-500/50 transition cursor-pointer bg-gradient-to-r from-blue-50/10 to-blue-100/10">
@@ -30,7 +30,7 @@ const PaymentMethods: React.FC<PaymentMethodsProps> = ({ isLoading, onSelectMeth
                 </div>
                 <div>
                   <h3 className="font-medium">MercadoPago</h3>
-                  <p className="text-sm text-gray-400">Cartão, Pix e mais opções</p>
+                  <p className="text-sm text-gray-400">Pagar com segurança via MercadoPago</p>
                 </div>
               </div>
               <Button 
@@ -38,7 +38,7 @@ const PaymentMethods: React.FC<PaymentMethodsProps> = ({ isLoading, onSelectMeth
                 onClick={() => onSelectMethod('MercadoPago')}
                 className="bg-blue-500 hover:bg-blue-600"
               >
-                {isLoading ? 'Processando...' : 'Pagar com MercadoPago'}
+                {isLoading ? 'Processando...' : 'Pagar agora'}
                 <ExternalLink className="ml-2 h-4 w-4" />
               </Button>
             </div>
@@ -56,9 +56,9 @@ const PaymentMethods: React.FC<PaymentMethodsProps> = ({ isLoading, onSelectMeth
           <ul className="list-disc pl-5 space-y-1">
             <li>Todos os pagamentos são processados em Reais (BRL)</li>
             <li>Pagamentos são processados com segurança pelo MercadoPago</li>
-            <li>Você pode escolher entre cartão de crédito, Pix e outros métodos na página de pagamento</li>
             <li>O prazo de entrega é contado a partir da confirmação do pagamento</li>
             <li>Seus dados de pagamento são protegidos por criptografia</li>
+            <li>Após o pagamento, você será redirecionado de volta para preencher o briefing</li>
           </ul>
         </div>
       </Card>
