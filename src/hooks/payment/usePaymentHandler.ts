@@ -90,7 +90,9 @@ export function usePaymentHandler(
           {
             step: 1,
             title: "Pagamento Confirmado",
-            description: "Seu pagamento foi confirmado e seu projeto foi iniciado.",
+            description: method === 'Boleto' 
+              ? "Seu pagamento via boleto foi registrado. O projeto será iniciado após a confirmação do pagamento."
+              : "Seu pagamento foi confirmado e seu projeto foi iniciado.",
             date: new Date().toLocaleDateString('pt-BR'),
             status: "completed",
             icon: "CreditCard"
@@ -146,8 +148,10 @@ export function usePaymentHandler(
       setIsPaymentSuccess(true);
       
       toast({
-        title: "Pagamento realizado com sucesso!",
-        description: `Seu pedido para o ${selectedPackage.name} foi confirmado.`,
+        title: "Pagamento registrado com sucesso!",
+        description: method === 'Boleto' 
+          ? `Seu pedido para o ${selectedPackage.name} foi registrado. O projeto será iniciado após a confirmação do pagamento.`
+          : `Seu pedido para o ${selectedPackage.name} foi confirmado.`,
       });
       
       // Após 3 segundos, redirecionar para a página de agradecimento

@@ -1,9 +1,9 @@
 
 import React from 'react';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Loader2, CreditCard, QrCode, Receipt, AlertCircle, Clock } from 'lucide-react';
+import { Separator } from "@/components/ui/separator";
+import { CreditCard, Landmark, Clock } from 'lucide-react';
 
 interface PaymentMethodsProps {
   isLoading: boolean;
@@ -12,128 +12,77 @@ interface PaymentMethodsProps {
 
 const PaymentMethods: React.FC<PaymentMethodsProps> = ({ isLoading, onSelectMethod }) => {
   return (
-    <Card className="col-span-1 md:col-span-2">
-      <CardHeader>
-        <CardTitle>Opções de Pagamento</CardTitle>
-        <CardDescription>
-          Escolha o método que melhor atende às suas necessidades
-        </CardDescription>
-      </CardHeader>
-      <CardContent>
-        <Tabs defaultValue="cartao" className="w-full">
-          <TabsList className="grid grid-cols-3 mb-4">
-            <TabsTrigger value="cartao">Cartão</TabsTrigger>
-            <TabsTrigger value="pix">PIX</TabsTrigger>
-            <TabsTrigger value="boleto">Boleto</TabsTrigger>
-          </TabsList>
-          
-          <TabsContent value="cartao" className="space-y-4">
-            <div className="p-4 border border-gray-200 rounded-md bg-gray-50 text-center">
-              <div className="flex items-center justify-center mb-4">
-                <CreditCard className="w-12 h-12 text-harmonia-green" />
-              </div>
-              <p className="mb-4">Pague com segurança usando seu cartão de crédito</p>
-              <div className="flex flex-wrap gap-2 justify-center mb-4">
-                <div className="p-2 bg-white border border-gray-200 rounded">Visa</div>
-                <div className="p-2 bg-white border border-gray-200 rounded">Mastercard</div>
-                <div className="p-2 bg-white border border-gray-200 rounded">Amex</div>
-                <div className="p-2 bg-white border border-gray-200 rounded">Elo</div>
-              </div>
-              <Button 
-                onClick={() => onSelectMethod('Cartão de Crédito')}
-                disabled={isLoading}
-                className="bg-harmonia-green hover:bg-harmonia-green/90"
-              >
-                {isLoading ? (
-                  <>
-                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                    Processando...
-                  </>
-                ) : (
-                  "Pagar com Cartão"
-                )}
-              </Button>
-              
-              <div className="flex items-center gap-2 text-xs text-green-600 mt-3 justify-center">
-                <Clock className="h-3 w-3" />
-                <span>Processamento imediato, produção iniciada em até 24h</span>
-              </div>
-            </div>
-          </TabsContent>
-          
-          <TabsContent value="pix" className="space-y-4">
-            <div className="p-4 border border-gray-200 rounded-md bg-gray-50 text-center">
-              <div className="flex items-center justify-center mb-4">
-                <QrCode className="w-12 h-12 text-harmonia-green" />
-              </div>
-              <p className="mb-4">Pagamento instantâneo via PIX</p>
-              <div className="p-4 border border-dashed border-gray-300 bg-white mb-4 mx-auto w-48 h-48 flex items-center justify-center">
-                <span className="text-gray-400">QR Code do PIX</span>
-              </div>
-              <Button 
-                onClick={() => onSelectMethod('PIX')}
-                disabled={isLoading}
-                className="bg-harmonia-green hover:bg-harmonia-green/90"
-              >
-                {isLoading ? (
-                  <>
-                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                    Processando...
-                  </>
-                ) : (
-                  "Confirmar Pagamento PIX"
-                )}
-              </Button>
-              
-              <div className="flex items-center gap-2 text-xs text-green-600 mt-3 justify-center">
-                <Clock className="h-3 w-3" />
-                <span>Confirmação na hora, produção iniciada em até 24h</span>
-              </div>
-            </div>
-          </TabsContent>
-          
-          <TabsContent value="boleto" className="space-y-4">
-            <div className="p-4 border border-gray-200 rounded-md bg-gray-50 text-center">
-              <div className="flex items-center justify-center mb-4">
-                <Receipt className="w-12 h-12 text-gray-600" />
-              </div>
-              <p className="mb-4">Pagamento via boleto bancário (compensação em 1-3 dias úteis)</p>
-              <Button 
-                onClick={() => onSelectMethod('Boleto')}
-                disabled={isLoading}
-                className="bg-gray-600 hover:bg-gray-700 text-white"
-              >
-                {isLoading ? (
-                  <>
-                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                    Processando...
-                  </>
-                ) : (
-                  "Gerar Boleto Bancário"
-                )}
-              </Button>
-              
-              <div className="flex items-center gap-2 text-xs text-amber-600 mt-3 justify-center">
-                <AlertCircle className="h-3 w-3" />
-                <span>Nota: O prazo de entrega inicia apenas após a confirmação do pagamento do boleto (1-3 dias úteis)</span>
-              </div>
-            </div>
-          </TabsContent>
-        </Tabs>
+    <div className="md:col-span-2">
+      <Card className="p-6 mb-6">
+        <h2 className="text-xl font-semibold mb-4">Forma de Pagamento</h2>
+        <p className="text-gray-400 mb-6">Escolha uma forma de pagamento para continuar</p>
         
-        <div className="mt-6 p-3 bg-gray-100 rounded-md text-sm text-gray-600 border border-gray-200">
-          <h4 className="font-medium flex items-center gap-1.5 mb-2">
-            <Clock className="h-4 w-4" />
-            Informações sobre processamento de pagamento
-          </h4>
-          <ul className="space-y-1.5 list-disc pl-5">
-            <li>Cartão de Crédito e PIX: Confirmação imediata, projeto iniciado em até 24 horas.</li>
-            <li>Boleto Bancário: O prazo de entrega só começa a contar após a confirmação do pagamento (1-3 dias úteis).</li>
-            <li>Para maior agilidade na produção da sua música, recomendamos pagamentos via PIX ou cartão de crédito.</li>
+        <div className="space-y-4">
+          <div className="border border-border rounded-lg p-4 hover:border-harmonia-green/50 transition cursor-pointer">
+            <div className="flex items-center justify-between mb-2">
+              <div className="flex items-center">
+                <div className="w-10 h-10 rounded-full bg-harmonia-green/20 flex items-center justify-center mr-3">
+                  <CreditCard className="w-5 h-5 text-harmonia-green" />
+                </div>
+                <div>
+                  <h3 className="font-medium">Cartão de Crédito</h3>
+                  <p className="text-sm text-gray-400">Pagamento processado imediatamente</p>
+                </div>
+              </div>
+              <Button 
+                disabled={isLoading} 
+                onClick={() => onSelectMethod('Cartão de Crédito')}
+                className="bg-harmonia-green hover:bg-harmonia-green/90"
+              >
+                {isLoading ? 'Processando...' : 'Pagar'}
+              </Button>
+            </div>
+            <div className="flex items-center text-xs text-gray-400 mt-2">
+              <Clock className="w-3 h-3 mr-1" />
+              <span>Início do projeto: imediato após a confirmação</span>
+            </div>
+          </div>
+          
+          <div className="border border-border rounded-lg p-4 hover:border-harmonia-green/50 transition cursor-pointer">
+            <div className="flex items-center justify-between mb-2">
+              <div className="flex items-center">
+                <div className="w-10 h-10 rounded-full bg-harmonia-green/20 flex items-center justify-center mr-3">
+                  <Landmark className="w-5 h-5 text-harmonia-green" />
+                </div>
+                <div>
+                  <h3 className="font-medium">Boleto Bancário</h3>
+                  <p className="text-sm text-gray-400">Prazo de até 3 dias úteis para compensação</p>
+                </div>
+              </div>
+              <Button 
+                disabled={isLoading} 
+                onClick={() => onSelectMethod('Boleto')}
+                className="bg-harmonia-green hover:bg-harmonia-green/90"
+              >
+                {isLoading ? 'Processando...' : 'Gerar Boleto'}
+              </Button>
+            </div>
+            <div className="flex items-center text-xs text-gray-400 mt-2">
+              <Clock className="w-3 h-3 mr-1" />
+              <span>Início do projeto: após confirmação do pagamento (1-3 dias úteis)</span>
+            </div>
+          </div>
+        </div>
+        
+        <Separator className="my-6" />
+        
+        <div className="text-sm text-gray-400">
+          <p className="mb-2">Informações importantes:</p>
+          <ul className="list-disc pl-5 space-y-1">
+            <li>Todos os pagamentos são processados em Reais (BRL)</li>
+            <li>Pagamentos via cartão de crédito são confirmados imediatamente</li>
+            <li>Pagamentos via boleto podem levar até 3 dias úteis para compensação</li>
+            <li>O prazo de entrega é contado a partir da confirmação do pagamento</li>
+            <li>Seus dados de pagamento são protegidos por criptografia</li>
           </ul>
         </div>
-      </CardContent>
-    </Card>
+      </Card>
+    </div>
   );
 };
 
