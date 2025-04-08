@@ -8,6 +8,7 @@ export const mockOrderData: OrderData[] = [
     packageType: "profissional",
     status: "Em Produção",
     currentStep: 3,
+    orderDate: "01/03/2025",
     expectedDelivery: "20/05/2025",
     previewLink: "/previews/HAR-2025-1001",
     progress: [
@@ -59,6 +60,7 @@ export const mockOrderData: OrderData[] = [
     packageType: "premium",
     status: "Aguardando Feedback",
     currentStep: 5,
+    orderDate: "15/02/2025",
     expectedDelivery: "15/05/2025",
     previewLink: "/previews/HAR-2025-1002",
     hasPreview: true,

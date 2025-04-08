@@ -3,7 +3,7 @@ import React from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
-import { Loader2, CreditCard, QrCode, Receipt } from 'lucide-react';
+import { Loader2, CreditCard, QrCode, Receipt, AlertCircle, Clock } from 'lucide-react';
 
 interface PaymentMethodsProps {
   isLoading: boolean;
@@ -53,6 +53,11 @@ const PaymentMethods: React.FC<PaymentMethodsProps> = ({ isLoading, onSelectMeth
                   "Pagar com Cartão"
                 )}
               </Button>
+              
+              <div className="flex items-center gap-2 text-xs text-green-600 mt-3 justify-center">
+                <Clock className="h-3 w-3" />
+                <span>Processamento imediato, produção iniciada em até 24h</span>
+              </div>
             </div>
           </TabsContent>
           
@@ -79,6 +84,11 @@ const PaymentMethods: React.FC<PaymentMethodsProps> = ({ isLoading, onSelectMeth
                   "Confirmar Pagamento PIX"
                 )}
               </Button>
+              
+              <div className="flex items-center gap-2 text-xs text-green-600 mt-3 justify-center">
+                <Clock className="h-3 w-3" />
+                <span>Confirmação na hora, produção iniciada em até 24h</span>
+              </div>
             </div>
           </TabsContent>
           
@@ -102,9 +112,26 @@ const PaymentMethods: React.FC<PaymentMethodsProps> = ({ isLoading, onSelectMeth
                   "Gerar Boleto Bancário"
                 )}
               </Button>
+              
+              <div className="flex items-center gap-2 text-xs text-amber-600 mt-3 justify-center">
+                <AlertCircle className="h-3 w-3" />
+                <span>Nota: O prazo de entrega inicia apenas após a confirmação do pagamento do boleto (1-3 dias úteis)</span>
+              </div>
             </div>
           </TabsContent>
         </Tabs>
+        
+        <div className="mt-6 p-3 bg-gray-100 rounded-md text-sm text-gray-600 border border-gray-200">
+          <h4 className="font-medium flex items-center gap-1.5 mb-2">
+            <Clock className="h-4 w-4" />
+            Informações sobre processamento de pagamento
+          </h4>
+          <ul className="space-y-1.5 list-disc pl-5">
+            <li>Cartão de Crédito e PIX: Confirmação imediata, projeto iniciado em até 24 horas.</li>
+            <li>Boleto Bancário: O prazo de entrega só começa a contar após a confirmação do pagamento (1-3 dias úteis).</li>
+            <li>Para maior agilidade na produção da sua música, recomendamos pagamentos via PIX ou cartão de crédito.</li>
+          </ul>
+        </div>
       </CardContent>
     </Card>
   );

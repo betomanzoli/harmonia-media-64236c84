@@ -1,4 +1,3 @@
-
 export type OrderProgressStatus = 'pending' | 'current' | 'completed';
 
 export interface OrderProgressStep {
@@ -14,12 +13,14 @@ export interface OrderData {
   orderId: string;
   clientName: string;
   packageType: string;
-  orderDate: string;
-  currentStep: number;
   status: string;
+  currentStep: number;
+  orderDate: string;
   expectedDelivery: string;
-  previewLink?: string;
+  previewLink: string | null;
   progress: OrderProgressStep[];
+  hasPreview?: boolean;
+  pendingAction?: 'feedback' | null;
 }
 
 export interface OrderSearchProps {

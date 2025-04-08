@@ -22,8 +22,17 @@ const PackageDetails: React.FC<PackageDetailsProps> = ({ selectedPackage, select
     }, 0);
   };
 
+  // Parse package price from string like "R$ 1500,00" to number 1500
+  const parsePackagePrice = (priceString: string): number => {
+    // Remove non-numeric characters except for comma/period
+    const numericString = priceString.replace(/[^0-9,\.]/g, '');
+    // Replace comma with period for parsing
+    const formattedString = numericString.replace(',', '.');
+    return parseFloat(formattedString);
+  };
+
   const extrasTotal = calculateExtrasTotal();
-  const packagePrice = parseInt(selectedPackage.price.replace(/[^0-9]/g, ''));
+  const packagePrice = parsePackagePrice(selectedPackage.price);
   const totalPrice = packagePrice + extrasTotal;
 
   return (
@@ -58,7 +67,7 @@ const PackageDetails: React.FC<PackageDetailsProps> = ({ selectedPackage, select
                       <li key={extraId} className="flex justify-between text-sm">
                         <span className="text-gray-300">{extra.title}</span>
                         <span className="font-medium">
-                          {typeof extra.price === 'number' ? `R$${extra.price},00` : extra.price}
+                          {typeof extra.price === 'number' ? `R$ ${extra.price},00` : extra.price}
                         </span>
                       </li>
                     );
@@ -72,19 +81,19 @@ const PackageDetails: React.FC<PackageDetailsProps> = ({ selectedPackage, select
         <div className="border-t border-border mt-4 pt-4 space-y-2">
           <div className="flex justify-between text-sm">
             <span className="text-gray-400">Subtotal (Pacote)</span>
-            <span>{selectedPackage.price}</span>
+            <span>R$ {packagePrice.toFixed(2).replace('.', ',')}</span>
           </div>
           
           {extrasTotal > 0 && (
             <div className="flex justify-between text-sm">
               <span className="text-gray-400">Subtotal (Extras)</span>
-              <span>R${extrasTotal},00</span>
+              <span>R$ {extrasTotal.toFixed(2).replace('.', ',')}</span>
             </div>
           )}
           
           <div className="flex justify-between font-bold pt-2 border-t border-dashed border-border">
             <span>Total</span>
-            <span className="text-harmonia-green">R${totalPrice},00</span>
+            <span className="text-harmonia-green">R$ {totalPrice.toFixed(2).replace('.', ',')}</span>
           </div>
         </div>
       </CardContent>

@@ -1,3 +1,4 @@
+
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useToast } from '@/hooks/use-toast';
@@ -38,6 +39,15 @@ export function usePaymentHandler(
     }, 0);
   };
 
+  // Parse package price from string like "R$ 1500,00" to number 1500
+  const parsePackagePrice = (priceString: string): number => {
+    // Remove non-numeric characters except for comma/period
+    const numericString = priceString.replace(/[^0-9,\.]/g, '');
+    // Replace comma with period for parsing
+    const formattedString = numericString.replace(',', '.');
+    return parseFloat(formattedString);
+  };
+
   const handlePaymentMethod = async (method: string) => {
     setIsLoading(true);
     
@@ -48,7 +58,7 @@ export function usePaymentHandler(
       
       // Calcular valores
       const extrasTotal = calculateExtrasTotal();
-      const packagePrice = parseInt(selectedPackage.price.replace(/[^0-9]/g, ''));
+      const packagePrice = parsePackagePrice(selectedPackage.price);
       const totalPrice = packagePrice + extrasTotal;
       
       // Armazenar dados do pagamento no localStorage
@@ -59,7 +69,7 @@ export function usePaymentHandler(
         price: selectedPackage.price,
         extras: selectedExtras,
         extrasTotal,
-        total: `R$ ${totalPrice},00`,
+        total: `R$ ${totalPrice.toFixed(2).replace('.', ',')}`,
         date: new Date().toISOString(),
         orderId: `HAR-${Date.now()}`
       };
@@ -73,6 +83,9 @@ export function usePaymentHandler(
         packageType: packageId,
         status: 'Em Análise',
         currentStep: 1,
+        orderDate: new Date().toISOString(),
+        expectedDelivery: getExpectedDeliveryDate(packageId, method),
+        previewLink: null,
         progress: [
           {
             step: 1,
@@ -150,6 +163,46 @@ export function usePaymentHandler(
       });
       setIsLoading(false);
     }
+  };
+
+  // Função para calcular data de entrega estimada com base no método de pagamento
+  const getExpectedDeliveryDate = (packageId: PackageId, paymentMethod: string): string => {
+    const today = new Date();
+    let businessDays = 0;
+    
+    // Definir prazo base em dias úteis conforme o pacote
+    switch (packageId) {
+      case 'premium':
+        businessDays = 3;
+        break;
+      case 'profissional':
+        businessDays = 5;
+        break;
+      case 'essencial':
+      default:
+        businessDays = 7;
+        break;
+    }
+    
+    // Adicionar dias extras para boleto
+    if (paymentMethod === 'Boleto') {
+      businessDays += 3; // Adiciona 3 dias úteis para compensação do boleto
+    }
+    
+    // Calcular data de entrega (pulando finais de semana)
+    let deliveryDate = new Date(today);
+    let daysAdded = 0;
+    
+    while (daysAdded < businessDays) {
+      deliveryDate.setDate(deliveryDate.getDate() + 1);
+      // Pular finais de semana (0 = Domingo, 6 = Sábado)
+      if (deliveryDate.getDay() !== 0 && deliveryDate.getDay() !== 6) {
+        daysAdded++;
+      }
+    }
+    
+    // Retornar data formatada
+    return deliveryDate.toLocaleDateString('pt-BR');
   };
 
   return {
