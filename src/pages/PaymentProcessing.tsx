@@ -17,10 +17,18 @@ const PaymentProcessing: React.FC = () => {
   // Extract parameters from URL
   const packageId = searchParams.get('packageId') || 'essencial';
   const orderId = searchParams.get('orderId') || '';
+  const returnUrl = searchParams.get('returnUrl') || '';
+  const discountApplied = searchParams.get('discount') === 'true';
+  
+  // This is a placeholder for the specific payment links that will be provided
+  // In the next message, these will be replaced with the actual links
+  const getPaymentLink = () => {
+    // For now, we'll use a common URL that will be updated later
+    return `https://biolivre.com.br/harmoniam?package=${packageId}&returnUrl=${encodeURIComponent(returnUrl)}&embed=true`;
+  };
   
   // Construct the iframe URL
-  const returnUrl = `${window.location.origin}/pagamento-retorno?packageId=${packageId}&orderId=${orderId}`;
-  const iframeUrl = `https://biolivre.com.br/harmoniam?package=${packageId}&price=0&returnUrl=${encodeURIComponent(returnUrl)}&embed=true`;
+  const iframeUrl = getPaymentLink();
   
   useEffect(() => {
     // Listen for messages from the iframe

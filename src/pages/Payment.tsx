@@ -16,7 +16,8 @@ const Payment: React.FC = () => {
   const { packageId = 'essencial' } = useParams<{ packageId: string }>();
   const [selectedPackage, setSelectedPackage] = useState<any>(null);
   const [qualificationData, setQualificationData] = useState<any>(null);
-  const [selectedExtras, setSelectedExtras] = useState<string[]>([]);
+  // We won't allow selection of extras in this version
+  const selectedExtras: string[] = [];
   
   useEffect(() => {
     // Get the package data based on the ID
@@ -57,7 +58,7 @@ const Payment: React.FC = () => {
           <div className="text-center mb-8">
             <h1 className="text-3xl md:text-4xl font-bold mb-4">Finalizar Pagamento</h1>
             <p className="text-gray-400 max-w-2xl mx-auto">
-              Revise seu pacote e prossiga para o pagamento no MercadoPago.
+              Revise seu pacote e prossiga para o pagamento.
             </p>
           </div>
           
@@ -68,6 +69,7 @@ const Payment: React.FC = () => {
               <PaymentMethods 
                 isLoading={isLoading}
                 onSelectMethod={handlePaymentMethod}
+                packageId={packageId as PackageId}
               />
               
               <PackageDetails 
@@ -80,12 +82,12 @@ const Payment: React.FC = () => {
           <Card className="p-6 mt-8">
             <h2 className="text-xl font-semibold mb-4">Informação sobre Serviços</h2>
             <p className="text-gray-500 mb-4">
-              Ao clicar em "Pagar agora", você será redirecionado para nossa plataforma de pagamento onde 
-              poderá visualizar todos os serviços extras disponíveis para adicionar ao seu pacote.
+              Os serviços extras estarão disponíveis para contratação em uma atualização futura do site.
+              No momento, apenas os pacotes principais estão disponíveis para compra.
             </p>
             <p className="text-gray-500">
-              Você pode personalizar sua experiência diretamente na plataforma de pagamento, selecionando 
-              os serviços adicionais que melhor atendem às suas necessidades.
+              Após a conclusão do pagamento, você será redirecionado de volta para preencher o briefing
+              e iniciar seu projeto musical personalizado.
             </p>
           </Card>
         </div>

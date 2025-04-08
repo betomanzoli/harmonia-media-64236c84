@@ -19,7 +19,8 @@ export function usePaymentHandler(
   const [isLoading, setIsLoading] = useState(false);
   const [isPaymentSuccess, setIsPaymentSuccess] = useState(false);
   const [paymentIframeUrl, setPaymentIframeUrl] = useState('');
-
+  
+  // This function handles direct payment links instead of embedding an iframe
   const handlePaymentMethod = async (method: string) => {
     setIsLoading(true);
     
@@ -47,14 +48,12 @@ export function usePaymentHandler(
       
       localStorage.setItem('paymentData', JSON.stringify(paymentData));
       
-      // Setup return URL for MercadoPago
+      // Setup return URL for redirect after payment
       const returnUrl = `${window.location.origin}/pagamento-retorno?packageId=${packageId}&orderId=${orderId}`;
       
-      // Create iframe URL for embedding MercadoPago checkout
-      const embedUrl = `https://biolivre.com.br/harmoniam?package=${packageId}&price=${totalPrice}&returnUrl=${encodeURIComponent(returnUrl)}&embed=true`;
-      
-      // Navigate to payment processing page which will display the iframe
-      navigate(`/pagamento-processando?orderId=${orderId}&packageId=${packageId}`);
+      // Instead of creating an iframe, we'll redirect to the payment processing page
+      // which will handle the specific payment links
+      navigate(`/pagamento-processando?orderId=${orderId}&packageId=${packageId}&returnUrl=${encodeURIComponent(returnUrl)}`);
       
     } catch (error) {
       console.error('Erro no processamento do pagamento:', error);
