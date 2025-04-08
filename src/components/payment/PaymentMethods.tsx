@@ -3,7 +3,7 @@ import React from 'react';
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
-import { CreditCard, Landmark, Clock } from 'lucide-react';
+import { CreditCard, Landmark, Clock, AlertCircle } from 'lucide-react';
 
 interface PaymentMethodsProps {
   isLoading: boolean;
@@ -37,7 +37,7 @@ const PaymentMethods: React.FC<PaymentMethodsProps> = ({ isLoading, onSelectMeth
                 {isLoading ? 'Processando...' : 'Pagar'}
               </Button>
             </div>
-            <div className="flex items-center text-xs text-gray-400 mt-2">
+            <div className="flex items-center text-xs text-green-600 mt-2 bg-green-50 p-2 rounded">
               <Clock className="w-3 h-3 mr-1" />
               <span>Início do projeto: imediato após a confirmação</span>
             </div>
@@ -62,9 +62,9 @@ const PaymentMethods: React.FC<PaymentMethodsProps> = ({ isLoading, onSelectMeth
                 {isLoading ? 'Processando...' : 'Gerar Boleto'}
               </Button>
             </div>
-            <div className="flex items-center text-xs text-gray-400 mt-2">
-              <Clock className="w-3 h-3 mr-1" />
-              <span>Início do projeto: após confirmação do pagamento (1-3 dias úteis)</span>
+            <div className="flex items-center text-xs text-amber-600 mt-2 bg-amber-50 p-2 rounded">
+              <AlertCircle className="w-3 h-3 mr-1" />
+              <span>Importante: O projeto será iniciado apenas após a confirmação do pagamento (1-3 dias úteis)</span>
             </div>
           </div>
         </div>

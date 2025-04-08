@@ -83,7 +83,7 @@ export function usePaymentHandler(
         packageType: packageId,
         status: 'Em Análise',
         currentStep: 1,
-        orderDate: new Date().toISOString(),
+        orderDate: new Date().toLocaleDateString('pt-BR'),
         expectedDelivery: getExpectedDeliveryDate(packageId, method),
         previewLink: null,
         progress: [
@@ -148,10 +148,10 @@ export function usePaymentHandler(
       setIsPaymentSuccess(true);
       
       toast({
-        title: "Pagamento registrado com sucesso!",
+        title: method === 'Boleto' ? "Boleto gerado com sucesso!" : "Pagamento confirmado!",
         description: method === 'Boleto' 
           ? `Seu pedido para o ${selectedPackage.name} foi registrado. O projeto será iniciado após a confirmação do pagamento.`
-          : `Seu pedido para o ${selectedPackage.name} foi confirmado.`,
+          : `Seu pedido para o ${selectedPackage.name} foi confirmado e será iniciado imediatamente.`,
       });
       
       // Após 3 segundos, redirecionar para a página de agradecimento

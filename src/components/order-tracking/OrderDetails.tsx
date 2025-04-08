@@ -40,6 +40,17 @@ const OrderDetails: React.FC<OrderDetailsProps> = ({ order }) => {
         </div>
       </div>
       
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+        <div className="bg-white shadow rounded-lg p-4">
+          <h3 className="text-sm font-medium text-gray-500">Data do Pedido</h3>
+          <p className="text-lg font-bold">{order.orderDate}</p>
+        </div>
+        <div className="bg-white shadow rounded-lg p-4">
+          <h3 className="text-sm font-medium text-gray-500">Previsão de Entrega</h3>
+          <p className="text-lg font-bold">{order.expectedDelivery}</p>
+        </div>
+      </div>
+      
       <div className="bg-white shadow rounded-lg p-6">
         <h2 className="text-xl font-bold mb-6">Acompanhamento do Processo</h2>
         <div className="space-y-8">
@@ -111,12 +122,6 @@ const OrderDetails: React.FC<OrderDetailsProps> = ({ order }) => {
             );
           })}
         </div>
-      </div>
-      
-      <div className="p-4 border border-dashed border-gray-300 rounded-lg bg-gray-50">
-        <p className="text-sm text-center text-gray-600">
-          Previsão de entrega final: <span className="font-medium">{order.expectedDelivery}</span>
-        </p>
       </div>
     </div>
   );
