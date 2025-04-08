@@ -1,4 +1,3 @@
-
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -30,6 +29,7 @@ import ThankYou from "./pages/ThankYou";
 import Payment from "./pages/Payment";
 import PaymentReturn from "./pages/PaymentReturn";
 import AdminInvoices from "./pages/admin/AdminInvoices";
+import PaymentProcessing from "./pages/PaymentProcessing";
 import { siteConfig } from "./config/site";
 
 const queryClient = new QueryClient();
@@ -98,6 +98,7 @@ const App = () => (
             {/* Pagamento */}
             <Route path="/pagamento" element={<Payment />} />
             <Route path="/pagamento/:packageId" element={<Payment />} />
+            <Route path="/pagamento-processando" element={<PaymentProcessing />} />
             <Route path="/pagamento-retorno" element={<PaymentReturn />} />
             
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}

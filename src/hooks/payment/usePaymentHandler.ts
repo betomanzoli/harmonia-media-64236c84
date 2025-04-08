@@ -18,6 +18,7 @@ export function usePaymentHandler(
   const { toast } = useToast();
   const [isLoading, setIsLoading] = useState(false);
   const [isPaymentSuccess, setIsPaymentSuccess] = useState(false);
+  const [paymentIframeUrl, setPaymentIframeUrl] = useState('');
 
   const handlePaymentMethod = async (method: string) => {
     setIsLoading(true);
@@ -46,12 +47,16 @@ export function usePaymentHandler(
       
       localStorage.setItem('paymentData', JSON.stringify(paymentData));
       
-      // Redirect to livre.com.br/harmoniam with parameters
+      // Setup return URL for MercadoPago
       const returnUrl = `${window.location.origin}/pagamento-retorno?packageId=${packageId}&orderId=${orderId}`;
-      const livreUrl = `https://livre.com.br/harmoniam?package=${packageId}&price=${totalPrice}&returnUrl=${encodeURIComponent(returnUrl)}`;
       
-      // In a real implementation, you would add more relevant parameters
-      window.location.href = livreUrl;
+      // Create iframe URL for embedding MercadoPago checkout
+      // This URL structure might need to be adjusted based on MercadoPago's integration requirements
+      const embedUrl = `https://livre.com.br/harmoniam?package=${packageId}&price=${totalPrice}&returnUrl=${encodeURIComponent(returnUrl)}&embed=true`;
+      
+      // Navigate to payment success page which will display a loading state
+      // and wait for postMessage events from the iframe
+      navigate(`/pagamento-processando?orderId=${orderId}&packageId=${packageId}`);
       
     } catch (error) {
       console.error('Erro no processamento do pagamento:', error);
@@ -67,7 +72,8 @@ export function usePaymentHandler(
   return {
     isLoading,
     isPaymentSuccess,
-    handlePaymentMethod
+    handlePaymentMethod,
+    paymentIframeUrl
   };
 }
 
