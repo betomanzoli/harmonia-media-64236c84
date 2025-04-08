@@ -75,14 +75,14 @@ const PaymentMethods: React.FC<PaymentMethodsProps> = ({ isLoading, onSelectMeth
                   <Percent className="w-5 h-5 text-green-500" />
                 </div>
                 <div>
-                  <h3 className="font-medium">Com Cupom de 5% de Desconto</h3>
+                  <h3 className="font-medium">Cupom de Desconto</h3>
                   <p className="text-sm text-gray-400">Pagar com desconto especial pelo MercadoPago</p>
                   
                   {showCouponField && (
                     <div className="mt-2 flex items-center">
                       <input 
                         type="text" 
-                        placeholder={`Código do cupom (${validDiscountCode})`}
+                        placeholder={`Digite o código do cupom`}
                         value={couponCode}
                         onChange={(e) => setCouponCode(e.target.value)}
                         className="text-sm border border-border rounded px-2 py-1 w-48 bg-background"
