@@ -1,20 +1,42 @@
 
-import React from 'react';
+import React, { useState } from 'react';
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import { ExternalLink, CreditCard, Percent } from 'lucide-react';
 import { PackageId } from '@/lib/payment/packageData';
+import { packagePaymentLinks } from '@/lib/payment/paymentLinks';
 
 interface PaymentMethodsProps {
   isLoading: boolean;
-  onSelectMethod: (method: string) => void;
+  onSelectMethod: (method: string, useDiscount?: boolean) => void;
   packageId: PackageId;
 }
 
 const PaymentMethods: React.FC<PaymentMethodsProps> = ({ isLoading, onSelectMethod, packageId }) => {
-  const handlePaymentClick = () => {
+  const [couponCode, setCouponCode] = useState('');
+  const [showCouponField, setShowCouponField] = useState(false);
+  
+  const paymentLinks = packagePaymentLinks[packageId];
+  const validDiscountCode = paymentLinks?.discountCode || '';
+  
+  const handleStandardPayment = () => {
     onSelectMethod('MercadoPago');
+  };
+  
+  const handleDiscountPayment = () => {
+    // If we're showing the coupon field, validate the code
+    if (showCouponField) {
+      if (couponCode.toUpperCase() === validDiscountCode) {
+        onSelectMethod('MercadoPageDiscount', true);
+      } else {
+        // Invalid coupon code
+        alert(`Código de cupom inválido. Use ${validDiscountCode} para este pacote.`);
+      }
+    } else {
+      // Just show the coupon field
+      setShowCouponField(true);
+    }
   };
   
   return (
@@ -37,7 +59,7 @@ const PaymentMethods: React.FC<PaymentMethodsProps> = ({ isLoading, onSelectMeth
               </div>
               <Button 
                 disabled={isLoading} 
-                onClick={handlePaymentClick}
+                onClick={handleStandardPayment}
                 className="bg-blue-500 hover:bg-blue-600"
               >
                 {isLoading ? 'Processando...' : 'Pagar agora'}
@@ -55,14 +77,26 @@ const PaymentMethods: React.FC<PaymentMethodsProps> = ({ isLoading, onSelectMeth
                 <div>
                   <h3 className="font-medium">Com Cupom de 5% de Desconto</h3>
                   <p className="text-sm text-gray-400">Pagar com desconto especial pelo MercadoPago</p>
+                  
+                  {showCouponField && (
+                    <div className="mt-2 flex items-center">
+                      <input 
+                        type="text" 
+                        placeholder={`Código do cupom (${validDiscountCode})`}
+                        value={couponCode}
+                        onChange={(e) => setCouponCode(e.target.value)}
+                        className="text-sm border border-border rounded px-2 py-1 w-48 bg-background"
+                      />
+                    </div>
+                  )}
                 </div>
               </div>
               <Button 
                 disabled={isLoading} 
-                onClick={() => onSelectMethod('MercadoPageDiscount')}
+                onClick={handleDiscountPayment}
                 className="bg-green-500 hover:bg-green-600"
               >
-                {isLoading ? 'Processando...' : 'Pagar com desconto'}
+                {isLoading ? 'Processando...' : (showCouponField ? 'Aplicar cupom' : 'Usar cupom de desconto')}
                 <Percent className="ml-2 h-4 w-4" />
               </Button>
             </div>

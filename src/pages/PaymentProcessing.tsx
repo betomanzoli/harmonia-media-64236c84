@@ -7,28 +7,40 @@ import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Loader2, ArrowLeft } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
+import { packagePaymentLinks } from '@/lib/payment/paymentLinks';
+import { Script } from '@/components/ui/script';
 
 const PaymentProcessing: React.FC = () => {
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
   const { toast } = useToast();
   const [isLoading, setIsLoading] = useState(true);
+  const [preferenceId, setPreferenceId] = useState<string | null>(null);
   
   // Extract parameters from URL
   const packageId = searchParams.get('packageId') || 'essencial';
   const orderId = searchParams.get('orderId') || '';
   const returnUrl = searchParams.get('returnUrl') || '';
   const discountApplied = searchParams.get('discount') === 'true';
+  const paymentUrl = searchParams.get('paymentUrl') || '';
   
-  // This is a placeholder for the specific payment links that will be provided
-  // In the next message, these will be replaced with the actual links
-  const getPaymentLink = () => {
-    // For now, we'll use a common URL that will be updated later
-    return `https://biolivre.com.br/harmoniam?package=${packageId}&returnUrl=${encodeURIComponent(returnUrl)}&embed=true`;
-  };
+  // Get preference ID based on package and discount
+  useEffect(() => {
+    const paymentLinkData = packagePaymentLinks[packageId];
+    
+    if (paymentLinkData) {
+      const preferenceData = discountApplied && paymentLinkData.discount 
+        ? paymentLinkData.discount.preferenceId
+        : paymentLinkData.standard.preferenceId;
+      
+      setPreferenceId(preferenceData);
+    }
+    
+    setIsLoading(false);
+  }, [packageId, discountApplied]);
   
   // Construct the iframe URL
-  const iframeUrl = getPaymentLink();
+  const iframeUrl = paymentUrl || `https://biolivre.com.br/harmoniam?package=${packageId}&returnUrl=${encodeURIComponent(returnUrl)}&embed=true`;
   
   useEffect(() => {
     // Listen for messages from the iframe
@@ -78,14 +90,39 @@ const PaymentProcessing: React.FC = () => {
             </div>
             
             <div className="rounded-lg border border-border p-4 mb-4">
-              <iframe 
-                src={iframeUrl}
-                width="100%" 
-                height="700" 
-                frameBorder="0"
-                title="MercadoPago Checkout"
-                className="w-full rounded-md"
-              />
+              {preferenceId ? (
+                <div className="flex flex-col items-center justify-center min-h-[600px]">
+                  <div className="w-full max-w-md mx-auto">
+                    <Script
+                      src="https://www.mercadopago.com.br/integrations/v1/web-payment-checkout.js"
+                      data-preference-id={preferenceId}
+                      data-source="button"
+                    />
+                    <p className="text-center mt-4 text-sm text-muted-foreground">
+                      Ou, se preferir, acesse diretamente:
+                    </p>
+                    <div className="flex justify-center mt-2">
+                      <Button 
+                        variant="outline"
+                        className="text-sm"
+                        onClick={() => window.open(paymentUrl, '_blank')}
+                      >
+                        Abrir página de pagamento
+                        <ArrowLeft className="w-4 h-4 ml-2 rotate-[-135deg]" />
+                      </Button>
+                    </div>
+                  </div>
+                </div>
+              ) : (
+                <iframe 
+                  src={iframeUrl}
+                  width="100%" 
+                  height="700" 
+                  frameBorder="0"
+                  title="MercadoPago Checkout"
+                  className="w-full rounded-md"
+                />
+              )}
             </div>
             
             <div className="flex items-center justify-center p-4 bg-blue-50 text-blue-700 rounded-lg">

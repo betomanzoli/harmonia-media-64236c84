@@ -44,11 +44,12 @@ const PaymentReturn: React.FC = () => {
         }
       }
       
-      // Check if we're coming from biolivre.com.br
+      // Check if we're coming from biolivre.com.br or MercadoPago
       const isFromBioLivre = referrer.includes('biolivre.com.br');
+      const isFromMercadoPago = referrer.includes('mercadopago');
       
       // Validate the payment return
-      if ((status === 'approved' || status === 'success') || isFromBioLivre) {
+      if ((status === 'approved' || status === 'success') || isFromBioLivre || isFromMercadoPago) {
         // Successful payment
         setSuccess(true);
         

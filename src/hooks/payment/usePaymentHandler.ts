@@ -6,6 +6,7 @@ import emailService from '@/services/emailService';
 import { PackageId, PackageInfo } from '@/lib/payment/packageData';
 import { calculateExtrasTotal, parsePackagePrice } from '@/lib/payment/priceUtils';
 import { createOrderData } from '@/lib/payment/orderUtils';
+import { packagePaymentLinks } from '@/lib/payment/paymentLinks';
 import { PaymentData } from './types';
 
 export function usePaymentHandler(
@@ -20,8 +21,7 @@ export function usePaymentHandler(
   const [isPaymentSuccess, setIsPaymentSuccess] = useState(false);
   const [paymentIframeUrl, setPaymentIframeUrl] = useState('');
   
-  // This function handles direct payment links instead of embedding an iframe
-  const handlePaymentMethod = async (method: string) => {
+  const handlePaymentMethod = async (method: string, useDiscount = false) => {
     setIsLoading(true);
     
     try {
@@ -48,12 +48,26 @@ export function usePaymentHandler(
       
       localStorage.setItem('paymentData', JSON.stringify(paymentData));
       
+      // Get the payment link for the selected package
+      const paymentLinkData = packagePaymentLinks[packageId];
+      
+      if (!paymentLinkData) {
+        throw new Error('Pacote não encontrado');
+      }
+      
+      // Determine which payment link to use (standard or discount)
+      const paymentLink = useDiscount && paymentLinkData.discount 
+        ? paymentLinkData.discount.url
+        : paymentLinkData.standard.url;
+      
       // Setup return URL for redirect after payment
       const returnUrl = `${window.location.origin}/pagamento-retorno?packageId=${packageId}&orderId=${orderId}`;
       
-      // Instead of creating an iframe, we'll redirect to the payment processing page
-      // which will handle the specific payment links
-      navigate(`/pagamento-processando?orderId=${orderId}&packageId=${packageId}&returnUrl=${encodeURIComponent(returnUrl)}`);
+      // Store return URL in session storage to verify later
+      sessionStorage.setItem('paymentReturnUrl', returnUrl);
+      
+      // Redirect to the payment processing page with the actual payment URL
+      navigate(`/pagamento-processando?orderId=${orderId}&packageId=${packageId}&paymentUrl=${encodeURIComponent(paymentLink)}&returnUrl=${encodeURIComponent(returnUrl)}`);
       
     } catch (error) {
       console.error('Erro no processamento do pagamento:', error);
