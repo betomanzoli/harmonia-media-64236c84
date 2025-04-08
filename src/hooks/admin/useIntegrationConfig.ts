@@ -1,7 +1,7 @@
 
 import { useState, useEffect } from 'react';
 import { useToast } from '@/hooks/use-toast';
-import webhookService from '@/services/webhookService';
+import webhookService, { NotificationType } from '@/services/webhookService';
 
 export function useIntegrationConfig() {
   const [webhookUrl, setWebhookUrl] = useState('');
@@ -10,7 +10,7 @@ export function useIntegrationConfig() {
   const [isUrlSaved, setIsUrlSaved] = useState(false);
   const { toast } = useToast();
 
-  // Carregar a URL do webhook ao inicializar
+  // Load webhook URL on initialization
   useEffect(() => {
     async function loadWebhookUrl() {
       setIsLoading(true);
@@ -25,7 +25,7 @@ export function useIntegrationConfig() {
     loadWebhookUrl();
   }, []);
 
-  // Salvar a URL do webhook
+  // Save webhook URL
   const saveWebhookUrl = async () => {
     setIsLoading(true);
     
@@ -57,7 +57,7 @@ export function useIntegrationConfig() {
     }
   };
 
-  // Função para enviar um ping de teste para o webhook
+  // Function to send a test ping to the webhook
   const sendTestPing = async () => {
     setIsTesting(true);
     
@@ -73,7 +73,7 @@ export function useIntegrationConfig() {
       
       // Send test ping
       const testPayload = {
-        type: 'test_message',
+        type: 'test_message' as NotificationType,
         data: { 
           testMessage: "Este é um teste de configuração do webhook da harmonIA",
           timestamp: new Date().toISOString()
@@ -110,7 +110,7 @@ export function useIntegrationConfig() {
     }
   };
 
-  // Função para copiar texto para a área de transferência
+  // Function to copy text to clipboard
   const copyToClipboard = (text: string) => {
     navigator.clipboard.writeText(text).then(() => {
       toast({

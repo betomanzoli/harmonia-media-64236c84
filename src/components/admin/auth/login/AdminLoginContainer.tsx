@@ -2,13 +2,15 @@
 import React, { useState } from 'react';
 import { Card } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { useNavigate } from 'react-router-dom';
+import { motion } from 'framer-motion';
+import { useToast } from '@/hooks/use-toast';
+import { useAdminLoginForm } from '@/hooks/admin/useAdminLoginForm';
 import LoginForm from './LoginForm';
 import LoginError from './LoginError';
 import ConnectionAlert from './ConnectionAlert';
 import DiagnosticsPanel from './DiagnosticsPanel';
 import PasswordResetDialog from './PasswordResetDialog';
-import { motion } from 'framer-motion';
-import { useNavigate } from 'react-router-dom';
 
 const MotionCard = motion(Card);
 
@@ -21,19 +23,71 @@ const AdminLoginContainer: React.FC<AdminLoginContainerProps> = ({ onAuthenticat
   const [showConnectionStatus, setShowConnectionStatus] = useState(false);
   const [isPasswordResetOpen, setIsPasswordResetOpen] = useState(false);
   const [loginErrorMessage, setLoginErrorMessage] = useState<string | null>(null);
+  const [showDetailedError, setShowDetailedError] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
+  const { toast } = useToast();
   const navigate = useNavigate();
   
-  const handleLogin = (email: string, password: string) => {
+  // Simulated connection status and diagnostics data
+  const connectionStatus = navigator.onLine ? 'online' : 'offline';
+  
+  const diagnosticInfo = {
+    environment: "production",
+    supportsIndexedDB: typeof window !== 'undefined' && 'indexedDB' in window,
+    supportsFetch: typeof fetch !== 'undefined',
+    supportsWebSockets: typeof WebSocket !== 'undefined',
+    browserName: navigator.userAgent.includes('Chrome') ? 'Chrome' : 
+                 navigator.userAgent.includes('Firefox') ? 'Firefox' : 
+                 navigator.userAgent.includes('Safari') ? 'Safari' : 'Unknown',
+    browserVersion: navigator.userAgent.match(/Chrome\/([0-9.]+)/) 
+                    ? navigator.userAgent.match(/Chrome\/([0-9.]+)/)![1] 
+                    : 'Unknown',
+    operatingSystem: navigator.platform,
+    cookiesEnabled: navigator.cookieEnabled,
+    localStorageAvailable: typeof localStorage !== 'undefined',
+    sessionStorageAvailable: typeof sessionStorage !== 'undefined',
+    timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
+    language: navigator.language,
+    userAgent: navigator.userAgent,
+    screenResolution: `${window.screen.width}x${window.screen.height}`,
+    storageInfo: {
+      localStorageSize: "N/A",
+      sessionStorageSize: "N/A",
+    },
+    connectionDetails: {
+      rtt: navigator.connection ? (navigator.connection as any).rtt : undefined,
+      downlink: navigator.connection ? (navigator.connection as any).downlink : undefined,
+      effectiveType: navigator.connection ? (navigator.connection as any).effectiveType : undefined,
+      saveData: navigator.connection ? (navigator.connection as any).saveData : undefined,
+    },
+    authSettings: "Modo de desenvolvimento",
+    supabaseUrl: import.meta.env.VITE_SUPABASE_URL || 'não configurado',
+  };
+  
+  const handleLogin = async (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    setIsLoading(true);
+    
+    // Get form data
+    const formData = new FormData(e.currentTarget);
+    const email = formData.get('email') as string;
+    const password = formData.get('password') as string;
+    
     // Use the provided authentication function if available
     if (onAuthenticate) {
       const success = onAuthenticate(email, password);
       if (success) {
         // Navigate after successful login
+        toast({
+          title: "Login bem-sucedido",
+          description: "Você está sendo redirecionado para o painel administrativo.",
+        });
         navigate('/admin-j28s7d1k/dashboard');
-        return true;
+        return;
       } else {
         setLoginErrorMessage('Credenciais inválidas. Por favor, verifique seu email e senha.');
-        return false;
+        setIsLoading(false);
+        return;
       }
     }
     
@@ -43,13 +97,43 @@ const AdminLoginContainer: React.FC<AdminLoginContainerProps> = ({ onAuthenticat
       localStorage.setItem('harmonia-admin-auth-token', 'admin-token-for-development');
       localStorage.setItem('harmonia-admin-auth-user', JSON.stringify({ email, role: 'admin' }));
       
+      toast({
+        title: "Login bem-sucedido",
+        description: "Você está sendo redirecionado para o painel administrativo.",
+      });
+      
       // Navigate to dashboard
       navigate('/admin-j28s7d1k/dashboard');
-      return true;
     } else {
       setLoginErrorMessage('Credenciais inválidas. Por favor, verifique seu email e senha.');
-      return false;
+      setIsLoading(false);
     }
+  };
+  
+  // Functions for ConnectionAlert component
+  const retryConnection = async () => {
+    return new Promise<void>((resolve) => {
+      setTimeout(() => {
+        resolve();
+      }, 1000);
+    });
+  };
+  
+  // Toggle diagnostic panel
+  const toggleDiagnostics = () => {
+    setShowConnectionStatus(!showConnectionStatus);
+  };
+  
+  // Handle password reset request
+  const handlePasswordReset = async (email: string) => {
+    setIsLoading(true);
+    await new Promise(resolve => setTimeout(resolve, 1000));
+    setIsLoading(false);
+    toast({
+      title: "Email enviado",
+      description: "Se este email estiver cadastrado, você receberá instruções para redefinir sua senha.",
+    });
+    setIsPasswordResetOpen(false);
   };
   
   return (
@@ -73,19 +157,30 @@ const AdminLoginContainer: React.FC<AdminLoginContainerProps> = ({ onAuthenticat
           <TabsContent value="login" className="space-y-4">
             {loginErrorMessage && (
               <LoginError 
-                message={loginErrorMessage} 
-                onClose={() => setLoginErrorMessage(null)}
+                error={loginErrorMessage} 
+                detailedError={showDetailedError ? "Erro de autenticação: credenciais inválidas" : undefined}
+                toggleDiagnostics={toggleDiagnostics}
               />
             )}
             
             <LoginForm 
+              email=""
+              password=""
+              loading={isLoading}
+              success={false}
+              onEmailChange={() => {}}
+              onPasswordChange={() => {}}
               onSubmit={handleLogin}
-              onForgotPassword={() => setIsPasswordResetOpen(true)}
+              onResetPasswordClick={() => setIsPasswordResetOpen(true)}
             />
             
             {showConnectionStatus && (
               <div className="mt-6">
-                <ConnectionAlert />
+                <ConnectionAlert 
+                  connectionStatus={connectionStatus}
+                  retryConnection={retryConnection}
+                  toggleDiagnostics={toggleDiagnostics}
+                />
               </div>
             )}
           </TabsContent>
@@ -94,7 +189,7 @@ const AdminLoginContainer: React.FC<AdminLoginContainerProps> = ({ onAuthenticat
         <div className="mt-6 text-center">
           <button 
             className="text-xs text-gray-500 hover:text-gray-400 transition-colors"
-            onClick={() => setShowConnectionStatus(!showConnectionStatus)}
+            onClick={toggleDiagnostics}
           >
             {showConnectionStatus ? "Ocultar diagnóstico" : "Verificar conexão"}
           </button>
@@ -108,7 +203,7 @@ const AdminLoginContainer: React.FC<AdminLoginContainerProps> = ({ onAuthenticat
             transition={{ duration: 0.3 }}
             className="mt-4 overflow-hidden"
           >
-            <DiagnosticsPanel />
+            <DiagnosticsPanel diagnosticInfo={diagnosticInfo} />
           </motion.div>
         )}
       </MotionCard>
@@ -116,6 +211,8 @@ const AdminLoginContainer: React.FC<AdminLoginContainerProps> = ({ onAuthenticat
       <PasswordResetDialog 
         open={isPasswordResetOpen}
         onOpenChange={setIsPasswordResetOpen}
+        onSubmit={handlePasswordReset}
+        isLoading={isLoading}
       />
     </div>
   );

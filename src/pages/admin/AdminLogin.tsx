@@ -9,25 +9,25 @@ const AdminLogin: React.FC = () => {
   const { toast } = useToast();
   const [isCheckingAuth, setIsCheckingAuth] = useState(true);
   
-  // Verificar se já está autenticado
+  // Check if already authenticated
   useEffect(() => {
     const token = localStorage.getItem('harmonia-admin-auth-token');
     const userJson = localStorage.getItem('harmonia-admin-auth-user');
     
     if (token && userJson) {
       console.log('Usuário já autenticado, redirecionando para o dashboard');
-      // Usuário já está autenticado, redirecionar para o dashboard
+      // User is already authenticated, redirect to dashboard
       navigate('/admin-j28s7d1k/dashboard');
     } else {
       setIsCheckingAuth(false);
     }
   }, [navigate]);
   
-  // Função para autenticar manualmente com as credenciais fixas
+  // Function to authenticate manually with fixed credentials
   const authenticateAdmin = (email: string, password: string): boolean => {
-    // Verificar credenciais específicas
+    // Check specific credentials
     if (email === 'contato@harmonia.media' && password === 'i9!_b!ThA;2H6/bt') {
-      // Armazenar informações de autenticação
+      // Store authentication information
       localStorage.setItem('harmonia-admin-auth-token', 'admin-token-for-development');
       localStorage.setItem('harmonia-admin-auth-user', JSON.stringify({ email, role: 'admin' }));
       

@@ -4,7 +4,7 @@ import { Alert, AlertTitle, AlertDescription } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { Info, Bug, Loader2, Wifi, WifiOff } from 'lucide-react';
 
-// Updated interface to match the expected properties
+// Interface for diagnostic information
 export interface DiagnosticInfo {
   environment: string;
   supportsIndexedDB: boolean;

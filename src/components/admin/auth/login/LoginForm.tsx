@@ -31,7 +31,8 @@ const LoginForm: React.FC<LoginFormProps> = ({
         <label className="block text-sm font-medium">Email</label>
         <Input
           type="email"
-          value={email}
+          name="email"
+          defaultValue={email}
           onChange={onEmailChange}
           placeholder="admin@exemplo.com"
           required
@@ -43,7 +44,8 @@ const LoginForm: React.FC<LoginFormProps> = ({
         <label className="block text-sm font-medium">Senha</label>
         <Input
           type="password"
-          value={password}
+          name="password"
+          defaultValue={password}
           onChange={onPasswordChange}
           placeholder="********"
           required

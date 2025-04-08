@@ -1,11 +1,11 @@
 
-// Serviço para gerenciar webhooks
+// Service to manage webhooks
 import { supabase } from '@/lib/supabase';
 
-// Definir os tipos aceitáveis de notificação
+// Define acceptable notification types
 export type NotificationType = 'new_portfolio_item' | 'test_message' | 'feedback_received';
 
-interface WebhookPayload {
+export interface WebhookPayload {
   type: NotificationType;
   data: any;
   timestamp: string;
@@ -61,18 +61,18 @@ const sendToWebhook = async (webhookUrl: string, payload: WebhookPayload): Promi
     
     console.log('Enviando para webhook:', webhookUrl, payload);
     
-    // Enviar dados para o webhook configurado
+    // Send data to the configured webhook
     const response = await fetch(webhookUrl, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
       },
       body: JSON.stringify(payload),
-      mode: 'no-cors', // Necessário para alguns serviços de webhook
+      mode: 'no-cors', // Required for some webhook services
     });
     
-    // Como estamos usando no-cors, não podemos verificar o status da resposta
-    // Consideramos como sucesso o fato de não ter ocorrido exceção
+    // Since we're using no-cors, we can't check the response status
+    // We consider it success if no exception occurred
     console.log('Webhook enviado com sucesso:', payload);
     return true;
   } catch (err) {
