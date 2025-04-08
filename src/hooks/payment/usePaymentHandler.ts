@@ -4,19 +4,9 @@ import { useNavigate } from 'react-router-dom';
 import { useToast } from '@/hooks/use-toast';
 import emailService from '@/services/emailService';
 import { PackageId, PackageInfo } from '@/lib/payment/packageData';
-import { extraServicesData } from '@/data/extraServices';
-
-export interface PaymentData {
-  method: string;
-  packageId: string;
-  packageName: string;
-  price: string;
-  extras: string[];
-  extrasTotal: number;
-  total: string;
-  date: string;
-  orderId: string;
-}
+import { calculateExtrasTotal, parsePackagePrice } from '@/lib/payment/priceUtils';
+import { createOrderData } from '@/lib/payment/orderUtils';
+import { PaymentData } from './types';
 
 export function usePaymentHandler(
   packageId: PackageId,
@@ -29,39 +19,20 @@ export function usePaymentHandler(
   const [isLoading, setIsLoading] = useState(false);
   const [isPaymentSuccess, setIsPaymentSuccess] = useState(false);
 
-  const calculateExtrasTotal = (): number => {
-    return selectedExtras.reduce((total, extraId) => {
-      const extra = extraServicesData.find(e => e.id === extraId);
-      if (extra && typeof extra.price === 'number') {
-        return total + extra.price;
-      }
-      return total;
-    }, 0);
-  };
-
-  // Parse package price from string like "R$ 1500,00" to number 1500
-  const parsePackagePrice = (priceString: string): number => {
-    // Remove non-numeric characters except for comma/period
-    const numericString = priceString.replace(/[^0-9,\.]/g, '');
-    // Replace comma with period for parsing
-    const formattedString = numericString.replace(',', '.');
-    return parseFloat(formattedString);
-  };
-
   const handlePaymentMethod = async (method: string) => {
     setIsLoading(true);
     
-    // Simular processo de pagamento (em um ambiente real, redirecionaria para gateway)
+    // Simulate payment process (in a real environment, would redirect to gateway)
     try {
-      // Simulação de processamento de pagamento
+      // Payment processing simulation
       await new Promise(resolve => setTimeout(resolve, 1500));
       
-      // Calcular valores
-      const extrasTotal = calculateExtrasTotal();
+      // Calculate values
+      const extrasTotal = calculateExtrasTotal(selectedExtras);
       const packagePrice = parsePackagePrice(selectedPackage.price);
       const totalPrice = packagePrice + extrasTotal;
       
-      // Armazenar dados do pagamento no localStorage
+      // Store payment data in localStorage
       const paymentData: PaymentData = {
         method,
         packageId,
@@ -76,67 +47,18 @@ export function usePaymentHandler(
       
       localStorage.setItem('paymentData', JSON.stringify(paymentData));
       
-      // Armazenar dados do pedido para acompanhamento
-      const orderData = {
-        orderId: paymentData.orderId,
-        clientName: qualificationData?.name || 'Cliente',
-        packageType: packageId,
-        status: 'Em Análise',
-        currentStep: 1,
-        orderDate: new Date().toLocaleDateString('pt-BR'),
-        expectedDelivery: getExpectedDeliveryDate(packageId, method),
-        previewLink: null,
-        progress: [
-          {
-            step: 1,
-            title: "Pagamento Confirmado",
-            description: method === 'Pix' 
-              ? "Seu pagamento via Pix foi registrado. O projeto será iniciado após a confirmação do pagamento."
-              : "Seu pagamento foi confirmado e seu projeto foi iniciado.",
-            date: new Date().toLocaleDateString('pt-BR'),
-            status: "completed",
-            icon: "CreditCard"
-          },
-          {
-            step: 2,
-            title: "Análise Inicial",
-            description: "Nossa equipe está analisando seu briefing e definindo a abordagem criativa.",
-            date: null,
-            status: "current",
-            icon: "FileText"
-          },
-          {
-            step: 3,
-            title: "Composição",
-            description: "Nossos compositores estão trabalhando na sua música personalizada.",
-            date: null,
-            status: "pending",
-            icon: "Music"
-          },
-          {
-            step: 4,
-            title: "Produção",
-            description: "Fase de arranjo e produção musical da sua composição.",
-            date: null,
-            status: "pending",
-            icon: "Settings"
-          },
-          {
-            step: 5,
-            title: "Apresentação",
-            description: "Prévias da sua música estão prontas para sua avaliação.",
-            date: null,
-            status: "pending",
-            icon: "Headphones"
-          }
-        ]
-      };
+      // Store order data for tracking
+      const orderData = createOrderData(
+        paymentData, 
+        qualificationData?.name || 'Cliente', 
+        method, 
+        packageId
+      );
       
       localStorage.setItem('orderData', JSON.stringify(orderData));
       
-      // Se temos email, enviar confirmação
+      // If we have email, send confirmation
       if (qualificationData?.email) {
-        // Fixed to use only 3 parameters as expected by the function
         await emailService.sendPaymentConfirmation(
           qualificationData.email,
           qualificationData.name || 'Cliente',
@@ -144,7 +66,7 @@ export function usePaymentHandler(
         );
       }
       
-      // Mostrar mensagem de sucesso
+      // Show success message
       setIsPaymentSuccess(true);
       
       toast({
@@ -154,7 +76,7 @@ export function usePaymentHandler(
           : `Seu pedido para o ${selectedPackage.name} foi confirmado e será iniciado imediatamente.`,
       });
       
-      // Após 3 segundos, redirecionar para a página de agradecimento
+      // After 3 seconds, redirect to the thank you page
       setTimeout(() => {
         navigate('/agradecimento');
       }, 3000);
@@ -169,49 +91,11 @@ export function usePaymentHandler(
     }
   };
 
-  // Função para calcular data de entrega estimada com base no método de pagamento
-  const getExpectedDeliveryDate = (packageId: PackageId, paymentMethod: string): string => {
-    const today = new Date();
-    let businessDays = 0;
-    
-    // Definir prazo base em dias úteis conforme o pacote
-    switch (packageId) {
-      case 'premium':
-        businessDays = 3;
-        break;
-      case 'profissional':
-        businessDays = 5;
-        break;
-      case 'essencial':
-      default:
-        businessDays = 7;
-        break;
-    }
-    
-    // Adicionar dias extras para Pix (menos que boleto, mas ainda tem um pequeno atraso)
-    if (paymentMethod === 'Pix') {
-      businessDays += 1; // Adiciona 1 dia útil para compensação do Pix
-    }
-    
-    // Calcular data de entrega (pulando finais de semana)
-    let deliveryDate = new Date(today);
-    let daysAdded = 0;
-    
-    while (daysAdded < businessDays) {
-      deliveryDate.setDate(deliveryDate.getDate() + 1);
-      // Pular finais de semana (0 = Domingo, 6 = Sábado)
-      if (deliveryDate.getDay() !== 0 && deliveryDate.getDay() !== 6) {
-        daysAdded++;
-      }
-    }
-    
-    // Retornar data formatada
-    return deliveryDate.toLocaleDateString('pt-BR');
-  };
-
   return {
     isLoading,
     isPaymentSuccess,
     handlePaymentMethod
   };
 }
+
+export type { PaymentData } from './types';
