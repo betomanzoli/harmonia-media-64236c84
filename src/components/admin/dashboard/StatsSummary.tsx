@@ -95,7 +95,7 @@ const StatsSummary = () => {
         trend={{ value: 5, isPositive: false }}
         icon={<ShoppingBag className="w-6 h-6 text-orange-500" />}
         linkText="Ver pedidos"
-        linkUrl="#"
+        linkUrl="/admin-j28s7d1k/orders"
       />
       
       <StatCard
@@ -105,7 +105,7 @@ const StatsSummary = () => {
         trend={{ value: 18, isPositive: true }}
         icon={<Users className="w-6 h-6 text-purple-500" />}
         linkText="Gerenciar clientes"
-        linkUrl="#"
+        linkUrl="/admin-j28s7d1k/customers"
       />
     </div>
   );

@@ -1,3 +1,4 @@
+
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -15,6 +16,10 @@ import AdminPortfolio from "./pages/admin/AdminPortfolio";
 import AdminDashboard from "./pages/admin/Dashboard";
 import AdminPreviews from "./pages/admin/AdminPreviews";
 import AdminIntegrations from "./pages/admin/AdminIntegrations";
+import AdminOrders from "./pages/admin/AdminOrders";
+import AdminCustomers from "./pages/admin/AdminCustomers";
+import AdminStatistics from "./pages/admin/AdminStatistics";
+import AdminSettings from "./pages/admin/AdminSettings";
 import Packages from "./pages/Packages";
 import Portfolio from "./pages/Portfolio";
 import PrivacyPolicy from "./pages/PrivacyPolicy";
@@ -67,6 +72,26 @@ const App = () => (
             <Route path="/admin-j28s7d1k/integrations" element={
               <ProtectedRoute>
                 <AdminIntegrations />
+              </ProtectedRoute>
+            } />
+            <Route path="/admin-j28s7d1k/orders" element={
+              <ProtectedRoute>
+                <AdminOrders />
+              </ProtectedRoute>
+            } />
+            <Route path="/admin-j28s7d1k/customers" element={
+              <ProtectedRoute>
+                <AdminCustomers />
+              </ProtectedRoute>
+            } />
+            <Route path="/admin-j28s7d1k/statistics" element={
+              <ProtectedRoute>
+                <AdminStatistics />
+              </ProtectedRoute>
+            } />
+            <Route path="/admin-j28s7d1k/settings" element={
+              <ProtectedRoute>
+                <AdminSettings />
               </ProtectedRoute>
             } />
             <Route path={siteConfig.urls.admin.audioDatabase} element={
