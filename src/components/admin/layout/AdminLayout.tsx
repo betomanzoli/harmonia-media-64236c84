@@ -16,6 +16,16 @@ const AdminLayout: React.FC<AdminLayoutProps> = ({ children }) => {
   useEffect(() => {
     const offlineMode = sessionStorage.getItem('offline-admin-mode');
     setIsOfflineMode(offlineMode === 'true');
+    
+    // Set up for future changes too
+    const handleStorageChange = (event: StorageEvent) => {
+      if (event.key === 'offline-admin-mode') {
+        setIsOfflineMode(event.newValue === 'true');
+      }
+    };
+    
+    window.addEventListener('storage', handleStorageChange);
+    return () => window.removeEventListener('storage', handleStorageChange);
   }, [location.pathname]);
 
   return (

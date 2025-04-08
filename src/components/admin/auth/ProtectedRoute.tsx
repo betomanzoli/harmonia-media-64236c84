@@ -47,10 +47,14 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children }) => {
     return () => window.removeEventListener('storage', handleStorageChange);
   }, [toast, offlineInitialized]);
 
-  // Add a special handler for when connection status changes
+  // Fix: Only show connection error if we're not in offline mode AND we have an actual connection problem
   useEffect(() => {
-    if (connectionStatus && !connectionStatus.connected && !isOfflineMode) {
-      console.log("Conexão perdida na área protegida");
+    if (connectionStatus && 
+        !connectionStatus.connected && 
+        !isOfflineMode && 
+        connectionStatus.tested &&
+        connectionStatus.error) {
+      console.log("Conexão perdida na área protegida:", connectionStatus);
       toast({
         title: "Problema de conexão",
         description: "A conexão foi perdida. Algumas funcionalidades podem não estar disponíveis.",

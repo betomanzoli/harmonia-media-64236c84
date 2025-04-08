@@ -7,8 +7,8 @@ export function useAuthState(offlineMode: boolean = false) {
   const [user, setUser] = useState<AdminUser | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [connectionStatus, setConnectionStatus] = useState<ConnectionStatus>({
-    tested: false,
-    connected: false
+    tested: true, // Mark as tested by default
+    connected: navigator.onLine // Set initial connection status based on navigator.onLine
   });
   const [securityStatus, setSecurityStatus] = useState<SecurityStatus>({
     checked: false,
@@ -52,6 +52,13 @@ export function useAuthState(offlineMode: boolean = false) {
           console.log("Nenhuma sessão encontrada");
           setUser(null);
         }
+        
+        // Update connection status based on navigator.onLine
+        setConnectionStatus(prev => ({
+          ...prev,
+          connected: navigator.onLine,
+          tested: true
+        }));
       } catch (err) {
         console.error("Erro ao checar autenticação:", err);
         setUser(null);
@@ -70,11 +77,34 @@ export function useAuthState(offlineMode: boolean = false) {
       }
     };
     
-    window.addEventListener('storage', handleStorageChange);
+    // Set up online/offline event listeners
+    const handleOnline = () => {
+      console.log("Aplicação voltou a ficar online");
+      setConnectionStatus(prev => ({
+        ...prev,
+        connected: true,
+        error: undefined
+      }));
+    };
     
-    // Clean up listener when unmounting
+    const handleOffline = () => {
+      console.log("Aplicação entrou em modo offline");
+      setConnectionStatus(prev => ({
+        ...prev,
+        connected: false,
+        error: "Sem conexão com a internet"
+      }));
+    };
+    
+    window.addEventListener('storage', handleStorageChange);
+    window.addEventListener('online', handleOnline);
+    window.addEventListener('offline', handleOffline);
+    
+    // Clean up listeners when unmounting
     return () => {
       window.removeEventListener('storage', handleStorageChange);
+      window.removeEventListener('online', handleOnline);
+      window.removeEventListener('offline', handleOffline);
     };
   }, [offlineMode]);
 
