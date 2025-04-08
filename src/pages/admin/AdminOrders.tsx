@@ -5,9 +5,10 @@ import { useOrders } from '@/hooks/admin/useOrders';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Button } from '@/components/ui/button';
-import { Eye, Filter, RefreshCcw, Search } from 'lucide-react';
+import { Eye, Filter, RefreshCcw, Search, Trash2, ArrowLeft } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
+import { Link } from 'react-router-dom';
 import {
   Select,
   SelectContent,
@@ -16,11 +17,24 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
+import { useToast } from '@/hooks/use-toast';
 
 const AdminOrders: React.FC = () => {
   const { orders, isLoading, refreshOrders } = useOrders();
   const [activeTab, setActiveTab] = useState('all');
   const [searchQuery, setSearchQuery] = useState('');
+  const { toast } = useToast();
 
   const getStatusColor = (status: string) => {
     switch (status) {
@@ -63,6 +77,15 @@ const AdminOrders: React.FC = () => {
     order.customer.name.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
+  const handleDelete = (id: string) => {
+    // In a real app, this would call an API to delete the order
+    toast({
+      title: "Pedido excluído",
+      description: "O pedido foi excluído com sucesso",
+    });
+    refreshOrders();
+  };
+
   return (
     <AdminLayout>
       <div className="space-y-6">
@@ -72,6 +95,12 @@ const AdminOrders: React.FC = () => {
             <p className="text-muted-foreground">Gerencie todos os pedidos do sistema</p>
           </div>
           <div className="flex gap-2">
+            <Button variant="outline" size="sm" asChild>
+              <Link to="/admin-j28s7d1k/dashboard">
+                <ArrowLeft className="mr-2 h-4 w-4" />
+                Voltar ao Dashboard
+              </Link>
+            </Button>
             <Button onClick={refreshOrders} variant="outline" size="sm">
               <RefreshCcw className="mr-2 h-4 w-4" />
               Atualizar
@@ -149,10 +178,38 @@ const AdminOrders: React.FC = () => {
                           </div>
                         </TableCell>
                         <TableCell className="text-right">
-                          <Button variant="ghost" size="sm">
-                            <Eye className="h-4 w-4" />
-                            <span className="sr-only">Visualizar</span>
-                          </Button>
+                          <div className="flex justify-end gap-2">
+                            <Button variant="ghost" size="sm">
+                              <Eye className="h-4 w-4" />
+                              <span className="sr-only">Visualizar</span>
+                            </Button>
+                            <AlertDialog>
+                              <AlertDialogTrigger asChild>
+                                <Button variant="ghost" size="sm" className="text-red-500 hover:text-red-700 hover:bg-red-50">
+                                  <Trash2 className="h-4 w-4" />
+                                  <span className="sr-only">Excluir</span>
+                                </Button>
+                              </AlertDialogTrigger>
+                              <AlertDialogContent>
+                                <AlertDialogHeader>
+                                  <AlertDialogTitle>Tem certeza?</AlertDialogTitle>
+                                  <AlertDialogDescription>
+                                    Esta ação não pode ser desfeita. Isso excluirá permanentemente o pedido 
+                                    {order.id} e todos os dados associados.
+                                  </AlertDialogDescription>
+                                </AlertDialogHeader>
+                                <AlertDialogFooter>
+                                  <AlertDialogCancel>Cancelar</AlertDialogCancel>
+                                  <AlertDialogAction 
+                                    onClick={() => handleDelete(order.id)}
+                                    className="bg-red-500 hover:bg-red-600"
+                                  >
+                                    Excluir
+                                  </AlertDialogAction>
+                                </AlertDialogFooter>
+                              </AlertDialogContent>
+                            </AlertDialog>
+                          </div>
                         </TableCell>
                       </TableRow>
                     ))}

@@ -5,16 +5,27 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import EmailSettingsCard from '@/components/admin/email/EmailSettingsCard';
 import EmailTestCard from '@/components/admin/email/EmailTestCard';
 import IntegrationConfig from '@/components/admin/portfolio/IntegrationConfig';
+import { Button } from '@/components/ui/button';
+import { ArrowLeft } from 'lucide-react';
+import { Link } from 'react-router-dom';
 
 const AdminIntegrations: React.FC = () => {
   return (
     <AdminLayout>
       <div className="space-y-6">
-        <div>
-          <h1 className="text-3xl font-bold tracking-tight">Integrações</h1>
-          <p className="text-muted-foreground">
-            Gerencie as integrações e configurações de serviços externos
-          </p>
+        <div className="flex items-center justify-between">
+          <div>
+            <h1 className="text-3xl font-bold tracking-tight">Integrações</h1>
+            <p className="text-muted-foreground">
+              Gerencie as integrações e configurações de serviços externos
+            </p>
+          </div>
+          <Button variant="outline" size="sm" asChild>
+            <Link to="/admin-j28s7d1k/dashboard">
+              <ArrowLeft className="mr-2 h-4 w-4" />
+              Voltar ao Dashboard
+            </Link>
+          </Button>
         </div>
         
         <Tabs defaultValue="email" className="space-y-6">

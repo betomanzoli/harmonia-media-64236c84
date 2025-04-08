@@ -3,7 +3,18 @@ import React from 'react';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Link } from "react-router-dom";
-import { FileAudio, Music, ShoppingBag, Users, ArrowUpRight, ArrowDownRight } from 'lucide-react';
+import { 
+  FileAudio, 
+  Music, 
+  ShoppingBag, 
+  Users, 
+  ArrowUpRight, 
+  ArrowDownRight, 
+  BarChart, 
+  Settings,
+  Link2,
+  FileText
+} from 'lucide-react';
 import { siteConfig } from '@/config/site';
 
 interface StatCardProps {
@@ -106,6 +117,54 @@ const StatsSummary = () => {
         icon={<Users className="w-6 h-6 text-purple-500" />}
         linkText="Gerenciar clientes"
         linkUrl="/admin-j28s7d1k/customers"
+      />
+
+      <StatCard
+        title="Prévias"
+        description="Prévias de músicas"
+        value={12}
+        trend={{ value: 10, isPositive: true }}
+        icon={<Music className="w-6 h-6 text-pink-500" />}
+        linkText="Gerenciar prévias"
+        linkUrl="/admin-j28s7d1k/previews"
+      />
+
+      <StatCard
+        title="Integrações"
+        description="Serviços conectados"
+        value={4}
+        trend={{ value: 25, isPositive: true }}
+        icon={<Link2 className="w-6 h-6 text-indigo-500" />}
+        linkText="Configurar integrações"
+        linkUrl="/admin-j28s7d1k/integrations"
+      />
+
+      <StatCard
+        title="Estatísticas"
+        description="Análise de desempenho"
+        value="Ver"
+        icon={<BarChart className="w-6 h-6 text-teal-500" />}
+        linkText="Ver estatísticas"
+        linkUrl="/admin-j28s7d1k/statistics"
+      />
+
+      <StatCard
+        title="Faturas"
+        description="Faturas emitidas"
+        value={18}
+        trend={{ value: 15, isPositive: true }}
+        icon={<FileText className="w-6 h-6 text-amber-500" />}
+        linkText="Gerenciar faturas"
+        linkUrl="/admin-j28s7d1k/invoices"
+      />
+
+      <StatCard
+        title="Configurações"
+        description="Configurações do sistema"
+        value="Ver"
+        icon={<Settings className="w-6 h-6 text-gray-500" />}
+        linkText="Configurar sistema"
+        linkUrl="/admin-j28s7d1k/settings"
       />
     </div>
   );

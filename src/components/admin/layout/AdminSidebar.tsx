@@ -37,7 +37,7 @@ const AdminSidebar: React.FC = () => {
           <SidebarGroupLabel>Principal</SidebarGroupLabel>
           <SidebarMenu>
             <SidebarMenuItem>
-              <SidebarMenuButton asChild active={isActive('/admin-j28s7d1k/dashboard')}>
+              <SidebarMenuButton asChild isActive={isActive('/admin-j28s7d1k/dashboard')}>
                 <Link to="/admin-j28s7d1k/dashboard">
                   <Home className="w-4 h-4" />
                   <span>Dashboard</span>
@@ -45,7 +45,7 @@ const AdminSidebar: React.FC = () => {
               </SidebarMenuButton>
             </SidebarMenuItem>
             <SidebarMenuItem>
-              <SidebarMenuButton asChild active={isActive(siteConfig.urls.admin.audioDatabase)}>
+              <SidebarMenuButton asChild isActive={isActive(siteConfig.urls.admin.audioDatabase)}>
                 <Link to={siteConfig.urls.admin.audioDatabase}>
                   <FileAudio className="w-4 h-4" />
                   <span>Banco de Áudios</span>
@@ -53,7 +53,7 @@ const AdminSidebar: React.FC = () => {
               </SidebarMenuButton>
             </SidebarMenuItem>
             <SidebarMenuItem>
-              <SidebarMenuButton asChild active={isActive(siteConfig.urls.admin.portfolio)}>
+              <SidebarMenuButton asChild isActive={isActive(siteConfig.urls.admin.portfolio)}>
                 <Link to={siteConfig.urls.admin.portfolio}>
                   <Music className="w-4 h-4" />
                   <span>Portfólio</span>
@@ -61,10 +61,18 @@ const AdminSidebar: React.FC = () => {
               </SidebarMenuButton>
             </SidebarMenuItem>
             <SidebarMenuItem>
-              <SidebarMenuButton asChild active={isActive('/admin-j28s7d1k/integrations')}>
+              <SidebarMenuButton asChild isActive={isActive('/admin-j28s7d1k/integrations')}>
                 <Link to="/admin-j28s7d1k/integrations">
                   <Link2 className="w-4 h-4" />
                   <span>Integrações</span>
+                </Link>
+              </SidebarMenuButton>
+            </SidebarMenuItem>
+            <SidebarMenuItem>
+              <SidebarMenuButton asChild isActive={isActive('/admin-j28s7d1k/previews')}>
+                <Link to="/admin-j28s7d1k/previews">
+                  <Music className="w-4 h-4" />
+                  <span>Prévias</span>
                 </Link>
               </SidebarMenuButton>
             </SidebarMenuItem>
@@ -75,7 +83,7 @@ const AdminSidebar: React.FC = () => {
           <SidebarGroupLabel>Gestão</SidebarGroupLabel>
           <SidebarMenu>
             <SidebarMenuItem>
-              <SidebarMenuButton asChild active={isActive('/admin-j28s7d1k/customers')}>
+              <SidebarMenuButton asChild isActive={isActive('/admin-j28s7d1k/customers')}>
                 <Link to="/admin-j28s7d1k/customers">
                   <Users className="w-4 h-4" />
                   <span>Clientes</span>
@@ -83,7 +91,7 @@ const AdminSidebar: React.FC = () => {
               </SidebarMenuButton>
             </SidebarMenuItem>
             <SidebarMenuItem>
-              <SidebarMenuButton asChild active={isActive('/admin-j28s7d1k/orders')}>
+              <SidebarMenuButton asChild isActive={isActive('/admin-j28s7d1k/orders')}>
                 <Link to="/admin-j28s7d1k/orders">
                   <ShoppingBag className="w-4 h-4" />
                   <span>Pedidos</span>
@@ -91,7 +99,7 @@ const AdminSidebar: React.FC = () => {
               </SidebarMenuButton>
             </SidebarMenuItem>
             <SidebarMenuItem>
-              <SidebarMenuButton asChild active={isActive('/admin-j28s7d1k/invoices')}>
+              <SidebarMenuButton asChild isActive={isActive('/admin-j28s7d1k/invoices')}>
                 <Link to="/admin-j28s7d1k/invoices">
                   <FileText className="w-4 h-4" />
                   <span>Faturas</span>
@@ -99,7 +107,7 @@ const AdminSidebar: React.FC = () => {
               </SidebarMenuButton>
             </SidebarMenuItem>
             <SidebarMenuItem>
-              <SidebarMenuButton asChild active={isActive('/admin-j28s7d1k/statistics')}>
+              <SidebarMenuButton asChild isActive={isActive('/admin-j28s7d1k/statistics')}>
                 <Link to="/admin-j28s7d1k/statistics">
                   <BarChart className="w-4 h-4" />
                   <span>Estatísticas</span>
@@ -113,7 +121,7 @@ const AdminSidebar: React.FC = () => {
       <SidebarFooter>
         <SidebarMenu>
           <SidebarMenuItem>
-            <SidebarMenuButton asChild active={isActive('/admin-j28s7d1k/settings')}>
+            <SidebarMenuButton asChild isActive={isActive('/admin-j28s7d1k/settings')}>
               <Link to="/admin-j28s7d1k/settings">
                 <Settings className="w-4 h-4" />
                 <span>Configurações</span>

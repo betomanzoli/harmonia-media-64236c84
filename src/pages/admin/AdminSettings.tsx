@@ -8,8 +8,9 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Switch } from "@/components/ui/switch";
-import { Shield, Bell, User, Lock, Globe } from 'lucide-react';
+import { Shield, Bell, User, Lock, Globe, ArrowLeft } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
+import { Link } from 'react-router-dom';
 
 const AdminSettings: React.FC = () => {
   const { toast } = useToast();
@@ -24,11 +25,19 @@ const AdminSettings: React.FC = () => {
   return (
     <AdminLayout>
       <div className="space-y-6">
-        <div>
-          <h1 className="text-3xl font-bold tracking-tight">Configurações</h1>
-          <p className="text-muted-foreground">
-            Gerencie as configurações da sua conta e preferências do sistema
-          </p>
+        <div className="flex items-center justify-between">
+          <div>
+            <h1 className="text-3xl font-bold tracking-tight">Configurações</h1>
+            <p className="text-muted-foreground">
+              Gerencie as configurações da sua conta e preferências do sistema
+            </p>
+          </div>
+          <Button variant="outline" size="sm" asChild>
+            <Link to="/admin-j28s7d1k/dashboard">
+              <ArrowLeft className="mr-2 h-4 w-4" />
+              Voltar ao Dashboard
+            </Link>
+          </Button>
         </div>
         
         <Tabs defaultValue="account" className="space-y-6">

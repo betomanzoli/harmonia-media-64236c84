@@ -5,6 +5,9 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Area, AreaChart, Bar, BarChart, Line, LineChart, Pie, PieChart, ResponsiveContainer, Tooltip, XAxis, YAxis, CartesianGrid, Legend, Cell } from 'recharts';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Button } from '@/components/ui/button';
+import { ArrowLeft } from 'lucide-react';
+import { Link } from 'react-router-dom';
 
 const salesData = [
   { month: 'Jan', revenue: 4500, orders: 9 },
@@ -46,6 +49,12 @@ const AdminStatistics: React.FC = () => {
             <p className="text-muted-foreground">Análises e métricas de desempenho</p>
           </div>
           <div className="flex gap-2">
+            <Button variant="outline" size="sm" asChild>
+              <Link to="/admin-j28s7d1k/dashboard">
+                <ArrowLeft className="mr-2 h-4 w-4" />
+                Voltar ao Dashboard
+              </Link>
+            </Button>
             <Select defaultValue="2025">
               <SelectTrigger className="w-[100px]">
                 <SelectValue placeholder="Ano" />
