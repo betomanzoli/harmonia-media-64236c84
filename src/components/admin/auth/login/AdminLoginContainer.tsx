@@ -31,6 +31,23 @@ const AdminLoginContainer: React.FC<AdminLoginContainerProps> = ({ onAuthenticat
   // Simulated connection status and diagnostics data
   const connectionStatus = navigator.onLine ? 'online' : 'offline';
   
+  // Safe access to navigator.connection properties using a helper function
+  const getConnectionInfo = () => {
+    const nav = navigator as any;
+    const connection = nav.connection || nav.mozConnection || nav.webkitConnection;
+    return connection ? {
+      rtt: connection.rtt,
+      downlink: connection.downlink,
+      effectiveType: connection.effectiveType,
+      saveData: connection.saveData
+    } : {
+      rtt: undefined,
+      downlink: undefined,
+      effectiveType: undefined,
+      saveData: undefined
+    };
+  };
+  
   const diagnosticInfo = {
     environment: "production",
     supportsIndexedDB: typeof window !== 'undefined' && 'indexedDB' in window,
@@ -54,12 +71,7 @@ const AdminLoginContainer: React.FC<AdminLoginContainerProps> = ({ onAuthenticat
       localStorageSize: "N/A",
       sessionStorageSize: "N/A",
     },
-    connectionDetails: {
-      rtt: navigator.connection ? (navigator.connection as any).rtt : undefined,
-      downlink: navigator.connection ? (navigator.connection as any).downlink : undefined,
-      effectiveType: navigator.connection ? (navigator.connection as any).effectiveType : undefined,
-      saveData: navigator.connection ? (navigator.connection as any).saveData : undefined,
-    },
+    connectionDetails: getConnectionInfo(),
     authSettings: "Modo de desenvolvimento",
     supabaseUrl: import.meta.env.VITE_SUPABASE_URL || 'não configurado',
   };

@@ -159,8 +159,9 @@ function getStorageEstimate(type: 'localStorage' | 'sessionStorage') {
   }
 }
 
+// Fix: Handle navigator.connection safely with proper TypeScript support
 function getConnectionDetails() {
-  // Use a safer approach to check navigator.connection
+  // Safely check for NetworkInformation
   const nav = navigator as any;
   const connection = nav.connection || nav.mozConnection || nav.webkitConnection;
   
