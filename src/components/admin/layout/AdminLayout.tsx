@@ -30,7 +30,7 @@ const AdminLayout: React.FC<AdminLayoutProps> = ({ children }) => {
 
   return (
     <SidebarProvider>
-      <div className="flex min-h-screen w-full bg-gray-50 flex-col">
+      <div className="flex min-h-screen w-full bg-gradient-to-b from-white to-harmonia-light-green/10 flex-col">
         {isOfflineMode && (
           <div className="bg-amber-100 border-b border-amber-300 py-2 px-4 text-amber-900 text-sm">
             <div className="flex items-center justify-center gap-2">

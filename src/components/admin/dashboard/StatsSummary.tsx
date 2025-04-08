@@ -28,6 +28,7 @@ interface StatCardProps {
   };
   linkText?: string;
   linkUrl?: string;
+  color?: string;
 }
 
 const StatCard: React.FC<StatCardProps> = ({ 
@@ -37,22 +38,23 @@ const StatCard: React.FC<StatCardProps> = ({
   icon, 
   trend, 
   linkText, 
-  linkUrl 
+  linkUrl,
+  color = "text-harmonia-green"
 }) => {
   return (
-    <Card>
-      <CardHeader className="pb-2 flex flex-row items-center justify-between">
+    <Card className="shadow-md border-harmonia-green/20 overflow-hidden hover:shadow-lg transition-shadow">
+      <CardHeader className={`pb-2 flex flex-row items-center justify-between bg-gradient-to-r from-harmonia-light-green to-harmonia-green/5`}>
         <div>
-          <CardTitle className="text-2xl">{title}</CardTitle>
+          <CardTitle className={`text-xl ${color}`}>{title}</CardTitle>
           <CardDescription>{description}</CardDescription>
         </div>
-        <div className="w-10 h-10 rounded-full bg-muted flex items-center justify-center">
+        <div className={`w-10 h-10 rounded-full flex items-center justify-center bg-white/90 ${color}`}>
           {icon}
         </div>
       </CardHeader>
-      <CardContent>
+      <CardContent className="pt-4">
         <div className="flex items-center space-x-2">
-          <p className="text-4xl font-bold">{value}</p>
+          <p className={`text-3xl font-bold ${color}`}>{value}</p>
           {trend && (
             <div className={`flex items-center text-xs ${trend.isPositive ? 'text-green-500' : 'text-red-500'}`}>
               {trend.isPositive ? (
@@ -66,8 +68,12 @@ const StatCard: React.FC<StatCardProps> = ({
         </div>
       </CardContent>
       {linkText && linkUrl && (
-        <CardFooter>
-          <Button variant="ghost" asChild>
+        <CardFooter className="pt-0">
+          <Button 
+            variant="ghost" 
+            asChild
+            className="text-harmonia-green hover:bg-harmonia-green/10 -ml-2 px-2 py-1"
+          >
             <Link to={linkUrl}>{linkText}</Link>
           </Button>
         </CardFooter>
@@ -84,9 +90,10 @@ const StatsSummary = () => {
         description="Total de áudios no sistema"
         value={23}
         trend={{ value: 12, isPositive: true }}
-        icon={<FileAudio className="w-6 h-6 text-blue-500" />}
+        icon={<FileAudio className="w-6 h-6" />}
         linkText="Gerenciar áudios"
         linkUrl={siteConfig.urls.admin.audioDatabase}
+        color="text-blue-500"
       />
       
       <StatCard
@@ -94,9 +101,10 @@ const StatsSummary = () => {
         description="Itens no portfólio"
         value={15}
         trend={{ value: 8, isPositive: true }}
-        icon={<Music className="w-6 h-6 text-green-500" />}
+        icon={<Music className="w-6 h-6" />}
         linkText="Gerenciar portfólio"
         linkUrl={siteConfig.urls.admin.portfolio}
+        color="text-green-500"
       />
       
       <StatCard
@@ -104,9 +112,10 @@ const StatsSummary = () => {
         description="Pedidos ativos"
         value={8}
         trend={{ value: 5, isPositive: false }}
-        icon={<ShoppingBag className="w-6 h-6 text-orange-500" />}
+        icon={<ShoppingBag className="w-6 h-6" />}
         linkText="Ver pedidos"
         linkUrl="/admin-j28s7d1k/orders"
+        color="text-orange-500"
       />
       
       <StatCard
@@ -114,9 +123,10 @@ const StatsSummary = () => {
         description="Total de clientes"
         value={42}
         trend={{ value: 18, isPositive: true }}
-        icon={<Users className="w-6 h-6 text-purple-500" />}
+        icon={<Users className="w-6 h-6" />}
         linkText="Gerenciar clientes"
         linkUrl="/admin-j28s7d1k/customers"
+        color="text-purple-500"
       />
 
       <StatCard
@@ -124,9 +134,10 @@ const StatsSummary = () => {
         description="Prévias de músicas"
         value={12}
         trend={{ value: 10, isPositive: true }}
-        icon={<Music className="w-6 h-6 text-pink-500" />}
+        icon={<Music className="w-6 h-6" />}
         linkText="Gerenciar prévias"
         linkUrl="/admin-j28s7d1k/previews"
+        color="text-pink-500"
       />
 
       <StatCard
@@ -134,18 +145,20 @@ const StatsSummary = () => {
         description="Serviços conectados"
         value={4}
         trend={{ value: 25, isPositive: true }}
-        icon={<Link2 className="w-6 h-6 text-indigo-500" />}
+        icon={<Link2 className="w-6 h-6" />}
         linkText="Configurar integrações"
         linkUrl="/admin-j28s7d1k/integrations"
+        color="text-indigo-500"
       />
 
       <StatCard
         title="Estatísticas"
         description="Análise de desempenho"
         value="Ver"
-        icon={<BarChart className="w-6 h-6 text-teal-500" />}
+        icon={<BarChart className="w-6 h-6" />}
         linkText="Ver estatísticas"
         linkUrl="/admin-j28s7d1k/statistics"
+        color="text-teal-500"
       />
 
       <StatCard
@@ -153,18 +166,20 @@ const StatsSummary = () => {
         description="Faturas emitidas"
         value={18}
         trend={{ value: 15, isPositive: true }}
-        icon={<FileText className="w-6 h-6 text-amber-500" />}
+        icon={<FileText className="w-6 h-6" />}
         linkText="Gerenciar faturas"
         linkUrl="/admin-j28s7d1k/invoices"
+        color="text-amber-500"
       />
 
       <StatCard
         title="Configurações"
         description="Configurações do sistema"
         value="Ver"
-        icon={<Settings className="w-6 h-6 text-gray-500" />}
+        icon={<Settings className="w-6 h-6" />}
         linkText="Configurar sistema"
         linkUrl="/admin-j28s7d1k/settings"
+        color="text-gray-500"
       />
     </div>
   );

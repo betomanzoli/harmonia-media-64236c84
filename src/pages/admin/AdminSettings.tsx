@@ -1,4 +1,3 @@
-
 import React from 'react';
 import AdminLayout from '@/components/admin/layout/AdminLayout';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -8,9 +7,10 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Switch } from "@/components/ui/switch";
-import { Shield, Bell, User, Lock, Globe, ArrowLeft } from 'lucide-react';
+import { Shield, Bell, User, Lock, Globe, ArrowLeft, Link2 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { Link } from 'react-router-dom';
+import WebhookUrlManager from '@/components/admin/integrations/WebhookUrlManager';
 
 const AdminSettings: React.FC = () => {
   const { toast } = useToast();
@@ -27,12 +27,17 @@ const AdminSettings: React.FC = () => {
       <div className="space-y-6">
         <div className="flex items-center justify-between">
           <div>
-            <h1 className="text-3xl font-bold tracking-tight">Configurações</h1>
+            <h1 className="text-3xl font-bold tracking-tight text-harmonia-green">Configurações</h1>
             <p className="text-muted-foreground">
               Gerencie as configurações da sua conta e preferências do sistema
             </p>
           </div>
-          <Button variant="outline" size="sm" asChild>
+          <Button 
+            variant="outline" 
+            size="sm" 
+            asChild
+            className="border-harmonia-green text-harmonia-green hover:bg-harmonia-green/10"
+          >
             <Link to="/admin-j28s7d1k/dashboard">
               <ArrowLeft className="mr-2 h-4 w-4" />
               Voltar ao Dashboard
@@ -41,38 +46,60 @@ const AdminSettings: React.FC = () => {
         </div>
         
         <Tabs defaultValue="account" className="space-y-6">
-          <TabsList>
-            <TabsTrigger value="account">
+          <TabsList className="bg-harmonia-light-green/20 text-harmonia-green">
+            <TabsTrigger 
+              value="account" 
+              className="data-[state=active]:bg-harmonia-green data-[state=active]:text-white"
+            >
               <User className="h-4 w-4 mr-2" />
               Conta
             </TabsTrigger>
-            <TabsTrigger value="security">
+            <TabsTrigger 
+              value="security"
+              className="data-[state=active]:bg-harmonia-green data-[state=active]:text-white"
+            >
               <Shield className="h-4 w-4 mr-2" />
               Segurança
             </TabsTrigger>
-            <TabsTrigger value="notifications">
+            <TabsTrigger 
+              value="notifications"
+              className="data-[state=active]:bg-harmonia-green data-[state=active]:text-white"
+            >
               <Bell className="h-4 w-4 mr-2" />
               Notificações
             </TabsTrigger>
-            <TabsTrigger value="password">
+            <TabsTrigger 
+              value="password"
+              className="data-[state=active]:bg-harmonia-green data-[state=active]:text-white"
+            >
               <Lock className="h-4 w-4 mr-2" />
               Senha
             </TabsTrigger>
-            <TabsTrigger value="site">
+            <TabsTrigger 
+              value="site"
+              className="data-[state=active]:bg-harmonia-green data-[state=active]:text-white"
+            >
               <Globe className="h-4 w-4 mr-2" />
               Site
+            </TabsTrigger>
+            <TabsTrigger 
+              value="integrations"
+              className="data-[state=active]:bg-harmonia-green data-[state=active]:text-white"
+            >
+              <Link2 className="h-4 w-4 mr-2" />
+              Integrações
             </TabsTrigger>
           </TabsList>
           
           <TabsContent value="account" className="space-y-6">
-            <Card>
-              <CardHeader>
-                <CardTitle>Informações da Conta</CardTitle>
+            <Card className="shadow-md border-harmonia-green/20">
+              <CardHeader className="bg-gradient-to-r from-harmonia-light-green to-harmonia-green/10">
+                <CardTitle className="text-harmonia-green">Informações da Conta</CardTitle>
                 <CardDescription>
                   Atualize suas informações pessoais e de contato
                 </CardDescription>
               </CardHeader>
-              <CardContent className="space-y-4">
+              <CardContent className="space-y-4 pt-6">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div className="space-y-2">
                     <Label htmlFor="name">Nome</Label>
@@ -89,20 +116,25 @@ const AdminSettings: React.FC = () => {
                 </div>
               </CardContent>
               <CardFooter>
-                <Button onClick={handleSave}>Salvar Alterações</Button>
+                <Button 
+                  onClick={handleSave}
+                  className="bg-harmonia-green hover:bg-harmonia-green/90"
+                >
+                  Salvar Alterações
+                </Button>
               </CardFooter>
             </Card>
           </TabsContent>
           
           <TabsContent value="security" className="space-y-6">
-            <Card>
-              <CardHeader>
-                <CardTitle>Segurança</CardTitle>
+            <Card className="shadow-md border-harmonia-green/20">
+              <CardHeader className="bg-gradient-to-r from-harmonia-light-green to-harmonia-green/10">
+                <CardTitle className="text-harmonia-green">Segurança</CardTitle>
                 <CardDescription>
                   Gerenciar configurações de segurança da conta
                 </CardDescription>
               </CardHeader>
-              <CardContent className="space-y-4">
+              <CardContent className="space-y-4 pt-6">
                 <div className="flex items-center justify-between">
                   <div className="space-y-0.5">
                     <Label>Autenticação de dois fatores</Label>
@@ -123,7 +155,12 @@ const AdminSettings: React.FC = () => {
                 </div>
               </CardContent>
               <CardFooter>
-                <Button onClick={handleSave}>Salvar Alterações</Button>
+                <Button 
+                  onClick={handleSave}
+                  className="bg-harmonia-green hover:bg-harmonia-green/90"
+                >
+                  Salvar Alterações
+                </Button>
               </CardFooter>
             </Card>
           </TabsContent>
@@ -219,6 +256,60 @@ const AdminSettings: React.FC = () => {
                 <Button onClick={handleSave}>Salvar Alterações</Button>
               </CardFooter>
             </Card>
+          </TabsContent>
+          
+          <TabsContent value="integrations" className="space-y-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <WebhookUrlManager 
+                title="Webhook Global" 
+                description="Configure o webhook global para todas as notificações do sistema"
+                serviceType="portfolio"
+                storageUrl="https://drive.google.com/drive/folders/1uuhCHv0c5eePU9_m-0BdYiuo0-3vUwVJ"
+              />
+              
+              <Card className="shadow-md border-harmonia-green/20">
+                <CardHeader className="bg-gradient-to-r from-harmonia-light-green to-harmonia-green/10">
+                  <CardTitle className="text-harmonia-green">Links de Armazenamento</CardTitle>
+                  <CardDescription>
+                    Gerencie os links para pastas compartilhadas
+                  </CardDescription>
+                </CardHeader>
+                <CardContent className="pt-6 space-y-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="audio-folder">Banco de Dados de Áudio</Label>
+                    <Input 
+                      id="audio-folder" 
+                      defaultValue="https://drive.google.com/drive/folders/1zOKfHNA7rAihCmEVKZtL191k8XgUsXMg" 
+                      readOnly
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="portfolio-folder">Portfólio</Label>
+                    <Input 
+                      id="portfolio-folder" 
+                      defaultValue="https://drive.google.com/drive/folders/1MJk2diD6Bmb9Q6lNVDPnLePAznerOU29" 
+                      readOnly
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="previews-folder">Projetos de Prévias</Label>
+                    <Input 
+                      id="previews-folder" 
+                      defaultValue="https://drive.google.com/drive/folders/1lLw3oBgNhlpUiYbo3wevgUvjA0RTV7tN" 
+                      readOnly
+                    />
+                  </div>
+                </CardContent>
+                <CardFooter>
+                  <Button 
+                    onClick={() => window.open('https://drive.google.com/', '_blank')}
+                    className="bg-harmonia-green hover:bg-harmonia-green/90"
+                  >
+                    Abrir Google Drive
+                  </Button>
+                </CardFooter>
+              </Card>
+            </div>
           </TabsContent>
         </Tabs>
       </div>

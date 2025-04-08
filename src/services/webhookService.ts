@@ -3,7 +3,7 @@
 import { supabase } from '@/lib/supabase';
 
 // Define acceptable notification types
-export type NotificationType = 'new_portfolio_item' | 'test_message' | 'feedback_received';
+export type NotificationType = 'new_portfolio_item' | 'test_message' | 'feedback_received' | 'new_audio' | 'new_customer' | 'new_order' | 'new_invoice';
 
 export interface WebhookPayload {
   type: NotificationType;
@@ -81,8 +81,37 @@ const sendToWebhook = async (webhookUrl: string, payload: WebhookPayload): Promi
   }
 };
 
+// Function to send a notification about a new item in any module
+const sendItemNotification = async (
+  type: NotificationType, 
+  data: any, 
+  customWebhookUrl?: string
+): Promise<boolean> => {
+  try {
+    // Get the webhook URL from the database if not provided
+    const webhookUrl = customWebhookUrl || await getWebhookUrl();
+    
+    if (!webhookUrl) {
+      console.error('URL do webhook não encontrada');
+      return false;
+    }
+    
+    const payload: WebhookPayload = {
+      type,
+      data,
+      timestamp: new Date().toISOString()
+    };
+    
+    return await sendToWebhook(webhookUrl, payload);
+  } catch (err) {
+    console.error(`Erro ao enviar notificação para ${type}:`, err);
+    return false;
+  }
+};
+
 export default {
   getWebhookUrl,
   saveWebhookUrl,
   sendToWebhook,
+  sendItemNotification
 };

@@ -10,6 +10,7 @@ import { Button } from "@/components/ui/button";
 import { HelpCircle, ArrowLeft } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { Link } from 'react-router-dom';
+import WebhookUrlManager from '@/components/admin/integrations/WebhookUrlManager';
 
 const AdminPreviews: React.FC = () => {
   const { projects } = usePreviewProjects();
@@ -34,9 +35,14 @@ const AdminPreviews: React.FC = () => {
     <AdminLayout>
       <div className="flex-1 flex flex-col h-screen">
         <div className="flex items-center justify-between p-4 border-b bg-white">
-          <h1 className="text-xl font-bold">Painel de Prévias Musicais</h1>
+          <h1 className="text-xl font-bold text-harmonia-green">Painel de Prévias Musicais</h1>
           <div className="flex gap-2">
-            <Button variant="outline" size="sm" asChild>
+            <Button 
+              variant="outline" 
+              size="sm" 
+              asChild
+              className="border-harmonia-green text-harmonia-green hover:bg-harmonia-green/10"
+            >
               <Link to="/admin-j28s7d1k/dashboard">
                 <ArrowLeft className="mr-2 h-4 w-4" />
                 Voltar ao Dashboard
@@ -45,7 +51,7 @@ const AdminPreviews: React.FC = () => {
             <Button 
               variant="outline" 
               size="sm" 
-              className={`gap-2 ${showHelp ? 'bg-blue-100 border-blue-300' : ''}`}
+              className={`gap-2 ${showHelp ? 'bg-harmonia-light-green border-harmonia-green' : 'border-harmonia-green text-harmonia-green hover:bg-harmonia-green/10'}`}
               onClick={toggleHelp}
             >
               <HelpCircle className="w-4 h-4" />
@@ -54,7 +60,19 @@ const AdminPreviews: React.FC = () => {
           </div>
         </div>
         <div className="flex-1 overflow-auto p-8">
-          <PreviewsHeader scrollToNewForm={scrollToNewForm} />
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
+            <div className="md:col-span-2">
+              <PreviewsHeader scrollToNewForm={scrollToNewForm} />
+            </div>
+            <div>
+              <WebhookUrlManager 
+                title="Integração de Prévias" 
+                description="Configure o webhook para notificações de feedback de prévias"
+                serviceType="previews"
+                storageUrl="https://drive.google.com/drive/folders/1lLw3oBgNhlpUiYbo3wevgUvjA0RTV7tN"
+              />
+            </div>
+          </div>
           <ProjectsListCard projects={projects} />
           <NewProjectForm />
         </div>
