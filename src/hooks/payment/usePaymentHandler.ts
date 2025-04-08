@@ -22,15 +22,14 @@ export function usePaymentHandler(
   const handlePaymentMethod = async (method: string) => {
     setIsLoading(true);
     
-    // Simulate payment process (in a real environment, would redirect to gateway)
     try {
-      // Payment processing simulation
-      await new Promise(resolve => setTimeout(resolve, 1500));
-      
       // Calculate values
       const extrasTotal = calculateExtrasTotal(selectedExtras);
       const packagePrice = parsePackagePrice(selectedPackage.price);
       const totalPrice = packagePrice + extrasTotal;
+      
+      // Generate order ID
+      const orderId = `HAR-${Date.now()}`;
       
       // Store payment data in localStorage
       const paymentData: PaymentData = {
@@ -42,10 +41,24 @@ export function usePaymentHandler(
         extrasTotal,
         total: `R$ ${totalPrice.toFixed(2).replace('.', ',')}`,
         date: new Date().toISOString(),
-        orderId: `HAR-${Date.now()}`
+        orderId
       };
       
       localStorage.setItem('paymentData', JSON.stringify(paymentData));
+      
+      if (method === 'MercadoPago') {
+        // Redirect to biolivre.com.br/harmonizam with parameters
+        const returnUrl = `${window.location.origin}/pagamento-retorno?packageId=${packageId}&orderId=${orderId}`;
+        const biolivreUrl = `https://biolivre.com.br/harmonizam?package=${packageId}&price=${totalPrice}&returnUrl=${encodeURIComponent(returnUrl)}`;
+        
+        // In a real implementation, you would add more relevant parameters
+        window.location.href = biolivreUrl;
+        return; // Stop execution as we're redirecting
+      }
+      
+      // For local payment methods like Pix or Credit Card, continue with existing flow
+      // Simulate payment process (in a real environment, would redirect to gateway)
+      await new Promise(resolve => setTimeout(resolve, 1500));
       
       // Store order data for tracking
       const orderData = createOrderData(

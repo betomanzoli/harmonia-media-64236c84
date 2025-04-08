@@ -28,6 +28,7 @@ import ApprovalConfirmation from "./pages/ApprovalConfirmation";
 import Qualification from "./pages/Qualification";
 import ThankYou from "./pages/ThankYou";
 import Payment from "./pages/Payment";
+import PaymentReturn from "./pages/PaymentReturn";
 import AdminInvoices from "./pages/admin/AdminInvoices";
 import { siteConfig } from "./config/site";
 
@@ -94,9 +95,12 @@ const App = () => (
             <Route path="/qualificacao" element={<Qualification />} />
             <Route path="/agradecimento" element={<ThankYou />} />
             
-            {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
+            {/* Pagamento */}
             <Route path="/pagamento" element={<Payment />} />
             <Route path="/pagamento/:packageId" element={<Payment />} />
+            <Route path="/pagamento-retorno" element={<PaymentReturn />} />
+            
+            {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
           </Routes>
         </AdminAuthProvider>
