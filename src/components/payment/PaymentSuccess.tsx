@@ -1,7 +1,7 @@
 
 import React, { useEffect, useState } from 'react';
 import { Card } from "@/components/ui/card";
-import { CheckCircle, Loader2, AlertCircle, Clock } from 'lucide-react';
+import { CheckCircle, Loader2, Clock } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { Button } from "@/components/ui/button";
 
@@ -27,19 +27,19 @@ const PaymentSuccess: React.FC = () => {
     <Card className="text-center p-8">
       <div className="flex flex-col items-center">
         <div className="w-16 h-16 rounded-full bg-harmonia-green/20 flex items-center justify-center mb-4">
-          {paymentMethod === 'Boleto' ? (
-            <AlertCircle className="w-8 h-8 text-yellow-500" />
+          {paymentMethod === 'Pix' ? (
+            <Clock className="w-8 h-8 text-amber-500" />
           ) : (
             <CheckCircle className="w-8 h-8 text-harmonia-green" />
           )}
         </div>
         
-        {paymentMethod === 'Boleto' ? (
+        {paymentMethod === 'Pix' ? (
           <>
-            <h2 className="text-2xl font-bold mb-2">Boleto gerado com sucesso!</h2>
+            <h2 className="text-2xl font-bold mb-2">Pix gerado com sucesso!</h2>
             <p className="mb-6 text-gray-400">
-              O prazo para o início do seu projeto será contado após a confirmação do pagamento do boleto, 
-              que pode levar até 3 dias úteis.
+              O prazo para o início do seu projeto será contado após a confirmação do pagamento via Pix, 
+              que geralmente ocorre em poucos minutos.
             </p>
             <div className="flex items-center justify-center mb-6 bg-amber-50 p-4 rounded-md border border-amber-200">
               <Clock className="w-5 h-5 text-amber-500 mr-2" />

@@ -90,8 +90,8 @@ export function usePaymentHandler(
           {
             step: 1,
             title: "Pagamento Confirmado",
-            description: method === 'Boleto' 
-              ? "Seu pagamento via boleto foi registrado. O projeto será iniciado após a confirmação do pagamento."
+            description: method === 'Pix' 
+              ? "Seu pagamento via Pix foi registrado. O projeto será iniciado após a confirmação do pagamento."
               : "Seu pagamento foi confirmado e seu projeto foi iniciado.",
             date: new Date().toLocaleDateString('pt-BR'),
             status: "completed",
@@ -148,8 +148,8 @@ export function usePaymentHandler(
       setIsPaymentSuccess(true);
       
       toast({
-        title: method === 'Boleto' ? "Boleto gerado com sucesso!" : "Pagamento confirmado!",
-        description: method === 'Boleto' 
+        title: method === 'Pix' ? "QR Code Pix gerado com sucesso!" : "Pagamento confirmado!",
+        description: method === 'Pix' 
           ? `Seu pedido para o ${selectedPackage.name} foi registrado. O projeto será iniciado após a confirmação do pagamento.`
           : `Seu pedido para o ${selectedPackage.name} foi confirmado e será iniciado imediatamente.`,
       });
@@ -188,9 +188,9 @@ export function usePaymentHandler(
         break;
     }
     
-    // Adicionar dias extras para boleto
-    if (paymentMethod === 'Boleto') {
-      businessDays += 3; // Adiciona 3 dias úteis para compensação do boleto
+    // Adicionar dias extras para Pix (menos que boleto, mas ainda tem um pequeno atraso)
+    if (paymentMethod === 'Pix') {
+      businessDays += 1; // Adiciona 1 dia útil para compensação do Pix
     }
     
     // Calcular data de entrega (pulando finais de semana)
