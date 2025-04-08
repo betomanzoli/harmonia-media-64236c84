@@ -1,7 +1,7 @@
 
 import React from 'react';
 import Logo from './Logo';
-import { Phone, Mail, Shield, ChevronUp, Clock, FileCheck, Music, Package } from 'lucide-react';
+import { Phone, Mail, Shield, ChevronUp, Clock, FileCheck, Music, Package, DollarSign } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useNavigate, Link } from 'react-router-dom';
 import { siteConfig } from '@/config/site';
@@ -25,6 +25,10 @@ const Footer: React.FC = () => {
     window.open(`mailto:${siteConfig.contact.email}`, '_blank');
   };
 
+  const handlePaymentClick = () => {
+    navigate('/pagamento/essencial');
+  };
+
   return (
     <footer className="bg-black pt-16 pb-8 px-6 md:px-10 relative">
       <div className="max-w-7xl mx-auto">
@@ -34,6 +38,12 @@ const Footer: React.FC = () => {
             <p className="text-gray-400 mt-4">
               Criamos composições personalizadas usando o melhor da IA e o talento de músicos profissionais.
             </p>
+            <div className="mt-6">
+              <Button onClick={handlePaymentClick} className="bg-harmonia-green hover:bg-harmonia-green/90 text-white">
+                <DollarSign className="w-4 h-4 mr-2" />
+                Contratar Agora
+              </Button>
+            </div>
           </div>
           
           <div>
@@ -53,6 +63,14 @@ const Footer: React.FC = () => {
                   className="text-gray-400 hover:text-harmonia-green transition-colors flex items-center gap-1"
                 >
                   <FileCheck className="w-4 h-4" /> Qualificação
+                </NavLink>
+              </li>
+              <li>
+                <NavLink 
+                  href="/pagamento/essencial" 
+                  className="text-gray-400 hover:text-harmonia-green transition-colors flex items-center gap-1"
+                >
+                  <DollarSign className="w-4 h-4" /> Pagamento Direto
                 </NavLink>
               </li>
               <li>

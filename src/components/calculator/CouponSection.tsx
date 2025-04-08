@@ -1,8 +1,9 @@
 
 import React, { useState } from 'react';
 import { Button } from "@/components/ui/button";
-import { Check } from 'lucide-react';
-import { useToast } from "@/components/ui/use-toast";
+import { Check, AlertCircle } from 'lucide-react';
+import { useToast } from "@/hooks/use-toast";
+import { Alert, AlertDescription } from "@/components/ui/alert";
 
 interface CouponSectionProps {
   couponCode: string;
@@ -24,7 +25,10 @@ const CouponSection: React.FC<CouponSectionProps> = ({
     const validCoupons = {
       'PROMO10': 10,
       'HARMON15': 15,
-      'SPECIAL5': 5
+      'SPECIAL5': 5,
+      'ESSENCIAL5': 5,
+      'PROFISSIONAL5': 5,
+      'PREMIUM5': 5
     };
     
     type CouponKey = keyof typeof validCoupons;
@@ -59,6 +63,13 @@ const CouponSection: React.FC<CouponSectionProps> = ({
         </Button>
       </div>
       
+      <Alert className="mb-4 bg-yellow-50 border-yellow-200">
+        <AlertCircle className="h-4 w-4 text-yellow-600" />
+        <AlertDescription className="text-yellow-700 text-sm">
+          Esta calculadora é apenas informativa. Cada serviço será pago individualmente no checkout.
+        </AlertDescription>
+      </Alert>
+      
       {showCouponInput && (
         <div className="flex gap-2">
           <input 
@@ -78,6 +89,15 @@ const CouponSection: React.FC<CouponSectionProps> = ({
           <span>Cupom aplicado! Desconto de {discount}% no valor total.</span>
         </div>
       )}
+      
+      <div className="mt-4 text-sm text-gray-400">
+        <p>Cupons disponíveis para pacotes:</p>
+        <ul className="list-disc pl-5 mt-1">
+          <li>ESSENCIAL5: 5% de desconto no Pacote Essencial</li>
+          <li>PROFISSIONAL5: 5% de desconto no Pacote Profissional</li>
+          <li>PREMIUM5: 5% de desconto no Pacote Premium</li>
+        </ul>
+      </div>
     </div>
   );
 };

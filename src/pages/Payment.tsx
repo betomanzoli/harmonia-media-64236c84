@@ -82,8 +82,9 @@ const Payment: React.FC = () => {
           <Card className="p-6 mt-8">
             <h2 className="text-xl font-semibold mb-4">Informação sobre Serviços</h2>
             <p className="text-gray-500 mb-4">
-              Os serviços extras estarão disponíveis para contratação em uma atualização futura do site.
-              No momento, apenas os pacotes principais estão disponíveis para compra.
+              A página de calculadora de preço é apenas informativa para serviços extras. 
+              Os cupons de desconto para pacotes funcionam normalmente e você pode calcular quanto gastará no total,
+              mas lembre-se que cada pagamento será realizado individualmente.
             </p>
             <p className="text-gray-500">
               Após a conclusão do pagamento, você será redirecionado de volta para preencher o briefing

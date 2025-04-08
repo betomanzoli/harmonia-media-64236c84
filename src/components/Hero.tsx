@@ -1,13 +1,17 @@
 
 import React from 'react';
 import { Button } from "@/components/ui/button";
-import { Play, ArrowUp } from 'lucide-react';
+import { Play, ArrowUp, DollarSign } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 
 const Hero: React.FC = () => {
   const navigate = useNavigate();
   
   const handleCreateMusic = () => {
+    navigate('/pagamento/essencial');
+  };
+  
+  const handleQualification = () => {
     navigate('/qualificacao');
   };
   
@@ -41,7 +45,11 @@ const Hero: React.FC = () => {
         </p>
         <div className="flex flex-col sm:flex-row gap-4">
           <Button onClick={handleCreateMusic} className="bg-harmonia-green hover:bg-harmonia-green/90 text-white h-12 px-6 rounded-md">
-            Criar Minha Música
+            <DollarSign className="w-4 h-4 mr-2" />
+            Contratar Agora
+          </Button>
+          <Button onClick={handleQualification} variant="outline" className="h-12 px-6 rounded-md">
+            Fazer Qualificação
           </Button>
           <Button onClick={handleHowItWorks} variant="outline" className="flex items-center gap-2 h-12 px-6 rounded-md">
             <Play className="w-4 h-4" /> Como Funciona

@@ -7,6 +7,12 @@ import NavLink from './NavLink';
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { useNavigate, Link, useLocation } from 'react-router-dom';
 import { siteConfig } from '@/config/site';
+import { 
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 
 const Header: React.FC = () => {
   const navigate = useNavigate();
@@ -82,15 +88,27 @@ const Header: React.FC = () => {
             </nav>
           </div>
           <div className="flex items-center gap-3">
-            <Button 
-              variant="ghost" 
-              size="sm" 
-              className="hidden md:flex items-center gap-1"
-              onClick={handleWhatsAppContact}
-            >
-              <Phone className="w-4 h-4" />
-              Contato
-            </Button>
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button 
+                  variant="ghost" 
+                  size="icon" 
+                  className="hidden md:flex"
+                >
+                  <Phone className="w-4 h-4" />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" className="bg-background border border-border p-2">
+                <DropdownMenuItem onClick={handleWhatsAppContact} className="cursor-pointer">
+                  <Phone className="mr-2 h-4 w-4" />
+                  <span>WhatsApp</span>
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={handleEmailContact} className="cursor-pointer">
+                  <Mail className="mr-2 h-4 w-4" />
+                  <span>Email</span>
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
             
             {/* Menu mobile */}
             <Sheet>

@@ -31,6 +31,21 @@ const ServiceCard: React.FC<ServiceCardProps> = ({
     handleProceedToBriefing
   } = useServiceTerms(title);
   
+  // Determine package ID from title
+  const getPackageId = () => {
+    if (title.includes('Essencial')) return 'essencial';
+    if (title.includes('Profissional')) return 'profissional';
+    if (title.includes('Premium')) return 'premium';
+    return 'essencial';
+  };
+  
+  // Direct to payment after accepting terms
+  const handleAcceptTerms = () => {
+    // Route directly to payment with the package ID
+    const packageId = getPackageId();
+    window.location.href = `/pagamento/${packageId}`;
+  };
+  
   return (
     <div className={cn(
       "rounded-lg p-6 border transition-all duration-300 h-full flex flex-col",
@@ -63,7 +78,7 @@ const ServiceCard: React.FC<ServiceCardProps> = ({
         title={title}
         acceptedTerms={acceptedTerms}
         onAcceptedTermsChange={setAcceptedTerms}
-        onAccept={handleProceedToBriefing}
+        onAccept={handleAcceptTerms}
       />
     </div>
   );

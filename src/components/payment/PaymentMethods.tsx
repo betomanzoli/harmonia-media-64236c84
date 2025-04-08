@@ -82,7 +82,7 @@ const PaymentMethods: React.FC<PaymentMethodsProps> = ({ isLoading, onSelectMeth
                     <div className="mt-2 flex items-center">
                       <input 
                         type="text" 
-                        placeholder={`Digite o código do cupom`}
+                        placeholder="Digite o código do cupom"
                         value={couponCode}
                         onChange={(e) => setCouponCode(e.target.value)}
                         className="text-sm border border-border rounded px-2 py-1 w-48 bg-background"
