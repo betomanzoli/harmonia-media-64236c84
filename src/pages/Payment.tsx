@@ -11,6 +11,7 @@ import { packageData, PackageId } from '@/lib/payment/packageData';
 import { usePaymentHandler } from '@/hooks/payment/usePaymentHandler';
 import { Card } from "@/components/ui/card";
 import PackageSwitch from '@/components/payment/PackageSwitch';
+import ContractAcceptanceInfo from '@/components/payment/ContractAcceptanceInfo';
 
 const Payment: React.FC = () => {
   const navigate = useNavigate();
@@ -44,7 +45,9 @@ const Payment: React.FC = () => {
   const {
     isLoading,
     isPaymentSuccess,
-    handlePaymentMethod
+    handlePaymentMethod,
+    hasAcceptedTerms,
+    logContractAcceptance
   } = usePaymentHandler(
     selectedPackageId,
     selectedPackage,
@@ -83,11 +86,17 @@ const Payment: React.FC = () => {
                 />
               </Card>
               
+              <div className="mb-6">
+                <ContractAcceptanceInfo hasAcceptedTerms={hasAcceptedTerms} />
+              </div>
+              
               <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                 <PaymentMethods 
                   isLoading={isLoading}
                   onSelectMethod={handlePaymentMethod}
                   packageId={selectedPackageId}
+                  hasAcceptedTerms={hasAcceptedTerms}
+                  onAcceptTerms={logContractAcceptance}
                 />
                 
                 <PackageDetails 

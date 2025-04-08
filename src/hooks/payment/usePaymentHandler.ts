@@ -8,6 +8,7 @@ import { calculateExtrasTotal, parsePackagePrice } from '@/lib/payment/priceUtil
 import { createOrderData } from '@/lib/payment/orderUtils';
 import { packagePaymentLinks } from '@/lib/payment/paymentLinks';
 import { PaymentData } from './types';
+import contractAcceptanceLogger from '@/services/contractAcceptanceLogger';
 
 export function usePaymentHandler(
   packageId: PackageId,
@@ -20,8 +21,71 @@ export function usePaymentHandler(
   const [isLoading, setIsLoading] = useState(false);
   const [isPaymentSuccess, setIsPaymentSuccess] = useState(false);
   const [paymentIframeUrl, setPaymentIframeUrl] = useState('');
+  const [hasAcceptedTerms, setHasAcceptedTerms] = useState(false);
+  
+  // Check if terms have already been accepted for this session
+  useState(() => {
+    // Check in localStorage if terms were accepted for this package
+    const acceptedPackageTerms = localStorage.getItem(`acceptedTerms_${packageId}`);
+    if (acceptedPackageTerms) {
+      setHasAcceptedTerms(true);
+    }
+  });
+  
+  // Log contract acceptance
+  const logContractAcceptance = async () => {
+    if (!qualificationData) {
+      console.warn('Qualification data not available for contract logging');
+      return;
+    }
+    
+    try {
+      await contractAcceptanceLogger.logAcceptance({
+        packageId,
+        customerName: qualificationData.name || 'Cliente Anônimo',
+        customerEmail: qualificationData.email || 'email@não-fornecido.com',
+        acceptanceDate: new Date().toISOString(),
+        ipAddress: 'client-side',
+        userAgent: navigator.userAgent,
+        contractVersion: '1.0',
+        source: 'payment-flow'
+      });
+      
+      // Store in localStorage to avoid asking again in the same session
+      localStorage.setItem(`acceptedTerms_${packageId}`, 'true');
+      
+      setHasAcceptedTerms(true);
+      
+      toast({
+        title: "Contrato aceito",
+        description: "Os termos de serviço foram aceitos e registrados."
+      });
+      
+      return true;
+    } catch (error) {
+      console.error('Error logging contract acceptance:', error);
+      toast({
+        title: "Erro ao registrar aceitação",
+        description: "Ocorreu um erro ao registrar a aceitação dos termos.",
+        variant: "destructive"
+      });
+      
+      return false;
+    }
+  };
   
   const handlePaymentMethod = async (method: string, useDiscount = false) => {
+    // Ensure terms are accepted before proceeding
+    if (!hasAcceptedTerms) {
+      toast({
+        title: "Termos não aceitos",
+        description: "Você precisa aceitar os termos de serviço para continuar.",
+        variant: "destructive"
+      });
+      
+      return;
+    }
+    
     setIsLoading(true);
     
     try {
@@ -79,12 +143,24 @@ export function usePaymentHandler(
       setIsLoading(false);
     }
   };
+  
+  // Check and request terms acceptance if not already accepted
+  const ensureTermsAccepted = async () => {
+    if (hasAcceptedTerms) return true;
+    
+    // Here you would typically show a dialog to accept terms
+    // For now, we'll just log directly since we're modifying this for any entry point
+    return await logContractAcceptance();
+  };
 
   return {
     isLoading,
     isPaymentSuccess,
     handlePaymentMethod,
-    paymentIframeUrl
+    paymentIframeUrl,
+    hasAcceptedTerms,
+    ensureTermsAccepted,
+    logContractAcceptance
   };
 }
 
