@@ -72,14 +72,14 @@ export function usePaymentHandler(
       toast({
         title: method === 'Pix' ? "QR Code Pix gerado com sucesso!" : "Pagamento confirmado!",
         description: method === 'Pix' 
-          ? `Seu pedido para o ${selectedPackage.name} foi registrado. O projeto será iniciado após a confirmação do pagamento.`
-          : `Seu pedido para o ${selectedPackage.name} foi confirmado e será iniciado imediatamente.`,
+          ? `Seu pedido para o ${selectedPackage.name} foi registrado. Preencha o briefing após a confirmação do pagamento.`
+          : `Seu pedido para o ${selectedPackage.name} foi confirmado. Por favor, preencha o briefing para iniciarmos o projeto.`,
       });
       
-      // After 3 seconds, redirect to the thank you page
+      // After 3 seconds, redirect to the briefing page
       setTimeout(() => {
-        navigate('/agradecimento');
-      }, 3000);
+        navigate('/briefing');
+      }, 5000);
     } catch (error) {
       console.error('Erro no processamento do pagamento:', error);
       toast({

@@ -1,5 +1,6 @@
 
 import { supabase } from './client';
+import { ContractContent } from '@/components/service-card/ContractDetails';
 
 // Helper for creating email content
 const createEmailContent = (to: string, subject: string, content: string) => {
@@ -8,6 +9,17 @@ const createEmailContent = (to: string, subject: string, content: string) => {
     subject,
     content
   };
+};
+
+// Get contract text based on package name
+const getContractText = (packageName: string): string => {
+  if (packageName.includes('Premium')) {
+    return ContractContent.getPremiumContract();
+  } else if (packageName.includes('Profissional')) {
+    return ContractContent.getProfissionalContract();
+  } else {
+    return ContractContent.getEssencialContract();
+  }
 };
 
 // Email Service using Supabase Edge Functions
@@ -79,13 +91,23 @@ export const emailService = {
     try {
       console.log('Enviando confirmação de pagamento para:', email);
       
+      // Get contract text based on package name
+      const contractText = getContractText(packageName);
+      
       const emailContent = createEmailContent(
         email,
         'Pagamento Confirmado - harmonIA',
         `
           <h1>Olá ${name},</h1>
           <p>Seu pagamento para o pacote "${packageName}" foi confirmado com sucesso!</p>
-          <p>Agora podemos dar início ao seu projeto. Nossa equipe entrará em contato em breve para alinhar os próximos passos.</p>
+          <p>O próximo passo é preencher o briefing detalhado para que possamos iniciar a produção 
+          da sua música personalizada.</p>
+          <p>Abaixo está uma cópia do contrato de prestação de serviços que você aceitou:</p>
+          <div style="background-color: #f9f9f9; border: 1px solid #ddd; padding: 15px; margin: 15px 0; max-height: 300px; overflow-y: auto;">
+            ${contractText}
+          </div>
+          <p>Você pode acessar o briefing a qualquer momento através do seu painel de cliente 
+          ou pelo link que enviamos.</p>
           <p>Atenciosamente,<br>Equipe harmonIA</p>
         `
       );

@@ -1,6 +1,7 @@
 
 // Serviço de email para integração com sistemas de terceiros
 import { emailService as supabaseEmailService } from '@/lib/supabase';
+import { ContractContent } from '@/components/service-card/ContractDetails';
 
 // Serviço de email
 const emailService = {
@@ -48,11 +49,35 @@ const emailService = {
     console.log(`Enviando confirmação de pagamento para ${email} (${name}): ${packageName}`);
     
     try {
+      // Get contract text based on package name
+      let contractText = ContractContent.getEssencialContract();
+      
+      if (packageName.includes('Premium')) {
+        contractText = ContractContent.getPremiumContract();
+      } else if (packageName.includes('Profissional')) {
+        contractText = ContractContent.getProfissionalContract();
+      }
+      
+      // Modificar o corpo do email para incluir o contrato
+      const emailBody = `
+        <h1>Olá ${name},</h1>
+        <p>Seu pagamento para o pacote "${packageName}" foi confirmado com sucesso!</p>
+        <p>O próximo passo é preencher o briefing detalhado para que possamos iniciar a produção 
+        da sua música personalizada.</p>
+        <p>Abaixo está uma cópia do contrato de prestação de serviços que você aceitou:</p>
+        <div style="background-color: #f9f9f9; border: 1px solid #ddd; padding: 15px; margin: 15px 0; max-height: 300px; overflow-y: auto;">
+          ${contractText}
+        </div>
+        <p>Você pode acessar o briefing a qualquer momento através do seu painel de cliente 
+        ou pelo link que enviamos.</p>
+        <p>Atenciosamente,<br>Equipe harmonIA</p>
+      `;
+      
       const result = await supabaseEmailService.sendPaymentConfirmation(email, name, packageName);
       
       // Registrar a ação para acompanhamento
       console.log(`Email de confirmação de pagamento enviado para ${email}`);
-      console.log(`Conteúdo: Olá ${name}, recebemos seu pagamento para o pacote ${packageName}.`);
+      console.log(`Conteúdo: Contrato de serviço do pacote ${packageName} e instruções para briefing.`);
       
       // Em produção, aqui enviaria uma notificação WhatsApp
       console.log(`WhatsApp enviado para o admin com dados do pagamento de ${name}, pacote ${packageName}`);

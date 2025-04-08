@@ -38,13 +38,13 @@ const PaymentSuccess: React.FC = () => {
           <>
             <h2 className="text-2xl font-bold mb-2">Pix gerado com sucesso!</h2>
             <p className="mb-6 text-gray-400">
-              O prazo para o início do seu projeto será contado após a confirmação do pagamento via Pix, 
-              que geralmente ocorre em poucos minutos.
+              O próximo passo será preencher o briefing após a confirmação do pagamento. O prazo para entrega 
+              será contado a partir do preenchimento completo do briefing.
             </p>
             <div className="flex items-center justify-center mb-6 bg-amber-50 p-4 rounded-md border border-amber-200">
               <Clock className="w-5 h-5 text-amber-500 mr-2" />
               <p className="text-amber-700 text-sm">
-                Seu projeto será iniciado assim que o pagamento for confirmado.
+                Você será redirecionado para o briefing assim que o pagamento for confirmado.
               </p>
             </div>
           </>
@@ -52,12 +52,13 @@ const PaymentSuccess: React.FC = () => {
           <>
             <h2 className="text-2xl font-bold mb-2">Pagamento confirmado!</h2>
             <p className="mb-6 text-gray-400">
-              Seu pagamento foi processado com sucesso. O projeto será iniciado imediatamente.
+              Seu pagamento foi processado com sucesso. O próximo passo será preencher o briefing detalhado 
+              para que possamos iniciar a produção da sua música personalizada.
             </p>
             <div className="flex items-center justify-center mb-6 bg-green-50 p-4 rounded-md border border-green-200">
               <CheckCircle className="w-5 h-5 text-harmonia-green mr-2" />
               <p className="text-green-700 text-sm">
-                Seu projeto já foi iniciado e você receberá atualizações em breve.
+                Você será redirecionado para o formulário de briefing em instantes.
               </p>
             </div>
           </>
@@ -78,12 +79,12 @@ const PaymentSuccess: React.FC = () => {
         )}
         
         <p className="mb-6">
-          Você será redirecionado para a página de confirmação em instantes.
+          Você será redirecionado para o formulário de briefing em instantes.
         </p>
         <div className="flex flex-col sm:flex-row gap-4 w-full max-w-md">
-          <Link to="/acompanhar-pedido" className="flex-1">
+          <Link to="/briefing" className="flex-1">
             <Button variant="outline" className="w-full">
-              Acompanhar pedido
+              Ir para o briefing
             </Button>
           </Link>
           <Link to="/" className="flex-1">
