@@ -1,6 +1,7 @@
 
 import React from 'react';
 import AdminGuide from './AdminGuide';
+import { STORAGE_FOLDERS } from '@/services/googleDriveService';
 
 const InvoicesGuide: React.FC = () => {
   const sections = [
@@ -31,6 +32,19 @@ const InvoicesGuide: React.FC = () => {
       )
     },
     {
+      title: "Armazenamento",
+      content: (
+        <div>
+          <p className="text-sm text-gray-400 mb-2">Todas as notas fiscais são armazenadas automaticamente no Google Drive para fácil acesso:</p>
+          <ul className="text-sm text-gray-400 space-y-1">
+            <li>• <span className="font-medium text-foreground">Backup Automático:</span> As notas são sincronizadas automaticamente com o Drive.</li>
+            <li>• <span className="font-medium text-foreground">Acesso Compartilhado:</span> Acesse a pasta de armazenamento através do botão na interface.</li>
+            <li>• <span className="font-medium text-foreground">Organização:</span> As notas são organizadas por data e cliente para fácil localização.</li>
+          </ul>
+        </div>
+      )
+    },
+    {
       title: "Integrações",
       content: "O sistema pode ser integrado com sistemas de emissão de NF-e como NFe.io, Nuvem Fiscal ou diretamente com sistemas governamentais."
     }
@@ -40,7 +54,7 @@ const InvoicesGuide: React.FC = () => {
     <AdminGuide 
       title="Guia de Notas Fiscais" 
       sections={sections} 
-      storageUrl="https://drive.google.com/drive/folders/1uuhCHv0c5eePU9_m-0BdYiuo0-3vUwVJ"
+      storageUrl={STORAGE_FOLDERS.invoices}
     />
   );
 };

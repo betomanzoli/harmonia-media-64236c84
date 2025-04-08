@@ -14,7 +14,7 @@ interface StorageLinksProps {
   links: StorageLink[];
 }
 
-const StorageLinks: React.FC<StorageLinksProps> = ({ 
+export const StorageLinks: React.FC<StorageLinksProps> = ({ 
   title = "Armazenamento de Arquivos", 
   links 
 }) => {

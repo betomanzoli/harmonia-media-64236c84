@@ -4,13 +4,15 @@ import { supabase } from '@/lib/supabase';
 import { AudioSample } from '@/types/audio';
 import { useToast } from "@/hooks/use-toast";
 import { v4 as uuidv4 } from 'uuid';
+import { useGoogleDriveStorage, syncDataWithDrive } from '@/services/googleDriveService';
 
 export const useAudioSamples = () => {
   const { toast } = useToast();
   const [audioSamples, setAudioSamples] = useState<AudioSample[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const driveStorage = useGoogleDriveStorage('audio');
   const [webhookUrl, setWebhookUrl] = useState<string>(
-    localStorage.getItem('zapierWebhookUrl') || ''
+    driveStorage.getWebhookUrl() || ''
   );
 
   useEffect(() => {
@@ -38,6 +40,9 @@ export const useAudioSamples = () => {
         
         if (response.data && response.data.length > 0) {
           setAudioSamples(response.data);
+          
+          // Sync with Google Drive
+          await syncDataWithDrive('audio', response.data);
         } else {
           // Se não houver dados, inicializar com dados de exemplo
           initializeAudioSamples();
@@ -46,7 +51,11 @@ export const useAudioSamples = () => {
         // Se tabela não existe, usar localStorage temporariamente
         const savedData = localStorage.getItem('audioSamples');
         if (savedData) {
-          setAudioSamples(JSON.parse(savedData));
+          const parsedData = JSON.parse(savedData);
+          setAudioSamples(parsedData);
+          
+          // Sync with Google Drive
+          await syncDataWithDrive('audio', parsedData);
         } else {
           // Inicializar com dados de exemplo
           initializeAudioSamples();
@@ -103,16 +112,22 @@ export const useAudioSamples = () => {
       if (error) throw error;
       
       setAudioSamples(sampleData);
+      
+      // Sync with Google Drive
+      await syncDataWithDrive('audio', sampleData);
     } catch (error) {
       console.error('Erro ao inicializar amostras de áudio:', error);
       // Fallback para localStorage
       localStorage.setItem('audioSamples', JSON.stringify(sampleData));
       setAudioSamples(sampleData);
+      
+      // Still try to sync with Google Drive
+      await syncDataWithDrive('audio', sampleData);
     }
   };
 
   const saveWebhookUrl = () => {
-    localStorage.setItem('zapierWebhookUrl', webhookUrl);
+    driveStorage.saveWebhookUrl(webhookUrl);
     toast({
       title: "Webhook URL salva",
       description: "A URL do webhook do Zapier foi salva com sucesso.",
@@ -135,7 +150,11 @@ export const useAudioSamples = () => {
       if (error) throw error;
       
       // Atualizar o estado local
-      setAudioSamples(prev => [sampleWithId, ...prev]);
+      const updatedSamples = [sampleWithId, ...audioSamples];
+      setAudioSamples(updatedSamples);
+      
+      // Sync with Google Drive
+      await syncDataWithDrive('audio', updatedSamples);
       
       toast({
         title: "Amostra adicionada",
@@ -149,9 +168,51 @@ export const useAudioSamples = () => {
       localStorage.setItem('audioSamples', JSON.stringify(updatedSamples));
       setAudioSamples(updatedSamples);
       
+      // Still try to sync with Google Drive
+      await syncDataWithDrive('audio', updatedSamples);
+      
       toast({
         title: "Amostra adicionada localmente",
         description: `A amostra foi salva localmente devido a um erro na conexão com o servidor.`,
+      });
+    }
+  };
+
+  const deleteSample = async (id: string) => {
+    try {
+      // Try to delete from Supabase
+      const { error } = await supabase
+        .from('audio_samples')
+        .delete()
+        .eq('id', id);
+        
+      if (error) throw error;
+      
+      // Update local state
+      const updatedSamples = audioSamples.filter(sample => sample.id !== id);
+      setAudioSamples(updatedSamples);
+      
+      // Sync with Google Drive
+      await syncDataWithDrive('audio', updatedSamples);
+      
+      toast({
+        title: "Amostra removida",
+        description: "A amostra de áudio foi removida com sucesso.",
+      });
+    } catch (error) {
+      console.error('Erro ao remover amostra de áudio:', error);
+      
+      // Fallback to localStorage
+      const updatedSamples = audioSamples.filter(sample => sample.id !== id);
+      localStorage.setItem('audioSamples', JSON.stringify(updatedSamples));
+      setAudioSamples(updatedSamples);
+      
+      // Still try to sync with Google Drive
+      await syncDataWithDrive('audio', updatedSamples);
+      
+      toast({
+        title: "Amostra removida localmente",
+        description: "A amostra foi removida localmente devido a um erro na conexão com o servidor.",
       });
     }
   };
@@ -179,8 +240,12 @@ export const useAudioSamples = () => {
     setWebhookUrl,
     saveWebhookUrl,
     handleAddSample,
+    deleteSample,
     getApiUrl,
     getJsonData,
-    copyToClipboard
+    copyToClipboard,
+    refreshData: fetchAudioSamples,
+    folderUrl: driveStorage.folderUrl,
+    openFolder: driveStorage.openFolder
   };
 };
