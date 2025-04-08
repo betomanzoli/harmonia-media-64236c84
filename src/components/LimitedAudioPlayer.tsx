@@ -22,6 +22,7 @@ const LimitedAudioPlayer: React.FC<LimitedAudioPlayerProps> = ({
   const [duration, setDuration] = useState(0);
   const [isLimited, setIsLimited] = useState(true);
   const audioRef = useRef<HTMLAudioElement | null>(null);
+  const audioElementRef = useRef<HTMLAudioElement | null>(null);
   
   useEffect(() => {
     const audio = new Audio(audioSrc);
@@ -56,18 +57,34 @@ const LimitedAudioPlayer: React.FC<LimitedAudioPlayerProps> = ({
     // Prevenir download do áudio
     document.addEventListener('contextmenu', preventContextMenu);
     
+    // Criar elemento de áudio oculto para melhorar compatibilidade com navegadores
+    const audioElement = document.createElement('audio');
+    audioElement.src = audioSrc;
+    audioElement.controls = false;
+    audioElement.setAttribute('controlsList', 'nodownload');
+    audioElement.style.display = 'none';
+    audioElement.oncontextmenu = () => false;
+    document.body.appendChild(audioElement);
+    audioElementRef.current = audioElement;
+    
     return () => {
       audio.pause();
       audio.removeEventListener('loadedmetadata', handleLoadedMetadata);
       audio.removeEventListener('timeupdate', handleTimeUpdate);
       audio.removeEventListener('ended', handleEnded);
       document.removeEventListener('contextmenu', preventContextMenu);
+      
+      // Remover elemento de áudio oculto
+      if (audioElementRef.current) {
+        document.body.removeChild(audioElementRef.current);
+      }
     };
   }, [audioSrc, previewDuration, isLimited]);
   
   const preventContextMenu = (e: MouseEvent) => {
     if ((e.target as HTMLElement)?.closest('audio')) {
       e.preventDefault();
+      return false;
     }
   };
   
@@ -152,6 +169,16 @@ const LimitedAudioPlayer: React.FC<LimitedAudioPlayerProps> = ({
           </div>
         </div>
       </div>
+      
+      {/* Elemento de áudio oculto com atributos de proteção */}
+      <audio 
+        className="hidden"
+        controls={false}
+        controlsList="nodownload"
+        onContextMenu={() => false}
+      >
+        <source src={audioSrc} type="audio/mpeg" />
+      </audio>
     </Card>
   );
 };
