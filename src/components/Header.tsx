@@ -2,7 +2,7 @@
 import React, { useState, useEffect } from 'react';
 import { Button } from "@/components/ui/button";
 import Logo from './Logo';
-import { MessageCircle, ChevronUp, DollarSign, Mail, Phone, Menu, Clock } from 'lucide-react';
+import { DollarSign, Mail, Phone, Menu, Clock, ChevronUp } from 'lucide-react';
 import NavLink from './NavLink';
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { useNavigate, Link, useLocation } from 'react-router-dom';
@@ -35,11 +35,11 @@ const Header: React.FC = () => {
     window.scrollTo(0, 0);
   }, [location.pathname]);
   
-  const handleWhatsAppChat = () => {
+  const handleWhatsAppContact = () => {
     window.open(`https://wa.me/${siteConfig.contact.whatsapp}`, '_blank');
   };
   
-  const handleEmailChat = () => {
+  const handleEmailContact = () => {
     window.open(`mailto:${siteConfig.contact.email}`, '_blank');
   };
   
@@ -53,11 +53,6 @@ const Header: React.FC = () => {
       top: 0,
       behavior: 'smooth'
     });
-  };
-  
-  const handleNavigation = (path: string) => {
-    navigate(path);
-    window.scrollTo(0, 0);
   };
   
   return (
@@ -87,37 +82,15 @@ const Header: React.FC = () => {
             </nav>
           </div>
           <div className="flex items-center gap-3">
-            <Sheet>
-              <SheetTrigger asChild>
-                <Button variant="ghost" size="sm" className="hidden md:flex items-center gap-1">
-                  <MessageCircle className="w-4 h-4" />
-                  Chat
-                </Button>
-              </SheetTrigger>
-              <SheetContent>
-                <div className="flex flex-col h-full p-6">
-                  <h2 className="text-xl font-bold mb-6">Fale Conosco</h2>
-                  <p className="text-gray-400 mb-8">Escolha como prefere falar com nossa equipe:</p>
-                  
-                  <div className="grid gap-4">
-                    <Button onClick={handleWhatsAppChat} className="bg-green-600 hover:bg-green-700 text-white flex items-center gap-2">
-                      <Phone className="w-4 h-4" />
-                      WhatsApp (Resposta em até 2h)
-                    </Button>
-                    
-                    <Button onClick={handleEmailChat} variant="outline" className="flex items-center gap-2">
-                      <Mail className="w-4 h-4" />
-                      Email (Resposta em até 24h)
-                    </Button>
-                  </div>
-                  
-                  <div className="mt-auto text-sm text-gray-400">
-                    <p>Horário de atendimento:</p>
-                    <p>Segunda a sexta, das 9h às 18h</p>
-                  </div>
-                </div>
-              </SheetContent>
-            </Sheet>
+            <Button 
+              variant="ghost" 
+              size="sm" 
+              className="hidden md:flex items-center gap-1"
+              onClick={handleWhatsAppContact}
+            >
+              <Phone className="w-4 h-4" />
+              Contato
+            </Button>
             
             {/* Menu mobile */}
             <Sheet>
@@ -152,11 +125,11 @@ const Header: React.FC = () => {
                   <div className="mt-8 pt-8 border-t border-border">
                     <h3 className="font-semibold mb-4">Contato</h3>
                     <div className="space-y-4">
-                      <Button onClick={handleWhatsAppChat} className="w-full bg-green-600 hover:bg-green-700 text-white flex items-center gap-2">
+                      <Button onClick={handleWhatsAppContact} className="w-full bg-green-600 hover:bg-green-700 text-white flex items-center gap-2">
                         <Phone className="w-4 h-4" />
                         WhatsApp
                       </Button>
-                      <Button onClick={handleEmailChat} variant="outline" className="w-full flex items-center gap-2">
+                      <Button onClick={handleEmailContact} variant="outline" className="w-full flex items-center gap-2">
                         <Mail className="w-4 h-4" />
                         Email
                       </Button>

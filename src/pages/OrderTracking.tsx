@@ -6,8 +6,8 @@ import OrderSearch from '@/components/order-tracking/OrderSearch';
 import OrderDetails from '@/components/order-tracking/OrderDetails';
 import OrderNotification from '@/components/order-tracking/OrderNotification';
 import OrderNotFound from '@/components/order-tracking/OrderNotFound';
-import { openChatAssistant } from '@/components/order-tracking/ChatbotHelper';
 import { OrderData } from '@/components/order-tracking/types';
+import { siteConfig } from '@/config/site';
 
 const OrderTracking: React.FC = () => {
   const [orderData, setOrderData] = useState<OrderData | null>(null);
@@ -24,6 +24,10 @@ const OrderTracking: React.FC = () => {
 
   const handleOrderSearch = (foundOrder: OrderData) => {
     setOrderData(foundOrder);
+  };
+
+  const handleWhatsAppContact = () => {
+    window.open(`https://wa.me/${siteConfig.contact.whatsapp}?text=Olá,%20preciso%20de%20ajuda%20para%20localizar%20meu%20pedido`, '_blank');
   };
 
   return (
@@ -52,7 +56,7 @@ const OrderTracking: React.FC = () => {
               <OrderDetails order={orderData} />
             </>
           ) : (
-            <OrderNotFound onChatAssistant={openChatAssistant} />
+            <OrderNotFound onChatAssistant={handleWhatsAppContact} />
           )}
         </div>
       </main>

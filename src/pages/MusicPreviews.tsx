@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import Header from '@/components/Header';
@@ -78,29 +79,22 @@ const MusicPreviews: React.FC = () => {
   const [feedback, setFeedback] = useState('');
   const [previewData, setPreviewData] = useState<typeof MOCK_PREVIEWS[string] | null>(null);
   
+  // Certifique-se de que o previewId é tratado corretamente
   useEffect(() => {
+    console.log("Preview ID:", previewId);
+    
     if (previewId && MOCK_PREVIEWS[previewId]) {
+      console.log("Preview data encontrado");
       setPreviewData(MOCK_PREVIEWS[previewId]);
     } else {
+      console.log("Preview data não encontrado");
       toast({
         title: "Preview não encontrado",
-        description: "O código de preview fornecido não é válido.",
+        description: "O código de preview fornecido não é válido ou expirou.",
         variant: "destructive"
       });
     }
   }, [previewId, toast]);
-  
-  if (!previewData) {
-    return (
-      <div className="min-h-screen bg-background text-foreground flex items-center justify-center">
-        <div className="text-center">
-          <h1 className="text-2xl font-bold mb-4">Preview não encontrado</h1>
-          <p className="text-gray-400 mb-6">O código de preview fornecido não é válido ou expirou.</p>
-          <button onClick={() => navigate('/')}>Voltar à página inicial</button>
-        </div>
-      </div>
-    );
-  }
   
   const handleSubmitFeedback = () => {
     if (!selectedPreview) {
@@ -117,6 +111,7 @@ const MusicPreviews: React.FC = () => {
       description: "Obrigado pelo seu feedback. Nossa equipe já está trabalhando nas modificações.",
     });
     
+    // Atualiza estado local para mostrar o status correto
     setPreviewData(prev => prev ? {...prev, status: 'feedback' as const} : null);
   };
   
@@ -135,8 +130,30 @@ const MusicPreviews: React.FC = () => {
       description: "Estamos felizes que você gostou! Vamos finalizar sua música e entregar em breve.",
     });
     
+    // Atualiza estado local para mostrar o status correto
     setPreviewData(prev => prev ? {...prev, status: 'approved' as const} : null);
   };
+  
+  if (!previewData) {
+    return (
+      <div className="min-h-screen bg-background text-foreground">
+        <Header />
+        <div className="pt-24 pb-20 px-6 md:px-10 flex items-center justify-center">
+          <div className="text-center max-w-md">
+            <h1 className="text-2xl font-bold mb-4">Preview não encontrado</h1>
+            <p className="text-gray-400 mb-6">O código de preview fornecido não é válido ou expirou.</p>
+            <button 
+              onClick={() => navigate('/')}
+              className="bg-harmonia-green hover:bg-harmonia-green/90 text-white px-4 py-2 rounded"
+            >
+              Voltar à página inicial
+            </button>
+          </div>
+        </div>
+        <Footer />
+      </div>
+    );
+  }
   
   return (
     <div className="min-h-screen bg-background text-foreground">
