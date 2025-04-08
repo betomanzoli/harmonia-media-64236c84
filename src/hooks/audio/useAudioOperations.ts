@@ -65,13 +65,13 @@ export function useAudioOperations(isOfflineMode: boolean) {
         return { success: true };
       }
 
-      // Delete from Supabase
-      const { error } = await supabase
+      // Delete from Supabase - corrigindo o método aqui
+      const response = await supabase
         .from('audio_samples')
         .delete()
         .eq('id', id);
 
-      if (error) throw new Error(error.message);
+      if (response.error) throw new Error(response.error.message);
       
       toast({
         title: "Amostra removida",
@@ -109,10 +109,9 @@ export function useAudioOperations(isOfflineMode: boolean) {
         return { success: true, data: filteredSamples };
       }
 
-      // Fetch data from Supabase
-      const { data, error } = await supabase
-        .from('audio_samples')
-        .select('*');
+      // Fetch data from Supabase - corrigindo a forma de consulta
+      const supabaseQuery = supabase.from('audio_samples');
+      const { data, error } = await supabaseQuery.select('*');
       
       if (error) throw new Error(error.message);
       
