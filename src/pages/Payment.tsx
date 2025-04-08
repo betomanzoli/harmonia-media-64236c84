@@ -9,9 +9,6 @@ import PackageDetails from '@/components/payment/PackageDetails';
 import PaymentSuccess from '@/components/payment/PaymentSuccess';
 import { packageData, PackageId } from '@/lib/payment/packageData';
 import { usePaymentHandler } from '@/hooks/payment/usePaymentHandler';
-import PackageSwitch from '@/components/payment/PackageSwitch';
-import PaymentExtras from '@/components/payment/PaymentExtras';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card } from "@/components/ui/card";
 
 const Payment: React.FC = () => {
@@ -20,7 +17,6 @@ const Payment: React.FC = () => {
   const [selectedPackage, setSelectedPackage] = useState<any>(null);
   const [qualificationData, setQualificationData] = useState<any>(null);
   const [selectedExtras, setSelectedExtras] = useState<string[]>([]);
-  const [activeTab, setActiveTab] = useState<string>("package");
   
   useEffect(() => {
     // Get the package data based on the ID
@@ -33,18 +29,6 @@ const Payment: React.FC = () => {
       setQualificationData(JSON.parse(storedData));
     }
   }, [packageId]);
-  
-  const handlePackageChange = (newPackageId: PackageId) => {
-    navigate(`/pagamento/${newPackageId}`);
-  };
-  
-  const handleExtraToggle = (extraId: string) => {
-    setSelectedExtras(prev => 
-      prev.includes(extraId) 
-        ? prev.filter(id => id !== extraId) 
-        : [...prev, extraId]
-    );
-  };
   
   const {
     isLoading,
@@ -73,73 +57,37 @@ const Payment: React.FC = () => {
           <div className="text-center mb-8">
             <h1 className="text-3xl md:text-4xl font-bold mb-4">Finalizar Pagamento</h1>
             <p className="text-gray-400 max-w-2xl mx-auto">
-              Revise seu pacote, adicione serviços extras se desejar, e prossiga para o pagamento.
+              Revise seu pacote e prossiga para o pagamento no MercadoPago.
             </p>
           </div>
           
           {isPaymentSuccess ? (
             <PaymentSuccess />
           ) : (
-            <>
-              <Tabs value={activeTab} onValueChange={setActiveTab} className="mb-8">
-                <TabsList className="grid grid-cols-3 mb-6">
-                  <TabsTrigger value="package" onClick={() => setActiveTab("package")}>
-                    Revisar Pacote
-                  </TabsTrigger>
-                  <TabsTrigger value="extras" onClick={() => setActiveTab("extras")}>
-                    Serviços Extras
-                  </TabsTrigger>
-                  <TabsTrigger value="payment" onClick={() => setActiveTab("payment")}>
-                    Pagamento
-                  </TabsTrigger>
-                </TabsList>
-                
-                <TabsContent value="package">
-                  <Card className="p-6">
-                    <PackageSwitch 
-                      currentPackageId={packageId as PackageId} 
-                      onPackageChange={handlePackageChange} 
-                    />
-                  </Card>
-                </TabsContent>
-                
-                <TabsContent value="extras">
-                  <Card className="p-6">
-                    <PaymentExtras 
-                      packageId={packageId as PackageId}
-                      selectedExtras={selectedExtras}
-                      onExtraToggle={handleExtraToggle}
-                    />
-                  </Card>
-                </TabsContent>
-                
-                <TabsContent value="payment">
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                    <PaymentMethods 
-                      isLoading={isLoading}
-                      onSelectMethod={handlePaymentMethod}
-                    />
-                    
-                    <PackageDetails 
-                      selectedPackage={selectedPackage}
-                      selectedExtras={selectedExtras}
-                    />
-                  </div>
-                </TabsContent>
-              </Tabs>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+              <PaymentMethods 
+                isLoading={isLoading}
+                onSelectMethod={handlePaymentMethod}
+              />
               
-              {activeTab !== "payment" && (
-                <div className="flex justify-end mt-6">
-                  <button 
-                    onClick={() => setActiveTab(activeTab === "package" ? "extras" : "payment")}
-                    className="bg-harmonia-green hover:bg-harmonia-green/90 text-white py-2 px-4 rounded"
-                  >
-                    {activeTab === "package" ? "Avançar para Extras" : "Avançar para Pagamento"}
-                  </button>
-                </div>
-              )}
-            </>
+              <PackageDetails 
+                selectedPackage={selectedPackage}
+                selectedExtras={selectedExtras}
+              />
+            </div>
           )}
+          
+          <Card className="p-6 mt-8">
+            <h2 className="text-xl font-semibold mb-4">Informação sobre Serviços</h2>
+            <p className="text-gray-500 mb-4">
+              Ao clicar em "Pagar agora", você será redirecionado para nossa plataforma de pagamento onde 
+              poderá visualizar todos os serviços extras disponíveis para adicionar ao seu pacote.
+            </p>
+            <p className="text-gray-500">
+              Você pode personalizar sua experiência diretamente na plataforma de pagamento, selecionando 
+              os serviços adicionais que melhor atendem às suas necessidades.
+            </p>
+          </Card>
         </div>
       </main>
       <Footer />

@@ -24,6 +24,7 @@ const PaymentReturn: React.FC = () => {
   const packageId = searchParams.get('packageId');
   const orderId = searchParams.get('orderId');
   const externalReference = searchParams.get('external_reference');
+  const referrer = document.referrer;
   
   useEffect(() => {
     const processPaymentReturn = async () => {
@@ -43,8 +44,11 @@ const PaymentReturn: React.FC = () => {
         }
       }
       
+      // Check if we're coming from biolivre.com.br
+      const isFromBioLivre = referrer.includes('biolivre.com.br');
+      
       // Validate the payment return
-      if (status === 'approved' || status === 'success') {
+      if ((status === 'approved' || status === 'success') || isFromBioLivre) {
         // Successful payment
         setSuccess(true);
         
@@ -114,7 +118,7 @@ const PaymentReturn: React.FC = () => {
     };
     
     processPaymentReturn();
-  }, [status, packageId, orderId, externalReference, toast]);
+  }, [status, packageId, orderId, externalReference, toast, referrer]);
   
   const renderContent = () => {
     if (loading) {

@@ -51,11 +51,9 @@ export function usePaymentHandler(
       const returnUrl = `${window.location.origin}/pagamento-retorno?packageId=${packageId}&orderId=${orderId}`;
       
       // Create iframe URL for embedding MercadoPago checkout
-      // This URL structure might need to be adjusted based on MercadoPago's integration requirements
-      const embedUrl = `https://livre.com.br/harmoniam?package=${packageId}&price=${totalPrice}&returnUrl=${encodeURIComponent(returnUrl)}&embed=true`;
+      const embedUrl = `https://biolivre.com.br/harmoniam?package=${packageId}&price=${totalPrice}&returnUrl=${encodeURIComponent(returnUrl)}&embed=true`;
       
-      // Navigate to payment success page which will display a loading state
-      // and wait for postMessage events from the iframe
+      // Navigate to payment processing page which will display the iframe
       navigate(`/pagamento-processando?orderId=${orderId}&packageId=${packageId}`);
       
     } catch (error) {

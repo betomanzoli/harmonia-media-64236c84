@@ -20,13 +20,13 @@ const PaymentProcessing: React.FC = () => {
   
   // Construct the iframe URL
   const returnUrl = `${window.location.origin}/pagamento-retorno?packageId=${packageId}&orderId=${orderId}`;
-  const iframeUrl = `https://livre.com.br/harmoniam?package=${packageId}&price=0&returnUrl=${encodeURIComponent(returnUrl)}&embed=true`;
+  const iframeUrl = `https://biolivre.com.br/harmoniam?package=${packageId}&price=0&returnUrl=${encodeURIComponent(returnUrl)}&embed=true`;
   
   useEffect(() => {
     // Listen for messages from the iframe
     const handleMessage = (event: MessageEvent) => {
-      // Check if the message is from livre.com.br
-      if (event.origin !== 'https://livre.com.br') return;
+      // Check if the message is from biolivre.com.br
+      if (event.origin !== 'https://biolivre.com.br') return;
       
       try {
         const data = JSON.parse(event.data);
