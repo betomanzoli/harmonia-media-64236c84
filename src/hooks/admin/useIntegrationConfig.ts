@@ -6,6 +6,7 @@ import webhookService from '@/services/webhookService';
 export function useIntegrationConfig() {
   const [webhookUrl, setWebhookUrl] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+  const [isTesting, setIsTesting] = useState(false);
   const { toast } = useToast();
 
   // Carregar a URL do webhook ao inicializar
@@ -53,6 +54,53 @@ export function useIntegrationConfig() {
     }
   };
 
+  // Função para enviar um ping de teste para o webhook
+  const sendTestPing = async () => {
+    setIsTesting(true);
+    
+    try {
+      if (!webhookUrl) {
+        toast({
+          title: 'URL não configurada',
+          description: 'Configure uma URL de webhook antes de enviar um teste.',
+          variant: 'destructive',
+        });
+        return;
+      }
+      
+      const success = await webhookService.sendToWebhook(webhookUrl, {
+        type: 'test_message',
+        data: { 
+          testMessage: "Este é um teste de configuração do webhook da harmonIA",
+          timestamp: new Date().toISOString()
+        },
+        timestamp: new Date().toISOString()
+      });
+      
+      if (success) {
+        toast({
+          title: 'Teste enviado',
+          description: 'Ping de teste enviado com sucesso para o webhook.',
+        });
+      } else {
+        toast({
+          title: 'Erro ao testar',
+          description: 'Não foi possível enviar o teste para o webhook.',
+          variant: 'destructive',
+        });
+      }
+    } catch (error) {
+      toast({
+        title: 'Erro',
+        description: 'Ocorreu um erro ao testar o webhook.',
+        variant: 'destructive',
+      });
+      console.error('Erro ao testar webhook:', error);
+    } finally {
+      setIsTesting(false);
+    }
+  };
+
   // Função para copiar texto para a área de transferência
   const copyToClipboard = (text: string) => {
     navigator.clipboard.writeText(text).then(() => {
@@ -67,7 +115,9 @@ export function useIntegrationConfig() {
     webhookUrl,
     setWebhookUrl,
     saveWebhookUrl,
+    sendTestPing,
     isLoading,
+    isTesting,
     copyToClipboard
   };
 }

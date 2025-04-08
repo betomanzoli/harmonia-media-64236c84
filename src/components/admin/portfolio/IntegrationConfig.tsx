@@ -19,7 +19,9 @@ const IntegrationConfig: React.FC<IntegrationConfigProps> = ({
     webhookUrl,
     setWebhookUrl,
     saveWebhookUrl,
+    sendTestPing,
     isLoading,
+    isTesting,
     copyToClipboard
   } = useIntegrationConfig();
 
@@ -76,21 +78,17 @@ const IntegrationConfig: React.FC<IntegrationConfigProps> = ({
               <Button 
                 variant="default" 
                 className="w-full"
-                onClick={async () => {
-                  const url = await webhookService.getWebhookUrl();
-                  if (url) {
-                    webhookService.sendToWebhook(url, {
-                      type: 'test_message' as NotificationType,
-                      data: { testMessage: "Este é um teste de webhook" },
-                      timestamp: new Date().toISOString()
-                    });
-                    copyToClipboard("Webhook de teste enviado!");
-                  } else {
-                    copyToClipboard("Configure uma URL de webhook primeiro!");
-                  }
-                }}
+                onClick={sendTestPing}
+                disabled={isTesting || !webhookUrl}
               >
-                Enviar Ping de Teste
+                {isTesting ? (
+                  <>
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    Enviando teste...
+                  </>
+                ) : (
+                  'Enviar Ping de Teste'
+                )}
               </Button>
               
               <Button 
@@ -148,9 +146,9 @@ const IntegrationConfig: React.FC<IntegrationConfigProps> = ({
                 </li>
                 
                 <li className="pb-2 border-b border-gray-100">
-                  <strong>Clique em "Test Trigger" no Zapier</strong>
+                  <strong>Clique em "Enviar Ping de Teste" acima</strong>
                   <p className="mt-1 ml-6 text-sm text-muted-foreground">
-                    Volte para o Zapier e teste o gatilho. Então clique no botão "Enviar Ping de Teste" acima
+                    Isso enviará dados de teste para seu webhook no Zapier para verificar a conexão
                   </p>
                 </li>
                 

@@ -56,59 +56,38 @@ export const useAdminLoginForm = () => {
     try {
       // Simple validation
       if (!email || !password) {
-        throw new Error('Please fill in all fields.');
+        throw new Error('Por favor, preencha todos os campos.');
       }
       
-      // Simulation of login for local development environment
-      if (process.env.NODE_ENV === 'development') {
-        // Test credentials for development
-        if (email === 'admin@harmonia.ai' && password === 'senha123') {
-          localStorage.setItem('adminAuth', JSON.stringify({
-            user: { email },
-            session: { expires_at: Date.now() + 3600000, access_token: 'fake-token-for-development' },
-          }));
-          
-          setSuccess(true);
-          setTimeout(() => {
-            window.location.href = '/admin-j28s7d1k/dashboard';
-          }, 1500);
-          return;
-        }
-      }
-      
-      // The supabase mock doesn't have signInWithPassword, so we'll handle this differently
-      console.log('Attempting to sign in with email and password:', email);
-      
-      // Simulate successful auth for test credentials or fail otherwise
-      if (email === 'admin@harmonia.ai' && password === 'senha123') {
-        localStorage.setItem('harmonia-admin-auth-token', 'fake-token-for-development');
-        localStorage.setItem('harmonia-admin-auth-user', JSON.stringify({ email }));
+      // Verificar credenciais específicas
+      if (email === 'contato@harmonia.media' && password === 'i9!_b!ThA;2H6/bt') {
+        // Armazenar informações de autenticação
+        localStorage.setItem('harmonia-admin-auth-token', 'admin-token-for-development');
+        localStorage.setItem('harmonia-admin-auth-user', JSON.stringify({ email, role: 'admin' }));
         
         setSuccess(true);
+        toast({
+          title: 'Login realizado com sucesso!',
+          description: 'Redirecionando para o painel administrativo...'
+        });
+        
         setTimeout(() => {
           window.location.href = '/admin-j28s7d1k/dashboard';
-        }, 1500);
-      } else {
-        throw new Error('Invalid login credentials');
+        }, 1000);
+        return;
       }
+      
+      // Caso as credenciais não sejam as esperadas
+      throw new Error('Credenciais inválidas. Por favor, verifique seu email e senha.');
       
     } catch (err: any) {
-      console.error('Login error:', err);
-      const errorMessage = err.message || 'An error occurred during login.';
-      
-      // Improve error messages for the user
-      let userFriendlyMessage = errorMessage;
-      if (errorMessage.includes('Invalid login credentials')) {
-        userFriendlyMessage = 'Invalid credentials. Please check your email and password.';
-      } else if (errorMessage.includes('Email not confirmed')) {
-        userFriendlyMessage = 'Your email has not been confirmed. Please check your inbox.';
-      }
-      
-      setError(userFriendlyMessage);
+      console.error('Erro de login:', err);
+      const errorMessage = err.message || 'Ocorreu um erro durante o login.';
+      setError(errorMessage);
     } finally {
       setLoading(false);
     }
-  }, [email, password]);
+  }, [email, password, toast]);
 
   const handleResetPassword = useCallback(async () => {
     setResetLoading(true);
@@ -117,34 +96,33 @@ export const useAdminLoginForm = () => {
     
     try {
       if (!resetEmail) {
-        throw new Error('Please provide your email.');
+        throw new Error('Por favor, forneça seu email.');
       }
       
-      const { error: resetError } = await supabase.auth.resetPasswordForEmail(resetEmail, {
-        redirectTo: `${window.location.origin}/admin-reset-password`,
-      });
-      
-      if (resetError) throw resetError;
-      
-      setResetSuccess(true);
-      toast({
-        title: 'Email sent!',
-        description: 'Check your inbox to reset your password.',
-        variant: 'default',
-      });
-      
-      setTimeout(() => {
-        setShowPasswordReset(false);
-        // Clear state after closing dialog
+      // Simular envio de email de redefinição
+      if (resetEmail === 'contato@harmonia.media') {
+        setResetSuccess(true);
+        toast({
+          title: 'Email enviado!',
+          description: 'Verifique sua caixa de entrada para redefinir sua senha.',
+          variant: 'default',
+        });
+        
         setTimeout(() => {
-          setResetSuccess(false);
-          setResetEmail('');
-        }, 300);
-      }, 3000);
+          setShowPasswordReset(false);
+          // Limpar estado após fechar o diálogo
+          setTimeout(() => {
+            setResetSuccess(false);
+            setResetEmail('');
+          }, 300);
+        }, 3000);
+      } else {
+        throw new Error('Email não encontrado no sistema.');
+      }
       
     } catch (err: any) {
-      console.error('Password reset error:', err);
-      setResetError(err.message || 'An error occurred while requesting password reset.');
+      console.error('Erro na redefinição de senha:', err);
+      setResetError(err.message || 'Ocorreu um erro ao solicitar a redefinição de senha.');
     } finally {
       setResetLoading(false);
     }

@@ -24,6 +24,7 @@ const getWebhookUrl = async (): Promise<string | null> => {
       return null;
     }
     
+    console.log('URL do webhook recuperada:', data?.value);
     return data?.value || null;
   } catch (err) {
     console.error('Erro ao obter URL do webhook:', err);
@@ -33,6 +34,7 @@ const getWebhookUrl = async (): Promise<string | null> => {
 
 const saveWebhookUrl = async (url: string): Promise<boolean> => {
   try {
+    console.log('Salvando URL do webhook:', url);
     const { error } = await supabase
       .from('system_settings')
       .upsert({ key: 'webhook_url', value: url }, { onConflict: 'key' });
@@ -42,6 +44,7 @@ const saveWebhookUrl = async (url: string): Promise<boolean> => {
       return false;
     }
     
+    console.log('URL do webhook salva com sucesso');
     return true;
   } catch (err) {
     console.error('Erro ao salvar URL do webhook:', err);
@@ -51,6 +54,13 @@ const saveWebhookUrl = async (url: string): Promise<boolean> => {
 
 const sendToWebhook = async (webhookUrl: string, payload: WebhookPayload): Promise<boolean> => {
   try {
+    if (!webhookUrl) {
+      console.error('URL do webhook não fornecida');
+      return false;
+    }
+    
+    console.log('Enviando para webhook:', webhookUrl, payload);
+    
     // Enviar dados para o webhook configurado
     const response = await fetch(webhookUrl, {
       method: 'POST',
@@ -62,7 +72,8 @@ const sendToWebhook = async (webhookUrl: string, payload: WebhookPayload): Promi
     });
     
     // Como estamos usando no-cors, não podemos verificar o status da resposta
-    console.log('Webhook enviado:', payload);
+    // Consideramos como sucesso o fato de não ter ocorrido exceção
+    console.log('Webhook enviado com sucesso:', payload);
     return true;
   } catch (err) {
     console.error('Erro ao enviar para webhook:', err);
