@@ -41,17 +41,17 @@ const AdminLayout: React.FC<AdminLayoutProps> = ({ children }) => {
 
   return (
     <SidebarProvider>
-      <div className="flex min-h-screen w-full bg-gradient-to-b from-white to-harmonia-light-green/10 flex-col">
+      <div className="flex min-h-screen w-full bg-gradient-to-b from-background to-gray-900 flex-col">
         {isOfflineMode && (
-          <div className="bg-amber-100 border-b border-amber-300 py-2 px-4 text-amber-900 text-sm">
+          <div className="bg-amber-900/80 border-b border-amber-700 py-2 px-4 text-amber-100 text-sm">
             <div className="flex items-center justify-center gap-2">
-              <AlertTriangle className="h-4 w-4 text-amber-600" />
+              <AlertTriangle className="h-4 w-4 text-amber-300" />
               <span>Modo de demonstração ativo - Funcionalidades de API estão limitadas.</span>
             </div>
           </div>
         )}
         {configuredWebhooks > 0 && (
-          <div className="bg-green-100 border-b border-green-300 py-2 px-4 text-green-900 text-sm">
+          <div className="bg-harmonia-green/20 border-b border-harmonia-green/30 py-2 px-4 text-white text-sm">
             <div className="flex items-center justify-center gap-2">
               <span>✓</span>
               <span>{configuredWebhooks} {configuredWebhooks === 1 ? 'integração configurada' : 'integrações configuradas'} com armazenamento externo</span>

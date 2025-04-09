@@ -109,19 +109,19 @@ export function useAudioOperations(isOfflineMode: boolean) {
         return { success: true, data: filteredSamples };
       }
 
-      // Fetch data from Supabase
-      let query_builder = supabase.from('audio_samples').select('*');
+      // Fetch data from Supabase - fixed query building
+      let query_result = supabase.from('audio_samples').select('*');
       
       // Then add filters if needed
       if (query) {
-        query_builder = query_builder.ilike('title', `%${query}%`);
+        query_result = query_result.ilike('title', `%${query}%`);
       }
       
       if (category) {
-        query_builder = query_builder.eq('style', category);
+        query_result = query_result.eq('category', category);
       }
       
-      const { data, error } = await query_builder;
+      const { data, error } = await query_result;
       
       if (error) throw new Error(error.message);
       

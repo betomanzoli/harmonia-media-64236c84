@@ -24,6 +24,15 @@ const qualificationBenefits = [{
   description: "Após o pagamento, você terá acesso ao briefing completo e acompanhamento dedicado de todo o processo de produção da sua música."
 }];
 const Index: React.FC = () => {
+  // Disable chatbot initialization
+  React.useEffect(() => {
+    // Remove any existing chatbot script or disable its initialization
+    if (window.harmonIAChatbot) {
+      // Set a flag to prevent initialization
+      localStorage.setItem('chatbot-disabled', 'true');
+    }
+  }, []);
+
   return <div className="min-h-screen bg-background text-foreground">
       <Header />
       <main>
@@ -31,6 +40,7 @@ const Index: React.FC = () => {
         <Services />
         <Process />
         {/* Porfolio section temporarily hidden */}
+        {/* Chatbot temporarily disabled */}
         <Testimonials showTestimonials={false} />
 
         {/* Call to Action for Qualification Form */}

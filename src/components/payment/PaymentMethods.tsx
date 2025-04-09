@@ -129,49 +129,50 @@ const PaymentMethods: React.FC<PaymentMethodsProps> = ({
   
   return (
     <div className="md:col-span-2">
-      <Card className="p-6 mb-6">
-        <h2 className="text-xl font-semibold mb-4">Formas de Pagamento</h2>
-        <p className="text-gray-400 mb-6">Escolha uma opção de pagamento abaixo</p>
+      <Card className="p-4 mb-6">
+        <h2 className="text-xl font-semibold mb-2">Formas de Pagamento</h2>
+        <p className="text-gray-400 mb-3 text-sm">Escolha uma opção de pagamento abaixo</p>
         
         {hasAcceptedTerms && (
-          <div className="mb-4 p-3 bg-green-50 border border-green-200 rounded-md text-green-700 flex items-center">
+          <div className="mb-3 p-2 bg-green-50 border border-green-200 rounded-md text-green-700 flex items-center">
             <FileText className="h-4 w-4 mr-2 text-green-600" />
             <span className="text-sm">Você já aceitou os termos de serviço.</span>
           </div>
         )}
         
-        <div className="space-y-4">
-          <div className="border border-border rounded-lg p-4 hover:border-blue-500/50 transition cursor-pointer bg-gradient-to-r from-blue-50/10 to-blue-100/10">
-            <div className="flex items-center justify-between mb-2">
+        <div className="space-y-3">
+          <div className="border border-border rounded-lg p-3 hover:border-blue-500/50 transition cursor-pointer bg-gradient-to-r from-blue-50/10 to-blue-100/10">
+            <div className="flex items-center justify-between">
               <div className="flex items-center">
-                <div className="w-10 h-10 rounded-full bg-blue-500/20 flex items-center justify-center mr-3">
-                  <CreditCard className="w-5 h-5 text-blue-500" />
+                <div className="w-8 h-8 rounded-full bg-blue-500/20 flex items-center justify-center mr-3">
+                  <CreditCard className="w-4 h-4 text-blue-500" />
                 </div>
                 <div>
-                  <h3 className="font-medium">Pagamento Normal</h3>
-                  <p className="text-sm text-gray-400">Pagar com cartão, boleto ou Pix pelo MercadoPago</p>
+                  <h3 className="font-medium text-sm">Pagamento Normal</h3>
+                  <p className="text-xs text-gray-400">Pagar com cartão, boleto ou Pix pelo MercadoPago</p>
                 </div>
               </div>
               <Button 
                 disabled={isLoading} 
                 onClick={handleStandardPayment}
-                className="bg-blue-500 hover:bg-blue-600"
+                className="bg-blue-500 hover:bg-blue-600 text-sm px-3 py-1 h-auto"
+                size="sm"
               >
                 {isLoading ? 'Processando...' : 'Pagar agora'}
-                <ExternalLink className="ml-2 h-4 w-4" />
+                <ExternalLink className="ml-1 h-3 w-3" />
               </Button>
             </div>
           </div>
           
-          <div className="border border-border rounded-lg p-4 hover:border-green-500/50 transition cursor-pointer bg-gradient-to-r from-green-50/10 to-green-100/10">
-            <div className="flex items-center justify-between mb-2">
+          <div className="border border-border rounded-lg p-3 hover:border-green-500/50 transition cursor-pointer bg-gradient-to-r from-green-50/10 to-green-100/10">
+            <div className="flex items-center justify-between">
               <div className="flex items-center">
-                <div className="w-10 h-10 rounded-full bg-green-500/20 flex items-center justify-center mr-3">
-                  <Percent className="w-5 h-5 text-green-500" />
+                <div className="w-8 h-8 rounded-full bg-green-500/20 flex items-center justify-center mr-3">
+                  <Percent className="w-4 h-4 text-green-500" />
                 </div>
                 <div>
-                  <h3 className="font-medium">Cupom de Desconto</h3>
-                  <p className="text-sm text-gray-400">Pagar com desconto especial pelo MercadoPago</p>
+                  <h3 className="font-medium text-sm">Cupom de Desconto</h3>
+                  <p className="text-xs text-gray-400">Pagar com desconto especial pelo MercadoPago</p>
                   
                   {showCouponField && (
                     <div className="mt-2 flex items-center">
@@ -180,7 +181,7 @@ const PaymentMethods: React.FC<PaymentMethodsProps> = ({
                         placeholder="Digite o código do cupom"
                         value={couponCode}
                         onChange={(e) => setCouponCode(e.target.value)}
-                        className="text-sm border border-border rounded px-2 py-1 w-48 bg-background"
+                        className="text-xs border border-border rounded px-2 py-1 w-40 bg-background"
                       />
                     </div>
                   )}
@@ -189,26 +190,25 @@ const PaymentMethods: React.FC<PaymentMethodsProps> = ({
               <Button 
                 disabled={isLoading} 
                 onClick={handleDiscountPayment}
-                className="bg-green-500 hover:bg-green-600"
+                className="bg-green-500 hover:bg-green-600 text-sm px-3 py-1 h-auto"
+                size="sm"
               >
-                {isLoading ? 'Processando...' : (showCouponField ? 'Aplicar cupom' : 'Usar cupom de desconto')}
-                <Percent className="ml-2 h-4 w-4" />
+                {isLoading ? 'Processando...' : (showCouponField ? 'Aplicar cupom' : 'Usar cupom')}
+                <Percent className="ml-1 h-3 w-3" />
               </Button>
             </div>
           </div>
         </div>
         
-        <Separator className="my-6" />
+        <Separator className="my-3" />
         
-        <div className="text-sm text-gray-400">
-          <p className="mb-2">Informações importantes:</p>
-          <ul className="list-disc pl-5 space-y-1">
+        <div className="text-xs text-gray-400">
+          <p className="mb-1">Informações importantes:</p>
+          <ul className="list-disc pl-4 space-y-0.5">
             <li>Todos os pagamentos são processados em Reais (BRL)</li>
             <li>Pagamentos são processados com segurança pelo MercadoPago</li>
             <li>O prazo de entrega é contado a partir da confirmação do pagamento</li>
-            <li>Seus dados de pagamento são protegidos por criptografia</li>
             <li>Após o pagamento, você será redirecionado de volta para preencher o briefing</li>
-            <li>Serviços extras poderão ser contratados posteriormente</li>
           </ul>
         </div>
         
