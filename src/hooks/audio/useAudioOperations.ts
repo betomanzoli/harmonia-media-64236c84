@@ -69,7 +69,7 @@ export function useAudioOperations(isOfflineMode: boolean) {
       const { error } = await supabase
         .from('audio_samples')
         .delete()
-        .match({ id });
+        .eq('id', id);
 
       if (error) throw new Error(error.message);
       
@@ -114,11 +114,11 @@ export function useAudioOperations(isOfflineMode: boolean) {
       
       // Then add filters if needed
       if (query) {
-        queryBuilder = queryBuilder.filter('title', 'ilike', `%${query}%`);
+        queryBuilder = queryBuilder.ilike('title', `%${query}%`);
       }
       
       if (category) {
-        queryBuilder = queryBuilder.filter('category', 'eq', category);
+        queryBuilder = queryBuilder.eq('category', category);
       }
       
       const { data, error } = await queryBuilder;
