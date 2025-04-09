@@ -65,13 +65,13 @@ export function useAudioOperations(isOfflineMode: boolean) {
         return { success: true };
       }
 
-      // Delete from Supabase - corrigindo o método aqui
-      const response = await supabase
+      // Delete from Supabase
+      const { error } = await supabase
         .from('audio_samples')
         .delete()
         .eq('id', id);
 
-      if (response.error) throw new Error(response.error.message);
+      if (error) throw new Error(error.message);
       
       toast({
         title: "Amostra removida",
@@ -109,28 +109,23 @@ export function useAudioOperations(isOfflineMode: boolean) {
         return { success: true, data: filteredSamples };
       }
 
-      // Fetch data from Supabase - corrigindo a forma de consulta
-      const supabaseQuery = supabase.from('audio_samples');
-      const { data, error } = await supabaseQuery.select('*');
+      // Fetch data from Supabase
+      let query_builder = supabase.from('audio_samples').select('*');
       
-      if (error) throw new Error(error.message);
-      
-      // Filter data manually in JavaScript
-      let filteredData = data || [];
-      
+      // Then add filters if needed
       if (query) {
-        filteredData = filteredData.filter((item: AudioSample) => 
-          item.title.toLowerCase().includes(query.toLowerCase())
-        );
+        query_builder = query_builder.ilike('title', `%${query}%`);
       }
       
       if (category) {
-        filteredData = filteredData.filter((item: AudioSample) => 
-          item.style === category || item.mood === category || item.occasion === category
-        );
+        query_builder = query_builder.eq('style', category);
       }
       
-      return { success: true, data: filteredData };
+      const { data, error } = await query_builder;
+      
+      if (error) throw new Error(error.message);
+      
+      return { success: true, data: data || [] };
     } catch (e) {
       const error = e as Error;
       
