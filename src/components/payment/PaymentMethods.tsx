@@ -1,16 +1,14 @@
 
 import React, { useState, useEffect } from 'react';
 import { Card } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Separator } from "@/components/ui/separator";
-import { ExternalLink, CreditCard, Percent, FileText } from 'lucide-react';
+import { CreditCard, Percent, FileText } from 'lucide-react';
 import { PackageId } from '@/lib/payment/packageData';
 import { packagePaymentLinks } from '@/lib/payment/paymentLinks';
 import { useToast } from '@/hooks/use-toast';
-import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { Checkbox } from "@/components/ui/checkbox";
-import { Label } from "@/components/ui/label";
-import { ContractContent } from '@/components/service-card/ContractDetails';
+import PaymentOption from './PaymentOption';
+import CouponField from './CouponField';
+import ContractTermsDialog from './ContractTermsDialog';
+import PaymentInfoList from './PaymentInfoList';
 
 interface PaymentMethodsProps {
   isLoading: boolean;
@@ -27,7 +25,6 @@ const PaymentMethods: React.FC<PaymentMethodsProps> = ({
   hasAcceptedTerms,
   onAcceptTerms
 }) => {
-  const [couponCode, setCouponCode] = useState('');
   const [showCouponField, setShowCouponField] = useState(false);
   const [isTermsDialogOpen, setIsTermsDialogOpen] = useState(false);
   const [acceptingTerms, setAcceptingTerms] = useState(false);
@@ -93,37 +90,16 @@ const PaymentMethods: React.FC<PaymentMethodsProps> = ({
   };
   
   const handleDiscountPayment = () => {
-    // If we're showing the coupon field, validate the code
-    if (showCouponField) {
-      if (couponCode.toUpperCase() === validDiscountCode) {
-        toast({
-          title: "Cupom aplicado!",
-          description: `Cupom ${validDiscountCode} aplicado com sucesso!`,
-        });
-        handlePaymentClick('MercadoPageDiscount', true);
-      } else {
-        // Invalid coupon code
-        toast({
-          title: "Código inválido",
-          description: `Código de cupom inválido. Use ${validDiscountCode} para este pacote.`,
-          variant: "destructive"
-        });
-      }
-    } else {
+    // If we're showing the coupon field, validate the code in the CouponField component
+    if (!showCouponField) {
       // Just show the coupon field
       setShowCouponField(true);
     }
   };
   
-  // Get contract content based on package ID
-  const getContractContent = () => {
-    switch (packageId) {
-      case 'premium':
-        return ContractContent.getPremiumContract();
-      case 'profissional':
-        return ContractContent.getProfissionalContract();
-      default:
-        return ContractContent.getEssencialContract();
+  const handleApplyCoupon = (code: string) => {
+    if (code.toUpperCase() === validDiscountCode) {
+      handlePaymentClick('MercadoPageDiscount', true);
     }
   };
   
@@ -141,122 +117,46 @@ const PaymentMethods: React.FC<PaymentMethodsProps> = ({
         )}
         
         <div className="space-y-3">
-          <div className="border border-border rounded-lg p-3 hover:border-blue-500/50 transition cursor-pointer bg-gradient-to-r from-blue-50/10 to-blue-100/10">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center">
-                <div className="w-8 h-8 rounded-full bg-blue-500/20 flex items-center justify-center mr-3">
-                  <CreditCard className="w-4 h-4 text-blue-500" />
-                </div>
-                <div>
-                  <h3 className="font-medium text-sm">Pagamento Normal</h3>
-                  <p className="text-xs text-gray-400">Pagar com cartão, boleto ou Pix pelo MercadoPago</p>
-                </div>
-              </div>
-              <Button 
-                disabled={isLoading} 
-                onClick={handleStandardPayment}
-                className="bg-blue-500 hover:bg-blue-600 text-sm px-3 py-1 h-auto"
-                size="sm"
-              >
-                {isLoading ? 'Processando...' : 'Pagar agora'}
-                <ExternalLink className="ml-1 h-3 w-3" />
-              </Button>
-            </div>
-          </div>
+          <PaymentOption
+            title="Pagamento Normal"
+            description="Pagar com cartão, boleto ou Pix pelo MercadoPago"
+            icon={<CreditCard className="w-4 h-4 text-blue-500" />}
+            buttonText="Pagar agora"
+            onClick={handleStandardPayment}
+            isLoading={isLoading}
+            variant="standard"
+          />
           
-          <div className="border border-border rounded-lg p-3 hover:border-green-500/50 transition cursor-pointer bg-gradient-to-r from-green-50/10 to-green-100/10">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center">
-                <div className="w-8 h-8 rounded-full bg-green-500/20 flex items-center justify-center mr-3">
-                  <Percent className="w-4 h-4 text-green-500" />
-                </div>
-                <div>
-                  <h3 className="font-medium text-sm">Cupom de Desconto</h3>
-                  <p className="text-xs text-gray-400">Pagar com desconto especial pelo MercadoPago</p>
-                  
-                  {showCouponField && (
-                    <div className="mt-2 flex items-center">
-                      <input 
-                        type="text" 
-                        placeholder="Digite o código do cupom"
-                        value={couponCode}
-                        onChange={(e) => setCouponCode(e.target.value)}
-                        className="text-xs border border-border rounded px-2 py-1 w-40 bg-background"
-                      />
-                    </div>
-                  )}
-                </div>
-              </div>
-              <Button 
-                disabled={isLoading} 
-                onClick={handleDiscountPayment}
-                className="bg-green-500 hover:bg-green-600 text-sm px-3 py-1 h-auto"
-                size="sm"
-              >
-                {isLoading ? 'Processando...' : (showCouponField ? 'Aplicar cupom' : 'Usar cupom')}
-                <Percent className="ml-1 h-3 w-3" />
-              </Button>
-            </div>
-          </div>
+          <PaymentOption
+            title="Cupom de Desconto"
+            description="Pagar com desconto especial pelo MercadoPago"
+            icon={<Percent className="w-4 h-4 text-green-500" />}
+            buttonText={showCouponField ? "Aplicar cupom" : "Usar cupom"}
+            onClick={handleDiscountPayment}
+            isLoading={isLoading}
+            variant="discount"
+          >
+            {showCouponField && (
+              <CouponField 
+                onApplyCoupon={handleApplyCoupon}
+                validDiscountCode={validDiscountCode}
+              />
+            )}
+          </PaymentOption>
         </div>
         
-        <Separator className="my-3" />
-        
-        <div className="text-xs text-gray-400">
-          <p className="mb-1">Informações importantes:</p>
-          <ul className="list-disc pl-4 space-y-0.5">
-            <li>Todos os pagamentos são processados em Reais (BRL)</li>
-            <li>Pagamentos são processados com segurança pelo MercadoPago</li>
-            <li>O prazo de entrega é contado a partir da confirmação do pagamento</li>
-            <li>Após o pagamento, você será redirecionado de volta para preencher o briefing</li>
-          </ul>
-        </div>
+        <PaymentInfoList />
         
         {/* Terms Acceptance Dialog */}
-        <Dialog open={isTermsDialogOpen} onOpenChange={setIsTermsDialogOpen}>
-          <DialogContent className="max-w-3xl">
-            <DialogHeader>
-              <DialogTitle>Contrato de Prestação de Serviços</DialogTitle>
-              <DialogDescription>
-                Por favor, leia com atenção o contrato abaixo antes de prosseguir com o pagamento.
-              </DialogDescription>
-            </DialogHeader>
-            
-            <div className="max-h-[400px] overflow-y-auto border border-border rounded-md p-4 my-4">
-              <div dangerouslySetInnerHTML={{ __html: getContractContent() }} />
-            </div>
-            
-            <div className="flex items-start space-x-2 mt-4">
-              <Checkbox 
-                id="terms" 
-                checked={localAcceptedTerms}
-                onCheckedChange={(checked) => setLocalAcceptedTerms(!!checked)}
-              />
-              <Label 
-                htmlFor="terms"
-                className="text-sm leading-tight"
-              >
-                Li e aceito os termos e condições deste contrato.
-              </Label>
-            </div>
-            
-            <DialogFooter>
-              <Button 
-                variant="outline" 
-                onClick={() => setIsTermsDialogOpen(false)}
-              >
-                Cancelar
-              </Button>
-              <Button 
-                onClick={handleAcceptTerms} 
-                disabled={!localAcceptedTerms || acceptingTerms}
-                className="bg-harmonia-green hover:bg-harmonia-green/90"
-              >
-                {acceptingTerms ? 'Processando...' : 'Aceitar e Prosseguir'}
-              </Button>
-            </DialogFooter>
-          </DialogContent>
-        </Dialog>
+        <ContractTermsDialog
+          open={isTermsDialogOpen}
+          onOpenChange={setIsTermsDialogOpen}
+          packageId={packageId}
+          accepted={localAcceptedTerms}
+          onAcceptedChange={setLocalAcceptedTerms}
+          onConfirm={handleAcceptTerms}
+          isLoading={acceptingTerms}
+        />
       </Card>
     </div>
   );
