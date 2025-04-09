@@ -1,15 +1,25 @@
 
 import React, { useRef } from 'react';
 import { Button } from "@/components/ui/button";
-import { File, X, Upload, Music, Image, FileVideo, FileText } from "lucide-react";
+import { Progress } from "@/components/ui/progress";
+import { File, X, Upload, Music, Image, FileVideo, FileText, Loader2 } from "lucide-react";
+import { useFileUpload } from '@/hooks/admin/useFileUpload';
 
 interface FileUploaderProps {
   referenceFiles: File[];
   setReferenceFiles: React.Dispatch<React.SetStateAction<File[]>>;
+  storageType?: 'briefings' | 'audio' | 'portfolio' | 'previews' | 'orders' | 'customers';
+  showUploadStatus?: boolean;
 }
 
-const FileUploader: React.FC<FileUploaderProps> = ({ referenceFiles, setReferenceFiles }) => {
+const FileUploader: React.FC<FileUploaderProps> = ({ 
+  referenceFiles, 
+  setReferenceFiles,
+  storageType = 'briefings',
+  showUploadStatus = false
+}) => {
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const { isUploading, uploadProgress } = useFileUpload(storageType);
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files) {
@@ -62,14 +72,26 @@ const FileUploader: React.FC<FileUploaderProps> = ({ referenceFiles, setReferenc
         variant="outline" 
         className="w-full"
         onClick={openFileDialog}
+        disabled={isUploading}
       >
-        <Upload className="w-4 h-4 mr-2" /> 
+        {isUploading ? (
+          <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+        ) : (
+          <Upload className="w-4 h-4 mr-2" />
+        )} 
         Anexar arquivos de referência
       </Button>
       
       <div className="text-xs text-gray-400 mt-2">
         Aceita imagens, áudios, vídeos e PDFs. (Tamanho máximo: 10MB por arquivo)
       </div>
+      
+      {showUploadStatus && isUploading && (
+        <div className="mt-4">
+          <p className="text-sm mb-2">Enviando arquivos...</p>
+          <Progress value={uploadProgress} className="h-2 w-full" />
+        </div>
+      )}
       
       {referenceFiles.length > 0 && (
         <div className="mt-4 space-y-2">
@@ -87,6 +109,7 @@ const FileUploader: React.FC<FileUploaderProps> = ({ referenceFiles, setReferenc
                   size="sm"
                   onClick={() => removeFile(index)}
                   className="h-6 w-6 p-0"
+                  disabled={isUploading}
                 >
                   <X className="w-4 h-4" />
                 </Button>

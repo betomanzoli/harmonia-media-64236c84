@@ -69,7 +69,7 @@ export function useAudioOperations(isOfflineMode: boolean) {
       const { error } = await supabase
         .from('audio_samples')
         .delete()
-        .eq('id', id);
+        .match({ id });  // Using match instead of eq
 
       if (error) throw new Error(error.message);
       
@@ -109,16 +109,16 @@ export function useAudioOperations(isOfflineMode: boolean) {
         return { success: true, data: filteredSamples };
       }
 
-      // Fetch data from Supabase - fixed query building
+      // Fixed query structure for Supabase
       let queryBuilder = supabase.from('audio_samples').select('*');
       
-      // Then add filters if needed
+      // Apply filters
       if (query) {
-        queryBuilder = queryBuilder.ilike('title', `%${query}%`);
+        queryBuilder = queryBuilder.filter('title', 'ilike', `%${query}%`);
       }
       
       if (category) {
-        queryBuilder = queryBuilder.eq('category', category);
+        queryBuilder = queryBuilder.filter('category', 'eq', category);
       }
       
       const { data, error } = await queryBuilder;
