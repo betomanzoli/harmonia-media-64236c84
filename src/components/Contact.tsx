@@ -14,10 +14,11 @@ const Contact: React.FC = () => {
     alert('Mensagem enviada com sucesso! Entraremos em contato em breve.');
   };
 
-  // Fallback values in case these properties don't exist in siteConfig
-  const supportEmail = siteConfig.contact.supportEmail || siteConfig.contact.email;
-  const city = siteConfig.contact.city || "São Paulo";
-  const state = siteConfig.contact.state || "SP";
+  // Corrigindo para usar propriedades que existem no objeto
+  const email = siteConfig.contact.email;
+  const address = siteConfig.contact.address;
+  const phone = siteConfig.contact.phone;
+  const whatsapp = siteConfig.contact.whatsapp;
 
   return (
     <section id="contato" className="py-20 px-6 bg-background">
@@ -78,8 +79,8 @@ const Contact: React.FC = () => {
                   </div>
                   <div>
                     <h4 className="font-medium mb-1">Telefone</h4>
-                    <p className="text-gray-500">{siteConfig.contact.phone}</p>
-                    <p className="text-gray-500">{siteConfig.contact.whatsapp} (WhatsApp)</p>
+                    <p className="text-gray-500">{phone}</p>
+                    <p className="text-gray-500">{whatsapp} (WhatsApp)</p>
                   </div>
                 </div>
               </Card>
@@ -91,8 +92,7 @@ const Contact: React.FC = () => {
                   </div>
                   <div>
                     <h4 className="font-medium mb-1">Email</h4>
-                    <p className="text-gray-500">{siteConfig.contact.email}</p>
-                    <p className="text-gray-500">{supportEmail}</p>
+                    <p className="text-gray-500">{email}</p>
                   </div>
                 </div>
               </Card>
@@ -104,8 +104,7 @@ const Contact: React.FC = () => {
                   </div>
                   <div>
                     <h4 className="font-medium mb-1">Endereço</h4>
-                    <p className="text-gray-500">{siteConfig.contact.address}</p>
-                    <p className="text-gray-500">{city}, {state}</p>
+                    <p className="text-gray-500">{address}</p>
                   </div>
                 </div>
               </Card>

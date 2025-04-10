@@ -2,17 +2,12 @@
 export interface AudioSample {
   id: string;
   title: string;
-  style: string;
-  mood: string;
-  occasion: string;
-  audio_url: string;
-  preview_duration: string;
-  created_at?: string;
-  
-  // Additional properties needed by the mock data
+  genre: string;
+  url: string;
+  duration: string;
   description?: string;
-  url?: string;
-  duration?: number;
-  category?: string;
+  artist?: string;
   tags?: string[];
+  dateAdded?: string;
+  fileSize?: number;
 }
