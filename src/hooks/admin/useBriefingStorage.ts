@@ -4,6 +4,7 @@ import { useToast } from '@/hooks/use-toast';
 import { useFileUpload } from './useFileUpload';
 import { syncStorageData } from '@/services/adminStorageService';
 import { emailService } from '@/lib/supabase';
+import notificationService from '@/services/notificationService';
 
 interface BriefingSubmission {
   id: string;
@@ -80,6 +81,16 @@ export function useBriefingStorage() {
         toast({
           title: "Briefing salvo",
           description: "O briefing foi salvo com sucesso no Google Drive.",
+        });
+        
+        // Enviar notificação
+        notificationService.notify('new_briefing', {
+          id: submissionId,
+          clientName,
+          clientEmail,
+          packageType,
+          submissionTime: new Date().toISOString(),
+          filesCount: uploadedReferenceFiles.length
         });
         
         return { success: true, submissionId };

@@ -1,5 +1,4 @@
-
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 
 interface OrderCustomer {
   id: string;
@@ -21,7 +20,7 @@ interface Order {
   packageType: string;
 }
 
-export const useOrders = () => {
+export function useOrders() {
   const [orders, setOrders] = useState<Order[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
@@ -141,9 +140,17 @@ export const useOrders = () => {
     }, 800);
   };
 
-  const refreshOrders = () => {
+  const refreshOrders = useCallback(() => {
     loadOrders();
-  };
+    
+    // Adicionar notificação para novos pedidos
+    if (typeof window !== 'undefined' && window.notificationService) {
+      window.notificationService.notify('new_order', {
+        id: `order-${Date.now()}`,
+        timestamp: new Date().toISOString()
+      });
+    }
+  }, []);
 
   useEffect(() => {
     loadOrders();
@@ -154,4 +161,4 @@ export const useOrders = () => {
     isLoading,
     refreshOrders
   };
-};
+}
