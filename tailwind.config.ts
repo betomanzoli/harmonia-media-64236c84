@@ -65,6 +65,7 @@ export default {
 				},
 				harmonia: {
 					green: '#2CDB66',
+					'light-green': '#82E5A4',
 					dark: '#111111',
 					light: '#F5F5F5',
 					'gray-dark': '#333333',

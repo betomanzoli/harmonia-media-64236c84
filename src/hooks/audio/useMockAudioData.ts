@@ -1,51 +1,55 @@
 
 import { AudioSample } from '@/types/audio';
 
-// Mock audio samples for offline development
-export const mockAudioSamples: AudioSample[] = [
-  {
-    id: '1',
-    title: 'Guitar Melody',
-    style: 'Acoustic',
-    mood: 'Calm',
-    occasion: 'Relaxation',
-    audio_url: 'https://example.com/samples/guitar-melody.mp3',
-    preview_duration: '0:45',
-    description: 'Acoustic guitar melody in G major',
-    url: 'https://example.com/samples/guitar-melody.mp3',
-    duration: 45,
-    category: 'Acoustic',
-    tags: ['guitar', 'melody', 'acoustic'],
-    created_at: new Date().toISOString()
-  },
-  {
-    id: '2',
-    title: 'Piano Ballad',
-    style: 'Classical',
-    mood: 'Emotional',
-    occasion: 'Reflection',
-    audio_url: 'https://example.com/samples/piano-ballad.mp3',
-    preview_duration: '2:00',
-    description: 'Emotional piano ballad in C minor',
-    url: 'https://example.com/samples/piano-ballad.mp3',
-    duration: 120,
-    category: 'Classical',
-    tags: ['piano', 'ballad', 'emotional'],
-    created_at: new Date().toISOString()
-  },
-  {
-    id: '3',
-    title: 'Electronic Beat',
-    style: 'Electronic',
-    mood: 'Energetic',
-    occasion: 'Party',
-    audio_url: 'https://example.com/samples/electronic-beat.mp3',
-    preview_duration: '1:00',
-    description: 'Modern electronic beat at 120 BPM',
-    url: 'https://example.com/samples/electronic-beat.mp3',
-    duration: 60,
-    category: 'Electronic',
-    tags: ['electronic', 'beat', 'modern'],
-    created_at: new Date().toISOString()
-  }
-];
+export const getMockAudioSamples = (): AudioSample[] => {
+  return [
+    {
+      id: '1',
+      title: 'Música Ambiente Alegre',
+      genre: 'Pop',
+      url: 'https://storage.googleapis.com/harmonia-media/samples/ambient_happy.mp3',
+      audio_url: 'https://storage.googleapis.com/harmonia-media/samples/ambient_happy.mp3',
+      description: 'Música ambiente alegre e positiva, perfeita para vídeos corporativos',
+      artist: 'harmonIA',
+      tags: ['alegre', 'positiva', 'corporativo'],
+      duration: '2:45',
+      dateAdded: '2023-09-15',
+      fileSize: 4.2,
+      style: 'Moderno',
+      mood: 'Alegre',
+      occasion: 'Corporativo'
+    },
+    {
+      id: '2',
+      title: 'Piano Emocional',
+      genre: 'Clássico',
+      url: 'https://storage.googleapis.com/harmonia-media/samples/emotional_piano.mp3',
+      audio_url: 'https://storage.googleapis.com/harmonia-media/samples/emotional_piano.mp3',
+      description: 'Solo de piano emocional para momentos de introspecção',
+      artist: 'harmonIA',
+      tags: ['piano', 'emocional', 'clássico'],
+      duration: '3:20',
+      dateAdded: '2023-10-02',
+      fileSize: 5.7,
+      style: 'Clássico',
+      mood: 'Introspectivo',
+      occasion: 'Documentário'
+    },
+    {
+      id: '3',
+      title: 'Energia Eletrônica',
+      genre: 'Eletrônica',
+      url: 'https://storage.googleapis.com/harmonia-media/samples/electronic_energy.mp3',
+      audio_url: 'https://storage.googleapis.com/harmonia-media/samples/electronic_energy.mp3',
+      description: 'Batidas eletrônicas energéticas para vídeos dinâmicos',
+      artist: 'harmonIA',
+      tags: ['eletrônica', 'energia', 'dinâmico'],
+      duration: '3:05',
+      dateAdded: '2023-08-20',
+      fileSize: 6.3,
+      style: 'Contemporâneo',
+      mood: 'Energético',
+      occasion: 'Publicidade'
+    }
+  ];
+};

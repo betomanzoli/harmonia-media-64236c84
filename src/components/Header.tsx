@@ -61,8 +61,8 @@ const Header: React.FC = () => {
   
   return (
     <>
-      <header className="fixed top-0 left-0 right-0 bg-white z-50 shadow-sm">
-        <div className="flex items-center justify-between max-w-7xl mx-auto">
+      <header className="fixed top-0 left-0 right-0 bg-black z-50 shadow-sm">
+        <div className="flex items-center justify-between max-w-7xl mx-auto px-4 py-3">
           <div className="flex items-center gap-10">
             <Link to="/" className="cursor-pointer" onClick={() => window.scrollTo(0, 0)}>
               <Logo />
@@ -172,6 +172,7 @@ const Header: React.FC = () => {
           <ChevronUp className="w-5 h-5" />
         </Button>
       )}
+      <div className="h-16"></div> {/* Espaço para compensar o header fixo */}
     </>
   );
 };

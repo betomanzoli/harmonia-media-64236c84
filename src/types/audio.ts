@@ -15,4 +15,5 @@ export interface AudioSample {
   occasion?: string;
   created_at?: string;
   audio_url?: string;
+  preview_duration?: string;
 }

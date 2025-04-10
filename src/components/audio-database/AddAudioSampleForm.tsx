@@ -1,114 +1,140 @@
 
-import React from 'react';
-import { Button } from "@/components/ui/button";
+import React, { useState } from 'react';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Textarea } from '@/components/ui/textarea';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { AudioSample } from '@/types/audio';
+import { PlusCircle } from 'lucide-react';
 
 interface AddAudioSampleFormProps {
-  onAddSample: (sample: Omit<AudioSample, 'id' | 'created_at'>) => void;
+  onAddSample: (sample: Omit<AudioSample, "id" | "created_at">) => void;
 }
 
 const AddAudioSampleForm: React.FC<AddAudioSampleFormProps> = ({ onAddSample }) => {
+  const [title, setTitle] = useState('');
+  const [genre, setGenre] = useState('');
+  const [url, setUrl] = useState('');
+  const [duration, setDuration] = useState('');
+  const [description, setDescription] = useState('');
+  const [artist, setArtist] = useState('harmonIA');
+  const [previewDuration, setPreviewDuration] = useState('');
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    onAddSample({
+      title,
+      genre,
+      url,
+      duration,
+      description,
+      artist,
+      audio_url: url,
+      preview_duration: previewDuration
+    });
+
+    // Reset form
+    setTitle('');
+    setGenre('');
+    setUrl('');
+    setDuration('');
+    setDescription('');
+    setPreviewDuration('');
+  };
+
   return (
-    <div className="border rounded-md p-6">
-      <h2 className="text-xl font-semibold mb-4">Adicionar Nova Amostra</h2>
-      <form 
-        onSubmit={(e) => {
-          e.preventDefault();
-          const form = e.target as HTMLFormElement;
-          const title = (form.elements.namedItem('title') as HTMLInputElement).value;
-          const style = (form.elements.namedItem('style') as HTMLInputElement).value;
-          const mood = (form.elements.namedItem('mood') as HTMLInputElement).value;
-          const occasion = (form.elements.namedItem('occasion') as HTMLInputElement).value;
-          const audio_url = (form.elements.namedItem('audio_url') as HTMLInputElement).value;
-          const preview_duration = (form.elements.namedItem('preview_duration') as HTMLInputElement).value;
+    <Card className="mt-8">
+      <CardHeader>
+        <CardTitle className="text-xl">Adicionar Nova Amostra de Áudio</CardTitle>
+      </CardHeader>
+      <CardContent>
+        <form onSubmit={handleSubmit} className="space-y-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <Label htmlFor="title">Título</Label>
+              <Input
+                id="title"
+                value={title}
+                onChange={(e) => setTitle(e.target.value)}
+                placeholder="Ex: Piano Emocional"
+                required
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="genre">Gênero</Label>
+              <Input
+                id="genre"
+                value={genre}
+                onChange={(e) => setGenre(e.target.value)}
+                placeholder="Ex: Pop, Clássico, Eletrônica"
+                required
+              />
+            </div>
+          </div>
           
-          onAddSample({
-            title,
-            style,
-            mood,
-            occasion,
-            audio_url,
-            preview_duration
-          });
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <Label htmlFor="url">URL do Áudio</Label>
+              <Input
+                id="url"
+                value={url}
+                onChange={(e) => setUrl(e.target.value)}
+                placeholder="https://..."
+                required
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="duration">Duração</Label>
+              <Input
+                id="duration"
+                value={duration}
+                onChange={(e) => setDuration(e.target.value)}
+                placeholder="Ex: 3:45"
+                required
+              />
+            </div>
+          </div>
           
-          form.reset();
-        }}
-        className="grid grid-cols-1 md:grid-cols-2 gap-4"
-      >
-        <div>
-          <label htmlFor="title" className="block text-sm font-medium mb-1">Título</label>
-          <input
-            id="title"
-            name="title"
-            required
-            className="w-full p-2 border border-input rounded"
-            placeholder="Ex: Música Romântica"
-          />
-        </div>
-        
-        <div>
-          <label htmlFor="audio_url" className="block text-sm font-medium mb-1">URL do Áudio</label>
-          <input
-            id="audio_url"
-            name="audio_url"
-            required
-            className="w-full p-2 border border-input rounded"
-            placeholder="https://exemplo.com/audio.mp3"
-          />
-        </div>
-        
-        <div>
-          <label htmlFor="style" className="block text-sm font-medium mb-1">Estilo Musical</label>
-          <input
-            id="style"
-            name="style"
-            required
-            className="w-full p-2 border border-input rounded"
-            placeholder="Ex: MPB, Pop, Rock"
-          />
-        </div>
-        
-        <div>
-          <label htmlFor="mood" className="block text-sm font-medium mb-1">Emoção</label>
-          <input
-            id="mood"
-            name="mood"
-            required
-            className="w-full p-2 border border-input rounded"
-            placeholder="Ex: Romântico, Alegre, Melancólico"
-          />
-        </div>
-        
-        <div>
-          <label htmlFor="occasion" className="block text-sm font-medium mb-1">Ocasião</label>
-          <input
-            id="occasion"
-            name="occasion"
-            required
-            className="w-full p-2 border border-input rounded"
-            placeholder="Ex: Casamento, Aniversário, Homenagem"
-          />
-        </div>
-        
-        <div>
-          <label htmlFor="preview_duration" className="block text-sm font-medium mb-1">Duração da Prévia</label>
-          <input
-            id="preview_duration"
-            name="preview_duration"
-            required
-            className="w-full p-2 border border-input rounded"
-            placeholder="Ex: 15s, 30s"
-            defaultValue="15s"
-          />
-        </div>
-        
-        <div className="md:col-span-2">
-          <Button type="submit" className="bg-harmonia-green hover:bg-harmonia-green/90">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <Label htmlFor="artist">Artista</Label>
+              <Input
+                id="artist"
+                value={artist}
+                onChange={(e) => setArtist(e.target.value)}
+                defaultValue="harmonIA"
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="previewDuration">Duração da Prévia (opcional)</Label>
+              <Input
+                id="previewDuration"
+                value={previewDuration}
+                onChange={(e) => setPreviewDuration(e.target.value)}
+                placeholder="Ex: 0:30"
+              />
+            </div>
+          </div>
+          
+          <div className="space-y-2">
+            <Label htmlFor="description">Descrição</Label>
+            <Textarea
+              id="description"
+              value={description}
+              onChange={(e) => setDescription(e.target.value)}
+              placeholder="Descreva o áudio e suas características"
+              rows={3}
+            />
+          </div>
+          
+          <Button type="submit" className="w-full bg-harmonia-green hover:bg-harmonia-green/90">
+            <PlusCircle className="mr-2 h-4 w-4" />
             Adicionar Amostra
           </Button>
-        </div>
-      </form>
-    </div>
+        </form>
+      </CardContent>
+    </Card>
   );
 };
 

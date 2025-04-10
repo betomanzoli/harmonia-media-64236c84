@@ -38,7 +38,7 @@ const AudioDatabase: React.FC = () => {
   return (
     <div className="container mx-auto py-8 px-4">
       <div className="mb-6 flex items-center justify-between">
-        <Link to="/admin/dashboard">
+        <Link to="/admin-j28s7d1k/dashboard">
           <Button variant="outline" className="flex items-center gap-2">
             <ArrowLeft className="h-4 w-4" />
             Voltar ao Dashboard
@@ -47,7 +47,7 @@ const AudioDatabase: React.FC = () => {
         <Button 
           variant="outline" 
           className="flex items-center gap-2 text-harmonia-green hover:bg-harmonia-light-green/20"
-          onClick={() => openFolder()}
+          onClick={openFolder}
         >
           <FolderOpen className="h-4 w-4" />
           Abrir Pasta de Armazenamento
