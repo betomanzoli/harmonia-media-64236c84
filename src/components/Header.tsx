@@ -83,7 +83,7 @@ const Header: React.FC = () => {
               )}
               <NavLink href="/qualificacao">Qualificação</NavLink>
               <NavLink href="/acompanhar-pedido">Acompanhar Pedido</NavLink>
-              <NavLink to="/preview-library">Biblioteca de Prévias</NavLink>
+              <NavLink href="/preview-library">Biblioteca de Prévias</NavLink>
             </nav>
           </div>
           <div className="flex items-center gap-3">

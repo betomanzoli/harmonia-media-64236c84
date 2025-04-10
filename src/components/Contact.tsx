@@ -14,6 +14,11 @@ const Contact: React.FC = () => {
     alert('Mensagem enviada com sucesso! Entraremos em contato em breve.');
   };
 
+  // Fallback values in case these properties don't exist in siteConfig
+  const supportEmail = siteConfig.contact.supportEmail || siteConfig.contact.email;
+  const city = siteConfig.contact.city || "São Paulo";
+  const state = siteConfig.contact.state || "SP";
+
   return (
     <section id="contato" className="py-20 px-6 bg-background">
       <div className="max-w-7xl mx-auto">
@@ -87,7 +92,7 @@ const Contact: React.FC = () => {
                   <div>
                     <h4 className="font-medium mb-1">Email</h4>
                     <p className="text-gray-500">{siteConfig.contact.email}</p>
-                    <p className="text-gray-500">{siteConfig.contact.supportEmail}</p>
+                    <p className="text-gray-500">{supportEmail}</p>
                   </div>
                 </div>
               </Card>
@@ -100,7 +105,7 @@ const Contact: React.FC = () => {
                   <div>
                     <h4 className="font-medium mb-1">Endereço</h4>
                     <p className="text-gray-500">{siteConfig.contact.address}</p>
-                    <p className="text-gray-500">{siteConfig.contact.city}, {siteConfig.contact.state}</p>
+                    <p className="text-gray-500">{city}, {state}</p>
                   </div>
                 </div>
               </Card>

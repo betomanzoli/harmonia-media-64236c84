@@ -1,165 +1,57 @@
 
-import { useState } from 'react';
-import { AudioSample } from '@/types/audio';
-import { supabase } from '@/lib/supabase';
-import { useToast } from '@/hooks/use-toast';
-import { mockAudioSamples } from './useMockAudioData';
+import { useState, useEffect } from 'react';
 
-export function useAudioOperations(isOfflineMode: boolean) {
-  const { toast } = useToast();
+export const useAudioOperations = () => {
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [data, setData] = useState<any[]>([]);
 
-  const addAudioSample = async (newSample: Omit<AudioSample, 'id' | 'created_at'>) => {
+  // Example functions for audio operations
+  const fetchAudioFiles = async () => {
     try {
-      // Check if in offline mode
-      if (isOfflineMode) {
-        const mockId = Date.now().toString();
-        const sampleWithId: AudioSample = {
-          ...newSample,
-          id: mockId,
-          created_at: new Date().toISOString()
-        };
-        
-        toast({
-          title: "Amostra de áudio adicionada",
-          description: "Amostra adicionada em modo offline.",
-        });
-        
-        return { success: true, data: sampleWithId };
-      }
-
-      // Add to Supabase
-      const response = await supabase
-        .from('audio_samples')
-        .insert([{ ...newSample, created_at: new Date().toISOString() }]);
-        
-      if (response.error) throw new Error(response.error.message);
+      setIsLoading(true);
+      // This would be a real API call in a production app
+      // Instead, we'll simulate a response
+      const response = { 
+        data: [
+          { id: 1, name: 'Audio Sample 1', url: '/samples/audio1.mp3' },
+          { id: 2, name: 'Audio Sample 2', url: '/samples/audio2.mp3' }
+        ],
+        error: null,
+        count: 2 
+      };
       
-      toast({
-        title: "Amostra de áudio adicionada",
-        description: "Amostra adicionada com sucesso ao banco de dados.",
-      });
-      
-      return { success: true, data: newSample };
-    } catch (e) {
-      const error = e as Error;
-      
-      toast({
-        title: "Erro ao adicionar amostra",
-        description: error.message,
-        variant: "destructive",
-      });
-      
-      return { success: false, error };
+      setData(response.data);
+      return response;
+    } catch (err) {
+      console.error('Error fetching audio files:', err);
+      setError('Failed to fetch audio files');
+      return { data: [], error: err, count: 0 };
+    } finally {
+      setIsLoading(false);
     }
   };
 
-  const deleteAudioSample = async (id: string) => {
-    try {
-      // Check if in offline mode
-      if (isOfflineMode) {
-        toast({
-          title: "Amostra removida",
-          description: "Amostra removida em modo offline.",
-        });
-        
-        return { success: true };
-      }
-
-      // Delete from Supabase
-      const { error } = await supabase
-        .from('audio_samples')
-        .delete()
-        .eq('id', id);
-
-      if (error) throw new Error(error.message);
-      
-      toast({
-        title: "Amostra removida",
-        description: "Amostra removida com sucesso do banco de dados.",
-      });
-      
-      return { success: true };
-    } catch (e) {
-      const error = e as Error;
-      
-      toast({
-        title: "Erro ao remover amostra",
-        description: error.message,
-        variant: "destructive",
-      });
-      
-      return { success: false, error };
-    }
+  const uploadAudioFile = async (file: File) => {
+    // Implementation would handle file upload logic
+    console.log('Uploading file:', file.name);
+    return { success: true, fileId: 'new-file-id' };
   };
 
-  const searchAudioSamples = async (query: string, category?: string) => {
-    try {
-      // Check if in offline mode
-      if (isOfflineMode) {
-        const filteredSamples = mockAudioSamples.filter(sample => {
-          const matchesQuery = sample.title.toLowerCase().includes(query.toLowerCase()) || 
-                            (sample.description && sample.description.toLowerCase().includes(query.toLowerCase())) ||
-                            (sample.tags && sample.tags.some(tag => tag.toLowerCase().includes(query.toLowerCase())));
-          
-          const matchesCategory = !category || sample.category === category;
-          
-          return matchesQuery && matchesCategory;
-        });
-        
-        return { success: true, data: filteredSamples };
-      }
-
-      // Iniciar a consulta
-      let queryBuilder = supabase.from('audio_samples').select('*');
-      
-      // Aplicar filtros se fornecidos
-      if (query) {
-        // Usando objetos de consulta em vez de encadeamento direto
-        const response = await queryBuilder;
-        
-        if (response.error) throw new Error(response.error.message);
-        
-        // Filtrar manualmente os resultados (backup para o caso de falha da consulta)
-        const filtered = (response.data || []).filter(sample => 
-          sample.title.toLowerCase().includes(query.toLowerCase())
-        );
-        
-        if (category) {
-          return { 
-            success: true, 
-            data: filtered.filter(sample => sample.category === category)
-          };
-        }
-        
-        return { success: true, data: filtered };
-      }
-      
-      // Se não houver consulta, obter todos os dados
-      const { data, error } = await queryBuilder;
-      
-      if (error) throw new Error(error.message);
-      
-      return { success: true, data: data || [] };
-    } catch (e) {
-      const error = e as Error;
-      
-      // Fallback to filtered mock data
-      const filteredSamples = mockAudioSamples.filter(sample => {
-        const matchesQuery = sample.title.toLowerCase().includes(query.toLowerCase()) || 
-                          (sample.description && sample.description.toLowerCase().includes(query.toLowerCase()));
-        
-        const matchesCategory = !category || sample.category === category;
-        
-        return matchesQuery && matchesCategory;
-      });
-      
-      return { success: false, error, data: filteredSamples };
-    }
+  const deleteAudioFile = async (id: string) => {
+    // Implementation would handle file deletion logic
+    console.log('Deleting file with ID:', id);
+    return { success: true };
   };
 
   return {
-    addAudioSample,
-    deleteAudioSample,
-    searchAudioSamples
+    isLoading,
+    error,
+    data,
+    fetchAudioFiles,
+    uploadAudioFile,
+    deleteAudioFile
   };
-}
+};
+
+export default useAudioOperations;

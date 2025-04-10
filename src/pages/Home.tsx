@@ -42,7 +42,7 @@ const Home: React.FC = () => {
         <Hero />
         <Services />
         <Process />
-        {/* Porfolio section temporarily hidden */}
+        {/* Portfolio section temporarily hidden */}
         {/* Chatbot temporarily disabled */}
         <Testimonials showTestimonials={false} />
 
