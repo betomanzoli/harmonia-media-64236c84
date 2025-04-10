@@ -22,6 +22,11 @@ const OrderTracking: React.FC = () => {
     }
   }, [orderData]);
 
+  useEffect(() => {
+    // Scroll to top when component mounts
+    window.scrollTo(0, 0);
+  }, []);
+
   const handleOrderSearch = (foundOrder: OrderData) => {
     setOrderData(foundOrder);
   };
@@ -32,11 +37,10 @@ const OrderTracking: React.FC = () => {
 
   return (
     <div className="min-h-screen bg-background">
-      <Header />
       <main className="pt-24 pb-20 px-6 md:px-10">
         <div className="max-w-5xl mx-auto">
           <h1 className="text-3xl font-bold mb-2">Acompanhar Pedido</h1>
-          <p className="text-gray-400 mb-10">
+          <p className="text-gray-500 mb-10">
             Insira o código do seu pedido para verificar seu status e progresso
           </p>
           
@@ -60,7 +64,6 @@ const OrderTracking: React.FC = () => {
           )}
         </div>
       </main>
-      <Footer />
     </div>
   );
 };

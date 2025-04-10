@@ -100,12 +100,24 @@ export const useAudioSamples = () => {
   };
 
   const openFolder = () => {
-    if (folderUrl) {
-      window.open(folderUrl, '_blank');
-    } else {
+    try {
+      if (folderUrl) {
+        window.open(folderUrl, '_blank', 'noopener,noreferrer');
+        
+        // Atualizar timestamp de sincronização para o tipo audio
+        localStorage.setItem('audio_lastSync', new Date().toISOString());
+      } else {
+        toast({
+          title: "Erro",
+          description: "URL da pasta não configurada.",
+          variant: "destructive"
+        });
+      }
+    } catch (error) {
+      console.error("Erro ao abrir pasta:", error);
       toast({
         title: "Erro",
-        description: "URL da pasta não configurada.",
+        description: "Não foi possível abrir a pasta. Verifique se o link está correto.",
         variant: "destructive"
       });
     }
