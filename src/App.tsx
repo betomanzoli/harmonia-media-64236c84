@@ -12,14 +12,11 @@ import PreviewLibrary from './pages/PreviewLibrary';
 import Dashboard from './pages/admin/Dashboard';
 import AdminStorage from './pages/admin/AdminStorage';
 import AdminPreviews from './pages/admin/AdminPreviews';
-import AdminBriefings from './pages/admin/AdminBriefings';
 import AdminOrders from './pages/admin/AdminOrders';
 import AdminInvoices from './pages/admin/AdminInvoices';
 import AdminCustomers from './pages/admin/AdminCustomers';
 import AdminSettings from './pages/admin/AdminSettings';
 import AdminLogin from './pages/admin/AdminLogin';
-import ResetPassword from './pages/admin/ResetPassword';
-import PreviewProjectPage from './pages/admin/PreviewProjectPage';
 import AudioDatabase from './pages/AudioDatabase';
 import AdminPortfolio from './pages/admin/AdminPortfolio';
 import AdminIntegrations from './pages/admin/AdminIntegrations';
@@ -40,12 +37,9 @@ function App() {
         
         {/* Admin routes */}
         <Route path="/admin-j28s7d1k/login" element={<AdminLogin />} />
-        <Route path="/admin-j28s7d1k/reset-password" element={<ResetPassword />} />
         <Route path="/admin-j28s7d1k/dashboard" element={<Dashboard />} />
         <Route path="/admin-j28s7d1k/storage" element={<AdminStorage />} />
         <Route path="/admin-j28s7d1k/previews" element={<AdminPreviews />} />
-        <Route path="/admin-j28s7d1k/previews/:projectId" element={<PreviewProjectPage />} />
-        <Route path="/admin-j28s7d1k/briefings" element={<AdminBriefings />} />
         <Route path="/admin-j28s7d1k/orders" element={<AdminOrders />} />
         <Route path="/admin-j28s7d1k/invoices" element={<AdminInvoices />} />
         <Route path="/admin-j28s7d1k/customers" element={<AdminCustomers />} />

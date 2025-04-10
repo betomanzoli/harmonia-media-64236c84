@@ -10,4 +10,9 @@ export interface AudioSample {
   tags?: string[];
   dateAdded?: string;
   fileSize?: number;
+  style?: string;
+  mood?: string;
+  occasion?: string;
+  created_at?: string;
+  audio_url?: string;
 }

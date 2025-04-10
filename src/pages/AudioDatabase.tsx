@@ -47,7 +47,7 @@ const AudioDatabase: React.FC = () => {
         <Button 
           variant="outline" 
           className="flex items-center gap-2 text-harmonia-green hover:bg-harmonia-light-green/20"
-          onClick={openFolder}
+          onClick={() => openFolder()}
         >
           <FolderOpen className="h-4 w-4" />
           Abrir Pasta de Armazenamento
