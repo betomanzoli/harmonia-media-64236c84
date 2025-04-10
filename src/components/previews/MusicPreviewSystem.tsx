@@ -2,16 +2,15 @@
 import React, { useState, useEffect } from 'react';
 import { useParams } from 'react-router-dom';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
+import { Card } from "@/components/ui/card";
+import { Lock } from 'lucide-react';
 import PreviewHeader from './PreviewHeader';
 import PreviewInstructions from './PreviewInstructions';
-import PreviewVersionsList from './PreviewVersionsList';
+import PreviewPlayerList from './PreviewPlayerList';
 import PreviewFeedbackForm from './PreviewFeedbackForm';
 import PreviewNextSteps from './PreviewNextSteps';
 import { useToast } from '@/hooks/use-toast';
-import { useGoogleDriveAudio } from '@/hooks/audio/useGoogleDriveAudio';
-import { Lock } from 'lucide-react';
+import { usePreviewData } from '@/hooks/use-preview-data';
 
 interface MusicPreview {
   id: string;
@@ -20,56 +19,16 @@ interface MusicPreview {
   audioUrl: string;
 }
 
-// Mock data - in a real implementation, this would come from the database
-const getMockPreviewData = (projectId: string) => {
-  const mockData = {
-    clientName: 'Cliente Exemplo',
-    projectTitle: 'Projeto de Música Personalizada',
-    status: 'waiting' as const,
-    previews: [
-      {
-        id: 'v1',
-        title: 'Versão Acústica',
-        description: 'Versão suave com violão e piano',
-        audioUrl: 'https://drive.google.com/uc?export=download&id=1H62ylCwQYJ23BLpygtvNmCgwTDcHX6Cl',
-      },
-      {
-        id: 'v2',
-        title: 'Versão Orquestral',
-        description: 'Arranjo completo com cordas e metais',
-        audioUrl: 'https://drive.google.com/uc?export=download&id=11c6JahRd5Lx0iKCL_gHZ0zrZ3LFBJ47a',
-      },
-      {
-        id: 'v3',
-        title: 'Versão Minimalista',
-        description: 'Abordagem simplificada com foco na melodia',
-        audioUrl: 'https://drive.google.com/uc?export=download&id=1fCsWubN8pXwM-mRlDtnQFTCkBbIkuUyW',
-      }
-    ]
-  };
-  
-  return mockData;
-};
-
 const MusicPreviewSystem: React.FC = () => {
   const { projectId } = useParams<{ projectId: string }>();
   const { toast } = useToast();
   const [selectedVersion, setSelectedVersion] = useState<string | null>(null);
   const [feedback, setFeedback] = useState('');
-  const [previewData, setPreviewData] = useState<any>(null);
   const [isProtected, setIsProtected] = useState(true);
-  const { audioFiles, isLoading } = useGoogleDriveAudio();
   
-  useEffect(() => {
-    if (projectId) {
-      // In a real implementation, this would fetch from an API or database
-      setPreviewData(getMockPreviewData(projectId));
-      
-      // Log preview access in real implementation
-      console.log(`Cliente acessando prévia: ${projectId}, data: ${new Date().toISOString()}`);
-    }
-  }, [projectId]);
-
+  // In a real implementation, use the custom hook to fetch project data
+  const { projectData, setProjectData } = usePreviewProject(projectId);
+  
   // Add protection to prevent audio downloads
   useEffect(() => {
     const handleContextMenu = (e: MouseEvent) => {
@@ -107,7 +66,7 @@ const MusicPreviewSystem: React.FC = () => {
     });
     
     // Update status locally for demo purposes
-    setPreviewData(prev => prev ? {...prev, status: 'feedback' as const} : null);
+    setProjectData(prev => prev ? {...prev, status: 'feedback' as const} : null);
   };
   
   const handleApprove = () => {
@@ -126,46 +85,18 @@ const MusicPreviewSystem: React.FC = () => {
     });
     
     // Update status locally for demo purposes
-    setPreviewData(prev => prev ? {...prev, status: 'approved' as const} : null);
+    setProjectData(prev => prev ? {...prev, status: 'approved' as const} : null);
   };
   
-  if (!previewData) {
-    return (
-      <div className="max-w-4xl mx-auto pt-10">
-        <Card>
-          <CardHeader>
-            <CardTitle>Carregando Prévia...</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="animate-pulse space-y-4">
-              <div className="h-4 bg-gray-200 rounded w-3/4"></div>
-              <div className="h-4 bg-gray-200 rounded w-1/2"></div>
-              <div className="h-20 bg-gray-200 rounded"></div>
-            </div>
-          </CardContent>
-        </Card>
-      </div>
-    );
+  if (!projectData) {
+    return <PreviewLoadingState />;
   }
   
   return (
     <div className="max-w-4xl mx-auto pt-10">
-      <Card className="mb-6 border-b-4 border-harmonia-green">
-        <CardContent className="pt-6">
-          <div className="flex items-center justify-between">
-            <div>
-              <h1 className="text-2xl font-bold">{previewData.projectTitle}</h1>
-              <p className="text-gray-500">Olá, {previewData.clientName}! Aqui estão suas prévias musicais.</p>
-            </div>
-            <div className="bg-harmonia-green/10 p-2 rounded-md flex items-center text-harmonia-green">
-              <Lock className="w-4 h-4 mr-2" />
-              <span className="text-xs font-medium">Prévias Protegidas</span>
-            </div>
-          </div>
-        </CardContent>
-      </Card>
+      <PreviewHeader projectData={projectData} />
       
-      <PreviewInstructions status={previewData.status} />
+      <PreviewInstructions status={projectData.status} />
       
       <Tabs defaultValue="versions" className="mt-6">
         <TabsList className="w-full mb-6">
@@ -178,17 +109,11 @@ const MusicPreviewSystem: React.FC = () => {
         </TabsList>
         
         <TabsContent value="versions">
-          <PreviewVersionsList
-            versions={previewData.previews.map(p => ({
-              id: p.id,
-              title: p.title,
-              description: p.description,
-              audioUrl: p.audioUrl,
-              recommended: p.id === 'v1'
-            }))}
-            selectedVersion={selectedVersion}
-            setSelectedVersion={setSelectedVersion}
-            isApproved={previewData.status === 'approved'}
+          <PreviewPlayerList
+            previews={projectData.previews}
+            selectedPreview={selectedVersion}
+            setSelectedPreview={setSelectedVersion}
+            isApproved={projectData.status === 'approved'}
           />
         </TabsContent>
         
@@ -199,18 +124,15 @@ const MusicPreviewSystem: React.FC = () => {
             setFeedback={setFeedback}
             handleSubmit={handleSubmitFeedback}
             handleApprove={handleApprove}
-            status={previewData.status}
-            versionTitle={previewData.previews.find(p => p.id === selectedVersion)?.title}
+            status={projectData.status}
+            versionTitle={projectData.previews.find(p => p.id === selectedVersion)?.title}
           />
         </TabsContent>
       </Tabs>
       
-      <PreviewNextSteps status={previewData.status} />
+      <PreviewNextSteps status={projectData.status} />
       
-      <div className="mt-8 text-center py-4 text-xs text-gray-400 border-t">
-        <p>Todas as prévias são limitadas a 30 segundos e protegidas contra download não autorizado.</p>
-        <p>© {new Date().getFullYear()} harmonIA - Todos os direitos reservados</p>
-      </div>
+      <PreviewFooter />
     </div>
   );
 };

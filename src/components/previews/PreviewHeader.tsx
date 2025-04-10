@@ -1,64 +1,32 @@
 
 import React from 'react';
-import { useNavigate } from 'react-router-dom';
-import { ArrowLeft, Share2 } from 'lucide-react';
-import { Button } from "@/components/ui/button";
-import { Dialog, DialogTrigger } from "@/components/ui/dialog";
-import SharePreviewDialog from './SharePreviewDialog';
+import { Card, CardContent } from "@/components/ui/card";
+import { Lock } from 'lucide-react';
 
 interface PreviewHeaderProps {
-  clientName: string;
-  projectTitle: string;
-  status: 'waiting' | 'feedback' | 'approved';
+  projectData: {
+    projectTitle: string;
+    clientName: string;
+    status: 'waiting' | 'feedback' | 'approved';
+  };
 }
 
-const PreviewHeader: React.FC<PreviewHeaderProps> = ({ 
-  clientName, 
-  projectTitle,
-  status 
-}) => {
-  const navigate = useNavigate();
-
+const PreviewHeader: React.FC<PreviewHeaderProps> = ({ projectData }) => {
   return (
-    <>
-      <div className="mb-6">
-        <Button 
-          variant="ghost" 
-          className="flex items-center gap-1 text-gray-400 hover:text-white"
-          onClick={() => navigate('/')}
-        >
-          <ArrowLeft className="w-4 h-4" />
-          Voltar à página inicial
-        </Button>
-      </div>
-      
-      <div className="mb-10 flex justify-between items-start">
-        <div>
-          <h1 className="text-3xl md:text-4xl font-bold mb-2">{projectTitle}</h1>
-          <p className="text-xl text-gray-300">Olá, {clientName}!</p>
-          <p className="text-gray-400 mt-4">
-            Estamos animados para apresentar as primeiras versões da sua música. 
-            Por favor, ouça cada uma delas e nos informe qual você prefere.
-            As prévias têm duração limitada para proteção dos direitos autorais.
-          </p>
+    <Card className="mb-6 border-b-4 border-harmonia-green">
+      <CardContent className="pt-6">
+        <div className="flex items-center justify-between">
+          <div>
+            <h1 className="text-2xl font-bold">{projectData.projectTitle}</h1>
+            <p className="text-gray-500">Olá, {projectData.clientName}! Aqui estão suas prévias musicais.</p>
+          </div>
+          <div className="bg-harmonia-green/10 p-2 rounded-md flex items-center text-harmonia-green">
+            <Lock className="w-4 h-4 mr-2" />
+            <span className="text-xs font-medium">Prévias Protegidas</span>
+          </div>
         </div>
-        
-        {status !== 'approved' && (
-          <Dialog>
-            <DialogTrigger asChild>
-              <Button 
-                variant="outline" 
-                className="flex items-center gap-2"
-              >
-                <Share2 className="w-4 h-4" />
-                Compartilhar
-              </Button>
-            </DialogTrigger>
-            <SharePreviewDialog />
-          </Dialog>
-        )}
-      </div>
-    </>
+      </CardContent>
+    </Card>
   );
 };
 
