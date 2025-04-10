@@ -1,4 +1,3 @@
-
 import React, { useEffect, useState } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
@@ -34,7 +33,6 @@ const PreviewProjectPage: React.FC = () => {
   const [extensionDays, setExtensionDays] = useState('7');
   const { projects } = usePreviewProjects();
 
-  // Função para copiar link para o cliente
   const copyPreviewLink = () => {
     const link = `${window.location.origin}/preview/${projectId}`;
     navigator.clipboard.writeText(link);
@@ -44,7 +42,6 @@ const PreviewProjectPage: React.FC = () => {
     });
   };
 
-  // Função para enviar notificação
   const sendNotification = () => {
     if (!notificationMessage.trim()) {
       toast({
@@ -55,7 +52,6 @@ const PreviewProjectPage: React.FC = () => {
       return;
     }
 
-    // Enviar notificação ao cliente
     notificationService.notify('new_preview', {
       projectId,
       message: notificationMessage,
@@ -71,11 +67,9 @@ const PreviewProjectPage: React.FC = () => {
     setShowNotifyDialog(false);
     setNotificationMessage('');
 
-    // Atualizar o histórico do projeto
     updateProjectHistory('notification_sent', { message: notificationMessage });
   };
 
-  // Função para estender o prazo
   const extendDeadline = () => {
     const days = parseInt(extensionDays);
     if (isNaN(days) || days <= 0) {
@@ -87,12 +81,10 @@ const PreviewProjectPage: React.FC = () => {
       return;
     }
 
-    // Calcular nova data de expiração
     const currentDate = new Date(project.expirationDate.split('/').reverse().join('-'));
     currentDate.setDate(currentDate.getDate() + days);
     const newExpirationDate = currentDate.toLocaleDateString('pt-BR');
 
-    // Atualizar o projeto
     const updatedProject = {
       ...project,
       expirationDate: newExpirationDate
@@ -107,11 +99,9 @@ const PreviewProjectPage: React.FC = () => {
     setShowExtendDialog(false);
     setExtensionDays('7');
 
-    // Atualizar o histórico do projeto
     updateProjectHistory('deadline_extended', { days, newDate: newExpirationDate });
   };
 
-  // Função para atualizar o histórico
   const updateProjectHistory = (actionType: string, data: any) => {
     const now = new Date();
     const timestamp = now.toLocaleDateString('pt-BR') + ' ' + now.toLocaleTimeString('pt-BR');
@@ -147,19 +137,15 @@ const PreviewProjectPage: React.FC = () => {
     });
   };
 
-  // Buscar detalhes do projeto pelo ID
   useEffect(() => {
     if (projectId) {
-      // Em produção, buscar do banco de dados
       setTimeout(() => {
-        // Localizar o projeto pela ID nos projetos mockados
         const foundProject = projects.find(p => p.id === projectId);
         
         if (foundProject) {
-          // Adicionar dados adicionais para a página de detalhes
           const enhancedProject = {
             ...foundProject,
-            feedback: 'Gostei muito da melodia, mas gostaria que o tempo fosse um pouco mais rápido. Também seria bom ter mais ênfase nos graves.',
+            feedback: 'Apreciei a melodia principal e o conceito geral. Sugiro modificar a estrutura na seção do refrão para enfatizar mais a transição entre as estrofes. Também seria interessante adicionar algumas variações na progressão de acordes do final.',
             versions: [
               { id: 'v1', name: 'Versão Inicial', url: '#', dateAdded: '15/03/2025', recommended: true },
               { id: 'v2', name: 'Versão Revisada', url: '#', dateAdded: '22/03/2025' }
@@ -203,7 +189,6 @@ const PreviewProjectPage: React.FC = () => {
     );
   }
 
-  // Verificar se o projeto está prestes a expirar (3 dias ou menos)
   const isNearExpiration = () => {
     const expirationParts = project.expirationDate.split('/');
     const expirationDate = new Date(
@@ -247,14 +232,12 @@ const PreviewProjectPage: React.FC = () => {
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
-          {/* Componente de informações do cliente */}
           <ProjectClientInfo client={{
             name: project.clientName,
             email: project.clientEmail,
             packageType: project.packageType
           }} />
 
-          {/* Componente de status do projeto */}
           <ProjectStatusCard 
             status={project.status}
             createdAt={project.createdAt}
@@ -262,7 +245,6 @@ const PreviewProjectPage: React.FC = () => {
             isNearExpiration={isNearExpiration()}
           />
 
-          {/* Componente de ações rápidas */}
           <ProjectActionCard 
             onAddVersion={() => setShowAddVersion(true)}
             onExtendDeadline={() => setShowExtendDialog(true)}
@@ -278,22 +260,18 @@ const PreviewProjectPage: React.FC = () => {
           </TabsList>
           
           <TabsContent value="versions" className="mt-4">
-            {/* Componente de listagem de versões */}
             <PreviewVersionsList versions={project.versions} />
           </TabsContent>
           
           <TabsContent value="feedback" className="mt-4">
-            {/* Componente de feedback do cliente */}
             <ClientFeedbackCard feedback={project.feedback} status={project.status} />
           </TabsContent>
           
           <TabsContent value="history" className="mt-4">
-            {/* Componente de histórico do projeto */}
             <ProjectHistoryList history={project.history} />
           </TabsContent>
         </Tabs>
 
-        {/* Dialog para adicionar nova versão */}
         <Dialog open={showAddVersion} onOpenChange={setShowAddVersion}>
           <DialogContent className="sm:max-w-[600px]">
             <DialogHeader>
@@ -303,7 +281,6 @@ const PreviewProjectPage: React.FC = () => {
               </DialogDescription>
             </DialogHeader>
             
-            {/* Formulário para adicionar versão */}
             <AddVersionForm 
               projectId={projectId || ''} 
               onAddComplete={(versionName) => {
@@ -318,7 +295,6 @@ const PreviewProjectPage: React.FC = () => {
           </DialogContent>
         </Dialog>
 
-        {/* Dialog para estender prazo */}
         <Dialog open={showExtendDialog} onOpenChange={setShowExtendDialog}>
           <DialogContent>
             <DialogHeader>
@@ -355,7 +331,6 @@ const PreviewProjectPage: React.FC = () => {
           </DialogContent>
         </Dialog>
 
-        {/* Dialog para enviar notificação */}
         <Dialog open={showNotifyDialog} onOpenChange={setShowNotifyDialog}>
           <DialogContent>
             <DialogHeader>

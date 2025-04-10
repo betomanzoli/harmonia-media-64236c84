@@ -2,8 +2,8 @@
 import React, { useState, useEffect } from 'react';
 import { useParams } from 'react-router-dom';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Card } from "@/components/ui/card";
-import { Lock } from 'lucide-react';
+import { useToast } from '@/hooks/use-toast';
+import { usePreviewData } from '@/hooks/use-preview-data';
 import PreviewHeader from './PreviewHeader';
 import PreviewInstructions from './PreviewInstructions';
 import PreviewPlayerList from './PreviewPlayerList';
@@ -11,22 +11,12 @@ import PreviewFeedbackForm from './PreviewFeedbackForm';
 import PreviewNextSteps from './PreviewNextSteps';
 import PreviewLoadingState from './PreviewLoadingState';
 import PreviewFooter from './PreviewFooter';
-import { useToast } from '@/hooks/use-toast';
-import { usePreviewData } from '@/hooks/use-preview-data';
-
-interface MusicPreview {
-  id: string;
-  title: string;
-  description: string;
-  audioUrl: string;
-}
 
 const MusicPreviewSystem: React.FC = () => {
   const { projectId } = useParams<{ projectId: string }>();
   const { toast } = useToast();
   const [selectedVersion, setSelectedVersion] = useState<string | null>(null);
   const [feedback, setFeedback] = useState('');
-  const [isProtected, setIsProtected] = useState(true);
   
   // Usar o hook personalizado para buscar dados do projeto
   const { projectData, setProjectData, isLoading } = usePreviewData(projectId);

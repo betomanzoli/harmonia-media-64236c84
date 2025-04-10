@@ -1,0 +1,73 @@
+
+import React from 'react';
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Link } from "react-router-dom";
+import { FileMusic, AlertTriangle, CheckCircle, MessageSquare, ArrowRight } from "lucide-react";
+
+const DashboardPreviewsCard: React.FC = () => {
+  // Dados simulados para o card
+  const previewsStats = {
+    totalProjects: 10,
+    awaitingFeedback: 3,
+    feedbackReceived: 2,
+    approved: 5,
+    expiringSoon: 1,
+  };
+
+  return (
+    <Card>
+      <CardHeader className="flex flex-row items-center justify-between pb-2">
+        <CardTitle className="text-md font-medium">Sistema de Prévias</CardTitle>
+        <FileMusic className="h-4 w-4 text-muted-foreground" />
+      </CardHeader>
+      <CardContent>
+        <div className="space-y-4">
+          <div className="grid grid-cols-2 gap-4">
+            <div className="flex flex-col">
+              <span className="text-3xl font-bold">{previewsStats.totalProjects}</span>
+              <span className="text-xs text-muted-foreground">Total de projetos</span>
+            </div>
+            <div className="flex items-center justify-end">
+              <div className="flex flex-col items-end">
+                <div className="flex items-center text-sm text-yellow-500 mb-1">
+                  <span className="mr-1">{previewsStats.awaitingFeedback}</span>
+                  <AlertTriangle className="h-3 w-3" />
+                </div>
+                <div className="flex items-center text-sm text-blue-500 mb-1">
+                  <span className="mr-1">{previewsStats.feedbackReceived}</span>
+                  <MessageSquare className="h-3 w-3" />
+                </div>
+                <div className="flex items-center text-sm text-green-500">
+                  <span className="mr-1">{previewsStats.approved}</span>
+                  <CheckCircle className="h-3 w-3" />
+                </div>
+              </div>
+            </div>
+          </div>
+          
+          {previewsStats.expiringSoon > 0 && (
+            <div className="p-2 bg-amber-50 border border-amber-200 rounded text-xs text-amber-700 flex items-center">
+              <AlertTriangle className="h-3 w-3 mr-1" />
+              <span>{previewsStats.expiringSoon} projeto(s) próximo(s) da expiração</span>
+            </div>
+          )}
+          
+          <Button 
+            variant="outline" 
+            size="sm" 
+            className="w-full text-harmonia-green border-harmonia-green hover:bg-harmonia-green/10"
+            asChild
+          >
+            <Link to="/admin-j28s7d1k/previews">
+              Gerenciar Prévias
+              <ArrowRight className="ml-2 h-3 w-3" />
+            </Link>
+          </Button>
+        </div>
+      </CardContent>
+    </Card>
+  );
+};
+
+export default DashboardPreviewsCard;

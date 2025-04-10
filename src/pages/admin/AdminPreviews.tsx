@@ -5,16 +5,15 @@ import { usePreviewProjects } from '@/hooks/admin/usePreviewProjects';
 import PreviewsHeader from '@/components/admin/previews/PreviewsHeader';
 import ProjectsListCard from '@/components/admin/previews/ProjectsListCard';
 import NewProjectForm from '@/components/admin/previews/NewProjectForm';
-import { ScrollArea } from "@/components/ui/scroll-area";
 import { Button } from "@/components/ui/button";
 import { HelpCircle, ArrowLeft } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { Link } from 'react-router-dom';
 import WebhookUrlManager from '@/components/admin/integrations/WebhookUrlManager';
+import AdminPreviewGuide from '@/components/admin/guides/AdminPreviewGuide';
 import { 
   Dialog, 
   DialogContent, 
-  DialogDescription, 
   DialogHeader, 
   DialogTitle,
   DialogTrigger 
@@ -68,75 +67,11 @@ const AdminPreviews: React.FC = () => {
                   Guia do sistema
                 </Button>
               </DialogTrigger>
-              <DialogContent className="max-w-3xl max-h-[80vh] overflow-auto">
+              <DialogContent className="max-w-4xl max-h-[80vh] overflow-auto">
                 <DialogHeader>
-                  <DialogTitle>Sistema de Prévias Musicais - Guia Rápido</DialogTitle>
-                  <DialogDescription>
-                    Este guia explica como gerenciar o fluxo de trabalho com as prévias musicais.
-                  </DialogDescription>
+                  <DialogTitle>Sistema de Prévias Musicais - Guia Detalhado</DialogTitle>
                 </DialogHeader>
-                
-                <div className="space-y-4 mt-4">
-                  <h3 className="text-lg font-medium">Fluxo de trabalho de prévias musicais</h3>
-                  
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                    <div className="border rounded-md p-4 bg-yellow-50 border-yellow-200">
-                      <h4 className="font-medium text-yellow-800 mb-2">1. Criação</h4>
-                      <ul className="text-sm space-y-2 text-yellow-700">
-                        <li>Crie um novo projeto de prévia</li>
-                        <li>Adicione múltiplas versões musicais</li>
-                        <li>Notifique o cliente automaticamente</li>
-                      </ul>
-                    </div>
-                    
-                    <div className="border rounded-md p-4 bg-blue-50 border-blue-200">
-                      <h4 className="font-medium text-blue-800 mb-2">2. Feedback</h4>
-                      <ul className="text-sm space-y-2 text-blue-700">
-                        <li>O cliente seleciona uma versão</li>
-                        <li>Envia feedback detalhado</li>
-                        <li>Você recebe notificação</li>
-                      </ul>
-                    </div>
-                    
-                    <div className="border rounded-md p-4 bg-green-50 border-green-200">
-                      <h4 className="font-medium text-green-800 mb-2">3. Aprovação</h4>
-                      <ul className="text-sm space-y-2 text-green-700">
-                        <li>Cliente aprova uma versão</li>
-                        <li>Projeto avança para produção final</li>
-                        <li>Sistema notifica equipe interna</li>
-                      </ul>
-                    </div>
-                  </div>
-                  
-                  <h3 className="text-lg font-medium pt-4">Prazos e Lembretes</h3>
-                  <p className="text-sm text-gray-600">
-                    Projetos têm um prazo para avaliação. A tabela destaca projetos com prazos próximos do vencimento.
-                    Envie lembretes se o cliente não responder.
-                  </p>
-                  
-                  <h3 className="text-lg font-medium pt-4">Experiência do cliente</h3>
-                  <p className="text-sm text-gray-600 mb-2">
-                    O cliente acessa uma interface simplificada que permite:
-                  </p>
-                  <ul className="text-sm text-gray-600 space-y-1 list-disc pl-5">
-                    <li>Ouvir todas as versões</li>
-                    <li>Selecionar a versão preferida</li>
-                    <li>Enviar feedback detalhado</li>
-                    <li>Aprovar diretamente uma versão</li>
-                  </ul>
-                  
-                  <div className="pt-4">
-                    <a 
-                      href="/PREVIEWS_README.md" 
-                      target="_blank" 
-                      rel="noopener noreferrer" 
-                      className="text-harmonia-green hover:underline text-sm inline-flex items-center"
-                    >
-                      <HelpCircle className="h-4 w-4 mr-1" />
-                      Ver documentação completa
-                    </a>
-                  </div>
-                </div>
+                <AdminPreviewGuide />
               </DialogContent>
             </Dialog>
           </div>
