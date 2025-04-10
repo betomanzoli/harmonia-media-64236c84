@@ -11,6 +11,7 @@ export interface ProjectItem {
   versions: number;
   previewUrl: string;
   expirationDate: string;
+  lastActivityDate?: string;
 }
 
 export const usePreviewProjects = () => {
@@ -23,8 +24,9 @@ export const usePreviewProjects = () => {
       createdAt: '05/04/2025',
       status: 'waiting',
       versions: 3,
-      previewUrl: '/previews/preview123',
-      expirationDate: '12/04/2025'
+      previewUrl: '/preview/HAR-2025-0001',
+      expirationDate: '12/04/2025',
+      lastActivityDate: '05/04/2025'
     },
     {
       id: 'HAR-2025-0002',
@@ -34,8 +36,9 @@ export const usePreviewProjects = () => {
       createdAt: '06/04/2025',
       status: 'feedback',
       versions: 5,
-      previewUrl: '/previews/preview456',
-      expirationDate: '13/04/2025'
+      previewUrl: '/preview/HAR-2025-0002',
+      expirationDate: '13/04/2025',
+      lastActivityDate: '08/04/2025'
     },
     {
       id: 'HAR-2025-0003',
@@ -45,26 +48,46 @@ export const usePreviewProjects = () => {
       createdAt: '07/04/2025',
       status: 'approved',
       versions: 2,
-      previewUrl: '/previews/preview789',
-      expirationDate: '14/04/2025'
+      previewUrl: '/preview/HAR-2025-0003',
+      expirationDate: '14/04/2025',
+      lastActivityDate: '09/04/2025'
     }
   ]);
 
   const addProject = (project: Omit<ProjectItem, 'id'>) => {
     const newId = `HAR-2025-000${projects.length + 1}`;
-    setProjects(prev => [
-      {
-        ...project,
-        id: newId
-      },
-      ...prev
-    ]);
+    const newProject = {
+      ...project,
+      id: newId,
+      previewUrl: `/preview/${newId}`
+    };
+    
+    setProjects(prev => [newProject, ...prev]);
     return newId;
+  };
+
+  const updateProject = (projectId: string, updates: Partial<ProjectItem>) => {
+    setProjects(prev => 
+      prev.map(project => 
+        project.id === projectId ? { ...project, ...updates } : project
+      )
+    );
+  };
+
+  const deleteProject = (projectId: string) => {
+    setProjects(prev => prev.filter(project => project.id !== projectId));
+  };
+
+  const getProjectById = (projectId: string) => {
+    return projects.find(project => project.id === projectId);
   };
 
   return {
     projects,
     setProjects,
-    addProject
+    addProject,
+    updateProject,
+    deleteProject,
+    getProjectById
   };
 };

@@ -12,6 +12,7 @@ import PreviewLibrary from './pages/PreviewLibrary';
 import Dashboard from './pages/admin/Dashboard';
 import AdminStorage from './pages/admin/AdminStorage';
 import AdminPreviews from './pages/admin/AdminPreviews';
+import AdminBriefings from './pages/admin/AdminBriefings';
 import AdminOrders from './pages/admin/AdminOrders';
 import AdminInvoices from './pages/admin/AdminInvoices';
 import AdminCustomers from './pages/admin/AdminCustomers';
@@ -24,6 +25,7 @@ import AdminPortfolio from './pages/admin/AdminPortfolio';
 import AdminIntegrations from './pages/admin/AdminIntegrations';
 import CreditRefundRequest from './pages/CreditRefundRequest';
 import OrderTracking from './pages/OrderTracking';
+import MusicPreviewPage from './pages/MusicPreviewPage';
 
 function App() {
   return (
@@ -38,6 +40,7 @@ function App() {
         <Route path="/preview-library" element={<PreviewLibrary />} />
         <Route path="/credit-refund-request" element={<CreditRefundRequest />} />
         <Route path="/acompanhar-pedido" element={<OrderTracking />} />
+        <Route path="/preview/:projectId" element={<MusicPreviewPage />} />
         
         {/* Admin Routes */}
         <Route path="/admin-j28s7d1k/login" element={<AdminLogin />} />
@@ -46,6 +49,7 @@ function App() {
         <Route path="/admin-j28s7d1k/storage" element={<AdminStorage />} />
         <Route path="/admin-j28s7d1k/previews" element={<AdminPreviews />} />
         <Route path="/admin-j28s7d1k/previews/:projectId" element={<PreviewProjectPage />} />
+        <Route path="/admin-j28s7d1k/briefings" element={<AdminBriefings />} />
         <Route path="/admin-j28s7d1k/orders" element={<AdminOrders />} />
         <Route path="/admin-j28s7d1k/invoices" element={<AdminInvoices />} />
         <Route path="/admin-j28s7d1k/customers" element={<AdminCustomers />} />

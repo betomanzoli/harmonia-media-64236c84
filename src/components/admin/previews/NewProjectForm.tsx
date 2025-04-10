@@ -1,191 +1,299 @@
 
-import React from 'react';
-import { Plus, Check, RefreshCw, HelpCircle } from 'lucide-react';
-import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter } from "@/components/ui/card";
+import React, { useState } from 'react';
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { Form, FormField, FormItem, FormLabel, FormControl, FormDescription } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import ProjectVersionItem from './ProjectVersionItem';
-import { useNewProjectForm } from '@/hooks/admin/useNewProjectForm';
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
+import { useForm } from "react-hook-form";
+import { usePreviewProjects } from '@/hooks/admin/usePreviewProjects';
+import { useToast } from '@/hooks/use-toast';
+import { Plus, Trash, CalendarDays, Upload } from 'lucide-react';
+import ProjectVersionItem from '@/components/admin/previews/ProjectVersionItem';
+import { notificationService } from '@/services/notificationService';
+
+interface FormValues {
+  clientName: string;
+  clientEmail: string;
+  packageType: string;
+  expirationDays: string;
+  notifyClient: boolean;
+}
 
 const NewProjectForm: React.FC = () => {
-  const {
-    newProject,
-    handleCreateProject,
-    handleAddVersion,
-    handleRemoveVersion,
-    handleVersionChange,
-    handleFileChange,
-    isCreating,
-    isUploading,
-  } = useNewProjectForm();
+  const { addProject } = usePreviewProjects();
+  const { toast } = useToast();
+  const [versions, setVersions] = useState<{title: string; description: string; audioFile: File | null}[]>([
+    { title: '', description: '', audioFile: null }
+  ]);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  
+  const form = useForm<FormValues>({
+    defaultValues: {
+      clientName: '',
+      clientEmail: '',
+      packageType: 'profissional',
+      expirationDays: '7',
+      notifyClient: true
+    }
+  });
+
+  const onSubmit = async (data: FormValues) => {
+    // Verificar se todas as versões têm título e descrição
+    const invalidVersion = versions.find(v => !v.title || !v.description || !v.audioFile);
+    if (invalidVersion) {
+      toast({
+        title: "Informações incompletas",
+        description: "Todas as versões precisam ter título, descrição e arquivo de áudio.",
+        variant: "destructive"
+      });
+      return;
+    }
+    
+    setIsSubmitting(true);
+    
+    // Calcular data de expiração
+    const today = new Date();
+    const expirationDate = new Date();
+    expirationDate.setDate(today.getDate() + parseInt(data.expirationDays));
+    
+    const formattedCreationDate = today.toLocaleDateString('pt-BR');
+    const formattedExpirationDate = expirationDate.toLocaleDateString('pt-BR');
+    
+    // Criar projeto
+    try {
+      // Em produção, enviar dados para API
+      const projectId = addProject({
+        clientName: data.clientName,
+        clientEmail: data.clientEmail,
+        packageType: data.packageType,
+        createdAt: formattedCreationDate,
+        status: 'waiting',
+        versions: versions.length,
+        previewUrl: '',
+        expirationDate: formattedExpirationDate,
+        lastActivityDate: formattedCreationDate
+      });
+      
+      // Notificar sobre novo projeto
+      if (data.notifyClient) {
+        notificationService.notify('new_preview', {
+          projectId,
+          clientName: data.clientName,
+          clientEmail: data.clientEmail,
+          expirationDate: formattedExpirationDate
+        });
+      }
+      
+      toast({
+        title: "Projeto criado com sucesso",
+        description: `Projeto ${projectId} criado e ${versions.length} versões adicionadas.`,
+      });
+      
+      // Limpar formulário
+      form.reset();
+      setVersions([{ title: '', description: '', audioFile: null }]);
+    } catch (error) {
+      console.error('Erro ao criar projeto:', error);
+      toast({
+        title: "Erro ao criar projeto",
+        description: "Ocorreu um erro ao criar o projeto. Por favor, tente novamente.",
+        variant: "destructive"
+      });
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  const addVersion = () => {
+    setVersions([...versions, { title: '', description: '', audioFile: null }]);
+  };
+
+  const removeVersion = (index: number) => {
+    if (versions.length === 1) {
+      toast({
+        title: "Ação não permitida",
+        description: "O projeto precisa ter pelo menos uma versão.",
+        variant: "destructive"
+      });
+      return;
+    }
+    
+    const newVersions = [...versions];
+    newVersions.splice(index, 1);
+    setVersions(newVersions);
+  };
+
+  const handleTitleChange = (index: number, value: string) => {
+    const newVersions = [...versions];
+    newVersions[index].title = value;
+    setVersions(newVersions);
+  };
+
+  const handleDescriptionChange = (index: number, value: string) => {
+    const newVersions = [...versions];
+    newVersions[index].description = value;
+    setVersions(newVersions);
+  };
+
+  const handleFileChange = (index: number, event: React.ChangeEvent<HTMLInputElement>) => {
+    if (event.target.files && event.target.files.length > 0) {
+      const newVersions = [...versions];
+      newVersions[index].audioFile = event.target.files[0];
+      setVersions(newVersions);
+    }
+  };
 
   return (
-    <Card id="new-project-form">
+    <Card id="new-project-form" className="mb-20">
       <CardHeader>
-        <CardTitle className="flex items-center gap-2">
-          Criar Novo Projeto de Prévias
-          <TooltipProvider>
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <HelpCircle className="w-4 h-4 text-gray-400" />
-              </TooltipTrigger>
-              <TooltipContent side="right" className="max-w-sm">
-                <p>Crie um novo projeto para enviar versões musicais para avaliação do cliente.
-                O cliente receberá um email com um link para a página de avaliação.</p>
-              </TooltipContent>
-            </Tooltip>
-          </TooltipProvider>
-        </CardTitle>
-        <CardDescription>
-          Preencha os dados do cliente e faça upload das versões musicais
-        </CardDescription>
+        <CardTitle className="text-harmonia-green">Criar novo projeto de prévia</CardTitle>
       </CardHeader>
       <CardContent>
-        <form onSubmit={handleCreateProject}>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
-            <div className="space-y-2">
-              <label className="text-sm font-medium">Nome do Cliente</label>
-              <Input
-                value={newProject.clientName}
-                onChange={e => newProject.setClientName(e.target.value)}
-                required
-                placeholder="Ex: João Silva"
-              />
-            </div>
-            
-            <div className="space-y-2">
-              <label className="text-sm font-medium">Email do Cliente</label>
-              <Input
-                type="email"
-                value={newProject.clientEmail}
-                onChange={e => newProject.setClientEmail(e.target.value)}
-                required
-                placeholder="Ex: cliente@email.com"
-              />
-            </div>
-            
-            <div className="space-y-2">
-              <label className="text-sm font-medium">Pacote</label>
-              <Select
-                value={newProject.packageType}
-                onValueChange={value => newProject.setPackageType(value)}
-                required
-              >
-                <SelectTrigger>
-                  <SelectValue placeholder="Selecione o pacote" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="Essencial">Essencial</SelectItem>
-                  <SelectItem value="Profissional">Profissional</SelectItem>
-                  <SelectItem value="Premium">Premium</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-            
-            <div className="space-y-2">
-              <label className="text-sm font-medium">Prazo para Avaliação</label>
-              <Select
-                value={newProject.expirationDays}
-                onValueChange={value => newProject.setExpirationDays(value)}
-                required
-              >
-                <SelectTrigger>
-                  <SelectValue placeholder="Selecione o prazo" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="3">3 dias</SelectItem>
-                  <SelectItem value="7">7 dias</SelectItem>
-                  <SelectItem value="10">10 dias</SelectItem>
-                  <SelectItem value="15">15 dias</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-          </div>
-          
-          <div className="mb-6">
-            <div className="flex items-center justify-between mb-4">
-              <h3 className="text-lg font-semibold">Versões Musicais</h3>
-              <Button 
-                type="button" 
-                variant="outline" 
-                size="sm"
-                onClick={handleAddVersion}
-                disabled={newProject.versions.length >= 5}
-              >
-                <Plus className="w-4 h-4 mr-2" />
-                Adicionar Versão
-              </Button>
-            </div>
-            
-            {newProject.versions.length === 0 ? (
-              <div className="border border-dashed border-gray-300 rounded-lg p-8 text-center text-gray-500">
-                <p>Adicione pelo menos uma versão musical para este projeto.</p>
-                <Button 
-                  type="button" 
-                  variant="outline" 
-                  size="sm"
-                  onClick={handleAddVersion}
-                  className="mt-4"
-                >
-                  <Plus className="w-4 h-4 mr-2" />
-                  Adicionar Primeira Versão
-                </Button>
-              </div>
-            ) : (
+        <Form {...form}>
+          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div className="space-y-6">
-                {newProject.versions.map((version, index) => (
+                <FormField
+                  control={form.control}
+                  name="clientName"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Nome do cliente</FormLabel>
+                      <FormControl>
+                        <Input {...field} required />
+                      </FormControl>
+                    </FormItem>
+                  )}
+                />
+                
+                <FormField
+                  control={form.control}
+                  name="clientEmail"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Email do cliente</FormLabel>
+                      <FormControl>
+                        <Input type="email" {...field} required />
+                      </FormControl>
+                    </FormItem>
+                  )}
+                />
+              </div>
+              
+              <div className="space-y-6">
+                <FormField
+                  control={form.control}
+                  name="packageType"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Pacote contratado</FormLabel>
+                      <Select
+                        onValueChange={field.onChange}
+                        defaultValue={field.value}
+                      >
+                        <FormControl>
+                          <SelectTrigger>
+                            <SelectValue placeholder="Selecione um pacote" />
+                          </SelectTrigger>
+                        </FormControl>
+                        <SelectContent>
+                          <SelectItem value="essencial">Essencial</SelectItem>
+                          <SelectItem value="profissional">Profissional</SelectItem>
+                          <SelectItem value="premium">Premium</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </FormItem>
+                  )}
+                />
+                
+                <FormField
+                  control={form.control}
+                  name="expirationDays"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Prazo para avaliação</FormLabel>
+                      <Select
+                        onValueChange={field.onChange}
+                        defaultValue={field.value}
+                      >
+                        <FormControl>
+                          <SelectTrigger>
+                            <SelectValue placeholder="Selecione o prazo" />
+                          </SelectTrigger>
+                        </FormControl>
+                        <SelectContent>
+                          <SelectItem value="3">3 dias</SelectItem>
+                          <SelectItem value="7">7 dias</SelectItem>
+                          <SelectItem value="10">10 dias</SelectItem>
+                          <SelectItem value="15">15 dias</SelectItem>
+                        </SelectContent>
+                      </Select>
+                      <FormDescription className="flex items-center">
+                        <CalendarDays className="h-3 w-3 mr-1" />
+                        O cliente terá esse prazo para avaliar as versões
+                      </FormDescription>
+                    </FormItem>
+                  )}
+                />
+              </div>
+            </div>
+            
+            <div className="border-t pt-6">
+              <h3 className="text-lg font-medium mb-4">Versões musicais</h3>
+              
+              <div className="space-y-4">
+                {versions.map((version, index) => (
                   <ProjectVersionItem
                     key={index}
                     version={version}
                     index={index}
-                    onRemove={handleRemoveVersion}
-                    onTitleChange={(index, value) => handleVersionChange(index, 'title', value)}
-                    onDescriptionChange={(index, value) => handleVersionChange(index, 'description', value)}
+                    onRemove={removeVersion}
+                    onTitleChange={handleTitleChange}
+                    onDescriptionChange={handleDescriptionChange}
                     onFileChange={handleFileChange}
                   />
                 ))}
               </div>
-            )}
+              
+              <Button
+                type="button"
+                variant="outline"
+                className="mt-4"
+                onClick={addVersion}
+              >
+                <Plus className="h-4 w-4 mr-2" />
+                Adicionar outra versão
+              </Button>
+            </div>
             
-            {newProject.versions.length >= 5 && (
-              <p className="text-sm text-amber-600 mt-4">
-                Limite máximo de 5 versões atingido. Recomendamos limitar o número de opções para facilitar a decisão do cliente.
-              </p>
-            )}
-          </div>
-          
-          <div className="flex justify-end">
-            <Button 
-              type="submit" 
-              className="bg-harmonia-green hover:bg-harmonia-green/90"
-              disabled={isCreating || isUploading || newProject.versions.length === 0}
-            >
-              {isCreating ? (
-                <>
-                  <RefreshCw className="w-4 h-4 mr-2 animate-spin" />
-                  {isUploading ? 'Enviando arquivos...' : 'Criando projeto...'}
-                </>
-              ) : (
-                <>
-                  <Check className="w-4 h-4 mr-2" />
-                  Criar Projeto e Notificar Cliente
-                </>
-              )}
-            </Button>
-          </div>
-        </form>
+            <div className="border-t pt-6">
+              <Button 
+                type="submit" 
+                className="w-full sm:w-auto bg-harmonia-green hover:bg-harmonia-green/90"
+                disabled={isSubmitting}
+              >
+                {isSubmitting ? (
+                  <>
+                    <span className="animate-spin mr-2">
+                      <svg className="h-4 w-4" viewBox="0 0 24 24">
+                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" />
+                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
+                      </svg>
+                    </span>
+                    Criando projeto...
+                  </>
+                ) : (
+                  <>
+                    <Upload className="h-4 w-4 mr-2" />
+                    Criar projeto e notificar cliente
+                  </>
+                )}
+              </Button>
+            </div>
+          </form>
+        </Form>
       </CardContent>
-      <CardFooter className="flex-col items-start text-sm text-gray-500 border-t pt-4">
-        <h4 className="font-medium text-gray-600 mb-2">Informações importantes:</h4>
-        <ul className="list-disc pl-5 space-y-1">
-          <li>O cliente receberá um email automático com um link único para acessar as prévias</li>
-          <li>As prévias ficam disponíveis pelo período selecionado, após esse prazo o link expira</li>
-          <li>Você será notificado quando o cliente enviar feedback ou aprovar uma versão</li>
-          <li>Arquivos de áudio devem ser em formato MP3 e não devem ultrapassar 20MB cada</li>
-        </ul>
-      </CardFooter>
     </Card>
   );
 };
