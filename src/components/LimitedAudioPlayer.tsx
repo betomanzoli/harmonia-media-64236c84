@@ -3,6 +3,7 @@ import React, { useState, useRef, useEffect } from 'react';
 import { Card } from "@/components/ui/card";
 import { Slider } from "@/components/ui/slider";
 import { Play, Pause, Lock } from 'lucide-react';
+import { useToast } from '@/hooks/use-toast';
 
 interface LimitedAudioPlayerProps {
   audioSrc: string;
@@ -23,6 +24,7 @@ const LimitedAudioPlayer: React.FC<LimitedAudioPlayerProps> = ({
   const [isLimited, setIsLimited] = useState(true);
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const audioElementRef = useRef<HTMLAudioElement | null>(null);
+  const { toast } = useToast();
   
   useEffect(() => {
     const audio = new Audio(audioSrc);
@@ -41,6 +43,10 @@ const LimitedAudioPlayer: React.FC<LimitedAudioPlayerProps> = ({
         audio.pause();
         audio.currentTime = 0;
         setIsPlaying(false);
+        toast({
+          title: "Prévia finalizada",
+          description: "Esta é apenas uma prévia de 30 segundos. A versão completa estará disponível após a aprovação.",
+        });
       }
     };
     
@@ -79,7 +85,7 @@ const LimitedAudioPlayer: React.FC<LimitedAudioPlayerProps> = ({
         document.body.removeChild(audioElementRef.current);
       }
     };
-  }, [audioSrc, previewDuration, isLimited]);
+  }, [audioSrc, previewDuration, isLimited, toast]);
   
   const preventContextMenu = (e: MouseEvent) => {
     if ((e.target as HTMLElement)?.closest('audio')) {
@@ -100,7 +106,14 @@ const LimitedAudioPlayer: React.FC<LimitedAudioPlayerProps> = ({
         setCurrentTime(0);
       }
       
-      audioRef.current.play();
+      audioRef.current.play().catch(error => {
+        console.error("Erro ao reproduzir áudio:", error);
+        toast({
+          title: "Erro ao reproduzir",
+          description: "Não foi possível reproduzir o áudio. Tente novamente.",
+          variant: "destructive"
+        });
+      });
     }
     
     setIsPlaying(!isPlaying);
@@ -115,6 +128,10 @@ const LimitedAudioPlayer: React.FC<LimitedAudioPlayerProps> = ({
     if (isLimited && newTime > previewDuration) {
       audioRef.current.currentTime = previewDuration;
       setCurrentTime(previewDuration);
+      toast({
+        title: "Prévia limitada",
+        description: "Esta é apenas uma prévia de 30 segundos.",
+      });
     } else {
       audioRef.current.currentTime = newTime;
       setCurrentTime(newTime);

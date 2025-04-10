@@ -29,10 +29,29 @@ const MusicPreviewPage: React.FC = () => {
       return false;
     };
 
+    // Add protection against keyboard shortcuts
+    const handleKeyDown = (e: KeyboardEvent) => {
+      // Prevent Ctrl+S, Ctrl+U, F12
+      if (
+        (e.ctrlKey && (e.key === 's' || e.key === 'S' || e.key === 'u' || e.key === 'U')) ||
+        e.key === 'F12'
+      ) {
+        e.preventDefault();
+        toast({
+          title: "Proteção de conteúdo",
+          description: "Esta ação não é permitida na página de prévias.",
+          variant: "destructive"
+        });
+        return false;
+      }
+    };
+
     document.addEventListener("contextmenu", handleContextMenu);
+    document.addEventListener("keydown", handleKeyDown);
     
     return () => {
       document.removeEventListener("contextmenu", handleContextMenu);
+      document.removeEventListener("keydown", handleKeyDown);
     };
   }, [toast]);
 

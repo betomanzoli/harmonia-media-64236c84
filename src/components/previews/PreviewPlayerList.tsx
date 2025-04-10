@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { Check } from 'lucide-react';
+import { Check, Lock } from 'lucide-react';
 import { Button } from "@/components/ui/button";
 import LimitedAudioPlayer from '@/components/LimitedAudioPlayer';
 
@@ -39,6 +39,11 @@ const PreviewPlayerList: React.FC<PreviewPlayerListProps> = ({
               Versão {index + 1}
             </div>
             
+            <div className="absolute -top-3 right-3 bg-harmonia-green/20 px-2 py-0.5 text-xs font-medium text-harmonia-green rounded-full flex items-center gap-1">
+              <Lock className="w-3 h-3" />
+              Prévia 30s
+            </div>
+            
             <LimitedAudioPlayer 
               title={preview.title}
               subtitle={preview.description}
@@ -50,7 +55,7 @@ const PreviewPlayerList: React.FC<PreviewPlayerListProps> = ({
               <Button 
                 variant="outline" 
                 size="sm"
-                className="absolute top-6 right-6 bg-harmonia-green/20 text-harmonia-green border-harmonia-green"
+                className="absolute bottom-6 right-6 bg-harmonia-green/20 text-harmonia-green border-harmonia-green"
                 disabled
               >
                 <Check className="w-4 h-4 mr-2" />
@@ -60,7 +65,7 @@ const PreviewPlayerList: React.FC<PreviewPlayerListProps> = ({
               <Button 
                 variant="outline" 
                 size="sm"
-                className="absolute top-6 right-6 hover:bg-harmonia-green/20 hover:text-harmonia-green"
+                className="absolute bottom-6 right-6 hover:bg-harmonia-green/20 hover:text-harmonia-green"
                 onClick={() => setSelectedPreview(preview.id)}
                 disabled={isApproved}
               >
