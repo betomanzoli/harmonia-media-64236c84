@@ -9,6 +9,8 @@ import PreviewInstructions from './PreviewInstructions';
 import PreviewPlayerList from './PreviewPlayerList';
 import PreviewFeedbackForm from './PreviewFeedbackForm';
 import PreviewNextSteps from './PreviewNextSteps';
+import PreviewLoadingState from './PreviewLoadingState';
+import PreviewFooter from './PreviewFooter';
 import { useToast } from '@/hooks/use-toast';
 import { usePreviewData } from '@/hooks/use-preview-data';
 
@@ -26,10 +28,10 @@ const MusicPreviewSystem: React.FC = () => {
   const [feedback, setFeedback] = useState('');
   const [isProtected, setIsProtected] = useState(true);
   
-  // In a real implementation, use the custom hook to fetch project data
-  const { projectData, setProjectData } = usePreviewProject(projectId);
+  // Usar o hook personalizado para buscar dados do projeto
+  const { projectData, setProjectData, isLoading } = usePreviewData(projectId);
   
-  // Add protection to prevent audio downloads
+  // Adicionar proteção para impedir downloads de áudio
   useEffect(() => {
     const handleContextMenu = (e: MouseEvent) => {
       if ((e.target as HTMLElement)?.closest('audio')) {
@@ -65,7 +67,7 @@ const MusicPreviewSystem: React.FC = () => {
       description: "Obrigado pelo seu feedback. Nossa equipe já está analisando.",
     });
     
-    // Update status locally for demo purposes
+    // Atualizar status localmente para propósitos de demonstração
     setProjectData(prev => prev ? {...prev, status: 'feedback' as const} : null);
   };
   
@@ -84,11 +86,11 @@ const MusicPreviewSystem: React.FC = () => {
       description: "Excelente escolha! Vamos finalizar sua música e entregar em breve.",
     });
     
-    // Update status locally for demo purposes
+    // Atualizar status localmente para propósitos de demonstração
     setProjectData(prev => prev ? {...prev, status: 'approved' as const} : null);
   };
   
-  if (!projectData) {
+  if (isLoading || !projectData) {
     return <PreviewLoadingState />;
   }
   

@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import Header from '@/components/Header';
@@ -79,7 +78,6 @@ const MusicPreviews: React.FC = () => {
   const [feedback, setFeedback] = useState('');
   const [previewData, setPreviewData] = useState<typeof MOCK_PREVIEWS[string] | null>(null);
   
-  // Certifique-se de que o previewId é tratado corretamente
   useEffect(() => {
     console.log("Preview ID:", previewId);
     
@@ -111,7 +109,6 @@ const MusicPreviews: React.FC = () => {
       description: "Obrigado pelo seu feedback. Nossa equipe já está trabalhando nas modificações.",
     });
     
-    // Atualiza estado local para mostrar o status correto
     setPreviewData(prev => prev ? {...prev, status: 'feedback' as const} : null);
   };
   
@@ -130,7 +127,6 @@ const MusicPreviews: React.FC = () => {
       description: "Estamos felizes que você gostou! Vamos finalizar sua música e entregar em breve.",
     });
     
-    // Atualiza estado local para mostrar o status correto
     setPreviewData(prev => prev ? {...prev, status: 'approved' as const} : null);
   };
   
@@ -161,9 +157,11 @@ const MusicPreviews: React.FC = () => {
       <main className="pt-24 pb-20 px-6 md:px-10">
         <div className="max-w-4xl mx-auto">
           <PreviewHeader 
-            clientName={previewData.clientName} 
-            projectTitle={previewData.projectTitle}
-            status={previewData.status}
+            projectData={{
+              projectTitle: previewData.projectTitle,
+              clientName: previewData.clientName,
+              status: previewData.status
+            }}
           />
           
           <PreviewInstructions status={previewData.status} />
