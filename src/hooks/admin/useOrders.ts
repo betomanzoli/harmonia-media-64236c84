@@ -1,4 +1,6 @@
+
 import { useState, useEffect, useCallback } from 'react';
+import notificationService from '@/services/notificationService';
 
 interface OrderCustomer {
   id: string;
@@ -144,12 +146,10 @@ export function useOrders() {
     loadOrders();
     
     // Adicionar notificação para novos pedidos
-    if (typeof window !== 'undefined' && window.notificationService) {
-      window.notificationService.notify('new_order', {
-        id: `order-${Date.now()}`,
-        timestamp: new Date().toISOString()
-      });
-    }
+    notificationService.notify('new_order', {
+      id: `order-${Date.now()}`,
+      timestamp: new Date().toISOString()
+    });
   }, []);
 
   useEffect(() => {

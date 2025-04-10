@@ -69,7 +69,7 @@ export function useAudioOperations(isOfflineMode: boolean) {
       const { error } = await supabase
         .from('audio_samples')
         .delete()
-        .eq('id', id);  // Changed from match to eq
+        .eq('id', id);
 
       if (error) throw new Error(error.message);
       
@@ -109,18 +109,32 @@ export function useAudioOperations(isOfflineMode: boolean) {
         return { success: true, data: filteredSamples };
       }
 
-      // Fixed query structure for Supabase
+      // Iniciar a consulta
       let queryBuilder = supabase.from('audio_samples').select('*');
       
-      // Apply filters
+      // Aplicar filtros se fornecidos
       if (query) {
-        queryBuilder = queryBuilder.ilike('title', `%${query}%`);
+        // Usando objetos de consulta em vez de encadeamento direto
+        const response = await queryBuilder;
+        
+        if (response.error) throw new Error(response.error.message);
+        
+        // Filtrar manualmente os resultados (backup para o caso de falha da consulta)
+        const filtered = (response.data || []).filter(sample => 
+          sample.title.toLowerCase().includes(query.toLowerCase())
+        );
+        
+        if (category) {
+          return { 
+            success: true, 
+            data: filtered.filter(sample => sample.category === category)
+          };
+        }
+        
+        return { success: true, data: filtered };
       }
       
-      if (category) {
-        queryBuilder = queryBuilder.eq('category', category);
-      }
-      
+      // Se não houver consulta, obter todos os dados
       const { data, error } = await queryBuilder;
       
       if (error) throw new Error(error.message);

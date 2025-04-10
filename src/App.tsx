@@ -1,132 +1,55 @@
-import { Toaster } from './components/ui/toaster';
-import { Toaster as Sonner } from './components/ui/sonner';
-import { TooltipProvider } from './components/ui/tooltip';
-import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
-import AdminAuthProvider from './components/admin/auth/AdminAuthProvider';
-import ProtectedRoute from './components/admin/auth/ProtectedRoute';
-import Index from './pages/Index';
-import Calculator from './pages/Calculator';
-import Briefing from './pages/Briefing';
-import NotFound from './pages/NotFound';
-import AudioDatabase from './pages/AudioDatabase';
-import AdminLogin from './pages/admin/AdminLogin';
-import AdminPortfolio from './pages/admin/AdminPortfolio';
-import AdminDashboard from './pages/admin/Dashboard';
+import React from 'react';
+import { BrowserRouter as Router, Route, Routes } from 'react-router-dom';
+import Home from './pages/Home';
+import AdminDashboard from './pages/admin/AdminDashboard';
+import AdminStorage from './pages/admin/AdminStorage';
 import AdminPreviews from './pages/admin/AdminPreviews';
-import AdminIntegrations from './pages/admin/AdminIntegrations';
+import AdminBriefings from './pages/admin/AdminBriefings';
 import AdminOrders from './pages/admin/AdminOrders';
-import AdminCustomers from './pages/admin/AdminCustomers';
-import AdminStatistics from './pages/admin/AdminStatistics';
-import AdminSettings from './pages/admin/AdminSettings';
-import Packages from './pages/Packages';
-import Portfolio from './pages/Portfolio';
-import PrivacyPolicy from './pages/PrivacyPolicy';
-import Terms from './pages/Terms';
-import OrderTracking from './pages/OrderTracking';
-import MusicPreviews from './pages/MusicPreviews';
-import MusicPreviewSystem from './components/previews/MusicPreviewSystem';
-import FeedbackConfirmation from './pages/FeedbackConfirmation';
-import ApprovalConfirmation from './pages/ApprovalConfirmation';
-import Qualification from './pages/Qualification';
-import ThankYou from './pages/ThankYou';
-import Payment from './pages/Payment';
-import PaymentReturn from './pages/PaymentReturn';
 import AdminInvoices from './pages/admin/AdminInvoices';
-import PaymentProcessing from './pages/PaymentProcessing';
-import { siteConfig } from './config/site';
+import AdminCustomers from './pages/admin/AdminCustomers';
+import AdminSettings from './pages/admin/AdminSettings';
+import Login from './pages/admin/Login';
+import ResetPassword from './pages/admin/ResetPassword';
+import Header from './components/Header';
+import Footer from './components/Footer';
+import Portfolio from './components/Portfolio';
+import Services from './components/Services';
+import Contact from './components/Contact';
+import BriefingForm from './components/BriefingForm';
+import PreviewProjectPage from './pages/admin/PreviewProjectPage';
+import AudioDatabase from './pages/admin/AudioDatabase';
+import PreviewLibrary from './pages/PreviewLibrary';
 
-const queryClient = new QueryClient();
+function App() {
+  return (
+    <Router>
+      <Header />
+      <Routes>
+        <Route path="/" element={<Home />} />
+        <Route path="/portfolio" element={<Portfolio />} />
+        <Route path="/services" element={<Services />} />
+        <Route path="/contact" element={<Contact />} />
+        <Route path="/briefing" element={<BriefingForm />} />
 
-const App = () => (
-  <QueryClientProvider client={queryClient}>
-    <TooltipProvider>
-      <Toaster />
-      <Sonner />
-      <Router>
-        <AdminAuthProvider>
-          <Routes>
-            <Route path="/" element={<Index />} />
-            <Route path="/calculadora" element={<Calculator />} />
-            <Route path={siteConfig.urls.briefing} element={<Briefing />} />
-            <Route path="/portfolio" element={<Portfolio />} />
-            <Route path="/pacotes" element={<Packages />} />
-            <Route path="/privacidade" element={<PrivacyPolicy />} />
-            <Route path="/termos" element={<Terms />} />
-            <Route path="/acompanhar-pedido" element={<OrderTracking />} />
-            <Route path="/admin-login" element={<AdminLogin />} />
-            <Route path="/admin-reset-password" element={<AdminLogin />} />
-            
-            <Route path="/admin-j28s7d1k/dashboard" element={
-              <ProtectedRoute>
-                <AdminDashboard />
-              </ProtectedRoute>
-            } />
-            <Route path="/admin-j28s7d1k/previews" element={
-              <ProtectedRoute>
-                <AdminPreviews />
-              </ProtectedRoute>
-            } />
-            <Route path="/admin-j28s7d1k/integrations" element={
-              <ProtectedRoute>
-                <AdminIntegrations />
-              </ProtectedRoute>
-            } />
-            <Route path="/admin-j28s7d1k/orders" element={
-              <ProtectedRoute>
-                <AdminOrders />
-              </ProtectedRoute>
-            } />
-            <Route path="/admin-j28s7d1k/customers" element={
-              <ProtectedRoute>
-                <AdminCustomers />
-              </ProtectedRoute>
-            } />
-            <Route path="/admin-j28s7d1k/statistics" element={
-              <ProtectedRoute>
-                <AdminStatistics />
-              </ProtectedRoute>
-            } />
-            <Route path="/admin-j28s7d1k/settings" element={
-              <ProtectedRoute>
-                <AdminSettings />
-              </ProtectedRoute>
-            } />
-            <Route path={siteConfig.urls.admin.audioDatabase} element={
-              <ProtectedRoute>
-                <AudioDatabase />
-              </ProtectedRoute>
-            } />
-            <Route path={siteConfig.urls.admin.portfolio} element={
-              <ProtectedRoute>
-                <AdminPortfolio />
-              </ProtectedRoute>
-            } />
-            <Route path="/admin-j28s7d1k/invoices" element={
-              <ProtectedRoute>
-                <AdminInvoices />
-              </ProtectedRoute>
-            } />
-            
-            <Route path="/previews/:previewId" element={<MusicPreviews />} />
-            <Route path="/cliente/previews/:projectId" element={<MusicPreviewSystem />} />
-            <Route path="/feedback-confirmacao" element={<FeedbackConfirmation />} />
-            <Route path="/aprovacao-confirmacao" element={<ApprovalConfirmation />} />
-            
-            <Route path="/qualificacao" element={<Qualification />} />
-            <Route path="/agradecimento" element={<ThankYou />} />
-            
-            <Route path="/pagamento" element={<Payment />} />
-            <Route path="/pagamento/:packageId" element={<Payment />} />
-            <Route path="/pagamento-processando" element={<PaymentProcessing />} />
-            <Route path="/pagamento-retorno" element={<PaymentReturn />} />
-            
-            <Route path="*" element={<NotFound />} />
-          </Routes>
-        </AdminAuthProvider>
-      </Router>
-    </TooltipProvider>
-  </QueryClientProvider>
-);
+        {/* Admin Routes */}
+        <Route path="/admin-j28s7d1k/login" element={<Login />} />
+        <Route path="/admin-j28s7d1k/reset-password" element={<ResetPassword />} />
+        <Route path="/admin-j28s7d1k/dashboard" element={<AdminDashboard />} />
+        <Route path="/admin-j28s7d1k/storage" element={<AdminStorage />} />
+        <Route path="/admin-j28s7d1k/previews" element={<AdminPreviews />} />
+        <Route path="/admin-j28s7d1k/previews/:projectId" element={<PreviewProjectPage />} />
+        <Route path="/admin-j28s7d1k/briefings" element={<AdminBriefings />} />
+        <Route path="/admin-j28s7d1k/orders" element={<AdminOrders />} />
+        <Route path="/admin-j28s7d1k/invoices" element={<AdminInvoices />} />
+        <Route path="/admin-j28s7d1k/customers" element={<AdminCustomers />} />
+        <Route path="/admin-j28s7d1k/settings" element={<AdminSettings />} />
+        <Route path="/admin-j28s7d1k/audio-database" element={<AudioDatabase />} />
+        <Route path="/preview-library" element={<PreviewLibrary />} />
+      </Routes>
+      <Footer />
+    </Router>
+  );
+}
 
 export default App;

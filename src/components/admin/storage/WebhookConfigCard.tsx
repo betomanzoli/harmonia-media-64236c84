@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
 import { Check, AlertCircle, Clipboard, Send, Save } from "lucide-react";
-import webhookService from '@/services/webhookService';
+import webhookService, { NotificationType } from '@/services/webhookService';
 
 const WebhookConfigCard: React.FC = () => {
   const [webhookUrl, setWebhookUrl] = useState('');
@@ -82,7 +82,7 @@ const WebhookConfigCard: React.FC = () => {
     
     try {
       const testPayload = {
-        type: 'test_message',
+        type: 'test_message' as NotificationType,
         data: { 
           testMessage: "Este é um teste de configuração do webhook da harmonIA",
           timestamp: new Date().toISOString()
