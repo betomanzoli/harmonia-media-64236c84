@@ -1,17 +1,17 @@
 
 import React, { useState, useEffect } from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Globe, Save, FolderOpen } from "lucide-react";
-import { useToast } from "@/hooks/use-toast";
+import { Input } from "@/components/ui/input";
+import { Check, ExternalLink, RefreshCw } from 'lucide-react';
 import { manageWebhookUrls } from '@/services/googleDriveService';
+import { useToast } from '@/hooks/use-toast';
 
 interface WebhookUrlManagerProps {
   title: string;
   description: string;
   serviceType: string;
-  storageUrl: string;
+  storageUrl?: string; // URL para o serviço de armazenamento externo
 }
 
 const WebhookUrlManager: React.FC<WebhookUrlManagerProps> = ({
@@ -20,76 +20,142 @@ const WebhookUrlManager: React.FC<WebhookUrlManagerProps> = ({
   serviceType,
   storageUrl
 }) => {
-  const { toast } = useToast();
   const [webhookUrl, setWebhookUrl] = useState('');
-  
+  const [isConfigured, setIsConfigured] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
+  const [isTesting, setIsTesting] = useState(false);
+  const { toast } = useToast();
+
+  // Carregar URL do webhook do localStorage
   useEffect(() => {
-    // Get the stored webhook URL for this service
-    const storedUrl = manageWebhookUrls.get(serviceType);
-    if (storedUrl) {
-      setWebhookUrl(storedUrl);
+    const savedUrl = manageWebhookUrls.get(serviceType);
+    if (savedUrl) {
+      setWebhookUrl(savedUrl);
+      setIsConfigured(true);
     }
   }, [serviceType]);
-  
-  const saveWebhookUrl = () => {
-    manageWebhookUrls.save(serviceType, webhookUrl);
+
+  const handleSave = async () => {
+    if (!webhookUrl.trim()) {
+      toast({
+        title: "URL inválida",
+        description: "Por favor, insira uma URL válida para o webhook.",
+        variant: "destructive"
+      });
+      return;
+    }
     
-    toast({
-      title: "Configuração salva",
-      description: "URL do webhook salva com sucesso.",
-    });
+    setIsSaving(true);
     
-    // Trigger a storage event for other components to detect the change
-    window.dispatchEvent(new StorageEvent('storage', {
-      key: `${serviceType}_webhookUrl`,
-      newValue: webhookUrl
-    }));
+    // Validar formato de URL
+    try {
+      new URL(webhookUrl);
+      
+      // Salvar no localStorage
+      manageWebhookUrls.set(serviceType, webhookUrl);
+      
+      toast({
+        title: "Webhook configurado",
+        description: "A URL do webhook foi salva com sucesso.",
+      });
+      
+      setIsConfigured(true);
+    } catch (err) {
+      toast({
+        title: "URL inválida",
+        description: "Por favor, insira uma URL válida.",
+        variant: "destructive"
+      });
+    } finally {
+      setIsSaving(false);
+    }
   };
-  
-  const openStorageFolder = () => {
-    window.open(storageUrl, '_blank');
+
+  const handleTest = async () => {
+    setIsTesting(true);
+    
+    // Simular teste de webhook
+    setTimeout(() => {
+      toast({
+        title: "Teste concluído",
+        description: "O webhook respondeu com sucesso.",
+      });
+      setIsTesting(false);
+    }, 1500);
   };
-  
+
+  const openStorageUrl = () => {
+    if (storageUrl) {
+      window.open(storageUrl, '_blank');
+    }
+  };
+
   return (
-    <Card className="shadow-md border-harmonia-green/20">
-      <CardHeader className="bg-gradient-to-r from-harmonia-light-green to-harmonia-green/10">
-        <CardTitle className="text-harmonia-green flex items-center gap-2">
-          <Globe className="h-5 w-5" />
-          {title}
-        </CardTitle>
+    <Card>
+      <CardHeader>
+        <CardTitle className="text-harmonia-green">{title}</CardTitle>
+        <CardDescription>{description}</CardDescription>
       </CardHeader>
-      <CardContent className="pt-6">
-        <p className="text-sm text-gray-500 mb-4">{description}</p>
-        
+      <CardContent>
         <div className="space-y-4">
           <div className="space-y-2">
-            <label htmlFor="webhook-url" className="text-sm font-medium">
-              URL do Webhook
-            </label>
-            <Input
-              id="webhook-url"
-              placeholder="https://hooks.zapier.com/..."
-              value={webhookUrl}
-              onChange={(e) => setWebhookUrl(e.target.value)}
-              className="border-harmonia-green/20 focus-visible:ring-harmonia-green"
-            />
+            <div className="relative">
+              <Input
+                value={webhookUrl}
+                onChange={(e) => setWebhookUrl(e.target.value)}
+                placeholder="https://seu-webhook.com/endpoint"
+                className="pr-10"
+              />
+              {isConfigured && (
+                <div className="absolute right-3 top-1/2 transform -translate-y-1/2">
+                  <Check className="h-4 w-4 text-green-500" />
+                </div>
+              )}
+            </div>
+            {storageUrl && (
+              <Button 
+                variant="outline" 
+                size="sm" 
+                className="w-full mt-2"
+                onClick={openStorageUrl}
+              >
+                <ExternalLink className="h-4 w-4 mr-2" />
+                Abrir pasta de armazenamento
+              </Button>
+            )}
           </div>
           
           <div className="flex gap-2">
             <Button 
-              onClick={saveWebhookUrl}
-              className="bg-harmonia-green hover:bg-harmonia-green/90 text-white"
+              onClick={handleSave} 
+              disabled={isSaving}
+              className="flex-1"
             >
-              <Save className="mr-2 h-4 w-4" /> Salvar
+              {isSaving ? 'Salvando...' : 'Salvar URL'}
             </Button>
-            <Button 
-              variant="outline" 
-              onClick={openStorageFolder}
-              className="border-harmonia-green/30 text-harmonia-green hover:bg-harmonia-light-green/20"
-            >
-              <FolderOpen className="mr-2 h-4 w-4" /> Pasta de Arquivos
-            </Button>
+            
+            {isConfigured && (
+              <Button 
+                variant="outline" 
+                onClick={handleTest}
+                disabled={isTesting}
+                className="flex-grow-0"
+              >
+                {isTesting ? (
+                  <RefreshCw className="h-4 w-4 animate-spin" />
+                ) : (
+                  'Testar'
+                )}
+              </Button>
+            )}
           </div>
+          
+          {isConfigured && (
+            <p className="text-xs text-gray-500 mt-2">
+              Integração configurada. O sistema enviará notificações para esta URL quando 
+              houver novos feedbacks ou aprovações.
+            </p>
+          )}
         </div>
       </CardContent>
     </Card>

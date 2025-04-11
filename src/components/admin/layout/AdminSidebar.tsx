@@ -50,9 +50,9 @@ const AdminSidebar: React.FC = () => {
   ];
 
   return (
-    <div className="flex flex-col w-64 border-r bg-gray-50">
-      <div className="h-16 flex items-center justify-center border-b">
-        <span className="text-lg font-bold">harmonIA Admin</span>
+    <div className="flex flex-col w-64 border-r border-gray-700 bg-gray-900">
+      <div className="h-16 flex items-center justify-center border-b border-gray-700">
+        <span className="text-lg font-bold text-harmonia-green">harmonIA Admin</span>
       </div>
       <nav className="flex-1 py-4">
         <ul>
@@ -66,7 +66,7 @@ const AdminSidebar: React.FC = () => {
                         href={link.href}
                         target="_blank"
                         rel="noopener noreferrer"
-                        className={`flex items-center px-4 py-2 text-sm font-medium rounded-md hover:bg-gray-200`}
+                        className={`flex items-center px-4 py-2 text-sm font-medium rounded-md hover:bg-gray-800 text-gray-300`}
                       >
                         {link.icon}
                         <span className="ml-3">{link.label}</span>
@@ -74,8 +74,8 @@ const AdminSidebar: React.FC = () => {
                     ) : (
                       <Link
                         to={link.href}
-                        className={`flex items-center px-4 py-2 text-sm font-medium rounded-md hover:bg-gray-200 ${
-                          location.pathname === link.href ? 'bg-gray-200' : ''
+                        className={`flex items-center px-4 py-2 text-sm font-medium rounded-md hover:bg-gray-800 text-gray-300 ${
+                          location.pathname === link.href ? 'bg-gray-800 text-harmonia-green' : ''
                         }`}
                       >
                         {link.icon}
