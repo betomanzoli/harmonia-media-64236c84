@@ -60,7 +60,7 @@ const Contact: React.FC = () => {
         </div>
         
         <div className="mt-12 text-center text-gray-500">
-          <p>Horário de Atendimento: Segunda a Sexta: 9h às 18h | Sábado: 9h às 13h</p>
+          <p>Horário de Atendimento: Segunda a Sexta: 9h às 18h</p>
         </div>
       </div>
     </section>

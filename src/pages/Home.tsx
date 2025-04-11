@@ -2,7 +2,6 @@
 import React from 'react';
 import Hero from '@/components/Hero';
 import Services from '@/components/Services';
-import Process from '@/components/Process';
 import Testimonials from '@/components/Testimonials';
 import { Button } from '@/components/ui/button';
 import { ArrowRight } from 'lucide-react';
@@ -23,7 +22,6 @@ const Home: React.FC = () => {
       <main>
         <Hero />
         <Services />
-        <Process />
         <Testimonials showTestimonials={false} />
 
         {/* Call to Action */}

@@ -89,14 +89,6 @@ const Footer: React.FC = () => {
                   <Music className="w-4 h-4" /> Portfólio
                 </NavLink>
               </li>
-              <li>
-                <NavLink 
-                  href="/#processo" 
-                  className="text-gray-400 hover:text-harmonia-green transition-colors flex items-center gap-1"
-                >
-                  <Clock className="w-4 h-4" /> Processo
-                </NavLink>
-              </li>
             </ul>
           </div>
           

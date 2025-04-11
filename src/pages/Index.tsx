@@ -3,7 +3,6 @@ import React from 'react';
 import Header from '@/components/Header';
 import Hero from '@/components/Hero';
 import Services from '@/components/Services';
-import Process from '@/components/Process';
 import Footer from '@/components/Footer';
 import Testimonials from '@/components/Testimonials';
 import { Button } from '@/components/ui/button';
@@ -26,7 +25,6 @@ const Index: React.FC = () => {
       <main>
         <Hero />
         <Services />
-        <Process />
         <Testimonials showTestimonials={false} />
 
         {/* Call to Action */}

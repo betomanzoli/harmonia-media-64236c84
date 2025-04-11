@@ -1,7 +1,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { Menu, X, Calculator, FileCheck } from 'lucide-react';
+import { Menu, X, Calculator } from 'lucide-react';
 import { Button } from "@/components/ui/button";
 import Logo from './Logo';
 
@@ -83,13 +83,6 @@ const Header: React.FC = () => {
                   Calcular Preço
                 </Link>
               </Button>
-              
-              <Button asChild size="sm" variant="outline" className="border-harmonia-green/70 text-harmonia-green hover:bg-harmonia-green/10">
-                <Link to="/qualificacao" className="flex items-center gap-1">
-                  <FileCheck className="w-4 h-4" />
-                  Qualificação
-                </Link>
-              </Button>
             </div>
           </nav>
 
@@ -151,13 +144,6 @@ const Header: React.FC = () => {
                   <Link to="/calculadora" className="flex items-center gap-1" onClick={() => setIsMenuOpen(false)}>
                     <Calculator className="w-4 h-4" />
                     Calcular Preço
-                  </Link>
-                </Button>
-                
-                <Button asChild size="sm" variant="outline" className="border-harmonia-green/70 text-harmonia-green hover:bg-harmonia-green/10">
-                  <Link to="/qualificacao" className="flex items-center gap-1" onClick={() => setIsMenuOpen(false)}>
-                    <FileCheck className="w-4 h-4" />
-                    Qualificação
                   </Link>
                 </Button>
               </div>
