@@ -1,3 +1,4 @@
+
 // Service to manage webhooks
 import { supabase } from '@/lib/supabase';
 
@@ -134,6 +135,14 @@ const sendItemNotification = async (
     return false;
   }
 };
+
+// Initialize default webhook URL on service load
+(async () => {
+  const url = await getWebhookUrl();
+  if (!url) {
+    await saveWebhookUrl(DEFAULT_WEBHOOK_URL);
+  }
+})();
 
 export default {
   getWebhookUrl,

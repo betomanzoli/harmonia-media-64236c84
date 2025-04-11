@@ -1,104 +1,85 @@
 
 import React, { useState, useEffect } from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Label } from "@/components/ui/label";
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { useToast } from "@/components/ui/use-toast";
-import { Check, AlertCircle, Clipboard, Send, Save } from "lucide-react";
-import webhookService, { NotificationType } from '@/services/webhookService';
+import { Loader2, ArrowRight, Send } from 'lucide-react';
+import { useToast } from '@/hooks/use-toast';
+import webhookService from '@/services/webhookService';
 
-const WEBHOOK_STORAGE_KEY = 'harmonia_webhook_url';
 const DEFAULT_WEBHOOK_URL = 'https://hooks.zapier.com/hooks/catch/22316385/2031hl7/';
 
 const WebhookConfigCard: React.FC = () => {
-  const [webhookUrl, setWebhookUrl] = useState('');
-  const [isSaving, setIsSaving] = useState(false);
-  const [isTesting, setIsTesting] = useState(false);
-  const [isConfigured, setIsConfigured] = useState(false);
+  const [webhookUrl, setWebhookUrl] = useState<string>('');
+  const [isLoading, setIsLoading] = useState<boolean>(false);
+  const [isTesting, setIsTesting] = useState<boolean>(false);
+  const [isConfigured, setIsConfigured] = useState<boolean>(false);
   const { toast } = useToast();
-
+  
   useEffect(() => {
-    async function loadWebhookUrl() {
-      // First try to get from local storage for immediate UI feedback
-      const savedUrl = localStorage.getItem(WEBHOOK_STORAGE_KEY) || DEFAULT_WEBHOOK_URL;
-      
+    const loadSavedUrl = async () => {
+      setIsLoading(true);
+      const savedUrl = await webhookService.getWebhookUrl();
       if (savedUrl) {
         setWebhookUrl(savedUrl);
         setIsConfigured(true);
       } else {
-        // If not in localStorage, try getting from the service
-        const url = await webhookService.getWebhookUrl();
-        if (url) {
-          setWebhookUrl(url);
-          setIsConfigured(true);
-          // Also save to localStorage for persistence
-          localStorage.setItem(WEBHOOK_STORAGE_KEY, url);
-        } else {
-          // If still no URL, use the default
-          setWebhookUrl(DEFAULT_WEBHOOK_URL);
-          setIsConfigured(true);
-          localStorage.setItem(WEBHOOK_STORAGE_KEY, DEFAULT_WEBHOOK_URL);
-        }
+        setWebhookUrl(DEFAULT_WEBHOOK_URL);
+        setIsConfigured(false);
       }
-    }
+      setIsLoading(false);
+    };
     
-    loadWebhookUrl();
+    loadSavedUrl();
   }, []);
-
+  
   const saveWebhookUrl = async () => {
     if (!webhookUrl.trim()) {
       toast({
-        title: "URL não informada",
-        description: "Por favor, informe uma URL de webhook válida.",
-        variant: "destructive",
+        title: "URL não pode ser vazia",
+        description: "Por favor, insira uma URL válida para o webhook.",
+        variant: "destructive"
       });
       return;
     }
     
-    setIsSaving(true);
+    setIsLoading(true);
     
     try {
-      // Save to localStorage for persistence across page reloads
-      localStorage.setItem(WEBHOOK_STORAGE_KEY, webhookUrl);
+      const success = await webhookService.saveWebhookUrl(webhookUrl);
       
-      const result = await webhookService.saveWebhookUrl(webhookUrl);
-      
-      if (result) {
+      if (success) {
         setIsConfigured(true);
         toast({
-          title: "Webhook configurado",
-          description: "A URL do webhook foi salva com sucesso.",
+          title: "Configuração salva",
+          description: "URL do webhook foi salva com sucesso.",
         });
       } else {
-        // Even if the service fails, we still have it in localStorage
-        setIsConfigured(true);
         toast({
-          title: "Webhook configurado localmente",
-          description: "A URL do webhook foi salva localmente.",
+          title: "Erro ao salvar",
+          description: "Não foi possível salvar a URL do webhook.",
+          variant: "destructive"
         });
       }
     } catch (error) {
-      console.error("Erro ao salvar webhook:", error);
-      // Save to localStorage even if the service fails
-      localStorage.setItem(WEBHOOK_STORAGE_KEY, webhookUrl);
-      setIsConfigured(true);
+      console.error('Erro ao salvar webhook:', error);
       toast({
-        title: "Webhook configurado localmente",
-        description: "A URL do webhook foi salva localmente.",
+        title: "Erro",
+        description: "Ocorreu um erro ao salvar a configuração.",
+        variant: "destructive"
       });
     } finally {
-      setIsSaving(false);
+      setIsLoading(false);
     }
   };
-
-  const testWebhook = async () => {
+  
+  const sendTestWebhook = async () => {
     if (!webhookUrl.trim()) {
       toast({
         title: "URL não configurada",
-        description: "Configure uma URL de webhook antes de testar.",
-        variant: "destructive",
+        description: "Configure uma URL de webhook antes de enviar um teste.",
+        variant: "destructive"
       });
       return;
     }
@@ -107,142 +88,97 @@ const WebhookConfigCard: React.FC = () => {
     
     try {
       const testPayload = {
-        type: 'test_message' as NotificationType,
-        data: { 
-          testMessage: "Este é um teste de configuração do webhook da harmonIA",
-          timestamp: new Date().toISOString()
-        },
+        type: 'test_message',
+        data: { message: "Teste de configuração do webhook da harmonIA" },
         timestamp: new Date().toISOString()
       };
       
-      const result = await webhookService.sendToWebhook(webhookUrl, testPayload);
+      const success = await webhookService.sendToWebhook(webhookUrl, testPayload);
       
-      if (result) {
+      if (success) {
         toast({
           title: "Teste enviado",
-          description: "O teste foi enviado com sucesso para o webhook.",
+          description: "Ping de teste enviado com sucesso para o webhook.",
         });
       } else {
         toast({
-          title: "Erro no teste",
+          title: "Erro ao testar",
           description: "Não foi possível enviar o teste para o webhook.",
-          variant: "destructive",
+          variant: "destructive"
         });
       }
     } catch (error) {
-      console.error("Erro ao testar webhook:", error);
+      console.error('Erro ao testar webhook:', error);
       toast({
-        title: "Erro no teste",
+        title: "Erro",
         description: "Ocorreu um erro ao testar o webhook.",
-        variant: "destructive",
+        variant: "destructive"
       });
     } finally {
       setIsTesting(false);
     }
   };
-
-  const copyPayloadExample = () => {
-    const example = JSON.stringify({
-      type: 'new_order',
-      data: {
-        id: 'order-123',
-        client: 'Nome do Cliente',
-        package: 'Premium',
-        timestamp: new Date().toISOString()
-      },
-      timestamp: new Date().toISOString()
-    }, null, 2);
-    
-    navigator.clipboard.writeText(example);
-    
-    toast({
-      title: "Exemplo copiado",
-      description: "O exemplo de payload foi copiado para a área de transferência.",
-    });
-  };
-
+  
   return (
-    <Card className="shadow-md">
-      <CardHeader className="bg-gradient-to-r from-harmonia-light-green/20 to-harmonia-green/5">
-        <div className="flex justify-between items-center">
-          <CardTitle className="text-harmonia-green">Configuração de Notificações</CardTitle>
-          {isConfigured && (
-            <Badge variant="default" className="bg-green-500">
-              <Check className="w-3 h-3 mr-1" /> Configurado
-            </Badge>
-          )}
-        </div>
+    <Card className="mb-6">
+      <CardHeader>
+        <CardTitle className="flex items-center justify-between">
+          Configuração de Notificações
+          {isConfigured && <Badge className="bg-harmonia-green text-white">Configurado</Badge>}
+        </CardTitle>
+        <CardDescription>
+          Configure a URL do webhook para receber notificações de eventos do sistema
+        </CardDescription>
       </CardHeader>
-      <CardContent className="pt-6">
+      <CardContent>
         <div className="space-y-4">
-          <div className="space-y-2">
-            <Label htmlFor="webhook-url">URL do Webhook</Label>
+          <div className="flex items-center gap-2">
             <Input
-              id="webhook-url"
+              placeholder="URL do webhook (ex: https://hooks.zapier.com/...)"
               value={webhookUrl}
               onChange={(e) => setWebhookUrl(e.target.value)}
-              placeholder="https://seu-webhook.com/endpoint"
-              className="w-full"
+              className="flex-1"
             />
-            <p className="text-xs text-muted-foreground">
-              Esta URL receberá notificações sempre que houver um novo pedido, briefing ou ação importante no sistema.
-            </p>
-          </div>
-          
-          <div className="flex flex-wrap gap-2">
             <Button 
               onClick={saveWebhookUrl}
-              disabled={isSaving}
-              className="text-harmonia-green border-harmonia-green hover:bg-harmonia-light-green/20"
-              variant="outline"
+              disabled={isLoading}
+              className="bg-harmonia-green hover:bg-harmonia-green/90 text-white"
             >
-              {isSaving ? (
-                <>Salvando...</>
-              ) : (
-                <>
-                  <Save className="w-4 h-4 mr-2" />
-                  Salvar URL
-                </>
-              )}
-            </Button>
-            
-            <Button 
-              onClick={testWebhook}
-              disabled={isTesting || !isConfigured}
-              className="text-blue-600 border-blue-600 hover:bg-blue-50"
-              variant="outline"
-            >
-              {isTesting ? (
-                <>Enviando teste...</>
-              ) : (
-                <>
-                  <Send className="w-4 h-4 mr-2" />
-                  Enviar teste
-                </>
-              )}
-            </Button>
-            
-            <Button
-              onClick={copyPayloadExample}
-              variant="ghost"
-              className="text-gray-500"
-            >
-              <Clipboard className="w-4 h-4 mr-2" />
-              Copiar exemplo
+              {isLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : "Salvar"}
             </Button>
           </div>
           
-          <div className="mt-4 p-3 bg-amber-50 border border-amber-200 rounded-md">
-            <div className="flex items-start">
-              <AlertCircle className="w-5 h-5 text-amber-500 mr-2 mt-0.5" />
-              <div>
-                <h4 className="text-sm font-medium text-amber-800">Importante</h4>
-                <p className="text-xs text-amber-700">
-                  Configure um serviço que possa receber webhooks para integrar com a harmonIA.
-                  Plataformas como Zapier, Integromat, ou seu próprio backend podem ser usadas.
-                </p>
-              </div>
-            </div>
+          <div className="flex gap-2">
+            <Button 
+              variant="outline" 
+              onClick={sendTestWebhook}
+              disabled={!isConfigured || isTesting}
+              className="text-harmonia-green border-harmonia-green/30 hover:bg-harmonia-light-green/20"
+            >
+              {isTesting ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : <Send className="h-4 w-4 mr-2" />}
+              Enviar teste
+            </Button>
+            
+            <Button 
+              variant="outline"
+              asChild
+              className="text-harmonia-green border-harmonia-green/30 hover:bg-harmonia-light-green/20"
+            >
+              <a href="https://zapier.com/app/zaps" target="_blank" rel="noopener noreferrer">
+                Gerenciar no Zapier
+                <ArrowRight className="h-4 w-4 ml-2" />
+              </a>
+            </Button>
+          </div>
+          
+          <div className="text-sm text-gray-500">
+            <p>Use o webhook para integrar com:</p>
+            <ul className="list-disc pl-5 mt-1">
+              <li>Planilhas do Google</li>
+              <li>Automatização de emails</li>
+              <li>Notificações no Slack</li>
+              <li>Outros serviços via Zapier</li>
+            </ul>
           </div>
         </div>
       </CardContent>

@@ -1,3 +1,4 @@
+
 import React, { useEffect, useState } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
@@ -18,7 +19,8 @@ import ProjectActionCard from '@/components/admin/previews/ProjectActionCard';
 import ClientFeedbackCard from '@/components/admin/previews/ClientFeedbackCard';
 import ProjectHistoryList from '@/components/admin/previews/ProjectHistoryList';
 import AddVersionForm from '@/components/admin/previews/AddVersionForm';
-import { ArrowLeft, FileMusic, MessageCircle, Clock, Calendar, Send, Copy } from 'lucide-react';
+import NotificationGuide from '@/components/admin/guides/NotificationGuide';
+import { ArrowLeft, FileMusic, MessageCircle, Clock, Calendar, Send, Copy, HelpCircle } from 'lucide-react';
 
 const PreviewProjectPage: React.FC = () => {
   const { projectId } = useParams<{ projectId: string }>();
@@ -29,6 +31,7 @@ const PreviewProjectPage: React.FC = () => {
   const [showAddVersion, setShowAddVersion] = useState(false);
   const [showExtendDialog, setShowExtendDialog] = useState(false);
   const [showNotifyDialog, setShowNotifyDialog] = useState(false);
+  const [showHelpDialog, setShowHelpDialog] = useState(false);
   const [notificationMessage, setNotificationMessage] = useState('');
   const [extensionDays, setExtensionDays] = useState('7');
   const { projects } = usePreviewProjects();
@@ -216,6 +219,14 @@ const PreviewProjectPage: React.FC = () => {
             <h1 className="text-2xl font-bold text-harmonia-green">Projeto {project.id}</h1>
           </div>
           <div className="flex items-center gap-2">
+            <Button 
+              variant="outline" 
+              onClick={() => setShowHelpDialog(true)}
+              className="border-harmonia-green text-harmonia-green"
+            >
+              <HelpCircle className="mr-2 h-4 w-4" />
+              Ajuda
+            </Button>
             <Button variant="outline" onClick={copyPreviewLink}>
               <Copy className="mr-2 h-4 w-4" />
               Copiar link
@@ -273,7 +284,7 @@ const PreviewProjectPage: React.FC = () => {
         </Tabs>
 
         <Dialog open={showAddVersion} onOpenChange={setShowAddVersion}>
-          <DialogContent className="sm:max-w-[600px]">
+          <DialogContent className="sm:max-w-[650px] max-h-[90vh] overflow-auto">
             <DialogHeader>
               <DialogTitle>Adicionar nova versão</DialogTitle>
               <DialogDescription>
@@ -359,6 +370,15 @@ const PreviewProjectPage: React.FC = () => {
               <Button variant="outline" onClick={() => setShowNotifyDialog(false)}>Cancelar</Button>
               <Button onClick={sendNotification}>Enviar notificação</Button>
             </DialogFooter>
+          </DialogContent>
+        </Dialog>
+
+        <Dialog open={showHelpDialog} onOpenChange={setShowHelpDialog}>
+          <DialogContent className="sm:max-w-[700px] max-h-[80vh] overflow-auto">
+            <DialogHeader>
+              <DialogTitle>Como usar o sistema de notificações</DialogTitle>
+            </DialogHeader>
+            <NotificationGuide />
           </DialogContent>
         </Dialog>
       </div>
