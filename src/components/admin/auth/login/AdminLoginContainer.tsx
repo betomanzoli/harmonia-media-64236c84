@@ -10,7 +10,7 @@ import { useConnectionInfo } from './hooks/useConnectionInfo';
 const MotionCard = motion(Card);
 
 interface AdminLoginContainerProps {
-  onAuthenticate?: (email: string, password: string) => boolean;
+  onAuthenticate?: (email: string, password: string) => Promise<boolean>;
 }
 
 const AdminLoginContainer: React.FC<AdminLoginContainerProps> = ({ onAuthenticate }) => {
