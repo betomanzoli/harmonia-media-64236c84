@@ -1,4 +1,3 @@
-
 import { useToast } from '@/hooks/use-toast';
 import { STORAGE_FOLDERS } from '@/services/googleDriveService';
 
@@ -8,15 +7,15 @@ export type StorageType = 'briefings' | 'audio' | 'portfolio' | 'orders' |
 
 // Map storage types to folder IDs
 export const STORAGE_FOLDER_MAP: Record<StorageType, string> = {
-  briefings: "1brm0ombzUSBzGOdPuj4e0phlU9nKbvbs", // Using orders folder as it contains briefings
+  briefings: "1ChX97c1jpuMg87QIn1uuytVx6r89ONuw", // Updated with correct briefings folder
   audio: "1zOKfHNA7rAihCmEVKZtL191k8XgUsXMg",
   portfolio: "1MJk2diD6Bmb9Q6lNVDPnLePAznerOU29",
   orders: "1brm0ombzUSBzGOdPuj4e0phlU9nKbvbs",
   customers: "1fQWdtNPx7pHvMwJfhamtdHBJsdpLkIZZ",
   previews: "1lLw3oBgNhlpUiYbo3wevgUvjA0RTV7tN",
   integrations: "1uuhCHv0c5eePU9_m-0BdYiuo0-3vUwVJ",
-  invoices: "1uuhCHv0c5eePU9_m-0BdYiuo0-3vUwVJ",
-  final_versions: "1MJk2diD6Bmb9Q6lNVDPnLePAznerOU29" // Using portfolio folder for final versions
+  invoices: "1VKQ2b-huvEx_0JzxR_Nd5XfyZLwU2fqt", // Updated with correct invoices folder
+  final_versions: "1rUIb3In_y3HrEc-GR4oGPlSCvZ5JT7mx" // Updated with correct final versions folder
 };
 
 // Check if app is in offline mode

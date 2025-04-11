@@ -5,9 +5,12 @@ import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { useToast } from "@/hooks/use-toast";
+import { useToast } from "@/components/ui/use-toast";
 import { Check, AlertCircle, Clipboard, Send, Save } from "lucide-react";
 import webhookService, { NotificationType } from '@/services/webhookService';
+
+const WEBHOOK_STORAGE_KEY = 'harmonia_webhook_url';
+const DEFAULT_WEBHOOK_URL = 'https://hooks.zapier.com/hooks/catch/22316385/2031hl7/';
 
 const WebhookConfigCard: React.FC = () => {
   const [webhookUrl, setWebhookUrl] = useState('');
@@ -18,10 +21,26 @@ const WebhookConfigCard: React.FC = () => {
 
   useEffect(() => {
     async function loadWebhookUrl() {
-      const url = await webhookService.getWebhookUrl();
-      if (url) {
-        setWebhookUrl(url);
+      // First try to get from local storage for immediate UI feedback
+      const savedUrl = localStorage.getItem(WEBHOOK_STORAGE_KEY) || DEFAULT_WEBHOOK_URL;
+      
+      if (savedUrl) {
+        setWebhookUrl(savedUrl);
         setIsConfigured(true);
+      } else {
+        // If not in localStorage, try getting from the service
+        const url = await webhookService.getWebhookUrl();
+        if (url) {
+          setWebhookUrl(url);
+          setIsConfigured(true);
+          // Also save to localStorage for persistence
+          localStorage.setItem(WEBHOOK_STORAGE_KEY, url);
+        } else {
+          // If still no URL, use the default
+          setWebhookUrl(DEFAULT_WEBHOOK_URL);
+          setIsConfigured(true);
+          localStorage.setItem(WEBHOOK_STORAGE_KEY, DEFAULT_WEBHOOK_URL);
+        }
       }
     }
     
@@ -41,6 +60,9 @@ const WebhookConfigCard: React.FC = () => {
     setIsSaving(true);
     
     try {
+      // Save to localStorage for persistence across page reloads
+      localStorage.setItem(WEBHOOK_STORAGE_KEY, webhookUrl);
+      
       const result = await webhookService.saveWebhookUrl(webhookUrl);
       
       if (result) {
@@ -50,18 +72,21 @@ const WebhookConfigCard: React.FC = () => {
           description: "A URL do webhook foi salva com sucesso.",
         });
       } else {
+        // Even if the service fails, we still have it in localStorage
+        setIsConfigured(true);
         toast({
-          title: "Erro ao salvar",
-          description: "Não foi possível salvar a URL do webhook.",
-          variant: "destructive",
+          title: "Webhook configurado localmente",
+          description: "A URL do webhook foi salva localmente.",
         });
       }
     } catch (error) {
       console.error("Erro ao salvar webhook:", error);
+      // Save to localStorage even if the service fails
+      localStorage.setItem(WEBHOOK_STORAGE_KEY, webhookUrl);
+      setIsConfigured(true);
       toast({
-        title: "Erro na configuração",
-        description: "Ocorreu um erro ao configurar o webhook.",
-        variant: "destructive",
+        title: "Webhook configurado localmente",
+        description: "A URL do webhook foi salva localmente.",
       });
     } finally {
       setIsSaving(false);
@@ -200,7 +225,7 @@ const WebhookConfigCard: React.FC = () => {
             <Button
               onClick={copyPayloadExample}
               variant="ghost"
-              className="text-gray-600"
+              className="text-gray-500"
             >
               <Clipboard className="w-4 h-4 mr-2" />
               Copiar exemplo

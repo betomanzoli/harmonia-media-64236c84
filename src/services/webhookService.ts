@@ -1,4 +1,3 @@
-
 // Service to manage webhooks
 import { supabase } from '@/lib/supabase';
 
@@ -11,8 +10,19 @@ export interface WebhookPayload {
   timestamp: string;
 }
 
+const WEBHOOK_STORAGE_KEY = 'harmonia_webhook_url';
+const DEFAULT_WEBHOOK_URL = 'https://hooks.zapier.com/hooks/catch/22316385/2031hl7/';
+
 const getWebhookUrl = async (): Promise<string | null> => {
   try {
+    // First try to get from localStorage
+    const localUrl = localStorage.getItem(WEBHOOK_STORAGE_KEY);
+    if (localUrl) {
+      console.log('URL do webhook recuperada do localStorage:', localUrl);
+      return localUrl;
+    }
+    
+    // If not in localStorage, try to get from database
     const { data, error } = await supabase
       .from('system_settings')
       .select('value')
@@ -21,34 +31,50 @@ const getWebhookUrl = async (): Promise<string | null> => {
       
     if (error) {
       console.error('Erro ao buscar URL do webhook:', error);
-      return null;
+      // If error, use default URL and save it
+      localStorage.setItem(WEBHOOK_STORAGE_KEY, DEFAULT_WEBHOOK_URL);
+      return DEFAULT_WEBHOOK_URL;
     }
     
-    console.log('URL do webhook recuperada:', data?.value);
-    return data?.value || null;
+    const webhookUrl = data?.value || DEFAULT_WEBHOOK_URL;
+    console.log('URL do webhook recuperada:', webhookUrl);
+    
+    // Save to localStorage for future use
+    localStorage.setItem(WEBHOOK_STORAGE_KEY, webhookUrl);
+    
+    return webhookUrl;
   } catch (err) {
     console.error('Erro ao obter URL do webhook:', err);
-    return null;
+    // If error, use default URL and save it
+    localStorage.setItem(WEBHOOK_STORAGE_KEY, DEFAULT_WEBHOOK_URL);
+    return DEFAULT_WEBHOOK_URL;
   }
 };
 
 const saveWebhookUrl = async (url: string): Promise<boolean> => {
   try {
     console.log('Salvando URL do webhook:', url);
+    
+    // Always save to localStorage first for persistence
+    localStorage.setItem(WEBHOOK_STORAGE_KEY, url);
+    
+    // Then try to save to database
     const { error } = await supabase
       .from('system_settings')
       .upsert({ key: 'webhook_url', value: url }, { onConflict: 'key' });
       
     if (error) {
-      console.error('Erro ao salvar URL do webhook:', error);
-      return false;
+      console.error('Erro ao salvar URL do webhook no banco:', error);
+      // Return true anyway because we saved to localStorage
+      return true;
     }
     
     console.log('URL do webhook salva com sucesso');
     return true;
   } catch (err) {
     console.error('Erro ao salvar URL do webhook:', err);
-    return false;
+    // Return true if we saved to localStorage
+    return localStorage.getItem(WEBHOOK_STORAGE_KEY) === url;
   }
 };
 

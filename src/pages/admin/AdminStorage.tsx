@@ -37,9 +37,19 @@ const AdminStorage: React.FC = () => {
       url: "https://drive.google.com/drive/folders/1lLw3oBgNhlpUiYbo3wevgUvjA0RTV7tN"
     },
     {
+      title: "Briefings",
+      description: "Formulários de briefing enviados pelos clientes",
+      url: "https://drive.google.com/drive/folders/1ChX97c1jpuMg87QIn1uuytVx6r89ONuw?usp=drive_link"
+    },
+    {
+      title: "Faturas",
+      description: "Faturas e comprovantes de pagamento",
+      url: "https://drive.google.com/drive/folders/1VKQ2b-huvEx_0JzxR_Nd5XfyZLwU2fqt?usp=drive_link"
+    },
+    {
       title: "Versões Finais",
       description: "Músicas finalizadas e aprovadas",
-      url: "https://drive.google.com/drive/folders/1uuhCHv0c5eePU9_m-0BdYiuo0-3vUwVJ"
+      url: "https://drive.google.com/drive/folders/1rUIb3In_y3HrEc-GR4oGPlSCvZ5JT7mx?usp=drive_link"
     }
   ];
 
