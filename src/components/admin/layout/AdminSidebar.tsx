@@ -5,7 +5,7 @@ import {
   Home, Users, FileText, Music, Settings, PlayCircle, Calculator, 
   FileCheck, CheckSquare, Folder, BarChart2, Database, HardDrive,
   Mail, Briefcase, ShoppingBag, AlertTriangle, FileSpreadsheet, 
-  Headphones, Wrench, Layers
+  Headphones, Wrench, Layers, Info
 } from 'lucide-react';
 import {
   Tooltip,
@@ -102,7 +102,7 @@ const AdminSidebar: React.FC = () => {
     { 
       href: "/admin-j28s7d1k/guides", 
       label: "Guias", 
-      icon: <FileCheck className="h-4 w-4" />, 
+      icon: <Info className="h-4 w-4" />, 
       tooltip: "Documentação e guias do sistema" 
     },
     { 
@@ -110,13 +110,6 @@ const AdminSidebar: React.FC = () => {
       label: "Calculadora", 
       icon: <Calculator className="h-4 w-4" />, 
       tooltip: "Acessar calculadora de preços (site público)",
-      external: true 
-    },
-    { 
-      href: "/qualificacao", 
-      label: "Qualificação", 
-      icon: <FileCheck className="h-4 w-4" />, 
-      tooltip: "Acessar formulário de qualificação (site público)",
       external: true 
     },
   ];
