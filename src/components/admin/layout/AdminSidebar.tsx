@@ -20,11 +20,12 @@ import {
   Sidebar, 
   SidebarFooter, 
   SidebarHeader, 
-  SidebarMain, 
-  SidebarNav, 
-  SidebarNavGroup,
-  SidebarNavItem,
-  SidebarToggleButton
+  SidebarContent, 
+  SidebarMenu, 
+  SidebarGroup,
+  SidebarMenuItem,
+  SidebarMenuButton,
+  SidebarTrigger
 } from '@/components/ui/sidebar';
 
 const AdminSidebar: React.FC = () => {
@@ -47,94 +48,114 @@ const AdminSidebar: React.FC = () => {
             <span className="text-gray-400 text-xs">Painel Administrativo</span>
           </div>
         </div>
-        <SidebarToggleButton />
+        <SidebarTrigger />
       </SidebarHeader>
-      <SidebarMain>
-        <SidebarNav>
-          <SidebarNavGroup>
-            <SidebarNavItem
-              as={Link}
-              to="/admin-j28s7d1k/dashboard"
-              icon={<LayoutDashboard size={18} />}
-              active={isActive('/admin-j28s7d1k/dashboard')}
-            >
-              Dashboard
-            </SidebarNavItem>
-            <SidebarNavItem
-              as={Link}
-              to="/admin-j28s7d1k/previews"
-              icon={<Music size={18} />}
-              active={isActive('/admin-j28s7d1k/previews')}
-            >
-              Prévias
-            </SidebarNavItem>
-            <SidebarNavItem
-              as={Link}
-              to="/admin-j28s7d1k/portfolio"
-              icon={<RefreshCcw size={18} />}
-              active={isActive('/admin-j28s7d1k/portfolio')}
-            >
-              Portfólio
-            </SidebarNavItem>
-            <SidebarNavItem
-              as={Link}
-              to="/admin-j28s7d1k/invoices"
-              icon={<CreditCard size={18} />}
-              active={isActive('/admin-j28s7d1k/invoices')}
-            >
-              Faturas
-            </SidebarNavItem>
-            <SidebarNavItem
-              as={Link}
-              to="/admin-j28s7d1k/briefings"
-              icon={<FileQuestion size={18} />}
-              active={isActive('/admin-j28s7d1k/briefings')}
-            >
-              Briefings
-            </SidebarNavItem>
-            <SidebarNavItem
-              as={Link}
-              to="/admin-j28s7d1k/projects"
-              icon={<File size={18} />}
-              active={isActive('/admin-j28s7d1k/projects')}
-            >
-              Projetos
-            </SidebarNavItem>
-            <SidebarNavItem
-              as={Link}
-              to="/admin-j28s7d1k/statistics"
-              icon={<LineChart size={18} />}
-              active={isActive('/admin-j28s7d1k/statistics')}
-            >
-              Estatísticas
-            </SidebarNavItem>
-            <SidebarNavItem
-              as={Link}
-              to="/admin-j28s7d1k/guides"
-              icon={<BookOpenText size={18} />}
-              active={isActive('/admin-j28s7d1k/guides')}
-            >
-              Guias
-            </SidebarNavItem>
-            <SidebarNavItem
-              as={Link}
-              to="/admin-j28s7d1k/storage"
-              icon={<Database size={18} />}
-              active={isActive('/admin-j28s7d1k/storage')}
-            >
-              Armazenamento
-            </SidebarNavItem>
-            <SidebarNavItem
-              as={Link}
-              to="/admin-j28s7d1k/integrations"
-              icon={<Share2 size={18} />}
-              active={isActive('/admin-j28s7d1k/integrations')}
-            >
-              Integrações
-            </SidebarNavItem>
-          </SidebarNavGroup>
-        </SidebarNav>
-      </SidebarMain>
+      <SidebarContent>
+        <SidebarMenu>
+          <SidebarGroup>
+            <SidebarMenuItem>
+              <SidebarMenuButton
+                as={Link}
+                to="/admin-j28s7d1k/dashboard"
+                isActive={isActive('/admin-j28s7d1k/dashboard')}
+              >
+                <LayoutDashboard size={18} />
+                <span>Dashboard</span>
+              </SidebarMenuButton>
+            </SidebarMenuItem>
+            <SidebarMenuItem>
+              <SidebarMenuButton
+                as={Link}
+                to="/admin-j28s7d1k/previews"
+                isActive={isActive('/admin-j28s7d1k/previews')}
+              >
+                <Music size={18} />
+                <span>Prévias</span>
+              </SidebarMenuButton>
+            </SidebarMenuItem>
+            <SidebarMenuItem>
+              <SidebarMenuButton
+                as={Link}
+                to="/admin-j28s7d1k/portfolio"
+                isActive={isActive('/admin-j28s7d1k/portfolio')}
+              >
+                <RefreshCcw size={18} />
+                <span>Portfólio</span>
+              </SidebarMenuButton>
+            </SidebarMenuItem>
+            <SidebarMenuItem>
+              <SidebarMenuButton
+                as={Link}
+                to="/admin-j28s7d1k/invoices"
+                isActive={isActive('/admin-j28s7d1k/invoices')}
+              >
+                <CreditCard size={18} />
+                <span>Faturas</span>
+              </SidebarMenuButton>
+            </SidebarMenuItem>
+            <SidebarMenuItem>
+              <SidebarMenuButton
+                as={Link}
+                to="/admin-j28s7d1k/briefings"
+                isActive={isActive('/admin-j28s7d1k/briefings')}
+              >
+                <FileQuestion size={18} />
+                <span>Briefings</span>
+              </SidebarMenuButton>
+            </SidebarMenuItem>
+            <SidebarMenuItem>
+              <SidebarMenuButton
+                as={Link}
+                to="/admin-j28s7d1k/projects"
+                isActive={isActive('/admin-j28s7d1k/projects')}
+              >
+                <File size={18} />
+                <span>Projetos</span>
+              </SidebarMenuButton>
+            </SidebarMenuItem>
+            <SidebarMenuItem>
+              <SidebarMenuButton
+                as={Link}
+                to="/admin-j28s7d1k/statistics"
+                isActive={isActive('/admin-j28s7d1k/statistics')}
+              >
+                <LineChart size={18} />
+                <span>Estatísticas</span>
+              </SidebarMenuButton>
+            </SidebarMenuItem>
+            <SidebarMenuItem>
+              <SidebarMenuButton
+                as={Link}
+                to="/admin-j28s7d1k/guides"
+                isActive={isActive('/admin-j28s7d1k/guides')}
+              >
+                <BookOpenText size={18} />
+                <span>Guias</span>
+              </SidebarMenuButton>
+            </SidebarMenuItem>
+            <SidebarMenuItem>
+              <SidebarMenuButton
+                as={Link}
+                to="/admin-j28s7d1k/storage"
+                isActive={isActive('/admin-j28s7d1k/storage')}
+              >
+                <Database size={18} />
+                <span>Armazenamento</span>
+              </SidebarMenuButton>
+            </SidebarMenuItem>
+            <SidebarMenuItem>
+              <SidebarMenuButton
+                as={Link}
+                to="/admin-j28s7d1k/integrations"
+                isActive={isActive('/admin-j28s7d1k/integrations')}
+              >
+                <Share2 size={18} />
+                <span>Integrações</span>
+              </SidebarMenuButton>
+            </SidebarMenuItem>
+          </SidebarGroup>
+        </SidebarMenu>
+      </SidebarContent>
       <SidebarFooter>
         <div className="px-6 py-3">
           <a 
