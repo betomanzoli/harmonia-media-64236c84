@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Loader2, ArrowRight, Send } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
-import webhookService from '@/services/webhookService';
+import webhookService, { NotificationType } from '@/services/webhookService';
 
 const DEFAULT_WEBHOOK_URL = 'https://hooks.zapier.com/hooks/catch/22316385/2031hl7/';
 
@@ -88,7 +88,7 @@ const WebhookConfigCard: React.FC = () => {
     
     try {
       const testPayload = {
-        type: 'test_message',
+        type: 'test_message' as NotificationType,
         data: { message: "Teste de configuração do webhook da harmonIA" },
         timestamp: new Date().toISOString()
       };

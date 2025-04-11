@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -6,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Loader2, Clipboard, ExternalLink, Send } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
-import webhookService from '@/services/webhookService';
+import webhookService, { NotificationType } from '@/services/webhookService';
 
 interface WebhookUrlManagerProps {
   title: string;
@@ -27,7 +26,6 @@ const WebhookUrlManager: React.FC<WebhookUrlManagerProps> = ({
   const [isConfigured, setIsConfigured] = useState<boolean>(false);
   const { toast } = useToast();
   
-  // Load saved webhook URL on component mount
   useEffect(() => {
     const loadSavedUrl = async () => {
       setIsLoading(true);
@@ -96,7 +94,7 @@ const WebhookUrlManager: React.FC<WebhookUrlManagerProps> = ({
     
     try {
       const testPayload = {
-        type: 'test_message',
+        type: 'test_message' as NotificationType,
         data: { message: "Teste de configuração do webhook da harmonIA" },
         timestamp: new Date().toISOString()
       };
