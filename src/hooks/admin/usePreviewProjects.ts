@@ -5,6 +5,7 @@ export interface ProjectItem {
   id: string;
   clientName: string;
   clientEmail: string;
+  clientId?: string; // Making clientId optional
   packageType: string;
   createdAt: string;
   status: string;
@@ -20,6 +21,7 @@ export const usePreviewProjects = () => {
       id: 'HAR-2025-0001',
       clientName: 'João Silva',
       clientEmail: 'joao.silva@email.com',
+      clientId: 'CLIENT-001', // Added clientId
       packageType: 'Profissional',
       createdAt: '05/04/2025',
       status: 'waiting',
@@ -32,6 +34,7 @@ export const usePreviewProjects = () => {
       id: 'HAR-2025-0002',
       clientName: 'Maria Oliveira',
       clientEmail: 'maria.oliveira@email.com',
+      clientId: 'CLIENT-002', // Added clientId
       packageType: 'Premium',
       createdAt: '06/04/2025',
       status: 'feedback',
@@ -44,6 +47,7 @@ export const usePreviewProjects = () => {
       id: 'HAR-2025-0003',
       clientName: 'Carlos Mendes',
       clientEmail: 'carlos.mendes@email.com',
+      clientId: 'CLIENT-003', // Added clientId
       packageType: 'Essencial',
       createdAt: '07/04/2025',
       status: 'approved',

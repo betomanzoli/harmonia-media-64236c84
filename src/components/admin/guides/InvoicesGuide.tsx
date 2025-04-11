@@ -54,7 +54,7 @@ const InvoicesGuide: React.FC = () => {
     <AdminGuide 
       title="Guia de Notas Fiscais" 
       sections={sections} 
-      storageUrl={STORAGE_FOLDERS.invoices}
+      storageUrl={STORAGE_FOLDERS.INVOICES}
     />
   );
 };

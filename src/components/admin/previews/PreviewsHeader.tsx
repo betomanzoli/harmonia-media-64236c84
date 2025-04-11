@@ -20,7 +20,8 @@ const PreviewsHeader: React.FC<PreviewsHeaderProps> = ({ scrollToNewForm }) => {
     : 0;
     
   // Get unique client IDs to count unique clients
-  const uniqueClients = [...new Set(projects.map(p => p.clientId))].length;
+  // Using email as a fallback if clientId is not available
+  const uniqueClients = [...new Set(projects.map(p => p.clientId || p.clientEmail))].length;
   
   // Total projects count
   const totalProjects = projects.length;

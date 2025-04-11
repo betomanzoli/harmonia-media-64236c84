@@ -50,7 +50,7 @@ const DashboardContent: React.FC = () => {
       pendingContracts: 3, // This would come from a contracts API in a real app
       portfolioTotal: portfolioItems.length,
       portfolioViews: portfolioItems.reduce((total, item) => total + (item.views || 0), 0),
-      activeClients: [...new Set(projects.map(p => p.clientId))].length,
+      activeClients: [...new Set(projects.map(p => p.clientId || p.clientEmail))].length,
       previewProjects: projects.length,
       audioSamples: 248 // This would come from an audio database API in a real app
     });

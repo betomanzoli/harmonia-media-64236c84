@@ -5,7 +5,7 @@ import {
   Home, Users, FileText, Music, Settings, PlayCircle, Calculator, 
   FileCheck, CheckSquare, Folder, BarChart2, Database, HardDrive,
   Mail, Briefcase, ShoppingBag, AlertTriangle, FileSpreadsheet, 
-  Headphones, Tool, Layers
+  Headphones, Wrench, Layers
 } from 'lucide-react';
 import {
   Tooltip,
