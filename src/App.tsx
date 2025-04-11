@@ -1,4 +1,3 @@
-
 import React, { useEffect } from 'react';
 import { BrowserRouter as Router, Route, Routes, Navigate, useLocation } from 'react-router-dom';
 import { useAuth } from './contexts/AuthContext';
@@ -34,12 +33,6 @@ import AdminStatistics from './pages/admin/AdminStatistics';
 import AdminGuides from './pages/admin/AdminGuides';
 import AdminStorage from './pages/admin/AdminStorage';
 import AdminIntegrations from './pages/admin/AdminIntegrations';
-
-// Forçar modo offline para desenvolvimento
-if (process.env.NODE_ENV === 'development') {
-  sessionStorage.setItem('offline-admin-mode', 'true');
-  console.log('Modo offline ativado para ambiente de desenvolvimento');
-}
 
 const App: React.FC = () => {
   const { authStatus, checkAuthStatus } = useAuth();

@@ -62,14 +62,15 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children }) => {
     }
   }, [connectionStatus, toast, isOfflineMode]);
 
-  // Fix: Force offline mode for development
-  useEffect(() => {
-    if (isLoading && !isOfflineMode && process.env.NODE_ENV === 'development') {
-      console.log("Ativando modo offline automaticamente para ambiente de desenvolvimento");
-      sessionStorage.setItem('offline-admin-mode', 'true');
-      setIsOfflineMode(true);
-    }
-  }, [isLoading, isOfflineMode]);
+  // Removendo a ativação automática do modo offline para desenvolvimento
+  // A seção abaixo foi removida:
+  // useEffect(() => {
+  //   if (isLoading && !isOfflineMode && process.env.NODE_ENV === 'development') {
+  //     console.log("Ativando modo offline automaticamente para ambiente de desenvolvimento");
+  //     sessionStorage.setItem('offline-admin-mode', 'true');
+  //     setIsOfflineMode(true);
+  //   }
+  // }, [isLoading, isOfflineMode]);
 
   if (isLoading && !isOfflineMode) {
     return (

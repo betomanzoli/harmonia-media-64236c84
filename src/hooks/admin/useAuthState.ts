@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { AdminUser, ConnectionStatus, SecurityStatus } from '@/types/admin-auth';
 import { localAuthService } from '@/lib/auth/localAuthService';
@@ -17,6 +16,10 @@ export function useAuthState(offlineMode: boolean = false) {
 
   // Effect to verify authentication session on mount
   useEffect(() => {
+    // Removemos o comentário automático que explicava o comportamento
+    // Desativamos o modo offline no sessionStorage
+    sessionStorage.setItem('offline-admin-mode', 'false');
+    
     // If in offline mode, set a mock user and skip real auth
     if (offlineMode) {
       console.log('Usando modo offline - simulando autenticação');
