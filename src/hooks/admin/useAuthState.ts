@@ -26,6 +26,8 @@ export function useAuthState(offlineMode: boolean = false) {
         const currentUser = localAuthService.getUser();
         const isAuthenticated = localAuthService.isAuthenticated();
         
+        console.log('Estado da autenticação:', { currentUser, isAuthenticated });
+        
         if (currentUser && isAuthenticated) {
           console.log("Sessão encontrada:", currentUser.email);
           setUser(currentUser);
@@ -46,7 +48,10 @@ export function useAuthState(offlineMode: boolean = false) {
         console.error("Erro ao checar autenticação:", err);
         setUser(null);
       } finally {
-        setIsLoading(false);
+        // Add a short delay to ensure UI has time to update
+        setTimeout(() => {
+          setIsLoading(false);
+        }, 500);
       }
     };
     

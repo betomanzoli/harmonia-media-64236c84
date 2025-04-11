@@ -26,15 +26,18 @@ export const localAuthService = {
     await new Promise(resolve => setTimeout(resolve, 800));
     
     try {
+      console.log("Tentando login com:", email);
+      
       // Check credentials
       const matchedUser = VALID_CREDENTIALS.find(
         cred => cred.email.toLowerCase() === email.toLowerCase() && cred.password === password
       );
       
       if (!matchedUser) {
+        console.log("Credenciais inválidas");
         return { 
           success: false, 
-          error: 'Credenciais inválidas. Por favor, tente novamente.' 
+          error: 'Credenciais inválidas. Por favor, verifique seu email e senha.' 
         };
       }
       
@@ -44,6 +47,8 @@ export const localAuthService = {
       // Store auth info in localStorage
       localStorage.setItem(AUTH_TOKEN_KEY, token);
       localStorage.setItem(AUTH_USER_KEY, JSON.stringify(DEMO_ADMIN));
+      
+      console.log("Login bem-sucedido, dados armazenados:", DEMO_ADMIN);
       
       return { 
         success: true,
@@ -66,15 +71,21 @@ export const localAuthService = {
     // Clear auth data from localStorage
     localStorage.removeItem(AUTH_TOKEN_KEY);
     localStorage.removeItem(AUTH_USER_KEY);
+    console.log("Logout realizado, dados de autenticação removidos");
   },
   
   // Check if user is authenticated
   getUser: (): AdminUser | null => {
     try {
       const userJson = localStorage.getItem(AUTH_USER_KEY);
-      if (!userJson) return null;
+      if (!userJson) {
+        console.log("Nenhum usuário encontrado no localStorage");
+        return null;
+      }
       
-      return JSON.parse(userJson) as AdminUser;
+      const user = JSON.parse(userJson) as AdminUser;
+      console.log("Usuário encontrado no localStorage:", user.email);
+      return user;
     } catch (error) {
       console.error('Erro ao recuperar usuário:', error);
       return null;
@@ -83,7 +94,9 @@ export const localAuthService = {
   
   // Check if token exists
   isAuthenticated: (): boolean => {
-    return !!localStorage.getItem(AUTH_TOKEN_KEY);
+    const hasToken = !!localStorage.getItem(AUTH_TOKEN_KEY);
+    console.log("Verificação de autenticação:", hasToken ? "Autenticado" : "Não autenticado");
+    return hasToken;
   }
 };
 

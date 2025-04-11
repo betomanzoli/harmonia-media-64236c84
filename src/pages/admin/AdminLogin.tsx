@@ -4,6 +4,7 @@ import { useNavigate, useLocation } from 'react-router-dom';
 import AdminLoginContainer from '@/components/admin/auth/login/AdminLoginContainer';
 import { useToast } from '@/hooks/use-toast';
 import { useAdminAuth } from '@/hooks/admin/useAdminAuth';
+import { Loader2 } from 'lucide-react';
 
 const AdminLogin: React.FC = () => {
   const navigate = useNavigate();
@@ -17,7 +18,13 @@ const AdminLogin: React.FC = () => {
   
   // Check if already authenticated
   useEffect(() => {
+    const timeoutId = setTimeout(() => {
+      // Adding a timeout to prevent infinite loading
+      setIsCheckingAuth(false);
+    }, 2000);
+    
     if (!isLoading) {
+      clearTimeout(timeoutId);
       setIsCheckingAuth(false);
       
       if (isAuthenticated) {
@@ -25,12 +32,14 @@ const AdminLogin: React.FC = () => {
         navigate(from, { replace: true });
       }
     }
+    
+    return () => clearTimeout(timeoutId);
   }, [isLoading, isAuthenticated, navigate, from]);
   
-  // Function to authenticate manually with fixed credentials
+  // Function to authenticate with fixed credentials
   const authenticateAdmin = (email: string, password: string): boolean => {
     // Check specific credentials
-    if (email === 'contato@harmonia.media' && password === 'i9!_b!ThA;2H6/bt') {
+    if (email === 'admin@harmonia.com' && password === 'admin123456') {
       // Store authentication information
       localStorage.setItem('harmonia-admin-auth-token', 'admin-token-for-development');
       localStorage.setItem('harmonia-admin-auth-user', JSON.stringify({ 
@@ -52,11 +61,11 @@ const AdminLogin: React.FC = () => {
     return false;
   };
   
-  if (isLoading || isCheckingAuth) {
+  if (isLoading && isCheckingAuth) {
     return (
       <div className="flex items-center justify-center min-h-screen bg-gradient-to-b from-gray-900 to-black">
         <div className="flex flex-col items-center gap-2">
-          <div className="h-8 w-8 animate-spin rounded-full border-b-2 border-harmonia-green"></div>
+          <Loader2 className="h-8 w-8 animate-spin text-harmonia-green" />
           <p className="text-gray-500">Verificando autenticação...</p>
         </div>
       </div>

@@ -29,6 +29,9 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children }) => {
     }
   }, [connectionStatus, toast]);
 
+  // Add a console log to help with debugging
+  console.log('ProtectedRoute state:', { isAuthenticated, isLoading });
+
   if (isLoading) {
     return (
       <div className="flex items-center justify-center min-h-screen bg-gradient-to-b from-gray-900 to-black">
@@ -42,6 +45,7 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children }) => {
 
   // If not authenticated, redirect to login with the current path in state
   if (!isAuthenticated) {
+    console.log('Usuário não autenticado, redirecionando para login');
     return <Navigate to="/admin-login" state={{ from: location }} replace />;
   }
 

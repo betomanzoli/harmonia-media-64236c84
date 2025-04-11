@@ -79,11 +79,14 @@ const AdminLoginContainer: React.FC<AdminLoginContainerProps> = ({ onAuthenticat
   const handleLogin = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     setIsLoading(true);
+    setLoginErrorMessage(null);
     
     // Get form data
     const formData = new FormData(e.currentTarget);
     const email = formData.get('email') as string;
     const password = formData.get('password') as string;
+    
+    console.log("Tentando login com:", email);
     
     // Use the provided authentication function if available
     if (onAuthenticate) {
@@ -104,10 +107,16 @@ const AdminLoginContainer: React.FC<AdminLoginContainerProps> = ({ onAuthenticat
     }
     
     // Fallback authentication logic
-    if (email === 'contato@harmonia.media' && password === 'i9!_b!ThA;2H6/bt') {
+    if ((email === 'admin@harmonia.com' && password === 'admin123456') || 
+        (email === 'contato@harmonia.media' && password === 'i9!_b!ThA;2H6/bt')) {
       // Store authentication information
       localStorage.setItem('harmonia-admin-auth-token', 'admin-token-for-development');
-      localStorage.setItem('harmonia-admin-auth-user', JSON.stringify({ email, role: 'admin' }));
+      localStorage.setItem('harmonia-admin-auth-user', JSON.stringify({ 
+        id: 'admin-1',
+        email, 
+        role: 'admin',
+        createdAt: new Date().toISOString()
+      }));
       
       toast({
         title: "Login bem-sucedido",
