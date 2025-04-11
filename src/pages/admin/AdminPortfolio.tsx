@@ -10,6 +10,7 @@ import { Button } from '@/components/ui/button';
 import { ArrowLeft } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import WebhookUrlManager from '@/components/admin/integrations/WebhookUrlManager';
+import GoogleDriveGuide from '@/components/admin/portfolio/GoogleDriveGuide';
 
 const AdminPortfolio: React.FC = () => {
   const {
@@ -40,6 +41,8 @@ const AdminPortfolio: React.FC = () => {
             </Link>
           </Button>
         </div>
+        
+        <GoogleDriveGuide />
         
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
           <div className="lg:col-span-2">

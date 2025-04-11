@@ -30,23 +30,9 @@ const ServiceCard: React.FC<ServiceCardProps> = ({
     setIsTermsDialogOpen,
     acceptedTerms,
     setAcceptedTerms,
-    handleChoosePackage
+    handleChoosePackage,
+    handleProceedToBriefing
   } = useServiceTerms(title);
-  
-  // Determine package ID from title
-  const getPackageId = () => {
-    if (title.includes('Essencial')) return 'essencial';
-    if (title.includes('Profissional')) return 'profissional';
-    if (title.includes('Premium')) return 'premium';
-    return 'essencial';
-  };
-  
-  // Direct to payment after accepting terms
-  const handleAcceptTerms = () => {
-    // Route directly to payment with the package ID
-    const packageId = getPackageId();
-    navigate(`/pagamento/${packageId}`);
-  };
   
   return (
     <div className={cn(
@@ -80,7 +66,7 @@ const ServiceCard: React.FC<ServiceCardProps> = ({
         title={title}
         acceptedTerms={acceptedTerms}
         onAcceptedTermsChange={setAcceptedTerms}
-        onAccept={handleAcceptTerms}
+        onAccept={handleProceedToBriefing}
       />
     </div>
   );

@@ -3,7 +3,6 @@ import React, { useState, useEffect } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { Menu, X, Calculator, FileCheck } from 'lucide-react';
 import { Button } from "@/components/ui/button";
-import ChatbotButton from './ChatbotButton';
 
 const Header: React.FC = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -91,8 +90,6 @@ const Header: React.FC = () => {
                 </Link>
               </Button>
             </div>
-            
-            <ChatbotButton />
           </nav>
 
           {/* Mobile Menu Button */}
@@ -162,10 +159,6 @@ const Header: React.FC = () => {
                     Qualificação
                   </Link>
                 </Button>
-              </div>
-              
-              <div className="pt-2">
-                <ChatbotButton />
               </div>
             </nav>
           </div>

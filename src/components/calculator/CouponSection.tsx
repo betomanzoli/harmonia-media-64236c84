@@ -86,15 +86,6 @@ const CouponSection: React.FC<CouponSectionProps> = ({
           <span>Cupom aplicado! Desconto de {discount}% no valor total.</span>
         </div>
       )}
-      
-      <div className="mt-4 text-sm text-gray-400">
-        <p>Cupons disponíveis para pacotes:</p>
-        <ul className="list-disc pl-5 mt-1">
-          <li>ESSENCIAL5: 5% de desconto no Pacote Essencial</li>
-          <li>PROFISSIONAL5: 5% de desconto no Pacote Profissional</li>
-          <li>PREMIUM5: 5% de desconto no Pacote Premium</li>
-        </ul>
-      </div>
     </div>
   );
 };
