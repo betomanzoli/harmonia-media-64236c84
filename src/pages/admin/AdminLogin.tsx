@@ -36,16 +36,18 @@ const AdminLogin: React.FC = () => {
     return () => clearTimeout(timeoutId);
   }, [isLoading, isAuthenticated, navigate, from]);
   
-  // Function to authenticate with fixed credentials
+  // Function to authenticate with correct credentials
   const authenticateAdmin = (email: string, password: string): boolean => {
     // Check specific credentials
-    if (email === 'admin@harmonia.com' && password === 'admin123456') {
+    if ((email === 'admin@harmonia.com' && password === 'admin123456') ||
+        (email === 'contato@harmonia.media' && password === 'i9!_b!ThA;2H6/bt')) {
       // Store authentication information
       localStorage.setItem('harmonia-admin-auth-token', 'admin-token-for-development');
       localStorage.setItem('harmonia-admin-auth-user', JSON.stringify({ 
-        id: 'admin-1',
+        id: email === 'admin@harmonia.com' ? 'admin-1' : 'admin-2',
         email, 
         role: 'admin',
+        name: email === 'admin@harmonia.com' ? 'Admin User' : 'Contato User',
         createdAt: new Date().toISOString()
       }));
       

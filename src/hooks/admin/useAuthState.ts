@@ -7,8 +7,8 @@ export function useAuthState(offlineMode: boolean = false) {
   const [user, setUser] = useState<AdminUser | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [connectionStatus, setConnectionStatus] = useState<ConnectionStatus>({
-    tested: true, // Mark as tested by default
-    connected: navigator.onLine // Set initial connection status based on navigator.onLine
+    tested: true,
+    connected: navigator.onLine
   });
   const [securityStatus, setSecurityStatus] = useState<SecurityStatus>({
     checked: false,
@@ -33,8 +33,6 @@ export function useAuthState(offlineMode: boolean = false) {
           setUser(currentUser);
         } else {
           console.log("Nenhuma sessão encontrada ou sessão inválida");
-          // Clear any stale auth data
-          localAuthService.logout();
           setUser(null);
         }
         

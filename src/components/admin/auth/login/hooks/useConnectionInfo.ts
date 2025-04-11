@@ -1,5 +1,5 @@
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 
 export const useConnectionInfo = () => {
   const [isOnline, setIsOnline] = useState(navigator.onLine);
@@ -67,7 +67,7 @@ export const useConnectionInfo = () => {
   };
   
   // Function to test connection
-  const retryConnection = async () => {
+  const retryConnection = useCallback(async () => {
     return new Promise<void>((resolve) => {
       // Force a check of online status
       setIsOnline(navigator.onLine);
@@ -75,11 +75,12 @@ export const useConnectionInfo = () => {
         resolve();
       }, 1000);
     });
-  };
+  }, []);
   
   return {
     connectionStatus,
     diagnosticInfo,
-    retryConnection
+    retryConnection,
+    isOnline
   };
 };

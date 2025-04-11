@@ -22,6 +22,10 @@ const AdminLoginContainer: React.FC<AdminLoginContainerProps> = ({ onAuthenticat
     showDetailedError,
     isLoading,
     showConnectionStatus,
+    email,
+    password,
+    handleEmailChange,
+    handlePasswordChange,
     toggleDiagnostics,
     handleLogin,
     handlePasswordReset
@@ -45,6 +49,10 @@ const AdminLoginContainer: React.FC<AdminLoginContainerProps> = ({ onAuthenticat
           showConnectionStatus={showConnectionStatus}
           diagnosticInfo={diagnosticInfo}
           connectionStatus={connectionStatus}
+          email={email}
+          password={password}
+          handleEmailChange={handleEmailChange}
+          handlePasswordChange={handlePasswordChange}
           toggleDiagnostics={toggleDiagnostics}
           retryConnection={retryConnection}
           handleLogin={handleLogin}

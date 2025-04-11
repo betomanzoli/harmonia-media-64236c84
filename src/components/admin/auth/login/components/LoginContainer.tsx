@@ -15,6 +15,10 @@ interface LoginContainerProps {
   showConnectionStatus: boolean;
   diagnosticInfo: any;
   connectionStatus: string;
+  email?: string;
+  password?: string;
+  handleEmailChange?: (e: React.ChangeEvent<HTMLInputElement>) => void;
+  handlePasswordChange?: (e: React.ChangeEvent<HTMLInputElement>) => void;
   toggleDiagnostics: () => void;
   retryConnection: () => Promise<void>;
   handleLogin: (e: React.FormEvent<HTMLFormElement>) => Promise<void>;
@@ -28,6 +32,10 @@ const LoginContainer: React.FC<LoginContainerProps> = ({
   showConnectionStatus,
   diagnosticInfo,
   connectionStatus,
+  email,
+  password,
+  handleEmailChange,
+  handlePasswordChange,
   toggleDiagnostics,
   retryConnection,
   handleLogin,
@@ -54,12 +62,12 @@ const LoginContainer: React.FC<LoginContainerProps> = ({
           )}
           
           <LoginForm 
-            email=""
-            password=""
+            email={email}
+            password={password}
             loading={isLoading}
             success={false}
-            onEmailChange={() => {}}
-            onPasswordChange={() => {}}
+            onEmailChange={handleEmailChange}
+            onPasswordChange={handlePasswordChange}
             onSubmit={handleLogin}
             onResetPasswordClick={onResetPasswordClick}
           />

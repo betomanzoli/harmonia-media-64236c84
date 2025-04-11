@@ -1,7 +1,8 @@
 
-import { useState } from 'react';
+import { useState, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useToast } from '@/hooks/use-toast';
+import { localAuthService } from '@/lib/auth/localAuthService';
 
 export const useLoginState = (onAuthenticate?: (email: string, password: string) => boolean) => {
   const [activeTab, setActiveTab] = useState("login");
@@ -10,13 +11,15 @@ export const useLoginState = (onAuthenticate?: (email: string, password: string)
   const [loginErrorMessage, setLoginErrorMessage] = useState<string | null>(null);
   const [showDetailedError, setShowDetailedError] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
   const { toast } = useToast();
   const navigate = useNavigate();
   
   // Toggle diagnostic panel
-  const toggleDiagnostics = () => {
+  const toggleDiagnostics = useCallback(() => {
     setShowConnectionStatus(!showConnectionStatus);
-  };
+  }, [showConnectionStatus]);
   
   // Handle login form submission
   const handleLogin = async (e: React.FormEvent<HTMLFormElement>) => {
@@ -35,45 +38,30 @@ export const useLoginState = (onAuthenticate?: (email: string, password: string)
       // Add a short delay to simulate processing
       await new Promise(resolve => setTimeout(resolve, 800));
       
-      // Use the provided authentication function if available
+      // Use provided authentication function if available
       if (onAuthenticate) {
         const success = onAuthenticate(email, password);
         if (success) {
-          // Navigate after successful login
           toast({
             title: "Login bem-sucedido",
             description: "Você está sendo redirecionado para o painel administrativo.",
           });
           navigate('/admin-j28s7d1k/dashboard');
           return;
-        } else {
-          setLoginErrorMessage('Credenciais inválidas. Por favor, verifique seu email e senha.');
-          setIsLoading(false);
-          return;
         }
       }
       
-      // Fallback authentication logic
-      if ((email === 'admin@harmonia.com' && password === 'admin123456') || 
-          (email === 'contato@harmonia.media' && password === 'i9!_b!ThA;2H6/bt')) {
-        // Store authentication information
-        localStorage.setItem('harmonia-admin-auth-token', 'admin-token-for-development');
-        localStorage.setItem('harmonia-admin-auth-user', JSON.stringify({ 
-          id: email === 'admin@harmonia.com' ? 'admin-1' : 'admin-2',
-          email, 
-          role: 'admin',
-          createdAt: new Date().toISOString()
-        }));
-        
+      // Use the local auth service for authentication
+      const { success, error } = await localAuthService.login(email, password);
+      
+      if (success) {
         toast({
           title: "Login bem-sucedido",
           description: "Você está sendo redirecionado para o painel administrativo.",
         });
-        
-        // Navigate to dashboard
         navigate('/admin-j28s7d1k/dashboard');
       } else {
-        setLoginErrorMessage('Credenciais inválidas. Por favor, verifique seu email e senha.');
+        setLoginErrorMessage(error || 'Credenciais inválidas. Por favor, verifique seu email e senha.');
       }
     } catch (error) {
       console.error("Erro durante login:", error);
@@ -81,6 +69,16 @@ export const useLoginState = (onAuthenticate?: (email: string, password: string)
     } finally {
       setIsLoading(false);
     }
+  };
+  
+  // Handle email change
+  const handleEmailChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setEmail(e.target.value);
+  };
+  
+  // Handle password change
+  const handlePasswordChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setPassword(e.target.value);
   };
   
   // Handle password reset request
@@ -108,6 +106,10 @@ export const useLoginState = (onAuthenticate?: (email: string, password: string)
     setShowDetailedError,
     isLoading,
     setIsLoading,
+    email,
+    password,
+    handleEmailChange,
+    handlePasswordChange,
     toggleDiagnostics,
     handleLogin,
     handlePasswordReset
