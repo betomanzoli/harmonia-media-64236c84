@@ -1,6 +1,7 @@
+
 import React from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { Home, Users, FileText, Music, Settings, PlayCircle } from 'lucide-react';
+import { Home, Users, FileText, Music, Settings, PlayCircle, Calculator } from 'lucide-react';
 import {
   Tooltip,
   TooltipContent,
@@ -13,6 +14,7 @@ interface NavLink {
   label: string;
   icon: React.ReactNode;
   tooltip?: string;
+  external?: boolean;
 }
 
 const AdminSidebar: React.FC = () => {
@@ -30,6 +32,13 @@ const AdminSidebar: React.FC = () => {
     { href: "/admin-j28s7d1k/portfolio", label: "Portfólio", icon: <FileText className="h-4 w-4" />, tooltip: "Gerenciamento de projetos do portfólio" },
     { href: "/admin-j28s7d1k/users", label: "Usuários", icon: <Users className="h-4 w-4" />, tooltip: "Gerenciamento de usuários do sistema" },
     { href: "/admin-j28s7d1k/settings", label: "Configurações", icon: <Settings className="h-4 w-4" />, tooltip: "Configurações gerais do sistema" },
+    { 
+      href: "/calculadora", 
+      label: "Calculadora", 
+      icon: <Calculator className="h-4 w-4" />, 
+      tooltip: "Acessar calculadora de preços (site público)",
+      external: true 
+    },
   ];
 
   return (
@@ -44,15 +53,27 @@ const AdminSidebar: React.FC = () => {
               <li className="mb-1">
                 <Tooltip>
                   <TooltipTrigger asChild>
-                    <Link
-                      to={link.href}
-                      className={`flex items-center px-4 py-2 text-sm font-medium rounded-md hover:bg-gray-200 ${
-                        location.pathname === link.href ? 'bg-gray-200' : ''
-                      }`}
-                    >
-                      {link.icon}
-                      <span className="ml-3">{link.label}</span>
-                    </Link>
+                    {link.external ? (
+                      <a 
+                        href={link.href}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className={`flex items-center px-4 py-2 text-sm font-medium rounded-md hover:bg-gray-200`}
+                      >
+                        {link.icon}
+                        <span className="ml-3">{link.label}</span>
+                      </a>
+                    ) : (
+                      <Link
+                        to={link.href}
+                        className={`flex items-center px-4 py-2 text-sm font-medium rounded-md hover:bg-gray-200 ${
+                          location.pathname === link.href ? 'bg-gray-200' : ''
+                        }`}
+                      >
+                        {link.icon}
+                        <span className="ml-3">{link.label}</span>
+                      </Link>
+                    )}
                   </TooltipTrigger>
                   {link.tooltip && (
                     <TooltipContent side="right" align="start">

@@ -2,7 +2,7 @@
 import React, { useState, useEffect } from 'react';
 import { Button } from "@/components/ui/button";
 import Logo from './Logo';
-import { DollarSign, Mail, Phone, Menu, Clock, ChevronUp } from 'lucide-react';
+import { DollarSign, Mail, Phone, Menu, Clock, ChevronUp, Calculator, FileCheck } from 'lucide-react';
 import NavLink from './NavLink';
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { useNavigate, Link, useLocation } from 'react-router-dom';
@@ -52,6 +52,11 @@ const Header: React.FC = () => {
     window.scrollTo(0, 0);
   };
   
+  const handleQualification = () => {
+    navigate('/qualificacao');
+    window.scrollTo(0, 0);
+  };
+  
   const scrollToTop = () => {
     window.scrollTo({
       top: 0,
@@ -82,8 +87,8 @@ const Header: React.FC = () => {
                 </>
               )}
               <NavLink href="/qualificacao">Qualificação</NavLink>
+              <NavLink href="/calculadora">Calculadora</NavLink>
               <NavLink href="/acompanhar-pedido">Acompanhar Pedido</NavLink>
-              <NavLink href="/preview-library">Biblioteca de Prévias</NavLink>
             </nav>
           </div>
           <div className="flex items-center gap-3">
@@ -131,8 +136,16 @@ const Header: React.FC = () => {
                         <NavLink href="/portfolio">Portfólio</NavLink>
                       </>
                     )}
-                    <NavLink href="/qualificacao">Qualificação</NavLink>
-                    <NavLink href="/calculadora">Calculadora</NavLink>
+                    <NavLink href="/qualificacao">
+                      <div className="flex items-center gap-1">
+                        <FileCheck className="w-4 h-4" /> Qualificação
+                      </div>
+                    </NavLink>
+                    <NavLink href="/calculadora">
+                      <div className="flex items-center gap-1">
+                        <Calculator className="w-4 h-4" /> Calculadora
+                      </div>
+                    </NavLink>
                     <NavLink href="/acompanhar-pedido" className="flex items-center gap-1">
                       <Clock className="w-4 h-4" /> Acompanhar Pedido
                     </NavLink>
@@ -155,10 +168,16 @@ const Header: React.FC = () => {
               </SheetContent>
             </Sheet>
             
-            <Button onClick={handlePriceCalculation} className="bg-harmonia-green hover:bg-harmonia-green/90 text-white flex items-center gap-1">
-              <DollarSign className="w-4 h-4" />
-              Calcular Preço
-            </Button>
+            <div className="hidden md:flex gap-2">
+              <Button onClick={handleQualification} variant="outline" className="flex items-center gap-1">
+                <FileCheck className="w-4 h-4" />
+                Qualificação
+              </Button>
+              <Button onClick={handlePriceCalculation} className="bg-harmonia-green hover:bg-harmonia-green/90 text-white flex items-center gap-1">
+                <Calculator className="w-4 h-4" />
+                Calcular Preço
+              </Button>
+            </div>
           </div>
         </div>
       </header>

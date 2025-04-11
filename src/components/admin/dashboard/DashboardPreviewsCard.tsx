@@ -3,7 +3,7 @@ import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Link } from "react-router-dom";
-import { FileMusic, AlertTriangle, CheckCircle, MessageSquare, ArrowRight } from "lucide-react";
+import { FileMusic, AlertTriangle, CheckCircle, MessageSquare, ArrowRight, Calculator, FileCheck } from "lucide-react";
 
 const DashboardPreviewsCard: React.FC = () => {
   // Dados simulados para o card
@@ -53,17 +53,45 @@ const DashboardPreviewsCard: React.FC = () => {
             </div>
           )}
           
-          <Button 
-            variant="outline" 
-            size="sm" 
-            className="w-full text-harmonia-green border-harmonia-green hover:bg-harmonia-green/10"
-            asChild
-          >
-            <Link to="/admin-j28s7d1k/previews">
-              Gerenciar Prévias
-              <ArrowRight className="ml-2 h-3 w-3" />
-            </Link>
-          </Button>
+          <div className="space-y-2">
+            <Button 
+              variant="outline" 
+              size="sm" 
+              className="w-full text-harmonia-green border-harmonia-green hover:bg-harmonia-green/10"
+              asChild
+            >
+              <Link to="/admin-j28s7d1k/previews">
+                Gerenciar Prévias
+                <ArrowRight className="ml-2 h-3 w-3" />
+              </Link>
+            </Button>
+            
+            <div className="grid grid-cols-2 gap-2">
+              <Button 
+                variant="outline" 
+                size="sm" 
+                className="w-full border-harmonia-green/50 hover:bg-harmonia-green/10"
+                asChild
+              >
+                <Link to="/calculadora">
+                  <Calculator className="h-3 w-3 mr-1" />
+                  Calculadora
+                </Link>
+              </Button>
+              
+              <Button 
+                variant="outline" 
+                size="sm" 
+                className="w-full border-harmonia-green/50 hover:bg-harmonia-green/10"
+                asChild
+              >
+                <Link to="/qualificacao">
+                  <FileCheck className="h-3 w-3 mr-1" />
+                  Qualificação
+                </Link>
+              </Button>
+            </div>
+          </div>
         </div>
       </CardContent>
     </Card>

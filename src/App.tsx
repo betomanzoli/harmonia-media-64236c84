@@ -26,6 +26,8 @@ import AdminIntegrations from './pages/admin/AdminIntegrations';
 import CreditRefundRequest from './pages/CreditRefundRequest';
 import OrderTracking from './pages/OrderTracking';
 import MusicPreviewPage from './pages/MusicPreviewPage';
+import Calculator from './pages/Calculator';
+import Qualification from './pages/Qualification';
 
 function App() {
   return (
@@ -41,6 +43,8 @@ function App() {
         <Route path="/credit-refund-request" element={<CreditRefundRequest />} />
         <Route path="/acompanhar-pedido" element={<OrderTracking />} />
         <Route path="/preview/:projectId" element={<MusicPreviewPage />} />
+        <Route path="/calculadora" element={<Calculator />} />
+        <Route path="/qualificacao" element={<Qualification />} />
         
         {/* Admin Routes */}
         <Route path="/admin-j28s7d1k/login" element={<AdminLogin />} />
