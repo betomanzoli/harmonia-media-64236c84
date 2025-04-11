@@ -10,6 +10,7 @@ import { useNavigate } from 'react-router-dom';
 import { Link } from 'react-router-dom';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { Card, CardContent } from "@/components/ui/card";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
 const Briefing: React.FC = () => {
   const navigate = useNavigate();
@@ -35,6 +36,11 @@ const Briefing: React.FC = () => {
       }
     }
   }, []);
+
+  // Handle package selection change
+  const handlePackageChange = (value: string) => {
+    setSelectedPackage(value as 'essencial' | 'profissional' | 'premium');
+  };
 
   return (
     <div className="min-h-screen bg-background text-foreground">
@@ -135,94 +141,51 @@ const Briefing: React.FC = () => {
               </div>
             
               <div className="mb-6">
-                <Tabs value={selectedPackage} onValueChange={(value) => setSelectedPackage(value as 'essencial' | 'profissional' | 'premium')}>
-                  <TabsList className="grid grid-cols-3 mb-6">
-                    <TabsTrigger value="essencial" className="data-[state=active]:bg-harmonia-green">
-                      Essencial
-                    </TabsTrigger>
-                    <TabsTrigger value="profissional" className="data-[state=active]:bg-harmonia-green">
-                      Profissional
-                    </TabsTrigger>
-                    <TabsTrigger value="premium" className="data-[state=active]:bg-harmonia-green">
-                      Premium
-                    </TabsTrigger>
-                  </TabsList>
+                {/* Package selection dropdown */}
+                <div className="mb-6">
+                  <label htmlFor="package-select" className="block text-sm font-medium mb-2">
+                    Selecione o pacote para preencher o briefing:
+                  </label>
+                  <Select value={selectedPackage} onValueChange={handlePackageChange}>
+                    <SelectTrigger className="w-full md:w-64">
+                      <SelectValue placeholder="Selecione um pacote" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="essencial">Pacote Essencial</SelectItem>
+                      <SelectItem value="profissional">Pacote Profissional</SelectItem>
+                      <SelectItem value="premium">Pacote Premium</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+                  <div className="md:col-span-1 space-y-6">
+                    <Card className="p-6 border border-border">
+                      <h3 className="font-semibold mb-2">
+                        {selectedPackage === 'essencial' && "Pacote Essencial"}
+                        {selectedPackage === 'profissional' && "Pacote Profissional"}
+                        {selectedPackage === 'premium' && "Pacote Premium"}
+                      </h3>
+                      <p className="text-gray-400 text-sm mb-4">
+                        {selectedPackage === 'essencial' && "Ideal para presentes emocionais rápidos. Inclui uma composição única com direito a uma revisão."}
+                        {selectedPackage === 'profissional' && "Perfeito para criadores de conteúdo. Inclui três versões para escolha e até três revisões."}
+                        {selectedPackage === 'premium' && "Melhor opção para empresas. Inclui registro na Biblioteca Nacional e revisões ilimitadas."}
+                      </p>
+                      <Button 
+                        variant="outline" 
+                        className="w-full"
+                        onClick={() => navigate('/services')}
+                      >
+                        Ver detalhes do pacote
+                      </Button>
+                    </Card>
+                    <SidebarContent />
+                  </div>
                   
-                  <TabsContent value="essencial">
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-                      <div className="md:col-span-1 space-y-6">
-                        <Card className="p-6 border border-border">
-                          <h3 className="font-semibold mb-2">Pacote Essencial</h3>
-                          <p className="text-gray-400 text-sm mb-4">
-                            Ideal para presentes emocionais rápidos. Inclui uma composição única com direito a uma revisão.
-                          </p>
-                          <Button 
-                            variant="outline" 
-                            className="w-full"
-                            onClick={() => navigate('/services')}
-                          >
-                            Ver detalhes do pacote
-                          </Button>
-                        </Card>
-                        <SidebarContent />
-                      </div>
-                      
-                      <div className="md:col-span-2">
-                        <BriefingForm />
-                      </div>
-                    </div>
-                  </TabsContent>
-                  
-                  <TabsContent value="profissional">
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-                      <div className="md:col-span-1 space-y-6">
-                        <Card className="p-6 border border-border">
-                          <h3 className="font-semibold mb-2">Pacote Profissional</h3>
-                          <p className="text-gray-400 text-sm mb-4">
-                            Perfeito para criadores de conteúdo. Inclui três versões para escolha e até três revisões.
-                          </p>
-                          <Button 
-                            variant="outline" 
-                            className="w-full"
-                            onClick={() => navigate('/services')}
-                          >
-                            Ver detalhes do pacote
-                          </Button>
-                        </Card>
-                        <SidebarContent />
-                      </div>
-                      
-                      <div className="md:col-span-2">
-                        <BriefingForm />
-                      </div>
-                    </div>
-                  </TabsContent>
-                  
-                  <TabsContent value="premium">
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-                      <div className="md:col-span-1 space-y-6">
-                        <Card className="p-6 border border-border">
-                          <h3 className="font-semibold mb-2">Pacote Premium</h3>
-                          <p className="text-gray-400 text-sm mb-4">
-                            Melhor opção para empresas. Inclui registro na Biblioteca Nacional e revisões ilimitadas.
-                          </p>
-                          <Button 
-                            variant="outline" 
-                            className="w-full"
-                            onClick={() => navigate('/services')}
-                          >
-                            Ver detalhes do pacote
-                          </Button>
-                        </Card>
-                        <SidebarContent />
-                      </div>
-                      
-                      <div className="md:col-span-2">
-                        <BriefingForm />
-                      </div>
-                    </div>
-                  </TabsContent>
-                </Tabs>
+                  <div className="md:col-span-2">
+                    <BriefingForm packageType={selectedPackage} />
+                  </div>
+                </div>
               </div>
             </>
           )}

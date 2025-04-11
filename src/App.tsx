@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { BrowserRouter as Router, Route, Routes } from 'react-router-dom';
 import Home from './pages/Home';
@@ -32,6 +31,8 @@ import Payment from './pages/Payment';
 import PaymentProcessing from './pages/PaymentProcessing';
 import PaymentReturn from './pages/PaymentReturn';
 import PortfolioPage from './pages/Portfolio';
+import PrivacyPolicy from './components/PrivacyPolicy';
+import Terms from './components/Terms';
 
 function App() {
   return (
@@ -84,6 +85,9 @@ function App() {
         <Route path="/admin-j28s7d1k/audio-database" element={<AudioDatabase />} />
         <Route path="/admin-j28s7d1k/portfolio" element={<AdminPortfolio />} />
         <Route path="/admin-j28s7d1k/integrations" element={<AdminIntegrations />} />
+        
+        <Route path="/privacidade" element={<PrivacyPolicy />} />
+        <Route path="/termos" element={<Terms />} />
       </Routes>
     </Router>
   );

@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Button } from "@/components/ui/button";
 import { Form } from "@/components/ui/form";
@@ -18,7 +17,6 @@ interface BriefingFormProps {
 const BriefingForm: React.FC<BriefingFormProps> = ({ packageType }) => {
   const location = useLocation();
   
-  // Get package from URL if not provided as prop
   const getInitialPackage = (): 'essencial' | 'profissional' | 'premium' => {
     if (packageType) return packageType;
     
@@ -49,7 +47,6 @@ const BriefingForm: React.FC<BriefingFormProps> = ({ packageType }) => {
     selectedPackage
   } = useBriefingForm(getInitialPackage());
 
-  // Render different package titles based on selected package
   const renderPackageTitle = () => {
     switch (selectedPackage) {
       case 'essencial':
@@ -63,7 +60,6 @@ const BriefingForm: React.FC<BriefingFormProps> = ({ packageType }) => {
     }
   };
 
-  // Render fields based on selected package
   const renderPackageFields = () => {
     switch (selectedPackage) {
       case 'essencial':
@@ -88,13 +84,10 @@ const BriefingForm: React.FC<BriefingFormProps> = ({ packageType }) => {
       
       <Form {...form}>
         <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-          {/* Dados pessoais */}
           <PersonalInfoSection />
           
-          {/* Package-specific fields */}
           {renderPackageFields()}
           
-          {/* Referências - now appears for all packages */}
           <h3 className="text-lg font-semibold pt-4">Referências</h3>
           <ReferencesSection 
             referenceFiles={referenceFiles} 
