@@ -2,6 +2,7 @@
 // Constants for storage folder structure
 export const STORAGE_FOLDERS = {
   PREVIEWS_BASE: "1lLw3oBgNhlpUiYbo3wevgUvjA0RTV7tN", // ID da pasta principal de prévias
+  INVOICES: "1MJk2diD6Bmb9Q6lNVDPnLePAznerOU29", // ID da pasta para faturas/notas fiscais
 };
 
 // Webhook URL management

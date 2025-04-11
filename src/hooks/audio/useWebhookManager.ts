@@ -16,7 +16,7 @@ export function useWebhookManager() {
 
   // Save webhook URL
   const saveWebhookUrl = () => {
-    manageWebhookUrls.save('audio_database_storage', webhookUrl);
+    manageWebhookUrls.set('audio_database_storage', webhookUrl);
     toast({
       title: "URL do webhook salva",
       description: "A URL do webhook foi configurada com sucesso.",

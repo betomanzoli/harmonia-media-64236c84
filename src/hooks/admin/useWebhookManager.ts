@@ -25,7 +25,7 @@ export function useWebhookManager(serviceType: string) {
       return false;
     }
     
-    manageWebhookUrls.save(serviceType, webhookUrl);
+    manageWebhookUrls.set(serviceType, webhookUrl);
     
     toast({
       title: "URL do webhook salva",
