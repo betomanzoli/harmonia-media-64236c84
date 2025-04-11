@@ -1,3 +1,4 @@
+
 import React, { useEffect } from 'react';
 import { BrowserRouter as Router, Route, Routes, Navigate, useLocation } from 'react-router-dom';
 import { useAuth } from './contexts/AuthContext';
@@ -33,6 +34,7 @@ import AdminStatistics from './pages/admin/AdminStatistics';
 import AdminGuides from './pages/admin/AdminGuides';
 import AdminStorage from './pages/admin/AdminStorage';
 import AdminIntegrations from './pages/admin/AdminIntegrations';
+import PreviewProjectPage from './pages/admin/PreviewProjectPage';
 
 const App: React.FC = () => {
   const { authStatus, checkAuthStatus } = useAuth();
@@ -69,6 +71,7 @@ const App: React.FC = () => {
           <Route path="/admin-login" element={<AdminLogin />} />
           <Route path="/admin-j28s7d1k/dashboard" element={<ProtectedRoute><AdminDashboard /></ProtectedRoute>} />
           <Route path="/admin-j28s7d1k/previews" element={<ProtectedRoute><AdminPreviews /></ProtectedRoute>} />
+          <Route path="/admin-j28s7d1k/previews/:projectId" element={<ProtectedRoute><PreviewProjectPage /></ProtectedRoute>} />
           <Route path="/admin-j28s7d1k/portfolio" element={<ProtectedRoute><AdminPortfolio /></ProtectedRoute>} />
           <Route path="/admin-j28s7d1k/invoices" element={<ProtectedRoute><AdminInvoices /></ProtectedRoute>} />
           <Route path="/admin-j28s7d1k/briefings" element={<ProtectedRoute><AdminBriefings /></ProtectedRoute>} />
@@ -89,6 +92,7 @@ const App: React.FC = () => {
           
           {/* Preview system */}
           <Route path="/previa/:previewId" element={<MusicPreviewPage />} />
+          <Route path="/preview/:previewId" element={<MusicPreviewPage />} />
           <Route path="/previews" element={<MusicPreviews />} />
           
           {/* Legal & Support pages */}

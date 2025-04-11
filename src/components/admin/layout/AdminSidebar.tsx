@@ -33,11 +33,11 @@ const AdminSidebar: React.FC = () => {
   const activePath = location.pathname;
   
   const isActive = (path: string) => {
-    return activePath === path;
+    return activePath === path || activePath.startsWith(`${path}/`);
   };
   
   return (
-    <Sidebar>
+    <Sidebar className="h-screen border-r border-gray-800">
       <SidebarHeader className="px-6 py-4">
         <div className="flex items-center gap-2">
           <div className="w-8 h-8 rounded-full bg-harmonia-green flex items-center justify-center">

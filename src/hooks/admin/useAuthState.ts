@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from 'react';
 import { AdminUser, ConnectionStatus, SecurityStatus } from '@/types/admin-auth';
 import { localAuthService } from '@/lib/auth/localAuthService';
@@ -16,29 +17,6 @@ export function useAuthState(offlineMode: boolean = false) {
 
   // Effect to verify authentication session on mount
   useEffect(() => {
-    // Removemos o comentário automático que explicava o comportamento
-    // Desativamos o modo offline no sessionStorage
-    sessionStorage.setItem('offline-admin-mode', 'false');
-    
-    // If in offline mode, set a mock user and skip real auth
-    if (offlineMode) {
-      console.log('Usando modo offline - simulando autenticação');
-      setUser({
-        id: 'offline-user-id',
-        email: 'demo@example.com',
-        name: 'Demo User',
-        role: 'admin',
-        createdAt: new Date().toISOString()
-      });
-      setIsLoading(false);
-      setConnectionStatus({
-        tested: true,
-        connected: true, // Pretend we're connected in offline mode
-        details: { offlineMode: true }
-      });
-      return;
-    }
-    
     // Check for active session
     const checkSession = async () => {
       setIsLoading(true);
@@ -109,7 +87,7 @@ export function useAuthState(offlineMode: boolean = false) {
       window.removeEventListener('online', handleOnline);
       window.removeEventListener('offline', handleOffline);
     };
-  }, [offlineMode]);
+  }, []);
 
   return {
     user,
@@ -119,6 +97,6 @@ export function useAuthState(offlineMode: boolean = false) {
     setConnectionStatus,
     securityStatus,
     setSecurityStatus,
-    isAuthenticated: offlineMode ? true : !!user
+    isAuthenticated: !!user
   };
 }

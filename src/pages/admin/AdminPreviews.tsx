@@ -41,14 +41,14 @@ const AdminPreviews: React.FC = () => {
   return (
     <AdminLayout>
       <div className="flex-1 flex flex-col h-screen">
-        <div className="flex items-center justify-between p-4 border-b bg-white">
-          <h1 className="text-xl font-bold text-harmonia-green">Painel de Prévias Musicais</h1>
+        <div className="flex items-center justify-between p-4 border-b bg-harmonia-green text-white">
+          <h1 className="text-xl font-bold">Painel de Prévias Musicais</h1>
           <div className="flex gap-2">
             <Button 
               variant="outline" 
               size="sm" 
               asChild
-              className="border-harmonia-green text-harmonia-green hover:bg-harmonia-green/10"
+              className="border-white text-white hover:bg-white/10"
             >
               <Link to="/admin-j28s7d1k/dashboard">
                 <ArrowLeft className="mr-2 h-4 w-4" />
@@ -61,7 +61,7 @@ const AdminPreviews: React.FC = () => {
                 <Button 
                   variant="outline" 
                   size="sm" 
-                  className="gap-2 border-harmonia-green text-harmonia-green hover:bg-harmonia-green/10"
+                  className="gap-2 border-white text-white hover:bg-white/10"
                 >
                   <HelpCircle className="w-4 h-4" />
                   Guia do sistema
