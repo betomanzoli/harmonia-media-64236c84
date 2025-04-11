@@ -30,7 +30,9 @@ export function useAuthState(offlineMode: boolean = false) {
           console.log("Sessão encontrada:", currentUser.email);
           setUser(currentUser);
         } else {
-          console.log("Nenhuma sessão encontrada");
+          console.log("Nenhuma sessão encontrada ou sessão inválida");
+          // Clear any stale auth data
+          localAuthService.logout();
           setUser(null);
         }
         

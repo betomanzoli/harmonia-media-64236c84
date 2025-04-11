@@ -1,6 +1,6 @@
 
 import React, { useEffect } from 'react';
-import { Navigate } from 'react-router-dom';
+import { Navigate, useLocation } from 'react-router-dom';
 import { useAdminAuth } from '@/hooks/admin/useAdminAuth';
 import { Loader2 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
@@ -12,8 +12,9 @@ interface ProtectedRouteProps {
 const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children }) => {
   const { isAuthenticated, isLoading, connectionStatus } = useAdminAuth();
   const { toast } = useToast();
+  const location = useLocation();
 
-  // Mostrar erro de conexão apenas se tivermos um problema de conexão real
+  // Show connection error only if we have a real connection problem
   useEffect(() => {
     if (connectionStatus && 
         !connectionStatus.connected && 
@@ -39,8 +40,9 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children }) => {
     );
   }
 
+  // If not authenticated, redirect to login with the current path in state
   if (!isAuthenticated) {
-    return <Navigate to="/admin-login" />;
+    return <Navigate to="/admin-login" state={{ from: location }} replace />;
   }
 
   return <>{children}</>;
