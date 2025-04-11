@@ -12,7 +12,6 @@ interface ProtectedRouteProps {
 const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children }) => {
   const { isAuthenticated, isLoading, connectionStatus } = useAdminAuth();
   const [isOfflineMode, setIsOfflineMode] = useState(false);
-  const [securityChecked, setSecurityChecked] = useState(false);
   const [offlineInitialized, setOfflineInitialized] = useState(false);
   const { toast } = useToast();
   
@@ -63,17 +62,12 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children }) => {
     }
   }, [connectionStatus, toast, isOfflineMode]);
 
-  // Fix: Force offline mode for development to avoid loading issues
+  // Fix: Force offline mode for development
   useEffect(() => {
-    if (isLoading && !isOfflineMode) {
-      // If loading takes too long, enable offline mode automatically
-      const timer = setTimeout(() => {
-        console.log("Ativando modo offline automaticamente devido a tempo de carregamento prolongado");
-        sessionStorage.setItem('offline-admin-mode', 'true');
-        setIsOfflineMode(true);
-      }, 3000);
-      
-      return () => clearTimeout(timer);
+    if (isLoading && !isOfflineMode && process.env.NODE_ENV === 'development') {
+      console.log("Ativando modo offline automaticamente para ambiente de desenvolvimento");
+      sessionStorage.setItem('offline-admin-mode', 'true');
+      setIsOfflineMode(true);
     }
   }, [isLoading, isOfflineMode]);
 

@@ -152,7 +152,7 @@ const sendItemNotification = async (
 // Initialize default webhook URL on service load
 (async () => {
   try {
-    // Sempre inicializar com a URL padrão no localStorage para garantir a disponibilidade
+    // Always initialize with default URL in localStorage to ensure availability
     if (!localStorage.getItem(WEBHOOK_STORAGE_KEY)) {
       localStorage.setItem(WEBHOOK_STORAGE_KEY, DEFAULT_WEBHOOK_URL);
       console.log('URL do webhook inicializada com padrão:', DEFAULT_WEBHOOK_URL);
@@ -164,7 +164,7 @@ const sendItemNotification = async (
     }
   } catch (e) {
     console.error('Erro ao inicializar webhook service:', e);
-    // Garantir que sempre temos uma URL padrão
+    // Ensure we always have a default URL
     localStorage.setItem(WEBHOOK_STORAGE_KEY, DEFAULT_WEBHOOK_URL);
   }
 })();

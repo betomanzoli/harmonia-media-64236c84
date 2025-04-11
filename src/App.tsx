@@ -5,6 +5,7 @@ import { useAuth } from './contexts/AuthContext';
 import { ThemeProvider } from "@/components/ui/theme-provider";
 import { Toaster } from "@/components/ui/toaster";
 import { useToast } from "@/hooks/use-toast";
+import ProtectedRoute from './components/admin/auth/ProtectedRoute';
 
 // Public Pages
 import Home from './pages/Home';
@@ -36,8 +37,8 @@ import AdminIntegrations from './pages/admin/AdminIntegrations';
 
 // Forçar modo offline para desenvolvimento
 if (process.env.NODE_ENV === 'development') {
-  // Uncomment this line if you want to force offline mode
-  // sessionStorage.setItem('offline-admin-mode', 'true');
+  sessionStorage.setItem('offline-admin-mode', 'true');
+  console.log('Modo offline ativado para ambiente de desenvolvimento');
 }
 
 const App: React.FC = () => {
@@ -59,22 +60,6 @@ const App: React.FC = () => {
     return null;
   };
 
-  const AdminRoute = ({ children }: { children: React.ReactNode }) => {
-    if (authStatus === 'loading') {
-      return <div>Carregando...</div>;
-    }
-
-    if (authStatus === 'unauthenticated') {
-      toast({
-        title: "Acesso negado",
-        description: "Você precisa estar logado para acessar esta página.",
-      })
-      return <Navigate to="/admin-j28s7d1k/login" />;
-    }
-
-    return <>{children}</>;
-  };
-
   return (
     <ThemeProvider defaultTheme="dark" storageKey="harmonia-theme">
       <Router>
@@ -88,16 +73,18 @@ const App: React.FC = () => {
           {/* Admin routes */}
           <Route path="/admin-j28s7d1k" element={<Navigate to="/admin-j28s7d1k/dashboard" />} />
           <Route path="/admin-j28s7d1k/login" element={<AdminLogin />} />
-          <Route path="/admin-j28s7d1k/dashboard" element={<AdminRoute><AdminDashboard /></AdminRoute>} />
-          <Route path="/admin-j28s7d1k/previews" element={<AdminRoute><AdminPreviews /></AdminRoute>} />
-          <Route path="/admin-j28s7d1k/portfolio" element={<AdminRoute><AdminPortfolio /></AdminRoute>} />
-          <Route path="/admin-j28s7d1k/invoices" element={<AdminRoute><AdminInvoices /></AdminRoute>} />
-          <Route path="/admin-j28s7d1k/briefings" element={<AdminRoute><AdminBriefings /></AdminRoute>} />
-          <Route path="/admin-j28s7d1k/projects" element={<AdminRoute><AdminProjects /></AdminRoute>} />
-          <Route path="/admin-j28s7d1k/statistics" element={<AdminRoute><AdminStatistics /></AdminRoute>} />
-          <Route path="/admin-j28s7d1k/guides" element={<AdminRoute><AdminGuides /></AdminRoute>} />
-          <Route path="/admin-j28s7d1k/storage" element={<AdminRoute><AdminStorage /></AdminRoute>} />
-          <Route path="/admin-j28s7d1k/integrations" element={<AdminRoute><AdminIntegrations /></AdminRoute>} />
+          <Route path="/admin-login" element={<AdminLogin />} />
+          <Route path="/admin-j28s7d1k/dashboard" element={<ProtectedRoute><AdminDashboard /></ProtectedRoute>} />
+          <Route path="/admin-j28s7d1k/previews" element={<ProtectedRoute><AdminPreviews /></ProtectedRoute>} />
+          <Route path="/admin-j28s7d1k/portfolio" element={<ProtectedRoute><AdminPortfolio /></ProtectedRoute>} />
+          <Route path="/admin-j28s7d1k/invoices" element={<ProtectedRoute><AdminInvoices /></ProtectedRoute>} />
+          <Route path="/admin-j28s7d1k/briefings" element={<ProtectedRoute><AdminBriefings /></ProtectedRoute>} />
+          <Route path="/admin-j28s7d1k/projects" element={<ProtectedRoute><AdminProjects /></ProtectedRoute>} />
+          <Route path="/admin-j28s7d1k/statistics" element={<ProtectedRoute><AdminStatistics /></ProtectedRoute>} />
+          <Route path="/admin-j28s7d1k/guides" element={<ProtectedRoute><AdminGuides /></ProtectedRoute>} />
+          <Route path="/admin-j28s7d1k/storage" element={<ProtectedRoute><AdminStorage /></ProtectedRoute>} />
+          <Route path="/admin-j28s7d1k/integrations" element={<ProtectedRoute><AdminIntegrations /></ProtectedRoute>} />
+          <Route path="/admin-j28s7d1k/settings" element={<ProtectedRoute><AdminDashboard /></ProtectedRoute>} />
           
           {/* Payment routes */}
           <Route path="/pagamento/:packageId" element={<Payment />} />
