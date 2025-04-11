@@ -37,7 +37,7 @@ const AdminSidebar: React.FC = () => {
   };
   
   return (
-    <Sidebar className="h-screen border-r border-gray-800">
+    <Sidebar className="h-screen border-r border-gray-800 fixed">
       <SidebarHeader className="px-6 py-4">
         <div className="flex items-center gap-2">
           <div className="w-8 h-8 rounded-full bg-harmonia-green flex items-center justify-center">

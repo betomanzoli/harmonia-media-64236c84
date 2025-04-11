@@ -48,7 +48,7 @@ const AdminLayout: React.FC<AdminLayoutProps> = ({ children }) => {
           <div className="sticky top-0 h-screen">
             <AdminSidebar />
           </div>
-          <div className="flex-1 overflow-auto bg-gradient-to-b from-gray-900 to-black pt-8">
+          <div className="flex-1 overflow-auto bg-gradient-to-b from-gray-900 to-black pt-8 ml-[240px]">
             <div className="p-0">
               {children}
             </div>

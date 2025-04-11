@@ -6,6 +6,8 @@ import { ThemeProvider } from "@/components/ui/theme-provider";
 import { Toaster } from "@/components/ui/toaster";
 import { useToast } from "@/hooks/use-toast";
 import ProtectedRoute from './components/admin/auth/ProtectedRoute';
+import Header from './components/Header';
+import Footer from './components/Footer';
 
 // Public Pages
 import Home from './pages/Home';
@@ -36,6 +38,24 @@ import AdminStorage from './pages/admin/AdminStorage';
 import AdminIntegrations from './pages/admin/AdminIntegrations';
 import PreviewProjectPage from './pages/admin/PreviewProjectPage';
 
+// Layout component to include Header and Footer for public pages
+const PublicLayout = ({ children }) => {
+  const location = useLocation();
+  const isAdminRoute = location.pathname.includes('admin-j28s7d1k') || location.pathname.includes('admin-login');
+  
+  if (isAdminRoute) {
+    return <>{children}</>;
+  }
+  
+  return (
+    <>
+      <Header />
+      {children}
+      <Footer />
+    </>
+  );
+};
+
 const App: React.FC = () => {
   const { authStatus, checkAuthStatus } = useAuth();
   const { toast } = useToast();
@@ -61,9 +81,9 @@ const App: React.FC = () => {
         <ScrollToTop />
         
         <Routes>
-          <Route path="/" element={<Home />} />
-          <Route path="/briefing" element={<Briefing />} />
-          <Route path="/calculadora" element={<Calculator />} />
+          <Route path="/" element={<PublicLayout><Home /></PublicLayout>} />
+          <Route path="/briefing" element={<PublicLayout><Briefing /></PublicLayout>} />
+          <Route path="/calculadora" element={<PublicLayout><Calculator /></PublicLayout>} />
           
           {/* Admin routes */}
           <Route path="/admin-j28s7d1k" element={<Navigate to="/admin-j28s7d1k/dashboard" />} />
@@ -83,25 +103,25 @@ const App: React.FC = () => {
           <Route path="/admin-j28s7d1k/settings" element={<ProtectedRoute><AdminDashboard /></ProtectedRoute>} />
           
           {/* Payment routes */}
-          <Route path="/pagamento/:packageId" element={<Payment />} />
-          <Route path="/pagamento-retorno" element={<PaymentReturn />} />
-          <Route path="/obrigado" element={<ThankYou />} />
+          <Route path="/pagamento/:packageId" element={<PublicLayout><Payment /></PublicLayout>} />
+          <Route path="/pagamento-retorno" element={<PublicLayout><PaymentReturn /></PublicLayout>} />
+          <Route path="/obrigado" element={<PublicLayout><ThankYou /></PublicLayout>} />
 
           {/* Order tracking */}
-          <Route path="/consultar-pedido" element={<OrderTracking />} />
+          <Route path="/consultar-pedido" element={<PublicLayout><OrderTracking /></PublicLayout>} />
           
           {/* Preview system */}
-          <Route path="/previa/:previewId" element={<MusicPreviewPage />} />
-          <Route path="/preview/:previewId" element={<MusicPreviewPage />} />
-          <Route path="/previews" element={<MusicPreviews />} />
+          <Route path="/previa/:previewId" element={<PublicLayout><MusicPreviewPage /></PublicLayout>} />
+          <Route path="/preview/:previewId" element={<PublicLayout><MusicPreviewPage /></PublicLayout>} />
+          <Route path="/previews" element={<PublicLayout><MusicPreviews /></PublicLayout>} />
           
           {/* Legal & Support pages */}
-          <Route path="/support/credit-refund" element={<CreditRefundRequest />} />
-          <Route path="/feedback-confirmation" element={<FeedbackConfirmation />} />
-          <Route path="/approval-confirmation" element={<ApprovalConfirmation />} />
+          <Route path="/support/credit-refund" element={<PublicLayout><CreditRefundRequest /></PublicLayout>} />
+          <Route path="/feedback-confirmation" element={<PublicLayout><FeedbackConfirmation /></PublicLayout>} />
+          <Route path="/approval-confirmation" element={<PublicLayout><ApprovalConfirmation /></PublicLayout>} />
           
           {/* 404 page */}
-          <Route path="*" element={<NotFound />} />
+          <Route path="*" element={<PublicLayout><NotFound /></PublicLayout>} />
         </Routes>
       </Router>
       <Toaster />

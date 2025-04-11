@@ -1,9 +1,7 @@
 
 import React from 'react';
-import Header from '@/components/Header';
 import Hero from '@/components/Hero';
 import Services from '@/components/Services';
-import Footer from '@/components/Footer';
 import Testimonials from '@/components/Testimonials';
 import { Button } from '@/components/ui/button';
 import { ArrowRight } from 'lucide-react';
@@ -21,7 +19,6 @@ const Index: React.FC = () => {
 
   return (
     <div className="min-h-screen bg-background text-foreground">
-      <Header />
       <main>
         <Hero />
         <Services />
@@ -45,7 +42,6 @@ const Index: React.FC = () => {
           </div>
         </section>
       </main>
-      <Footer />
     </div>
   );
 };
