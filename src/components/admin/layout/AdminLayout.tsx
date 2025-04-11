@@ -49,7 +49,7 @@ const AdminLayout: React.FC<AdminLayoutProps> = ({ children }) => {
             <AdminSidebar />
           </div>
           <div className="flex-1 overflow-auto bg-gradient-to-b from-gray-900 to-black pt-8 ml-[240px]">
-            <div className="p-0">
+            <div className="p-6">
               {children}
             </div>
           </div>

@@ -19,6 +19,11 @@ const Header: React.FC = () => {
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
+  useEffect(() => {
+    // Close mobile menu when route changes
+    setIsMenuOpen(false);
+  }, [location.pathname]);
+
   const toggleMenu = () => {
     setIsMenuOpen(!isMenuOpen);
   };
@@ -70,8 +75,8 @@ const Header: React.FC = () => {
               Briefing
             </Link>
             <Link 
-              to="/contact" 
-              className={`text-sm ${isActive('/contact') ? 'text-harmonia-green' : 'text-gray-300 hover:text-white'}`}
+              to="/contato" 
+              className={`text-sm ${isActive('/contato') ? 'text-harmonia-green' : 'text-gray-300 hover:text-white'}`}
             >
               Contato
             </Link>
@@ -132,8 +137,8 @@ const Header: React.FC = () => {
                 Briefing
               </Link>
               <Link 
-                to="/contact" 
-                className={`text-sm ${isActive('/contact') ? 'text-harmonia-green' : 'text-gray-300 hover:text-white'}`}
+                to="/contato" 
+                className={`text-sm ${isActive('/contato') ? 'text-harmonia-green' : 'text-gray-300 hover:text-white'}`}
                 onClick={() => setIsMenuOpen(false)}
               >
                 Contato

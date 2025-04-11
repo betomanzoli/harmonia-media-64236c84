@@ -23,6 +23,11 @@ import MusicPreviews from './pages/MusicPreviews';
 import CreditRefundRequest from './pages/CreditRefundRequest';
 import FeedbackConfirmation from './pages/FeedbackConfirmation';
 import ApprovalConfirmation from './pages/ApprovalConfirmation';
+import Portfolio from './pages/Portfolio';
+import Services from './pages/Packages';
+import Contact from './pages/Contact';
+import PrivacyPolicy from './pages/PrivacyPolicy';
+import Terms from './pages/Terms';
 
 // Admin Pages
 import AdminLogin from './pages/admin/AdminLogin';
@@ -50,7 +55,9 @@ const PublicLayout = ({ children }) => {
   return (
     <>
       <Header />
-      {children}
+      <div className="pt-16 min-h-screen">
+        {children}
+      </div>
       <Footer />
     </>
   );
@@ -62,6 +69,9 @@ const App: React.FC = () => {
 
   useEffect(() => {
     checkAuthStatus();
+    
+    // Clear any offline mode settings
+    sessionStorage.removeItem('offline-admin-mode');
   }, [checkAuthStatus]);
 
   // Custom hook to scroll to top on route change
@@ -82,8 +92,19 @@ const App: React.FC = () => {
         
         <Routes>
           <Route path="/" element={<PublicLayout><Home /></PublicLayout>} />
+          <Route path="/index" element={<Navigate to="/" />} />
+          <Route path="/home" element={<Navigate to="/" />} />
+          
+          {/* Core Public Pages */}
+          <Route path="/portfolio" element={<PublicLayout><Portfolio /></PublicLayout>} />
+          <Route path="/services" element={<PublicLayout><Services /></PublicLayout>} />
+          <Route path="/pacotes" element={<PublicLayout><Services /></PublicLayout>} />
+          <Route path="/contact" element={<PublicLayout><Contact /></PublicLayout>} />
+          <Route path="/contato" element={<PublicLayout><Contact /></PublicLayout>} />
           <Route path="/briefing" element={<PublicLayout><Briefing /></PublicLayout>} />
           <Route path="/calculadora" element={<PublicLayout><Calculator /></PublicLayout>} />
+          <Route path="/privacidade" element={<PublicLayout><PrivacyPolicy /></PublicLayout>} />
+          <Route path="/termos" element={<PublicLayout><Terms /></PublicLayout>} />
           
           {/* Admin routes */}
           <Route path="/admin-j28s7d1k" element={<Navigate to="/admin-j28s7d1k/dashboard" />} />
@@ -109,11 +130,13 @@ const App: React.FC = () => {
 
           {/* Order tracking */}
           <Route path="/consultar-pedido" element={<PublicLayout><OrderTracking /></PublicLayout>} />
+          <Route path="/acompanhar-pedido" element={<PublicLayout><OrderTracking /></PublicLayout>} />
           
           {/* Preview system */}
           <Route path="/previa/:previewId" element={<PublicLayout><MusicPreviewPage /></PublicLayout>} />
           <Route path="/preview/:previewId" element={<PublicLayout><MusicPreviewPage /></PublicLayout>} />
           <Route path="/previews" element={<PublicLayout><MusicPreviews /></PublicLayout>} />
+          <Route path="/previas" element={<PublicLayout><MusicPreviews /></PublicLayout>} />
           
           {/* Legal & Support pages */}
           <Route path="/support/credit-refund" element={<PublicLayout><CreditRefundRequest /></PublicLayout>} />

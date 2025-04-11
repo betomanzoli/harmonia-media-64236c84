@@ -37,7 +37,7 @@ const AdminSidebar: React.FC = () => {
   };
   
   return (
-    <Sidebar className="h-screen border-r border-gray-800 fixed">
+    <Sidebar className="h-screen border-r border-gray-800 fixed left-0">
       <SidebarHeader className="px-6 py-4">
         <div className="flex items-center gap-2">
           <div className="w-8 h-8 rounded-full bg-harmonia-green flex items-center justify-center">
@@ -159,9 +159,7 @@ const AdminSidebar: React.FC = () => {
       <SidebarFooter>
         <div className="px-6 py-3">
           <a 
-            href="https://harmonia.media" 
-            target="_blank" 
-            rel="noopener noreferrer"
+            href="/"
             className="flex items-center gap-2 text-gray-400 hover:text-white transition-colors text-sm"
           >
             <ExternalLink size={14} />

@@ -1,7 +1,8 @@
 
-import { useLocation } from "react-router-dom";
+import { useLocation, Link } from "react-router-dom";
 import { useEffect } from "react";
 import { Button } from "@/components/ui/button";
+import { Home, ArrowLeft } from "lucide-react";
 
 const NotFound = () => {
   const location = useLocation();
@@ -19,11 +20,22 @@ const NotFound = () => {
         <h1 className="text-6xl font-bold mb-4 text-harmonia-green">404</h1>
         <p className="text-xl text-foreground mb-8">Oops! Página não encontrada</p>
         <p className="text-muted-foreground mb-8">
-          A página que você está procurando não existe ou foi movida.
+          A página <span className="font-mono bg-black/20 px-2 py-0.5 rounded">{location.pathname}</span> que você está procurando não existe ou foi movida.
         </p>
-        <Button asChild className="bg-harmonia-green hover:bg-harmonia-green/90">
-          <a href="/">Voltar para Home</a>
-        </Button>
+        <div className="flex flex-col sm:flex-row gap-3 justify-center">
+          <Button asChild className="bg-harmonia-green hover:bg-harmonia-green/90 flex items-center gap-2">
+            <Link to="/">
+              <Home className="h-4 w-4" />
+              Voltar para Home
+            </Link>
+          </Button>
+          <Button asChild variant="outline" className="flex items-center gap-2">
+            <Link to="#" onClick={() => window.history.back()}>
+              <ArrowLeft className="h-4 w-4" />
+              Voltar à página anterior
+            </Link>
+          </Button>
+        </div>
       </div>
     </div>
   );
