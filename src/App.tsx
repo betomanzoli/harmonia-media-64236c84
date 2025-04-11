@@ -1,17 +1,13 @@
+
 import React, { useEffect } from 'react';
 import { BrowserRouter as Router, Route, Routes, Navigate, useLocation } from 'react-router-dom';
-import { useAuth } from '@/contexts/AuthContext';
 import { ThemeProvider } from "@/components/ui/theme-provider"
 import { Toaster } from "@/components/ui/toaster"
-import { Analytics } from '@vercel/analytics/react';
-import { SpeedInsights } from "@vercel/speed-insights/react"
 import { useToast } from "@/components/ui/use-toast"
 
 // Public Pages
 import Home from './pages/Home';
-import Services from './pages/Services';
-import Portfolio from './pages/Portfolio';
-import Contact from './pages/Contact';
+import NotFound from './pages/NotFound';
 import Briefing from './pages/Briefing';
 import Calculator from './pages/Calculator';
 import Payment from './pages/Payment';
@@ -23,15 +19,12 @@ import MusicPreviews from './pages/MusicPreviews';
 import CreditRefundRequest from './pages/CreditRefundRequest';
 import FeedbackConfirmation from './pages/FeedbackConfirmation';
 import ApprovalConfirmation from './pages/ApprovalConfirmation';
-import NotFound from './pages/NotFound';
 
 // Admin Pages
 import AdminLogin from './pages/admin/AdminLogin';
 import AdminDashboard from './pages/admin/Dashboard';
 import AdminPreviews from './pages/admin/AdminPreviews';
-import AdminPreviewDetail from './pages/admin/AdminPreviewDetail';
 import AdminPortfolio from './pages/admin/AdminPortfolio';
-import AudioDatabase from './pages/admin/AudioDatabase';
 import AdminInvoices from './pages/admin/AdminInvoices';
 import AdminBriefings from './pages/admin/AdminBriefings';
 import AdminProjects from './pages/admin/AdminProjects';
@@ -39,8 +32,11 @@ import AdminStatistics from './pages/admin/AdminStatistics';
 import AdminGuides from './pages/admin/AdminGuides';
 
 const App: React.FC = () => {
-  const { authStatus, checkAuthStatus } = useAuth();
-  const { toast } = useToast()
+  const { toast } = useToast();
+
+  // Mock authentication for demo purposes
+  const authStatus = 'authenticated'; // or 'unauthenticated' or 'loading'
+  const checkAuthStatus = () => console.log('Checking auth status');
 
   useEffect(() => {
     checkAuthStatus();
@@ -77,14 +73,9 @@ const App: React.FC = () => {
     <ThemeProvider defaultTheme="dark" storageKey="harmonia-theme">
       <Router>
         <ScrollToTop />
-        <Analytics />
-        <SpeedInsights />
         
         <Routes>
           <Route path="/" element={<Home />} />
-          <Route path="/services" element={<Services />} />
-          <Route path="/portfolio" element={<Portfolio />} />
-          <Route path="/contact" element={<Contact />} />
           <Route path="/briefing" element={<Briefing />} />
           <Route path="/calculadora" element={<Calculator />} />
           
@@ -93,9 +84,7 @@ const App: React.FC = () => {
           <Route path="/admin-j28s7d1k/login" element={<AdminLogin />} />
           <Route path="/admin-j28s7d1k/dashboard" element={<AdminRoute><AdminDashboard /></AdminRoute>} />
           <Route path="/admin-j28s7d1k/previews" element={<AdminRoute><AdminPreviews /></AdminRoute>} />
-          <Route path="/admin-j28s7d1k/preview/:previewId" element={<AdminRoute><AdminPreviewDetail /></AdminRoute>} />
           <Route path="/admin-j28s7d1k/portfolio" element={<AdminRoute><AdminPortfolio /></AdminRoute>} />
-          <Route path="/admin-j28s7d1k/audio-database" element={<AdminRoute><AudioDatabase /></AdminRoute>} />
           <Route path="/admin-j28s7d1k/invoices" element={<AdminRoute><AdminInvoices /></AdminRoute>} />
           <Route path="/admin-j28s7d1k/briefings" element={<AdminRoute><AdminBriefings /></AdminRoute>} />
           <Route path="/admin-j28s7d1k/projects" element={<AdminRoute><AdminProjects /></AdminRoute>} />

@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { ArrowLeft, Folder, FolderOpen } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { ProjectPhases } from '@/components/admin/projects/ProjectPhases';
+import ProjectPhases from '@/components/admin/projects/ProjectPhases';
 
 const AdminProjects: React.FC = () => {
   return (

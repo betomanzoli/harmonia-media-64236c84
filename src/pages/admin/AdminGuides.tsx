@@ -6,9 +6,9 @@ import { ArrowLeft, FileText, Book, Bookmark, ExternalLink } from 'lucide-react'
 import { Link } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { AdminGuide } from '@/components/admin/guides/AdminGuide';
-import { PreviewsGuide } from '@/components/admin/guides/PreviewsGuide';
-import { InvoicesGuide } from '@/components/admin/guides/InvoicesGuide';
+import AdminGuide from '@/components/admin/guides/AdminGuide';
+import PreviewsGuide from '@/components/admin/guides/PreviewsGuide';
+import InvoicesGuide from '@/components/admin/guides/InvoicesGuide';
 
 const AdminGuides: React.FC = () => {
   return (
@@ -43,7 +43,26 @@ const AdminGuides: React.FC = () => {
           </TabsList>
           
           <TabsContent value="general" className="space-y-6">
-            <AdminGuide />
+            <AdminGuide 
+              title="Guia do Administrador" 
+              sections={[
+                {
+                  title: "Visão Geral",
+                  content: (
+                    <p>Este sistema administrativo permite gerenciar todos os aspectos do serviço harmonIA, 
+                    incluindo prévias musicais, portfólio, faturas e projetos.</p>
+                  )
+                },
+                {
+                  title: "Acesso e Segurança",
+                  content: (
+                    <p>O acesso é restrito a administradores autorizados. Nunca compartilhe suas credenciais 
+                    ou deixe a sessão aberta em computadores públicos.</p>
+                  )
+                }
+              ]}
+              storageUrl="https://drive.google.com/drive/folders/example"
+            />
             
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mt-8">
               <Card>
