@@ -46,10 +46,8 @@ export function useAuthState(offlineMode: boolean = false) {
         console.error("Erro ao checar autenticação:", err);
         setUser(null);
       } finally {
-        // Add a short delay to ensure UI has time to update
-        setTimeout(() => {
-          setIsLoading(false);
-        }, 500);
+        // Ensure we exit loading state quickly
+        setIsLoading(false);
       }
     };
     

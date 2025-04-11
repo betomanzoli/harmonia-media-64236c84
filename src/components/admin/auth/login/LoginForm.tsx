@@ -37,6 +37,7 @@ const LoginForm: React.FC<LoginFormProps> = ({
           placeholder="admin@exemplo.com"
           required
           disabled={loading || success}
+          autoComplete="email"
         />
       </div>
       
@@ -50,6 +51,7 @@ const LoginForm: React.FC<LoginFormProps> = ({
           placeholder="********"
           required
           disabled={loading || success}
+          autoComplete="current-password"
         />
       </div>
       

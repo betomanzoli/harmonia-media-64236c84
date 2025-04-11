@@ -29,8 +29,28 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children }) => {
     }
   }, [connectionStatus, toast]);
 
-  // Add a console log to help with debugging
-  console.log('ProtectedRoute state:', { isAuthenticated, isLoading, connectionStatus, path: location.pathname });
+  // Add more detailed logging to help with debugging
+  console.log('ProtectedRoute state:', { 
+    isAuthenticated, 
+    isLoading, 
+    connectionStatus, 
+    path: location.pathname, 
+    time: new Date().toISOString() 
+  });
+
+  // Add a timeout to prevent infinite loading
+  useEffect(() => {
+    // If loading takes more than 3 seconds, redirect to login
+    const timeoutId = setTimeout(() => {
+      if (isLoading) {
+        console.log('Timeout atingido, redirecionando para login');
+        // Force redirect to login
+        window.location.href = '/admin-login';
+      }
+    }, 3000);
+
+    return () => clearTimeout(timeoutId);
+  }, [isLoading]);
 
   if (isLoading) {
     return (

@@ -5,6 +5,7 @@ import AdminLoginContainer from '@/components/admin/auth/login/AdminLoginContain
 import { useToast } from '@/hooks/use-toast';
 import { useAdminAuth } from '@/hooks/admin/useAdminAuth';
 import { Loader2 } from 'lucide-react';
+import { localAuthService } from '@/lib/auth/localAuthService';
 
 const AdminLogin: React.FC = () => {
   const navigate = useNavigate();
@@ -23,7 +24,7 @@ const AdminLogin: React.FC = () => {
     const timeoutId = setTimeout(() => {
       // Adding a timeout to prevent infinite loading
       setIsCheckingAuth(false);
-    }, 2000);
+    }, 1000); // Reduced timeout to 1 second
     
     if (!isLoading) {
       clearTimeout(timeoutId);
@@ -39,33 +40,38 @@ const AdminLogin: React.FC = () => {
   }, [isLoading, isAuthenticated, navigate, from]);
   
   // Function to authenticate with correct credentials
-  const authenticateAdmin = (email: string, password: string): boolean => {
-    console.log('Tentando autenticar com:', email, password);
+  const authenticateAdmin = async (email: string, password: string): Promise<boolean> => {
+    console.log('Tentando autenticar com:', email);
     
-    // Check specific credentials
-    if ((email === 'admin@harmonia.com' && password === 'admin123456') ||
-        (email === 'contato@harmonia.media' && password === 'i9!_b!ThA;2H6/bt')) {
-      // Store authentication information
-      localStorage.setItem('harmonia-admin-auth-token', 'admin-token-for-development');
-      localStorage.setItem('harmonia-admin-auth-user', JSON.stringify({ 
-        id: email === 'admin@harmonia.com' ? 'admin-1' : 'admin-2',
-        email, 
-        role: 'admin',
-        name: email === 'admin@harmonia.com' ? 'Admin User' : 'Contato User',
-        createdAt: new Date().toISOString()
-      }));
+    try {
+      const result = await localAuthService.login(email, password);
       
+      if (result.success) {
+        toast({
+          title: 'Login realizado com sucesso!',
+          description: 'Redirecionando para o painel administrativo...'
+        });
+        
+        navigate(from, { replace: true });
+        return true;
+      } else {
+        console.log('Falha na autenticação:', result.error);
+        toast({
+          title: 'Erro de autenticação',
+          description: result.error || 'Credenciais inválidas',
+          variant: 'destructive'
+        });
+        return false;
+      }
+    } catch (error) {
+      console.error('Erro durante autenticação:', error);
       toast({
-        title: 'Login realizado com sucesso!',
-        description: 'Redirecionando para o painel administrativo...'
+        title: 'Erro de sistema',
+        description: 'Ocorreu um erro ao tentar fazer login. Tente novamente.',
+        variant: 'destructive'
       });
-      
-      navigate(from, { replace: true });
-      return true;
+      return false;
     }
-    
-    console.log('Credenciais inválidas');
-    return false;
   };
   
   if (isLoading || isCheckingAuth) {

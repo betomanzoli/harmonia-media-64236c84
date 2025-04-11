@@ -1,19 +1,18 @@
 
 import { useState, useCallback } from 'react';
-import { useNavigate } from 'react-router-dom';
 import { useToast } from '@/hooks/use-toast';
 
-export const useLoginState = (onAuthenticate?: (email: string, password: string) => boolean) => {
+export const useLoginState = (onAuthenticate?: (email: string, password: string) => Promise<boolean>) => {
   const [activeTab, setActiveTab] = useState("login");
   const [showConnectionStatus, setShowConnectionStatus] = useState(false);
   const [isPasswordResetOpen, setIsPasswordResetOpen] = useState(false);
   const [loginErrorMessage, setLoginErrorMessage] = useState<string | null>(null);
   const [showDetailedError, setShowDetailedError] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const [isSuccess, setIsSuccess] = useState(false);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const { toast } = useToast();
-  const navigate = useNavigate();
   
   // Toggle diagnostic panel
   const toggleDiagnostics = useCallback(() => {
@@ -26,16 +25,15 @@ export const useLoginState = (onAuthenticate?: (email: string, password: string)
     setIsLoading(true);
     setLoginErrorMessage(null);
     
-    console.log("Tentando login com:", email, password);
+    console.log("Tentando login com:", email);
     
     try {
-      // Add a short delay to simulate processing
-      await new Promise(resolve => setTimeout(resolve, 800));
-      
       // Use provided authentication function if available
       if (onAuthenticate) {
-        const success = onAuthenticate(email, password);
+        const success = await onAuthenticate(email, password);
+        
         if (success) {
+          setIsSuccess(true);
           return; // Redirect is handled in onAuthenticate
         } else {
           setLoginErrorMessage('Credenciais inválidas. Por favor, verifique seu email e senha.');
@@ -86,6 +84,7 @@ export const useLoginState = (onAuthenticate?: (email: string, password: string)
     setShowDetailedError,
     isLoading,
     setIsLoading,
+    isSuccess,
     email,
     password,
     handleEmailChange,
