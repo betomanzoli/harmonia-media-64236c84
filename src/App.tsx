@@ -1,9 +1,10 @@
 
 import React, { useEffect } from 'react';
 import { BrowserRouter as Router, Route, Routes, Navigate, useLocation } from 'react-router-dom';
-import { ThemeProvider } from "@/components/ui/theme-provider"
-import { Toaster } from "@/components/ui/toaster"
-import { useToast } from "@/components/ui/use-toast"
+import { useAuth } from './contexts/AuthContext';
+import { ThemeProvider } from "@/components/ui/theme-provider";
+import { Toaster } from "@/components/ui/toaster";
+import { useToast } from "@/components/ui/use-toast";
 
 // Public Pages
 import Home from './pages/Home';
@@ -32,11 +33,8 @@ import AdminStatistics from './pages/admin/AdminStatistics';
 import AdminGuides from './pages/admin/AdminGuides';
 
 const App: React.FC = () => {
+  const { authStatus, checkAuthStatus } = useAuth();
   const { toast } = useToast();
-
-  // Mock authentication for demo purposes
-  const authStatus = 'authenticated'; // or 'unauthenticated' or 'loading'
-  const checkAuthStatus = () => console.log('Checking auth status');
 
   useEffect(() => {
     checkAuthStatus();

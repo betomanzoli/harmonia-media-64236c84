@@ -8,12 +8,14 @@ export interface ProjectPhasesProps {
   projectId?: string;
   projectType?: string;
   currentPhase?: string;
+  onPhaseAction?: (phaseId: string, action: 'upload' | 'notify' | 'complete') => void;
 }
 
 const ProjectPhases: React.FC<ProjectPhasesProps> = ({ 
   projectId = 'exemplo',
   projectType = 'Música Personalizada',
-  currentPhase = 'Produção'
+  currentPhase = 'producao',
+  onPhaseAction
 }) => {
   const phases = [
     { id: "briefing", name: "Briefing", icon: <Clipboard />, color: "bg-blue-500" },
@@ -23,7 +25,7 @@ const ProjectPhases: React.FC<ProjectPhasesProps> = ({
     { id: "aprovacao", name: "Aprovação", icon: <CheckCircle2 />, color: "bg-emerald-500" }
   ];
 
-  // Encontrar a fase atual no array
+  // Find the current phase index
   const currentIndex = phases.findIndex(phase => phase.id === currentPhase.toLowerCase());
   
   return (
@@ -38,10 +40,10 @@ const ProjectPhases: React.FC<ProjectPhasesProps> = ({
         <p className="text-sm text-muted-foreground mb-6">{projectType}</p>
         
         <div className="relative">
-          {/* Linha de conexão */}
+          {/* Connection line */}
           <div className="absolute top-6 left-6 w-[calc(100%-48px)] h-0.5 bg-muted z-0"></div>
           
-          {/* Fases do projeto */}
+          {/* Project phases */}
           <div className="flex justify-between relative z-10">
             {phases.map((phase, index) => (
               <div key={phase.id} className="flex flex-col items-center">

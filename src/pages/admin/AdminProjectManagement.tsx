@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import AdminLayout from '@/components/admin/layout/AdminLayout';
 import ProjectPhases from '@/components/admin/projects/ProjectPhases';
@@ -17,11 +16,10 @@ import {
   HelpCircle
 } from 'lucide-react';
 import { Link, useParams } from 'react-router-dom';
-import { useToast } from "@/hooks/use-toast";
+import { useToast } from "@/components/ui/use-toast";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 
-// Mock data - would be fetched from API in production
 const getProjectData = (projectId: string) => {
   return {
     id: projectId,
@@ -29,7 +27,7 @@ const getProjectData = (projectId: string) => {
     clientName: 'Maria Oliveira',
     clientEmail: 'maria.oliveira@email.com',
     packageType: 'Profissional' as const,
-    currentPhase: 2,
+    currentPhase: 'producao',
     status: 'Em Andamento',
     startDate: '05/04/2025',
     deadlineDate: '19/04/2025',
