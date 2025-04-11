@@ -30,7 +30,7 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children }) => {
   }, [connectionStatus, toast]);
 
   // Add a console log to help with debugging
-  console.log('ProtectedRoute state:', { isAuthenticated, isLoading, connectionStatus });
+  console.log('ProtectedRoute state:', { isAuthenticated, isLoading, connectionStatus, path: location.pathname });
 
   if (isLoading) {
     return (

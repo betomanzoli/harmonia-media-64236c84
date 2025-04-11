@@ -1,23 +1,23 @@
 
-import React, { useState } from 'react';
+import React from 'react';
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Loader2, Shield } from 'lucide-react';
 
 interface LoginFormProps {
-  email?: string;
-  password?: string;
+  email: string;
+  password: string;
   loading: boolean;
   success: boolean;
-  onEmailChange?: (e: React.ChangeEvent<HTMLInputElement>) => void;
-  onPasswordChange?: (e: React.ChangeEvent<HTMLInputElement>) => void;
+  onEmailChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
+  onPasswordChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
   onSubmit: (e: React.FormEvent<HTMLFormElement>) => Promise<void>;
   onResetPasswordClick: () => void;
 }
 
 const LoginForm: React.FC<LoginFormProps> = ({ 
-  email = "",
-  password = "",
+  email,
+  password,
   loading,
   success,
   onEmailChange,
@@ -25,19 +25,6 @@ const LoginForm: React.FC<LoginFormProps> = ({
   onSubmit,
   onResetPasswordClick
 }) => {
-  const [emailValue, setEmailValue] = useState(email);
-  const [passwordValue, setPasswordValue] = useState(password);
-
-  const handleEmailChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setEmailValue(e.target.value);
-    if (onEmailChange) onEmailChange(e);
-  };
-
-  const handlePasswordChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setPasswordValue(e.target.value);
-    if (onPasswordChange) onPasswordChange(e);
-  };
-
   return (
     <form onSubmit={onSubmit} className="space-y-4">
       <div className="space-y-2">
@@ -45,8 +32,8 @@ const LoginForm: React.FC<LoginFormProps> = ({
         <Input
           type="email"
           name="email"
-          value={emailValue}
-          onChange={handleEmailChange}
+          value={email}
+          onChange={onEmailChange}
           placeholder="admin@exemplo.com"
           required
           disabled={loading || success}
@@ -58,8 +45,8 @@ const LoginForm: React.FC<LoginFormProps> = ({
         <Input
           type="password"
           name="password"
-          value={passwordValue}
-          onChange={handlePasswordChange}
+          value={password}
+          onChange={onPasswordChange}
           placeholder="********"
           required
           disabled={loading || success}

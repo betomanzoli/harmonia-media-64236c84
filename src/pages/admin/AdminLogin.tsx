@@ -18,6 +18,8 @@ const AdminLogin: React.FC = () => {
   
   // Check if already authenticated
   useEffect(() => {
+    console.log('AdminLogin montado, verificando autenticação...');
+    
     const timeoutId = setTimeout(() => {
       // Adding a timeout to prevent infinite loading
       setIsCheckingAuth(false);
@@ -38,6 +40,8 @@ const AdminLogin: React.FC = () => {
   
   // Function to authenticate with correct credentials
   const authenticateAdmin = (email: string, password: string): boolean => {
+    console.log('Tentando autenticar com:', email, password);
+    
     // Check specific credentials
     if ((email === 'admin@harmonia.com' && password === 'admin123456') ||
         (email === 'contato@harmonia.media' && password === 'i9!_b!ThA;2H6/bt')) {
@@ -60,10 +64,11 @@ const AdminLogin: React.FC = () => {
       return true;
     }
     
+    console.log('Credenciais inválidas');
     return false;
   };
   
-  if (isLoading && isCheckingAuth) {
+  if (isLoading || isCheckingAuth) {
     return (
       <div className="flex items-center justify-center min-h-screen bg-gradient-to-b from-gray-900 to-black">
         <div className="flex flex-col items-center gap-2">

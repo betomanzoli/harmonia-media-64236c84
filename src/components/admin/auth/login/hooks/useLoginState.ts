@@ -2,7 +2,6 @@
 import { useState, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useToast } from '@/hooks/use-toast';
-import { localAuthService } from '@/lib/auth/localAuthService';
 
 export const useLoginState = (onAuthenticate?: (email: string, password: string) => boolean) => {
   const [activeTab, setActiveTab] = useState("login");
@@ -27,12 +26,7 @@ export const useLoginState = (onAuthenticate?: (email: string, password: string)
     setIsLoading(true);
     setLoginErrorMessage(null);
     
-    // Get form data
-    const formData = new FormData(e.currentTarget);
-    const email = formData.get('email') as string;
-    const password = formData.get('password') as string;
-    
-    console.log("Tentando login com:", email);
+    console.log("Tentando login com:", email, password);
     
     try {
       // Add a short delay to simulate processing
@@ -42,26 +36,12 @@ export const useLoginState = (onAuthenticate?: (email: string, password: string)
       if (onAuthenticate) {
         const success = onAuthenticate(email, password);
         if (success) {
-          toast({
-            title: "Login bem-sucedido",
-            description: "Você está sendo redirecionado para o painel administrativo.",
-          });
-          navigate('/admin-j28s7d1k/dashboard');
-          return;
+          return; // Redirect is handled in onAuthenticate
+        } else {
+          setLoginErrorMessage('Credenciais inválidas. Por favor, verifique seu email e senha.');
         }
-      }
-      
-      // Use the local auth service for authentication
-      const { success, error } = await localAuthService.login(email, password);
-      
-      if (success) {
-        toast({
-          title: "Login bem-sucedido",
-          description: "Você está sendo redirecionado para o painel administrativo.",
-        });
-        navigate('/admin-j28s7d1k/dashboard');
       } else {
-        setLoginErrorMessage(error || 'Credenciais inválidas. Por favor, verifique seu email e senha.');
+        setLoginErrorMessage('Nenhum método de autenticação foi configurado.');
       }
     } catch (error) {
       console.error("Erro durante login:", error);
