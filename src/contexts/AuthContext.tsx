@@ -1,6 +1,7 @@
 
 import React, { createContext, useContext, useState, useCallback } from 'react';
 
+// Update AuthStatus type to match the actual string literals used in the code
 type AuthStatus = 'loading' | 'authenticated' | 'unauthenticated';
 
 interface AuthContextType {

@@ -93,7 +93,11 @@ const AdminProjects: React.FC = () => {
           </Card>
         </div>
         
-        <ProjectPhases />
+        <ProjectPhases 
+          projectId="PROJ-2023-01" 
+          projectType="Música Personalizada - Pacote Premium" 
+          currentPhase="producao" 
+        />
       </div>
     </AdminLayout>
   );

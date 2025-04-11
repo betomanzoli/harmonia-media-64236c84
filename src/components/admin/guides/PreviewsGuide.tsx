@@ -12,7 +12,7 @@ import { Clipboard, Mail, SmartphoneIcon } from 'lucide-react';
 import { useToast } from "@/components/ui/use-toast";
 import { siteConfig } from '@/config/site';
 
-export const PreviewsGuide: React.FC = () => {
+const PreviewsGuide: React.FC = () => {
   const { toast } = useToast();
   const baseUrl = window.location.origin;
   
@@ -186,3 +186,7 @@ Equipe harmonIA`;
     </Card>
   );
 };
+
+// Export both as default and named export to ensure compatibility
+export { PreviewsGuide };
+export default PreviewsGuide;
