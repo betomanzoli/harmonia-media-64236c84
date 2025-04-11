@@ -11,24 +11,43 @@ import webhookService, { NotificationType } from '@/services/webhookService';
 const DEFAULT_WEBHOOK_URL = 'https://hooks.zapier.com/hooks/catch/22316385/2031hl7/';
 
 const WebhookConfigCard: React.FC = () => {
-  const [webhookUrl, setWebhookUrl] = useState<string>('');
+  const [webhookUrl, setWebhookUrl] = useState<string>(DEFAULT_WEBHOOK_URL);
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [isTesting, setIsTesting] = useState<boolean>(false);
-  const [isConfigured, setIsConfigured] = useState<boolean>(false);
+  const [isConfigured, setIsConfigured] = useState<boolean>(true); // Default to true since we always have a default URL
   const { toast } = useToast();
   
   useEffect(() => {
     const loadSavedUrl = async () => {
       setIsLoading(true);
-      const savedUrl = await webhookService.getWebhookUrl();
-      if (savedUrl) {
-        setWebhookUrl(savedUrl);
-        setIsConfigured(true);
-      } else {
+      try {
+        // Iniciar com o URL padrão do localStorage para evitar estado vazio
+        const localUrl = localStorage.getItem('harmonia_webhook_url');
+        if (localUrl) {
+          setWebhookUrl(localUrl);
+          setIsConfigured(true);
+        } else {
+          // Se não tiver no localStorage, usar o padrão e salvar
+          setWebhookUrl(DEFAULT_WEBHOOK_URL);
+          localStorage.setItem('harmonia_webhook_url', DEFAULT_WEBHOOK_URL);
+          setIsConfigured(true);
+        }
+        
+        // Tentar obter do serviço (que tenta banco de dados)
+        const savedUrl = await webhookService.getWebhookUrl();
+        if (savedUrl) {
+          setWebhookUrl(savedUrl);
+          setIsConfigured(true);
+        }
+      } catch (error) {
+        console.error("Erro ao carregar URL do webhook:", error);
+        // Em caso de erro, garantir que temos a URL padrão
         setWebhookUrl(DEFAULT_WEBHOOK_URL);
-        setIsConfigured(false);
+        localStorage.setItem('harmonia_webhook_url', DEFAULT_WEBHOOK_URL);
+        setIsConfigured(true);
+      } finally {
+        setIsLoading(false);
       }
-      setIsLoading(false);
     };
     
     loadSavedUrl();
@@ -47,6 +66,11 @@ const WebhookConfigCard: React.FC = () => {
     setIsLoading(true);
     
     try {
+      // Salvar no localStorage primeiro para garantir persistência
+      localStorage.setItem('harmonia_webhook_url', webhookUrl);
+      setIsConfigured(true);
+      
+      // Tentar salvar usando o serviço (que tenta banco de dados)
       const success = await webhookService.saveWebhookUrl(webhookUrl);
       
       if (success) {
@@ -56,18 +80,18 @@ const WebhookConfigCard: React.FC = () => {
           description: "URL do webhook foi salva com sucesso.",
         });
       } else {
+        // Mesmo com falha no banco, consideramos configurado pois salvamos no localStorage
         toast({
-          title: "Erro ao salvar",
-          description: "Não foi possível salvar a URL do webhook.",
-          variant: "destructive"
+          title: "Aviso",
+          description: "URL salva localmente, mas houve um problema ao salvar no banco de dados.",
         });
       }
     } catch (error) {
       console.error('Erro ao salvar webhook:', error);
+      // Mesmo com erro, o localStorage deve ter sido atualizado
       toast({
-        title: "Erro",
-        description: "Ocorreu um erro ao salvar a configuração.",
-        variant: "destructive"
+        title: "Configuração parcial",
+        description: "A URL foi salva localmente, mas ocorreu um erro no processo completo.",
       });
     } finally {
       setIsLoading(false);
@@ -179,6 +203,15 @@ const WebhookConfigCard: React.FC = () => {
               <li>Notificações no Slack</li>
               <li>Outros serviços via Zapier</li>
             </ul>
+          </div>
+          
+          <div className="mt-4 p-3 bg-amber-50 border border-amber-200 rounded-md">
+            <h4 className="text-amber-800 font-medium mb-2">Importante</h4>
+            <p className="text-sm text-amber-700">
+              A URL padrão (<code>https://hooks.zapier.com/hooks/catch/22316385/2031hl7/</code>) é 
+              usada para receber notificações dos clientes. Para enviar notificações para os clientes, 
+              você precisa configurar as integrações na página de Integrações.
+            </p>
           </div>
         </div>
       </CardContent>

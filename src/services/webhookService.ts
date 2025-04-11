@@ -24,26 +24,33 @@ const getWebhookUrl = async (): Promise<string | null> => {
     }
     
     // If not in localStorage, try to get from database
-    const { data, error } = await supabase
-      .from('system_settings')
-      .select('value')
-      .eq('key', 'webhook_url')
-      .single();
+    try {
+      const { data, error } = await supabase
+        .from('system_settings')
+        .select('value')
+        .eq('key', 'webhook_url')
+        .single();
+        
+      if (error) {
+        console.error('Erro ao buscar URL do webhook:', error);
+        // If error, use default URL and save it
+        localStorage.setItem(WEBHOOK_STORAGE_KEY, DEFAULT_WEBHOOK_URL);
+        return DEFAULT_WEBHOOK_URL;
+      }
       
-    if (error) {
-      console.error('Erro ao buscar URL do webhook:', error);
-      // If error, use default URL and save it
+      const webhookUrl = data?.value || DEFAULT_WEBHOOK_URL;
+      console.log('URL do webhook recuperada:', webhookUrl);
+      
+      // Save to localStorage for future use
+      localStorage.setItem(WEBHOOK_STORAGE_KEY, webhookUrl);
+      
+      return webhookUrl;
+    } catch (dbErr) {
+      console.error('Erro de banco de dados:', dbErr);
+      // Use default URL in case of database error
       localStorage.setItem(WEBHOOK_STORAGE_KEY, DEFAULT_WEBHOOK_URL);
       return DEFAULT_WEBHOOK_URL;
     }
-    
-    const webhookUrl = data?.value || DEFAULT_WEBHOOK_URL;
-    console.log('URL do webhook recuperada:', webhookUrl);
-    
-    // Save to localStorage for future use
-    localStorage.setItem(WEBHOOK_STORAGE_KEY, webhookUrl);
-    
-    return webhookUrl;
   } catch (err) {
     console.error('Erro ao obter URL do webhook:', err);
     // If error, use default URL and save it
@@ -60,18 +67,24 @@ const saveWebhookUrl = async (url: string): Promise<boolean> => {
     localStorage.setItem(WEBHOOK_STORAGE_KEY, url);
     
     // Then try to save to database
-    const { error } = await supabase
-      .from('system_settings')
-      .upsert({ key: 'webhook_url', value: url }, { onConflict: 'key' });
+    try {
+      const { error } = await supabase
+        .from('system_settings')
+        .upsert({ key: 'webhook_url', value: url }, { onConflict: 'key' });
+        
+      if (error) {
+        console.error('Erro ao salvar URL do webhook no banco:', error);
+        // Return true anyway because we saved to localStorage
+        return true;
+      }
       
-    if (error) {
-      console.error('Erro ao salvar URL do webhook no banco:', error);
-      // Return true anyway because we saved to localStorage
+      console.log('URL do webhook salva com sucesso');
+      return true;
+    } catch (dbErr) {
+      console.error('Erro de banco de dados ao salvar webhook:', dbErr);
+      // Return true if we saved to localStorage
       return true;
     }
-    
-    console.log('URL do webhook salva com sucesso');
-    return true;
   } catch (err) {
     console.error('Erro ao salvar URL do webhook:', err);
     // Return true if we saved to localStorage
@@ -138,9 +151,21 @@ const sendItemNotification = async (
 
 // Initialize default webhook URL on service load
 (async () => {
-  const url = await getWebhookUrl();
-  if (!url) {
-    await saveWebhookUrl(DEFAULT_WEBHOOK_URL);
+  try {
+    // Sempre inicializar com a URL padrão no localStorage para garantir a disponibilidade
+    if (!localStorage.getItem(WEBHOOK_STORAGE_KEY)) {
+      localStorage.setItem(WEBHOOK_STORAGE_KEY, DEFAULT_WEBHOOK_URL);
+      console.log('URL do webhook inicializada com padrão:', DEFAULT_WEBHOOK_URL);
+    }
+    
+    const url = await getWebhookUrl();
+    if (!url) {
+      await saveWebhookUrl(DEFAULT_WEBHOOK_URL);
+    }
+  } catch (e) {
+    console.error('Erro ao inicializar webhook service:', e);
+    // Garantir que sempre temos uma URL padrão
+    localStorage.setItem(WEBHOOK_STORAGE_KEY, DEFAULT_WEBHOOK_URL);
   }
 })();
 

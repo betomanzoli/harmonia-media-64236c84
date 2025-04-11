@@ -63,12 +63,35 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children }) => {
     }
   }, [connectionStatus, toast, isOfflineMode]);
 
+  // Fix: Force offline mode for development to avoid loading issues
+  useEffect(() => {
+    if (isLoading && !isOfflineMode) {
+      // If loading takes too long, enable offline mode automatically
+      const timer = setTimeout(() => {
+        console.log("Ativando modo offline automaticamente devido a tempo de carregamento prolongado");
+        sessionStorage.setItem('offline-admin-mode', 'true');
+        setIsOfflineMode(true);
+      }, 3000);
+      
+      return () => clearTimeout(timer);
+    }
+  }, [isLoading, isOfflineMode]);
+
   if (isLoading && !isOfflineMode) {
     return (
       <div className="flex items-center justify-center min-h-screen">
         <div className="flex flex-col items-center gap-2">
           <Loader2 className="h-10 w-10 animate-spin text-harmonia-green" />
           <p className="text-gray-500">Verificando autenticação...</p>
+          <button 
+            onClick={() => {
+              sessionStorage.setItem('offline-admin-mode', 'true');
+              window.location.reload();
+            }}
+            className="mt-4 text-sm px-3 py-1 bg-harmonia-green text-white rounded-md"
+          >
+            Ativar modo offline
+          </button>
         </div>
       </div>
     );

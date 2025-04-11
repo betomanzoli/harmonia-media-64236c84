@@ -4,7 +4,7 @@ import { BrowserRouter as Router, Route, Routes, Navigate, useLocation } from 'r
 import { useAuth } from './contexts/AuthContext';
 import { ThemeProvider } from "@/components/ui/theme-provider";
 import { Toaster } from "@/components/ui/toaster";
-import { useToast } from "@/components/ui/use-toast";
+import { useToast } from "@/hooks/use-toast";
 
 // Public Pages
 import Home from './pages/Home';
@@ -31,6 +31,14 @@ import AdminBriefings from './pages/admin/AdminBriefings';
 import AdminProjects from './pages/admin/AdminProjects';
 import AdminStatistics from './pages/admin/AdminStatistics';
 import AdminGuides from './pages/admin/AdminGuides';
+import AdminStorage from './pages/admin/AdminStorage';
+import AdminIntegrations from './pages/admin/AdminIntegrations';
+
+// Forçar modo offline para desenvolvimento
+if (process.env.NODE_ENV === 'development') {
+  // Uncomment this line if you want to force offline mode
+  // sessionStorage.setItem('offline-admin-mode', 'true');
+}
 
 const App: React.FC = () => {
   const { authStatus, checkAuthStatus } = useAuth();
@@ -88,6 +96,8 @@ const App: React.FC = () => {
           <Route path="/admin-j28s7d1k/projects" element={<AdminRoute><AdminProjects /></AdminRoute>} />
           <Route path="/admin-j28s7d1k/statistics" element={<AdminRoute><AdminStatistics /></AdminRoute>} />
           <Route path="/admin-j28s7d1k/guides" element={<AdminRoute><AdminGuides /></AdminRoute>} />
+          <Route path="/admin-j28s7d1k/storage" element={<AdminRoute><AdminStorage /></AdminRoute>} />
+          <Route path="/admin-j28s7d1k/integrations" element={<AdminRoute><AdminIntegrations /></AdminRoute>} />
           
           {/* Payment routes */}
           <Route path="/pagamento/:packageId" element={<Payment />} />
