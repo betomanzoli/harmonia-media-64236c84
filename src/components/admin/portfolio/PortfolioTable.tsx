@@ -49,12 +49,12 @@ const PortfolioTable: React.FC<PortfolioTableProps> = ({ portfolioItems, isLoadi
                 <TableRow key={item.id}>
                   <TableCell className="font-medium">{item.id}</TableCell>
                   <TableCell>{item.title}</TableCell>
-                  <TableCell>{item.subtitle}</TableCell>
-                  <TableCell>{item.genre}</TableCell>
-                  <TableCell>{item.type}</TableCell>
+                  <TableCell>{item.subtitle || item.category}</TableCell>
+                  <TableCell>{item.genre || item.category}</TableCell>
+                  <TableCell>{item.type || 'N/A'}</TableCell>
                   <TableCell className="text-right">
                     <a 
-                      href={item.audioSrc} 
+                      href={item.audioSrc || item.audioUrl} 
                       target="_blank" 
                       rel="noopener noreferrer"
                       className="inline-flex items-center gap-1 text-harmonia-green hover:underline"

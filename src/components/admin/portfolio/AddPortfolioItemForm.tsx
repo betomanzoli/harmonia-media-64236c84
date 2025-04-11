@@ -20,13 +20,25 @@ const AddPortfolioItemForm: React.FC<AddPortfolioItemFormProps> = ({ onAddItem }
           const genre = (form.elements.namedItem('genre') as HTMLInputElement).value;
           const type = (form.elements.namedItem('type') as HTMLSelectElement).value;
           const audioSrc = (form.elements.namedItem('audioSrc') as HTMLInputElement).value;
+          const category = genre; // Using genre as category
+          const description = (form.elements.namedItem('description') as HTMLTextAreaElement).value || `${title} - ${subtitle}`;
+          const imageUrl = '/images/portfolio/portfolio-default.jpg'; // Default image
+          const clientName = 'harmonIA Music';
+          const date = new Date().toISOString().split('T')[0];
+          const audioUrl = audioSrc; // Same as audioSrc for compatibility
           
           onAddItem({
             title,
             subtitle,
             genre,
             type,
-            audioSrc
+            audioSrc,
+            category,
+            description,
+            imageUrl,
+            clientName,
+            date,
+            audioUrl
           });
           
           form.reset();
@@ -87,6 +99,17 @@ const AddPortfolioItemForm: React.FC<AddPortfolioItemFormProps> = ({ onAddItem }
             required
             className="w-full p-2 border border-input rounded"
             placeholder="https://exemplo.com/audio.mp3"
+          />
+        </div>
+        
+        <div className="md:col-span-2">
+          <label htmlFor="description" className="block text-sm font-medium mb-1">Descrição (opcional)</label>
+          <textarea
+            id="description"
+            name="description"
+            className="w-full p-2 border border-input rounded"
+            placeholder="Descrição detalhada do item"
+            rows={3}
           />
         </div>
         

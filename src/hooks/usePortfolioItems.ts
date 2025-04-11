@@ -10,8 +10,13 @@ export interface PortfolioItem {
   audioUrl: string;
   clientName: string;
   date: string;
-  views?: number; // Added views property
+  views?: number;
   featured?: boolean;
+  // Add the missing properties that are being referenced in other components
+  subtitle?: string;
+  genre?: string;
+  type?: string;
+  audioSrc?: string;
 }
 
 export const usePortfolioItems = () => {
@@ -26,7 +31,11 @@ export const usePortfolioItems = () => {
       clientName: 'Brand Premium',
       date: '2024-03-15',
       views: 156,
-      featured: true
+      featured: true,
+      subtitle: 'Música para Campanha',
+      genre: 'Orquestral/Moderno',
+      type: 'instrumental',
+      audioSrc: '/audio/example-track-1.mp3'
     },
     {
       id: '2',
@@ -37,7 +46,11 @@ export const usePortfolioItems = () => {
       audioUrl: '/audio/example-track-2.mp3',
       clientName: 'Nature Films',
       date: '2024-02-28',
-      views: 98
+      views: 98,
+      subtitle: 'Música para Documentário',
+      genre: 'Ambiental',
+      type: 'instrumental',
+      audioSrc: '/audio/example-track-2.mp3'
     },
     {
       id: '3',
@@ -49,7 +62,11 @@ export const usePortfolioItems = () => {
       clientName: 'TechCorp',
       date: '2024-01-20',
       views: 213,
-      featured: true
+      featured: true,
+      subtitle: 'Jingle Promocional',
+      genre: 'Pop/Eletrônico',
+      type: 'vocal',
+      audioSrc: '/audio/example-track-3.mp3'
     },
     {
       id: '4',
@@ -60,9 +77,16 @@ export const usePortfolioItems = () => {
       audioUrl: '/audio/example-track-4.mp3',
       clientName: 'Business Insights',
       date: '2023-12-05',
-      views: 87
+      views: 87,
+      subtitle: 'Tema para Podcast',
+      genre: 'Corporativo',
+      type: 'instrumental',
+      audioSrc: '/audio/example-track-4.mp3'
     }
   ]);
+
+  // Add isLoading state
+  const [isLoading, setIsLoading] = useState(false);
 
   const addPortfolioItem = (newItem: Omit<PortfolioItem, 'id'>) => {
     const id = (portfolioItems.length + 1).toString();
@@ -78,11 +102,16 @@ export const usePortfolioItems = () => {
   const deletePortfolioItem = (id: string) => {
     setPortfolioItems(portfolioItems.filter((item) => item.id !== id));
   };
+  
+  // Alias for addPortfolioItem to match what AdminPortfolio.tsx is expecting
+  const handleAddItem = addPortfolioItem;
 
   return {
     portfolioItems,
     addPortfolioItem,
     updatePortfolioItem,
-    deletePortfolioItem
+    deletePortfolioItem,
+    isLoading,
+    handleAddItem  // Adding this to fix the error in AdminPortfolio.tsx
   };
 };
