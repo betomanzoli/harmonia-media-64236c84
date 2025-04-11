@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { BrowserRouter as Router, Route, Routes } from 'react-router-dom';
 import Home from './pages/Home';
@@ -31,8 +32,8 @@ import Payment from './pages/Payment';
 import PaymentProcessing from './pages/PaymentProcessing';
 import PaymentReturn from './pages/PaymentReturn';
 import PortfolioPage from './pages/Portfolio';
-import PrivacyPolicy from './components/PrivacyPolicy';
-import Terms from './components/Terms';
+import PrivacyPolicy from './pages/PrivacyPolicy';
+import Terms from './pages/Terms';
 
 function App() {
   return (
