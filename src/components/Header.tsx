@@ -3,6 +3,7 @@ import React, { useState, useEffect } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { Menu, X, Calculator, FileCheck } from 'lucide-react';
 import { Button } from "@/components/ui/button";
+import Logo from './Logo';
 
 const Header: React.FC = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -38,8 +39,8 @@ const Header: React.FC = () => {
     }`}>
       <div className="container mx-auto px-4 py-4">
         <div className="flex items-center justify-between">
-          <Link to="/" className="text-white font-bold text-xl">
-            harmonIA
+          <Link to="/" className="text-white">
+            <Logo />
           </Link>
 
           {/* Desktop Navigation */}
