@@ -5,14 +5,17 @@ import Footer from '@/components/Footer';
 import BriefingForm from '@/components/BriefingForm';
 import { Button } from "@/components/ui/button";
 import { Alert, AlertTitle, AlertDescription } from "@/components/ui/alert";
-import { ArrowLeft, AlertTriangle, CheckCircle2 } from 'lucide-react';
+import { ArrowLeft, AlertTriangle, CheckCircle2, Package } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { Link } from 'react-router-dom';
+import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
+import { Card, CardContent } from "@/components/ui/card";
 
 const Briefing: React.FC = () => {
   const navigate = useNavigate();
   const [hasPurchased, setHasPurchased] = useState(false);
   const [purchaseData, setPurchaseData] = useState<any>(null);
+  const [selectedPackage, setSelectedPackage] = useState<'essencial' | 'profissional' | 'premium'>('essencial');
 
   useEffect(() => {
     // Check if user has purchased a package
@@ -22,6 +25,11 @@ const Briefing: React.FC = () => {
         const data = JSON.parse(paymentData);
         setHasPurchased(true);
         setPurchaseData(data);
+        
+        // Set the selected package based on the purchased package
+        if (data.packageId) {
+          setSelectedPackage(data.packageId as 'essencial' | 'profissional' | 'premium');
+        }
       } catch (e) {
         console.error('Error parsing payment data:', e);
       }
@@ -49,7 +57,7 @@ const Briefing: React.FC = () => {
             <p className="text-gray-400 max-w-2xl mx-auto">
               {hasPurchased 
                 ? "Preencha o formulário abaixo para iniciarmos a criação de sua composição musical personalizada."
-                : "Este formulário é exclusivo para clientes que já adquiriram um de nossos pacotes."}
+                : "Para preencher o briefing, você precisa primeiro adquirir um de nossos pacotes."}
             </p>
           </div>
 
@@ -57,93 +65,166 @@ const Briefing: React.FC = () => {
             <div className="max-w-2xl mx-auto">
               <Alert variant="destructive" className="mb-8">
                 <AlertTriangle className="h-4 w-4" />
-                <AlertTitle>Acesso restrito</AlertTitle>
+                <AlertTitle>Pagamento necessário</AlertTitle>
                 <AlertDescription>
-                  Este formulário de briefing detalhado está disponível apenas para clientes que já adquiriram um de nossos pacotes.
+                  Para preencher o briefing e iniciar sua composição personalizada, é necessário primeiro realizar o pagamento de um de nossos pacotes.
                 </AlertDescription>
               </Alert>
               
               <div className="text-center space-y-6">
                 <p className="text-gray-300">
-                  Para acessar este formulário, você precisa primeiro adquirir um de nossos pacotes de música personalizada.
+                  Escolha um de nossos pacotes abaixo para prosseguir com o pagamento:
                 </p>
                 
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                  <Link to="/pacotes" className="w-full">
-                    <Button variant="outline" className="w-full">
-                      Ver pacotes disponíveis
-                    </Button>
-                  </Link>
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                  <Card className="border border-border hover:border-harmonia-green/50 cursor-pointer transition-colors">
+                    <CardContent className="p-6">
+                      <h3 className="font-semibold mb-2">Pacote Essencial</h3>
+                      <p className="text-sm text-gray-500 mb-4">Ideal para presentes emocionais rápidos.</p>
+                      <Link to="/pagamento/essencial">
+                        <Button className="w-full">Escolher</Button>
+                      </Link>
+                    </CardContent>
+                  </Card>
                   
-                  <Link to="/qualification" className="w-full">
-                    <Button className="w-full bg-harmonia-green hover:bg-harmonia-green/90">
-                      Iniciar o processo
+                  <Card className="border border-harmonia-green bg-gradient-to-b from-harmonia-green/10 to-transparent shadow-lg cursor-pointer">
+                    <CardContent className="p-6">
+                      <h3 className="font-semibold mb-2">Pacote Profissional</h3>
+                      <p className="text-sm text-gray-500 mb-4">Perfeito para criadores de conteúdo.</p>
+                      <Link to="/pagamento/profissional">
+                        <Button className="w-full bg-harmonia-green hover:bg-harmonia-green/90">Escolher</Button>
+                      </Link>
+                    </CardContent>
+                  </Card>
+                  
+                  <Card className="border border-border hover:border-harmonia-green/50 cursor-pointer transition-colors">
+                    <CardContent className="p-6">
+                      <h3 className="font-semibold mb-2">Pacote Premium</h3>
+                      <p className="text-sm text-gray-500 mb-4">Melhor opção para empresas.</p>
+                      <Link to="/pagamento/premium">
+                        <Button className="w-full">Escolher</Button>
+                      </Link>
+                    </CardContent>
+                  </Card>
+                </div>
+                
+                <div className="pt-4">
+                  <Link to="/services">
+                    <Button variant="outline">
+                      <Package className="w-4 h-4 mr-2" />
+                      Ver detalhes dos pacotes
                     </Button>
                   </Link>
                 </div>
               </div>
             </div>
           ) : (
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-              <div className="md:col-span-1 space-y-6">
+            <>
+              <div className="mb-6">
                 <Alert className="bg-card border border-border">
                   <CheckCircle2 className="h-4 w-4 text-harmonia-green" />
                   <AlertTitle>Pagamento confirmado</AlertTitle>
                   <AlertDescription>
                     {purchaseData && (
                       <p className="text-sm text-gray-400">
-                        Você adquiriu o {purchaseData.packageName} em {new Date(purchaseData.date).toLocaleDateString()}.
+                        Você adquiriu o pacote {purchaseData.packageName} em {new Date(purchaseData.date).toLocaleDateString()}.
                       </p>
                     )}
                   </AlertDescription>
                 </Alert>
-                
-                <div className="bg-card border border-border rounded-lg p-6">
-                  <h3 className="font-semibold mb-2">Como funciona?</h3>
-                  <p className="text-gray-400 text-sm">
-                    Após o envio do formulário, nossa equipe irá iniciar o processo de composição.
-                    Você receberá atualizações por e-mail e poderá acompanhar o progresso do seu projeto.
-                  </p>
-                </div>
-                
-                <div className="bg-card border border-border rounded-lg p-6">
-                  <h3 className="font-semibold mb-2">Exemplos de músicas</h3>
-                  <p className="text-gray-400 text-sm mb-4">
-                    Escute exemplos das músicas que criamos para nossos clientes.
-                  </p>
-                  <Link to="/portfolio">
-                    <Button 
-                      variant="outline" 
-                      className="w-full"
-                    >
-                      Ver portfólio
-                    </Button>
-                  </Link>
-                </div>
-                
-                <div className="bg-card border border-border rounded-lg p-6">
-                  <h3 className="font-semibold mb-2">Suporte</h3>
-                  <p className="text-gray-400 text-sm mb-4">
-                    Tem alguma dúvida sobre o preenchimento do formulário?
-                  </p>
-                  <Link to="#" onClick={(e) => {
-                    e.preventDefault();
-                    window.open('https://wa.me/5511999999999', '_blank');
-                  }}>
-                    <Button 
-                      variant="outline" 
-                      className="w-full"
-                    >
-                      Falar com suporte
-                    </Button>
-                  </Link>
-                </div>
               </div>
-              
-              <div className="md:col-span-2">
-                <BriefingForm />
+            
+              <div className="mb-6">
+                <Tabs value={selectedPackage} onValueChange={(value) => setSelectedPackage(value as 'essencial' | 'profissional' | 'premium')}>
+                  <TabsList className="grid grid-cols-3 mb-6">
+                    <TabsTrigger value="essencial" className="data-[state=active]:bg-harmonia-green">
+                      Essencial
+                    </TabsTrigger>
+                    <TabsTrigger value="profissional" className="data-[state=active]:bg-harmonia-green">
+                      Profissional
+                    </TabsTrigger>
+                    <TabsTrigger value="premium" className="data-[state=active]:bg-harmonia-green">
+                      Premium
+                    </TabsTrigger>
+                  </TabsList>
+                  
+                  <TabsContent value="essencial">
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+                      <div className="md:col-span-1 space-y-6">
+                        <Card className="p-6 border border-border">
+                          <h3 className="font-semibold mb-2">Pacote Essencial</h3>
+                          <p className="text-gray-400 text-sm mb-4">
+                            Ideal para presentes emocionais rápidos. Inclui uma composição única com direito a uma revisão.
+                          </p>
+                          <Button 
+                            variant="outline" 
+                            className="w-full"
+                            onClick={() => navigate('/services')}
+                          >
+                            Ver detalhes do pacote
+                          </Button>
+                        </Card>
+                        <SidebarContent />
+                      </div>
+                      
+                      <div className="md:col-span-2">
+                        <BriefingForm />
+                      </div>
+                    </div>
+                  </TabsContent>
+                  
+                  <TabsContent value="profissional">
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+                      <div className="md:col-span-1 space-y-6">
+                        <Card className="p-6 border border-border">
+                          <h3 className="font-semibold mb-2">Pacote Profissional</h3>
+                          <p className="text-gray-400 text-sm mb-4">
+                            Perfeito para criadores de conteúdo. Inclui três versões para escolha e até três revisões.
+                          </p>
+                          <Button 
+                            variant="outline" 
+                            className="w-full"
+                            onClick={() => navigate('/services')}
+                          >
+                            Ver detalhes do pacote
+                          </Button>
+                        </Card>
+                        <SidebarContent />
+                      </div>
+                      
+                      <div className="md:col-span-2">
+                        <BriefingForm />
+                      </div>
+                    </div>
+                  </TabsContent>
+                  
+                  <TabsContent value="premium">
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+                      <div className="md:col-span-1 space-y-6">
+                        <Card className="p-6 border border-border">
+                          <h3 className="font-semibold mb-2">Pacote Premium</h3>
+                          <p className="text-gray-400 text-sm mb-4">
+                            Melhor opção para empresas. Inclui registro na Biblioteca Nacional e revisões ilimitadas.
+                          </p>
+                          <Button 
+                            variant="outline" 
+                            className="w-full"
+                            onClick={() => navigate('/services')}
+                          >
+                            Ver detalhes do pacote
+                          </Button>
+                        </Card>
+                        <SidebarContent />
+                      </div>
+                      
+                      <div className="md:col-span-2">
+                        <BriefingForm />
+                      </div>
+                    </div>
+                  </TabsContent>
+                </Tabs>
               </div>
-            </div>
+            </>
           )}
         </div>
       </main>
@@ -151,5 +232,48 @@ const Briefing: React.FC = () => {
     </div>
   );
 };
+
+// Helper component for sidebar content
+const SidebarContent = () => (
+  <>
+    <div className="bg-card border border-border rounded-lg p-6">
+      <h3 className="font-semibold mb-2">Como funciona?</h3>
+      <p className="text-gray-400 text-sm">
+        Após o envio do formulário, nossa equipe irá iniciar o processo de composição.
+        Você receberá atualizações por e-mail e poderá acompanhar o progresso do seu projeto.
+      </p>
+    </div>
+    
+    <div className="bg-card border border-border rounded-lg p-6">
+      <h3 className="font-semibold mb-2">Exemplos de músicas</h3>
+      <p className="text-gray-400 text-sm mb-4">
+        Escute exemplos das músicas que criamos para nossos clientes.
+      </p>
+      <Link to="/portfolio">
+        <Button 
+          variant="outline" 
+          className="w-full"
+        >
+          Ver portfólio
+        </Button>
+      </Link>
+    </div>
+    
+    <div className="bg-card border border-border rounded-lg p-6">
+      <h3 className="font-semibold mb-2">Suporte</h3>
+      <p className="text-gray-400 text-sm mb-4">
+        Tem alguma dúvida sobre o preenchimento do formulário?
+      </p>
+      <a href="https://wa.me/5511999999999" target="_blank" rel="noopener noreferrer">
+        <Button 
+          variant="outline" 
+          className="w-full"
+        >
+          Falar com suporte
+        </Button>
+      </a>
+    </div>
+  </>
+);
 
 export default Briefing;

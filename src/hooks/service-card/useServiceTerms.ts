@@ -24,7 +24,7 @@ export function useServiceTerms(title: string) {
     setIsTermsDialogOpen(true);
   };
 
-  // Proceder para o briefing após aceitar os termos
+  // Proceder para o pagamento após aceitar os termos
   const handleProceedToBriefing = async () => {
     // Obter o ID do pacote a partir do título
     const packageId = getPackageId();

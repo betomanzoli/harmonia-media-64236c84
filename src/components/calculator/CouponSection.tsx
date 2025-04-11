@@ -22,6 +22,7 @@ const CouponSection: React.FC<CouponSectionProps> = ({
   const [showCouponInput, setShowCouponInput] = useState(false);
   
   const applyCoupon = () => {
+    // Cupons válidos (não exibimos eles diretamente na interface)
     const validCoupons = {
       'ESSENCIAL5': 5,
       'PROFISSIONAL5': 5,

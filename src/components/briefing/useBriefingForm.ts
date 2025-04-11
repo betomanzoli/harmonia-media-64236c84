@@ -12,32 +12,21 @@ import {
 } from './formSchema';
 import { useLocation, useNavigate } from 'react-router-dom';
 
-export const useBriefingForm = () => {
+export const useBriefingForm = (initialPackage?: 'essencial' | 'profissional' | 'premium') => {
   const { toast } = useToast();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [referenceFiles, setReferenceFiles] = useState<File[]>([]);
   const location = useLocation();
   const navigate = useNavigate();
+  const [selectedPackage, setSelectedPackage] = useState<'essencial' | 'profissional' | 'premium'>(
+    initialPackage || 'essencial'
+  );
 
-  const getInitialPackage = (): 'essencial' | 'profissional' | 'premium' => {
-    const paymentData = localStorage.getItem('paymentData');
-    if (paymentData) {
-      const { packageId } = JSON.parse(paymentData);
-      if (['essencial', 'profissional', 'premium'].includes(packageId)) {
-        return packageId as 'essencial' | 'profissional' | 'premium';
-      }
+  useEffect(() => {
+    if (initialPackage) {
+      setSelectedPackage(initialPackage);
     }
-    
-    const params = new URLSearchParams(location.search);
-    const packageParam = params.get('package');
-    if (packageParam && ['essencial', 'profissional', 'premium'].includes(packageParam)) {
-      return packageParam as 'essencial' | 'profissional' | 'premium';
-    }
-    
-    return 'essencial';
-  };
-
-  const selectedPackage = getInitialPackage();
+  }, [initialPackage]);
 
   const getSchemaResolver = () => {
     switch (selectedPackage) {
@@ -80,9 +69,31 @@ export const useBriefingForm = () => {
         console.error('Error parsing user data from localStorage:', e);
       }
     }
-  }, [form]);
+
+    // Verificar se o pagamento foi realizado
+    const paymentData = localStorage.getItem('paymentData');
+    if (!paymentData) {
+      toast({
+        title: "Pagamento não detectado",
+        description: "Por favor, realize o pagamento antes de preencher o briefing.",
+        variant: "destructive"
+      });
+    }
+  }, [form, toast]);
 
   const onSubmit = async (data: BriefingFormValues) => {
+    // Verificar se o pagamento foi realizado
+    const paymentData = localStorage.getItem('paymentData');
+    if (!paymentData) {
+      toast({
+        title: "Pagamento não detectado",
+        description: "Por favor, realize o pagamento antes de preencher o briefing.",
+        variant: "destructive"
+      });
+      navigate('/services');
+      return;
+    }
+
     setIsSubmitting(true);
     
     try {
@@ -122,7 +133,7 @@ export const useBriefingForm = () => {
         console.log("Zapier automation: Initiating Suno AI music generation task");
         console.log("Zapier automation: Scheduling Moises mastering task");
         
-        // Redirecionar para a página de agradecimento ao invés de abrir o WhatsApp
+        // Redirecionar para a página de agradecimento
         navigate('/agradecimento');
       }, 1500);
     } catch (error) {
@@ -142,6 +153,7 @@ export const useBriefingForm = () => {
     referenceFiles,
     setReferenceFiles,
     onSubmit,
-    selectedPackage
+    selectedPackage,
+    setSelectedPackage
   };
 };

@@ -9,8 +9,37 @@ import EssentialPackageFields from './briefing/EssentialPackageFields';
 import ProfessionalPackageFields from './briefing/ProfessionalPackageFields';
 import PremiumPackageFields from './briefing/PremiumPackageFields';
 import { Music } from 'lucide-react';
+import { useLocation } from 'react-router-dom';
 
-const BriefingForm: React.FC = () => {
+interface BriefingFormProps {
+  packageType?: 'essencial' | 'profissional' | 'premium';
+}
+
+const BriefingForm: React.FC<BriefingFormProps> = ({ packageType }) => {
+  const location = useLocation();
+  
+  // Get package from URL if not provided as prop
+  const getInitialPackage = (): 'essencial' | 'profissional' | 'premium' => {
+    if (packageType) return packageType;
+    
+    const searchParams = new URLSearchParams(location.search);
+    const packageParam = searchParams.get('package');
+    
+    if (packageParam && ['essencial', 'profissional', 'premium'].includes(packageParam)) {
+      return packageParam as 'essencial' | 'profissional' | 'premium';
+    }
+    
+    const paymentData = localStorage.getItem('paymentData');
+    if (paymentData) {
+      const { packageId } = JSON.parse(paymentData);
+      if (['essencial', 'profissional', 'premium'].includes(packageId)) {
+        return packageId as 'essencial' | 'profissional' | 'premium';
+      }
+    }
+    
+    return 'essencial';
+  };
+  
   const { 
     form, 
     isSubmitting, 
@@ -18,7 +47,7 @@ const BriefingForm: React.FC = () => {
     setReferenceFiles, 
     onSubmit,
     selectedPackage
-  } = useBriefingForm();
+  } = useBriefingForm(getInitialPackage());
 
   // Render different package titles based on selected package
   const renderPackageTitle = () => {

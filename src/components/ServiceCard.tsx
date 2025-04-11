@@ -6,7 +6,6 @@ import TermsDialog from './service-card/TermsDialog';
 import FeatureList from './service-card/FeatureList';
 import ServiceCardHeader from './service-card/ServiceCardHeader';
 import { useServiceTerms } from '@/hooks/service-card/useServiceTerms';
-import { useNavigate } from 'react-router-dom';
 
 interface ServiceCardProps {
   title: string;
@@ -23,8 +22,6 @@ const ServiceCard: React.FC<ServiceCardProps> = ({
   features, 
   recommended = false 
 }) => {
-  const navigate = useNavigate();
-  
   const {
     isTermsDialogOpen,
     setIsTermsDialogOpen,

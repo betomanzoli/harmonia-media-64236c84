@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Card } from "@/components/ui/card";
-import { Mail, Phone, MapPin, Send } from 'lucide-react';
+import { Mail, Phone, MapPin, Send, MessageCircle } from 'lucide-react';
 import { siteConfig } from '@/config/site';
 
 const Contact: React.FC = () => {
@@ -80,7 +80,29 @@ const Contact: React.FC = () => {
                   <div>
                     <h4 className="font-medium mb-1">Telefone</h4>
                     <p className="text-gray-500">{phone}</p>
-                    <p className="text-gray-500">{whatsapp} (WhatsApp)</p>
+                    <a href={`tel:${phone.replace(/\D/g, '')}`} className="text-harmonia-green hover:underline">
+                      Ligar agora
+                    </a>
+                  </div>
+                </div>
+              </Card>
+              
+              <Card className="p-6">
+                <div className="flex items-start gap-4">
+                  <div className="bg-harmonia-green/10 p-3 rounded-full">
+                    <MessageCircle className="h-6 w-6 text-harmonia-green" />
+                  </div>
+                  <div>
+                    <h4 className="font-medium mb-1">WhatsApp</h4>
+                    <p className="text-gray-500">{whatsapp}</p>
+                    <a 
+                      href={`https://wa.me/${whatsapp.replace(/\D/g, '')}`} 
+                      target="_blank" 
+                      rel="noopener noreferrer"
+                      className="text-harmonia-green hover:underline"
+                    >
+                      Iniciar conversa
+                    </a>
                   </div>
                 </div>
               </Card>
@@ -93,6 +115,12 @@ const Contact: React.FC = () => {
                   <div>
                     <h4 className="font-medium mb-1">Email</h4>
                     <p className="text-gray-500">{email}</p>
+                    <a 
+                      href={`mailto:${email}`} 
+                      className="text-harmonia-green hover:underline"
+                    >
+                      Enviar email
+                    </a>
                   </div>
                 </div>
               </Card>
