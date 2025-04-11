@@ -1,8 +1,24 @@
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 
 export const useConnectionInfo = () => {
-  // Safe access to navigator.connection properties using a helper function
+  const [isOnline, setIsOnline] = useState(navigator.onLine);
+  
+  // Update online status when it changes
+  useEffect(() => {
+    const handleOnline = () => setIsOnline(true);
+    const handleOffline = () => setIsOnline(false);
+    
+    window.addEventListener('online', handleOnline);
+    window.addEventListener('offline', handleOffline);
+    
+    return () => {
+      window.removeEventListener('online', handleOnline);
+      window.removeEventListener('offline', handleOffline);
+    };
+  }, []);
+  
+  // Get connection info details for diagnostics
   const getConnectionInfo = () => {
     const nav = navigator as any;
     const connection = nav.connection || nav.mozConnection || nav.webkitConnection;
@@ -20,7 +36,7 @@ export const useConnectionInfo = () => {
   };
   
   // Simulated connection status
-  const connectionStatus = navigator.onLine ? 'online' : 'offline';
+  const connectionStatus = isOnline ? 'online' : 'offline';
   
   const diagnosticInfo = {
     environment: "production",
@@ -47,12 +63,14 @@ export const useConnectionInfo = () => {
     },
     connectionDetails: getConnectionInfo(),
     authSettings: "Modo de desenvolvimento",
-    supabaseUrl: import.meta.env.VITE_SUPABASE_URL || 'não configurado',
+    supabaseUrl: 'local-authentication-mode',
   };
   
   // Function to test connection
   const retryConnection = async () => {
     return new Promise<void>((resolve) => {
+      // Force a check of online status
+      setIsOnline(navigator.onLine);
       setTimeout(() => {
         resolve();
       }, 1000);

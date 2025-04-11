@@ -31,45 +31,54 @@ export const useLoginState = (onAuthenticate?: (email: string, password: string)
     
     console.log("Tentando login com:", email);
     
-    // Use the provided authentication function if available
-    if (onAuthenticate) {
-      const success = onAuthenticate(email, password);
-      if (success) {
-        // Navigate after successful login
+    try {
+      // Add a short delay to simulate processing
+      await new Promise(resolve => setTimeout(resolve, 800));
+      
+      // Use the provided authentication function if available
+      if (onAuthenticate) {
+        const success = onAuthenticate(email, password);
+        if (success) {
+          // Navigate after successful login
+          toast({
+            title: "Login bem-sucedido",
+            description: "Você está sendo redirecionado para o painel administrativo.",
+          });
+          navigate('/admin-j28s7d1k/dashboard');
+          return;
+        } else {
+          setLoginErrorMessage('Credenciais inválidas. Por favor, verifique seu email e senha.');
+          setIsLoading(false);
+          return;
+        }
+      }
+      
+      // Fallback authentication logic
+      if ((email === 'admin@harmonia.com' && password === 'admin123456') || 
+          (email === 'contato@harmonia.media' && password === 'i9!_b!ThA;2H6/bt')) {
+        // Store authentication information
+        localStorage.setItem('harmonia-admin-auth-token', 'admin-token-for-development');
+        localStorage.setItem('harmonia-admin-auth-user', JSON.stringify({ 
+          id: email === 'admin@harmonia.com' ? 'admin-1' : 'admin-2',
+          email, 
+          role: 'admin',
+          createdAt: new Date().toISOString()
+        }));
+        
         toast({
           title: "Login bem-sucedido",
           description: "Você está sendo redirecionado para o painel administrativo.",
         });
+        
+        // Navigate to dashboard
         navigate('/admin-j28s7d1k/dashboard');
-        return;
       } else {
         setLoginErrorMessage('Credenciais inválidas. Por favor, verifique seu email e senha.');
-        setIsLoading(false);
-        return;
       }
-    }
-    
-    // Fallback authentication logic
-    if ((email === 'admin@harmonia.com' && password === 'admin123456') || 
-        (email === 'contato@harmonia.media' && password === 'i9!_b!ThA;2H6/bt')) {
-      // Store authentication information
-      localStorage.setItem('harmonia-admin-auth-token', 'admin-token-for-development');
-      localStorage.setItem('harmonia-admin-auth-user', JSON.stringify({ 
-        id: 'admin-1',
-        email, 
-        role: 'admin',
-        createdAt: new Date().toISOString()
-      }));
-      
-      toast({
-        title: "Login bem-sucedido",
-        description: "Você está sendo redirecionado para o painel administrativo.",
-      });
-      
-      // Navigate to dashboard
-      navigate('/admin-j28s7d1k/dashboard');
-    } else {
-      setLoginErrorMessage('Credenciais inválidas. Por favor, verifique seu email e senha.');
+    } catch (error) {
+      console.error("Erro durante login:", error);
+      setLoginErrorMessage('Ocorreu um erro durante o login. Por favor, tente novamente.');
+    } finally {
       setIsLoading(false);
     }
   };

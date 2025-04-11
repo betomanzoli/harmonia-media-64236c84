@@ -1,18 +1,30 @@
 
 import { AdminUser } from '@/types/admin-auth';
 
-// Demo admin user
-const DEMO_ADMIN: AdminUser = {
-  id: 'admin-1',
-  email: 'admin@harmonia.com',
-  name: 'Admin User',
-  role: 'admin',
-  createdAt: new Date().toISOString()
-};
-
-// For a real app you would hash passwords, but for demo purposes we'll use plain text
+// Demo admin users
 const VALID_CREDENTIALS = [
-  { email: 'admin@harmonia.com', password: 'admin123456' }
+  { 
+    email: 'admin@harmonia.com', 
+    password: 'admin123456',
+    userData: {
+      id: 'admin-1',
+      email: 'admin@harmonia.com',
+      name: 'Admin User',
+      role: 'admin',
+      createdAt: new Date().toISOString()
+    }
+  },
+  { 
+    email: 'contato@harmonia.media', 
+    password: 'i9!_b!ThA;2H6/bt',
+    userData: {
+      id: 'admin-2',
+      email: 'contato@harmonia.media',
+      name: 'Contato User',
+      role: 'admin',
+      createdAt: new Date().toISOString()
+    }
+  }
 ];
 
 // Keys for localStorage
@@ -46,13 +58,13 @@ export const localAuthService = {
       
       // Store auth info in localStorage
       localStorage.setItem(AUTH_TOKEN_KEY, token);
-      localStorage.setItem(AUTH_USER_KEY, JSON.stringify(DEMO_ADMIN));
+      localStorage.setItem(AUTH_USER_KEY, JSON.stringify(matchedUser.userData));
       
-      console.log("Login bem-sucedido, dados armazenados:", DEMO_ADMIN);
+      console.log("Login bem-sucedido, dados armazenados:", matchedUser.userData);
       
       return { 
         success: true,
-        user: DEMO_ADMIN
+        user: matchedUser.userData
       };
     } catch (error) {
       console.error('Erro ao fazer login:', error);

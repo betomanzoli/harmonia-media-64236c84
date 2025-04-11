@@ -8,12 +8,12 @@ interface ConnectionStatusIndicatorProps {
 
 const ConnectionStatusIndicator: React.FC<ConnectionStatusIndicatorProps> = ({ isOnline }) => {
   return isOnline ? (
-    <span className="text-green-600 font-medium flex items-center">
-      <Wifi className="h-3 w-3 mr-1" /> Conectado
+    <span className="text-green-600 font-medium flex items-center gap-1.5">
+      <Wifi className="h-4 w-4" /> Conectado
     </span>
   ) : (
-    <span className="text-red-600 font-medium flex items-center">
-      <WifiOff className="h-3 w-3 mr-1" /> Desconectado
+    <span className="text-red-600 font-medium flex items-center gap-1.5">
+      <WifiOff className="h-4 w-4" /> Desconectado
     </span>
   );
 };
