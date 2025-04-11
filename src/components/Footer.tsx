@@ -1,9 +1,9 @@
 
 import React from 'react';
 import Logo from './Logo';
-import { Phone, Mail, Shield, ChevronUp, Clock, FileCheck, Music, Package, DollarSign } from 'lucide-react';
+import { MessageCircle, Mail, Shield, ChevronUp, Clock, FileCheck, Music, Package, DollarSign } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { useNavigate, Link } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import { siteConfig } from '@/config/site';
 import NavLink from './NavLink';
 
@@ -59,10 +59,10 @@ const Footer: React.FC = () => {
               </li>
               <li>
                 <NavLink 
-                  href="/qualificacao" 
+                  href="/briefing" 
                   className="text-gray-400 hover:text-harmonia-green transition-colors flex items-center gap-1"
                 >
-                  <FileCheck className="w-4 h-4" /> Qualificação
+                  <FileCheck className="w-4 h-4" /> Briefing
                 </NavLink>
               </li>
               <li>
@@ -102,16 +102,23 @@ const Footer: React.FC = () => {
           
           <div>
             <h3 className="font-semibold mb-4">Contato</h3>
-            <ul className="space-y-3">
-              <li className="flex gap-2 text-gray-400 cursor-pointer hover:text-harmonia-green transition-colors" onClick={handleWhatsAppContact}>
-                <Phone className="w-5 h-5 text-harmonia-green shrink-0" />
-                <span>{siteConfig.contact.phone}</span>
-              </li>
-              <li className="flex gap-2 text-gray-400 cursor-pointer hover:text-harmonia-green transition-colors" onClick={handleEmailContact}>
+            <div className="space-y-3">
+              <div 
+                className="flex gap-2 text-gray-400 cursor-pointer hover:text-harmonia-green transition-colors"
+                onClick={handleWhatsAppContact}
+              >
+                <MessageCircle className="w-5 h-5 text-harmonia-green shrink-0" />
+                <span>{siteConfig.contact.whatsapp}</span>
+              </div>
+              <div 
+                className="flex gap-2 text-gray-400 cursor-pointer hover:text-harmonia-green transition-colors"
+                onClick={handleEmailContact}
+              >
                 <Mail className="w-5 h-5 text-harmonia-green shrink-0" />
                 <span>{siteConfig.contact.email}</span>
-              </li>
-            </ul>
+              </div>
+            </div>
+            
             <div className="mt-6">
               <h3 className="font-semibold mb-4">Informações Legais</h3>
               <ul className="space-y-2">
