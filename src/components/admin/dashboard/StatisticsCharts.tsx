@@ -16,7 +16,6 @@ import {
   Cell
 } from 'recharts';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { ChartContainer, ChartTooltip, ChartTooltipContent } from "@/components/ui/chart";
 
 // Dados para o gráfico de barras - Visualizações de portfólio por mês
 const portfolioViewsData = [
@@ -59,14 +58,23 @@ const genresData = [
   { name: 'Hip Hop', value: 10 },
 ];
 
-const COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042', '#8884d8'];
+const COLORS = ['#3b82f6', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6'];
+
+const customTooltipStyle = {
+  background: '#1f2937',
+  border: '1px solid #374151',
+  borderRadius: '6px',
+  padding: '8px 12px',
+  color: '#e5e7eb',
+  boxShadow: '0 10px 15px -3px rgba(0, 0, 0, 0.1)',
+};
 
 const PortfolioViewsChart = () => {
   return (
-    <Card className="col-span-2">
+    <Card className="col-span-2 bg-gray-800/60 border-gray-700 shadow-md">
       <CardHeader>
-        <CardTitle>Visualizações do Portfólio</CardTitle>
-        <CardDescription>Visualizações mensais dos itens do portfólio</CardDescription>
+        <CardTitle className="text-gray-100">Visualizações do Portfólio</CardTitle>
+        <CardDescription className="text-gray-400">Visualizações mensais dos itens do portfólio</CardDescription>
       </CardHeader>
       <CardContent>
         <div className="h-80">
@@ -75,12 +83,12 @@ const PortfolioViewsChart = () => {
               data={portfolioViewsData}
               margin={{ top: 5, right: 30, left: 20, bottom: 5 }}
             >
-              <CartesianGrid strokeDasharray="3 3" />
-              <XAxis dataKey="name" />
-              <YAxis />
-              <Tooltip />
-              <Legend />
-              <Bar dataKey="views" fill="#10b981" name="Visualizações" />
+              <CartesianGrid strokeDasharray="3 3" stroke="#374151" />
+              <XAxis dataKey="name" stroke="#9ca3af" />
+              <YAxis stroke="#9ca3af" />
+              <Tooltip contentStyle={customTooltipStyle} />
+              <Legend wrapperStyle={{ color: '#9ca3af' }} />
+              <Bar dataKey="views" fill="#10b981" name="Visualizações" radius={[4, 4, 0, 0]} />
             </BarChart>
           </ResponsiveContainer>
         </div>
@@ -91,10 +99,10 @@ const PortfolioViewsChart = () => {
 
 const OrdersChart = () => {
   return (
-    <Card className="col-span-2">
+    <Card className="col-span-2 bg-gray-800/60 border-gray-700 shadow-md">
       <CardHeader>
-        <CardTitle>Pedidos por Mês</CardTitle>
-        <CardDescription>Total de pedidos recebidos mensalmente</CardDescription>
+        <CardTitle className="text-gray-100">Pedidos por Mês</CardTitle>
+        <CardDescription className="text-gray-400">Total de pedidos recebidos mensalmente</CardDescription>
       </CardHeader>
       <CardContent>
         <div className="h-80">
@@ -103,12 +111,12 @@ const OrdersChart = () => {
               data={ordersData}
               margin={{ top: 5, right: 30, left: 20, bottom: 5 }}
             >
-              <CartesianGrid strokeDasharray="3 3" />
-              <XAxis dataKey="name" />
-              <YAxis />
-              <Tooltip />
-              <Legend />
-              <Line type="monotone" dataKey="pedidos" stroke="#8884d8" activeDot={{ r: 8 }} />
+              <CartesianGrid strokeDasharray="3 3" stroke="#374151" />
+              <XAxis dataKey="name" stroke="#9ca3af" />
+              <YAxis stroke="#9ca3af" />
+              <Tooltip contentStyle={customTooltipStyle} />
+              <Legend wrapperStyle={{ color: '#9ca3af' }} />
+              <Line type="monotone" dataKey="pedidos" stroke="#8b5cf6" strokeWidth={2} activeDot={{ r: 8 }} />
             </LineChart>
           </ResponsiveContainer>
         </div>
@@ -119,10 +127,10 @@ const OrdersChart = () => {
 
 const GenresChart = () => {
   return (
-    <Card>
+    <Card className="bg-gray-800/60 border-gray-700 shadow-md">
       <CardHeader>
-        <CardTitle>Distribuição por Gênero</CardTitle>
-        <CardDescription>Gêneros musicais no banco de áudio</CardDescription>
+        <CardTitle className="text-gray-100">Distribuição por Gênero</CardTitle>
+        <CardDescription className="text-gray-400">Gêneros musicais no banco de áudio</CardDescription>
       </CardHeader>
       <CardContent>
         <div className="h-72 flex justify-center">
@@ -142,8 +150,8 @@ const GenresChart = () => {
                   <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
                 ))}
               </Pie>
-              <Tooltip />
-              <Legend />
+              <Tooltip contentStyle={customTooltipStyle} />
+              <Legend wrapperStyle={{ color: '#9ca3af' }} />
             </PieChart>
           </ResponsiveContainer>
         </div>
@@ -154,7 +162,7 @@ const GenresChart = () => {
 
 const StatisticsCharts = () => {
   return (
-    <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
+    <div className="grid grid-cols-1 lg:grid-cols-3 gap-5 mb-5">
       <PortfolioViewsChart />
       <OrdersChart />
       <GenresChart />

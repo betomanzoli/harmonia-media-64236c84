@@ -29,6 +29,7 @@ interface StatCardProps {
   linkText?: string;
   linkUrl?: string;
   color?: string;
+  bgColor?: string;
 }
 
 const StatCard: React.FC<StatCardProps> = ({ 
@@ -39,16 +40,17 @@ const StatCard: React.FC<StatCardProps> = ({
   trend, 
   linkText, 
   linkUrl,
-  color = "text-harmonia-green"
+  color = "text-harmonia-green",
+  bgColor = "from-gray-800/80 to-gray-900/80"
 }) => {
   return (
-    <Card className="shadow-md border-harmonia-green/20 overflow-hidden hover:shadow-lg transition-shadow">
-      <CardHeader className={`pb-2 flex flex-row items-center justify-between bg-gradient-to-r from-harmonia-light-green to-harmonia-green/5`}>
+    <Card className="shadow-md border-gray-700 overflow-hidden bg-gray-800/60 hover:shadow-lg transition-shadow">
+      <CardHeader className={`pb-2 flex flex-row items-center justify-between bg-gradient-to-r ${bgColor}`}>
         <div>
           <CardTitle className={`text-xl ${color}`}>{title}</CardTitle>
-          <CardDescription>{description}</CardDescription>
+          <CardDescription className="text-gray-400">{description}</CardDescription>
         </div>
-        <div className={`w-10 h-10 rounded-full flex items-center justify-center bg-white/90 ${color}`}>
+        <div className={`w-10 h-10 rounded-full flex items-center justify-center bg-gray-900/50 ${color}`}>
           {icon}
         </div>
       </CardHeader>
@@ -72,7 +74,7 @@ const StatCard: React.FC<StatCardProps> = ({
           <Button 
             variant="ghost" 
             asChild
-            className="text-harmonia-green hover:bg-harmonia-green/10 -ml-2 px-2 py-1"
+            className={`${color} hover:bg-gray-700/30 -ml-2 px-2 py-1`}
           >
             <Link to={linkUrl}>{linkText}</Link>
           </Button>
@@ -84,7 +86,7 @@ const StatCard: React.FC<StatCardProps> = ({
 
 const StatsSummary = () => {
   return (
-    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+    <div className="grid grid-cols-1 gap-5 mb-5">
       <StatCard
         title="Áudios"
         description="Total de áudios no sistema"
@@ -93,7 +95,8 @@ const StatsSummary = () => {
         icon={<FileAudio className="w-6 h-6" />}
         linkText="Gerenciar áudios"
         linkUrl={siteConfig.urls.admin.audioDatabase}
-        color="text-blue-500"
+        color="text-blue-400"
+        bgColor="from-blue-900/20 to-gray-900/80"
       />
       
       <StatCard
@@ -104,7 +107,8 @@ const StatsSummary = () => {
         icon={<Music className="w-6 h-6" />}
         linkText="Gerenciar portfólio"
         linkUrl={siteConfig.urls.admin.portfolio}
-        color="text-green-500"
+        color="text-green-400"
+        bgColor="from-green-900/20 to-gray-900/80"
       />
       
       <StatCard
@@ -115,7 +119,8 @@ const StatsSummary = () => {
         icon={<ShoppingBag className="w-6 h-6" />}
         linkText="Ver pedidos"
         linkUrl="/admin-j28s7d1k/orders"
-        color="text-orange-500"
+        color="text-orange-400"
+        bgColor="from-orange-900/20 to-gray-900/80"
       />
       
       <StatCard
@@ -126,60 +131,8 @@ const StatsSummary = () => {
         icon={<Users className="w-6 h-6" />}
         linkText="Gerenciar clientes"
         linkUrl="/admin-j28s7d1k/customers"
-        color="text-purple-500"
-      />
-
-      <StatCard
-        title="Prévias"
-        description="Prévias de músicas"
-        value={12}
-        trend={{ value: 10, isPositive: true }}
-        icon={<Music className="w-6 h-6" />}
-        linkText="Gerenciar prévias"
-        linkUrl="/admin-j28s7d1k/previews"
-        color="text-pink-500"
-      />
-
-      <StatCard
-        title="Integrações"
-        description="Serviços conectados"
-        value={4}
-        trend={{ value: 25, isPositive: true }}
-        icon={<Link2 className="w-6 h-6" />}
-        linkText="Configurar integrações"
-        linkUrl="/admin-j28s7d1k/integrations"
-        color="text-indigo-500"
-      />
-
-      <StatCard
-        title="Estatísticas"
-        description="Análise de desempenho"
-        value="Ver"
-        icon={<BarChart className="w-6 h-6" />}
-        linkText="Ver estatísticas"
-        linkUrl="/admin-j28s7d1k/statistics"
-        color="text-teal-500"
-      />
-
-      <StatCard
-        title="Faturas"
-        description="Faturas emitidas"
-        value={18}
-        trend={{ value: 15, isPositive: true }}
-        icon={<FileText className="w-6 h-6" />}
-        linkText="Gerenciar faturas"
-        linkUrl="/admin-j28s7d1k/invoices"
-        color="text-amber-500"
-      />
-
-      <StatCard
-        title="Configurações"
-        description="Configurações do sistema"
-        value="Ver"
-        icon={<Settings className="w-6 h-6" />}
-        linkText="Configurar sistema"
-        linkUrl="/admin-j28s7d1k/settings"
-        color="text-gray-500"
+        color="text-purple-400"
+        bgColor="from-purple-900/20 to-gray-900/80"
       />
     </div>
   );

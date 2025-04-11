@@ -41,7 +41,7 @@ const AdminLayout: React.FC<AdminLayoutProps> = ({ children }) => {
 
   return (
     <SidebarProvider>
-      <div className="flex min-h-screen w-full bg-gradient-to-b from-background to-gray-900 flex-col">
+      <div className="flex min-h-screen w-full bg-gradient-to-b from-gray-900 to-black flex-col">
         {isOfflineMode && (
           <div className="bg-amber-900/80 border-b border-amber-700 py-2 px-4 text-amber-100 text-sm">
             <div className="flex items-center justify-center gap-2">
@@ -60,8 +60,8 @@ const AdminLayout: React.FC<AdminLayoutProps> = ({ children }) => {
         )}
         <div className="flex flex-1 w-full">
           <AdminSidebar />
-          <div className="flex-1 overflow-auto">
-            <div className="p-6">
+          <div className="flex-1 overflow-auto bg-gradient-to-b from-gray-900 to-black">
+            <div className="p-0">
               {children}
             </div>
           </div>

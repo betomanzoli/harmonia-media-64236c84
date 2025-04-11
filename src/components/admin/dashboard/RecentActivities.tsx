@@ -81,11 +81,11 @@ const ActivityItem: React.FC<ActivityItemProps> = ({ activity, isLast }) => (
     <div className="flex items-start py-2">
       <div className={cn("w-2 h-2 rounded-full mt-2 mr-3", getActivityColor(activity.type))}></div>
       <div className="flex flex-col space-y-1">
-        <p className="text-sm text-gray-500">{activity.timestamp}</p>
-        <p className="text-sm">{activity.description}</p>
+        <p className="text-sm text-gray-400">{activity.timestamp}</p>
+        <p className="text-sm text-gray-200">{activity.description}</p>
       </div>
     </div>
-    {!isLast && <Separator className="my-1" />}
+    {!isLast && <Separator className="my-1 bg-gray-700" />}
   </React.Fragment>
 );
 
@@ -105,11 +105,11 @@ const RecentActivities: React.FC<RecentActivitiesProps> = ({
   const displayActivities = activities.slice(0, maxItems);
 
   return (
-    <Card className={className}>
+    <Card className={cn("bg-gray-800/60 border-gray-700 shadow-md", className)}>
       {showTitle && (
         <CardHeader>
-          <CardTitle>Atividades Recentes</CardTitle>
-          <CardDescription>Últimas ações no sistema</CardDescription>
+          <CardTitle className="text-gray-100">Atividades Recentes</CardTitle>
+          <CardDescription className="text-gray-400">Últimas ações no sistema</CardDescription>
         </CardHeader>
       )}
       <CardContent>

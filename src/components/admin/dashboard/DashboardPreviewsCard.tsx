@@ -16,17 +16,17 @@ const DashboardPreviewsCard: React.FC = () => {
   };
 
   return (
-    <Card>
+    <Card className="bg-gray-800/60 border-gray-700 shadow-md hover:shadow-lg transition-shadow">
       <CardHeader className="flex flex-row items-center justify-between pb-2">
-        <CardTitle className="text-md font-medium">Sistema de Prévias</CardTitle>
-        <FileMusic className="h-4 w-4 text-muted-foreground" />
+        <CardTitle className="text-md font-medium text-gray-200">Sistema de Prévias</CardTitle>
+        <FileMusic className="h-4 w-4 text-harmonia-green" />
       </CardHeader>
       <CardContent>
         <div className="space-y-4">
           <div className="grid grid-cols-2 gap-4">
             <div className="flex flex-col">
-              <span className="text-3xl font-bold">{previewsStats.totalProjects}</span>
-              <span className="text-xs text-muted-foreground">Total de projetos</span>
+              <span className="text-3xl font-bold text-white">{previewsStats.totalProjects}</span>
+              <span className="text-xs text-gray-400">Total de projetos</span>
             </div>
             <div className="flex items-center justify-end">
               <div className="flex flex-col items-end">
@@ -47,7 +47,7 @@ const DashboardPreviewsCard: React.FC = () => {
           </div>
           
           {previewsStats.expiringSoon > 0 && (
-            <div className="p-2 bg-amber-50 border border-amber-200 rounded text-xs text-amber-700 flex items-center">
+            <div className="p-2 bg-amber-900/30 border border-amber-800/50 rounded text-xs text-amber-400 flex items-center">
               <AlertTriangle className="h-3 w-3 mr-1" />
               <span>{previewsStats.expiringSoon} projeto(s) próximo(s) da expiração</span>
             </div>
@@ -57,7 +57,7 @@ const DashboardPreviewsCard: React.FC = () => {
             <Button 
               variant="outline" 
               size="sm" 
-              className="w-full text-harmonia-green border-harmonia-green hover:bg-harmonia-green/10"
+              className="w-full text-harmonia-green border-harmonia-green/40 hover:bg-harmonia-green/10"
               asChild
             >
               <Link to="/admin-j28s7d1k/previews">
@@ -70,7 +70,7 @@ const DashboardPreviewsCard: React.FC = () => {
               <Button 
                 variant="outline" 
                 size="sm" 
-                className="w-full border-harmonia-green/50 hover:bg-harmonia-green/10"
+                className="w-full border-gray-700 text-gray-300 hover:bg-gray-700/50"
                 asChild
               >
                 <Link to="/calculadora">
@@ -82,7 +82,7 @@ const DashboardPreviewsCard: React.FC = () => {
               <Button 
                 variant="outline" 
                 size="sm" 
-                className="w-full border-harmonia-green/50 hover:bg-harmonia-green/10"
+                className="w-full border-gray-700 text-gray-300 hover:bg-gray-700/50"
                 asChild
               >
                 <Link to="/qualificacao">
@@ -94,7 +94,7 @@ const DashboardPreviewsCard: React.FC = () => {
               <Button 
                 variant="outline" 
                 size="sm" 
-                className="w-full border-harmonia-green/50 hover:bg-harmonia-green/10"
+                className="w-full border-gray-700 text-gray-300 hover:bg-gray-700/50"
                 asChild
               >
                 <Link to="/admin-j28s7d1k/orders">
