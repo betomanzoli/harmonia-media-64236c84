@@ -1,7 +1,7 @@
 
 import React from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { Home, Users, FileText, Music, Settings, PlayCircle, Calculator } from 'lucide-react';
+import { Home, Users, FileText, Music, Settings, PlayCircle, Calculator, FileCheck, CheckSquare } from 'lucide-react';
 import {
   Tooltip,
   TooltipContent,
@@ -30,6 +30,7 @@ const AdminSidebar: React.FC = () => {
     },
     { href: "/admin-j28s7d1k/audio-database", label: "Banco de Áudio", icon: <Music className="h-4 w-4" />, tooltip: "Gerenciamento do banco de dados de áudio" },
     { href: "/admin-j28s7d1k/portfolio", label: "Portfólio", icon: <FileText className="h-4 w-4" />, tooltip: "Gerenciamento de projetos do portfólio" },
+    { href: "/admin-j28s7d1k/orders", label: "Pedidos", icon: <CheckSquare className="h-4 w-4" />, tooltip: "Gerenciamento de pedidos e entregas" },
     { href: "/admin-j28s7d1k/users", label: "Usuários", icon: <Users className="h-4 w-4" />, tooltip: "Gerenciamento de usuários do sistema" },
     { href: "/admin-j28s7d1k/settings", label: "Configurações", icon: <Settings className="h-4 w-4" />, tooltip: "Configurações gerais do sistema" },
     { 
@@ -37,6 +38,13 @@ const AdminSidebar: React.FC = () => {
       label: "Calculadora", 
       icon: <Calculator className="h-4 w-4" />, 
       tooltip: "Acessar calculadora de preços (site público)",
+      external: true 
+    },
+    { 
+      href: "/qualificacao", 
+      label: "Qualificação", 
+      icon: <FileCheck className="h-4 w-4" />, 
+      tooltip: "Acessar formulário de qualificação (site público)",
       external: true 
     },
   ];

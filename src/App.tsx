@@ -28,23 +28,46 @@ import OrderTracking from './pages/OrderTracking';
 import MusicPreviewPage from './pages/MusicPreviewPage';
 import Calculator from './pages/Calculator';
 import Qualification from './pages/Qualification';
+import Payment from './pages/Payment';
+import PaymentProcessing from './pages/PaymentProcessing';
+import PaymentReturn from './pages/PaymentReturn';
+import PortfolioPage from './pages/Portfolio';
 
 function App() {
   return (
     <Router>
-      <Header />
       <Routes>
-        <Route path="/" element={<Home />} />
-        <Route path="/portfolio" element={<Portfolio />} />
-        <Route path="/services" element={<Services />} />
-        <Route path="/contact" element={<Contact />} />
-        <Route path="/briefing" element={<BriefingForm />} />
+        <Route path="/" element={<>
+          <Header />
+          <Home />
+          <Footer />
+        </>} />
+        
+        <Route path="/portfolio" element={<PortfolioPage />} />
+        <Route path="/services" element={<>
+          <Header />
+          <Services />
+          <Footer />
+        </>} />
+        <Route path="/contact" element={<>
+          <Header />
+          <Contact />
+          <Footer />
+        </>} />
+        <Route path="/briefing" element={<>
+          <Header />
+          <BriefingForm />
+          <Footer />
+        </>} />
         <Route path="/preview-library" element={<PreviewLibrary />} />
         <Route path="/credit-refund-request" element={<CreditRefundRequest />} />
         <Route path="/acompanhar-pedido" element={<OrderTracking />} />
         <Route path="/preview/:projectId" element={<MusicPreviewPage />} />
         <Route path="/calculadora" element={<Calculator />} />
         <Route path="/qualificacao" element={<Qualification />} />
+        <Route path="/pagamento/:packageId" element={<Payment />} />
+        <Route path="/pagamento-processando" element={<PaymentProcessing />} />
+        <Route path="/pagamento-retorno" element={<PaymentReturn />} />
         
         {/* Admin Routes */}
         <Route path="/admin-j28s7d1k/login" element={<AdminLogin />} />
@@ -62,7 +85,6 @@ function App() {
         <Route path="/admin-j28s7d1k/portfolio" element={<AdminPortfolio />} />
         <Route path="/admin-j28s7d1k/integrations" element={<AdminIntegrations />} />
       </Routes>
-      <Footer />
     </Router>
   );
 }

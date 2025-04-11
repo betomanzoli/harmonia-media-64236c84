@@ -23,9 +23,6 @@ const CouponSection: React.FC<CouponSectionProps> = ({
   
   const applyCoupon = () => {
     const validCoupons = {
-      'PROMO10': 10,
-      'HARMON15': 15,
-      'SPECIAL5': 5,
       'ESSENCIAL5': 5,
       'PROFISSIONAL5': 5,
       'PREMIUM5': 5

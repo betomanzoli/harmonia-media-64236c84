@@ -97,10 +97,10 @@ export function QualificationForm() {
         }
       }
       
-      // Store form data in localStorage to use it on the thank you page
+      // Store form data in localStorage to use it on the payment page
       localStorage.setItem("qualificationData", JSON.stringify({
         ...qualificationData,
-        termsAccepted // Include termsAccepted to match QualificationData type
+        termsAccepted: true // Include termsAccepted to match QualificationData type
       }));
       
       // Show success toast
@@ -114,7 +114,7 @@ export function QualificationForm() {
       // Determinar pacote recomendado
       const recommendedPackage = getRecommendedPackage({
         ...qualificationData,
-        termsAccepted // Include termsAccepted to match QualificationData type
+        termsAccepted: true // Include termsAccepted to match QualificationData type
       });
       
       // Redirect to payment page with recommended package
@@ -157,11 +157,11 @@ export function QualificationForm() {
                 Enviando...
               </>
             ) : (
-              "Enviar"
+              "Enviar e Prosseguir para Pagamento"
             )}
           </Button>
         </form>
       </Form>
     </div>
   );
-}
+};

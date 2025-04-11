@@ -1,198 +1,177 @@
 
 import React, { useState, useEffect } from 'react';
+import { Link, useLocation } from 'react-router-dom';
+import { Menu, X, Calculator, FileCheck } from 'lucide-react';
 import { Button } from "@/components/ui/button";
-import Logo from './Logo';
-import { DollarSign, Mail, Phone, Menu, Clock, ChevronUp, Calculator, FileCheck } from 'lucide-react';
-import NavLink from './NavLink';
-import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
-import { useNavigate, Link, useLocation } from 'react-router-dom';
-import { siteConfig } from '@/config/site';
-import { 
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
+import ChatbotButton from './ChatbotButton';
 
 const Header: React.FC = () => {
-  const navigate = useNavigate();
+  const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const [isScrolled, setIsScrolled] = useState(false);
   const location = useLocation();
-  const [showBackToTop, setShowBackToTop] = useState(false);
-  const [isHome, setIsHome] = useState(true);
-  
+
   useEffect(() => {
-    setIsHome(location.pathname === '/' || location.pathname === '');
-    
     const handleScroll = () => {
-      if (window.scrollY > 300) {
-        setShowBackToTop(true);
-      } else {
-        setShowBackToTop(false);
-      }
+      setIsScrolled(window.scrollY > 10);
     };
-    
+
     window.addEventListener('scroll', handleScroll);
     return () => window.removeEventListener('scroll', handleScroll);
-  }, [location]);
-  
-  useEffect(() => {
-    window.scrollTo(0, 0);
-  }, [location.pathname]);
-  
-  const handleWhatsAppContact = () => {
-    window.open(`https://wa.me/${siteConfig.contact.whatsapp}`, '_blank');
+  }, []);
+
+  const toggleMenu = () => {
+    setIsMenuOpen(!isMenuOpen);
   };
-  
-  const handleEmailContact = () => {
-    window.open(`mailto:${siteConfig.contact.email}`, '_blank');
+
+  const isActive = (path: string) => {
+    return location.pathname === path;
   };
-  
-  const handlePriceCalculation = () => {
-    navigate('/calculadora');
-    window.scrollTo(0, 0);
-  };
-  
-  const handleQualification = () => {
-    navigate('/qualificacao');
-    window.scrollTo(0, 0);
-  };
-  
-  const scrollToTop = () => {
-    window.scrollTo({
-      top: 0,
-      behavior: 'smooth'
-    });
-  };
-  
+
+  const isAdminRoute = location.pathname.includes('admin-j28s7d1k');
+
+  if (isAdminRoute) {
+    return null;
+  }
+
   return (
-    <>
-      <header className="fixed top-0 left-0 right-0 bg-black z-50 shadow-sm">
-        <div className="flex items-center justify-between max-w-7xl mx-auto px-4 py-3">
-          <div className="flex items-center gap-10">
-            <Link to="/" className="cursor-pointer" onClick={() => window.scrollTo(0, 0)}>
-              <Logo />
+    <header className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${
+      isScrolled ? 'bg-black/80 backdrop-blur-sm shadow-lg' : 'bg-transparent'
+    }`}>
+      <div className="container mx-auto px-4 py-4">
+        <div className="flex items-center justify-between">
+          <Link to="/" className="text-white font-bold text-xl">
+            harmonIA
+          </Link>
+
+          {/* Desktop Navigation */}
+          <nav className="hidden md:flex items-center space-x-6">
+            <Link 
+              to="/" 
+              className={`text-sm ${isActive('/') ? 'text-harmonia-green' : 'text-gray-300 hover:text-white'}`}
+            >
+              Início
             </Link>
-            <nav className="hidden md:flex space-x-8">
-              {isHome ? (
-                <>
-                  <NavLink href="#servicos">Serviços</NavLink>
-                  <NavLink href="#processo">Processo</NavLink>
-                  <NavLink href="#portfolio">Portfólio</NavLink>
-                </>
-              ) : (
-                <>
-                  <NavLink href="/pacotes">Serviços</NavLink>
-                  <NavLink href="/#processo">Processo</NavLink>
-                  <NavLink href="/portfolio">Portfólio</NavLink>
-                </>
-              )}
-              <NavLink href="/qualificacao">Qualificação</NavLink>
-              <NavLink href="/calculadora">Calculadora</NavLink>
-              <NavLink href="/acompanhar-pedido">Acompanhar Pedido</NavLink>
-            </nav>
-          </div>
-          <div className="flex items-center gap-3">
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button 
-                  variant="ghost" 
-                  size="icon" 
-                  className="hidden md:flex"
-                >
-                  <Phone className="w-4 h-4" />
-                </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="end" className="bg-background border border-border p-2">
-                <DropdownMenuItem onClick={handleWhatsAppContact} className="cursor-pointer">
-                  <Phone className="mr-2 h-4 w-4" />
-                  <span>WhatsApp</span>
-                </DropdownMenuItem>
-                <DropdownMenuItem onClick={handleEmailContact} className="cursor-pointer">
-                  <Mail className="mr-2 h-4 w-4" />
-                  <span>Email</span>
-                </DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
+            <Link 
+              to="/portfolio" 
+              className={`text-sm ${isActive('/portfolio') ? 'text-harmonia-green' : 'text-gray-300 hover:text-white'}`}
+            >
+              Portfólio
+            </Link>
+            <Link 
+              to="/services" 
+              className={`text-sm ${isActive('/services') ? 'text-harmonia-green' : 'text-gray-300 hover:text-white'}`}
+            >
+              Serviços
+            </Link>
+            <Link 
+              to="/briefing" 
+              className={`text-sm ${isActive('/briefing') ? 'text-harmonia-green' : 'text-gray-300 hover:text-white'}`}
+            >
+              Briefing
+            </Link>
+            <Link 
+              to="/contact" 
+              className={`text-sm ${isActive('/contact') ? 'text-harmonia-green' : 'text-gray-300 hover:text-white'}`}
+            >
+              Contato
+            </Link>
             
-            <Sheet>
-              <SheetTrigger asChild>
-                <Button variant="ghost" size="sm" className="md:hidden">
-                  <Menu className="w-5 h-5" />
-                </Button>
-              </SheetTrigger>
-              <SheetContent side="right">
-                <div className="flex flex-col h-full p-6 pt-10">
-                  <nav className="flex flex-col space-y-4">
-                    {isHome ? (
-                      <>
-                        <NavLink href="#servicos">Serviços</NavLink>
-                        <NavLink href="#processo">Processo</NavLink>
-                        <NavLink href="#portfolio">Portfólio</NavLink>
-                      </>
-                    ) : (
-                      <>
-                        <NavLink href="/pacotes">Serviços</NavLink>
-                        <NavLink href="/#processo">Processo</NavLink>
-                        <NavLink href="/portfolio">Portfólio</NavLink>
-                      </>
-                    )}
-                    <NavLink href="/qualificacao">
-                      <div className="flex items-center gap-1">
-                        <FileCheck className="w-4 h-4" /> Qualificação
-                      </div>
-                    </NavLink>
-                    <NavLink href="/calculadora">
-                      <div className="flex items-center gap-1">
-                        <Calculator className="w-4 h-4" /> Calculadora
-                      </div>
-                    </NavLink>
-                    <NavLink href="/acompanhar-pedido" className="flex items-center gap-1">
-                      <Clock className="w-4 h-4" /> Acompanhar Pedido
-                    </NavLink>
-                  </nav>
-                  
-                  <div className="mt-8 pt-8 border-t border-border">
-                    <h3 className="font-semibold mb-4">Contato</h3>
-                    <div className="space-y-4">
-                      <Button onClick={handleWhatsAppContact} className="w-full bg-green-600 hover:bg-green-700 text-white flex items-center gap-2">
-                        <Phone className="w-4 h-4" />
-                        WhatsApp
-                      </Button>
-                      <Button onClick={handleEmailContact} variant="outline" className="w-full flex items-center gap-2">
-                        <Mail className="w-4 h-4" />
-                        Email
-                      </Button>
-                    </div>
-                  </div>
-                </div>
-              </SheetContent>
-            </Sheet>
-            
-            <div className="hidden md:flex gap-2">
-              <Button onClick={handleQualification} variant="outline" className="flex items-center gap-1">
-                <FileCheck className="w-4 h-4" />
-                Qualificação
+            <div className="flex items-center gap-2 ml-2">
+              <Button asChild size="sm" className="bg-harmonia-green hover:bg-harmonia-green/90 text-white">
+                <Link to="/calculadora" className="flex items-center gap-1">
+                  <Calculator className="w-4 h-4" />
+                  Calcular Preço
+                </Link>
               </Button>
-              <Button onClick={handlePriceCalculation} className="bg-harmonia-green hover:bg-harmonia-green/90 text-white flex items-center gap-1">
-                <Calculator className="w-4 h-4" />
-                Calcular Preço
+              
+              <Button asChild size="sm" variant="outline" className="border-harmonia-green/70 text-harmonia-green hover:bg-harmonia-green/10">
+                <Link to="/qualificacao" className="flex items-center gap-1">
+                  <FileCheck className="w-4 h-4" />
+                  Qualificação
+                </Link>
               </Button>
             </div>
+            
+            <ChatbotButton />
+          </nav>
+
+          {/* Mobile Menu Button */}
+          <div className="md:hidden flex items-center">
+            <Button 
+              variant="ghost" 
+              size="sm" 
+              className="text-gray-200 hover:text-white"
+              onClick={toggleMenu}
+            >
+              {isMenuOpen ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
+            </Button>
           </div>
         </div>
-      </header>
 
-      {showBackToTop && (
-        <Button
-          onClick={scrollToTop}
-          className="fixed right-6 bottom-24 p-2 rounded-full bg-harmonia-green hover:bg-harmonia-green/90 z-40"
-          size="icon"
-        >
-          <ChevronUp className="w-5 h-5" />
-        </Button>
-      )}
-      <div className="h-16"></div> {/* Espaço para compensar o header fixo */}
-    </>
+        {/* Mobile Navigation */}
+        {isMenuOpen && (
+          <div className="md:hidden bg-background border border-border rounded-lg shadow-lg mt-2 p-4">
+            <nav className="flex flex-col space-y-4">
+              <Link 
+                to="/" 
+                className={`text-sm ${isActive('/') ? 'text-harmonia-green' : 'text-gray-300 hover:text-white'}`}
+                onClick={() => setIsMenuOpen(false)}
+              >
+                Início
+              </Link>
+              <Link 
+                to="/portfolio" 
+                className={`text-sm ${isActive('/portfolio') ? 'text-harmonia-green' : 'text-gray-300 hover:text-white'}`}
+                onClick={() => setIsMenuOpen(false)}
+              >
+                Portfólio
+              </Link>
+              <Link 
+                to="/services" 
+                className={`text-sm ${isActive('/services') ? 'text-harmonia-green' : 'text-gray-300 hover:text-white'}`}
+                onClick={() => setIsMenuOpen(false)}
+              >
+                Serviços
+              </Link>
+              <Link 
+                to="/briefing" 
+                className={`text-sm ${isActive('/briefing') ? 'text-harmonia-green' : 'text-gray-300 hover:text-white'}`}
+                onClick={() => setIsMenuOpen(false)}
+              >
+                Briefing
+              </Link>
+              <Link 
+                to="/contact" 
+                className={`text-sm ${isActive('/contact') ? 'text-harmonia-green' : 'text-gray-300 hover:text-white'}`}
+                onClick={() => setIsMenuOpen(false)}
+              >
+                Contato
+              </Link>
+              
+              <div className="flex flex-col gap-2 pt-2 border-t border-gray-700">
+                <Button asChild size="sm" className="bg-harmonia-green hover:bg-harmonia-green/90 text-white">
+                  <Link to="/calculadora" className="flex items-center gap-1" onClick={() => setIsMenuOpen(false)}>
+                    <Calculator className="w-4 h-4" />
+                    Calcular Preço
+                  </Link>
+                </Button>
+                
+                <Button asChild size="sm" variant="outline" className="border-harmonia-green/70 text-harmonia-green hover:bg-harmonia-green/10">
+                  <Link to="/qualificacao" className="flex items-center gap-1" onClick={() => setIsMenuOpen(false)}>
+                    <FileCheck className="w-4 h-4" />
+                    Qualificação
+                  </Link>
+                </Button>
+              </div>
+              
+              <div className="pt-2">
+                <ChatbotButton />
+              </div>
+            </nav>
+          </div>
+        )}
+      </div>
+    </header>
   );
 };
 
