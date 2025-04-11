@@ -54,104 +54,104 @@ const AdminSidebar: React.FC = () => {
         <SidebarMenu>
           <SidebarGroup>
             <SidebarMenuItem>
-              <SidebarMenuButton
-                as={Link}
-                to="/admin-j28s7d1k/dashboard"
-                isActive={isActive('/admin-j28s7d1k/dashboard')}
-              >
-                <LayoutDashboard size={18} />
-                <span>Dashboard</span>
-              </SidebarMenuButton>
+              <Link to="/admin-j28s7d1k/dashboard">
+                <SidebarMenuButton 
+                  isActive={isActive('/admin-j28s7d1k/dashboard')}
+                >
+                  <LayoutDashboard size={18} />
+                  <span>Dashboard</span>
+                </SidebarMenuButton>
+              </Link>
             </SidebarMenuItem>
             <SidebarMenuItem>
-              <SidebarMenuButton
-                as={Link}
-                to="/admin-j28s7d1k/previews"
-                isActive={isActive('/admin-j28s7d1k/previews')}
-              >
-                <Music size={18} />
-                <span>Prévias</span>
-              </SidebarMenuButton>
+              <Link to="/admin-j28s7d1k/previews">
+                <SidebarMenuButton 
+                  isActive={isActive('/admin-j28s7d1k/previews')}
+                >
+                  <Music size={18} />
+                  <span>Prévias</span>
+                </SidebarMenuButton>
+              </Link>
             </SidebarMenuItem>
             <SidebarMenuItem>
-              <SidebarMenuButton
-                as={Link}
-                to="/admin-j28s7d1k/portfolio"
-                isActive={isActive('/admin-j28s7d1k/portfolio')}
-              >
-                <RefreshCcw size={18} />
-                <span>Portfólio</span>
-              </SidebarMenuButton>
+              <Link to="/admin-j28s7d1k/portfolio">
+                <SidebarMenuButton 
+                  isActive={isActive('/admin-j28s7d1k/portfolio')}
+                >
+                  <RefreshCcw size={18} />
+                  <span>Portfólio</span>
+                </SidebarMenuButton>
+              </Link>
             </SidebarMenuItem>
             <SidebarMenuItem>
-              <SidebarMenuButton
-                as={Link}
-                to="/admin-j28s7d1k/invoices"
-                isActive={isActive('/admin-j28s7d1k/invoices')}
-              >
-                <CreditCard size={18} />
-                <span>Faturas</span>
-              </SidebarMenuButton>
+              <Link to="/admin-j28s7d1k/invoices">
+                <SidebarMenuButton 
+                  isActive={isActive('/admin-j28s7d1k/invoices')}
+                >
+                  <CreditCard size={18} />
+                  <span>Faturas</span>
+                </SidebarMenuButton>
+              </Link>
             </SidebarMenuItem>
             <SidebarMenuItem>
-              <SidebarMenuButton
-                as={Link}
-                to="/admin-j28s7d1k/briefings"
-                isActive={isActive('/admin-j28s7d1k/briefings')}
-              >
-                <FileQuestion size={18} />
-                <span>Briefings</span>
-              </SidebarMenuButton>
+              <Link to="/admin-j28s7d1k/briefings">
+                <SidebarMenuButton 
+                  isActive={isActive('/admin-j28s7d1k/briefings')}
+                >
+                  <FileQuestion size={18} />
+                  <span>Briefings</span>
+                </SidebarMenuButton>
+              </Link>
             </SidebarMenuItem>
             <SidebarMenuItem>
-              <SidebarMenuButton
-                as={Link}
-                to="/admin-j28s7d1k/projects"
-                isActive={isActive('/admin-j28s7d1k/projects')}
-              >
-                <File size={18} />
-                <span>Projetos</span>
-              </SidebarMenuButton>
+              <Link to="/admin-j28s7d1k/projects">
+                <SidebarMenuButton 
+                  isActive={isActive('/admin-j28s7d1k/projects')}
+                >
+                  <File size={18} />
+                  <span>Projetos</span>
+                </SidebarMenuButton>
+              </Link>
             </SidebarMenuItem>
             <SidebarMenuItem>
-              <SidebarMenuButton
-                as={Link}
-                to="/admin-j28s7d1k/statistics"
-                isActive={isActive('/admin-j28s7d1k/statistics')}
-              >
-                <LineChart size={18} />
-                <span>Estatísticas</span>
-              </SidebarMenuButton>
+              <Link to="/admin-j28s7d1k/statistics">
+                <SidebarMenuButton 
+                  isActive={isActive('/admin-j28s7d1k/statistics')}
+                >
+                  <LineChart size={18} />
+                  <span>Estatísticas</span>
+                </SidebarMenuButton>
+              </Link>
             </SidebarMenuItem>
             <SidebarMenuItem>
-              <SidebarMenuButton
-                as={Link}
-                to="/admin-j28s7d1k/guides"
-                isActive={isActive('/admin-j28s7d1k/guides')}
-              >
-                <BookOpenText size={18} />
-                <span>Guias</span>
-              </SidebarMenuButton>
+              <Link to="/admin-j28s7d1k/guides">
+                <SidebarMenuButton 
+                  isActive={isActive('/admin-j28s7d1k/guides')}
+                >
+                  <BookOpenText size={18} />
+                  <span>Guias</span>
+                </SidebarMenuButton>
+              </Link>
             </SidebarMenuItem>
             <SidebarMenuItem>
-              <SidebarMenuButton
-                as={Link}
-                to="/admin-j28s7d1k/storage"
-                isActive={isActive('/admin-j28s7d1k/storage')}
-              >
-                <Database size={18} />
-                <span>Armazenamento</span>
-              </SidebarMenuButton>
+              <Link to="/admin-j28s7d1k/storage">
+                <SidebarMenuButton 
+                  isActive={isActive('/admin-j28s7d1k/storage')}
+                >
+                  <Database size={18} />
+                  <span>Armazenamento</span>
+                </SidebarMenuButton>
+              </Link>
             </SidebarMenuItem>
             <SidebarMenuItem>
-              <SidebarMenuButton
-                as={Link}
-                to="/admin-j28s7d1k/integrations"
-                isActive={isActive('/admin-j28s7d1k/integrations')}
-              >
-                <Share2 size={18} />
-                <span>Integrações</span>
-              </SidebarMenuButton>
+              <Link to="/admin-j28s7d1k/integrations">
+                <SidebarMenuButton 
+                  isActive={isActive('/admin-j28s7d1k/integrations')}
+                >
+                  <Share2 size={18} />
+                  <span>Integrações</span>
+                </SidebarMenuButton>
+              </Link>
             </SidebarMenuItem>
           </SidebarGroup>
         </SidebarMenu>
