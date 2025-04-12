@@ -9,7 +9,120 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
-      [_ in never]: never
+      admin_users: {
+        Row: {
+          created_at: string | null
+          created_by: string | null
+          id: number
+          user_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          created_by?: string | null
+          id?: number
+          user_id?: string
+        }
+        Update: {
+          created_at?: string | null
+          created_by?: string | null
+          id?: number
+          user_id?: string
+        }
+        Relationships: []
+      }
+      audio_samples: {
+        Row: {
+          audio_url: string | null
+          created_at: string | null
+          description: string | null
+          duration: number | null
+          id: number
+          title: string
+          updated_at: string | null
+          user_id: string | null
+        }
+        Insert: {
+          audio_url?: string | null
+          created_at?: string | null
+          description?: string | null
+          duration?: number | null
+          id?: number
+          title: string
+          updated_at?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          audio_url?: string | null
+          created_at?: string | null
+          description?: string | null
+          duration?: number | null
+          id?: number
+          title?: string
+          updated_at?: string | null
+          user_id?: string | null
+        }
+        Relationships: []
+      }
+      portfolio_items: {
+        Row: {
+          created_at: string | null
+          description: string | null
+          id: number
+          image_url: string | null
+          title: string
+          updated_at: string | null
+          user_id: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          description?: string | null
+          id?: number
+          image_url?: string | null
+          title: string
+          updated_at?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          description?: string | null
+          id?: number
+          image_url?: string | null
+          title?: string
+          updated_at?: string | null
+          user_id?: string | null
+        }
+        Relationships: []
+      }
+      qualification_submissions: {
+        Row: {
+          created_at: string
+          id: number
+        }
+        Insert: {
+          created_at?: string
+          id?: number
+        }
+        Update: {
+          created_at?: string
+          id?: number
+        }
+        Relationships: []
+      }
+      system_settings: {
+        Row: {
+          created_at: string
+          id: number
+        }
+        Insert: {
+          created_at?: string
+          id?: number
+        }
+        Update: {
+          created_at?: string
+          id?: number
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
