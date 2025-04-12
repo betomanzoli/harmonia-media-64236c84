@@ -8,6 +8,7 @@ import { useToast } from "@/hooks/use-toast";
 import ProtectedRoute from './components/admin/auth/ProtectedRoute';
 import Header from './components/Header';
 import Footer from './components/Footer';
+import { AuthProvider } from './contexts/AuthContext';
 
 // Public Pages
 import Home from './pages/Home';
@@ -28,6 +29,7 @@ import Services from './pages/Packages';
 import Contact from './pages/Contact';
 import PrivacyPolicy from './pages/PrivacyPolicy';
 import Terms from './pages/Terms';
+import Qualification from './pages/Qualification';
 
 // Admin Pages
 import AdminLogin from './pages/admin/AdminLogin';
@@ -63,7 +65,7 @@ const PublicLayout = ({ children }) => {
   );
 };
 
-const App: React.FC = () => {
+const AppContent: React.FC = () => {
   const { authStatus, checkAuthStatus } = useAuth();
   const { toast } = useToast();
 
@@ -86,68 +88,79 @@ const App: React.FC = () => {
   };
 
   return (
-    <ThemeProvider defaultTheme="dark" storageKey="harmonia-theme">
-      <Router>
-        <ScrollToTop />
+    <>
+      <ScrollToTop />
+      
+      <Routes>
+        <Route path="/" element={<PublicLayout><Home /></PublicLayout>} />
+        <Route path="/index" element={<Navigate to="/" />} />
+        <Route path="/home" element={<Navigate to="/" />} />
         
-        <Routes>
-          <Route path="/" element={<PublicLayout><Home /></PublicLayout>} />
-          <Route path="/index" element={<Navigate to="/" />} />
-          <Route path="/home" element={<Navigate to="/" />} />
-          
-          {/* Core Public Pages */}
-          <Route path="/portfolio" element={<PublicLayout><Portfolio /></PublicLayout>} />
-          <Route path="/services" element={<PublicLayout><Services /></PublicLayout>} />
-          <Route path="/pacotes" element={<PublicLayout><Services /></PublicLayout>} />
-          <Route path="/contact" element={<PublicLayout><Contact /></PublicLayout>} />
-          <Route path="/contato" element={<PublicLayout><Contact /></PublicLayout>} />
-          <Route path="/briefing" element={<PublicLayout><Briefing /></PublicLayout>} />
-          <Route path="/calculadora" element={<PublicLayout><Calculator /></PublicLayout>} />
-          <Route path="/privacidade" element={<PublicLayout><PrivacyPolicy /></PublicLayout>} />
-          <Route path="/termos" element={<PublicLayout><Terms /></PublicLayout>} />
-          
-          {/* Admin routes */}
-          <Route path="/admin-j28s7d1k" element={<Navigate to="/admin-j28s7d1k/dashboard" />} />
-          <Route path="/admin-j28s7d1k/login" element={<AdminLogin />} />
-          <Route path="/admin-login" element={<AdminLogin />} />
-          <Route path="/admin-j28s7d1k/dashboard" element={<ProtectedRoute><AdminDashboard /></ProtectedRoute>} />
-          <Route path="/admin-j28s7d1k/previews" element={<ProtectedRoute><AdminPreviews /></ProtectedRoute>} />
-          <Route path="/admin-j28s7d1k/previews/:projectId" element={<ProtectedRoute><PreviewProjectPage /></ProtectedRoute>} />
-          <Route path="/admin-j28s7d1k/portfolio" element={<ProtectedRoute><AdminPortfolio /></ProtectedRoute>} />
-          <Route path="/admin-j28s7d1k/invoices" element={<ProtectedRoute><AdminInvoices /></ProtectedRoute>} />
-          <Route path="/admin-j28s7d1k/briefings" element={<ProtectedRoute><AdminBriefings /></ProtectedRoute>} />
-          <Route path="/admin-j28s7d1k/projects" element={<ProtectedRoute><AdminProjects /></ProtectedRoute>} />
-          <Route path="/admin-j28s7d1k/statistics" element={<ProtectedRoute><AdminStatistics /></ProtectedRoute>} />
-          <Route path="/admin-j28s7d1k/guides" element={<ProtectedRoute><AdminGuides /></ProtectedRoute>} />
-          <Route path="/admin-j28s7d1k/storage" element={<ProtectedRoute><AdminStorage /></ProtectedRoute>} />
-          <Route path="/admin-j28s7d1k/integrations" element={<ProtectedRoute><AdminIntegrations /></ProtectedRoute>} />
-          <Route path="/admin-j28s7d1k/settings" element={<ProtectedRoute><AdminDashboard /></ProtectedRoute>} />
-          
-          {/* Payment routes */}
-          <Route path="/pagamento/:packageId" element={<PublicLayout><Payment /></PublicLayout>} />
-          <Route path="/pagamento-retorno" element={<PublicLayout><PaymentReturn /></PublicLayout>} />
-          <Route path="/obrigado" element={<PublicLayout><ThankYou /></PublicLayout>} />
+        {/* Core Public Pages */}
+        <Route path="/portfolio" element={<PublicLayout><Portfolio /></PublicLayout>} />
+        <Route path="/services" element={<PublicLayout><Services /></PublicLayout>} />
+        <Route path="/pacotes" element={<PublicLayout><Services /></PublicLayout>} />
+        <Route path="/contact" element={<PublicLayout><Contact /></PublicLayout>} />
+        <Route path="/contato" element={<PublicLayout><Contact /></PublicLayout>} />
+        <Route path="/briefing" element={<PublicLayout><Briefing /></PublicLayout>} />
+        <Route path="/calculadora" element={<PublicLayout><Calculator /></PublicLayout>} />
+        <Route path="/qualificacao" element={<PublicLayout><Qualification /></PublicLayout>} />
+        <Route path="/privacidade" element={<PublicLayout><PrivacyPolicy /></PublicLayout>} />
+        <Route path="/termos" element={<PublicLayout><Terms /></PublicLayout>} />
+        
+        {/* Admin routes */}
+        <Route path="/admin-j28s7d1k" element={<Navigate to="/admin-j28s7d1k/dashboard" />} />
+        <Route path="/admin-j28s7d1k/login" element={<AdminLogin />} />
+        <Route path="/admin-login" element={<AdminLogin />} />
+        <Route path="/admin-j28s7d1k/dashboard" element={<ProtectedRoute><AdminDashboard /></ProtectedRoute>} />
+        <Route path="/admin-j28s7d1k/previews" element={<ProtectedRoute><AdminPreviews /></ProtectedRoute>} />
+        <Route path="/admin-j28s7d1k/previews/:projectId" element={<ProtectedRoute><PreviewProjectPage /></ProtectedRoute>} />
+        <Route path="/admin-j28s7d1k/portfolio" element={<ProtectedRoute><AdminPortfolio /></ProtectedRoute>} />
+        <Route path="/admin-j28s7d1k/invoices" element={<ProtectedRoute><AdminInvoices /></ProtectedRoute>} />
+        <Route path="/admin-j28s7d1k/briefings" element={<ProtectedRoute><AdminBriefings /></ProtectedRoute>} />
+        <Route path="/admin-j28s7d1k/projects" element={<ProtectedRoute><AdminProjects /></ProtectedRoute>} />
+        <Route path="/admin-j28s7d1k/statistics" element={<ProtectedRoute><AdminStatistics /></ProtectedRoute>} />
+        <Route path="/admin-j28s7d1k/guides" element={<ProtectedRoute><AdminGuides /></ProtectedRoute>} />
+        <Route path="/admin-j28s7d1k/storage" element={<ProtectedRoute><AdminStorage /></ProtectedRoute>} />
+        <Route path="/admin-j28s7d1k/integrations" element={<ProtectedRoute><AdminIntegrations /></ProtectedRoute>} />
+        <Route path="/admin-j28s7d1k/settings" element={<ProtectedRoute><AdminDashboard /></ProtectedRoute>} />
+        
+        {/* Payment routes */}
+        <Route path="/pagamento/:packageId" element={<PublicLayout><Payment /></PublicLayout>} />
+        <Route path="/pagamento-retorno" element={<PublicLayout><PaymentReturn /></PublicLayout>} />
+        <Route path="/obrigado" element={<PublicLayout><ThankYou /></PublicLayout>} />
 
-          {/* Order tracking */}
-          <Route path="/consultar-pedido" element={<PublicLayout><OrderTracking /></PublicLayout>} />
-          <Route path="/acompanhar-pedido" element={<PublicLayout><OrderTracking /></PublicLayout>} />
-          
-          {/* Preview system */}
-          <Route path="/previa/:previewId" element={<PublicLayout><MusicPreviewPage /></PublicLayout>} />
-          <Route path="/preview/:previewId" element={<PublicLayout><MusicPreviewPage /></PublicLayout>} />
-          <Route path="/previews" element={<PublicLayout><MusicPreviews /></PublicLayout>} />
-          <Route path="/previas" element={<PublicLayout><MusicPreviews /></PublicLayout>} />
-          
-          {/* Legal & Support pages */}
-          <Route path="/support/credit-refund" element={<PublicLayout><CreditRefundRequest /></PublicLayout>} />
-          <Route path="/feedback-confirmation" element={<PublicLayout><FeedbackConfirmation /></PublicLayout>} />
-          <Route path="/approval-confirmation" element={<PublicLayout><ApprovalConfirmation /></PublicLayout>} />
-          
-          {/* 404 page */}
-          <Route path="*" element={<PublicLayout><NotFound /></PublicLayout>} />
-        </Routes>
-      </Router>
-      <Toaster />
+        {/* Order tracking */}
+        <Route path="/consultar-pedido" element={<PublicLayout><OrderTracking /></PublicLayout>} />
+        <Route path="/acompanhar-pedido" element={<PublicLayout><OrderTracking /></PublicLayout>} />
+        
+        {/* Preview system */}
+        <Route path="/previa/:previewId" element={<PublicLayout><MusicPreviewPage /></PublicLayout>} />
+        <Route path="/preview/:previewId" element={<PublicLayout><MusicPreviewPage /></PublicLayout>} />
+        <Route path="/previews" element={<PublicLayout><MusicPreviews /></PublicLayout>} />
+        <Route path="/previas" element={<PublicLayout><MusicPreviews /></PublicLayout>} />
+        
+        {/* Legal & Support pages */}
+        <Route path="/support/credit-refund" element={<PublicLayout><CreditRefundRequest /></PublicLayout>} />
+        <Route path="/feedback-confirmation" element={<PublicLayout><FeedbackConfirmation /></PublicLayout>} />
+        <Route path="/approval-confirmation" element={<PublicLayout><ApprovalConfirmation /></PublicLayout>} />
+        
+        {/* 404 page */}
+        <Route path="*" element={<PublicLayout><NotFound /></PublicLayout>} />
+      </Routes>
+    </>
+  );
+};
+
+const App: React.FC = () => {
+  return (
+    <ThemeProvider defaultTheme="dark" storageKey="harmonia-theme">
+      <AuthProvider>
+        <Router>
+          <AppContent />
+        </Router>
+        <Toaster />
+      </AuthProvider>
     </ThemeProvider>
   );
 };

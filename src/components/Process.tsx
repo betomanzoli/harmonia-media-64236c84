@@ -1,10 +1,22 @@
 
-import React from 'react';
+import React, { useEffect } from 'react';
 import ProcessStep from './ProcessStep';
 import { Card } from "@/components/ui/card";
 import { FileText, Package, CreditCard, MessageSquare, Music, Headphones, FileCheck, Settings } from 'lucide-react';
 
 const Process: React.FC = () => {
+  // Make sure the element ID is properly set for the scroll target
+  useEffect(() => {
+    // Ensure the section has an id for scrolling
+    const section = document.getElementById('processo');
+    if (!section && typeof document !== 'undefined') {
+      const element = document.querySelector('section:nth-of-type(2)');
+      if (element) {
+        element.id = 'processo';
+      }
+    }
+  }, []);
+
   return (
     <section id="processo" className="py-20 px-6 md:px-10">
       <div className="max-w-7xl mx-auto">

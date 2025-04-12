@@ -1,96 +1,103 @@
 
-import { useState, useCallback } from 'react';
-import { useToast } from '@/hooks/use-toast';
+import { useState } from 'react';
 
-export const useLoginState = (onAuthenticate?: (email: string, password: string) => Promise<boolean>) => {
-  const [activeTab, setActiveTab] = useState("login");
-  const [showConnectionStatus, setShowConnectionStatus] = useState(false);
-  const [isPasswordResetOpen, setIsPasswordResetOpen] = useState(false);
-  const [loginErrorMessage, setLoginErrorMessage] = useState<string | null>(null);
-  const [showDetailedError, setShowDetailedError] = useState(false);
-  const [isLoading, setIsLoading] = useState(false);
-  const [isSuccess, setIsSuccess] = useState(false);
+type AuthenticateFunction = (email: string, password: string) => Promise<boolean>;
+
+export function useLoginState(onAuthenticate?: AuthenticateFunction) {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const { toast } = useToast();
+  const [isLoading, setIsLoading] = useState(false);
+  const [loginSuccess, setLoginSuccess] = useState(false);
+  const [loginErrorMessage, setLoginErrorMessage] = useState<string | null>(null);
+  const [showDetailedError, setShowDetailedError] = useState(false);
+  const [showConnectionStatus, setShowConnectionStatus] = useState(false);
+  const [isPasswordResetOpen, setIsPasswordResetOpen] = useState(false);
   
-  // Toggle diagnostic panel
-  const toggleDiagnostics = useCallback(() => {
-    setShowConnectionStatus(!showConnectionStatus);
-  }, [showConnectionStatus]);
+  // Handler for email input changes
+  const handleEmailChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setEmail(e.target.value);
+  };
+  
+  // Handler for password input changes
+  const handlePasswordChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setPassword(e.target.value);
+  };
+  
+  // Toggle diagnostic information
+  const toggleDiagnostics = () => {
+    setShowConnectionStatus(prev => !prev);
+    setShowDetailedError(prev => !prev);
+  };
   
   // Handle login form submission
   const handleLogin = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
+    
+    if (!email || !password) {
+      setLoginErrorMessage('Por favor, preencha todos os campos.');
+      return;
+    }
+    
     setIsLoading(true);
     setLoginErrorMessage(null);
     
-    console.log("Tentando login com:", email);
-    
     try {
-      // Use provided authentication function if available
       if (onAuthenticate) {
         const success = await onAuthenticate(email, password);
         
         if (success) {
-          setIsSuccess(true);
-          return; // Redirect is handled in onAuthenticate
+          setLoginSuccess(true);
+          console.log('Login bem-sucedido');
         } else {
-          setLoginErrorMessage('Credenciais inválidas. Por favor, verifique seu email e senha.');
+          setLoginErrorMessage('Credenciais inválidas. Por favor, tente novamente.');
+          console.log('Login falhou: credenciais inválidas');
         }
       } else {
-        setLoginErrorMessage('Nenhum método de autenticação foi configurado.');
+        // Demo mode without authentication function
+        console.log('Modo demonstração (sem função de autenticação)');
+        
+        // Simulate successful login after delay
+        await new Promise(resolve => setTimeout(resolve, 1000));
+        setLoginSuccess(true);
       }
     } catch (error) {
-      console.error("Erro durante login:", error);
+      console.error('Erro durante login:', error);
       setLoginErrorMessage('Ocorreu um erro durante o login. Por favor, tente novamente.');
     } finally {
       setIsLoading(false);
     }
   };
   
-  // Handle email change
-  const handleEmailChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setEmail(e.target.value);
-  };
-  
-  // Handle password change
-  const handlePasswordChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setPassword(e.target.value);
-  };
-  
-  // Handle password reset request
-  const handlePasswordReset = async (email: string) => {
+  // Handle password reset
+  const handlePasswordReset = async (resetEmail: string) => {
     setIsLoading(true);
-    await new Promise(resolve => setTimeout(resolve, 1000));
-    setIsLoading(false);
-    toast({
-      title: "Email enviado",
-      description: "Se este email estiver cadastrado, você receberá instruções para redefinir sua senha.",
-    });
-    setIsPasswordResetOpen(false);
+    
+    try {
+      // Simulate password reset after delay
+      await new Promise(resolve => setTimeout(resolve, 1500));
+      console.log('Redefinição de senha solicitada para:', resetEmail);
+      setIsPasswordResetOpen(false);
+    } catch (error) {
+      console.error('Erro ao processar redefinição de senha:', error);
+    } finally {
+      setIsLoading(false);
+    }
   };
   
   return {
-    activeTab,
-    setActiveTab,
-    showConnectionStatus,
-    setShowConnectionStatus,
-    isPasswordResetOpen,
-    setIsPasswordResetOpen,
-    loginErrorMessage,
-    setLoginErrorMessage,
-    showDetailedError,
-    setShowDetailedError,
-    isLoading,
-    setIsLoading,
-    isSuccess,
     email,
     password,
+    isLoading,
+    loginSuccess,
+    loginErrorMessage,
+    showDetailedError,
+    showConnectionStatus,
+    isPasswordResetOpen,
+    setIsPasswordResetOpen,
     handleEmailChange,
     handlePasswordChange,
     toggleDiagnostics,
     handleLogin,
     handlePasswordReset
   };
-};
+}

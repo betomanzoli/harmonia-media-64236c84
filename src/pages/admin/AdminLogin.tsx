@@ -3,7 +3,7 @@ import React, { useEffect, useState } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import AdminLoginContainer from '@/components/admin/auth/login/AdminLoginContainer';
 import { useToast } from '@/hooks/use-toast';
-import { useAdminAuth } from '@/hooks/admin/useAdminAuth';
+import { useAuth } from '@/contexts/AuthContext';
 import { Loader2 } from 'lucide-react';
 import { localAuthService } from '@/lib/auth/localAuthService';
 
@@ -11,7 +11,7 @@ const AdminLogin: React.FC = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const { toast } = useToast();
-  const { isAuthenticated, isLoading } = useAdminAuth();
+  const { authStatus, login } = useAuth();
   const [isCheckingAuth, setIsCheckingAuth] = useState(true);
   
   // Get the pathname to redirect to after login
@@ -19,34 +19,34 @@ const AdminLogin: React.FC = () => {
   
   // Check if already authenticated
   useEffect(() => {
-    console.log('AdminLogin montado, verificando autenticação...');
+    console.log('AdminLogin montado, verificando autenticação...', authStatus);
     
     const timeoutId = setTimeout(() => {
       // Adding a timeout to prevent infinite loading
       setIsCheckingAuth(false);
     }, 1000); // Reduced timeout to 1 second
     
-    if (!isLoading) {
+    if (authStatus !== 'loading') {
       clearTimeout(timeoutId);
       setIsCheckingAuth(false);
       
-      if (isAuthenticated) {
+      if (authStatus === 'authenticated') {
         console.log('Usuário já autenticado, redirecionando para o dashboard');
         navigate(from, { replace: true });
       }
     }
     
     return () => clearTimeout(timeoutId);
-  }, [isLoading, isAuthenticated, navigate, from]);
+  }, [authStatus, navigate, from]);
   
   // Function to authenticate with correct credentials
   const authenticateAdmin = async (email: string, password: string): Promise<boolean> => {
     console.log('Tentando autenticar com:', email);
     
     try {
-      const result = await localAuthService.login(email, password);
+      const success = await login(email, password);
       
-      if (result.success) {
+      if (success) {
         toast({
           title: 'Login realizado com sucesso!',
           description: 'Redirecionando para o painel administrativo...'
@@ -55,10 +55,10 @@ const AdminLogin: React.FC = () => {
         navigate(from, { replace: true });
         return true;
       } else {
-        console.log('Falha na autenticação:', result.error);
+        console.log('Falha na autenticação');
         toast({
           title: 'Erro de autenticação',
-          description: result.error || 'Credenciais inválidas',
+          description: 'Credenciais inválidas',
           variant: 'destructive'
         });
         return false;
@@ -74,7 +74,7 @@ const AdminLogin: React.FC = () => {
     }
   };
   
-  if (isLoading || isCheckingAuth) {
+  if (authStatus === 'loading' || isCheckingAuth) {
     return (
       <div className="flex items-center justify-center min-h-screen bg-gradient-to-b from-gray-900 to-black">
         <div className="flex flex-col items-center gap-2">

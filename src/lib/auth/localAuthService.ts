@@ -28,8 +28,8 @@ const VALID_CREDENTIALS = [
 ];
 
 // Keys for localStorage
-const AUTH_TOKEN_KEY = 'harmonia-admin-auth-token';
-const AUTH_USER_KEY = 'harmonia-admin-auth-user';
+const AUTH_TOKEN_KEY = 'admin-auth-token';
+const AUTH_USER_KEY = 'admin-auth-user';
 
 export const localAuthService = {
   // Login function

@@ -11,10 +11,6 @@ const Hero: React.FC = () => {
     navigate('/pagamento/essencial');
   };
   
-  const handleQualification = () => {
-    navigate('/qualificacao');
-  };
-  
   const handleHowItWorks = () => {
     // Scroll to the process section
     const processSection = document.getElementById('processo');
@@ -47,9 +43,6 @@ const Hero: React.FC = () => {
           <Button onClick={handleCreateMusic} className="bg-harmonia-green hover:bg-harmonia-green/90 text-white h-12 px-6 rounded-md">
             <DollarSign className="w-4 h-4 mr-2" />
             Contratar Agora
-          </Button>
-          <Button onClick={handleQualification} variant="outline" className="h-12 px-6 rounded-md">
-            Fazer Qualificação
           </Button>
           <Button onClick={handleHowItWorks} variant="outline" className="flex items-center gap-2 h-12 px-6 rounded-md">
             <Play className="w-4 h-4" /> Como Funciona
