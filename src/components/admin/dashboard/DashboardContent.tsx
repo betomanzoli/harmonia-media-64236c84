@@ -14,6 +14,7 @@ import {
 } from 'lucide-react';
 import { usePreviewProjects } from '@/hooks/admin/usePreviewProjects';
 import { usePortfolioItems } from '@/hooks/usePortfolioItems';
+import { useToast } from '@/hooks/use-toast';
 
 // Type for dashboard metrics
 interface DashboardMetrics {
@@ -30,6 +31,8 @@ interface DashboardMetrics {
 const DashboardContent: React.FC = () => {
   const { projects } = usePreviewProjects();
   const { portfolioItems } = usePortfolioItems();
+  const { toast } = useToast();
+  
   const [metrics, setMetrics] = useState<DashboardMetrics>({
     newOrders: 0,
     musicInProduction: 0,
@@ -56,18 +59,35 @@ const DashboardContent: React.FC = () => {
     });
   }, [projects, portfolioItems]);
 
+  const handleNotImplemented = (feature: string) => {
+    toast({
+      title: "Funcionalidade em desenvolvimento",
+      description: `A funcionalidade "${feature}" será implementada em breve.`
+    });
+  };
+
   return (
     <div className="flex-1 space-y-6 p-6 pt-8">
       <div className="flex items-center justify-between mb-2">
         <h2 className="text-3xl font-bold tracking-tight text-white">Dashboard</h2>
         <div className="flex items-center space-x-2">
-          <Button variant="outline" size="sm" asChild className="text-gray-300 border-gray-700 hover:bg-gray-800">
+          <Button 
+            variant="outline" 
+            size="sm" 
+            asChild 
+            className="text-gray-300 border-gray-700 hover:bg-gray-800"
+          >
             <Link to="/admin-j28s7d1k/statistics">
               <BarChart2 className="h-4 w-4 mr-2" />
               Estatísticas Detalhadas
             </Link>
           </Button>
-          <Button variant="outline" size="icon" className="text-gray-300 border-gray-700 hover:bg-gray-800">
+          <Button 
+            variant="outline" 
+            size="icon" 
+            className="text-gray-300 border-gray-700 hover:bg-gray-800"
+            onClick={() => handleNotImplemented("Ajuda")}
+          >
             <HelpCircle className="h-4 w-4" />
           </Button>
         </div>
@@ -145,34 +165,28 @@ const DashboardContent: React.FC = () => {
                     variant="outline" 
                     size="sm" 
                     className="justify-start border-gray-700 text-gray-300 hover:bg-gray-700/50"
-                    asChild
+                    onClick={() => handleNotImplemented("Clientes")}
                   >
-                    <Link to="/admin-j28s7d1k/customers">
-                      <Users className="mr-2 h-4 w-4 text-blue-400" />
-                      Clientes
-                    </Link>
+                    <Users className="mr-2 h-4 w-4 text-blue-400" />
+                    Clientes
                   </Button>
                   <Button 
                     variant="outline" 
                     size="sm" 
                     className="justify-start border-gray-700 text-gray-300 hover:bg-gray-700/50"
-                    asChild
+                    onClick={() => handleNotImplemented("Banco de Áudio")}
                   >
-                    <Link to="/admin-j28s7d1k/audio-database">
-                      <Database className="mr-2 h-4 w-4 text-green-400" />
-                      Banco de Áudio
-                    </Link>
+                    <Database className="mr-2 h-4 w-4 text-green-400" />
+                    Banco de Áudio
                   </Button>
                   <Button 
                     variant="outline" 
                     size="sm" 
                     className="justify-start border-gray-700 text-gray-300 hover:bg-gray-700/50"
-                    asChild
+                    onClick={() => handleNotImplemented("Pedidos")}
                   >
-                    <Link to="/admin-j28s7d1k/orders">
-                      <Box className="mr-2 h-4 w-4 text-amber-400" />
-                      Pedidos
-                    </Link>
+                    <Box className="mr-2 h-4 w-4 text-amber-400" />
+                    Pedidos
                   </Button>
                   <Button 
                     variant="outline" 
@@ -211,12 +225,10 @@ const DashboardContent: React.FC = () => {
                     variant="outline" 
                     size="sm" 
                     className="justify-start border-gray-700 text-gray-300 hover:bg-gray-700/50"
-                    asChild
+                    onClick={() => handleNotImplemented("Configurações")}
                   >
-                    <Link to="/admin-j28s7d1k/settings">
-                      <Settings className="mr-2 h-4 w-4 text-gray-400" />
-                      Configurações
-                    </Link>
+                    <Settings className="mr-2 h-4 w-4 text-gray-400" />
+                    Configurações
                   </Button>
                 </div>
               </CardContent>

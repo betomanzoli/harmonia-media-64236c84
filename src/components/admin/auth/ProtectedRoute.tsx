@@ -10,7 +10,7 @@ interface ProtectedRouteProps {
 }
 
 const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children }) => {
-  const { authStatus } = useAuth();
+  const { authStatus, checkAuthStatus } = useAuth();
   const { toast } = useToast();
   const location = useLocation();
 
@@ -21,19 +21,29 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children }) => {
     time: new Date().toISOString() 
   });
 
+  // Refresh authentication state when component mounts
+  useEffect(() => {
+    checkAuthStatus();
+  }, [checkAuthStatus]);
+
   // Add a timeout to prevent infinite loading
   useEffect(() => {
     // If loading takes more than 3 seconds, redirect to login
     const timeoutId = setTimeout(() => {
       if (authStatus === 'loading') {
         console.log('Timeout atingido, redirecionando para login');
+        toast({
+          title: "Problema de autenticação",
+          description: "Não foi possível verificar seu login. Por favor, faça login novamente.",
+          variant: "destructive"
+        });
         // Force redirect to login
         window.location.href = '/admin-login';
       }
     }, 3000);
 
     return () => clearTimeout(timeoutId);
-  }, [authStatus]);
+  }, [authStatus, toast]);
 
   if (authStatus === 'loading') {
     return (
@@ -49,6 +59,10 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children }) => {
   // If not authenticated, redirect to login with the current path in state
   if (authStatus !== 'authenticated') {
     console.log('Usuário não autenticado, redirecionando para login');
+    toast({
+      title: "Autenticação necessária",
+      description: "Por favor, faça login para acessar esta página.",
+    });
     return <Navigate to="/admin-login" state={{ from: location }} replace />;
   }
 

@@ -1,5 +1,6 @@
 
 import React, { createContext, useContext, useState, useCallback, useEffect } from 'react';
+import { supabase } from '@/integrations/supabase/client';
 
 // Update AuthStatus type to match the actual string literals used in the code
 type AuthStatus = 'loading' | 'authenticated' | 'unauthenticated';
@@ -42,25 +43,51 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const login = async (username: string, password: string): Promise<boolean> => {
     console.log('Login attempt with:', username);
-    // This is a simplified mock implementation
-    // In a real app, you'd make an API call to validate credentials
-    if ((username === 'admin@harmonia.com' && password === 'admin123456') || 
-        (username === 'contato@harmonia.media' && password === 'i9!_b!ThA;2H6/bt')) {
-      localStorage.setItem('admin-auth-token', 'mock-token');
-      const userData = {
-        email: username,
-        name: username === 'admin@harmonia.com' ? 'Admin User' : 'Contato User',
-        role: 'admin'
-      };
-      localStorage.setItem('admin-auth-user', JSON.stringify(userData));
-      setAuthStatus('authenticated');
-      console.log('Login successful, token stored');
-      return true;
-    }
     
-    console.log('Login failed, invalid credentials');
-    setAuthStatus('unauthenticated');
-    return false;
+    try {
+      // This is a simplified mock implementation
+      // In a real app, you'd make an API call to validate credentials
+      if ((username === 'admin@harmonia.com' && password === 'admin123456') || 
+          (username === 'contato@harmonia.media' && password === 'i9!_b!ThA;2H6/bt')) {
+        localStorage.setItem('admin-auth-token', 'mock-token');
+        const userData = {
+          email: username,
+          name: username === 'admin@harmonia.com' ? 'Admin User' : 'Contato User',
+          role: 'admin'
+        };
+        localStorage.setItem('admin-auth-user', JSON.stringify(userData));
+        setAuthStatus('authenticated');
+        console.log('Login successful, token stored');
+        return true;
+      }
+      
+      // Supabase login attempt - disabled for now but ready for future implementation
+      // const { data, error } = await supabase.auth.signInWithPassword({
+      //   email: username,
+      //   password: password,
+      // });
+      
+      // if (error) {
+      //   console.log('Supabase login error:', error.message);
+      //   setAuthStatus('unauthenticated');
+      //   return false;
+      // }
+      
+      // if (data.user) {
+      //   localStorage.setItem('admin-auth-token', data.session?.access_token || '');
+      //   localStorage.setItem('admin-auth-user', JSON.stringify(data.user));
+      //   setAuthStatus('authenticated');
+      //   return true;
+      // }
+      
+      console.log('Login failed, invalid credentials');
+      setAuthStatus('unauthenticated');
+      return false;
+    } catch (error) {
+      console.error('Login error:', error);
+      setAuthStatus('unauthenticated');
+      return false;
+    }
   };
 
   const logout = () => {
@@ -68,6 +95,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     localStorage.removeItem('admin-auth-token');
     localStorage.removeItem('admin-auth-user');
     setAuthStatus('unauthenticated');
+    
+    // For future Supabase implementation
+    // supabase.auth.signOut();
   };
 
   return (

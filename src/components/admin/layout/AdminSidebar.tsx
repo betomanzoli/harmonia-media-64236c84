@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { Link, useLocation } from 'react-router-dom';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { 
   CreditCard, 
   Database, 
@@ -13,8 +13,11 @@ import {
   ExternalLink, 
   BookOpenText,
   Settings,
-  Share2
+  Share2,
+  LogOut
 } from 'lucide-react';
+import { useAuth } from '@/contexts/AuthContext';
+import { useToast } from '@/hooks/use-toast';
 
 import { 
   Sidebar, 
@@ -30,10 +33,22 @@ import {
 
 const AdminSidebar: React.FC = () => {
   const location = useLocation();
+  const navigate = useNavigate();
+  const { logout } = useAuth();
+  const { toast } = useToast();
   const activePath = location.pathname;
   
   const isActive = (path: string) => {
     return activePath === path || activePath.startsWith(`${path}/`);
+  };
+  
+  const handleLogout = () => {
+    logout();
+    toast({
+      title: "Logout realizado",
+      description: "Você foi desconectado com sucesso."
+    });
+    navigate('/admin-login');
   };
   
   return (
@@ -157,7 +172,7 @@ const AdminSidebar: React.FC = () => {
         </SidebarMenu>
       </SidebarContent>
       <SidebarFooter>
-        <div className="px-6 py-3">
+        <div className="px-6 py-3 flex flex-col gap-2">
           <a 
             href="/"
             className="flex items-center gap-2 text-gray-400 hover:text-white transition-colors text-sm"
@@ -165,6 +180,13 @@ const AdminSidebar: React.FC = () => {
             <ExternalLink size={14} />
             <span>Site público</span>
           </a>
+          <button 
+            className="flex items-center gap-2 text-gray-400 hover:text-white transition-colors text-sm"
+            onClick={handleLogout}
+          >
+            <LogOut size={14} />
+            <span>Sair</span>
+          </button>
         </div>
       </SidebarFooter>
     </Sidebar>
