@@ -46,7 +46,7 @@ import AdminIntegrations from './pages/admin/AdminIntegrations';
 import PreviewProjectPage from './pages/admin/PreviewProjectPage';
 
 // Layout component to include Header and Footer for public pages
-const PublicLayout = ({ children }) => {
+const PublicLayout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const location = useLocation();
   const isAdminRoute = location.pathname.includes('admin-j28s7d1k') || location.pathname.includes('admin-login');
   
@@ -65,6 +65,17 @@ const PublicLayout = ({ children }) => {
   );
 };
 
+// Custom hook to scroll to top on route change
+const ScrollToTop: React.FC = () => {
+  const { pathname } = useLocation();
+
+  useEffect(() => {
+    window.scrollTo(0, 0);
+  }, [pathname]);
+
+  return null;
+};
+
 const AppContent: React.FC = () => {
   const { authStatus, checkAuthStatus } = useAuth();
   const { toast } = useToast();
@@ -75,17 +86,6 @@ const AppContent: React.FC = () => {
     // Clear any offline mode settings
     sessionStorage.removeItem('offline-admin-mode');
   }, [checkAuthStatus]);
-
-  // Custom hook to scroll to top on route change
-  const ScrollToTop = () => {
-    const { pathname } = useLocation();
-
-    useEffect(() => {
-      window.scrollTo(0, 0);
-    }, [pathname]);
-
-    return null;
-  };
 
   return (
     <>
