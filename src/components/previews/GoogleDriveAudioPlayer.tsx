@@ -81,6 +81,28 @@ const GoogleDriveAudioPlayer: React.FC<GoogleDriveAudioPlayerProps> = ({
     }
   }, [volume]);
 
+  // Adicionar proteção contra downloads
+  useEffect(() => {
+    const handleContextMenu = (e: MouseEvent) => {
+      const target = e.target as HTMLElement;
+      if (target.tagName === 'AUDIO' || target.closest('audio')) {
+        e.preventDefault();
+        toast({
+          title: "Proteção de conteúdo",
+          description: "O download direto não é permitido nesta fase.",
+          variant: "destructive"
+        });
+        return false;
+      }
+    };
+
+    document.addEventListener('contextmenu', handleContextMenu);
+    
+    return () => {
+      document.removeEventListener('contextmenu', handleContextMenu);
+    };
+  }, [toast]);
+
   const togglePlay = () => {
     if (!audioRef.current) return;
 

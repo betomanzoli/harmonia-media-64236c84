@@ -1,12 +1,19 @@
 
-import React, { useState } from 'react';
+import React from 'react';
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Card } from "@/components/ui/card";
-import { Step, StepsProvider, StepsNavigation, StepsContent } from '@/components/ui/steps';
-import { ArrowRight, ArrowLeft } from 'lucide-react';
-import { useToast } from '@/hooks/use-toast';
+import { 
+  ClipboardList, 
+  Music, 
+  Headphones, 
+  ThumbsUp, 
+  Package, 
+  Check, 
+  Upload, 
+  MessageSquare
+} from 'lucide-react';
 
-interface ProjectPhasesProps {
+export interface ProjectPhasesProps {
   projectId: string;
   projectType: string;
   currentPhase: string;
@@ -19,180 +26,113 @@ const ProjectPhases: React.FC<ProjectPhasesProps> = ({
   currentPhase,
   onPhaseAction
 }) => {
-  const [activeStep, setActiveStep] = useState(
-    currentPhase === 'briefing' ? 0 :
-    currentPhase === 'composicao' ? 1 :
-    currentPhase === 'producao' ? 2 :
-    currentPhase === 'aprovacao' ? 3 :
-    currentPhase === 'entrega' ? 4 : 0
-  );
-  const { toast } = useToast();
+  // Define as fases do projeto
+  const phases = [
+    { id: 'briefing', name: 'Briefing', icon: ClipboardList },
+    { id: 'composicao', name: 'Composição', icon: Music },
+    { id: 'producao', name: 'Produção', icon: Headphones },
+    { id: 'aprovacao', name: 'Aprovação', icon: ThumbsUp },
+    { id: 'entrega', name: 'Entrega Final', icon: Package }
+  ];
 
-  const completeStep = () => {
-    if (activeStep < 4) {
-      setActiveStep(activeStep + 1);
-      toast({
-        title: "Fase concluída",
-        description: "O projeto avançou para a próxima fase."
-      });
-      
-      if (onPhaseAction) {
-        const phaseMap = ['briefing', 'composicao', 'producao', 'aprovacao', 'entrega'];
-        onPhaseAction(phaseMap[activeStep], 'complete');
-      }
-    } else {
-      toast({
-        title: "Projeto finalizado",
-        description: "Todas as fases do projeto foram concluídas."
-      });
-    }
+  // Encontrar o índice da fase atual
+  const currentPhaseIndex = phases.findIndex(phase => phase.id === currentPhase);
+
+  // Função para determinar o status da fase
+  const getPhaseStatus = (index: number) => {
+    if (index < currentPhaseIndex) return 'completed';
+    if (index === currentPhaseIndex) return 'current';
+    return 'upcoming';
   };
 
-  const moveToPreviousStep = () => {
-    if (activeStep > 0) {
-      setActiveStep(activeStep - 1);
-      toast({
-        title: "Retornando fase",
-        description: "O projeto retornou para a fase anterior."
-      });
+  const handleAction = (phaseId: string, action: 'upload' | 'notify' | 'complete') => {
+    if (onPhaseAction) {
+      onPhaseAction(phaseId, action);
     }
   };
 
   return (
-    <Card className="p-6">
-      <div className="mb-4">
-        <h3 className="text-xl font-medium mb-1">Fases do Projeto</h3>
-        <p className="text-sm text-muted-foreground mb-4">
-          {projectId} - {projectType}
-        </p>
-        
-        <StepsProvider initialStep={activeStep} onValueChange={setActiveStep}>
-          <StepsNavigation>
-            <Step value={0} title="Briefing" />
-            <Step value={1} title="Composição" />
-            <Step value={2} title="Produção" />
-            <Step value={3} title="Aprovação" />
-            <Step value={4} title="Entrega Final" />
-          </StepsNavigation>
+    <Card>
+      <CardHeader>
+        <CardTitle>Fases do Projeto: {projectType}</CardTitle>
+      </CardHeader>
+      <CardContent>
+        <div className="relative">
+          {/* Linha de progresso conectando as fases */}
+          <div className="absolute left-7 top-8 h-full w-0.5 bg-gray-200 -z-10" />
           
-          <div className="mt-8">
-            <StepsContent value={0}>
-              <div className="space-y-4">
-                <h4 className="text-lg font-medium">Fase de Briefing</h4>
-                <p className="text-muted-foreground">
-                  Nesta fase, coletamos todas as informações do cliente sobre o projeto musical.
-                  Entendemos o objetivo, estilo, referências e sentimentos que a música deve transmitir.
-                </p>
-                <div className="border p-3 rounded-md bg-muted/30">
-                  <span className="font-medium block mb-1">Próximas ações:</span>
-                  <ul className="list-disc list-inside text-sm space-y-1">
-                    <li>Revisar formulário de briefing recebido</li>
-                    <li>Preparar resumo criativo para a equipe</li>
-                    <li>Agendar reunião com o cliente para alinhamento (se necessário)</li>
-                  </ul>
+          {/* Lista de fases */}
+          <div className="space-y-8">
+            {phases.map((phase, index) => {
+              const status = getPhaseStatus(index);
+              const Icon = phase.icon;
+              
+              return (
+                <div key={phase.id} className="relative">
+                  <div className="flex items-start">
+                    <div className={`flex-shrink-0 h-14 w-14 rounded-full flex items-center justify-center mr-4 
+                      ${status === 'completed' ? 'bg-green-100 text-green-600' : 
+                        status === 'current' ? 'bg-harmonia-green text-white' : 
+                        'bg-gray-100 text-gray-400'}`}>
+                      <Icon className="h-6 w-6" />
+                    </div>
+                    <div className="flex-1">
+                      <h3 className={`font-semibold ${
+                        status === 'completed' ? 'text-green-600' : 
+                        status === 'current' ? 'text-harmonia-green' : 
+                        'text-gray-400'
+                      }`}>
+                        {phase.name}
+                        {status === 'completed' && <Check className="inline ml-2 h-4 w-4" />}
+                      </h3>
+                      
+                      {status === 'current' && (
+                        <div className="mt-2 space-x-2">
+                          <Button 
+                            size="sm" 
+                            variant="outline" 
+                            className="text-xs"
+                            onClick={() => handleAction(phase.id, 'upload')}
+                          >
+                            <Upload className="h-3 w-3 mr-1" />
+                            Upload
+                          </Button>
+                          <Button 
+                            size="sm" 
+                            variant="outline" 
+                            className="text-xs"
+                            onClick={() => handleAction(phase.id, 'notify')}
+                          >
+                            <MessageSquare className="h-3 w-3 mr-1" />
+                            Notificar
+                          </Button>
+                          <Button 
+                            size="sm" 
+                            variant="outline" 
+                            className="text-xs bg-green-50 text-green-600 hover:bg-green-100"
+                            onClick={() => handleAction(phase.id, 'complete')}
+                          >
+                            <Check className="h-3 w-3 mr-1" />
+                            Completar
+                          </Button>
+                        </div>
+                      )}
+                      
+                      {status === 'completed' && (
+                        <p className="text-sm text-green-600">Fase concluída</p>
+                      )}
+                      
+                      {status === 'upcoming' && (
+                        <p className="text-sm text-gray-400">Aguardando fases anteriores</p>
+                      )}
+                    </div>
+                  </div>
                 </div>
-              </div>
-            </StepsContent>
-            
-            <StepsContent value={1}>
-              <div className="space-y-4">
-                <h4 className="text-lg font-medium">Fase de Composição</h4>
-                <p className="text-muted-foreground">
-                  Com base no briefing, criamos as primeiras ideias musicais, incluindo melodia, harmonia 
-                  e estrutura básica da música.
-                </p>
-                <div className="border p-3 rounded-md bg-muted/30">
-                  <span className="font-medium block mb-1">Próximas ações:</span>
-                  <ul className="list-disc list-inside text-sm space-y-1">
-                    <li>Desenvolver conceitos melódicos iniciais</li>
-                    <li>Criar progressões harmônicas</li>
-                    <li>Definir a estrutura básica da música</li>
-                    <li>Preparar rascunhos para aprovação interna</li>
-                  </ul>
-                </div>
-              </div>
-            </StepsContent>
-            
-            <StepsContent value={2}>
-              <div className="space-y-4">
-                <h4 className="text-lg font-medium">Fase de Produção</h4>
-                <p className="text-muted-foreground">
-                  Após a aprovação do conceito musical, desenvolvemos a produção completa com arranjos,
-                  instrumentação, gravações e mixagem inicial.
-                </p>
-                <div className="border p-3 rounded-md bg-muted/30">
-                  <span className="font-medium block mb-1">Próximas ações:</span>
-                  <ul className="list-disc list-inside text-sm space-y-1">
-                    <li>Gravar instrumentos e vozes</li>
-                    <li>Desenvolver arranjos detalhados</li>
-                    <li>Realizar a mixagem inicial</li>
-                    <li>Preparar versões para avaliação do cliente</li>
-                  </ul>
-                </div>
-              </div>
-            </StepsContent>
-            
-            <StepsContent value={3}>
-              <div className="space-y-4">
-                <h4 className="text-lg font-medium">Fase de Aprovação</h4>
-                <p className="text-muted-foreground">
-                  As prévias musicais são enviadas ao cliente para avaliação e feedback. Realizamos ajustes
-                  conforme solicitado até chegarmos à versão final aprovada.
-                </p>
-                <div className="border p-3 rounded-md bg-muted/30">
-                  <span className="font-medium block mb-1">Próximas ações:</span>
-                  <ul className="list-disc list-inside text-sm space-y-1">
-                    <li>Enviar links de prévia para o cliente</li>
-                    <li>Acompanhar feedback recebido</li>
-                    <li>Implementar ajustes solicitados</li>
-                    <li>Obter aprovação final</li>
-                  </ul>
-                </div>
-              </div>
-            </StepsContent>
-            
-            <StepsContent value={4}>
-              <div className="space-y-4">
-                <h4 className="text-lg font-medium">Fase de Entrega Final</h4>
-                <p className="text-muted-foreground">
-                  Com a aprovação do cliente, finalizamos a masterização da música e realizamos a entrega
-                  dos arquivos finais no formato acordado no contrato.
-                </p>
-                <div className="border p-3 rounded-md bg-muted/30">
-                  <span className="font-medium block mb-1">Próximas ações:</span>
-                  <ul className="list-disc list-inside text-sm space-y-1">
-                    <li>Realizar masterização final</li>
-                    <li>Preparar diferentes formatos de arquivo</li>
-                    <li>Gerar versões para diferentes plataformas (se contratado)</li>
-                    <li>Enviar pacote final ao cliente</li>
-                    <li>Solicitar avaliação do serviço</li>
-                  </ul>
-                </div>
-              </div>
-            </StepsContent>
+              );
+            })}
           </div>
-          
-          <div className="flex justify-between mt-8">
-            <Button 
-              variant="outline" 
-              onClick={moveToPreviousStep}
-              disabled={activeStep === 0}
-            >
-              <ArrowLeft className="w-4 h-4 mr-2" />
-              Fase Anterior
-            </Button>
-            
-            <Button 
-              onClick={completeStep}
-              disabled={activeStep === 4}
-              className="bg-harmonia-green hover:bg-harmonia-green/90"
-            >
-              {activeStep === 4 ? 'Finalizado' : 'Concluir Fase'}
-              {activeStep < 4 && <ArrowRight className="w-4 h-4 ml-2" />}
-            </Button>
-          </div>
-        </StepsProvider>
-      </div>
+        </div>
+      </CardContent>
     </Card>
   );
 };

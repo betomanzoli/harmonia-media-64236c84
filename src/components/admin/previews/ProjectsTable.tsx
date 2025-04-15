@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Table, TableBody, TableCaption, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
@@ -62,7 +61,6 @@ const ProjectsTable: React.FC<ProjectsTableProps> = ({ projects, isLoading = fal
     }, 1500);
   };
 
-  // Verifica se o projeto está próximo da expiração (menos de 3 dias)
   const isNearExpiration = (expirationDate: string) => {
     const parts = expirationDate.split('/');
     const expDate = new Date(parseInt(parts[2]), parseInt(parts[1]) - 1, parseInt(parts[0]));
@@ -91,7 +89,7 @@ const ProjectsTable: React.FC<ProjectsTableProps> = ({ projects, isLoading = fal
   }
 
   return (
-    <div className="overflow-x-auto max-w-full">
+    <div className="border rounded-md overflow-x-auto max-w-full">
       <Table>
         <TableCaption>Lista de projetos de prévia musical</TableCaption>
         <TableHeader>
@@ -103,7 +101,7 @@ const ProjectsTable: React.FC<ProjectsTableProps> = ({ projects, isLoading = fal
             <TableHead className="whitespace-nowrap">Criado em</TableHead>
             <TableHead className="whitespace-nowrap">Expiração</TableHead>
             <TableHead className="whitespace-nowrap">Versões</TableHead>
-            <TableHead className="text-right whitespace-nowrap">Ações</TableHead>
+            <TableHead className="whitespace-nowrap text-right">Ações</TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>

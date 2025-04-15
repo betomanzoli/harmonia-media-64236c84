@@ -13,8 +13,13 @@ import PreviewLoadingState from './PreviewLoadingState';
 import PreviewFooter from './PreviewFooter';
 import { notificationService } from '@/services/notificationService';
 
-const MusicPreviewSystem: React.FC = () => {
-  const { projectId } = useParams<{ projectId: string }>();
+interface MusicPreviewSystemProps {
+  projectId?: string;
+}
+
+const MusicPreviewSystem: React.FC<MusicPreviewSystemProps> = ({ projectId: propProjectId }) => {
+  const params = useParams<{ projectId: string }>();
+  const projectId = propProjectId || params.projectId;
   const { toast } = useToast();
   const [selectedVersion, setSelectedVersion] = useState<string | null>(null);
   const [feedback, setFeedback] = useState('');

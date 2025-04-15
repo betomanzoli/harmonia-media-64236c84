@@ -19,6 +19,8 @@ import AdminStorage from './pages/admin/AdminStorage';
 import AdminIntegrations from './pages/admin/AdminIntegrations';
 import AdminStatistics from './pages/admin/AdminStatistics';
 import AdminGuides from './pages/admin/AdminGuides';
+import PortfolioPage from './pages/Portfolio';
+import { ProtectedRoute } from './components/admin/auth/ProtectedRoute';
 
 const router = createBrowserRouter([
   {
@@ -35,7 +37,7 @@ const router = createBrowserRouter([
   },
   {
     path: '/portfolio',
-    element: <Home />, // Using Home as placeholder until Portfolio is fixed
+    element: <PortfolioPage />,
   },
   {
     path: '/calculadora',
@@ -63,63 +65,63 @@ const router = createBrowserRouter([
   },
   {
     path: '/admin-j28s7d1k/dashboard',
-    element: <Dashboard />,
+    element: <ProtectedRoute><Dashboard /></ProtectedRoute>,
   },
   {
     path: '/admin-j28s7d1k/projects',
-    element: <AdminProjects />,
+    element: <ProtectedRoute><AdminProjects /></ProtectedRoute>,
   },
   {
     path: '/admin-j28s7d1k/previews',
-    element: <AdminPreviews />,
+    element: <ProtectedRoute><AdminPreviews /></ProtectedRoute>,
   },
   {
     path: '/admin-j28s7d1k/previews/:projectId',
-    element: <PreviewProjectPage />,
+    element: <ProtectedRoute><PreviewProjectPage /></ProtectedRoute>,
   },
   {
     path: '/admin-j28s7d1k/portfolio',
-    element: <AdminPortfolio />,
+    element: <ProtectedRoute><AdminPortfolio /></ProtectedRoute>,
   },
   {
     path: '/admin-j28s7d1k/briefings',
-    element: <AdminBriefings />,
+    element: <ProtectedRoute><AdminBriefings /></ProtectedRoute>,
   },
   {
     path: '/admin-j28s7d1k/orders',
-    element: <NotFound />, // Temporary placeholder until AdminOrders is created
+    element: <ProtectedRoute><AdminProjects /></ProtectedRoute>, // Now redirecting to Projects page
   },
   {
     path: '/admin-j28s7d1k/payments',
-    element: <NotFound />, // Temporary placeholder until AdminPayments is created
+    element: <ProtectedRoute><AdminInvoices /></ProtectedRoute>, // Now redirecting to Invoices page
   },
   {
     path: '/admin-j28s7d1k/integrations',
-    element: <AdminIntegrations />,
+    element: <ProtectedRoute><AdminIntegrations /></ProtectedRoute>,
   },
   {
     path: '/admin-j28s7d1k/chat',
-    element: <NotFound />, // Temporary placeholder until AdminChat is created
+    element: <ProtectedRoute><Dashboard /></ProtectedRoute>, // Temporary redirect to Dashboard
   },
   {
     path: '/admin-j28s7d1k/settings',
-    element: <NotFound />, // Temporary placeholder until AdminSettings is created
+    element: <ProtectedRoute><Dashboard /></ProtectedRoute>, // Temporary redirect to Dashboard
   },
   {
     path: '/admin-j28s7d1k/documentation',
-    element: <AdminGuides />, // Using AdminGuides as temporary replacement
+    element: <ProtectedRoute><AdminGuides /></ProtectedRoute>,
   },
   {
     path: '/admin-j28s7d1k/analytics',
-    element: <AdminStatistics />, // Using AdminStatistics as temporary replacement
+    element: <ProtectedRoute><AdminStatistics /></ProtectedRoute>,
   },
   {
     path: '/admin-j28s7d1k/invoices',
-    element: <AdminInvoices />,
+    element: <ProtectedRoute><AdminInvoices /></ProtectedRoute>,
   },
   {
     path: '/admin-j28s7d1k/storage',
-    element: <AdminStorage />,
+    element: <ProtectedRoute><AdminStorage /></ProtectedRoute>,
   },
   {
     // Rota pública para visualização de prévias (acessível por qualquer pessoa com o link)
