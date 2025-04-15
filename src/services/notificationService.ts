@@ -1,162 +1,113 @@
 
-import webhookService, { NotificationType } from '@/services/webhookService';
-import { useToast } from '@/hooks/use-toast';
+import { toast } from '@/hooks/use-toast';
 
-// Tipos de eventos que podem ser notificados
-export type EventType = 
-  | 'new_briefing' 
-  | 'new_order' 
+type NotificationType = 
   | 'new_preview' 
-  | 'feedback_received' 
-  | 'payment_confirmed'
-  | 'file_uploaded'
-  | 'file_updated';
+  | 'preview_feedback' 
+  | 'preview_approved' 
+  | 'payment_received' 
+  | 'project_update'
+  | 'deadline_extended';
 
-// Interface para armazenar callbacks de notificação
-interface NotificationHandlers {
-  [key: string]: Array<(data: any) => void>;
+interface NotificationData {
+  projectId?: string;
+  clientName?: string;
+  clientEmail?: string;
+  message?: string;
+  expirationDate?: string;
+  days?: number;
+  newDate?: string;
+  packageType?: string;
+  amount?: number;
+  [key: string]: any;
 }
 
 class NotificationService {
-  private handlers: NotificationHandlers = {};
-  private webhookEnabled: boolean = false;
-  
-  // Registra um handler para um tipo de evento
-  subscribe(eventType: EventType, handler: (data: any) => void) {
-    if (!this.handlers[eventType]) {
-      this.handlers[eventType] = [];
-    }
-    
-    this.handlers[eventType].push(handler);
-    
-    // Retorna uma função para cancelar a inscrição
-    return () => {
-      this.handlers[eventType] = this.handlers[eventType].filter(h => h !== handler);
-    };
-  }
-  
-  // Envia uma notificação para todos os handlers registrados para o evento
-  notify(eventType: EventType, data: any) {
-    // Registra o evento no console
-    console.log(`[Notification] Evento: ${eventType}`, data);
-    
-    // Notifica handlers locais
-    if (this.handlers[eventType]) {
-      this.handlers[eventType].forEach(handler => {
-        try {
-          handler(data);
-        } catch (error) {
-          console.error(`Erro ao processar notificação (${eventType}):`, error);
-        }
-      });
-    }
-    
-    // Envia para webhook se estiver configurado
-    this.sendToWebhook(eventType, data);
-    
-    return true;
-  }
-  
-  // Envia para webhook externo (se configurado)
-  async sendToWebhook(eventType: EventType, data: any) {
+  // Registrar todas as notificações no localStorage para manter histórico
+  private logNotification(type: NotificationType, data: NotificationData) {
     try {
-      // Mapear o tipo de evento para o tipo de notificação do webhook
-      const notificationType = this.mapEventToNotificationType(eventType);
-      if (!notificationType) return false;
+      const now = new Date();
+      const timestamp = now.toLocaleDateString('pt-BR') + ' ' + now.toLocaleTimeString('pt-BR');
       
-      // Enviar para o webhook
-      const result = await webhookService.sendItemNotification(notificationType, data);
-      return result;
+      const notificationLog = {
+        type,
+        data,
+        timestamp,
+        id: `notification-${Date.now()}`
+      };
+      
+      // Adicionar ao histórico no localStorage
+      const logs = JSON.parse(localStorage.getItem('notification-logs') || '[]');
+      logs.unshift(notificationLog); // Adicionar ao início para mostrar os mais recentes primeiro
+      
+      // Limitar a 1000 registros
+      const trimmedLogs = logs.slice(0, 1000);
+      localStorage.setItem('notification-logs', JSON.stringify(trimmedLogs));
+      
+      return notificationLog;
     } catch (error) {
-      console.error(`Erro ao enviar notificação para webhook (${eventType}):`, error);
-      return false;
+      console.error('Erro ao registrar notificação:', error);
+      return null;
     }
   }
   
-  // Mapeia tipos de eventos internos para tipos de notificação do webhook
-  private mapEventToNotificationType(eventType: EventType): NotificationType | null {
-    const mapping: Record<EventType, NotificationType> = {
-      new_briefing: 'new_portfolio_item',
-      new_order: 'new_order',
-      new_preview: 'feedback_received',
-      feedback_received: 'feedback_received',
-      payment_confirmed: 'new_customer',
-      file_uploaded: 'new_audio',
-      file_updated: 'new_audio'
-    };
+  // Simular o envio de notificação por email (em produção, isso chamaria uma API real)
+  public notify(type: NotificationType, data: NotificationData): boolean {
+    console.log(`Enviando notificação tipo: ${type}`, data);
     
-    return mapping[eventType] || null;
-  }
-  
-  // Ativa ou desativa a funcionalidade de webhook
-  setWebhookEnabled(enabled: boolean) {
-    this.webhookEnabled = enabled;
-  }
-}
-
-// Singleton para compartilhar o serviço em toda a aplicação
-export const notificationService = new NotificationService();
-
-// Hook para usar o serviço em componentes
-export function useNotificationService() {
-  const { toast } = useToast();
-  
-  const notifyWithToast = (eventType: EventType, data: any, showToast: boolean = true) => {
-    notificationService.notify(eventType, data);
+    // Registrar no histórico
+    const log = this.logNotification(type, data);
     
-    if (showToast) {
-      // Mensagens customizadas para diferentes tipos de eventos
-      const messages: Record<EventType, {title: string, description: string}> = {
-        new_briefing: {
-          title: "Novo briefing recebido",
-          description: "Um novo briefing foi enviado por um cliente."
-        },
-        new_order: {
-          title: "Novo pedido recebido",
-          description: "Um novo pedido foi registrado no sistema."
-        },
-        new_preview: {
-          title: "Nova prévia disponível",
-          description: "Uma nova prévia foi adicionada e está pronta para revisão."
-        },
-        feedback_received: {
-          title: "Feedback recebido",
-          description: "Um cliente enviou feedback sobre uma prévia."
-        },
-        payment_confirmed: {
-          title: "Pagamento confirmado",
-          description: "Um pagamento foi confirmado com sucesso."
-        },
-        file_uploaded: {
-          title: "Arquivo enviado",
-          description: "Um novo arquivo foi enviado para o sistema."
-        },
-        file_updated: {
-          title: "Arquivo atualizado",
-          description: "Um arquivo existente foi atualizado."
-        }
-      };
-      
-      const message = messages[eventType] || {
-        title: "Notificação",
-        description: `Evento ${eventType} ocorreu.`
-      };
-      
-      toast({
-        title: message.title,
-        description: message.description,
-      });
+    // Em um ambiente real, aqui chamaria uma API para enviar o email
+    // Por enquanto, vamos simular o envio e mostrar um toast
+    let title = '';
+    let description = '';
+    
+    switch (type) {
+      case 'new_preview':
+        title = 'Nova prévia enviada';
+        description = `Prévia enviada para ${data.clientName} (${data.clientEmail})`;
+        break;
+      case 'preview_feedback':
+        title = 'Feedback recebido';
+        description = `${data.clientName} enviou feedback para o projeto ${data.projectId}`;
+        break;
+      case 'preview_approved':
+        title = 'Prévia aprovada';
+        description = `${data.clientName} aprovou a prévia do projeto ${data.projectId}`;
+        break;
+      case 'deadline_extended':
+        title = 'Prazo estendido';
+        description = `Prazo do projeto ${data.projectId} estendido em ${data.days} dias`;
+        break;
+      default:
+        title = 'Notificação enviada';
+        description = `Tipo: ${type}`;
     }
+    
+    toast({
+      title,
+      description,
+    });
     
     return true;
-  };
+  }
   
-  return {
-    notify: notifyWithToast,
-    subscribe: notificationService.subscribe.bind(notificationService),
-    sendToWebhook: notificationService.sendToWebhook.bind(notificationService),
-    setWebhookEnabled: notificationService.setWebhookEnabled.bind(notificationService)
-  };
+  // Obter histórico de notificações
+  public getNotificationHistory() {
+    try {
+      return JSON.parse(localStorage.getItem('notification-logs') || '[]');
+    } catch (error) {
+      console.error('Erro ao recuperar histórico de notificações:', error);
+      return [];
+    }
+  }
+  
+  // Limpar histórico de notificações
+  public clearNotificationHistory() {
+    localStorage.removeItem('notification-logs');
+    return true;
+  }
 }
 
-export default notificationService;
+export const notificationService = new NotificationService();

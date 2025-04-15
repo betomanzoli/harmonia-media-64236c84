@@ -1,290 +1,207 @@
 
 import React, { useState } from 'react';
 import { Button } from "@/components/ui/button";
+import { DialogFooter } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
+import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { DialogFooter } from "@/components/ui/dialog";
-import { Loader2, Upload, PlusCircle, Trash2 } from 'lucide-react';
+import { Loader2, Upload } from "lucide-react";
 import { useToast } from '@/hooks/use-toast';
-import { Card } from "@/components/ui/card";
-import { ScrollArea } from "@/components/ui/scroll-area";
+import { usePreviewProjects } from '@/hooks/admin/usePreviewProjects';
 
 interface AddVersionFormProps {
   projectId: string;
   onAddComplete: (versionName: string) => void;
 }
 
-// Expanded list of music categories
-const MUSIC_CATEGORIES = [
-  { value: 'completa', label: 'Versão Completa' },
-  { value: 'acustica', label: 'Acústica' },
-  { value: 'orquestrada', label: 'Orquestrada' },
-  { value: 'minimalista', label: 'Minimalista' },
-  { value: 'pop', label: 'Pop' },
-  { value: 'rock', label: 'Rock' },
-  { value: 'eletronica', label: 'Eletrônica' },
-  { value: 'jazz', label: 'Jazz' },
-  { value: 'classicarefrao', label: 'Clássica com Refrão' },
-  { value: 'instrumental', label: 'Instrumental' },
-  { value: 'vocal', label: 'Versão Vocal' },
-  { value: 'remix', label: 'Remix' },
-  { value: 'alternativa', label: 'Alternativa' },
-  { value: 'ambiente', label: 'Música Ambiente' },
-  { value: 'lofi', label: 'Lo-Fi' },
-  { value: 'samba', label: 'Samba' },
-  { value: 'bossanova', label: 'Bossa Nova' },
-  { value: 'mpb', label: 'MPB' },
-  { value: 'regional', label: 'Regional' },
-  { value: 'cinematografica', label: 'Cinematográfica' },
-  { value: 'comercial', label: 'Comercial' },
-  { value: 'jingle', label: 'Jingle' },
-  { value: 'outros', label: 'Outros' }
-];
-
-interface VersionItem {
-  title: string;
-  description: string;
-  category: string;
-  audioFile: File | null;
-  isRecommended: boolean;
-}
-
 const AddVersionForm: React.FC<AddVersionFormProps> = ({ projectId, onAddComplete }) => {
-  const [isLoading, setIsLoading] = useState(false);
-  const [versions, setVersions] = useState<VersionItem[]>([{
-    title: '',
-    description: '',
-    category: '',
-    audioFile: null,
-    isRecommended: false
-  }]);
+  const [versionName, setVersionName] = useState('');
+  const [description, setDescription] = useState('');
+  const [audioFile, setAudioFile] = useState<File | null>(null);
+  const [isRecommended, setIsRecommended] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const { toast } = useToast();
+  const { getProjectById, updateProject } = usePreviewProjects();
 
-  const handleAddVersion = () => {
-    setVersions([...versions, {
-      title: '',
-      description: '',
-      category: '',
-      audioFile: null,
-      isRecommended: false
-    }]);
-  };
-
-  const handleRemoveVersion = (index: number) => {
-    if (versions.length === 1) {
-      toast({
-        title: "Atenção",
-        description: "É necessário pelo menos uma versão.",
-        variant: "destructive"
-      });
-      return;
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files && e.target.files.length > 0) {
+      const file = e.target.files[0];
+      
+      // Verificar se é um arquivo de áudio
+      if (!file.type.startsWith('audio/')) {
+        toast({
+          title: "Tipo de arquivo inválido",
+          description: "Por favor, selecione um arquivo de áudio",
+          variant: "destructive"
+        });
+        return;
+      }
+      
+      // Verificar tamanho (limite de 20MB)
+      const maxSize = 20 * 1024 * 1024; // 20MB em bytes
+      if (file.size > maxSize) {
+        toast({
+          title: "Arquivo muito grande",
+          description: "O tamanho máximo permitido é 20MB",
+          variant: "destructive"
+        });
+        return;
+      }
+      
+      setAudioFile(file);
     }
-    
-    setVersions(versions.filter((_, i) => i !== index));
-  };
-
-  const handleTitleChange = (index: number, value: string) => {
-    const newVersions = [...versions];
-    newVersions[index].title = value;
-    setVersions(newVersions);
-  };
-
-  const handleDescriptionChange = (index: number, value: string) => {
-    const newVersions = [...versions];
-    newVersions[index].description = value;
-    setVersions(newVersions);
-  };
-
-  const handleCategoryChange = (index: number, value: string) => {
-    const newVersions = [...versions];
-    newVersions[index].category = value;
-    setVersions(newVersions);
-  };
-
-  const handleFileChange = (index: number, event: React.ChangeEvent<HTMLInputElement>) => {
-    if (event.target.files && event.target.files[0]) {
-      const newVersions = [...versions];
-      newVersions[index].audioFile = event.target.files[0];
-      setVersions(newVersions);
-    }
-  };
-
-  const handleRecommendedChange = (index: number) => {
-    const newVersions = versions.map((version, i) => ({
-      ...version,
-      isRecommended: i === index
-    }));
-    setVersions(newVersions);
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    // Validate form
-    if (versions.some(v => !v.title || !v.description || !v.category || !v.audioFile)) {
+    if (!versionName || !description || !audioFile) {
       toast({
-        title: "Campos obrigatórios",
-        description: "Preencha todos os campos e adicione arquivos de áudio para cada versão.",
+        title: "Dados incompletos",
+        description: "Preencha todos os campos obrigatórios",
         variant: "destructive"
       });
       return;
     }
     
-    setIsLoading(true);
+    setIsSubmitting(true);
     
     try {
-      // In a real implementation, this would upload the files and create the versions
-      // For now, we'll just simulate a successful upload
-      await new Promise((resolve) => setTimeout(resolve, 1500));
+      // Obter projeto atual
+      const project = getProjectById(projectId);
       
-      // Determine the name to return (first version or recommended version)
-      const recommendedVersion = versions.find(v => v.isRecommended) || versions[0];
+      if (!project) {
+        throw new Error("Projeto não encontrado");
+      }
       
-      onAddComplete(recommendedVersion.title);
+      // Em produção, aqui faria upload do arquivo
+      // Simulando um upload bem-sucedido
+      console.log('Simulando upload do arquivo:', audioFile.name);
       
-      toast({
-        title: "Versões adicionadas",
-        description: `${versions.length} versões foram adicionadas com sucesso.`,
+      // Simulando um tempo de processamento
+      await new Promise(resolve => setTimeout(resolve, 1500));
+      
+      // Gerar URL de prévia (em produção seria a URL real do arquivo)
+      const previewUrl = `/previews/${projectId}/${encodeURIComponent(versionName.toLowerCase().replace(/\s+/g, '-'))}`;
+      
+      // Criar nova versão
+      const now = new Date();
+      const newVersion = {
+        id: `v${(project.versions || 0) + 1}`,
+        name: versionName,
+        description: description,
+        url: previewUrl,
+        fileSize: audioFile.size,
+        fileType: audioFile.type,
+        fileName: audioFile.name,
+        dateAdded: now.toLocaleDateString('pt-BR'),
+        recommended: isRecommended
+      };
+      
+      // Atualizar projeto com nova versão
+      const newVersionsList = project.versionsList ? [...project.versionsList, newVersion] : [newVersion];
+      updateProject(projectId, {
+        versions: newVersionsList.length,
+        versionsList: newVersionsList,
+        lastActivityDate: now.toLocaleDateString('pt-BR')
       });
-    } catch (error) {
-      console.error('Erro ao adicionar versões:', error);
+      
+      // Adicionar ao histórico
+      const historyItem = {
+        action: `Versão "${versionName}" adicionada`,
+        timestamp: now.toLocaleDateString('pt-BR') + ' ' + now.toLocaleTimeString('pt-BR'),
+        data: { versionName, description, isRecommended }
+      };
+      
+      const newHistory = project.history ? [historyItem, ...project.history] : [historyItem];
+      updateProject(projectId, { history: newHistory });
+      
       toast({
-        title: "Erro",
-        description: "Ocorreu um erro ao adicionar as versões. Tente novamente.",
+        title: "Versão adicionada com sucesso",
+        description: `A versão "${versionName}" foi adicionada ao projeto ${projectId}`
+      });
+      
+      onAddComplete(versionName);
+    } catch (error) {
+      console.error('Erro ao adicionar versão:', error);
+      toast({
+        title: "Erro ao adicionar versão",
+        description: "Ocorreu um erro ao adicionar a versão. Por favor, tente novamente.",
         variant: "destructive"
       });
     } finally {
-      setIsLoading(false);
+      setIsSubmitting(false);
     }
   };
 
   return (
     <form onSubmit={handleSubmit}>
-      <ScrollArea className="max-h-[60vh]">
-        <div className="space-y-6 pr-4">
-          {versions.map((version, index) => (
-            <Card key={index} className="p-4 border-l-4 border-l-harmonia-green/60">
-              <div className="flex items-center justify-between mb-4">
-                <h4 className="font-medium">Versão {index + 1}</h4>
-                <Button 
-                  type="button" 
-                  variant="ghost" 
-                  size="sm"
-                  onClick={() => handleRemoveVersion(index)}
-                  className="h-8 w-8 p-0 text-red-500 hover:text-red-600 hover:bg-red-100/20"
-                >
-                  <Trash2 className="w-4 h-4" />
-                </Button>
-              </div>
-              
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
-                <div className="space-y-2">
-                  <Label htmlFor={`title-${index}`}>Título da Versão</Label>
-                  <Input
-                    id={`title-${index}`}
-                    value={version.title}
-                    onChange={e => handleTitleChange(index, e.target.value)}
-                    placeholder="Ex: Versão Acústica"
-                    required
-                  />
-                </div>
-                
-                <div className="space-y-2">
-                  <Label htmlFor={`category-${index}`}>Categoria</Label>
-                  <Select 
-                    value={version.category} 
-                    onValueChange={(value) => handleCategoryChange(index, value)}
-                  >
-                    <SelectTrigger id={`category-${index}`}>
-                      <SelectValue placeholder="Selecione a categoria" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {MUSIC_CATEGORIES.map((category) => (
-                        <SelectItem key={category.value} value={category.value}>
-                          {category.label}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-              </div>
-              
-              <div className="space-y-2 mb-4">
-                <Label htmlFor={`file-${index}`}>Arquivo de Áudio</Label>
-                <div className="flex items-center">
-                  <Input
-                    id={`file-${index}`}
-                    type="file"
-                    accept="audio/*"
-                    onChange={e => handleFileChange(index, e)}
-                    className="hidden"
-                  />
-                  <Button 
-                    type="button" 
-                    variant="outline" 
-                    onClick={() => document.getElementById(`file-${index}`)?.click()}
-                    className="w-full flex items-center justify-center"
-                  >
-                    <Upload className="w-4 h-4 mr-2" />
-                    {version.audioFile ? version.audioFile.name : "Selecionar Arquivo"}
-                  </Button>
-                </div>
-              </div>
-              
-              <div className="space-y-2 mb-4">
-                <Label htmlFor={`description-${index}`}>Descrição da Versão</Label>
-                <Textarea
-                  id={`description-${index}`}
-                  value={version.description}
-                  onChange={e => handleDescriptionChange(index, e.target.value)}
-                  placeholder="Descreva as características desta versão musical..."
-                  required
-                  className="min-h-[100px]"
-                />
-              </div>
-              
-              <div className="flex items-center">
-                <input
-                  type="radio"
-                  id={`recommended-${index}`}
-                  name="recommended-version"
-                  checked={version.isRecommended}
-                  onChange={() => handleRecommendedChange(index)}
-                  className="mr-2"
-                />
-                <Label htmlFor={`recommended-${index}`} className="text-sm">
-                  Marcar como versão recomendada para o cliente
-                </Label>
-              </div>
-            </Card>
-          ))}
-          
-          <Button
-            type="button"
-            variant="outline"
-            onClick={handleAddVersion}
-            className="w-full border-dashed border-2"
-          >
-            <PlusCircle className="w-4 h-4 mr-2" />
-            Adicionar outra versão
-          </Button>
+      <div className="space-y-4 py-4">
+        <div className="space-y-2">
+          <Label htmlFor="version-name">Nome da versão</Label>
+          <Input
+            id="version-name"
+            value={versionName}
+            onChange={(e) => setVersionName(e.target.value)}
+            placeholder="Ex: Versão Orquestral"
+            required
+          />
         </div>
-      </ScrollArea>
+        
+        <div className="space-y-2">
+          <Label htmlFor="version-description">Descrição da versão</Label>
+          <Textarea
+            id="version-description"
+            value={description}
+            onChange={(e) => setDescription(e.target.value)}
+            placeholder="Detalhe as características desta versão..."
+            rows={4}
+            required
+          />
+        </div>
+        
+        <div className="space-y-2">
+          <Label htmlFor="audio-file">Arquivo de áudio</Label>
+          <div className="flex items-center gap-2">
+            <Input
+              id="audio-file"
+              type="file"
+              accept="audio/*"
+              onChange={handleFileChange}
+              required
+              className="flex-1"
+            />
+          </div>
+          <p className="text-sm text-muted-foreground">
+            Formatos aceitos: MP3, WAV, AAC. Tamanho máximo: 20MB
+          </p>
+        </div>
+        
+        <div className="flex items-center space-x-2 pt-2">
+          <Checkbox 
+            id="is-recommended" 
+            checked={isRecommended}
+            onCheckedChange={(checked) => setIsRecommended(checked === true)}
+          />
+          <Label htmlFor="is-recommended" className="font-normal">
+            Marcar como versão recomendada para o cliente
+          </Label>
+        </div>
+      </div>
       
-      <DialogFooter className="mt-6">
-        <Button type="button" variant="outline" onClick={() => onAddComplete('')}>
-          Cancelar
-        </Button>
-        <Button type="submit" disabled={isLoading}>
-          {isLoading ? (
+      <DialogFooter>
+        <Button type="submit" disabled={isSubmitting}>
+          {isSubmitting ? (
             <>
-              <Loader2 className="h-4 w-4 animate-spin mr-2" />
-              Processando...
+              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+              Adicionando...
             </>
           ) : (
-            <>Adicionar {versions.length} {versions.length === 1 ? 'versão' : 'versões'}</>
+            <>
+              <Upload className="mr-2 h-4 w-4" />
+              Adicionar versão
+            </>
           )}
         </Button>
       </DialogFooter>

@@ -1,7 +1,7 @@
 
 import React from 'react';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
-import { Music, Sliders, Layers, Calculator, FileCheck } from 'lucide-react';
+import { Music, Sliders, Layers, Calculator } from 'lucide-react';
 import ExamplesList, { AudioExampleItem } from './ExamplesList';
 import AudioVersions from './AudioVersions';
 import { Button } from "@/components/ui/button";
@@ -86,23 +86,17 @@ const PortfolioTabs: React.FC<PortfolioTabsProps> = ({
         </TabsContent>
       </Tabs>
 
-      {/* Seção CTA para calcular preço e fazer qualificação */}
+      {/* Seção CTA para calcular preço - Removido botão de qualificação */}
       <div className="bg-gradient-to-r from-background via-black to-background p-6 rounded-lg border border-border mt-10 mb-16">
         <div className="text-center mb-6">
           <h3 className="text-xl font-bold mb-2">Pronto para criar sua música personalizada?</h3>
-          <p className="text-gray-400">Calcule o preço ou faça uma qualificação para começar seu projeto musical.</p>
+          <p className="text-gray-400">Calcule o preço para começar seu projeto musical.</p>
         </div>
-        <div className="flex flex-col sm:flex-row justify-center gap-4">
+        <div className="flex justify-center">
           <Button asChild className="bg-harmonia-green hover:bg-harmonia-green/90 flex items-center gap-2">
             <Link to="/calculadora">
               <Calculator className="w-4 h-4" />
               Calcular Preço
-            </Link>
-          </Button>
-          <Button asChild variant="outline" className="flex items-center gap-2">
-            <Link to="/qualificacao">
-              <FileCheck className="w-4 h-4" />
-              Fazer Qualificação
             </Link>
           </Button>
         </div>

@@ -29,7 +29,6 @@ import Services from './pages/Packages';
 import Contact from './pages/Contact';
 import PrivacyPolicy from './pages/PrivacyPolicy';
 import Terms from './pages/Terms';
-import Qualification from './pages/Qualification';
 
 // Admin Pages
 import AdminLogin from './pages/admin/AdminLogin';
@@ -104,9 +103,11 @@ const AppContent: React.FC = () => {
         <Route path="/contato" element={<PublicLayout><Contact /></PublicLayout>} />
         <Route path="/briefing" element={<PublicLayout><Briefing /></PublicLayout>} />
         <Route path="/calculadora" element={<PublicLayout><Calculator /></PublicLayout>} />
-        <Route path="/qualificacao" element={<PublicLayout><Qualification /></PublicLayout>} />
         <Route path="/privacidade" element={<PublicLayout><PrivacyPolicy /></PublicLayout>} />
         <Route path="/termos" element={<PublicLayout><Terms /></PublicLayout>} />
+        
+        {/* Redirecionamento da página de qualificação para home - removida */}
+        <Route path="/qualificacao" element={<Navigate to="/" />} />
         
         {/* Admin routes */}
         <Route path="/admin-j28s7d1k" element={<Navigate to="/admin-j28s7d1k/dashboard" />} />
