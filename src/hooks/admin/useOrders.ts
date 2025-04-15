@@ -1,6 +1,5 @@
-
 import { useState, useEffect, useCallback } from 'react';
-import notificationService from '@/services/notificationService';
+import { notificationService } from '@/services/notificationService';
 
 interface OrderCustomer {
   id: string;

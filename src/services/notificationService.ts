@@ -1,4 +1,3 @@
-
 import { toast } from '@/hooks/use-toast';
 
 type NotificationType = 
@@ -7,7 +6,10 @@ type NotificationType =
   | 'preview_approved' 
   | 'payment_received' 
   | 'project_update'
-  | 'deadline_extended';
+  | 'deadline_extended'
+  | 'feedback_received'
+  | 'new_order'
+  | 'new_briefing';
 
 interface NotificationData {
   projectId?: string;
@@ -23,7 +25,6 @@ interface NotificationData {
 }
 
 class NotificationService {
-  // Registrar todas as notificações no localStorage para manter histórico
   private logNotification(type: NotificationType, data: NotificationData) {
     try {
       const now = new Date();
@@ -36,11 +37,8 @@ class NotificationService {
         id: `notification-${Date.now()}`
       };
       
-      // Adicionar ao histórico no localStorage
       const logs = JSON.parse(localStorage.getItem('notification-logs') || '[]');
-      logs.unshift(notificationLog); // Adicionar ao início para mostrar os mais recentes primeiro
-      
-      // Limitar a 1000 registros
+      logs.unshift(notificationLog);
       const trimmedLogs = logs.slice(0, 1000);
       localStorage.setItem('notification-logs', JSON.stringify(trimmedLogs));
       
@@ -51,15 +49,11 @@ class NotificationService {
     }
   }
   
-  // Simular o envio de notificação por email (em produção, isso chamaria uma API real)
   public notify(type: NotificationType, data: NotificationData): boolean {
     console.log(`Enviando notificação tipo: ${type}`, data);
     
-    // Registrar no histórico
     const log = this.logNotification(type, data);
     
-    // Em um ambiente real, aqui chamaria uma API para enviar o email
-    // Por enquanto, vamos simular o envio e mostrar um toast
     let title = '';
     let description = '';
     
@@ -80,6 +74,18 @@ class NotificationService {
         title = 'Prazo estendido';
         description = `Prazo do projeto ${data.projectId} estendido em ${data.days} dias`;
         break;
+      case 'feedback_received':
+        title = 'Feedback recebido';
+        description = `${data.clientName} enviou feedback para o projeto ${data.projectId}`;
+        break;
+      case 'new_order':
+        title = 'Novo pedido';
+        description = `Novo pedido recebido para ${data.clientName} (${data.clientEmail})`;
+        break;
+      case 'new_briefing':
+        title = 'Novo briefing';
+        description = `Novo briefing recebido para ${data.clientName} (${data.clientEmail})`;
+        break;
       default:
         title = 'Notificação enviada';
         description = `Tipo: ${type}`;
@@ -93,7 +99,6 @@ class NotificationService {
     return true;
   }
   
-  // Obter histórico de notificações
   public getNotificationHistory() {
     try {
       return JSON.parse(localStorage.getItem('notification-logs') || '[]');
@@ -103,7 +108,6 @@ class NotificationService {
     }
   }
   
-  // Limpar histórico de notificações
   public clearNotificationHistory() {
     localStorage.removeItem('notification-logs');
     return true;

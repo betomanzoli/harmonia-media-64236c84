@@ -1,10 +1,9 @@
-
 import { useState } from 'react';
 import { useToast } from '@/hooks/use-toast';
 import { useFileUpload } from './useFileUpload';
 import { syncStorageData } from '@/services/adminStorageService';
 import { emailService } from '@/lib/supabase';
-import notificationService from '@/services/notificationService';
+import { notificationService } from '@/services/notificationService';
 
 interface BriefingSubmission {
   id: string;
