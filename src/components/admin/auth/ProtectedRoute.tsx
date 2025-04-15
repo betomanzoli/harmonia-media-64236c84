@@ -38,7 +38,7 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children }) => {
           variant: "destructive"
         });
         // Force redirect to login
-        window.location.href = '/admin-login';
+        window.location.href = '/admin-j28s7d1k/login';
       }
     }, 3000);
 
@@ -59,11 +59,10 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children }) => {
   // If not authenticated, redirect to login with the current path in state
   if (authStatus !== 'authenticated') {
     console.log('Usuário não autenticado, redirecionando para login');
-    toast({
-      title: "Autenticação necessária",
-      description: "Por favor, faça login para acessar esta página.",
-    });
-    return <Navigate to="/admin-login" state={{ from: location }} replace />;
+    
+    // Use Navigate component instead of directly modifying window.location
+    // This allows React Router to handle the navigation properly
+    return <Navigate to="/admin-j28s7d1k/login" state={{ from: location }} replace />;
   }
 
   return <>{children}</>;

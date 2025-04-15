@@ -6,9 +6,19 @@ import Contact from './pages/Contact';
 import Briefing from './pages/Briefing';
 import NotFound from './pages/NotFound';
 import AdminLogin from './pages/admin/AdminLogin';
+import Dashboard from './pages/admin/Dashboard';
 import PreviewProjectPage from './pages/admin/PreviewProjectPage';
 import MusicPreviews from './pages/MusicPreviews';
 import PreviewPage from './pages/PreviewPage';
+import AdminPreviews from './pages/admin/AdminPreviews';
+import AdminPortfolio from './pages/admin/AdminPortfolio';
+import AdminBriefings from './pages/admin/AdminBriefings';
+import AdminProjects from './pages/admin/AdminProjects';
+import AdminInvoices from './pages/admin/AdminInvoices';
+import AdminStorage from './pages/admin/AdminStorage';
+import AdminIntegrations from './pages/admin/AdminIntegrations';
+import AdminStatistics from './pages/admin/AdminStatistics';
+import AdminGuides from './pages/admin/AdminGuides';
 
 const router = createBrowserRouter([
   {
@@ -53,15 +63,15 @@ const router = createBrowserRouter([
   },
   {
     path: '/admin-j28s7d1k/dashboard',
-    element: <NotFound />, // Temporary placeholder until AdminDashboard is created
+    element: <Dashboard />,
   },
   {
     path: '/admin-j28s7d1k/projects',
-    element: <NotFound />, // Temporary placeholder until AdminProjects is created
+    element: <AdminProjects />,
   },
   {
     path: '/admin-j28s7d1k/previews',
-    element: <NotFound />, // Temporary placeholder until AdminPreviews is created
+    element: <AdminPreviews />,
   },
   {
     path: '/admin-j28s7d1k/previews/:projectId',
@@ -69,11 +79,11 @@ const router = createBrowserRouter([
   },
   {
     path: '/admin-j28s7d1k/portfolio',
-    element: <NotFound />, // Temporary placeholder until AdminPortfolio is created
+    element: <AdminPortfolio />,
   },
   {
     path: '/admin-j28s7d1k/briefings',
-    element: <NotFound />, // Temporary placeholder until AdminBriefings is created
+    element: <AdminBriefings />,
   },
   {
     path: '/admin-j28s7d1k/orders',
@@ -85,7 +95,7 @@ const router = createBrowserRouter([
   },
   {
     path: '/admin-j28s7d1k/integrations',
-    element: <NotFound />, // Temporary placeholder until AdminIntegrations is created
+    element: <AdminIntegrations />,
   },
   {
     path: '/admin-j28s7d1k/chat',
@@ -97,11 +107,19 @@ const router = createBrowserRouter([
   },
   {
     path: '/admin-j28s7d1k/documentation',
-    element: <NotFound />, // Temporary placeholder until AdminDocumentation is created
+    element: <AdminGuides />, // Using AdminGuides as temporary replacement
   },
   {
     path: '/admin-j28s7d1k/analytics',
-    element: <NotFound />, // Temporary placeholder until AdminAnalytics is created
+    element: <AdminStatistics />, // Using AdminStatistics as temporary replacement
+  },
+  {
+    path: '/admin-j28s7d1k/invoices',
+    element: <AdminInvoices />,
+  },
+  {
+    path: '/admin-j28s7d1k/storage',
+    element: <AdminStorage />,
   },
   {
     // Rota pública para visualização de prévias (acessível por qualquer pessoa com o link)

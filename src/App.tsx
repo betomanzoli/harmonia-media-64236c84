@@ -1,165 +1,16 @@
 
 import React, { useEffect } from 'react';
-import { BrowserRouter as Router, Route, Routes, Navigate, useLocation } from 'react-router-dom';
-import { useAuth } from './contexts/AuthContext';
+import { RouterProvider } from 'react-router-dom';
 import { ThemeProvider } from "@/components/ui/theme-provider";
 import { Toaster } from "@/components/ui/toaster";
-import { useToast } from "@/hooks/use-toast";
-import ProtectedRoute from './components/admin/auth/ProtectedRoute';
-import Header from './components/Header';
-import Footer from './components/Footer';
 import { AuthProvider } from './contexts/AuthContext';
-
-// Public Pages
-import Home from './pages/Home';
-import NotFound from './pages/NotFound';
-import Briefing from './pages/Briefing';
-import Calculator from './pages/Calculator';
-import Payment from './pages/Payment';
-import PaymentReturn from './pages/PaymentReturn';
-import ThankYou from './pages/ThankYou';
-import OrderTracking from './pages/OrderTracking';
-import MusicPreviewPage from './pages/MusicPreviewPage';
-import MusicPreviews from './pages/MusicPreviews';
-import CreditRefundRequest from './pages/CreditRefundRequest';
-import FeedbackConfirmation from './pages/FeedbackConfirmation';
-import ApprovalConfirmation from './pages/ApprovalConfirmation';
-import Portfolio from './pages/Portfolio';
-import Services from './pages/Packages';
-import Contact from './pages/Contact';
-import PrivacyPolicy from './pages/PrivacyPolicy';
-import Terms from './pages/Terms';
-
-// Admin Pages
-import AdminLogin from './pages/admin/AdminLogin';
-import AdminDashboard from './pages/admin/Dashboard';
-import AdminPreviews from './pages/admin/AdminPreviews';
-import AdminPortfolio from './pages/admin/AdminPortfolio';
-import AdminInvoices from './pages/admin/AdminInvoices';
-import AdminBriefings from './pages/admin/AdminBriefings';
-import AdminProjects from './pages/admin/AdminProjects';
-import AdminStatistics from './pages/admin/AdminStatistics';
-import AdminGuides from './pages/admin/AdminGuides';
-import AdminStorage from './pages/admin/AdminStorage';
-import AdminIntegrations from './pages/admin/AdminIntegrations';
-import PreviewProjectPage from './pages/admin/PreviewProjectPage';
-
-// Layout component to include Header and Footer for public pages
-const PublicLayout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const location = useLocation();
-  const isAdminRoute = location.pathname.includes('admin-j28s7d1k') || location.pathname.includes('admin-login');
-  
-  if (isAdminRoute) {
-    return <>{children}</>;
-  }
-  
-  return (
-    <>
-      <Header />
-      <div className="pt-16 min-h-screen">
-        {children}
-      </div>
-      <Footer />
-    </>
-  );
-};
-
-// Custom hook to scroll to top on route change
-const ScrollToTop: React.FC = () => {
-  const { pathname } = useLocation();
-
-  useEffect(() => {
-    window.scrollTo(0, 0);
-  }, [pathname]);
-
-  return null;
-};
-
-const AppContent: React.FC = () => {
-  const { authStatus, checkAuthStatus } = useAuth();
-  const { toast } = useToast();
-
-  useEffect(() => {
-    checkAuthStatus();
-    
-    // Clear any offline mode settings
-    sessionStorage.removeItem('offline-admin-mode');
-  }, [checkAuthStatus]);
-
-  return (
-    <>
-      <ScrollToTop />
-      
-      <Routes>
-        <Route path="/" element={<PublicLayout><Home /></PublicLayout>} />
-        <Route path="/index" element={<Navigate to="/" />} />
-        <Route path="/home" element={<Navigate to="/" />} />
-        
-        {/* Core Public Pages */}
-        <Route path="/portfolio" element={<PublicLayout><Portfolio /></PublicLayout>} />
-        <Route path="/services" element={<PublicLayout><Services /></PublicLayout>} />
-        <Route path="/pacotes" element={<PublicLayout><Services /></PublicLayout>} />
-        <Route path="/contact" element={<PublicLayout><Contact /></PublicLayout>} />
-        <Route path="/contato" element={<PublicLayout><Contact /></PublicLayout>} />
-        <Route path="/briefing" element={<PublicLayout><Briefing /></PublicLayout>} />
-        <Route path="/calculadora" element={<PublicLayout><Calculator /></PublicLayout>} />
-        <Route path="/privacidade" element={<PublicLayout><PrivacyPolicy /></PublicLayout>} />
-        <Route path="/termos" element={<PublicLayout><Terms /></PublicLayout>} />
-        
-        {/* Redirecionamento da página de qualificação para home - removida */}
-        <Route path="/qualificacao" element={<Navigate to="/" />} />
-        
-        {/* Admin routes */}
-        <Route path="/admin-j28s7d1k" element={<Navigate to="/admin-j28s7d1k/dashboard" />} />
-        <Route path="/admin-j28s7d1k/login" element={<AdminLogin />} />
-        <Route path="/admin-login" element={<AdminLogin />} />
-        <Route path="/admin-j28s7d1k/dashboard" element={<ProtectedRoute><AdminDashboard /></ProtectedRoute>} />
-        <Route path="/admin-j28s7d1k/previews" element={<ProtectedRoute><AdminPreviews /></ProtectedRoute>} />
-        <Route path="/admin-j28s7d1k/previews/:projectId" element={<ProtectedRoute><PreviewProjectPage /></ProtectedRoute>} />
-        <Route path="/admin-j28s7d1k/portfolio" element={<ProtectedRoute><AdminPortfolio /></ProtectedRoute>} />
-        <Route path="/admin-j28s7d1k/invoices" element={<ProtectedRoute><AdminInvoices /></ProtectedRoute>} />
-        <Route path="/admin-j28s7d1k/briefings" element={<ProtectedRoute><AdminBriefings /></ProtectedRoute>} />
-        <Route path="/admin-j28s7d1k/projects" element={<ProtectedRoute><AdminProjects /></ProtectedRoute>} />
-        <Route path="/admin-j28s7d1k/statistics" element={<ProtectedRoute><AdminStatistics /></ProtectedRoute>} />
-        <Route path="/admin-j28s7d1k/guides" element={<ProtectedRoute><AdminGuides /></ProtectedRoute>} />
-        <Route path="/admin-j28s7d1k/storage" element={<ProtectedRoute><AdminStorage /></ProtectedRoute>} />
-        <Route path="/admin-j28s7d1k/integrations" element={<ProtectedRoute><AdminIntegrations /></ProtectedRoute>} />
-        <Route path="/admin-j28s7d1k/settings" element={<ProtectedRoute><AdminDashboard /></ProtectedRoute>} />
-        
-        {/* Payment routes */}
-        <Route path="/pagamento/:packageId" element={<PublicLayout><Payment /></PublicLayout>} />
-        <Route path="/pagamento-retorno" element={<PublicLayout><PaymentReturn /></PublicLayout>} />
-        <Route path="/obrigado" element={<PublicLayout><ThankYou /></PublicLayout>} />
-
-        {/* Order tracking */}
-        <Route path="/consultar-pedido" element={<PublicLayout><OrderTracking /></PublicLayout>} />
-        <Route path="/acompanhar-pedido" element={<PublicLayout><OrderTracking /></PublicLayout>} />
-        
-        {/* Preview system */}
-        <Route path="/previa/:previewId" element={<PublicLayout><MusicPreviewPage /></PublicLayout>} />
-        <Route path="/preview/:previewId" element={<PublicLayout><MusicPreviewPage /></PublicLayout>} />
-        <Route path="/previews" element={<PublicLayout><MusicPreviews /></PublicLayout>} />
-        <Route path="/previas" element={<PublicLayout><MusicPreviews /></PublicLayout>} />
-        
-        {/* Legal & Support pages */}
-        <Route path="/support/credit-refund" element={<PublicLayout><CreditRefundRequest /></PublicLayout>} />
-        <Route path="/feedback-confirmation" element={<PublicLayout><FeedbackConfirmation /></PublicLayout>} />
-        <Route path="/approval-confirmation" element={<PublicLayout><ApprovalConfirmation /></PublicLayout>} />
-        
-        {/* 404 page */}
-        <Route path="*" element={<PublicLayout><NotFound /></PublicLayout>} />
-      </Routes>
-    </>
-  );
-};
+import router from './routes';
 
 const App: React.FC = () => {
   return (
     <ThemeProvider defaultTheme="dark" storageKey="harmonia-theme">
       <AuthProvider>
-        <Router>
-          <AppContent />
-        </Router>
+        <RouterProvider router={router} />
         <Toaster />
       </AuthProvider>
     </ThemeProvider>
