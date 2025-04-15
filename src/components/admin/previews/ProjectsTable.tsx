@@ -91,69 +91,71 @@ const ProjectsTable: React.FC<ProjectsTableProps> = ({ projects, isLoading = fal
   }
 
   return (
-    <Table>
-      <TableCaption>Lista de projetos de prévia musical</TableCaption>
-      <TableHeader>
-        <TableRow>
-          <TableHead>ID</TableHead>
-          <TableHead>Cliente</TableHead>
-          <TableHead>Status</TableHead>
-          <TableHead>Pacote</TableHead>
-          <TableHead>Criado em</TableHead>
-          <TableHead>Expiração</TableHead>
-          <TableHead>Versões</TableHead>
-          <TableHead className="text-right">Ações</TableHead>
-        </TableRow>
-      </TableHeader>
-      <TableBody>
-        {projects.map((project) => (
-          <TableRow key={project.id}>
-            <TableCell className="font-medium">{project.id}</TableCell>
-            <TableCell>{project.clientName}</TableCell>
-            <TableCell>{getStatusBadge(project.status)}</TableCell>
-            <TableCell>{project.packageType}</TableCell>
-            <TableCell>{project.createdAt}</TableCell>
-            <TableCell>
-              <div className="flex items-center">
-                {isNearExpiration(project.expirationDate) && (
-                  <AlertTriangle className="h-4 w-4 text-amber-500 mr-1" />
-                )}
-                <span className={isNearExpiration(project.expirationDate) ? 'text-amber-600' : ''}>
-                  {project.expirationDate}
-                </span>
-              </div>
-            </TableCell>
-            <TableCell>{project.versions}</TableCell>
-            <TableCell className="text-right">
-              <div className="flex justify-end gap-2">
-                <Button 
-                  size="sm" 
-                  variant="outline" 
-                  asChild
-                >
-                  <Link to={`/admin-j28s7d1k/previews/${project.id}`}>
-                    <Eye className="h-4 w-4" />
-                  </Link>
-                </Button>
-                
-                <Button 
-                  size="sm" 
-                  variant="outline"
-                  onClick={() => handleSendReminder(project)}
-                  disabled={sendingReminder === project.id || project.status === 'approved'}
-                >
-                  {sendingReminder === project.id ? (
-                    <RefreshCw className="h-4 w-4 animate-spin" />
-                  ) : (
-                    <Mail className="h-4 w-4" />
-                  )}
-                </Button>
-              </div>
-            </TableCell>
+    <div className="overflow-x-auto max-w-full">
+      <Table>
+        <TableCaption>Lista de projetos de prévia musical</TableCaption>
+        <TableHeader>
+          <TableRow>
+            <TableHead className="whitespace-nowrap">ID</TableHead>
+            <TableHead className="whitespace-nowrap">Cliente</TableHead>
+            <TableHead className="whitespace-nowrap">Status</TableHead>
+            <TableHead className="whitespace-nowrap">Pacote</TableHead>
+            <TableHead className="whitespace-nowrap">Criado em</TableHead>
+            <TableHead className="whitespace-nowrap">Expiração</TableHead>
+            <TableHead className="whitespace-nowrap">Versões</TableHead>
+            <TableHead className="text-right whitespace-nowrap">Ações</TableHead>
           </TableRow>
-        ))}
-      </TableBody>
-    </Table>
+        </TableHeader>
+        <TableBody>
+          {projects.map((project) => (
+            <TableRow key={project.id}>
+              <TableCell className="font-medium whitespace-nowrap">{project.id}</TableCell>
+              <TableCell className="whitespace-nowrap">{project.clientName}</TableCell>
+              <TableCell className="whitespace-nowrap">{getStatusBadge(project.status)}</TableCell>
+              <TableCell className="whitespace-nowrap">{project.packageType}</TableCell>
+              <TableCell className="whitespace-nowrap">{project.createdAt}</TableCell>
+              <TableCell className="whitespace-nowrap">
+                <div className="flex items-center">
+                  {isNearExpiration(project.expirationDate) && (
+                    <AlertTriangle className="h-4 w-4 text-amber-500 mr-1" />
+                  )}
+                  <span className={isNearExpiration(project.expirationDate) ? 'text-amber-600' : ''}>
+                    {project.expirationDate}
+                  </span>
+                </div>
+              </TableCell>
+              <TableCell className="whitespace-nowrap">{project.versions}</TableCell>
+              <TableCell className="text-right whitespace-nowrap">
+                <div className="flex justify-end gap-2">
+                  <Button 
+                    size="sm" 
+                    variant="outline" 
+                    asChild
+                  >
+                    <Link to={`/admin-j28s7d1k/previews/${project.id}`}>
+                      <Eye className="h-4 w-4" />
+                    </Link>
+                  </Button>
+                  
+                  <Button 
+                    size="sm" 
+                    variant="outline"
+                    onClick={() => handleSendReminder(project)}
+                    disabled={sendingReminder === project.id || project.status === 'approved'}
+                  >
+                    {sendingReminder === project.id ? (
+                      <RefreshCw className="h-4 w-4 animate-spin" />
+                    ) : (
+                      <Mail className="h-4 w-4" />
+                    )}
+                  </Button>
+                </div>
+              </TableCell>
+            </TableRow>
+          ))}
+        </TableBody>
+      </Table>
+    </div>
   );
 };
 

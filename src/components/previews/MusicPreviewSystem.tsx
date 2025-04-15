@@ -11,6 +11,7 @@ import PreviewFeedbackForm from './PreviewFeedbackForm';
 import PreviewNextSteps from './PreviewNextSteps';
 import PreviewLoadingState from './PreviewLoadingState';
 import PreviewFooter from './PreviewFooter';
+import { notificationService } from '@/services/notificationService';
 
 const MusicPreviewSystem: React.FC = () => {
   const { projectId } = useParams<{ projectId: string }>();
@@ -57,6 +58,13 @@ const MusicPreviewSystem: React.FC = () => {
       description: "Obrigado pelo seu feedback. Nossa equipe já está analisando.",
     });
     
+    // Enviar notificação de feedback recebido
+    notificationService.notify('feedback_received', {
+      projectId: projectId,
+      clientName: projectData?.clientName || 'Cliente',
+      message: feedback
+    });
+    
     // Atualizar status localmente para propósitos de demonstração
     setProjectData(prev => prev ? {...prev, status: 'feedback' as const} : null);
   };
@@ -74,6 +82,13 @@ const MusicPreviewSystem: React.FC = () => {
     toast({
       title: "Música aprovada!",
       description: "Excelente escolha! Vamos finalizar sua música e entregar em breve.",
+    });
+    
+    // Enviar notificação de música aprovada
+    notificationService.notify('preview_approved', {
+      projectId: projectId,
+      clientName: projectData?.clientName || 'Cliente',
+      versionId: selectedVersion
     });
     
     // Atualizar status localmente para propósitos de demonstração
