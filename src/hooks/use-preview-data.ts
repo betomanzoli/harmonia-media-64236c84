@@ -2,18 +2,26 @@
 import { useState, useEffect } from 'react';
 import { useToast } from '@/hooks/use-toast';
 
-interface MusicPreview {
+export interface MusicPreview {
   id: string;
   title: string;
   description: string;
   audioUrl: string;
 }
 
-interface PreviewProject {
+export interface PreviewProject {
   clientName: string;
   projectTitle: string;
   status: 'waiting' | 'feedback' | 'approved';
   previews: MusicPreview[];
+}
+
+export interface PreviewProjectData {
+  projectId: string;
+  clientName: string;
+  packageType: string;
+  creationDate: string;
+  status: 'waiting' | 'feedback' | 'approved';
 }
 
 export const usePreviewData = (projectId: string | undefined) => {

@@ -10,12 +10,14 @@ interface ProjectPhasesProps {
   projectId: string;
   projectType: string;
   currentPhase: string;
+  onPhaseAction?: (phaseId: string, action: 'upload' | 'notify' | 'complete') => void;
 }
 
 const ProjectPhases: React.FC<ProjectPhasesProps> = ({ 
   projectId, 
   projectType, 
-  currentPhase 
+  currentPhase,
+  onPhaseAction
 }) => {
   const [activeStep, setActiveStep] = useState(
     currentPhase === 'briefing' ? 0 :
@@ -33,6 +35,11 @@ const ProjectPhases: React.FC<ProjectPhasesProps> = ({
         title: "Fase concluída",
         description: "O projeto avançou para a próxima fase."
       });
+      
+      if (onPhaseAction) {
+        const phaseMap = ['briefing', 'composicao', 'producao', 'aprovacao', 'entrega'];
+        onPhaseAction(phaseMap[activeStep], 'complete');
+      }
     } else {
       toast({
         title: "Projeto finalizado",

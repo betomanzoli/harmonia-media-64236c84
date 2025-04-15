@@ -1,31 +1,13 @@
 
 import { createBrowserRouter } from 'react-router-dom';
 import Home from './pages/Home';
-import About from './pages/About';
-import Services from './pages/Services';
-import Portfolio from './pages/Portfolio';
 import Calculator from './pages/Calculator';
 import Contact from './pages/Contact';
-import Qualificacao from './pages/Qualificacao';
 import Briefing from './pages/Briefing';
 import NotFound from './pages/NotFound';
 import AdminLogin from './pages/admin/AdminLogin';
-import AdminDashboard from './pages/admin/AdminDashboard';
-import AdminProjects from './pages/admin/AdminProjects';
-import AdminPreviews from './pages/admin/AdminPreviews';
-import AdminPortfolio from './pages/admin/AdminPortfolio';
-import AdminBriefings from './pages/admin/AdminBriefings';
-import AdminOrders from './pages/admin/AdminOrders';
-import AdminPayments from './pages/admin/AdminPayments';
-import AdminIntegrations from './pages/admin/AdminIntegrations';
-import AdminChat from './pages/admin/AdminChat';
-import AdminSettings from './pages/admin/AdminSettings';
-import AdminDocumentation from './pages/admin/AdminDocumentation';
-import AdminAnalytics from './pages/admin/AdminAnalytics';
 import PreviewProjectPage from './pages/admin/PreviewProjectPage';
 import MusicPreviews from './pages/MusicPreviews';
-
-// Este é o componente que vai renderizar a prévia musical para clientes
 import PreviewPage from './pages/PreviewPage';
 
 const router = createBrowserRouter([
@@ -35,15 +17,15 @@ const router = createBrowserRouter([
   },
   {
     path: '/sobre',
-    element: <About />,
+    element: <Home />, // Temporary redirect until About page is created
   },
   {
     path: '/servicos',
-    element: <Services />,
+    element: <Home />, // Temporary redirect until Services page is created
   },
   {
     path: '/portfolio',
-    element: <Portfolio />,
+    element: <Home />, // Using Home as placeholder until Portfolio is fixed
   },
   {
     path: '/calculadora',
@@ -55,7 +37,7 @@ const router = createBrowserRouter([
   },
   {
     path: '/qualificacao',
-    element: <Qualificacao />,
+    element: <Home />, // Temporary redirect until Qualificacao page is created
   },
   {
     path: '/briefing',
@@ -71,15 +53,15 @@ const router = createBrowserRouter([
   },
   {
     path: '/admin-j28s7d1k/dashboard',
-    element: <AdminDashboard />,
+    element: <NotFound />, // Temporary placeholder until AdminDashboard is created
   },
   {
     path: '/admin-j28s7d1k/projects',
-    element: <AdminProjects />,
+    element: <NotFound />, // Temporary placeholder until AdminProjects is created
   },
   {
     path: '/admin-j28s7d1k/previews',
-    element: <AdminPreviews />,
+    element: <NotFound />, // Temporary placeholder until AdminPreviews is created
   },
   {
     path: '/admin-j28s7d1k/previews/:projectId',
@@ -87,39 +69,39 @@ const router = createBrowserRouter([
   },
   {
     path: '/admin-j28s7d1k/portfolio',
-    element: <AdminPortfolio />,
+    element: <NotFound />, // Temporary placeholder until AdminPortfolio is created
   },
   {
     path: '/admin-j28s7d1k/briefings',
-    element: <AdminBriefings />,
+    element: <NotFound />, // Temporary placeholder until AdminBriefings is created
   },
   {
     path: '/admin-j28s7d1k/orders',
-    element: <AdminOrders />,
+    element: <NotFound />, // Temporary placeholder until AdminOrders is created
   },
   {
     path: '/admin-j28s7d1k/payments',
-    element: <AdminPayments />,
+    element: <NotFound />, // Temporary placeholder until AdminPayments is created
   },
   {
     path: '/admin-j28s7d1k/integrations',
-    element: <AdminIntegrations />,
+    element: <NotFound />, // Temporary placeholder until AdminIntegrations is created
   },
   {
     path: '/admin-j28s7d1k/chat',
-    element: <AdminChat />,
+    element: <NotFound />, // Temporary placeholder until AdminChat is created
   },
   {
     path: '/admin-j28s7d1k/settings',
-    element: <AdminSettings />,
+    element: <NotFound />, // Temporary placeholder until AdminSettings is created
   },
   {
     path: '/admin-j28s7d1k/documentation',
-    element: <AdminDocumentation />,
+    element: <NotFound />, // Temporary placeholder until AdminDocumentation is created
   },
   {
     path: '/admin-j28s7d1k/analytics',
-    element: <AdminAnalytics />,
+    element: <NotFound />, // Temporary placeholder until AdminAnalytics is created
   },
   {
     // Rota pública para visualização de prévias (acessível por qualquer pessoa com o link)
