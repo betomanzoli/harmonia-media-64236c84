@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import AdminLayout from '@/components/admin/layout/AdminLayout';
 import { Button } from "@/components/ui/button";
@@ -215,7 +214,7 @@ const AdminInvoices: React.FC = () => {
         
         <div className="flex flex-col sm:flex-row gap-4 justify-between">
           <Card className="w-full sm:w-1/2">
-            <Car dHeader>
+            <CardHeader>
               <CardTitle className="text-lg">Filtrar Faturas</CardTitle>
             </CardHeader>
             <CardContent>
