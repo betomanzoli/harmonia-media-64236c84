@@ -13,7 +13,7 @@ const Hero: React.FC = () => {
   
   const handleHowItWorks = () => {
     // Scroll to the process section
-    const processSection = document.getElementById('processo');
+    const processSection = document.getElementById('como-funciona');
     if (processSection) {
       processSection.scrollIntoView({
         behavior: 'smooth'

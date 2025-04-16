@@ -1,5 +1,5 @@
 
-import React from 'react';
+import React, { useState } from 'react';
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -7,10 +7,16 @@ import { Button } from "@/components/ui/button";
 import { ArrowLeft } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { siteConfig } from '@/config/site';
-import { packagePaymentLinks } from '@/lib/payment/paymentLinks';
+import { packagePaymentLinks, extraServicePaymentLinks } from '@/lib/payment/paymentLinks';
+import ServiceExtrasGrid from '@/components/services/ServiceExtrasGrid';
+import TermsDialog from '@/components/service-card/TermsDialog';
 
 const ServicesPage: React.FC = () => {
   const navigate = useNavigate();
+  const [isTermsDialogOpen, setIsTermsDialogOpen] = useState(false);
+  const [selectedPackageTitle, setSelectedPackageTitle] = useState('');
+  const [acceptedTerms, setAcceptedTerms] = useState(false);
+  const [selectedPaymentLink, setSelectedPaymentLink] = useState('');
 
   const services = [
     {
@@ -23,7 +29,8 @@ const ServicesPage: React.FC = () => {
         "Entrega em até 7 dias úteis",
         "Licença para uso pessoal"
       ],
-      paymentLink: packagePaymentLinks['essencial'].standard.url
+      paymentLink: packagePaymentLinks['essencial'].standard.url,
+      packageId: 'essencial'
     },
     {
       title: "Pacote Profissional",
@@ -36,7 +43,8 @@ const ServicesPage: React.FC = () => {
         "Entrega em até 10 dias úteis",
         "Licença para uso comercial limitado"
       ],
-      paymentLink: packagePaymentLinks['profissional'].standard.url
+      paymentLink: packagePaymentLinks['profissional'].standard.url,
+      packageId: 'profissional'
     },
     {
       title: "Pacote Premium",
@@ -49,12 +57,33 @@ const ServicesPage: React.FC = () => {
         "Entrega em até 15 dias úteis",
         "Licença comercial global"
       ],
-      paymentLink: packagePaymentLinks['premium'].standard.url
+      paymentLink: packagePaymentLinks['premium'].standard.url,
+      packageId: 'premium'
     },
   ];
 
-  const handlePaymentClick = (paymentLink: string) => {
-    window.open(paymentLink, '_blank');
+  const handlePaymentClick = (title: string, paymentLink: string) => {
+    setSelectedPackageTitle(title);
+    setSelectedPaymentLink(paymentLink);
+    setIsTermsDialogOpen(true);
+  };
+
+  const handleAcceptTerms = () => {
+    // If terms are accepted, redirect to payment link
+    if (selectedPaymentLink) {
+      window.open(selectedPaymentLink, '_blank');
+    }
+    setIsTermsDialogOpen(false);
+  };
+
+  const handleExtraServiceClick = (serviceId: string) => {
+    // For extra services, navigate directly to payment
+    const paymentLink = extraServicePaymentLinks[serviceId]?.url;
+    if (paymentLink) {
+      window.open(paymentLink, '_blank');
+    } else {
+      console.log('No payment link found for service:', serviceId);
+    }
   };
 
   return (
@@ -99,7 +128,7 @@ const ServicesPage: React.FC = () => {
                   </ul>
                   <Button 
                     className="w-full justify-center bg-harmonia-green hover:bg-harmonia-green/90 mt-4"
-                    onClick={() => handlePaymentClick(service.paymentLink)}
+                    onClick={() => handlePaymentClick(service.title, service.paymentLink)}
                   >
                     Contratar agora
                   </Button>
@@ -114,23 +143,21 @@ const ServicesPage: React.FC = () => {
               Personalize sua experiência com estes serviços adicionais que podem ser contratados durante ou após o projeto.
             </p>
             
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-              {/* Service extras grid will be rendered by imported components */}
-              <div className="col-span-full">
-                <div className="flex justify-center">
-                  <Button 
-                    className="bg-harmonia-green hover:bg-harmonia-green/90"
-                    onClick={() => navigate('/pacotes')}
-                  >
-                    Ver todos os serviços extras
-                  </Button>
-                </div>
-              </div>
-            </div>
+            <ServiceExtrasGrid onExtraServiceClick={handleExtraServiceClick} />
           </div>
         </div>
       </main>
       <Footer />
+
+      {/* Contract Terms Dialog */}
+      <TermsDialog
+        open={isTermsDialogOpen}
+        onOpenChange={setIsTermsDialogOpen}
+        title={selectedPackageTitle}
+        acceptedTerms={acceptedTerms}
+        onAcceptedTermsChange={setAcceptedTerms}
+        onAccept={handleAcceptTerms}
+      />
     </div>
   );
 };

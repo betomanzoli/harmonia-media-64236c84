@@ -6,151 +6,225 @@ interface ContractContentProps {
 }
 
 const ContractContent: React.FC<ContractContentProps> = ({ title }) => {
-  switch(title) {
-    case "Pacote Essencial":
-      return (
-        <div className="max-h-96 overflow-y-auto text-sm">
-          <h3 className="font-bold mb-2">CONTRATO DE PRESTAÇÃO DE SERVIÇOS - PACOTE ESSENCIAL</h3>
-          
-          <h4 className="font-bold mt-4">CLÁUSULA PRIMEIRA - DO OBJETO</h4>
-          <p>1.1. Prestação de serviços de composição musical assistida por inteligência artificial com intervenção humana, conforme especificações do Pacote Essencial.</p>
-          
-          <h4 className="font-bold mt-4">CLÁUSULA SEGUNDA - DO ESCOPO DO SERVIÇO</h4>
-          <p>2.1. O serviço inclui:<br />
-             a) 1 (uma) composição musical (letra + melodia) via IA com supervisão humana;<br />
-             b) 1 (uma) revisão de letra/estrutura musical;<br />
-             c) Arquivo digital em alta qualidade (MP3/WAV);<br />
-             d) Entrega em até 72 horas úteis;<br />
-             e) Certificado digital de autoria.</p>
-          
-          <h4 className="font-bold mt-4">CLÁUSULA TERCEIRA - DOS DIREITOS CONCEDIDOS</h4>
-          <p>3.1. O CONTRATANTE recebe uma licença não-exclusiva, intransferível, para uso EXCLUSIVAMENTE PESSOAL E NÃO-COMERCIAL da OBRA MUSICAL.<br />
-             3.2. É expressamente VEDADA a reprodução pública, comercialização, adaptação, sincronização com imagens, ou cessão a terceiros da OBRA MUSICAL.<br />
-             3.3. O uso da OBRA MUSICAL exige a atribuição de crédito: "Música criada por harmonIA para [Nome do CONTRATANTE]".</p>
-          
-          {/* ... Additional clauses */}
-          <h4 className="font-bold mt-4">CLÁUSULA QUARTA - DA PROPRIEDADE INTELECTUAL</h4>
-          <p>4.1. O CONTRATANTE detém direitos sobre o conteúdo fornecido para criação.<br />
-             4.2. A CONTRATADA mantém direitos sobre melodia, harmonia e arranjos.<br />
-             4.3. A OBRA MUSICAL é protegida por certificado digital de autoria emitido pela CONTRATADA.<br />
-             4.4. Qualquer registro adicional da OBRA MUSICAL em órgãos como UBC, ECAD ou similares é de responsabilidade exclusiva do CONTRATANTE.</p>
-          
-          <h4 className="font-bold mt-4">CLÁUSULA QUINTA - DA RESPONSABILIDADE POR USO INDEVIDO</h4>
-          <p>5.1. O CONTRATANTE assume integral e exclusiva responsabilidade por qualquer uso da OBRA MUSICAL que exceda os limites estabelecidos na CLÁUSULA TERCEIRA.<br />
-             5.2. A CONTRATADA não responderá, em nenhuma hipótese, por disputas ou reivindicações de terceiros decorrentes de uso indevido da OBRA MUSICAL pelo CONTRATANTE.</p>
-          
-          <h4 className="font-bold mt-4">CLÁUSULA SEXTA - DO VALOR E PAGAMENTO</h4>
-          <p>6.1. O pagamento deverá ser realizado integralmente no ato da contratação.<br />
-             6.2. O início da produção ocorrerá apenas após a confirmação do pagamento.</p>
-          
-          <h4 className="font-bold mt-4">CLÁUSULA SÉTIMA - DA ENTREGA E ACEITAÇÃO</h4>
-          <p>7.1. A OBRA MUSICAL será entregue em formato digital através de link seguro.<br />
-             7.2. O CONTRATANTE terá 7 (sete) dias para solicitar a revisão incluída.<br />
-             7.3. Os arquivos do projeto ficarão disponíveis para revisões pelo período de 90 (noventa) dias após a entrega final, após o qual serão arquivados, impossibilitando revisões futuras.</p>
-        </div>
-      );
-    case "Pacote Profissional":
-      return (
-        <div className="max-h-96 overflow-y-auto text-sm">
-          <h3 className="font-bold mb-2">CONTRATO DE PRESTAÇÃO DE SERVIÇOS - PACOTE PROFISSIONAL</h3>
-          
-          <h4 className="font-bold mt-4">CLÁUSULA PRIMEIRA - DO OBJETO</h4>
-          <p>1.1. Prestação de serviços de composição musical assistida por inteligência artificial com intervenção humana, conforme especificações do Pacote Profissional.</p>
-          
-          <h4 className="font-bold mt-4">CLÁUSULA SEGUNDA - DO ESCOPO DO SERVIÇO</h4>
-          <p>2.1. O serviço inclui:<br />
-             a) 3 (três) propostas de composição em estilos diferentes;<br />
-             b) 2 (duas) revisões incluídas;<br />
-             c) Masterização básica;<br />
-             d) Stems básicos separados (voz + instrumentação);<br />
-             e) Entrega em até 5 dias úteis;<br />
-             f) Certificado digital de autoria com verificação via hash criptográfico.</p>
-          
-          {/* ... Additional clauses */}
-          <h4 className="font-bold mt-4">CLÁUSULA TERCEIRA - DOS DIREITOS CONCEDIDOS</h4>
-          <p>3.1. O CONTRATANTE recebe uma licença limitada para:<br />
-             a) Uso em conteúdo digital próprio (canais pessoais de redes sociais, podcast, site);<br />
-             b) Monetização em plataformas digitais onde o CONTRATANTE seja o titular da conta;<br />
-             c) Execução em eventos particulares ou corporativos do CONTRATANTE.<br />
-             3.2. É expressamente VEDADO:<br />
-             a) Sublicenciar ou revender a OBRA MUSICAL;<br />
-             b) Ceder a terceiros para uso em conteúdo não vinculado diretamente ao CONTRATANTE;<br />
-             c) Sincronização comercial com produções audiovisuais para distribuição em cinema ou TV.</p>
-          
-          <h4 className="font-bold mt-4">CLÁUSULA QUARTA - DA PROPRIEDADE INTELECTUAL</h4>
-          <p>4.1. O CONTRATANTE detém direitos sobre o conteúdo fornecido para criação.<br />
-             4.2. A CONTRATADA mantém direitos parciais sobre a OBRA MUSICAL, conforme limitações da CLÁUSULA TERCEIRA.<br />
-             4.3. Qualquer registro adicional da OBRA MUSICAL em órgãos como Biblioteca Nacional, UBC, ECAD ou similares é de responsabilidade exclusiva do CONTRATANTE.</p>
-          
-          <h4 className="font-bold mt-4">CLÁUSULA QUINTA - DAS VERIFICAÇÕES DE SIMILARIDADE</h4>
-          <p>5.1. A CONTRATADA realizará verificações básicas de similaridade utilizando algoritmos automatizados.<br />
-             5.2. A CONTRATADA fornecerá documentação do processo de verificação como parte da entrega.<br />
-             5.3. O CONTRATANTE reconhece que tais verificações representam o melhor esforço técnico disponível, não constituindo garantia absoluta contra reivindicações de terceiros.</p>
-          
-          <h4 className="font-bold mt-4">CLÁUSULA SEXTA - DA RESPONSABILIDADE POR USO INDEVIDO</h4>
-          <p>6.1. O CONTRATANTE assume integral e exclusiva responsabilidade por qualquer uso da OBRA MUSICAL que exceda os limites estabelecidos na CLÁUSULA TERCEIRA.<br />
-             6.2. A CONTRATADA não responderá, em nenhuma hipótese, por disputas ou reivindicações de terceiros decorrentes de uso indevido da OBRA MUSICAL pelo CONTRATANTE.</p>
-          
-          <h4 className="font-bold mt-4">CLÁUSULA SÉTIMA - DO VALOR E PAGAMENTO</h4>
-          <p>7.1. O pagamento deverá ser realizado integralmente no ato da contratação.<br />
-             7.2. O início da produção ocorrerá apenas após a confirmação do pagamento.</p>
-          
-          <h4 className="font-bold mt-4">CLÁUSULA OITAVA - DA ENTREGA E ACEITAÇÃO</h4>
-          <p>8.1. A OBRA MUSICAL será entregue em formato digital através de link seguro.<br />
-             8.2. O CONTRATANTE terá 10 (dez) dias para solicitar as revisões incluídas.<br />
-             8.3. Os arquivos do projeto ficarão disponíveis para revisões pelo período de 90 (noventa) dias após a entrega final, após o qual serão arquivados, impossibilitando revisões futuras.</p>
-        </div>
-      );
-    case "Pacote Premium":
-      return (
-        <div className="max-h-96 overflow-y-auto text-sm">
-          <h3 className="font-bold mb-2">CONTRATO DE PRESTAÇÃO DE SERVIÇOS - PACOTE PREMIUM</h3>
-          
-          <h4 className="font-bold mt-4">CLÁUSULA PRIMEIRA - DO OBJETO</h4>
-          <p>1.1. Prestação de serviços de composição musical assistida por inteligência artificial com intervenção humana, conforme especificações do Pacote Premium.</p>
-          
-          <h4 className="font-bold mt-4">CLÁUSULA SEGUNDA - DO ESCOPO DO SERVIÇO</h4>
-          <p>2.1. O serviço inclui:<br />
-             a) 5 (cinco) propostas de conceito/estilo;<br />
-             b) 3 (três) revisões completas;<br />
-             c) Registro da letra na Biblioteca Nacional;<br />
-             d) Masterização profissional com ajustes manuais;<br />
-             e) Stems completos separados;<br />
-             f) Entrega em até 7 dias úteis;<br />
-             g) Certificado digital de autoria com registro em blockchain e documentação completa.</p>
-          
-          <h4 className="font-bold mt-4">CLÁUSULA TERCEIRA - DA CESSÃO DE DIREITOS AUTORAIS</h4>
-          <p>3.1. A CONTRATADA transfere ao CONTRATANTE a titularidade dos direitos patrimoniais sobre a OBRA MUSICAL, nos termos do Termo de Cessão de Direitos Autorais anexo a este contrato.</p>
-          
-          {/* ... Additional clauses */}
-          <h4 className="font-bold mt-4">CLÁUSULA QUARTA - DOS REGISTROS LEGAIS</h4>
-          <p>4.1. A CONTRATADA providenciará o registro da LETRA da OBRA MUSICAL na Biblioteca Nacional em nome do CONTRATANTE.<br />
-             4.2. A CONTRATADA realizará registro em blockchain como evidência de precedência temporal, não substituindo registros oficiais completos.<br />
-             4.3. Quaisquer registros adicionais de melodia, arranjo ou fonograma em órgãos como UBC, ECAD ou similares são de responsabilidade exclusiva do CONTRATANTE.</p>
-          
-          <h4 className="font-bold mt-4">CLÁUSULA QUINTA - DAS VERIFICAÇÕES DE SIMILARIDADE</h4>
-          <p>5.1. A CONTRATADA realizará verificações avançadas de similaridade, incluindo:<br />
-             a) Análise algorítmica utilizando múltiplas ferramentas;<br />
-             b) Verificação por hash criptográfico;<br />
-             c) Documentação detalhada do processo criativo.</p>
-          
-          <h4 className="font-bold mt-4">CLÁUSULA SEXTA - DA RESPONSABILIDADE POR USO INDEVIDO</h4>
-          <p>6.1. Mesmo com a cessão total dos direitos patrimoniais, o CONTRATANTE assume integral e exclusiva responsabilidade por qualquer uso da OBRA MUSICAL que viole direitos de terceiros.<br />
-             6.2. A CONTRATADA não responderá, em nenhuma hipótese, por disputas ou reivindicações de terceiros decorrentes do uso da OBRA MUSICAL pelo CONTRATANTE, mesmo tendo realizado verificações de similaridade.</p>
-          
-          <h4 className="font-bold mt-4">CLÁUSULA SÉTIMA - DO VALOR E PAGAMENTO</h4>
-          <p>7.1. O pagamento deverá ser realizado integralmente no ato da contratação.<br />
-             7.2. O início da produção ocorrerá apenas após a confirmação do pagamento.</p>
-          
-          <h4 className="font-bold mt-4">CLÁUSULA OITAVA - DA ENTREGA E ACEITAÇÃO</h4>
-          <p>8.1. A OBRA MUSICAL será entregue em formato digital através de link seguro.<br />
-             8.2. O CONTRATANTE terá 15 (quinze) dias para solicitar as revisões incluídas.<br />
-             8.3. Os arquivos do projeto ficarão disponíveis para revisões pelo período de 90 (noventa) dias após a entrega final, após o qual serão arquivados, impossibilitando revisões futuras.</p>
-        </div>
-      );
-    default:
-      return <p>Contrato não disponível.</p>;
-  }
+  // Determine contract content based on package title
+  const getContractContent = () => {
+    if (title.includes('Premium')) {
+      return premiumContract;
+    } else if (title.includes('Profissional')) {
+      return professionalContract;
+    } else {
+      return essentialContract;
+    }
+  };
+
+  const contractContent = getContractContent();
+  
+  return (
+    <div className="max-h-[400px] overflow-y-auto border border-border rounded-md p-4 my-4">
+      <div dangerouslySetInnerHTML={{ __html: contractContent }} />
+    </div>
+  );
 };
+
+// Contract templates without personal information
+const essentialContract = `
+<h3 class="font-bold mb-2">CONTRATO DE PRESTAÇÃO DE SERVIÇOS - PACOTE ESSENCIAL</h3>
+<p class="mb-4">
+  CONTRATADA: harmonIA
+  <br />
+  CONTRATANTE: Cliente contratante dos serviços
+</p>
+
+<p class="mb-2">
+  Pelo presente instrumento particular de Contrato de Prestação de Serviços, as partes acima qualificadas têm entre si justas e contratadas as seguintes condições:
+</p>
+
+<h4 class="font-bold mt-4 mb-2">1. OBJETO</h4>
+<p class="mb-2">
+  1.1. O presente contrato tem por objeto a prestação de serviços de composição musical personalizada no formato "Pacote Essencial", que inclui:
+</p>
+<ul class="list-disc pl-6 mb-4">
+  <li>Composição musical personalizada com base no briefing fornecido pelo CONTRATANTE;</li>
+  <li>Uma revisão inclusa;</li>
+  <li>Entrega em até 7 dias úteis a partir da aprovação do briefing;</li>
+  <li>Licença para uso pessoal, não comercial.</li>
+</ul>
+
+<h4 class="font-bold mt-4 mb-2">2. VALOR E FORMA DE PAGAMENTO</h4>
+<p class="mb-2">
+  2.1. Pela prestação dos serviços, o CONTRATANTE pagará à CONTRATADA o valor especificado na plataforma.
+</p>
+<p class="mb-2">
+  2.2. O pagamento será realizado antecipadamente, através das formas de pagamento disponibilizadas no site.
+</p>
+
+<h4 class="font-bold mt-4 mb-2">3. DIREITOS DE USO</h4>
+<p class="mb-2">
+  3.1. O "Pacote Essencial" concede ao CONTRATANTE uma licença limitada de uso pessoal da composição musical.
+</p>
+<p class="mb-2">
+  3.2. A licença NÃO inclui direitos para uso comercial, reprodução pública, ou modificação da obra sem autorização.
+</p>
+<p class="mb-2">
+  3.3. A CONTRATADA não garante exclusividade absoluta da composição, dado o processo assistido por IA.
+</p>
+
+<h4 class="font-bold mt-4 mb-2">4. PRAZO DE ENTREGA</h4>
+<p class="mb-2">
+  4.1. O prazo de entrega é de até 7 dias úteis a partir da aprovação do briefing e confirmação do pagamento.
+</p>
+
+<h4 class="font-bold mt-4 mb-2">5. REVISÕES</h4>
+<p class="mb-2">
+  5.1. O pacote inclui 1 (uma) revisão gratuita, a ser solicitada em até 15 dias após a entrega.
+</p>
+<p class="mb-2">
+  5.2. Revisões adicionais poderão ser contratadas separadamente.
+</p>
+
+<h4 class="font-bold mt-4 mb-2">6. CONSIDERAÇÕES FINAIS</h4>
+<p class="mb-2">
+  6.1. Ao aceitar este contrato, o CONTRATANTE declara ter lido, compreendido e concordado com todas as cláusulas aqui presentes.
+</p>
+<p class="mb-2">
+  6.2. Este contrato é regido pelas leis brasileiras.
+</p>
+`;
+
+const professionalContract = `
+<h3 class="font-bold mb-2">CONTRATO DE PRESTAÇÃO DE SERVIÇOS - PACOTE PROFISSIONAL</h3>
+<p class="mb-4">
+  CONTRATADA: harmonIA
+  <br />
+  CONTRATANTE: Cliente contratante dos serviços
+</p>
+
+<p class="mb-2">
+  Pelo presente instrumento particular de Contrato de Prestação de Serviços, as partes acima qualificadas têm entre si justas e contratadas as seguintes condições:
+</p>
+
+<h4 class="font-bold mt-4 mb-2">1. OBJETO</h4>
+<p class="mb-2">
+  1.1. O presente contrato tem por objeto a prestação de serviços de composição musical personalizada no formato "Pacote Profissional", que inclui:
+</p>
+<ul class="list-disc pl-6 mb-4">
+  <li>Composição musical personalizada com base no briefing fornecido pelo CONTRATANTE;</li>
+  <li>Três versões para escolha;</li>
+  <li>Até três revisões inclusas;</li>
+  <li>Entrega em até 10 dias úteis a partir da aprovação do briefing;</li>
+  <li>Licença para uso comercial limitado.</li>
+</ul>
+
+<h4 class="font-bold mt-4 mb-2">2. VALOR E FORMA DE PAGAMENTO</h4>
+<p class="mb-2">
+  2.1. Pela prestação dos serviços, o CONTRATANTE pagará à CONTRATADA o valor especificado na plataforma.
+</p>
+<p class="mb-2">
+  2.2. O pagamento será realizado antecipadamente, através das formas de pagamento disponibilizadas no site.
+</p>
+
+<h4 class="font-bold mt-4 mb-2">3. DIREITOS DE USO</h4>
+<p class="mb-2">
+  3.1. O "Pacote Profissional" concede ao CONTRATANTE uma licença de uso comercial limitado da composição musical.
+</p>
+<p class="mb-2">
+  3.2. A licença inclui direitos para uso em conteúdo digital próprio, como vlogs, podcasts, ou vídeos para redes sociais.
+</p>
+<p class="mb-2">
+  3.3. A licença NÃO inclui direitos para revenda ou sublicenciamento da composição.
+</p>
+<p class="mb-2">
+  3.4. A CONTRATADA não garante exclusividade absoluta da composição, dado o processo assistido por IA.
+</p>
+
+<h4 class="font-bold mt-4 mb-2">4. PRAZO DE ENTREGA</h4>
+<p class="mb-2">
+  4.1. O prazo de entrega é de até 10 dias úteis a partir da aprovação do briefing e confirmação do pagamento.
+</p>
+
+<h4 class="font-bold mt-4 mb-2">5. REVISÕES</h4>
+<p class="mb-2">
+  5.1. O pacote inclui até 3 (três) revisões gratuitas, a serem solicitadas em até 30 dias após a entrega.
+</p>
+<p class="mb-2">
+  5.2. Revisões adicionais poderão ser contratadas separadamente.
+</p>
+
+<h4 class="font-bold mt-4 mb-2">6. CONSIDERAÇÕES FINAIS</h4>
+<p class="mb-2">
+  6.1. Ao aceitar este contrato, o CONTRATANTE declara ter lido, compreendido e concordado com todas as cláusulas aqui presentes.
+</p>
+<p class="mb-2">
+  6.2. Este contrato é regido pelas leis brasileiras.
+</p>
+`;
+
+const premiumContract = `
+<h3 class="font-bold mb-2">CONTRATO DE PRESTAÇÃO DE SERVIÇOS - PACOTE PREMIUM</h3>
+<p class="mb-4">
+  CONTRATADA: harmonIA
+  <br />
+  CONTRATANTE: Cliente contratante dos serviços
+</p>
+
+<p class="mb-2">
+  Pelo presente instrumento particular de Contrato de Prestação de Serviços, as partes acima qualificadas têm entre si justas e contratadas as seguintes condições:
+</p>
+
+<h4 class="font-bold mt-4 mb-2">1. OBJETO</h4>
+<p class="mb-2">
+  1.1. O presente contrato tem por objeto a prestação de serviços de composição musical personalizada no formato "Pacote Premium", que inclui:
+</p>
+<ul class="list-disc pl-6 mb-4">
+  <li>Composição musical personalizada premium com base no briefing fornecido pelo CONTRATANTE;</li>
+  <li>Revisões ilimitadas durante o período de produção;</li>
+  <li>Registro na Biblioteca Nacional;</li>
+  <li>Entrega em até 15 dias úteis a partir da aprovação do briefing;</li>
+  <li>Licença comercial global.</li>
+</ul>
+
+<h4 class="font-bold mt-4 mb-2">2. VALOR E FORMA DE PAGAMENTO</h4>
+<p class="mb-2">
+  2.1. Pela prestação dos serviços, o CONTRATANTE pagará à CONTRATADA o valor especificado na plataforma.
+</p>
+<p class="mb-2">
+  2.2. O pagamento será realizado antecipadamente, através das formas de pagamento disponibilizadas no site.
+</p>
+
+<h4 class="font-bold mt-4 mb-2">3. DIREITOS DE USO</h4>
+<p class="mb-2">
+  3.1. O "Pacote Premium" concede ao CONTRATANTE uma licença comercial global da composição musical.
+</p>
+<p class="mb-2">
+  3.2. A licença inclui direitos para uso em qualquer mídia e formato, incluindo uso comercial amplo.
+</p>
+<p class="mb-2">
+  3.3. A licença NÃO inclui direitos para revenda da composição como produto musical independente.
+</p>
+<p class="mb-2">
+  3.4. A CONTRATADA implementa verificações avançadas para mitigar riscos de similaridade com obras existentes.
+</p>
+
+<h4 class="font-bold mt-4 mb-2">4. PRAZO DE ENTREGA</h4>
+<p class="mb-2">
+  4.1. O prazo de entrega é de até 15 dias úteis a partir da aprovação do briefing e confirmação do pagamento.
+</p>
+<p class="mb-2">
+  4.2. O prazo para registro na Biblioteca Nacional é de até 30 dias adicionais após a aprovação final da composição.
+</p>
+
+<h4 class="font-bold mt-4 mb-2">5. REVISÕES</h4>
+<p class="mb-2">
+  5.1. O pacote inclui revisões ilimitadas durante o período de produção (até 30 dias após a primeira entrega).
+</p>
+
+<h4 class="font-bold mt-4 mb-2">6. CONSIDERAÇÕES FINAIS</h4>
+<p class="mb-2">
+  6.1. Ao aceitar este contrato, o CONTRATANTE declara ter lido, compreendido e concordado com todas as cláusulas aqui presentes.
+</p>
+<p class="mb-2">
+  6.2. Este contrato é regido pelas leis brasileiras.
+</p>
+`;
 
 export default ContractContent;

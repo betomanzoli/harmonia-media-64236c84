@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { Button } from "@/components/ui/button";
 import { LucideIcon } from 'lucide-react';
@@ -31,7 +32,7 @@ const ExtraServiceCard: React.FC<ExtraServiceCardProps> = ({
       // If we have a payment link, open it
       window.open(paymentLink, '_blank');
     } else {
-      // Otherwise use the original handler
+      // If it's a custom price service, use the original handler
       onServiceClick(serviceId);
     }
   };

@@ -1,8 +1,9 @@
 
-import React from 'react';
+import React, { useState } from 'react';
 import { Button } from "@/components/ui/button";
 import { ArrowRight } from 'lucide-react';
 import { Link } from 'react-router-dom';
+import TermsDialog from '@/components/service-card/TermsDialog';
 
 interface OrderSummaryProps {
   basePrice: number;
@@ -19,6 +20,10 @@ const OrderSummary: React.FC<OrderSummaryProps> = ({
   discount,
   selectedPackage 
 }) => {
+  const [isTermsDialogOpen, setIsTermsDialogOpen] = useState(false);
+  const [acceptedTerms, setAcceptedTerms] = useState(false);
+  const [redirectPath, setRedirectPath] = useState('');
+
   const formatCurrency = (value: number) => {
     return `R$ ${value.toFixed(2).replace('.', ',')}`;
   };
@@ -34,6 +39,17 @@ const OrderSummary: React.FC<OrderSummaryProps> = ({
       default:
         return '/pagamento/essencial';
     }
+  };
+
+  const handleProceedToPayment = () => {
+    const route = getPaymentRoute();
+    setRedirectPath(route);
+    setIsTermsDialogOpen(true);
+  };
+
+  const handleAcceptTerms = () => {
+    // Close the dialog - the Link component will handle the navigation
+    setIsTermsDialogOpen(false);
   };
   
   return (
@@ -69,18 +85,37 @@ const OrderSummary: React.FC<OrderSummaryProps> = ({
       <div className="space-y-3">
         <Button 
           className="w-full bg-harmonia-green hover:bg-harmonia-green/90"
-          asChild
+          onClick={handleProceedToPayment}
         >
-          <Link to={getPaymentRoute()}>
-            Prosseguir para pagamento
-            <ArrowRight className="ml-2 h-4 w-4" />
-          </Link>
+          Prosseguir para pagamento
+          <ArrowRight className="ml-2 h-4 w-4" />
         </Button>
         
         <p className="text-xs text-muted-foreground text-center mt-2">
           Pagamento seguro processado pelo MercadoPago
         </p>
       </div>
+
+      {/* Contract Terms Dialog */}
+      <TermsDialog
+        open={isTermsDialogOpen}
+        onOpenChange={setIsTermsDialogOpen}
+        title={selectedPackage === 'professional' ? 'Pacote Profissional' : 
+               selectedPackage === 'premium' ? 'Pacote Premium' : 'Pacote Essencial'}
+        acceptedTerms={acceptedTerms}
+        onAcceptedTermsChange={setAcceptedTerms}
+        onAccept={handleAcceptTerms}
+      />
+
+      {/* This Link is invisible but will be clicked programmatically after accepting terms */}
+      {acceptedTerms && redirectPath && (
+        <Link 
+          to={redirectPath} 
+          id="redirectLink" 
+          className="hidden"
+          onClick={() => document.getElementById('redirectLink')?.click()}
+        />
+      )}
     </div>
   );
 };
