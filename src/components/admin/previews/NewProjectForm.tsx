@@ -20,7 +20,11 @@ interface FormValues {
   notifyClient: boolean;
 }
 
-const NewProjectForm: React.FC = () => {
+interface NewProjectFormProps {
+  onAddProject?: (project: Omit<any, "id">) => string;
+}
+
+const NewProjectForm: React.FC<NewProjectFormProps> = ({ onAddProject }) => {
   const { addProject } = usePreviewProjects();
   const { toast } = useToast();
   const [versions, setVersions] = useState<{title: string; description: string; audioFile: File | null}[]>([
@@ -62,18 +66,30 @@ const NewProjectForm: React.FC = () => {
     
     // Criar projeto
     try {
-      // Em produção, enviar dados para API
-      const projectId = addProject({
-        clientName: data.clientName,
-        clientEmail: data.clientEmail,
-        packageType: data.packageType,
-        createdAt: formattedCreationDate,
-        status: 'waiting',
-        versions: versions.length,
-        previewUrl: '',
-        expirationDate: formattedExpirationDate,
-        lastActivityDate: formattedCreationDate
-      });
+      // Use the onAddProject prop if provided, otherwise use the hook's addProject function
+      const projectId = onAddProject 
+        ? onAddProject({
+            clientName: data.clientName,
+            clientEmail: data.clientEmail,
+            packageType: data.packageType,
+            createdAt: formattedCreationDate,
+            status: 'waiting',
+            versions: versions.length,
+            previewUrl: '',
+            expirationDate: formattedExpirationDate,
+            lastActivityDate: formattedCreationDate
+          })
+        : addProject({
+            clientName: data.clientName,
+            clientEmail: data.clientEmail,
+            packageType: data.packageType,
+            createdAt: formattedCreationDate,
+            status: 'waiting',
+            versions: versions.length,
+            previewUrl: '',
+            expirationDate: formattedExpirationDate,
+            lastActivityDate: formattedCreationDate
+          });
       
       // Notificar sobre novo projeto
       if (data.notifyClient) {
