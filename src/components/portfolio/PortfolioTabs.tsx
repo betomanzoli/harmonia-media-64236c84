@@ -86,7 +86,22 @@ const PortfolioTabs: React.FC<PortfolioTabsProps> = ({
         </TabsContent>
       </Tabs>
 
-      {/* Seção CTA para calcular preço - Removido botão de qualificação */}
+      {/* Contact CTA */}
+      <div className="bg-gradient-to-r from-background via-black to-background p-6 rounded-lg border border-border mt-10 mb-16">
+        <div className="text-center mb-6">
+          <h3 className="text-xl font-bold mb-2">Quer escutar as versões completas?</h3>
+          <p className="text-gray-400">Entre em contato conosco para agendar uma apresentação ou solicitar acesso ao nosso portfólio completo.</p>
+        </div>
+        <div className="flex justify-center">
+          <Button asChild className="bg-harmonia-green hover:bg-harmonia-green/90 flex items-center gap-2">
+            <Link to="/contato">
+              Entre em Contato
+            </Link>
+          </Button>
+        </div>
+      </div>
+      
+      {/* Calculator CTA */}
       <div className="bg-gradient-to-r from-background via-black to-background p-6 rounded-lg border border-border mt-10 mb-16">
         <div className="text-center mb-6">
           <h3 className="text-xl font-bold mb-2">Pronto para criar sua música personalizada?</h3>

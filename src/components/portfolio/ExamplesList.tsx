@@ -42,7 +42,7 @@ const ExamplesList: React.FC<ExamplesListProps> = ({
         ))}
       </div>
 
-      {!showAll && (
+      {!showAll && extraExamples.length > 0 && (
         <div className="flex justify-center mt-10">
           <Button 
             onClick={onShowMore} 

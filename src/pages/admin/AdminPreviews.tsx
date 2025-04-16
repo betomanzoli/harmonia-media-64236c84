@@ -20,7 +20,7 @@ import {
 } from "@/components/ui/dialog";
 
 const AdminPreviews: React.FC = () => {
-  const { projects } = usePreviewProjects();
+  const { projects, addProject } = usePreviewProjects();
   const { toast } = useToast();
   const [showHelp, setShowHelp] = useState(false);
   
@@ -93,7 +93,7 @@ const AdminPreviews: React.FC = () => {
           </div>
           
           <ProjectsListCard projects={projects} />
-          <NewProjectForm />
+          <NewProjectForm onAddProject={addProject} />
         </div>
       </div>
     </AdminLayout>

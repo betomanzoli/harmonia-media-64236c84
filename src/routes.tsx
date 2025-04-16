@@ -20,44 +20,60 @@ import AdminIntegrations from './pages/admin/AdminIntegrations';
 import AdminStatistics from './pages/admin/AdminStatistics';
 import AdminGuides from './pages/admin/AdminGuides';
 import PortfolioPage from './pages/Portfolio';
+import AboutPage from './pages/About';
+import ServicesPage from './pages/Services';
+import QualificacaoPage from './pages/Qualificacao';
+import Payment from './pages/Payment';
+import PaymentReturn from './pages/PaymentReturn';
+import AdminClients from './pages/admin/AdminClients';
+import AdminSettings from './pages/admin/AdminSettings';
 import { ProtectedRoute } from './components/admin/auth/ProtectedRoute';
+import PublicLayout from './layouts/PublicLayout';
 
 const router = createBrowserRouter([
   {
     path: '/',
-    element: <Home />,
+    element: <PublicLayout><Home /></PublicLayout>,
   },
   {
     path: '/sobre',
-    element: <Home />, // Temporary redirect until About page is created
+    element: <PublicLayout><AboutPage /></PublicLayout>,
   },
   {
     path: '/servicos',
-    element: <Home />, // Temporary redirect until Services page is created
+    element: <PublicLayout><ServicesPage /></PublicLayout>,
   },
   {
     path: '/portfolio',
-    element: <PortfolioPage />,
+    element: <PublicLayout><PortfolioPage /></PublicLayout>,
   },
   {
     path: '/calculadora',
-    element: <Calculator />,
+    element: <PublicLayout><Calculator /></PublicLayout>,
   },
   {
     path: '/contato',
-    element: <Contact />,
+    element: <PublicLayout><Contact /></PublicLayout>,
   },
   {
     path: '/qualificacao',
-    element: <Home />, // Temporary redirect until Qualificacao page is created
+    element: <PublicLayout><QualificacaoPage /></PublicLayout>,
   },
   {
     path: '/briefing',
-    element: <Briefing />,
+    element: <PublicLayout><Briefing /></PublicLayout>,
+  },
+  {
+    path: '/pagamento/:packageId',
+    element: <PublicLayout><Payment /></PublicLayout>,
+  },
+  {
+    path: '/pagamento-retorno',
+    element: <PublicLayout><PaymentReturn /></PublicLayout>,
   },
   {
     path: '/preview/:previewId',
-    element: <MusicPreviews />,
+    element: <PublicLayout><MusicPreviews /></PublicLayout>,
   },
   {
     path: '/admin-j28s7d1k/login',
@@ -88,24 +104,24 @@ const router = createBrowserRouter([
     element: <ProtectedRoute><AdminBriefings /></ProtectedRoute>,
   },
   {
+    path: '/admin-j28s7d1k/clients',
+    element: <ProtectedRoute><AdminClients /></ProtectedRoute>,
+  },
+  {
+    path: '/admin-j28s7d1k/settings',
+    element: <ProtectedRoute><AdminSettings /></ProtectedRoute>,
+  },
+  {
     path: '/admin-j28s7d1k/orders',
-    element: <ProtectedRoute><AdminProjects /></ProtectedRoute>, // Now redirecting to Projects page
+    element: <ProtectedRoute><AdminProjects /></ProtectedRoute>,
   },
   {
     path: '/admin-j28s7d1k/payments',
-    element: <ProtectedRoute><AdminInvoices /></ProtectedRoute>, // Now redirecting to Invoices page
+    element: <ProtectedRoute><AdminInvoices /></ProtectedRoute>,
   },
   {
     path: '/admin-j28s7d1k/integrations',
     element: <ProtectedRoute><AdminIntegrations /></ProtectedRoute>,
-  },
-  {
-    path: '/admin-j28s7d1k/chat',
-    element: <ProtectedRoute><Dashboard /></ProtectedRoute>, // Temporary redirect to Dashboard
-  },
-  {
-    path: '/admin-j28s7d1k/settings',
-    element: <ProtectedRoute><Dashboard /></ProtectedRoute>, // Temporary redirect to Dashboard
   },
   {
     path: '/admin-j28s7d1k/documentation',
@@ -124,13 +140,13 @@ const router = createBrowserRouter([
     element: <ProtectedRoute><AdminStorage /></ProtectedRoute>,
   },
   {
-    // Rota pública para visualização de prévias (acessível por qualquer pessoa com o link)
+    // Public preview route accessible to anyone with the link
     path: '/preview/:projectId',
-    element: <PreviewPage />,
+    element: <PublicLayout><PreviewPage /></PublicLayout>,
   },
   {
     path: '*',
-    element: <NotFound />,
+    element: <PublicLayout><NotFound /></PublicLayout>,
   },
 ]);
 
