@@ -1,7 +1,7 @@
 
 import React from 'react';
 import { Button } from "@/components/ui/button";
-import { ArrowRight, Check } from 'lucide-react';
+import { ArrowRight } from 'lucide-react';
 import { Link } from 'react-router-dom';
 
 interface OrderSummaryProps {
@@ -74,17 +74,6 @@ const OrderSummary: React.FC<OrderSummaryProps> = ({
           <Link to={getPaymentRoute()}>
             Prosseguir para pagamento
             <ArrowRight className="ml-2 h-4 w-4" />
-          </Link>
-        </Button>
-        
-        <Button 
-          variant="outline" 
-          className="w-full"
-          asChild
-        >
-          <Link to="/qualificacao">
-            Fazer qualificação primeiro
-            <Check className="ml-2 h-4 w-4" />
           </Link>
         </Button>
         

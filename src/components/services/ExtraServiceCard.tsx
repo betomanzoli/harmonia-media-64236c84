@@ -1,7 +1,8 @@
-
 import React from 'react';
 import { Button } from "@/components/ui/button";
 import { LucideIcon } from 'lucide-react';
+import { Link } from 'react-router-dom';
+import { extraServicePaymentLinks } from '@/lib/payment/paymentLinks';
 
 interface ExtraServiceCardProps {
   title: string;
@@ -22,6 +23,19 @@ const ExtraServiceCard: React.FC<ExtraServiceCardProps> = ({
   onServiceClick,
   serviceId,
 }) => {
+  // Get payment link for this service
+  const paymentLink = extraServicePaymentLinks[serviceId]?.url;
+  
+  const handleClick = () => {
+    if (paymentLink) {
+      // If we have a payment link, open it
+      window.open(paymentLink, '_blank');
+    } else {
+      // Otherwise use the original handler
+      onServiceClick(serviceId);
+    }
+  };
+  
   return (
     <div className="bg-card border border-border hover:border-harmonia-green/50 rounded-lg p-6 transition-colors">
       <div className="flex justify-between items-start mb-4">
@@ -42,7 +56,7 @@ const ExtraServiceCard: React.FC<ExtraServiceCardProps> = ({
         ))}
       </ul>
       <Button 
-        onClick={() => onServiceClick(serviceId)}
+        onClick={handleClick}
         className="w-full bg-secondary hover:bg-secondary/90"
       >
         {price.toString().includes('Consultar') ? 'Solicitar Orçamento Personalizado' : `Adicionar ${title}`}

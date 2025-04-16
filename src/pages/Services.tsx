@@ -1,11 +1,13 @@
+
 import React from 'react';
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Check } from 'lucide-react';
+import { ArrowLeft } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
-import NavLink from '@/components/NavLink';
+import { siteConfig } from '@/config/site';
+import { packagePaymentLinks } from '@/lib/payment/paymentLinks';
 
 const ServicesPage: React.FC = () => {
   const navigate = useNavigate();
@@ -13,40 +15,47 @@ const ServicesPage: React.FC = () => {
   const services = [
     {
       title: "Pacote Essencial",
-      price: "R$ 497",
+      price: `R$ ${siteConfig.pricing.basePrice}`,
       description: "Ideal para presentes emocionais rápidos.",
       features: [
         "Composição musical personalizada",
         "Uma revisão inclusa",
         "Entrega em até 7 dias úteis",
+        "Licença para uso pessoal"
       ],
-      link: "/pagamento/essencial"
+      paymentLink: packagePaymentLinks['essencial'].standard.url
     },
     {
       title: "Pacote Profissional",
-      price: "R$ 997",
+      price: `R$ ${siteConfig.pricing.professionalPrice}`,
       description: "Perfeito para criadores de conteúdo.",
       features: [
         "Composição musical personalizada",
         "Três versões para escolha",
         "Até três revisões",
         "Entrega em até 10 dias úteis",
+        "Licença para uso comercial limitado"
       ],
-      link: "/pagamento/profissional"
+      paymentLink: packagePaymentLinks['profissional'].standard.url
     },
     {
       title: "Pacote Premium",
-      price: "R$ 2.497",
+      price: `R$ ${siteConfig.pricing.premiumPrice}`,
       description: "Melhor opção para empresas.",
       features: [
-        "Composição musical personalizada",
+        "Composição musical personalizada premium",
         "Revisões ilimitadas",
         "Registro na Biblioteca Nacional",
         "Entrega em até 15 dias úteis",
+        "Licença comercial global"
       ],
-      link: "/pagamento/premium"
+      paymentLink: packagePaymentLinks['premium'].standard.url
     },
   ];
+
+  const handlePaymentClick = (paymentLink: string) => {
+    window.open(paymentLink, '_blank');
+  };
 
   return (
     <div className="min-h-screen bg-background text-foreground">
@@ -59,7 +68,7 @@ const ServicesPage: React.FC = () => {
               className="flex items-center gap-1 text-gray-400 hover:text-white"
               onClick={() => navigate('/')}
             >
-              <Check className="w-4 h-4" />
+              <ArrowLeft className="w-4 h-4" />
               Voltar para a página inicial
             </Button>
           </div>
@@ -88,14 +97,36 @@ const ServicesPage: React.FC = () => {
                       </li>
                     ))}
                   </ul>
-                </CardContent>
-                <NavLink href={service.link}>
-                  <Button className="w-full justify-center bg-harmonia-green hover:bg-harmonia-green/90">
-                    Escolher este pacote
+                  <Button 
+                    className="w-full justify-center bg-harmonia-green hover:bg-harmonia-green/90 mt-4"
+                    onClick={() => handlePaymentClick(service.paymentLink)}
+                  >
+                    Contratar agora
                   </Button>
-                </NavLink>
+                </CardContent>
               </Card>
             ))}
+          </div>
+          
+          <div className="mt-20">
+            <h2 className="text-2xl font-bold mb-6 text-center">Serviços Extras</h2>
+            <p className="text-gray-400 max-w-2xl mx-auto text-center mb-10">
+              Personalize sua experiência com estes serviços adicionais que podem ser contratados durante ou após o projeto.
+            </p>
+            
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+              {/* Service extras grid will be rendered by imported components */}
+              <div className="col-span-full">
+                <div className="flex justify-center">
+                  <Button 
+                    className="bg-harmonia-green hover:bg-harmonia-green/90"
+                    onClick={() => navigate('/pacotes')}
+                  >
+                    Ver todos os serviços extras
+                  </Button>
+                </div>
+              </div>
+            </div>
           </div>
         </div>
       </main>

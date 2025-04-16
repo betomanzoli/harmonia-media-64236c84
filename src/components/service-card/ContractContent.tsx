@@ -11,8 +11,7 @@ const ContractContent: React.FC<ContractContentProps> = ({ title }) => {
       return (
         <div className="max-h-96 overflow-y-auto text-sm">
           <h3 className="font-bold mb-2">CONTRATO DE PRESTAÇÃO DE SERVIÇOS - PACOTE ESSENCIAL</h3>
-          <p className="mb-2">CONTRATADA: harmonIA, CNPJ XX.XXX.XXX/0001-XX<br />
-          CONTRATANTE: [NOME COMPLETO], CPF [XXX.XXX.XXX-XX]</p>
+          
           <h4 className="font-bold mt-4">CLÁUSULA PRIMEIRA - DO OBJETO</h4>
           <p>1.1. Prestação de serviços de composição musical assistida por inteligência artificial com intervenção humana, conforme especificações do Pacote Essencial.</p>
           
@@ -54,8 +53,6 @@ const ContractContent: React.FC<ContractContentProps> = ({ title }) => {
       return (
         <div className="max-h-96 overflow-y-auto text-sm">
           <h3 className="font-bold mb-2">CONTRATO DE PRESTAÇÃO DE SERVIÇOS - PACOTE PROFISSIONAL</h3>
-          <p className="mb-2">CONTRATADA: harmonIA, CNPJ XX.XXX.XXX/0001-XX<br />
-          CONTRATANTE: [NOME COMPLETO], CPF [XXX.XXX.XXX-XX]</p>
           
           <h4 className="font-bold mt-4">CLÁUSULA PRIMEIRA - DO OBJETO</h4>
           <p>1.1. Prestação de serviços de composição musical assistida por inteligência artificial com intervenção humana, conforme especificações do Pacote Profissional.</p>
@@ -108,8 +105,6 @@ const ContractContent: React.FC<ContractContentProps> = ({ title }) => {
       return (
         <div className="max-h-96 overflow-y-auto text-sm">
           <h3 className="font-bold mb-2">CONTRATO DE PRESTAÇÃO DE SERVIÇOS - PACOTE PREMIUM</h3>
-          <p className="mb-2">CONTRATADA: harmonIA, CNPJ XX.XXX.XXX/0001-XX<br />
-          CONTRATANTE: [NOME COMPLETO], CPF [XXX.XXX.XXX-XX]</p>
           
           <h4 className="font-bold mt-4">CLÁUSULA PRIMEIRA - DO OBJETO</h4>
           <p>1.1. Prestação de serviços de composição musical assistida por inteligência artificial com intervenção humana, conforme especificações do Pacote Premium.</p>
