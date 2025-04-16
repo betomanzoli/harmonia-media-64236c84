@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
@@ -5,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
 import { Slider } from "@/components/ui/slider";
 import { useToast } from "@/hooks/use-toast";
-import { ArrowLeft, ArrowRight, Calculator, Clock, Clock3, Headphones, Music, ShieldCheck, Check, InfoIcon } from 'lucide-react';
+import { ArrowLeft, ArrowRight, CalculatorIcon, Clock, Clock3, Headphones, Music, ShieldCheck, Check, InfoIcon } from 'lucide-react';
 import {
   Select,
   SelectContent,
@@ -387,7 +388,7 @@ const Calculator: React.FC = () => {
               <Card>
                 <CardHeader>
                   <CardTitle className="flex items-center gap-2">
-                    <Calculator className="text-harmonia-green h-5 w-5" />
+                    <CalculatorIcon className="text-harmonia-green h-5 w-5" />
                     Resumo do Orçamento
                   </CardTitle>
                 </CardHeader>

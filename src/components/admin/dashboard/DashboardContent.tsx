@@ -1,470 +1,301 @@
 
-import React from 'react';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Area, AreaChart, Bar, BarChart, Line, LineChart, ResponsiveContainer, XAxis, YAxis } from "recharts";
-import { ActivityIcon, ArrowRight, Music, Package, Users } from 'lucide-react';
-import { Button } from '@/components/ui/button';
+import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
 import RecentProjectsList from './RecentProjectsList';
 import ProjectStatusCard from './ProjectStatusCard';
-import { Link } from 'react-router-dom';
-import { useStatistics } from '@/hooks/admin/useStatistics';
+import { ArrowRight, Music, Users, FileText, CreditCard, Calendar, BarChart3, Settings } from 'lucide-react';
+import { useToast } from '@/hooks/use-toast';
 
 const DashboardContent: React.FC = () => {
-  const { 
-    counts, 
-    projectsData, 
-    revenueData, 
-    clientsData,
-    pendingProjects,
-    feedbackProjects,
-    completedProjects,
-    recentProjects
-  } = useStatistics();
+  const navigate = useNavigate();
+  const { toast } = useToast();
+  const [isLoading, setIsLoading] = useState(true);
+  const [dashboardStats, setDashboardStats] = useState({
+    totalClients: 0,
+    totalProjects: 0,
+    totalCompletedProjects: 0,
+    totalPendingProjects: 0,
+    totalInProgressProjects: 0,
+    totalPortfolioItems: 0,
+    totalInvoices: 0,
+    recentProjects: []
+  });
+
+  useEffect(() => {
+    // In a real application, this would fetch data from your API
+    // For now, we'll simulate loading and set some sample data
+    const loadDashboardData = async () => {
+      setIsLoading(true);
+      // Simulate API call
+      await new Promise(resolve => setTimeout(resolve, 1000));
+      
+      setDashboardStats({
+        totalClients: 0,
+        totalProjects: 0,
+        totalCompletedProjects: 0,
+        totalPendingProjects: 0, 
+        totalInProgressProjects: 0,
+        totalPortfolioItems: 0,
+        totalInvoices: 0,
+        recentProjects: []
+      });
+      
+      setIsLoading(false);
+    };
+    
+    loadDashboardData();
+  }, []);
+
+  const handleModuleClick = (path: string, isImplemented = true) => {
+    if (isImplemented) {
+      navigate(path);
+    } else {
+      toast({
+        title: "Módulo em desenvolvimento",
+        description: "Este módulo está sendo implementado e estará disponível em breve."
+      });
+    }
+  };
 
   return (
-    <div className="flex-1 space-y-4 p-6">
-      <div className="flex items-center justify-between">
-        <h2 className="text-3xl font-bold tracking-tight">Dashboard</h2>
-        <div className="flex items-center gap-2">
-          <Button
-            variant="ghost"
-            className="gap-1 text-xs text-muted-foreground"
-            disabled
-          >
-            Última atualização: {new Date().toLocaleString()}
+    <div className="p-6 space-y-6">
+      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+        <div>
+          <h1 className="text-3xl font-bold tracking-tight text-harmonia-green">Dashboard Administrativo</h1>
+          <p className="text-muted-foreground">
+            Bem-vindo ao painel administrativo da harmonIA. Gerencie seus projetos, clientes e pagamentos.
+          </p>
+        </div>
+        <div className="flex gap-2">
+          <Button onClick={() => handleModuleClick('/admin-j28s7d1k/settings', true)}>
+            <Settings className="mr-2 h-4 w-4" />
+            Configurações
           </Button>
         </div>
       </div>
-      
-      <Tabs defaultValue="overview" className="space-y-4">
-        <TabsList>
-          <TabsTrigger value="overview">Visão Geral</TabsTrigger>
-          <TabsTrigger value="projects">Projetos</TabsTrigger>
-          <TabsTrigger value="clients">Clientes</TabsTrigger>
-        </TabsList>
+
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">
+              Total de Clientes
+            </CardTitle>
+            <Users className="h-4 w-4 text-muted-foreground" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">{dashboardStats.totalClients}</div>
+            <p className="text-xs text-muted-foreground">
+              Clientes registrados
+            </p>
+          </CardContent>
+        </Card>
         
-        <TabsContent value="overview" className="space-y-4">
-          <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-            <Card>
-              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium">
-                  Total de Projetos
-                </CardTitle>
-                <Package className="h-4 w-4 text-muted-foreground" />
-              </CardHeader>
-              <CardContent>
-                <div className="text-2xl font-bold">{counts.projects}</div>
-                <p className="text-xs text-muted-foreground">
-                  {projectsData.length > 0 && projectsData[projectsData.length - 1].value > projectsData[projectsData.length - 2].value 
-                    ? `+${projectsData[projectsData.length - 1].value - projectsData[projectsData.length - 2].value}` 
-                    : '0'} desde o último mês
-                </p>
-              </CardContent>
-            </Card>
-            
-            <Card>
-              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium">
-                  Músicas no Portfólio
-                </CardTitle>
-                <Music className="h-4 w-4 text-muted-foreground" />
-              </CardHeader>
-              <CardContent>
-                <div className="text-2xl font-bold">{counts.portfolio}</div>
-                <p className="text-xs text-muted-foreground">
-                  +{Math.floor(Math.random() * 5)} desde o último mês
-                </p>
-              </CardContent>
-            </Card>
-            
-            <Card>
-              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium">
-                  Clientes
-                </CardTitle>
-                <Users className="h-4 w-4 text-muted-foreground" />
-              </CardHeader>
-              <CardContent>
-                <div className="text-2xl font-bold">{counts.clients}</div>
-                <p className="text-xs text-muted-foreground">
-                  {clientsData.length > 0 && clientsData[clientsData.length - 1].value > clientsData[clientsData.length - 2].value 
-                    ? `+${clientsData[clientsData.length - 1].value - clientsData[clientsData.length - 2].value}` 
-                    : '0'} desde o último mês
-                </p>
-              </CardContent>
-            </Card>
-            
-            <Card>
-              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium">
-                  Faturamento
-                </CardTitle>
-                <ActivityIcon className="h-4 w-4 text-muted-foreground" />
-              </CardHeader>
-              <CardContent>
-                <div className="text-2xl font-bold">
-                  {Intl.NumberFormat('pt-BR', { 
-                    style: 'currency', 
-                    currency: 'BRL',
-                    maximumFractionDigits: 0 
-                  }).format(counts.revenue)}
-                </div>
-                <p className="text-xs text-muted-foreground">
-                  {revenueData.length > 0 && revenueData[revenueData.length - 1].value > revenueData[revenueData.length - 2].value 
-                    ? `+${Intl.NumberFormat('pt-BR', { 
-                      style: 'currency', 
-                      currency: 'BRL',
-                      maximumFractionDigits: 0 
-                    }).format(revenueData[revenueData.length - 1].value - revenueData[revenueData.length - 2].value)}` 
-                    : 'R$ 0'} desde o último mês
-                </p>
-              </CardContent>
-            </Card>
-          </div>
-          
-          <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-7">
-            <Card className="lg:col-span-4">
-              <CardHeader>
-                <CardTitle>Visão Geral</CardTitle>
-                <CardDescription>
-                  Visão geral de projetos e receita nos últimos 90 dias.
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                <ResponsiveContainer width="100%" height={350}>
-                  <AreaChart
-                    data={projectsData}
-                    margin={{
-                      top: 5,
-                      right: 10,
-                      left: 10,
-                      bottom: 0,
-                    }}
-                  >
-                    <XAxis 
-                      dataKey="name" 
-                      tickLine={false} 
-                      axisLine={false}
-                      dy={10}
-                      tickMargin={10}
-                    />
-                    <YAxis
-                      tickLine={false}
-                      axisLine={false}
-                      tickMargin={10}
-                    />
-                    <Area
-                      type="monotone"
-                      dataKey="value"
-                      stroke="#10B981"
-                      fill="url(#colorPv)"
-                      strokeWidth={2}
-                    />
-                    <defs>
-                      <linearGradient id="colorPv" x1="0" y1="0" x2="0" y2="1">
-                        <stop
-                          offset="5%"
-                          stopColor="#10B981"
-                          stopOpacity={0.3}
-                        />
-                        <stop
-                          offset="95%"
-                          stopColor="#10B981"
-                          stopOpacity={0}
-                        />
-                      </linearGradient>
-                    </defs>
-                  </AreaChart>
-                </ResponsiveContainer>
-              </CardContent>
-            </Card>
-            
-            <div className="grid gap-4 lg:col-span-3">
-              <Card>
-                <CardHeader className="pb-2">
-                  <CardTitle>Status dos Projetos</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="space-y-4">
-                    <ProjectStatusCard 
-                      title="Pendentes" 
-                      count={pendingProjects}
-                      percentage={(pendingProjects / counts.projects) * 100}
-                      color="bg-yellow-500"
-                    />
-                    <ProjectStatusCard 
-                      title="Em feedback" 
-                      count={feedbackProjects}
-                      percentage={(feedbackProjects / counts.projects) * 100}
-                      color="bg-blue-500"
-                    />
-                    <ProjectStatusCard 
-                      title="Concluídos" 
-                      count={completedProjects}
-                      percentage={(completedProjects / counts.projects) * 100}
-                      color="bg-green-500"
-                    />
-                  </div>
-                </CardContent>
-                
-                <div className="px-6 pb-4">
-                  <Button variant="outline" asChild className="w-full">
-                    <Link to="/admin-j28s7d1k/projects" className="flex items-center justify-center gap-1">
-                      Ver todos os projetos
-                      <ArrowRight className="h-4 w-4" />
-                    </Link>
-                  </Button>
-                </div>
-              </Card>
-            </div>
-          </div>
-          
-          <div className="grid gap-4 grid-cols-1 md:grid-cols-2 lg:grid-cols-3">
-            <Card className="lg:col-span-2">
-              <CardHeader>
-                <CardTitle>Projetos Recentes</CardTitle>
-                <CardDescription>
-                  Lista dos projetos mais recentes
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                <RecentProjectsList projects={recentProjects} />
-              </CardContent>
-              <div className="px-6 pb-4">
-                <Button variant="outline" asChild className="w-full">
-                  <Link to="/admin-j28s7d1k/projects" className="flex items-center justify-center gap-1">
-                    Ver todos os projetos
-                    <ArrowRight className="h-4 w-4" />
-                  </Link>
-                </Button>
-              </div>
-            </Card>
-            
-            <Card>
-              <CardHeader>
-                <CardTitle>Faturamento Mensal</CardTitle>
-                <CardDescription>
-                  Faturamento nos últimos 6 meses
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                <ResponsiveContainer width="100%" height={350}>
-                  <BarChart data={revenueData}>
-                    <XAxis
-                      dataKey="name"
-                      tickLine={false}
-                      axisLine={false}
-                      dy={10}
-                      tickMargin={10}
-                    />
-                    <YAxis
-                      tickLine={false}
-                      axisLine={false}
-                      tickMargin={10}
-                      tickFormatter={(value) =>
-                        `R$${value.toLocaleString('pt-BR')}`
-                      }
-                    />
-                    <Bar
-                      dataKey="value"
-                      fill="#10B981"
-                      radius={[4, 4, 0, 0]}
-                    />
-                  </BarChart>
-                </ResponsiveContainer>
-              </CardContent>
-            </Card>
-          </div>
-        </TabsContent>
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">
+              Projetos Ativos
+            </CardTitle>
+            <FileText className="h-4 w-4 text-muted-foreground" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">{dashboardStats.totalProjects}</div>
+            <p className="text-xs text-muted-foreground">
+              {dashboardStats.totalCompletedProjects} concluídos
+            </p>
+          </CardContent>
+        </Card>
         
-        <TabsContent value="projects" className="space-y-4">
-          <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-            {/* Projetos por tipo content */}
-            <Card>
-              <CardHeader>
-                <CardTitle>Projetos por Tipo</CardTitle>
-                <CardDescription>
-                  Distribuição de projetos por pacote
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                <ResponsiveContainer width="100%" height={350}>
-                  <BarChart data={[
-                    { name: 'Essencial', value: Math.floor(counts.projects * 0.4) },
-                    { name: 'Profissional', value: Math.floor(counts.projects * 0.4) },
-                    { name: 'Premium', value: Math.floor(counts.projects * 0.2) },
-                  ]}>
-                    <XAxis
-                      dataKey="name"
-                      tickLine={false}
-                      axisLine={false}
-                    />
-                    <YAxis
-                      tickLine={false}
-                      axisLine={false}
-                    />
-                    <Bar
-                      dataKey="value"
-                      fill="#10B981"
-                      radius={[4, 4, 0, 0]}
-                    />
-                  </BarChart>
-                </ResponsiveContainer>
-              </CardContent>
-            </Card>
-            
-            <Card>
-              <CardHeader>
-                <CardTitle>Projetos por Mês</CardTitle>
-                <CardDescription>
-                  Número de novos projetos por mês
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                <ResponsiveContainer width="100%" height={350}>
-                  <LineChart data={projectsData}>
-                    <XAxis
-                      dataKey="name"
-                      tickLine={false}
-                      axisLine={false}
-                    />
-                    <YAxis
-                      tickLine={false}
-                      axisLine={false}
-                    />
-                    <Line
-                      type="monotone"
-                      strokeWidth={2}
-                      dataKey="value"
-                      stroke="#10B981"
-                      activeDot={{ r: 6 }}
-                    />
-                  </LineChart>
-                </ResponsiveContainer>
-              </CardContent>
-            </Card>
-            
-            <Card>
-              <CardHeader>
-                <CardTitle>Tempo de Conclusão</CardTitle>
-                <CardDescription>
-                  Tempo médio de conclusão dos projetos (dias)
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                <ResponsiveContainer width="100%" height={350}>
-                  <BarChart data={[
-                    { name: 'Essencial', value: 8 },
-                    { name: 'Profissional', value: 6 },
-                    { name: 'Premium', value: 4 },
-                  ]}>
-                    <XAxis
-                      dataKey="name"
-                      tickLine={false}
-                      axisLine={false}
-                    />
-                    <YAxis
-                      tickLine={false}
-                      axisLine={false}
-                    />
-                    <Bar
-                      dataKey="value"
-                      fill="#10B981"
-                      radius={[4, 4, 0, 0]}
-                    />
-                  </BarChart>
-                </ResponsiveContainer>
-              </CardContent>
-            </Card>
-          </div>
-        </TabsContent>
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">
+              Portfólio
+            </CardTitle>
+            <Music className="h-4 w-4 text-muted-foreground" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">{dashboardStats.totalPortfolioItems}</div>
+            <p className="text-xs text-muted-foreground">
+              Músicas no portfólio
+            </p>
+          </CardContent>
+        </Card>
         
-        <TabsContent value="clients" className="space-y-4">
-          <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-            <Card>
-              <CardHeader>
-                <CardTitle>Novos Clientes</CardTitle>
-                <CardDescription>
-                  Número de novos clientes por mês
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                <ResponsiveContainer width="100%" height={350}>
-                  <LineChart data={clientsData}>
-                    <XAxis
-                      dataKey="name"
-                      tickLine={false}
-                      axisLine={false}
-                    />
-                    <YAxis
-                      tickLine={false}
-                      axisLine={false}
-                    />
-                    <Line
-                      type="monotone"
-                      strokeWidth={2}
-                      dataKey="value"
-                      stroke="#10B981"
-                      activeDot={{ r: 6 }}
-                    />
-                  </LineChart>
-                </ResponsiveContainer>
-              </CardContent>
-            </Card>
-            
-            <Card>
-              <CardHeader>
-                <CardTitle>Clientes Recorrentes</CardTitle>
-                <CardDescription>
-                  Porcentagem de clientes que retornam
-                </CardDescription>
-              </CardHeader>
-              <CardContent className="flex justify-center items-center h-[350px]">
-                <div className="text-center">
-                  <div className="text-5xl font-bold text-harmonia-green mb-2">
-                    {Math.floor(Math.random() * 20) + 30}%
-                  </div>
-                  <p className="text-sm text-muted-foreground">
-                    dos clientes retornam para um segundo projeto
-                  </p>
-                </div>
-              </CardContent>
-            </Card>
-            
-            <Card>
-              <CardHeader>
-                <CardTitle>Valor Médio por Cliente</CardTitle>
-                <CardDescription>
-                  Valor médio gasto por cliente
-                </CardDescription>
-              </CardHeader>
-              <CardContent className="flex justify-center items-center h-[350px]">
-                <div className="text-center">
-                  <div className="text-4xl font-bold text-harmonia-green mb-2">
-                    {Intl.NumberFormat('pt-BR', { 
-                      style: 'currency', 
-                      currency: 'BRL',
-                      maximumFractionDigits: 0 
-                    }).format(counts.revenue / counts.clients)}
-                  </div>
-                  <p className="text-sm text-muted-foreground">
-                    valor médio por cliente
-                  </p>
-                </div>
-              </CardContent>
-            </Card>
-          </div>
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">
+              Faturas
+            </CardTitle>
+            <CreditCard className="h-4 w-4 text-muted-foreground" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">{dashboardStats.totalInvoices}</div>
+            <p className="text-xs text-muted-foreground">
+              Faturas emitidas
+            </p>
+          </CardContent>
+        </Card>
+      </div>
+
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <RecentProjectsList 
+          projects={dashboardStats.recentProjects as any[]} 
+        />
+        
+        <ProjectStatusCard 
+          statusData={{
+            total: dashboardStats.totalProjects,
+            pending: dashboardStats.totalPendingProjects,
+            inProgress: dashboardStats.totalInProgressProjects,
+            completed: dashboardStats.totalCompletedProjects,
+            feedback: 0
+          }} 
+        />
+      </div>
+
+      <div>
+        <h2 className="text-xl font-semibold mb-4">Módulos Administrativos</h2>
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+          <Card className="cursor-pointer hover:border-harmonia-green transition-colors" 
+            onClick={() => handleModuleClick('/admin-j28s7d1k/previews', true)}>
+            <CardHeader>
+              <CardTitle className="flex items-center text-lg">
+                <Music className="mr-2 h-5 w-5 text-harmonia-green" />
+                Prévias Musicais
+              </CardTitle>
+              <CardDescription>
+                Gerenciar prévias de músicas
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <p className="text-sm text-gray-500">
+                Envie, edite e acompanhe as prévias enviadas aos clientes.
+              </p>
+            </CardContent>
+            <CardFooter>
+              <Button variant="ghost" className="w-full justify-between">
+                Acessar <ArrowRight className="h-4 w-4" />
+              </Button>
+            </CardFooter>
+          </Card>
           
-          <div className="flex justify-end">
-            <Button asChild>
-              <Link to="/admin-j28s7d1k/clients">
-                Ver todos os clientes
-              </Link>
-            </Button>
-          </div>
-        </TabsContent>
-      </Tabs>
+          <Card className="cursor-pointer hover:border-harmonia-green transition-colors"
+            onClick={() => handleModuleClick('/admin-j28s7d1k/briefings', true)}>
+            <CardHeader>
+              <CardTitle className="flex items-center text-lg">
+                <FileText className="mr-2 h-5 w-5 text-harmonia-green" />
+                Briefings
+              </CardTitle>
+              <CardDescription>
+                Gerenciar briefings de clientes
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <p className="text-sm text-gray-500">
+                Visualize e responda aos briefings enviados pelos clientes.
+              </p>
+            </CardContent>
+            <CardFooter>
+              <Button variant="ghost" className="w-full justify-between">
+                Acessar <ArrowRight className="h-4 w-4" />
+              </Button>
+            </CardFooter>
+          </Card>
+          
+          <Card className="cursor-pointer hover:border-harmonia-green transition-colors"
+            onClick={() => handleModuleClick('/admin-j28s7d1k/portfolio', true)}>
+            <CardHeader>
+              <CardTitle className="flex items-center text-lg">
+                <BarChart3 className="mr-2 h-5 w-5 text-harmonia-green" />
+                Portfólio
+              </CardTitle>
+              <CardDescription>
+                Gerenciar o portfólio público
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <p className="text-sm text-gray-500">
+                Adicione e edite as músicas exibidas no portfólio do site.
+              </p>
+            </CardContent>
+            <CardFooter>
+              <Button variant="ghost" className="w-full justify-between">
+                Acessar <ArrowRight className="h-4 w-4" />
+              </Button>
+            </CardFooter>
+          </Card>
+          
+          <Card className="cursor-pointer hover:border-harmonia-green transition-colors"
+            onClick={() => handleModuleClick('/admin-j28s7d1k/invoices', true)}>
+            <CardHeader>
+              <CardTitle className="flex items-center text-lg">
+                <CreditCard className="mr-2 h-5 w-5 text-harmonia-green" />
+                Faturas
+              </CardTitle>
+              <CardDescription>
+                Gerenciar faturas e pagamentos
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <p className="text-sm text-gray-500">
+                Visualize e gerencie as faturas emitidas para os clientes.
+              </p>
+            </CardContent>
+            <CardFooter>
+              <Button variant="ghost" className="w-full justify-between">
+                Acessar <ArrowRight className="h-4 w-4" />
+              </Button>
+            </CardFooter>
+          </Card>
+          
+          <Card className="cursor-pointer hover:border-harmonia-green transition-colors"
+            onClick={() => handleModuleClick('/admin-j28s7d1k/clients', true)}>
+            <CardHeader>
+              <CardTitle className="flex items-center text-lg">
+                <Users className="mr-2 h-5 w-5 text-harmonia-green" />
+                Clientes
+              </CardTitle>
+              <CardDescription>
+                Gerenciar cadastro de clientes
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <p className="text-sm text-gray-500">
+                Visualize e edite as informações dos clientes cadastrados.
+              </p>
+            </CardContent>
+            <CardFooter>
+              <Button variant="ghost" className="w-full justify-between">
+                Acessar <ArrowRight className="h-4 w-4" />
+              </Button>
+            </CardFooter>
+          </Card>
+          
+          <Card className="cursor-pointer hover:border-harmonia-green transition-colors"
+            onClick={() => handleModuleClick('/admin-j28s7d1k/projects', true)}>
+            <CardHeader>
+              <CardTitle className="flex items-center text-lg">
+                <Calendar className="mr-2 h-5 w-5 text-harmonia-green" />
+                Projetos
+              </CardTitle>
+              <CardDescription>
+                Gerenciar projetos e prazos
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <p className="text-sm text-gray-500">
+                Acompanhe o andamento e os prazos dos projetos em produção.
+              </p>
+            </CardContent>
+            <CardFooter>
+              <Button variant="ghost" className="w-full justify-between">
+                Acessar <ArrowRight className="h-4 w-4" />
+              </Button>
+            </CardFooter>
+          </Card>
+        </div>
+      </div>
     </div>
   );
 };

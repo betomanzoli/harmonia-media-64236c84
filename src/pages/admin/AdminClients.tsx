@@ -1,101 +1,117 @@
 
 import React, { useState } from 'react';
 import AdminLayout from '@/components/admin/layout/AdminLayout';
-import { useNavigate } from 'react-router-dom';
 import { Button } from "@/components/ui/button";
-import { ArrowLeft, UserPlus, Filter, Search, MoreHorizontal, Mail, Package, CalendarClock } from 'lucide-react';
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Badge } from "@/components/ui/badge";
-import { Input } from "@/components/ui/input";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { 
-  DropdownMenu, 
-  DropdownMenuContent, 
-  DropdownMenuItem, 
-  DropdownMenuLabel, 
-  DropdownMenuSeparator, 
-  DropdownMenuTrigger 
-} from "@/components/ui/dropdown-menu";
-import { useToast } from '@/hooks/use-toast';
+import { ArrowLeft, Users, Plus, Search, Trash2, Edit, Eye } from 'lucide-react';
 import { Link } from 'react-router-dom';
+import { Table, TableBody, TableCaption, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
+import { Input } from "@/components/ui/input";
+import { useToast } from '@/hooks/use-toast';
+import { 
+  Dialog, 
+  DialogContent, 
+  DialogDescription, 
+  DialogFooter, 
+  DialogHeader, 
+  DialogTitle, 
+  DialogTrigger,
+} from "@/components/ui/dialog";
 
 interface Client {
   id: string;
   name: string;
   email: string;
-  status: 'active' | 'inactive';
+  phone: string;
   projectsCount: number;
-  totalSpent: string;
-  lastPurchase: string;
+  lastInteraction: string;
 }
 
 const AdminClients: React.FC = () => {
-  const navigate = useNavigate();
   const { toast } = useToast();
   const [searchTerm, setSearchTerm] = useState('');
-  const [statusFilter, setStatusFilter] = useState('all');
+  const [isAddClientOpen, setIsAddClientOpen] = useState(false);
+  const [newClient, setNewClient] = useState({
+    name: '',
+    email: '',
+    phone: ''
+  });
   
-  // Mock client data - in a real implementation, this would come from the database
-  const [clients] = useState<Client[]>([
+  const [clients, setClients] = useState<Client[]>([
     {
       id: 'CLI-001',
       name: 'João Silva',
-      email: 'joao.silva@email.com',
-      status: 'active',
+      email: 'joao.silva@example.com',
+      phone: '(11) 98765-4321',
       projectsCount: 2,
-      totalSpent: 'R$ 2.994,00',
-      lastPurchase: '10/04/2025'
+      lastInteraction: '15/04/2025'
     },
     {
       id: 'CLI-002',
       name: 'Maria Oliveira',
-      email: 'maria.oliveira@email.com',
-      status: 'active',
+      email: 'maria.oliveira@example.com',
+      phone: '(11) 91234-5678',
       projectsCount: 1,
-      totalSpent: 'R$ 1.997,00',
-      lastPurchase: '15/04/2025'
+      lastInteraction: '10/04/2025'
     },
     {
       id: 'CLI-003',
       name: 'Carlos Santos',
-      email: 'carlos.santos@email.com',
-      status: 'inactive',
-      projectsCount: 1,
-      totalSpent: 'R$ 997,00',
-      lastPurchase: '20/03/2025'
+      email: 'carlos.santos@example.com',
+      phone: '(11) 99876-5432',
+      projectsCount: 3,
+      lastInteraction: '05/04/2025'
     }
   ]);
 
-  const filteredClients = clients.filter(client => {
-    // Filter by search term
-    const matchesSearch = searchTerm === '' || 
-      client.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      client.email.toLowerCase().includes(searchTerm.toLowerCase());
-    
-    // Filter by status
-    const matchesStatus = statusFilter === 'all' || client.status === statusFilter;
-    
-    return matchesSearch && matchesStatus;
-  });
+  const handleAddClient = () => {
+    // Validate fields
+    if (!newClient.name || !newClient.email) {
+      toast({
+        title: "Campos obrigatórios",
+        description: "Nome e email são campos obrigatórios.",
+        variant: "destructive"
+      });
+      return;
+    }
 
-  const handleViewProjects = (clientId: string) => {
-    navigate(`/admin-j28s7d1k/projects?client=${clientId}`);
-  };
-
-  const handleSendEmail = (email: string) => {
+    // Create new client
+    const id = `CLI-${String(clients.length + 1).padStart(3, '0')}`;
+    const today = new Date().toLocaleDateString('pt-BR');
+    
+    setClients([...clients, {
+      id,
+      name: newClient.name,
+      email: newClient.email,
+      phone: newClient.phone,
+      projectsCount: 0,
+      lastInteraction: today
+    }]);
+    
+    // Reset form and close dialog
+    setNewClient({ name: '', email: '', phone: '' });
+    setIsAddClientOpen(false);
+    
     toast({
-      title: "Enviar email",
-      description: `Preparando para enviar email para ${email}`
+      title: "Cliente adicionado",
+      description: `Cliente ${newClient.name} foi adicionado com sucesso.`
     });
   };
 
-  const handleExportData = (clientId: string) => {
+  const handleDeleteClient = (id: string) => {
+    setClients(clients.filter(client => client.id !== id));
+    
     toast({
-      title: "Exportar dados",
-      description: `Exportando dados do cliente ${clientId}`
+      title: "Cliente removido",
+      description: "O cliente foi removido com sucesso."
     });
   };
+
+  const filteredClients = clients.filter(client => 
+    client.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    client.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    client.id.toLowerCase().includes(searchTerm.toLowerCase())
+  );
 
   return (
     <AdminLayout>
@@ -104,161 +120,176 @@ const AdminClients: React.FC = () => {
           <div>
             <h1 className="text-3xl font-bold tracking-tight text-harmonia-green">Clientes</h1>
             <p className="text-muted-foreground">
-              Gerencie os clientes e visualize informações sobre seus projetos
+              Gerencie os clientes cadastrados na plataforma
             </p>
           </div>
-          <Button 
-            variant="outline" 
-            size="sm" 
-            asChild
-            className="border-harmonia-green text-harmonia-green hover:bg-harmonia-green/10"
-          >
-            <Link to="/admin-j28s7d1k/dashboard">
-              <ArrowLeft className="mr-2 h-4 w-4" />
-              Voltar ao Dashboard
-            </Link>
-          </Button>
+          <div className="flex gap-2">
+            <Button 
+              variant="outline" 
+              size="sm" 
+              asChild
+              className="border-harmonia-green text-harmonia-green hover:bg-harmonia-green/10"
+            >
+              <Link to="/admin-j28s7d1k/dashboard">
+                <ArrowLeft className="mr-2 h-4 w-4" />
+                Voltar ao Dashboard
+              </Link>
+            </Button>
+          </div>
         </div>
         
-        <div className="flex flex-col sm:flex-row gap-4">
+        <div className="flex flex-col sm:flex-row gap-4 justify-between">
           <Card className="w-full">
-            <CardHeader className="flex flex-row items-center justify-between pb-2">
-              <CardTitle className="text-lg">Filtrar Clientes</CardTitle>
-              <Button 
-                variant="ghost" 
-                size="sm"
-                className="text-harmonia-green"
-                onClick={() => {
-                  setSearchTerm('');
-                  setStatusFilter('all');
-                }}
-              >
-                Limpar Filtros
-              </Button>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-lg">Clientes</CardTitle>
+              <Users className="h-5 w-5 text-muted-foreground" />
             </CardHeader>
             <CardContent>
-              <div className="flex flex-col sm:flex-row gap-4">
+              <div className="flex flex-col sm:flex-row gap-4 mb-4">
                 <div className="relative flex-1">
                   <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-gray-500" />
                   <Input
-                    placeholder="Buscar por nome, email ou ID..."
+                    placeholder="Pesquisar por nome, email ou ID..."
                     className="pl-8"
                     value={searchTerm}
                     onChange={(e) => setSearchTerm(e.target.value)}
                   />
                 </div>
                 
-                <div className="w-full sm:w-48">
-                  <Select value={statusFilter} onValueChange={setStatusFilter}>
-                    <SelectTrigger>
-                      <div className="flex items-center">
-                        <Filter className="h-4 w-4 mr-2" />
-                        <SelectValue placeholder="Status" />
+                <Dialog open={isAddClientOpen} onOpenChange={setIsAddClientOpen}>
+                  <DialogTrigger asChild>
+                    <Button className="bg-harmonia-green hover:bg-harmonia-green/90">
+                      <Plus className="mr-2 h-4 w-4" />
+                      Adicionar Cliente
+                    </Button>
+                  </DialogTrigger>
+                  <DialogContent>
+                    <DialogHeader>
+                      <DialogTitle>Adicionar Novo Cliente</DialogTitle>
+                      <DialogDescription>
+                        Preencha as informações abaixo para adicionar um novo cliente.
+                      </DialogDescription>
+                    </DialogHeader>
+                    
+                    <div className="space-y-4 py-4">
+                      <div className="space-y-2">
+                        <label htmlFor="name" className="text-sm font-medium">
+                          Nome completo *
+                        </label>
+                        <Input
+                          id="name"
+                          placeholder="Nome do cliente"
+                          value={newClient.name}
+                          onChange={(e) => setNewClient({...newClient, name: e.target.value})}
+                        />
                       </div>
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="all">Todos os status</SelectItem>
-                      <SelectItem value="active">Ativos</SelectItem>
-                      <SelectItem value="inactive">Inativos</SelectItem>
-                    </SelectContent>
-                  </Select>
+                      
+                      <div className="space-y-2">
+                        <label htmlFor="email" className="text-sm font-medium">
+                          Email *
+                        </label>
+                        <Input
+                          id="email"
+                          type="email"
+                          placeholder="email@exemplo.com"
+                          value={newClient.email}
+                          onChange={(e) => setNewClient({...newClient, email: e.target.value})}
+                        />
+                      </div>
+                      
+                      <div className="space-y-2">
+                        <label htmlFor="phone" className="text-sm font-medium">
+                          Telefone
+                        </label>
+                        <Input
+                          id="phone"
+                          placeholder="(00) 00000-0000"
+                          value={newClient.phone}
+                          onChange={(e) => setNewClient({...newClient, phone: e.target.value})}
+                        />
+                      </div>
+                    </div>
+                    
+                    <DialogFooter>
+                      <Button variant="outline" onClick={() => setIsAddClientOpen(false)}>
+                        Cancelar
+                      </Button>
+                      <Button onClick={handleAddClient} className="bg-harmonia-green hover:bg-harmonia-green/90">
+                        Adicionar Cliente
+                      </Button>
+                    </DialogFooter>
+                  </DialogContent>
+                </Dialog>
+              </div>
+              
+              <div className="rounded-md border overflow-hidden">
+                <div className="overflow-x-auto">
+                  <Table>
+                    <TableCaption>Lista de clientes cadastrados</TableCaption>
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead>ID</TableHead>
+                        <TableHead>Nome</TableHead>
+                        <TableHead>Email</TableHead>
+                        <TableHead>Telefone</TableHead>
+                        <TableHead>Projetos</TableHead>
+                        <TableHead>Última Interação</TableHead>
+                        <TableHead className="text-right">Ações</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {filteredClients.length === 0 ? (
+                        <TableRow>
+                          <TableCell colSpan={7} className="text-center py-8">
+                            Nenhum cliente encontrado com os filtros atuais
+                          </TableCell>
+                        </TableRow>
+                      ) : (
+                        filteredClients.map((client) => (
+                          <TableRow key={client.id}>
+                            <TableCell className="font-medium">{client.id}</TableCell>
+                            <TableCell>{client.name}</TableCell>
+                            <TableCell>{client.email}</TableCell>
+                            <TableCell>{client.phone}</TableCell>
+                            <TableCell>{client.projectsCount}</TableCell>
+                            <TableCell>{client.lastInteraction}</TableCell>
+                            <TableCell className="text-right">
+                              <div className="flex justify-end gap-2">
+                                <Button 
+                                  size="sm" 
+                                  variant="outline"
+                                  asChild
+                                >
+                                  <Link to={`/admin-j28s7d1k/clients/${client.id}`}>
+                                    <Eye className="h-4 w-4" />
+                                  </Link>
+                                </Button>
+                                <Button 
+                                  size="sm" 
+                                  variant="outline"
+                                >
+                                  <Edit className="h-4 w-4" />
+                                </Button>
+                                <Button 
+                                  size="sm" 
+                                  variant="outline"
+                                  className="text-red-500 hover:text-red-700"
+                                  onClick={() => handleDeleteClient(client.id)}
+                                >
+                                  <Trash2 className="h-4 w-4" />
+                                </Button>
+                              </div>
+                            </TableCell>
+                          </TableRow>
+                        ))
+                      )}
+                    </TableBody>
+                  </Table>
                 </div>
-                
-                <Button 
-                  className="sm:w-auto bg-harmonia-green hover:bg-harmonia-green/90 flex items-center gap-2"
-                  onClick={() => {
-                    toast({
-                      title: "Adicionar cliente",
-                      description: "Funcionalidade de adicionar cliente será implementada em breve"
-                    });
-                  }}
-                >
-                  <UserPlus className="h-4 w-4" />
-                  Adicionar Cliente
-                </Button>
               </div>
             </CardContent>
           </Card>
         </div>
-        
-        <Card>
-          <CardHeader>
-            <CardTitle>Lista de Clientes</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="rounded-md border overflow-hidden">
-              <div className="overflow-x-auto">
-                <Table>
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead>ID</TableHead>
-                      <TableHead>Cliente</TableHead>
-                      <TableHead>Status</TableHead>
-                      <TableHead>Projetos</TableHead>
-                      <TableHead>Total Gasto</TableHead>
-                      <TableHead>Última Compra</TableHead>
-                      <TableHead className="text-right">Ações</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {filteredClients.length === 0 ? (
-                      <TableRow>
-                        <TableCell colSpan={7} className="text-center py-6 text-gray-500">
-                          Nenhum cliente encontrado com os filtros atuais
-                        </TableCell>
-                      </TableRow>
-                    ) : (
-                      filteredClients.map((client) => (
-                        <TableRow key={client.id}>
-                          <TableCell className="font-medium">{client.id}</TableCell>
-                          <TableCell>
-                            <div>
-                              <p className="font-medium">{client.name}</p>
-                              <p className="text-sm text-gray-500">{client.email}</p>
-                            </div>
-                          </TableCell>
-                          <TableCell>
-                            <Badge className={client.status === 'active' ? 'bg-green-500' : 'bg-gray-500'}>
-                              {client.status === 'active' ? 'Ativo' : 'Inativo'}
-                            </Badge>
-                          </TableCell>
-                          <TableCell>{client.projectsCount}</TableCell>
-                          <TableCell>{client.totalSpent}</TableCell>
-                          <TableCell>{client.lastPurchase}</TableCell>
-                          <TableCell className="text-right">
-                            <DropdownMenu>
-                              <DropdownMenuTrigger asChild>
-                                <Button variant="ghost" size="icon">
-                                  <MoreHorizontal className="h-5 w-5" />
-                                </Button>
-                              </DropdownMenuTrigger>
-                              <DropdownMenuContent align="end">
-                                <DropdownMenuLabel>Ações</DropdownMenuLabel>
-                                <DropdownMenuSeparator />
-                                <DropdownMenuItem onClick={() => handleViewProjects(client.id)}>
-                                  <Package className="mr-2 h-4 w-4" />
-                                  Ver Projetos
-                                </DropdownMenuItem>
-                                <DropdownMenuItem onClick={() => handleSendEmail(client.email)}>
-                                  <Mail className="mr-2 h-4 w-4" />
-                                  Enviar Email
-                                </DropdownMenuItem>
-                                <DropdownMenuItem onClick={() => handleExportData(client.id)}>
-                                  <CalendarClock className="mr-2 h-4 w-4" />
-                                  Exportar Histórico
-                                </DropdownMenuItem>
-                              </DropdownMenuContent>
-                            </DropdownMenu>
-                          </TableCell>
-                        </TableRow>
-                      ))
-                    )}
-                  </TableBody>
-                </Table>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
       </div>
     </AdminLayout>
   );

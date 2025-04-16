@@ -37,6 +37,10 @@ const AdminPreviews: React.FC = () => {
       });
     }
   };
+
+  const handleAddProject = (project: Omit<any, "id">) => {
+    return addProject(project);
+  };
   
   return (
     <AdminLayout>
@@ -93,7 +97,7 @@ const AdminPreviews: React.FC = () => {
           </div>
           
           <ProjectsListCard projects={projects} />
-          <NewProjectForm onAddProject={addProject} />
+          <NewProjectForm onAddProject={handleAddProject} />
         </div>
       </div>
     </AdminLayout>

@@ -17,13 +17,17 @@ interface ExamplesListProps {
   extraExamples: AudioExampleItem[];
   showAll: boolean;
   onShowMore: () => void;
+  onDelete?: (title: string) => void;
+  isAdmin?: boolean;
 }
 
 const ExamplesList: React.FC<ExamplesListProps> = ({ 
   initialExamples, 
   extraExamples, 
   showAll, 
-  onShowMore 
+  onShowMore,
+  onDelete,
+  isAdmin = false
 }) => {
   const displayedExamples = showAll ? [...initialExamples, ...extraExamples] : initialExamples;
 
@@ -38,6 +42,8 @@ const ExamplesList: React.FC<ExamplesListProps> = ({
             audioSrc={example.audioSrc}
             genre={example.genre}
             type={example.type}
+            onDelete={onDelete}
+            isAdmin={isAdmin}
           />
         ))}
       </div>
