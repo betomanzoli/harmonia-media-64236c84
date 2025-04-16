@@ -63,8 +63,8 @@ const Header: React.FC = () => {
               Portfólio
             </Link>
             <Link 
-              to="/services" 
-              className={`text-sm ${isActive('/services') ? 'text-harmonia-green' : 'text-gray-300 hover:text-white'}`}
+              to="/servicos" 
+              className={`text-sm ${isActive('/servicos') ? 'text-harmonia-green' : 'text-gray-300 hover:text-white'}`}
             >
               Serviços
             </Link>
@@ -123,8 +123,8 @@ const Header: React.FC = () => {
                 Portfólio
               </Link>
               <Link 
-                to="/services" 
-                className={`text-sm ${isActive('/services') ? 'text-harmonia-green' : 'text-gray-300 hover:text-white'}`}
+                to="/servicos" 
+                className={`text-sm ${isActive('/servicos') ? 'text-harmonia-green' : 'text-gray-300 hover:text-white'}`}
                 onClick={() => setIsMenuOpen(false)}
               >
                 Serviços

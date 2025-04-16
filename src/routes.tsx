@@ -1,4 +1,3 @@
-
 import { createBrowserRouter } from 'react-router-dom';
 import Home from './pages/Home';
 import Calculator from './pages/Calculator';
@@ -29,6 +28,10 @@ import AdminClients from './pages/admin/AdminClients';
 import AdminSettings from './pages/admin/AdminSettings';
 import { ProtectedRoute } from './components/admin/auth/ProtectedRoute';
 import PublicLayout from './layouts/PublicLayout';
+import PrivacyPolicy from './pages/PrivacyPolicy';
+import Terms from './pages/Terms';
+import Packages from './pages/Packages';
+import OrderTracking from './pages/OrderTracking';
 
 const router = createBrowserRouter([
   {
@@ -42,6 +45,10 @@ const router = createBrowserRouter([
   {
     path: '/servicos',
     element: <PublicLayout><ServicesPage /></PublicLayout>,
+  },
+  {
+    path: '/pacotes',
+    element: <PublicLayout><Packages /></PublicLayout>,
   },
   {
     path: '/portfolio',
@@ -70,6 +77,18 @@ const router = createBrowserRouter([
   {
     path: '/pagamento-retorno',
     element: <PublicLayout><PaymentReturn /></PublicLayout>,
+  },
+  {
+    path: '/acompanhar-pedido',
+    element: <PublicLayout><OrderTracking /></PublicLayout>,
+  },
+  {
+    path: '/privacidade',
+    element: <PublicLayout><PrivacyPolicy /></PublicLayout>,
+  },
+  {
+    path: '/termos',
+    element: <PublicLayout><Terms /></PublicLayout>,
   },
   {
     path: '/preview/:previewId',
@@ -140,7 +159,6 @@ const router = createBrowserRouter([
     element: <ProtectedRoute><AdminStorage /></ProtectedRoute>,
   },
   {
-    // Public preview route accessible to anyone with the link
     path: '/preview/:projectId',
     element: <PublicLayout><PreviewPage /></PublicLayout>,
   },

@@ -75,7 +75,7 @@ const Footer: React.FC = () => {
               </li>
               <li>
                 <NavLink 
-                  href="/services" 
+                  href="/pacotes" 
                   className="text-gray-400 hover:text-harmonia-green transition-colors flex items-center gap-1"
                 >
                   <Package className="w-4 h-4" /> Pacotes

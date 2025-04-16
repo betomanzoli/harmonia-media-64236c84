@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
@@ -22,18 +21,16 @@ import {
 } from "@/components/ui/tooltip";
 import NavLink from '@/components/NavLink';
 
-const Calculator: React.FC = () => {
+const PriceCalculator: React.FC = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
   
-  // Base price configurations
   const basePrices = {
     essencial: 997,
     profissional: 1997,
     premium: 2997
   };
   
-  // State
   const [basePackage, setBasePackage] = useState<'essencial' | 'profissional' | 'premium'>('profissional');
   const [duration, setDuration] = useState<number>(3);
   const [versions, setVersions] = useState<number>(3);
@@ -44,38 +41,31 @@ const Calculator: React.FC = () => {
   const [stems, setStems] = useState<boolean>(false);
   const [commercial, setCommercial] = useState<boolean>(false);
   
-  // Price calculation
   const [totalPrice, setTotalPrice] = useState<number>(0);
   const [extras, setExtras] = useState<number>(0);
   
-  // Calculate prices when options change
   useEffect(() => {
     let basePrice = basePrices[basePackage];
     let extrasPrice = 0;
     
-    // Duration extras (base is 3 minutes)
     if (duration > 3) {
       extrasPrice += (duration - 3) * 200;
     }
     
-    // Versions extras (base depends on package)
     const baseVersions = basePackage === 'essencial' ? 3 : basePackage === 'profissional' ? 5 : 7;
     if (versions > baseVersions) {
       extrasPrice += (versions - baseVersions) * 150;
     }
     
-    // Instruments extras (base depends on package)
     const baseInstruments = basePackage === 'essencial' ? 5 : basePackage === 'profissional' ? 12 : 20;
     if (instruments > baseInstruments) {
       extrasPrice += (instruments - baseInstruments) * 100;
     }
     
-    // Urgency extras (base is 7 days)
     if (urgencyDays < 7) {
       extrasPrice += (7 - urgencyDays) * 300;
     }
     
-    // Other extras
     if (vocals) extrasPrice += 500;
     if (lyrics) extrasPrice += 300;
     if (stems) extrasPrice += 200;
@@ -86,7 +76,6 @@ const Calculator: React.FC = () => {
   }, [basePackage, duration, versions, instruments, urgencyDays, vocals, lyrics, stems, commercial]);
   
   const handleSubmit = () => {
-    // Salvar os dados do cálculo para uso no fluxo de pagamento
     localStorage.setItem('calculatorData', JSON.stringify({
       basePackage,
       duration,
@@ -469,4 +458,4 @@ const Calculator: React.FC = () => {
   );
 };
 
-export default Calculator;
+export default PriceCalculator;

@@ -1,69 +1,80 @@
 
-import React, { useState, useEffect } from 'react';
+import React from 'react';
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
-import OrderSearch from '@/components/order-tracking/OrderSearch';
-import OrderDetails from '@/components/order-tracking/OrderDetails';
-import OrderNotification from '@/components/order-tracking/OrderNotification';
-import OrderNotFound from '@/components/order-tracking/OrderNotFound';
-import { OrderData } from '@/components/order-tracking/types';
-import { siteConfig } from '@/config/site';
+import { Button } from "@/components/ui/button";
+import { ArrowLeft } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
 
 const OrderTracking: React.FC = () => {
-  const [orderData, setOrderData] = useState<OrderData | null>(null);
-  const [hasNotification, setHasNotification] = useState(false);
+  const navigate = useNavigate();
 
-  useEffect(() => {
-    if (orderData) {
-      const currentStep = orderData.progress.find((step: any) => step.status === 'current');
-      if (currentStep && (currentStep.step === 7 || currentStep.step === 8)) {
-        setHasNotification(true);
-      }
-    }
-  }, [orderData]);
-
-  useEffect(() => {
-    // Scroll to top when component mounts
-    window.scrollTo(0, 0);
-  }, []);
-
-  const handleOrderSearch = (foundOrder: OrderData) => {
-    setOrderData(foundOrder);
-  };
-
-  const handleWhatsAppContact = () => {
-    window.open(`https://wa.me/${siteConfig.contact.whatsapp}?text=Olá,%20preciso%20de%20ajuda%20para%20localizar%20meu%20pedido`, '_blank');
+  const handleSearch = (e: React.FormEvent) => {
+    e.preventDefault();
+    // This would be implemented with actual order tracking functionality
+    // For now, just show a message
+    alert("Funcionalidade de acompanhamento de pedido em implementação");
   };
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-background text-foreground">
+      <Header />
       <main className="pt-24 pb-20 px-6 md:px-10">
-        <div className="max-w-5xl mx-auto">
-          <h1 className="text-3xl font-bold mb-2">Acompanhar Pedido</h1>
-          <p className="text-gray-500 mb-10">
-            Insira o código do seu pedido para verificar seu status e progresso
-          </p>
+        <div className="max-w-4xl mx-auto">
+          <div className="mb-6">
+            <Button 
+              variant="ghost" 
+              className="flex items-center gap-1 text-gray-400 hover:text-white"
+              onClick={() => navigate(-1)}
+            >
+              <ArrowLeft className="w-4 h-4" />
+              Voltar
+            </Button>
+          </div>
           
-          <OrderSearch onSearch={handleOrderSearch} />
-          
-          {orderData ? (
-            <>
-              {hasNotification && (
-                <OrderNotification 
-                  orderId={orderData.orderId}
-                  hasPreview={true}
-                  previewLink={orderData.previewLink}
-                  pendingAction={orderData.currentStep === 7 ? 'feedback' : null}
+          <div className="text-center mb-10">
+            <h1 className="text-3xl md:text-4xl font-bold mb-4">Acompanhar Pedido</h1>
+            <p className="text-gray-400 max-w-2xl mx-auto">
+              Digite o número do seu pedido para acompanhar o status do seu projeto musical.
+            </p>
+          </div>
+
+          <Card className="mb-8">
+            <CardHeader>
+              <CardTitle className="text-xl">Consultar pedido</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <form onSubmit={handleSearch} className="flex flex-col sm:flex-row gap-4">
+                <Input 
+                  placeholder="Digite o número do pedido" 
+                  className="flex-1"
                 />
-              )}
-              
-              <OrderDetails order={orderData} />
-            </>
-          ) : (
-            <OrderNotFound onChatAssistant={handleWhatsAppContact} />
-          )}
+                <Button 
+                  type="submit"
+                  className="bg-harmonia-green hover:bg-harmonia-green/90"
+                >
+                  Consultar
+                </Button>
+              </form>
+            </CardContent>
+          </Card>
+
+          <div className="text-center mt-12">
+            <p className="text-gray-400 mb-4">
+              Não encontrou seu pedido ou precisa de ajuda?
+            </p>
+            <Button 
+              variant="outline" 
+              onClick={() => navigate('/contato')}
+            >
+              Entre em contato conosco
+            </Button>
+          </div>
         </div>
       </main>
+      <Footer />
     </div>
   );
 };
