@@ -27,7 +27,16 @@ import {
   PackageCheck,
   Package
 } from 'lucide-react';
-import { AlertDialog, AlertDialogContent, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger, AlertDialogDescription, AlertDialogCancel, AlertDialogAction } from '@/components/ui/alert-dialog';
+import { 
+  AlertDialog, 
+  AlertDialogAction, 
+  AlertDialogCancel, 
+  AlertDialogContent, 
+  AlertDialogDescription, 
+  AlertDialogFooter, 
+  AlertDialogHeader, 
+  AlertDialogTitle 
+} from "@/components/ui/alert-dialog";
 
 interface Briefing {
   id: string;
@@ -80,6 +89,10 @@ const AdminBriefings: React.FC = () => {
       projectCreated: true
     }
   ]);
+  
+  // State to track which briefing is selected for deletion
+  const [briefingToDelete, setBriefingToDelete] = useState<string | null>(null);
+  const [showDeleteDialog, setShowDeleteDialog] = useState(false);
 
   // Filter briefings based on search term
   const filteredBriefings = briefingsData.filter(
@@ -97,13 +110,23 @@ const AdminBriefings: React.FC = () => {
     });
   };
 
-  const handleDeleteBriefing = (id: string) => {
-    setBriefingsData(briefingsData.filter(briefing => briefing.id !== id));
+  const openDeleteDialog = (id: string) => {
+    setBriefingToDelete(id);
+    setShowDeleteDialog(true);
+  };
+
+  const handleDeleteBriefing = () => {
+    if (!briefingToDelete) return;
+    
+    setBriefingsData(briefingsData.filter(briefing => briefing.id !== briefingToDelete));
     toast({
       title: "Briefing excluído",
-      description: `O briefing ${id} foi excluído com sucesso.`,
+      description: `O briefing ${briefingToDelete} foi excluído com sucesso.`,
       variant: "destructive"
     });
+    
+    setBriefingToDelete(null);
+    setShowDeleteDialog(false);
   };
 
   const handleCreateProject = (briefingId: string) => {
@@ -256,31 +279,13 @@ const AdminBriefings: React.FC = () => {
                                   Editar
                                 </DropdownMenuItem>
                                 
-                                <AlertDialog>
-                                  <AlertDialogTrigger asChild>
-                                    <DropdownMenuItem onSelect={(e) => e.preventDefault()}>
-                                      <Trash className="mr-2 h-4 w-4" />
-                                      Excluir
-                                    </DropdownMenuItem>
-                                  </AlertDialogTrigger>
-                                  <AlertDialogContent>
-                                    <AlertDialogHeader>
-                                      <AlertDialogTitle>Confirmar exclusão</AlertDialogTitle>
-                                      <AlertDialogDescription>
-                                        Tem certeza que deseja excluir este briefing? Esta ação não pode ser desfeita.
-                                      </AlertDialogDescription>
-                                    </AlertDialogHeader>
-                                    <AlertDialogFooter>
-                                      <AlertDialogCancel>Cancelar</AlertDialogCancel>
-                                      <AlertDialogAction 
-                                        onClick={() => handleDeleteBriefing(briefing.id)}
-                                        className="bg-red-500 hover:bg-red-600"
-                                      >
-                                        Excluir
-                                      </AlertDialogAction>
-                                    </AlertDialogFooter>
-                                  </AlertDialogContent>
-                                </AlertDialog>
+                                <DropdownMenuItem onSelect={(e) => {
+                                  e.preventDefault();
+                                  openDeleteDialog(briefing.id);
+                                }}>
+                                  <Trash className="mr-2 h-4 w-4" />
+                                  Excluir
+                                </DropdownMenuItem>
                               </DropdownMenuContent>
                             </DropdownMenu>
                           </TableCell>
@@ -294,6 +299,27 @@ const AdminBriefings: React.FC = () => {
           </CardContent>
         </Card>
       </div>
+
+      {/* Delete confirmation dialog */}
+      <AlertDialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Confirmar exclusão</AlertDialogTitle>
+            <AlertDialogDescription>
+              Tem certeza que deseja excluir este briefing? Esta ação não pode ser desfeita.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel onClick={() => setBriefingToDelete(null)}>Cancelar</AlertDialogCancel>
+            <AlertDialogAction 
+              onClick={handleDeleteBriefing}
+              className="bg-red-500 hover:bg-red-600"
+            >
+              Excluir
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </AdminLayout>
   );
 };

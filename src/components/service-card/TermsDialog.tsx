@@ -1,17 +1,25 @@
 
 import React from 'react';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
+import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
-import { Button } from "@/components/ui/button";
-import ContractContent from './ContractContent';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import { ScrollArea } from "@/components/ui/scroll-area";
+import { ContractContent } from './ContractContent';
 
 interface TermsDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   title: string;
   acceptedTerms: boolean;
-  onAcceptedTermsChange: (checked: boolean) => void;
+  onAcceptedTermsChange: (accepted: boolean) => void;
   onAccept: () => void;
 }
 
@@ -21,45 +29,42 @@ const TermsDialog: React.FC<TermsDialogProps> = ({
   title,
   acceptedTerms,
   onAcceptedTermsChange,
-  onAccept
+  onAccept,
 }) => {
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-3xl">
+      <DialogContent className="max-w-3xl max-h-[80vh] flex flex-col">
         <DialogHeader>
-          <DialogTitle>Contrato de Prestação de Serviços - {title}</DialogTitle>
+          <DialogTitle>Termos de Serviço - {title}</DialogTitle>
           <DialogDescription>
-            Por favor, leia com atenção o contrato abaixo antes de prosseguir.
+            Por favor, leia e aceite os termos abaixo para prosseguir.
           </DialogDescription>
         </DialogHeader>
         
-        <ContractContent title={title} />
+        <ScrollArea className="flex-1 max-h-[50vh] mt-4 rounded-md border p-4">
+          <ContractContent />
+        </ScrollArea>
         
-        <div className="flex items-start space-x-2 mt-4">
+        <div className="flex items-center space-x-2 my-4">
           <Checkbox 
-            id="terms" 
+            id="accept-terms" 
             checked={acceptedTerms}
-            onCheckedChange={(checked) => {
-              onAcceptedTermsChange(checked as boolean);
-            }}
+            onCheckedChange={(checked) => onAcceptedTermsChange(checked as boolean)}
           />
-          <Label 
-            htmlFor="terms"
-            className="text-sm leading-tight"
-          >
-            Li e aceito os termos e condições deste contrato.
+          <Label htmlFor="accept-terms" className="text-sm">
+            Li e aceito os termos de serviço
           </Label>
         </div>
         
         <DialogFooter>
           <Button 
-            variant="outline" 
+            variant="outline"
             onClick={() => onOpenChange(false)}
           >
             Cancelar
           </Button>
           <Button 
-            onClick={onAccept} 
+            onClick={onAccept}
             disabled={!acceptedTerms}
             className="bg-harmonia-green hover:bg-harmonia-green/90"
           >

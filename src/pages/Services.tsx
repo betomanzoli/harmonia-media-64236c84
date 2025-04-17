@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button";
 import { ArrowLeft } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { siteConfig } from '@/config/site';
-import { packagePaymentLinks, extraServicePaymentLinks } from '@/lib/payment/paymentLinks';
+import { packagePaymentLinks } from '@/lib/payment/paymentLinks';
 import ServiceExtrasGrid from '@/components/services/ServiceExtrasGrid';
 import TermsDialog from '@/components/service-card/TermsDialog';
 
@@ -82,7 +82,8 @@ const ServicesPage: React.FC = () => {
     if (paymentLink) {
       window.open(paymentLink, '_blank');
     } else {
-      console.log('No payment link found for service:', serviceId);
+      // If it's a custom price service, redirect to contact page
+      navigate('/contato');
     }
   };
 
@@ -108,6 +109,9 @@ const ServicesPage: React.FC = () => {
               Oferecemos pacotes personalizados para atender às suas necessidades musicais.
               Escolha o pacote que melhor se adapta ao seu projeto.
             </p>
+            <p className="text-amber-400 font-medium mt-2">
+              *Preços promocionais por tempo limitado!
+            </p>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
@@ -118,7 +122,10 @@ const ServicesPage: React.FC = () => {
                   <CardDescription className="text-gray-400">{service.description}</CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-3">
-                  <div className="text-2xl font-bold">{service.price}</div>
+                  <div className="flex flex-col">
+                    <div className="text-2xl font-bold">{service.price}</div>
+                    <span className="text-xs text-amber-400 font-medium">Promocional</span>
+                  </div>
                   <ul className="list-disc pl-5 space-y-1">
                     {service.features.map((feature, i) => (
                       <li key={i} className="text-sm text-gray-500">
@@ -139,8 +146,11 @@ const ServicesPage: React.FC = () => {
           
           <div className="mt-20">
             <h2 className="text-2xl font-bold mb-6 text-center">Serviços Extras</h2>
-            <p className="text-gray-400 max-w-2xl mx-auto text-center mb-10">
+            <p className="text-gray-400 max-w-2xl mx-auto text-center mb-2">
               Personalize sua experiência com estes serviços adicionais que podem ser contratados durante ou após o projeto.
+            </p>
+            <p className="text-amber-400 font-medium text-center mb-10">
+              *Preços promocionais por tempo limitado!
             </p>
             
             <ServiceExtrasGrid onExtraServiceClick={handleExtraServiceClick} />

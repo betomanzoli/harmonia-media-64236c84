@@ -2,7 +2,6 @@
 import React from 'react';
 import { Button } from "@/components/ui/button";
 import { LucideIcon } from 'lucide-react';
-import { Link } from 'react-router-dom';
 import { extraServicePaymentLinks } from '@/lib/payment/paymentLinks';
 
 interface ExtraServiceCardProps {
@@ -11,7 +10,6 @@ interface ExtraServiceCardProps {
   description: string;
   features: string[];
   icon: LucideIcon;
-  onServiceClick: (service: string) => void;
   serviceId: string;
 }
 
@@ -21,7 +19,6 @@ const ExtraServiceCard: React.FC<ExtraServiceCardProps> = ({
   description,
   features,
   icon: Icon,
-  onServiceClick,
   serviceId,
 }) => {
   // Get payment link for this service
@@ -31,9 +28,9 @@ const ExtraServiceCard: React.FC<ExtraServiceCardProps> = ({
     if (paymentLink) {
       // If we have a payment link, open it
       window.open(paymentLink, '_blank');
-    } else {
-      // If it's a custom price service, use the original handler
-      onServiceClick(serviceId);
+    } else if (typeof price === 'string' && price.includes('Consultar')) {
+      // If it's a custom price service, redirect to contact page
+      window.location.href = '/contato';
     }
   };
   
@@ -44,9 +41,12 @@ const ExtraServiceCard: React.FC<ExtraServiceCardProps> = ({
           <Icon className="text-harmonia-green w-5 h-5" />
           <h3 className="font-semibold">{title}</h3>
         </div>
-        <span className={`font-bold ${typeof price === 'string' && price.includes('Consultar') ? 'text-amber-400' : 'text-harmonia-green'}`}>
-          {typeof price === 'number' ? `R$${price}` : price}
-        </span>
+        <div className="flex flex-col items-end">
+          <span className={`font-bold ${typeof price === 'string' && price.includes('Consultar') ? 'text-amber-400' : 'text-harmonia-green'}`}>
+            {typeof price === 'number' ? `R$${price}` : price}
+          </span>
+          <span className="text-xs text-amber-400 font-medium">Promocional</span>
+        </div>
       </div>
       <p className="text-gray-400 text-sm mb-4">
         {description}

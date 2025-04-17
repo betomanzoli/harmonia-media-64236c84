@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import AdminLayout from '@/components/admin/layout/AdminLayout';
 import { usePreviewProjects } from '@/hooks/admin/usePreviewProjects';
@@ -37,8 +38,12 @@ const AdminPreviews: React.FC = () => {
     }
   };
 
-  const handleAddProject = (project: Omit<any, "id">) => {
-    return addProject(project);
+  const handleAddProject = (project: any) => {
+    // Check if project exists to avoid type error
+    if (project) {
+      return addProject(project);
+    }
+    return null;
   };
   
   return (
@@ -95,7 +100,7 @@ const AdminPreviews: React.FC = () => {
             </div>
           </div>
           
-          <ProjectsListCard projects={projects} />
+          <ProjectsListCard projects={projects || []} />
           <NewProjectForm onAddProject={handleAddProject} />
         </div>
       </div>

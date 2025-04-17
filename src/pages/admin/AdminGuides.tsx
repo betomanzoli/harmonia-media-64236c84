@@ -2,13 +2,13 @@
 import React from 'react';
 import AdminLayout from '@/components/admin/layout/AdminLayout';
 import { Button } from "@/components/ui/button";
-import { ArrowLeft, FileText, Book, Bookmark, ExternalLink } from 'lucide-react';
+import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { ArrowLeft, BookOpen, FileText, HelpCircle, VideoIcon } from 'lucide-react';
 import { Link } from 'react-router-dom';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import AdminGuide from '@/components/admin/guides/AdminGuide';
 import PreviewsGuide from '@/components/admin/guides/PreviewsGuide';
-import InvoicesGuide from '@/components/admin/guides/InvoicesGuide';
+import NotificationGuide from '@/components/admin/guides/NotificationGuide';
 
 const AdminGuides: React.FC = () => {
   return (
@@ -16,9 +16,9 @@ const AdminGuides: React.FC = () => {
       <div className="space-y-6 p-6">
         <div className="flex items-center justify-between">
           <div>
-            <h1 className="text-3xl font-bold tracking-tight text-harmonia-green">Guias</h1>
+            <h1 className="text-3xl font-bold tracking-tight text-harmonia-green">Guias e Documentação</h1>
             <p className="text-muted-foreground">
-              Documentação e manuais do sistema administrativo
+              Documentação detalhada para uso do sistema administrativo
             </p>
           </div>
           <Button 
@@ -35,135 +35,119 @@ const AdminGuides: React.FC = () => {
         </div>
         
         <Tabs defaultValue="general">
-          <TabsList className="mb-6">
+          <TabsList className="mb-4">
             <TabsTrigger value="general">Geral</TabsTrigger>
+            <TabsTrigger value="projects">Projetos</TabsTrigger>
             <TabsTrigger value="previews">Prévias</TabsTrigger>
-            <TabsTrigger value="invoices">Faturas</TabsTrigger>
-            <TabsTrigger value="portfolio">Portfólio</TabsTrigger>
+            <TabsTrigger value="integrations">Integrações</TabsTrigger>
           </TabsList>
           
-          <TabsContent value="general" className="space-y-6">
-            <AdminGuide 
-              title="Guia do Administrador" 
-              sections={[
-                {
-                  title: "Visão Geral",
-                  content: (
-                    <p>Este sistema administrativo permite gerenciar todos os aspectos do serviço harmonIA, 
-                    incluindo prévias musicais, portfólio, faturas e projetos.</p>
-                  )
-                },
-                {
-                  title: "Acesso e Segurança",
-                  content: (
-                    <p>O acesso é restrito a administradores autorizados. Nunca compartilhe suas credenciais 
-                    ou deixe a sessão aberta em computadores públicos.</p>
-                  )
-                }
-              ]}
-              storageUrl="https://drive.google.com/drive/folders/example"
-            />
-            
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mt-8">
-              <Card>
-                <CardHeader className="pb-2">
-                  <CardTitle className="text-lg font-medium flex items-center">
-                    <Book className="mr-2 h-5 w-5 text-harmonia-green" />
-                    Manual do Administrador
-                  </CardTitle>
-                  <CardDescription>Guia completo para operações administrativas</CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <Button variant="outline" size="sm" className="w-full">
-                    <FileText className="mr-2 h-4 w-4" />
-                    Abrir Manual
-                  </Button>
-                </CardContent>
-              </Card>
-              
-              <Card>
-                <CardHeader className="pb-2">
-                  <CardTitle className="text-lg font-medium flex items-center">
-                    <Bookmark className="mr-2 h-5 w-5 text-amber-500" />
-                    Referência Rápida
-                  </CardTitle>
-                  <CardDescription>Comandos e operações frequentes</CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <Button variant="outline" size="sm" className="w-full">
-                    <FileText className="mr-2 h-4 w-4" />
-                    Ver Referência
-                  </Button>
-                </CardContent>
-              </Card>
-              
-              <Card>
-                <CardHeader className="pb-2">
-                  <CardTitle className="text-lg font-medium flex items-center">
-                    <ExternalLink className="mr-2 h-5 w-5 text-blue-500" />
-                    Recursos Externos
-                  </CardTitle>
-                  <CardDescription>Links úteis e ferramentas</CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <Button variant="outline" size="sm" className="w-full">
-                    <FileText className="mr-2 h-4 w-4" />
-                    Acessar Recursos
-                  </Button>
-                </CardContent>
-              </Card>
-            </div>
-          </TabsContent>
-          
-          <TabsContent value="previews">
-            <PreviewsGuide />
-          </TabsContent>
-          
-          <TabsContent value="invoices">
-            <InvoicesGuide />
-          </TabsContent>
-          
-          <TabsContent value="portfolio">
+          <TabsContent value="general">
             <Card>
               <CardHeader>
-                <CardTitle>Guia de Gerenciamento de Portfólio</CardTitle>
-                <CardDescription>Como adicionar, editar e organizar itens do portfólio</CardDescription>
+                <CardTitle>Guia de Administração</CardTitle>
+                <CardDescription>Informações gerais sobre o uso do painel administrativo</CardDescription>
               </CardHeader>
               <CardContent>
-                <p className="text-muted-foreground mb-4">
-                  Este guia ajudará você a gerenciar o portfólio de músicas e projetos da harmonIA.
-                </p>
-                
-                <div className="space-y-4">
-                  <div className="border rounded-md p-4 bg-muted/50">
-                    <h3 className="text-lg font-medium mb-2">Adicionando novos itens ao portfólio</h3>
-                    <p className="text-sm">
-                      Para adicionar um novo item ao portfólio, acesse a página de Portfólio no 
-                      painel administrativo e utilize o formulário "Adicionar Novo Item".
-                    </p>
-                  </div>
-                  
-                  <div className="border rounded-md p-4 bg-muted/50">
-                    <h3 className="text-lg font-medium mb-2">Organizando por categorias</h3>
-                    <p className="text-sm">
-                      Você pode organizar os itens do portfólio por gênero musical, tipo de 
-                      projeto ou finalidade. Isso facilita para os visitantes encontrarem 
-                      exemplos relevantes.
-                    </p>
-                  </div>
-                  
-                  <div className="border rounded-md p-4 bg-muted/50">
-                    <h3 className="text-lg font-medium mb-2">Destacando projetos</h3>
-                    <p className="text-sm">
-                      Para destacar projetos especiais na página principal do portfólio, 
-                      marque a opção "Destacado" ao criar ou editar um item.
-                    </p>
-                  </div>
+                <AdminGuide />
+              </CardContent>
+            </Card>
+          </TabsContent>
+          
+          <TabsContent value="projects">
+            <Card>
+              <CardHeader>
+                <CardTitle>Guia de Gerenciamento de Projetos</CardTitle>
+                <CardDescription>Como criar e gerenciar projetos no sistema</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="flex flex-col items-center justify-center py-12">
+                  <FileText className="h-16 w-16 text-gray-300" />
+                  <p className="mt-4 text-center text-gray-400">
+                    O guia detalhado de projetos estará disponível em breve.
+                  </p>
                 </div>
               </CardContent>
             </Card>
           </TabsContent>
+          
+          <TabsContent value="previews">
+            <Card>
+              <CardHeader>
+                <CardTitle>Guia do Sistema de Prévias</CardTitle>
+                <CardDescription>Como utilizar o sistema de prévias musicais</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <PreviewsGuide />
+              </CardContent>
+            </Card>
+          </TabsContent>
+          
+          <TabsContent value="integrations">
+            <Card>
+              <CardHeader>
+                <CardTitle>Guia de Integrações</CardTitle>
+                <CardDescription>Como configurar webhooks e serviços de notificação</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <NotificationGuide />
+              </CardContent>
+            </Card>
+          </TabsContent>
         </Tabs>
+        
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mt-8">
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center">
+                <VideoIcon className="h-5 w-5 mr-2" />
+                Vídeos tutoriais
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <p className="text-gray-500">
+                Assista a tutoriais em vídeo sobre como utilizar o sistema administrativo
+              </p>
+            </CardContent>
+            <CardFooter>
+              <Button variant="outline" disabled>Em breve</Button>
+            </CardFooter>
+          </Card>
+          
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center">
+                <BookOpen className="h-5 w-5 mr-2" />
+                Documentação técnica
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <p className="text-gray-500">
+                Acesse documentação técnica detalhada sobre APIs e funcionamento do sistema
+              </p>
+            </CardContent>
+            <CardFooter>
+              <Button variant="outline" disabled>Em breve</Button>
+            </CardFooter>
+          </Card>
+          
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center">
+                <HelpCircle className="h-5 w-5 mr-2" />
+                Suporte
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <p className="text-gray-500">
+                Entre em contato com o suporte para tirar dúvidas ou reportar problemas
+              </p>
+            </CardContent>
+            <CardFooter>
+              <Button>Contatar suporte</Button>
+            </CardFooter>
+          </Card>
+        </div>
       </div>
     </AdminLayout>
   );
