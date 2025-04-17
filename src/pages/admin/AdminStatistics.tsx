@@ -224,7 +224,7 @@ const AdminStatistics: React.FC = () => {
                   <p className="text-gray-500 max-w-xs">
                     Análises temporais avançadas estarão disponíveis em breve, permitindo visualizar tendências e padrões.
                   </p>
-                  <Button disabled>Ativar Análise Avançada</Button>
+                  <Button>Ativar Análise Avançada</Button>
                 </div>
               </div>
             </CardContent>

@@ -9,6 +9,18 @@ interface ServiceExtrasGridProps {
 }
 
 const ServiceExtrasGrid: React.FC<ServiceExtrasGridProps> = ({ onExtraServiceClick }) => {
+  const handleServiceClick = (serviceId: string) => {
+    // Get payment URL from the serviceId
+    const paymentInfo = extraServicePaymentLinks[serviceId];
+    if (paymentInfo && paymentInfo.url) {
+      // Open payment URL in a new tab
+      window.open(paymentInfo.url, '_blank');
+    } else {
+      // Fallback to the parent component handler
+      onExtraServiceClick(serviceId);
+    }
+  };
+
   return (
     <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
       {extraServicesData.map((service) => (
@@ -20,7 +32,7 @@ const ServiceExtrasGrid: React.FC<ServiceExtrasGridProps> = ({ onExtraServiceCli
           features={service.features}
           icon={service.icon}
           serviceId={service.id}
-          onServiceClick={() => onExtraServiceClick(service.id)}
+          onServiceClick={() => handleServiceClick(service.id)}
         />
       ))}
     </div>

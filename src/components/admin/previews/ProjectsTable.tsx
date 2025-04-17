@@ -1,18 +1,26 @@
+
 import React, { useState } from 'react';
 import { Table, TableBody, TableCaption, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Link } from 'react-router-dom';
-import { Eye, Mail, Clock, CheckCircle, RefreshCw, MessageSquare, AlertTriangle } from 'lucide-react';
-import { ProjectItem } from '@/hooks/admin/usePreviewProjects';
+import { Eye, Mail, Clock, CheckCircle, RefreshCw, MessageSquare, AlertTriangle, Download, Trash, Play } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
+import { ProjectItem } from '@/hooks/admin/usePreviewProjects';
 
 interface ProjectsTableProps {
   projects: ProjectItem[];
   isLoading?: boolean;
+  onDelete?: (id: string) => void;
+  onSendReminder?: (id: string) => void;
 }
 
-const ProjectsTable: React.FC<ProjectsTableProps> = ({ projects, isLoading = false }) => {
+const ProjectsTable: React.FC<ProjectsTableProps> = ({ 
+  projects, 
+  isLoading = false,
+  onDelete,
+  onSendReminder
+}) => {
   const { toast } = useToast();
   const [sendingReminder, setSendingReminder] = useState<string | null>(null);
 
@@ -58,7 +66,23 @@ const ProjectsTable: React.FC<ProjectsTableProps> = ({ projects, isLoading = fal
         title: "Lembrete enviado",
         description: `Um email de lembrete foi enviado para ${project.clientName}`,
       });
+      
+      if (onSendReminder) {
+        onSendReminder(project.id);
+      }
     }, 1500);
+  };
+
+  const handleDelete = (projectId: string) => {
+    if (onDelete) {
+      onDelete(projectId);
+    } else {
+      toast({
+        title: "Função não implementada",
+        description: "A exclusão de projetos será implementada em breve.",
+        variant: "destructive"
+      });
+    }
   };
 
   const isNearExpiration = (expirationDate: string) => {
@@ -72,88 +96,115 @@ const ProjectsTable: React.FC<ProjectsTableProps> = ({ projects, isLoading = fal
 
   if (isLoading) {
     return (
-      <div className="rounded-md border p-8 text-center">
-        <div className="animate-spin h-8 w-8 border-2 border-harmonia-green border-t-transparent rounded-full mx-auto mb-4"></div>
-        <p className="text-gray-500">Carregando projetos...</p>
+      <div className="flex items-center justify-center p-8">
+        <RefreshCw className="h-8 w-8 animate-spin text-harmonia-green" />
       </div>
     );
   }
 
-  if (projects.length === 0) {
+  if (!projects || projects.length === 0) {
     return (
-      <div className="rounded-md border p-8 text-center">
-        <p className="text-gray-500 mb-4">Nenhum projeto de prévia encontrado</p>
-        <Button variant="outline">Criar novo projeto</Button>
+      <div className="text-center py-8">
+        <div className="bg-gray-100 rounded-full p-4 w-16 h-16 mx-auto mb-4 flex items-center justify-center">
+          <AlertTriangle className="h-8 w-8 text-gray-400" />
+        </div>
+        <h3 className="text-lg font-medium text-gray-700">Nenhum projeto encontrado</h3>
+        <p className="text-gray-500 mt-1">Crie seu primeiro projeto clicando no botão abaixo.</p>
       </div>
     );
   }
 
   return (
-    <div className="border rounded-md overflow-x-auto max-w-full">
-      <Table>
-        <TableCaption>Lista de projetos de prévia musical</TableCaption>
-        <TableHeader>
-          <TableRow>
-            <TableHead className="whitespace-nowrap">ID</TableHead>
-            <TableHead className="whitespace-nowrap">Cliente</TableHead>
-            <TableHead className="whitespace-nowrap">Status</TableHead>
-            <TableHead className="whitespace-nowrap">Pacote</TableHead>
-            <TableHead className="whitespace-nowrap">Criado em</TableHead>
-            <TableHead className="whitespace-nowrap">Expiração</TableHead>
-            <TableHead className="whitespace-nowrap">Versões</TableHead>
-            <TableHead className="whitespace-nowrap text-right">Ações</TableHead>
-          </TableRow>
-        </TableHeader>
-        <TableBody>
-          {projects.map((project) => (
-            <TableRow key={project.id}>
-              <TableCell className="font-medium whitespace-nowrap">{project.id}</TableCell>
-              <TableCell className="whitespace-nowrap">{project.clientName}</TableCell>
-              <TableCell className="whitespace-nowrap">{getStatusBadge(project.status)}</TableCell>
-              <TableCell className="whitespace-nowrap">{project.packageType}</TableCell>
-              <TableCell className="whitespace-nowrap">{project.createdAt}</TableCell>
-              <TableCell className="whitespace-nowrap">
-                <div className="flex items-center">
-                  {isNearExpiration(project.expirationDate) && (
-                    <AlertTriangle className="h-4 w-4 text-amber-500 mr-1" />
-                  )}
-                  <span className={isNearExpiration(project.expirationDate) ? 'text-amber-600' : ''}>
+    <Table>
+      <TableCaption>Lista de projetos de prévia</TableCaption>
+      <TableHeader>
+        <TableRow>
+          <TableHead>ID</TableHead>
+          <TableHead>Cliente</TableHead>
+          <TableHead>Pacote</TableHead>
+          <TableHead>Status</TableHead>
+          <TableHead>Versões</TableHead>
+          <TableHead>Expira em</TableHead>
+          <TableHead className="text-right">Ações</TableHead>
+        </TableRow>
+      </TableHeader>
+      <TableBody>
+        {projects.map((project) => (
+          <TableRow key={project.id}>
+            <TableCell className="font-medium">{project.id}</TableCell>
+            <TableCell>
+              <div>
+                <div className="font-medium">{project.clientName}</div>
+                <div className="text-sm text-muted-foreground">{project.clientEmail}</div>
+              </div>
+            </TableCell>
+            <TableCell>{project.packageType}</TableCell>
+            <TableCell>{getStatusBadge(project.status)}</TableCell>
+            <TableCell>{project.versions || 0}</TableCell>
+            <TableCell>
+              <div className="flex items-center">
+                {isNearExpiration(project.expirationDate) ? (
+                  <Badge variant="outline" className="bg-amber-50 text-amber-700 border-amber-200">
+                    <Clock className="h-3 w-3 mr-1" />
                     {project.expirationDate}
-                  </span>
-                </div>
-              </TableCell>
-              <TableCell className="whitespace-nowrap">{project.versions}</TableCell>
-              <TableCell className="text-right whitespace-nowrap">
-                <div className="flex justify-end gap-2">
-                  <Button 
-                    size="sm" 
-                    variant="outline" 
-                    asChild
-                  >
-                    <Link to={`/admin-j28s7d1k/previews/${project.id}`}>
-                      <Eye className="h-4 w-4" />
-                    </Link>
-                  </Button>
-                  
-                  <Button 
-                    size="sm" 
-                    variant="outline"
-                    onClick={() => handleSendReminder(project)}
-                    disabled={sendingReminder === project.id || project.status === 'approved'}
-                  >
-                    {sendingReminder === project.id ? (
-                      <RefreshCw className="h-4 w-4 animate-spin" />
-                    ) : (
-                      <Mail className="h-4 w-4" />
-                    )}
-                  </Button>
-                </div>
-              </TableCell>
-            </TableRow>
-          ))}
-        </TableBody>
-      </Table>
-    </div>
+                  </Badge>
+                ) : (
+                  project.expirationDate
+                )}
+              </div>
+            </TableCell>
+            <TableCell className="text-right">
+              <div className="flex space-x-1 justify-end">
+                <Button 
+                  variant="outline" 
+                  size="icon"
+                  asChild
+                  className="h-8 w-8"
+                >
+                  <Link to={`/admin-j28s7d1k/previews/${project.id}`}>
+                    <Eye className="h-4 w-4" />
+                  </Link>
+                </Button>
+                
+                <Button 
+                  variant="outline" 
+                  size="icon"
+                  className="h-8 w-8"
+                  asChild
+                >
+                  <Link to={`/preview/${project.id}`} target="_blank">
+                    <Play className="h-4 w-4" />
+                  </Link>
+                </Button>
+                
+                <Button 
+                  variant="outline" 
+                  size="icon"
+                  className="h-8 w-8"
+                  onClick={() => handleSendReminder(project)}
+                  disabled={sendingReminder === project.id}
+                >
+                  {sendingReminder === project.id ? (
+                    <RefreshCw className="h-4 w-4 animate-spin" />
+                  ) : (
+                    <Mail className="h-4 w-4" />
+                  )}
+                </Button>
+                
+                <Button 
+                  variant="outline" 
+                  size="icon"
+                  className="h-8 w-8 text-red-500 hover:text-red-700 hover:bg-red-50"
+                  onClick={() => handleDelete(project.id)}
+                >
+                  <Trash className="h-4 w-4" />
+                </Button>
+              </div>
+            </TableCell>
+          </TableRow>
+        ))}
+      </TableBody>
+    </Table>
   );
 };
 

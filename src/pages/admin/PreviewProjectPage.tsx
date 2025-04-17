@@ -1,4 +1,3 @@
-
 import React, { useEffect, useState } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
@@ -55,8 +54,6 @@ const PreviewProjectPage: React.FC = () => {
       return;
     }
 
-    // In a real implementation, this would send an email
-    // For now, we'll just show a toast and log the message
     console.log(`Enviando notificação para ${project?.clientEmail}: ${notificationMessage}`);
     
     notificationService.notify('new_preview', {
@@ -82,7 +79,7 @@ const PreviewProjectPage: React.FC = () => {
     if (isNaN(days) || days <= 0) {
       toast({
         title: "Erro",
-        description: "Por favor, informe um número válido de dias.",
+        description: "Por favor, informe um número v��lido de dias.",
         variant: "destructive"
       });
       return;
@@ -98,7 +95,6 @@ const PreviewProjectPage: React.FC = () => {
     };
     setProject(updatedProject);
     
-    // Update in the global state
     if (updateProject) {
       updateProject(projectId || '', { expirationDate: newExpirationDate });
     }
@@ -117,7 +113,6 @@ const PreviewProjectPage: React.FC = () => {
   const deleteVersion = (versionId: string) => {
     if (!project || !project.versions) return;
     
-    // Filter out the version to be deleted
     const updatedVersions = project.versions.filter((v: any) => v.id !== versionId);
     
     const updatedProject = {
@@ -127,7 +122,6 @@ const PreviewProjectPage: React.FC = () => {
     
     setProject(updatedProject);
     
-    // Update in global state
     if (updateProject) {
       updateProject(projectId || '', { 
         versions: updatedVersions.length,
@@ -177,7 +171,6 @@ const PreviewProjectPage: React.FC = () => {
       history: updatedHistory
     });
     
-    // Update in global state
     if (updateProject) {
       updateProject(projectId || '', { history: updatedHistory });
     }
@@ -189,7 +182,6 @@ const PreviewProjectPage: React.FC = () => {
         const foundProject = projects.find(p => p.id === projectId);
         
         if (foundProject) {
-          // If the project doesn't have versions array, create a default one
           let enhancedProject = { ...foundProject };
           
           if (!enhancedProject.versionsList) {
@@ -329,6 +321,7 @@ const PreviewProjectPage: React.FC = () => {
             onAddVersion={() => setShowAddVersion(true)}
             onExtendDeadline={() => setShowExtendDialog(true)}
             previewUrl={`/preview/${projectId}`}
+            projectId={projectId || ''}
           />
         </div>
 
