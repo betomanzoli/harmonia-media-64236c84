@@ -11,6 +11,55 @@ import PreviewsGuide from '@/components/admin/guides/PreviewsGuide';
 import NotificationGuide from '@/components/admin/guides/NotificationGuide';
 
 const AdminGuides: React.FC = () => {
+  // Define general guide sections for the default AdminGuide component
+  const generalGuideSections = [
+    {
+      title: "Visão Geral do Sistema Admin",
+      content: (
+        <div className="space-y-2">
+          <p>O painel administrativo da harmonIA é projetado para gerenciar todos os aspectos do negócio, incluindo:</p>
+          <ul className="list-disc pl-5 space-y-1">
+            <li>Gestão de projetos musicais</li>
+            <li>Comunicação com clientes</li>
+            <li>Gerenciamento de prévias</li>
+            <li>Emissão de notas fiscais</li>
+            <li>Estatísticas de vendas</li>
+          </ul>
+        </div>
+      )
+    },
+    {
+      title: "Acessando Funcionalidades",
+      content: (
+        <div className="space-y-2">
+          <p>Use o menu lateral para acessar as principais funcionalidades do sistema:</p>
+          <ul className="list-disc pl-5 space-y-1">
+            <li><strong>Dashboard:</strong> Visão geral e estatísticas</li>
+            <li><strong>Projetos:</strong> Gerenciamento de projetos musicais</li>
+            <li><strong>Prévias:</strong> Sistema de envio e feedback</li>
+            <li><strong>Briefings:</strong> Consulta de briefings recebidos</li>
+            <li><strong>Clientes:</strong> Banco de dados de clientes</li>
+          </ul>
+        </div>
+      )
+    },
+    {
+      title: "Permissões de Usuário",
+      content: (
+        <div className="space-y-2">
+          <p>O sistema possui diferentes níveis de acesso:</p>
+          <ul className="list-disc pl-5 space-y-1">
+            <li><strong>Administrador:</strong> Acesso total</li>
+            <li><strong>Gerente:</strong> Acesso a projetos e comunicação</li>
+            <li><strong>Compositor:</strong> Acesso apenas a projetos designados</li>
+            <li><strong>Suporte:</strong> Acesso a comunicações de clientes</li>
+          </ul>
+          <p className="text-amber-500 mt-2">Nota: Entre em contato com o administrador do sistema para alterações de permissões.</p>
+        </div>
+      )
+    }
+  ];
+
   return (
     <AdminLayout>
       <div className="space-y-6 p-6">
@@ -49,7 +98,11 @@ const AdminGuides: React.FC = () => {
                 <CardDescription>Informações gerais sobre o uso do painel administrativo</CardDescription>
               </CardHeader>
               <CardContent>
-                <AdminGuide />
+                <AdminGuide 
+                  title="Guia de Administração Geral"
+                  sections={generalGuideSections}
+                  storageUrl="https://drive.google.com/drive/folders/admin-docs"
+                />
               </CardContent>
             </Card>
           </TabsContent>

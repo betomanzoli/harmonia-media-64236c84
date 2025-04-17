@@ -2,7 +2,6 @@
 import React from 'react';
 import { Button } from "@/components/ui/button";
 import { LucideIcon } from 'lucide-react';
-import { extraServicePaymentLinks } from '@/lib/payment/paymentLinks';
 
 interface ExtraServiceCardProps {
   title: string;
@@ -11,6 +10,7 @@ interface ExtraServiceCardProps {
   features: string[];
   icon: LucideIcon;
   serviceId: string;
+  onServiceClick: () => void;
 }
 
 const ExtraServiceCard: React.FC<ExtraServiceCardProps> = ({
@@ -20,20 +20,8 @@ const ExtraServiceCard: React.FC<ExtraServiceCardProps> = ({
   features,
   icon: Icon,
   serviceId,
+  onServiceClick,
 }) => {
-  // Get payment link for this service
-  const paymentLink = extraServicePaymentLinks[serviceId]?.url;
-  
-  const handleClick = () => {
-    if (paymentLink) {
-      // If we have a payment link, open it
-      window.open(paymentLink, '_blank');
-    } else if (typeof price === 'string' && price.includes('Consultar')) {
-      // If it's a custom price service, redirect to contact page
-      window.location.href = '/contato';
-    }
-  };
-  
   return (
     <div className="bg-card border border-border hover:border-harmonia-green/50 rounded-lg p-6 transition-colors">
       <div className="flex justify-between items-start mb-4">
@@ -57,7 +45,7 @@ const ExtraServiceCard: React.FC<ExtraServiceCardProps> = ({
         ))}
       </ul>
       <Button 
-        onClick={handleClick}
+        onClick={onServiceClick}
         className="w-full bg-secondary hover:bg-secondary/90"
       >
         {price.toString().includes('Consultar') ? 'Solicitar Orçamento Personalizado' : `Adicionar ${title}`}

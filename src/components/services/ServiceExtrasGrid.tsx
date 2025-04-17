@@ -19,6 +19,7 @@ const ServiceExtrasGrid: React.FC<ServiceExtrasGridProps> = ({ onExtraServiceCli
           features={service.features}
           icon={service.icon}
           serviceId={service.id}
+          onServiceClick={() => onExtraServiceClick(service.id)}
         />
       ))}
     </div>

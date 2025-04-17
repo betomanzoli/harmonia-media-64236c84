@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
@@ -7,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { ArrowLeft } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { siteConfig } from '@/config/site';
-import { packagePaymentLinks } from '@/lib/payment/paymentLinks';
+import { packagePaymentLinks, extraServicePaymentLinks } from '@/lib/payment/paymentLinks';
 import ServiceExtrasGrid from '@/components/services/ServiceExtrasGrid';
 import TermsDialog from '@/components/service-card/TermsDialog';
 
@@ -69,7 +68,6 @@ const ServicesPage: React.FC = () => {
   };
 
   const handleAcceptTerms = () => {
-    // If terms are accepted, redirect to payment link
     if (selectedPaymentLink) {
       window.open(selectedPaymentLink, '_blank');
     }
@@ -77,12 +75,10 @@ const ServicesPage: React.FC = () => {
   };
 
   const handleExtraServiceClick = (serviceId: string) => {
-    // For extra services, navigate directly to payment
     const paymentLink = extraServicePaymentLinks[serviceId]?.url;
     if (paymentLink) {
       window.open(paymentLink, '_blank');
     } else {
-      // If it's a custom price service, redirect to contact page
       navigate('/contato');
     }
   };
@@ -159,7 +155,6 @@ const ServicesPage: React.FC = () => {
       </main>
       <Footer />
 
-      {/* Contract Terms Dialog */}
       <TermsDialog
         open={isTermsDialogOpen}
         onOpenChange={setIsTermsDialogOpen}
