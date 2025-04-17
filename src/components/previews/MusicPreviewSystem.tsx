@@ -1,5 +1,5 @@
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useParams } from 'react-router-dom';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useToast } from '@/hooks/use-toast';
@@ -12,6 +12,10 @@ import PreviewNextSteps from './PreviewNextSteps';
 import PreviewLoadingState from './PreviewLoadingState';
 import PreviewFooter from './PreviewFooter';
 import { notificationService } from '@/services/notificationService';
+import { Alert, AlertTitle, AlertDescription } from "@/components/ui/alert";
+import { AlertCircle } from 'lucide-react';
+import { Button } from "@/components/ui/button";
+import { useNavigate } from 'react-router-dom';
 
 interface MusicPreviewSystemProps {
   projectId?: string;
@@ -23,6 +27,8 @@ const MusicPreviewSystem: React.FC<MusicPreviewSystemProps> = ({ projectId: prop
   const { toast } = useToast();
   const [selectedVersion, setSelectedVersion] = useState<string | null>(null);
   const [feedback, setFeedback] = useState('');
+  const [error, setError] = useState<string | null>(null);
+  const navigate = useNavigate();
   
   // Usar o hook personalizado para buscar dados do projeto
   const { projectData, setProjectData, isLoading } = usePreviewData(projectId);
@@ -47,6 +53,13 @@ const MusicPreviewSystem: React.FC<MusicPreviewSystemProps> = ({ projectId: prop
       document.removeEventListener("contextmenu", handleContextMenu);
     };
   }, [toast]);
+
+  // Check if project exists once loading is complete
+  useEffect(() => {
+    if (!isLoading && !projectData) {
+      setError("Previews not found or expired. This link may no longer be valid.");
+    }
+  }, [isLoading, projectData]);
 
   const handleSubmitFeedback = () => {
     if (!selectedVersion) {
@@ -100,12 +113,35 @@ const MusicPreviewSystem: React.FC<MusicPreviewSystemProps> = ({ projectId: prop
     setProjectData(prev => prev ? {...prev, status: 'approved' as const} : null);
   };
   
-  if (isLoading || !projectData) {
+  if (isLoading) {
     return <PreviewLoadingState />;
+  }
+
+  if (error || !projectData) {
+    return (
+      <div className="max-w-4xl mx-auto pt-10 px-4">
+        <Alert variant="destructive" className="mb-6">
+          <AlertCircle className="h-4 w-4" />
+          <AlertTitle>Erro</AlertTitle>
+          <AlertDescription>
+            {error || "Prévia não encontrada ou expirada. Este link pode não ser mais válido."}
+          </AlertDescription>
+        </Alert>
+        
+        <div className="text-center mt-8">
+          <Button 
+            onClick={() => navigate('/')}
+            className="bg-harmonia-green hover:bg-harmonia-green/90"
+          >
+            Voltar para a página inicial
+          </Button>
+        </div>
+      </div>
+    );
   }
   
   return (
-    <div className="max-w-4xl mx-auto pt-10">
+    <div className="max-w-4xl mx-auto pt-10 px-4">
       <PreviewHeader projectData={projectData} />
       
       <PreviewInstructions status={projectData.status} />

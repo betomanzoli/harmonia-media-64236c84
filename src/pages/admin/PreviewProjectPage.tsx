@@ -20,7 +20,7 @@ import ClientFeedbackCard from '@/components/admin/previews/ClientFeedbackCard';
 import ProjectHistoryList from '@/components/admin/previews/ProjectHistoryList';
 import AddVersionForm from '@/components/admin/previews/AddVersionForm';
 import NotificationGuide from '@/components/admin/guides/NotificationGuide';
-import { ArrowLeft, FileMusic, MessageCircle, Clock, Calendar, Send, Copy, HelpCircle } from 'lucide-react';
+import { ArrowLeft, FileMusic, MessageCircle, Clock, Calendar, Send, Copy, HelpCircle, AlertTriangle } from 'lucide-react';
 
 const PreviewProjectPage: React.FC = () => {
   const { projectId } = useParams<{ projectId: string }>();
@@ -34,7 +34,7 @@ const PreviewProjectPage: React.FC = () => {
   const [showHelpDialog, setShowHelpDialog] = useState(false);
   const [notificationMessage, setNotificationMessage] = useState('');
   const [extensionDays, setExtensionDays] = useState('7');
-  const { projects } = usePreviewProjects();
+  const { projects, updateProject } = usePreviewProjects();
 
   const copyPreviewLink = () => {
     const link = `${window.location.origin}/preview/${projectId}`;
@@ -55,6 +55,10 @@ const PreviewProjectPage: React.FC = () => {
       return;
     }
 
+    // In a real implementation, this would send an email
+    // For now, we'll just show a toast and log the message
+    console.log(`Enviando notificação para ${project?.clientEmail}: ${notificationMessage}`);
+    
     notificationService.notify('new_preview', {
       projectId,
       message: notificationMessage,
@@ -93,6 +97,11 @@ const PreviewProjectPage: React.FC = () => {
       expirationDate: newExpirationDate
     };
     setProject(updatedProject);
+    
+    // Update in the global state
+    if (updateProject) {
+      updateProject(projectId || '', { expirationDate: newExpirationDate });
+    }
 
     toast({
       title: "Prazo estendido",
@@ -103,6 +112,30 @@ const PreviewProjectPage: React.FC = () => {
     setExtensionDays('7');
 
     updateProjectHistory('deadline_extended', { days, newDate: newExpirationDate });
+  };
+
+  const deleteVersion = (versionId: string) => {
+    if (!project || !project.versions) return;
+    
+    // Filter out the version to be deleted
+    const updatedVersions = project.versions.filter((v: any) => v.id !== versionId);
+    
+    const updatedProject = {
+      ...project,
+      versions: updatedVersions
+    };
+    
+    setProject(updatedProject);
+    
+    // Update in global state
+    if (updateProject) {
+      updateProject(projectId || '', { 
+        versions: updatedVersions.length,
+        versionsList: updatedVersions
+      });
+    }
+    
+    updateProjectHistory('version_deleted', { versionId });
   };
 
   const updateProjectHistory = (actionType: string, data: any) => {
@@ -120,6 +153,9 @@ const PreviewProjectPage: React.FC = () => {
       case 'version_added':
         actionDescription = `Versão "${data.name}" adicionada`;
         break;
+      case 'version_deleted':
+        actionDescription = `Versão removida`;
+        break;
       default:
         actionDescription = 'Ação realizada';
     }
@@ -134,10 +170,17 @@ const PreviewProjectPage: React.FC = () => {
       project.history = [];
     }
 
+    const updatedHistory = [newHistoryItem, ...project.history];
+    
     setProject({
       ...project,
-      history: [newHistoryItem, ...project.history]
+      history: updatedHistory
     });
+    
+    // Update in global state
+    if (updateProject) {
+      updateProject(projectId || '', { history: updatedHistory });
+    }
   };
 
   useEffect(() => {
@@ -146,27 +189,53 @@ const PreviewProjectPage: React.FC = () => {
         const foundProject = projects.find(p => p.id === projectId);
         
         if (foundProject) {
-          const enhancedProject = {
-            ...foundProject,
-            feedback: 'Apreciei a melodia principal e o conceito geral. Sugiro modificar a estrutura na seção do refrão para enfatizar mais a transição entre as estrofes. Também seria interessante adicionar algumas variações na progressão de acordes do final.',
-            versions: [
-              { id: 'v1', name: 'Versão Inicial', url: '#', dateAdded: '15/03/2025', recommended: true },
-              { id: 'v2', name: 'Versão Revisada', url: '#', dateAdded: '22/03/2025' }
-            ],
-            history: [
+          // If the project doesn't have versions array, create a default one
+          let enhancedProject = { ...foundProject };
+          
+          if (!enhancedProject.versionsList) {
+            enhancedProject.versionsList = [
+              { 
+                id: 'v1', 
+                name: 'Versão Inicial', 
+                url: 'https://drive.google.com/uc?export=download&id=1H62ylCwQYJ23BLpygtvNmCgwTDcHX6Cl', 
+                dateAdded: '15/03/2025', 
+                recommended: true 
+              },
+              { 
+                id: 'v2', 
+                name: 'Versão Revisada', 
+                url: 'https://drive.google.com/uc?export=download&id=11c6JahRd5Lx0iKCL_gHZ0zrZ3LFBJ47a', 
+                dateAdded: '22/03/2025' 
+              }
+            ];
+          }
+          
+          if (!enhancedProject.feedback) {
+            enhancedProject.feedback = 'Apreciei a melodia principal e o conceito geral. Sugiro modificar a estrutura na seção do refrão para enfatizar mais a transição entre as estrofes. Também seria interessante adicionar algumas variações na progressão de acordes do final.';
+          }
+          
+          if (!enhancedProject.history) {
+            enhancedProject.history = [
               { action: 'Cliente enviou feedback', timestamp: '25/03/2025 14:30' },
               { action: 'Versão 2 adicionada', timestamp: '22/03/2025 10:15' },
               { action: 'Cliente visualizou o projeto', timestamp: '18/03/2025 09:45' },
               { action: 'Versão 1 adicionada', timestamp: '15/03/2025 16:20' },
               { action: 'Projeto criado', timestamp: '15/03/2025 11:00' }
-            ]
-          };
+            ];
+          }
+          
           setProject(enhancedProject);
+        } else {
+          toast({
+            title: "Erro",
+            description: "Projeto não encontrado",
+            variant: "destructive"
+          });
         }
         setLoading(false);
       }, 500);
     }
-  }, [projectId, projects]);
+  }, [projectId, projects, toast]);
 
   if (loading) {
     return (
@@ -207,7 +276,7 @@ const PreviewProjectPage: React.FC = () => {
 
   return (
     <AdminLayout>
-      <div className="space-y-6">
+      <div className="space-y-6 p-6">
         <div className="flex items-center justify-between">
           <div>
             <Button variant="outline" asChild className="mb-2">
@@ -263,6 +332,19 @@ const PreviewProjectPage: React.FC = () => {
           />
         </div>
 
+        <div className="p-4 bg-amber-100 border border-amber-300 rounded mb-6">
+          <div className="flex items-start">
+            <AlertTriangle className="h-5 w-5 text-amber-600 mr-2 mt-0.5" />
+            <div>
+              <h3 className="font-medium text-amber-800 mb-1">Ambiente de demonstração</h3>
+              <p className="text-sm text-amber-700">
+                Este é um ambiente de demonstração com dados simulados. Os links para prévias podem não funcionar completamente.
+                Em um ambiente de produção, os emails seriam enviados corretamente e as prévias estariam disponíveis para os clientes.
+              </p>
+            </div>
+          </div>
+        </div>
+
         <Tabs defaultValue="versions">
           <TabsList>
             <TabsTrigger value="versions">Versões</TabsTrigger>
@@ -271,7 +353,10 @@ const PreviewProjectPage: React.FC = () => {
           </TabsList>
           
           <TabsContent value="versions" className="mt-4">
-            <PreviewVersionsList versions={project.versions} />
+            <PreviewVersionsList 
+              versions={project.versionsList || []} 
+              onDeleteVersion={deleteVersion}
+            />
           </TabsContent>
           
           <TabsContent value="feedback" className="mt-4">

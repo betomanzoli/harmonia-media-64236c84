@@ -1,9 +1,10 @@
+
 import React, { useState } from 'react';
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { ArrowLeft } from 'lucide-react';
+import { ArrowLeft, Clock } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { siteConfig } from '@/config/site';
 import { packagePaymentLinks, extraServicePaymentLinks } from '@/lib/payment/paymentLinks';
@@ -105,9 +106,12 @@ const ServicesPage: React.FC = () => {
               Oferecemos pacotes personalizados para atender às suas necessidades musicais.
               Escolha o pacote que melhor se adapta ao seu projeto.
             </p>
-            <p className="text-amber-400 font-medium mt-2">
-              *Preços promocionais por tempo limitado!
-            </p>
+            <div className="mt-4 bg-amber-900/30 text-amber-300 border border-amber-800/50 rounded-md py-3 px-4 inline-flex items-center">
+              <Clock className="w-5 h-5 mr-2" />
+              <p className="font-medium">
+                Preços promocionais por tempo limitado!
+              </p>
+            </div>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
@@ -120,7 +124,10 @@ const ServicesPage: React.FC = () => {
                 <CardContent className="space-y-3">
                   <div className="flex flex-col">
                     <div className="text-2xl font-bold">{service.price}</div>
-                    <span className="text-xs text-amber-400 font-medium">Promocional</span>
+                    <span className="text-xs text-amber-400 font-medium flex items-center">
+                      <Clock className="w-3 h-3 mr-1" />
+                      Promocional por tempo limitado
+                    </span>
                   </div>
                   <ul className="list-disc pl-5 space-y-1">
                     {service.features.map((feature, i) => (
@@ -145,9 +152,14 @@ const ServicesPage: React.FC = () => {
             <p className="text-gray-400 max-w-2xl mx-auto text-center mb-2">
               Personalize sua experiência com estes serviços adicionais que podem ser contratados durante ou após o projeto.
             </p>
-            <p className="text-amber-400 font-medium text-center mb-10">
-              *Preços promocionais por tempo limitado!
-            </p>
+            <div className="mb-6 text-center">
+              <div className="mt-4 bg-amber-900/30 text-amber-300 border border-amber-800/50 rounded-md py-3 px-4 inline-flex items-center">
+                <Clock className="w-5 h-5 mr-2" />
+                <p className="font-medium">
+                  Preços promocionais por tempo limitado!
+                </p>
+              </div>
+            </div>
             
             <ServiceExtrasGrid onExtraServiceClick={handleExtraServiceClick} />
           </div>

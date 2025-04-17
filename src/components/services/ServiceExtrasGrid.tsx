@@ -2,6 +2,7 @@
 import React from 'react';
 import ExtraServiceCard from './ExtraServiceCard';
 import { extraServicesData } from '@/data/extraServices';
+import { extraServicePaymentLinks } from '@/lib/payment/paymentLinks';
 
 interface ServiceExtrasGridProps {
   onExtraServiceClick: (service: string) => void;

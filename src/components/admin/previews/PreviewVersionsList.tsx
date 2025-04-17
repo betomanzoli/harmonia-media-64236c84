@@ -1,10 +1,11 @@
 
-import React from 'react';
+import React, { useState, useRef } from 'react';
 import { Card, CardHeader, CardContent, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Play, Star, Download, Info } from 'lucide-react';
+import { Play, Pause, Star, Download, Info, Trash } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
+import { Slider } from "@/components/ui/slider";
 
 interface Version {
   id: string;
@@ -16,25 +17,136 @@ interface Version {
 
 interface PreviewVersionsListProps {
   versions: Version[];
+  onDeleteVersion?: (id: string) => void;
 }
 
-const PreviewVersionsList: React.FC<PreviewVersionsListProps> = ({ versions }) => {
+const PreviewVersionsList: React.FC<PreviewVersionsListProps> = ({ versions, onDeleteVersion }) => {
   const { toast } = useToast();
+  const [playingId, setPlayingId] = useState<string | null>(null);
+  const [currentTime, setCurrentTime] = useState(0);
+  const [duration, setDuration] = useState(0);
+  const audioRef = useRef<HTMLAudioElement | null>(null);
+  const previewDuration = 30; // 30 seconds preview
+  const timeoutRef = useRef<number | null>(null);
 
   const handlePlay = (version: Version) => {
-    // Em produção, reproduzir o áudio
-    toast({
-      title: "Reproduzindo",
-      description: `Reproduzindo a versão: ${version.name}`
-    });
+    if (playingId === version.id) {
+      // Pause the current playing audio
+      if (audioRef.current) {
+        audioRef.current.pause();
+        if (timeoutRef.current) {
+          window.clearTimeout(timeoutRef.current);
+          timeoutRef.current = null;
+        }
+      }
+      setPlayingId(null);
+    } else {
+      // Stop currently playing audio if any
+      if (audioRef.current) {
+        audioRef.current.pause();
+        if (timeoutRef.current) {
+          window.clearTimeout(timeoutRef.current);
+          timeoutRef.current = null;
+        }
+      }
+
+      // Start new audio
+      if (audioRef.current) {
+        audioRef.current.src = version.url;
+        audioRef.current.currentTime = 0;
+        audioRef.current.play();
+        
+        // Set timeout to stop after preview duration
+        timeoutRef.current = window.setTimeout(() => {
+          if (audioRef.current) {
+            audioRef.current.pause();
+            setPlayingId(null);
+            toast({
+              title: "Prévia finalizada",
+              description: "Esta é apenas uma prévia de 30 segundos."
+            });
+          }
+        }, previewDuration * 1000);
+        
+        setPlayingId(version.id);
+      }
+    }
+  };
+
+  const handleTimeUpdate = () => {
+    if (audioRef.current) {
+      setCurrentTime(audioRef.current.currentTime);
+      
+      // Stop at preview duration
+      if (audioRef.current.currentTime >= previewDuration) {
+        audioRef.current.pause();
+        setPlayingId(null);
+        if (timeoutRef.current) {
+          window.clearTimeout(timeoutRef.current);
+          timeoutRef.current = null;
+        }
+        toast({
+          title: "Prévia finalizada",
+          description: "Esta é apenas uma prévia de 30 segundos."
+        });
+      }
+    }
+  };
+
+  const handleLoadedMetadata = () => {
+    if (audioRef.current) {
+      setDuration(audioRef.current.duration);
+    }
+  };
+
+  const handleSliderChange = (value: number[]) => {
+    if (audioRef.current) {
+      const newTime = value[0];
+      
+      // Don't allow seeking beyond preview time
+      if (newTime > previewDuration) {
+        audioRef.current.currentTime = previewDuration;
+        setCurrentTime(previewDuration);
+        toast({
+          title: "Prévia limitada",
+          description: "Esta é apenas uma prévia de 30 segundos."
+        });
+      } else {
+        audioRef.current.currentTime = newTime;
+        setCurrentTime(newTime);
+      }
+    }
   };
 
   const handleDownload = (version: Version) => {
-    // Em produção, disponibilizar o download do arquivo
+    // Full version download for admin purposes
+    window.open(version.url, '_blank');
     toast({
       title: "Download iniciado",
       description: `Baixando a versão: ${version.name}`
     });
+  };
+
+  const handleDelete = (id: string) => {
+    if (onDeleteVersion) {
+      // Stop audio if playing this version
+      if (playingId === id && audioRef.current) {
+        audioRef.current.pause();
+        setPlayingId(null);
+      }
+      
+      onDeleteVersion(id);
+      toast({
+        title: "Versão removida",
+        description: "A versão foi removida com sucesso."
+      });
+    }
+  };
+
+  const formatTime = (time: number) => {
+    const minutes = Math.floor(time / 60);
+    const seconds = Math.floor(time % 60);
+    return `${minutes}:${seconds < 10 ? '0' : ''}${seconds}`;
   };
 
   return (
@@ -43,6 +155,14 @@ const PreviewVersionsList: React.FC<PreviewVersionsListProps> = ({ versions }) =
         <CardTitle>Versões do projeto</CardTitle>
       </CardHeader>
       <CardContent>
+        {/* Hidden audio element */}
+        <audio 
+          ref={audioRef} 
+          onTimeUpdate={handleTimeUpdate}
+          onLoadedMetadata={handleLoadedMetadata}
+          onEnded={() => setPlayingId(null)}
+        />
+        
         <div className="space-y-4">
           {versions.map((version) => (
             <div 
@@ -53,7 +173,7 @@ const PreviewVersionsList: React.FC<PreviewVersionsListProps> = ({ versions }) =
                 ${version.recommended ? 'bg-harmonia-green/5 -mx-2 p-2 rounded border border-harmonia-green/20' : ''}
               `}
             >
-              <div>
+              <div className="flex-1">
                 <div className="flex items-center">
                   <h3 className="font-medium">{version.name}</h3>
                   {version.recommended && (
@@ -72,6 +192,23 @@ const PreviewVersionsList: React.FC<PreviewVersionsListProps> = ({ versions }) =
                   )}
                 </div>
                 <p className="text-sm text-gray-500">Adicionado em {version.dateAdded}</p>
+                
+                {/* Display audio player when this version is playing */}
+                {playingId === version.id && (
+                  <div className="mt-2 space-y-1">
+                    <Slider
+                      value={[currentTime]}
+                      max={Math.min(previewDuration, duration)}
+                      step={0.1}
+                      onValueChange={handleSliderChange}
+                      className="w-full"
+                    />
+                    <div className="flex justify-between text-xs text-gray-500">
+                      <span>{formatTime(currentTime)}</span>
+                      <span>{formatTime(Math.min(previewDuration, duration))}</span>
+                    </div>
+                  </div>
+                )}
               </div>
               
               <div className="flex items-center gap-2">
@@ -79,10 +216,19 @@ const PreviewVersionsList: React.FC<PreviewVersionsListProps> = ({ versions }) =
                   variant="outline" 
                   size="sm"
                   onClick={() => handlePlay(version)}
-                  className="text-harmonia-green"
+                  className={playingId === version.id ? "bg-harmonia-green/10 text-harmonia-green" : "text-harmonia-green"}
                 >
-                  <Play className="h-4 w-4 mr-1" />
-                  Ouvir
+                  {playingId === version.id ? (
+                    <>
+                      <Pause className="h-4 w-4 mr-1" />
+                      Pausar
+                    </>
+                  ) : (
+                    <>
+                      <Play className="h-4 w-4 mr-1" />
+                      Ouvir
+                    </>
+                  )}
                 </Button>
                 
                 <Button 
@@ -93,6 +239,18 @@ const PreviewVersionsList: React.FC<PreviewVersionsListProps> = ({ versions }) =
                   <Download className="h-4 w-4 mr-1" />
                   Download
                 </Button>
+                
+                {onDeleteVersion && (
+                  <Button 
+                    variant="outline" 
+                    size="sm"
+                    onClick={() => handleDelete(version.id)}
+                    className="text-red-500 hover:bg-red-50"
+                  >
+                    <Trash className="h-4 w-4 mr-1" />
+                    Remover
+                  </Button>
+                )}
               </div>
             </div>
           ))}
