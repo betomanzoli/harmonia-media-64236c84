@@ -19,62 +19,39 @@ export const useBriefings = () => {
   const loadBriefings = useCallback(async () => {
     setIsLoading(true);
     try {
-      // Try to load from Supabase first
-      const { data, error } = await supabase
-        .from('briefings')
-        .select('*')
-        .order('created_at', { ascending: false });
-        
-      if (error) throw error;
-      
-      if (data && data.length > 0) {
-        // Map from database format
-        const mappedBriefings: BriefingItem[] = data.map(item => ({
-          id: item.id,
-          name: item.client_name,
-          email: item.client_email,
-          packageType: item.package_type,
-          createdAt: new Date(item.created_at).toLocaleDateString('pt-BR'),
-          status: item.status || 'pending'
-        }));
-        
-        setBriefings(mappedBriefings);
+      // Try to load from localStorage first as fallback
+      const storedBriefings = localStorage.getItem('harmonIA_briefings');
+      if (storedBriefings) {
+        setBriefings(JSON.parse(storedBriefings));
       } else {
-        // Fallback to localStorage
-        const storedBriefings = localStorage.getItem('harmonIA_briefings');
-        if (storedBriefings) {
-          setBriefings(JSON.parse(storedBriefings));
-        } else {
-          // Sample data if nothing exists
-          const sampleBriefings: BriefingItem[] = [
-            {
-              id: 'B0001',
-              name: 'Maria Silva',
-              email: 'maria@example.com',
-              packageType: 'Essencial',
-              createdAt: new Date().toLocaleDateString('pt-BR'),
-              status: 'pending'
-            },
-            {
-              id: 'B0002',
-              name: 'João Santos',
-              email: 'joao@example.com',
-              packageType: 'Premium',
-              createdAt: new Date().toLocaleDateString('pt-BR'),
-              status: 'completed'
-            }
-          ];
-          setBriefings(sampleBriefings);
-        }
+        // Sample data if nothing exists
+        const sampleBriefings: BriefingItem[] = [
+          {
+            id: 'B0001',
+            name: 'Maria Silva',
+            email: 'maria@example.com',
+            packageType: 'Essencial',
+            createdAt: new Date().toLocaleDateString('pt-BR'),
+            status: 'pending'
+          },
+          {
+            id: 'B0002',
+            name: 'João Santos',
+            email: 'joao@example.com',
+            packageType: 'Premium',
+            createdAt: new Date().toLocaleDateString('pt-BR'),
+            status: 'completed'
+          }
+        ];
+        setBriefings(sampleBriefings);
+        // Save sample data to localStorage
+        localStorage.setItem('harmonIA_briefings', JSON.stringify(sampleBriefings));
       }
     } catch (err) {
       console.error('Error loading briefings:', err);
       
-      // Fallback to localStorage if Supabase fails
-      const storedBriefings = localStorage.getItem('harmonIA_briefings');
-      if (storedBriefings) {
-        setBriefings(JSON.parse(storedBriefings));
-      }
+      // Fallback to empty array if everything fails
+      setBriefings([]);
     } finally {
       setIsLoading(false);
     }

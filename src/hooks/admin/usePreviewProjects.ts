@@ -36,102 +36,34 @@ export const usePreviewProjects = () => {
   const [error, setError] = useState<string | null>(null);
   const { briefings } = useBriefings();
   
-  // Load projects from local storage or Supabase
+  // Load projects from local storage
   const loadProjects = useCallback(async () => {
     setIsLoading(true);
     try {
-      // First try to load from Supabase
-      const { data, error } = await supabase
-        .from('preview_projects')
-        .select('*')
-        .order('created_at', { ascending: false });
-      
-      if (error) {
-        throw error;
-      }
-      
-      if (data && data.length > 0) {
-        console.log('Projects loaded from Supabase:', data.length);
-        // Map from database format to our format
-        const mappedProjects: ProjectItem[] = data.map(item => ({
-          id: item.id,
-          clientName: item.client_name,
-          clientEmail: item.client_email,
-          packageType: item.package_type,
-          createdAt: new Date(item.created_at).toLocaleDateString('pt-BR'),
-          status: item.status || 'waiting',
-          versions: item.versions || 0,
-          previewUrl: item.preview_url || '',
-          expirationDate: item.expiration_date ? new Date(item.expiration_date).toLocaleDateString('pt-BR') : '',
-          lastActivityDate: item.last_activity_date ? new Date(item.last_activity_date).toLocaleDateString('pt-BR') : '',
-          briefingId: item.briefing_id,
-          versionsList: item.versions_list,
-          feedback: item.feedback,
-          history: item.history
-        }));
-        
-        setProjects(mappedProjects);
+      // Try to load from localStorage
+      const storedProjects = localStorage.getItem('harmonIA_preview_projects');
+      if (storedProjects) {
+        setProjects(JSON.parse(storedProjects));
+        console.log('Projects loaded from localStorage');
       } else {
-        // If no data from Supabase, try local storage
-        const storedProjects = localStorage.getItem('harmonIA_preview_projects');
-        if (storedProjects) {
-          setProjects(JSON.parse(storedProjects));
-          console.log('Projects loaded from localStorage');
-        } else {
-          // Initialize with empty array if nothing found
-          setProjects([]);
-          console.log('No projects found, initialized with empty array');
-        }
+        // Initialize with empty array if nothing found
+        setProjects([]);
+        console.log('No projects found, initialized with empty array');
       }
     } catch (err: any) {
       console.error('Error loading projects:', err);
       setError(err.message || 'Failed to load projects');
-      
-      // Fallback to localStorage if Supabase fails
-      const storedProjects = localStorage.getItem('harmonIA_preview_projects');
-      if (storedProjects) {
-        setProjects(JSON.parse(storedProjects));
-        console.log('Fallback: Projects loaded from localStorage');
-      }
+      setProjects([]);
     } finally {
       setIsLoading(false);
     }
   }, []);
 
-  // Save projects to both local storage and Supabase
+  // Save projects to local storage
   const saveProjects = useCallback(async (updatedProjects: ProjectItem[]) => {
     // Save to localStorage as backup
     localStorage.setItem('harmonIA_preview_projects', JSON.stringify(updatedProjects));
-    
-    try {
-      // Save each project to Supabase
-      for (const project of updatedProjects) {
-        const { error } = await supabase
-          .from('preview_projects')
-          .upsert({
-            id: project.id,
-            client_name: project.clientName,
-            client_email: project.clientEmail,
-            package_type: project.packageType,
-            status: project.status,
-            versions: project.versions,
-            preview_url: project.previewUrl || '',
-            expiration_date: project.expirationDate ? new Date(project.expirationDate.split('/').reverse().join('-')) : null,
-            last_activity_date: project.lastActivityDate ? new Date(project.lastActivityDate.split('/').reverse().join('-')) : null,
-            briefing_id: project.briefingId || null,
-            versions_list: project.versionsList || null,
-            feedback: project.feedback || null,
-            history: project.history || null
-          }, { onConflict: 'id' });
-          
-        if (error) {
-          console.error('Error saving project to Supabase:', error);
-        }
-      }
-      console.log('Projects saved to Supabase');
-    } catch (err) {
-      console.error('Error saving projects to Supabase:', err);
-    }
+    console.log('Projects saved to localStorage');
   }, []);
 
   // Load projects on component mount
@@ -189,13 +121,6 @@ export const usePreviewProjects = () => {
   const deleteProject = useCallback((id: string) => {
     const updatedProjects = projects.filter(project => project.id !== id);
     setProjects(updatedProjects);
-    
-    // Delete from Supabase
-    try {
-      supabase.from('preview_projects').delete().eq('id', id);
-    } catch (err) {
-      console.error('Error deleting project from Supabase:', err);
-    }
     
     // Update local storage
     saveProjects(updatedProjects);

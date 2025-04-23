@@ -1,3 +1,4 @@
+
 import { useState } from 'react';
 import { useToast } from '@/hooks/use-toast';
 import { useFileUpload } from './useFileUpload';
@@ -83,7 +84,7 @@ export function useBriefingStorage() {
         });
         
         // Enviar notificação
-        notificationService.notify('new_briefing', {
+        notificationService.notify('briefing_received', {
           id: submissionId,
           clientName,
           clientEmail,

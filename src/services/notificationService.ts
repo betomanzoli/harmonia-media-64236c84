@@ -6,12 +6,14 @@
 import emailService from '@/services/emailService';
 import { supabase } from '@/integrations/supabase/client';
 
-type NotificationType = 
+export type NotificationType = 
   | 'new_preview' 
   | 'feedback_received'
   | 'preview_approved'
   | 'payment_confirmed'
-  | 'briefing_received';
+  | 'briefing_received'
+  | 'new_briefing'
+  | 'new_order';
 
 interface NotificationData {
   projectId?: string;
@@ -105,6 +107,7 @@ export const notificationService = {
           break;
           
         case 'briefing_received':
+        case 'new_briefing':
           if (data.clientEmail && data.clientName) {
             await emailService.sendBriefingConfirmation(
               data.clientEmail,
@@ -112,6 +115,17 @@ export const notificationService = {
             );
             
             console.log(`E-mail de confirmação de briefing enviado para: ${data.clientEmail}`);
+          }
+          break;
+          
+        case 'new_order':
+          if (data.clientEmail && data.clientName) {
+            await emailService.sendOrderConfirmation(
+              data.clientEmail,
+              data.clientName
+            );
+            
+            console.log(`E-mail de confirmação de pedido enviado para: ${data.clientEmail}`);
           }
           break;
       }
