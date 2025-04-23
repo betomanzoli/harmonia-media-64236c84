@@ -18,10 +18,8 @@ const ProjectActionCard: React.FC<ProjectActionCardProps> = ({
   previewUrl,
   projectId
 }) => {
-  // Ensure the preview URL is correctly formatted
-  const formattedPreviewUrl = previewUrl.startsWith('/') 
-    ? previewUrl 
-    : `/preview/${projectId}`;
+  // Format the preview URL correctly to ensure it works
+  const formattedPreviewUrl = `/preview/${projectId}`;
 
   return (
     <Card>

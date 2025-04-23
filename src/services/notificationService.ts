@@ -1,117 +1,149 @@
-import { toast } from '@/hooks/use-toast';
+
+/**
+ * Serviço de Notificações
+ * Responsável por enviar notificações aos clientes e administradores
+ */
+import emailService from '@/services/emailService';
+import { supabase } from '@/integrations/supabase/client';
 
 type NotificationType = 
   | 'new_preview' 
-  | 'preview_feedback' 
-  | 'preview_approved' 
-  | 'payment_received' 
-  | 'project_update'
-  | 'deadline_extended'
   | 'feedback_received'
-  | 'new_order'
-  | 'new_briefing';
+  | 'preview_approved'
+  | 'payment_confirmed'
+  | 'briefing_received';
 
 interface NotificationData {
   projectId?: string;
   clientName?: string;
   clientEmail?: string;
   message?: string;
+  versionId?: string;
+  packageName?: string;
   expirationDate?: string;
-  days?: number;
-  newDate?: string;
-  packageType?: string;
-  amount?: number;
   [key: string]: any;
 }
 
-class NotificationService {
-  private logNotification(type: NotificationType, data: NotificationData) {
-    try {
-      const now = new Date();
-      const timestamp = now.toLocaleDateString('pt-BR') + ' ' + now.toLocaleTimeString('pt-BR');
-      
-      const notificationLog = {
-        type,
-        data,
-        timestamp,
-        id: `notification-${Date.now()}`
-      };
-      
-      const logs = JSON.parse(localStorage.getItem('notification-logs') || '[]');
-      logs.unshift(notificationLog);
-      const trimmedLogs = logs.slice(0, 1000);
-      localStorage.setItem('notification-logs', JSON.stringify(trimmedLogs));
-      
-      return notificationLog;
-    } catch (error) {
-      console.error('Erro ao registrar notificação:', error);
-      return null;
-    }
-  }
-  
-  public notify(type: NotificationType, data: NotificationData): boolean {
-    console.log(`Enviando notificação tipo: ${type}`, data);
-    
-    const log = this.logNotification(type, data);
-    
-    let title = '';
-    let description = '';
-    
-    switch (type) {
-      case 'new_preview':
-        title = 'Nova prévia enviada';
-        description = `Prévia enviada para ${data.clientName} (${data.clientEmail})`;
-        break;
-      case 'preview_feedback':
-        title = 'Feedback recebido';
-        description = `${data.clientName} enviou feedback para o projeto ${data.projectId}`;
-        break;
-      case 'preview_approved':
-        title = 'Prévia aprovada';
-        description = `${data.clientName} aprovou a prévia do projeto ${data.projectId}`;
-        break;
-      case 'deadline_extended':
-        title = 'Prazo estendido';
-        description = `Prazo do projeto ${data.projectId} estendido em ${data.days} dias`;
-        break;
-      case 'feedback_received':
-        title = 'Feedback recebido';
-        description = `${data.clientName} enviou feedback para o projeto ${data.projectId}`;
-        break;
-      case 'new_order':
-        title = 'Novo pedido';
-        description = `Novo pedido recebido para ${data.clientName} (${data.clientEmail})`;
-        break;
-      case 'new_briefing':
-        title = 'Novo briefing';
-        description = `Novo briefing recebido para ${data.clientName} (${data.clientEmail})`;
-        break;
-      default:
-        title = 'Notificação enviada';
-        description = `Tipo: ${type}`;
-    }
-    
-    toast({
-      title,
-      description,
-    });
-    
-    return true;
-  }
-  
-  public getNotificationHistory() {
-    try {
-      return JSON.parse(localStorage.getItem('notification-logs') || '[]');
-    } catch (error) {
-      console.error('Erro ao recuperar histórico de notificações:', error);
-      return [];
-    }
-  }
-  
-  public clearNotificationHistory() {
-    localStorage.removeItem('notification-logs');
-    return true;
-  }
-}
+const webhookUrl = localStorage.getItem('previews_webhookUrl') || '';
 
-export const notificationService = new NotificationService();
+export const notificationService = {
+  /**
+   * Envia uma notificação
+   * @param type Tipo de notificação
+   * @param data Dados da notificação
+   */
+  notify: async (type: NotificationType, data: NotificationData) => {
+    console.log(`Enviando notificação: ${type}`, data);
+    
+    // Preparar notificação para envio
+    const notificationData = {
+      type,
+      data,
+      timestamp: new Date().toISOString()
+    };
+    
+    // Registrar notificação no banco de dados
+    try {
+      const { error } = await supabase.from('notifications')
+        .insert([
+          { 
+            type,
+            data: notificationData,
+            project_id: data.projectId || null,
+            client_email: data.clientEmail || null,
+            status: 'pending'
+          }
+        ]);
+        
+      if (error) {
+        console.error('Erro ao registrar notificação:', error);
+      }
+    } catch (err) {
+      console.error('Falha ao registrar notificação no banco:', err);
+    }
+    
+    // Enviar email baseado no tipo de notificação
+    try {
+      switch (type) {
+        case 'new_preview':
+          if (data.clientEmail && data.clientName) {
+            const previewUrl = data.projectId ? 
+              `${window.location.origin}/preview/${data.projectId}` : '';
+              
+            await emailService.sendPreviewNotification(
+              data.clientEmail,
+              data.clientName,
+              previewUrl
+            );
+            
+            console.log(`E-mail de prévia enviado para: ${data.clientEmail}`);
+          }
+          break;
+          
+        case 'feedback_received':
+          // Enviar email para administrador sobre feedback recebido
+          console.log('Feedback recebido do cliente:', data.clientName);
+          // Em produção, enviar email para administrador
+          break;
+          
+        case 'preview_approved':
+          // Enviar email para administrador sobre prévia aprovada
+          console.log('Prévia aprovada pelo cliente:', data.clientName);
+          // Em produção, enviar email para administrador
+          break;
+          
+        case 'payment_confirmed':
+          if (data.clientEmail && data.clientName && data.packageName) {
+            await emailService.sendPaymentConfirmation(
+              data.clientEmail,
+              data.clientName,
+              data.packageName
+            );
+            
+            console.log(`E-mail de pagamento enviado para: ${data.clientEmail}`);
+          }
+          break;
+          
+        case 'briefing_received':
+          if (data.clientEmail && data.clientName) {
+            await emailService.sendBriefingConfirmation(
+              data.clientEmail,
+              data.clientName
+            );
+            
+            console.log(`E-mail de confirmação de briefing enviado para: ${data.clientEmail}`);
+          }
+          break;
+      }
+    } catch (err) {
+      console.error('Erro ao enviar notificação por e-mail:', err);
+    }
+    
+    // Enviar para webhook se configurado (integração com outros serviços)
+    if (webhookUrl) {
+      try {
+        const response = await fetch(webhookUrl, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify(notificationData)
+        });
+        
+        if (!response.ok) {
+          console.error('Erro ao enviar para webhook:', await response.text());
+        } else {
+          console.log('Notificação enviada para webhook com sucesso');
+        }
+      } catch (err) {
+        console.error('Falha ao enviar para webhook:', err);
+      }
+    } else {
+      console.log('Webhook não configurado, notificação não enviada');
+    }
+    
+    return true;
+  }
+};
+
+export default notificationService;

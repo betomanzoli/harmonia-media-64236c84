@@ -1,161 +1,226 @@
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
+import { supabase } from '@/integrations/supabase/client';
+import { useBriefings } from '@/hooks/admin/useBriefings';
+
+export interface VersionItem {
+  id: string;
+  name: string;
+  description?: string;
+  fileId?: string;
+  audioUrl?: string;
+  dateAdded: string;
+  recommended?: boolean;
+}
 
 export interface ProjectItem {
   id: string;
   clientName: string;
   clientEmail: string;
-  clientId?: string;
   packageType: string;
   createdAt: string;
-  status: string;
+  status: 'waiting' | 'feedback' | 'approved';
   versions: number;
   previewUrl: string;
   expirationDate: string;
-  lastActivityDate?: string;
-  history?: any[];
+  lastActivityDate: string;
+  briefingId?: string;
+  versionsList?: VersionItem[];
   feedback?: string;
-  versionsList?: any[];
+  history?: any[];
 }
 
 export const usePreviewProjects = () => {
   const [projects, setProjects] = useState<ProjectItem[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
-
-  // Carregar projetos do localStorage ao inicializar
-  useEffect(() => {
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const { briefings } = useBriefings();
+  
+  // Load projects from local storage or Supabase
+  const loadProjects = useCallback(async () => {
     setIsLoading(true);
-    
-    // Exemplos de projetos padrão
-    const defaultProjects: ProjectItem[] = [
-      {
-        id: 'HAR-2025-0001',
-        clientName: 'João Silva',
-        clientEmail: 'joao.silva@email.com',
-        clientId: 'CLIENT-001',
-        packageType: 'Profissional',
-        createdAt: '05/04/2025',
-        status: 'waiting',
-        versions: 3,
-        previewUrl: '/preview/HAR-2025-0001',
-        expirationDate: '12/04/2025',
-        lastActivityDate: '05/04/2025'
-      },
-      {
-        id: 'HAR-2025-0002',
-        clientName: 'Maria Oliveira',
-        clientEmail: 'maria.oliveira@email.com',
-        clientId: 'CLIENT-002',
-        packageType: 'Premium',
-        createdAt: '06/04/2025',
-        status: 'feedback',
-        versions: 5,
-        previewUrl: '/preview/HAR-2025-0002',
-        expirationDate: '13/04/2025',
-        lastActivityDate: '08/04/2025'
-      },
-      {
-        id: 'HAR-2025-0003',
-        clientName: 'Carlos Mendes',
-        clientEmail: 'carlos.mendes@email.com',
-        clientId: 'CLIENT-003',
-        packageType: 'Essencial',
-        createdAt: '07/04/2025',
-        status: 'approved',
-        versions: 2,
-        previewUrl: '/preview/HAR-2025-0003',
-        expirationDate: '14/04/2025',
-        lastActivityDate: '09/04/2025'
-      }
-    ];
-    
     try {
-      // Carregar projetos salvos
-      const savedProjects = JSON.parse(localStorage.getItem('preview-projects') || '[]');
-      console.log('Carregados', savedProjects.length, 'projetos do localStorage');
+      // First try to load from Supabase
+      const { data, error } = await supabase
+        .from('preview_projects')
+        .select('*')
+        .order('created_at', { ascending: false });
       
-      // Combinar projetos padrão com os salvos
-      const allProjects = [...defaultProjects, ...savedProjects];
-      setProjects(allProjects);
-    } catch (error) {
-      console.error('Erro ao carregar projetos de prévia:', error);
-      setProjects(defaultProjects);
+      if (error) {
+        throw error;
+      }
+      
+      if (data && data.length > 0) {
+        console.log('Projects loaded from Supabase:', data.length);
+        // Map from database format to our format
+        const mappedProjects: ProjectItem[] = data.map(item => ({
+          id: item.id,
+          clientName: item.client_name,
+          clientEmail: item.client_email,
+          packageType: item.package_type,
+          createdAt: new Date(item.created_at).toLocaleDateString('pt-BR'),
+          status: item.status || 'waiting',
+          versions: item.versions || 0,
+          previewUrl: item.preview_url || '',
+          expirationDate: item.expiration_date ? new Date(item.expiration_date).toLocaleDateString('pt-BR') : '',
+          lastActivityDate: item.last_activity_date ? new Date(item.last_activity_date).toLocaleDateString('pt-BR') : '',
+          briefingId: item.briefing_id,
+          versionsList: item.versions_list,
+          feedback: item.feedback,
+          history: item.history
+        }));
+        
+        setProjects(mappedProjects);
+      } else {
+        // If no data from Supabase, try local storage
+        const storedProjects = localStorage.getItem('harmonIA_preview_projects');
+        if (storedProjects) {
+          setProjects(JSON.parse(storedProjects));
+          console.log('Projects loaded from localStorage');
+        } else {
+          // Initialize with empty array if nothing found
+          setProjects([]);
+          console.log('No projects found, initialized with empty array');
+        }
+      }
+    } catch (err: any) {
+      console.error('Error loading projects:', err);
+      setError(err.message || 'Failed to load projects');
+      
+      // Fallback to localStorage if Supabase fails
+      const storedProjects = localStorage.getItem('harmonIA_preview_projects');
+      if (storedProjects) {
+        setProjects(JSON.parse(storedProjects));
+        console.log('Fallback: Projects loaded from localStorage');
+      }
     } finally {
       setIsLoading(false);
     }
   }, []);
 
-  const addProject = (project: Omit<ProjectItem, 'id'>) => {
-    // Gerar ID com base na data e número de projetos (garantindo sequência)
-    const year = new Date().getFullYear();
-    const projectNumber = (projects.length + 1).toString().padStart(4, '0');
-    const newId = `HAR-${year}-${projectNumber}`;
+  // Save projects to both local storage and Supabase
+  const saveProjects = useCallback(async (updatedProjects: ProjectItem[]) => {
+    // Save to localStorage as backup
+    localStorage.setItem('harmonIA_preview_projects', JSON.stringify(updatedProjects));
     
-    const now = new Date();
-    const timestamp = now.toLocaleDateString('pt-BR') + ' ' + now.toLocaleTimeString('pt-BR');
+    try {
+      // Save each project to Supabase
+      for (const project of updatedProjects) {
+        const { error } = await supabase
+          .from('preview_projects')
+          .upsert({
+            id: project.id,
+            client_name: project.clientName,
+            client_email: project.clientEmail,
+            package_type: project.packageType,
+            status: project.status,
+            versions: project.versions,
+            preview_url: project.previewUrl || '',
+            expiration_date: project.expirationDate ? new Date(project.expirationDate.split('/').reverse().join('-')) : null,
+            last_activity_date: project.lastActivityDate ? new Date(project.lastActivityDate.split('/').reverse().join('-')) : null,
+            briefing_id: project.briefingId || null,
+            versions_list: project.versionsList || null,
+            feedback: project.feedback || null,
+            history: project.history || null
+          }, { onConflict: 'id' });
+          
+        if (error) {
+          console.error('Error saving project to Supabase:', error);
+        }
+      }
+      console.log('Projects saved to Supabase');
+    } catch (err) {
+      console.error('Error saving projects to Supabase:', err);
+    }
+  }, []);
+
+  // Load projects on component mount
+  useEffect(() => {
+    loadProjects();
+  }, [loadProjects]);
+
+  // Get project by ID
+  const getProjectById = useCallback((id: string) => {
+    return projects.find(project => project.id === id) || null;
+  }, [projects]);
+
+  // Generate unique project ID linked to briefing if available
+  const generateProjectId = useCallback(() => {
+    // Get the highest existing project number
+    const highestId = projects.reduce((max, project) => {
+      const idNum = parseInt(project.id.replace('P', ''));
+      return isNaN(idNum) ? max : Math.max(max, idNum);
+    }, 0);
     
-    const newProject = {
+    return `P${(highestId + 1).toString().padStart(4, '0')}`;
+  }, [projects]);
+
+  // Find corresponding briefing for a client
+  const findClientBriefing = useCallback((clientEmail: string) => {
+    return briefings.find(briefing => briefing.email === clientEmail);
+  }, [briefings]);
+
+  // Add new project
+  const addProject = useCallback((project: Omit<ProjectItem, "id">) => {
+    // Check if client has a briefing and use that ID if possible
+    const clientBriefing = findClientBriefing(project.clientEmail);
+    const briefingId = clientBriefing?.id;
+    
+    // Generate ID based on highest existing ID
+    const newId = generateProjectId();
+    
+    // Create the new project with the briefing ID if available
+    const newProject: ProjectItem = {
       ...project,
       id: newId,
-      previewUrl: `/preview/${newId}`,
-      history: [
-        { action: 'Projeto criado', timestamp }
-      ],
-      versionsList: Array.from({ length: project.versions }, (_, i) => ({
-        id: `v${i+1}`,
-        name: `Versão ${i+1}`,
-        url: '#',
-        dateAdded: now.toLocaleDateString('pt-BR')
-      }))
+      briefingId: briefingId
     };
     
-    const updatedProjects = [newProject, ...projects];
+    const updatedProjects = [...projects, newProject];
     setProjects(updatedProjects);
     
-    // Salvar no localStorage
-    const savedProjects = JSON.parse(localStorage.getItem('preview-projects') || '[]');
-    localStorage.setItem('preview-projects', JSON.stringify([...savedProjects, newProject]));
+    // Save to storage
+    saveProjects(updatedProjects);
     
-    console.log('Projeto adicionado com sucesso:', newId);
     return newId;
-  };
+  }, [projects, generateProjectId, findClientBriefing, saveProjects]);
 
-  const updateProject = (projectId: string, updates: Partial<ProjectItem>) => {
+  // Delete project
+  const deleteProject = useCallback((id: string) => {
+    const updatedProjects = projects.filter(project => project.id !== id);
+    setProjects(updatedProjects);
+    
+    // Delete from Supabase
+    try {
+      supabase.from('preview_projects').delete().eq('id', id);
+    } catch (err) {
+      console.error('Error deleting project from Supabase:', err);
+    }
+    
+    // Update local storage
+    saveProjects(updatedProjects);
+  }, [projects, saveProjects]);
+
+  // Update project
+  const updateProject = useCallback((id: string, updates: Partial<ProjectItem>) => {
     const updatedProjects = projects.map(project => 
-      project.id === projectId ? { ...project, ...updates } : project
+      project.id === id ? { ...project, ...updates } : project
     );
     
     setProjects(updatedProjects);
+    saveProjects(updatedProjects);
     
-    // Atualizar no localStorage
-    const savedProjects = JSON.parse(localStorage.getItem('preview-projects') || '[]');
-    const updatedSaved = savedProjects.map((proj: any) => 
-      proj.id === projectId ? { ...proj, ...updates } : proj
-    );
-    localStorage.setItem('preview-projects', JSON.stringify(updatedSaved));
-  };
-
-  const deleteProject = (projectId: string) => {
-    const filteredProjects = projects.filter(project => project.id !== projectId);
-    setProjects(filteredProjects);
-    
-    // Atualizar no localStorage
-    const savedProjects = JSON.parse(localStorage.getItem('preview-projects') || '[]');
-    const filteredSaved = savedProjects.filter((proj: any) => proj.id !== projectId);
-    localStorage.setItem('preview-projects', JSON.stringify(filteredSaved));
-  };
-
-  const getProjectById = (projectId: string) => {
-    return projects.find(project => project.id === projectId);
-  };
+    return updatedProjects.find(p => p.id === id);
+  }, [projects, saveProjects]);
 
   return {
     projects,
-    setProjects,
-    addProject,
-    updateProject,
-    deleteProject,
+    isLoading,
+    error,
     getProjectById,
-    isLoading
+    addProject,
+    deleteProject,
+    updateProject,
+    loadProjects
   };
 };

@@ -1,9 +1,9 @@
 
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useParams } from 'react-router-dom';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useToast } from '@/hooks/use-toast';
-import { usePreviewData } from '@/hooks/use-preview-data';
+import { usePreviewData } from '@/hooks/usePreviewData';
 import PreviewHeader from './PreviewHeader';
 import PreviewInstructions from './PreviewInstructions';
 import PreviewPlayerList from './PreviewPlayerList';
@@ -30,10 +30,10 @@ const MusicPreviewSystem: React.FC<MusicPreviewSystemProps> = ({ projectId: prop
   const [error, setError] = useState<string | null>(null);
   const navigate = useNavigate();
   
-  // Usar o hook personalizado para buscar dados do projeto
+  // Use the hook to fetch preview data
   const { projectData, setProjectData, isLoading } = usePreviewData(projectId);
   
-  // Adicionar proteção para impedir downloads de áudio
+  // Add protection to prevent audio downloads
   useEffect(() => {
     const handleContextMenu = (e: MouseEvent) => {
       if ((e.target as HTMLElement)?.closest('audio')) {
@@ -57,7 +57,7 @@ const MusicPreviewSystem: React.FC<MusicPreviewSystemProps> = ({ projectId: prop
   // Check if project exists once loading is complete
   useEffect(() => {
     if (!isLoading && !projectData) {
-      setError("Previews not found or expired. This link may no longer be valid.");
+      setError("Prévias não encontradas ou expiradas. Este link pode não ser mais válido.");
     }
   }, [isLoading, projectData]);
 
@@ -76,14 +76,14 @@ const MusicPreviewSystem: React.FC<MusicPreviewSystemProps> = ({ projectId: prop
       description: "Obrigado pelo seu feedback. Nossa equipe já está analisando.",
     });
     
-    // Enviar notificação de feedback recebido
+    // Send notification for feedback received
     notificationService.notify('feedback_received', {
       projectId: projectId,
       clientName: projectData?.clientName || 'Cliente',
       message: feedback
     });
     
-    // Atualizar status localmente para propósitos de demonstração
+    // Update status locally for demonstration purposes
     setProjectData(prev => prev ? {...prev, status: 'feedback' as const} : null);
   };
   
@@ -102,14 +102,14 @@ const MusicPreviewSystem: React.FC<MusicPreviewSystemProps> = ({ projectId: prop
       description: "Excelente escolha! Vamos finalizar sua música e entregar em breve.",
     });
     
-    // Enviar notificação de música aprovada
+    // Send notification for approved preview
     notificationService.notify('preview_approved', {
       projectId: projectId,
       clientName: projectData?.clientName || 'Cliente',
       versionId: selectedVersion
     });
     
-    // Atualizar status localmente para propósitos de demonstração
+    // Update status locally
     setProjectData(prev => prev ? {...prev, status: 'approved' as const} : null);
   };
   
