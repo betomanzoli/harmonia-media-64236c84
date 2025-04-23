@@ -9,6 +9,8 @@ import { Label } from "@/components/ui/label";
 import { Loader2, Upload } from "lucide-react";
 import { useToast } from '@/hooks/use-toast';
 import { usePreviewProjects } from '@/hooks/admin/usePreviewProjects';
+import { useGoogleDriveAudio } from '@/hooks/audio/useGoogleDriveAudio';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
 interface AddVersionFormProps {
   projectId: string;
@@ -19,10 +21,13 @@ const AddVersionForm: React.FC<AddVersionFormProps> = ({ projectId, onAddComplet
   const [versionName, setVersionName] = useState('');
   const [description, setDescription] = useState('');
   const [audioFile, setAudioFile] = useState<File | null>(null);
+  const [selectedDriveFileId, setSelectedDriveFileId] = useState<string>('');
   const [isRecommended, setIsRecommended] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [uploadMethod, setUploadMethod] = useState<'upload' | 'drive'>('drive');
   const { toast } = useToast();
   const { getProjectById, updateProject } = usePreviewProjects();
+  const { audioFiles, isLoading: audioFilesLoading } = useGoogleDriveAudio();
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files.length > 0) {
@@ -56,7 +61,7 @@ const AddVersionForm: React.FC<AddVersionFormProps> = ({ projectId, onAddComplet
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    if (!versionName || !description || !audioFile) {
+    if (!versionName || !description || (uploadMethod === 'upload' && !audioFile) || (uploadMethod === 'drive' && !selectedDriveFileId)) {
       toast({
         title: "Dados incompletos",
         description: "Preencha todos os campos obrigatórios",
@@ -75,15 +80,40 @@ const AddVersionForm: React.FC<AddVersionFormProps> = ({ projectId, onAddComplet
         throw new Error("Projeto não encontrado");
       }
       
-      // Em produção, aqui faria upload do arquivo
-      // Simulando um upload bem-sucedido
-      console.log('Simulando upload do arquivo:', audioFile.name);
+      // Determinar o fileId (do Google Drive ou simulado)
+      let fileId = '';
+      let fileName = '';
+      let fileSize = 0;
+      let fileType = '';
       
-      // Simulando um tempo de processamento
-      await new Promise(resolve => setTimeout(resolve, 1500));
+      if (uploadMethod === 'drive') {
+        // Use the selected Google Drive file
+        fileId = selectedDriveFileId;
+        
+        // Get file details from audioFiles
+        const fileDetails = audioFiles.find(file => file.id === selectedDriveFileId);
+        if (fileDetails) {
+          fileName = fileDetails.name;
+          // These would be approximations or defaults since we don't have the actual values
+          fileSize = 1024 * 1024; // 1MB placeholder
+          fileType = 'audio/mp3'; // Default type
+        }
+      } else if (audioFile) {
+        // Simulate upload - in a real implementation, we'd upload to Google Drive
+        // and get back the fileId, but here we'll just pretend
+        fileId = `simulated-${Date.now()}`;
+        fileName = audioFile.name;
+        fileSize = audioFile.size;
+        fileType = audioFile.type;
+        
+        console.log('Simulating upload of file:', audioFile.name);
+        
+        // Simulando um tempo de processamento
+        await new Promise(resolve => setTimeout(resolve, 1500));
+      }
       
-      // Gerar URL de prévia (em produção seria a URL real do arquivo)
-      const previewUrl = `/previews/${projectId}/${encodeURIComponent(versionName.toLowerCase().replace(/\s+/g, '-'))}`;
+      // Gerar URL de prévia baseada no Google Drive
+      const previewUrl = `/preview/${projectId}`;
       
       // Criar nova versão
       const now = new Date();
@@ -92,9 +122,10 @@ const AddVersionForm: React.FC<AddVersionFormProps> = ({ projectId, onAddComplet
         name: versionName,
         description: description,
         url: previewUrl,
-        fileSize: audioFile.size,
-        fileType: audioFile.type,
-        fileName: audioFile.name,
+        fileId: fileId, // Important! Store the file ID
+        fileName: fileName,
+        fileSize: fileSize,
+        fileType: fileType,
         dateAdded: now.toLocaleDateString('pt-BR'),
         recommended: isRecommended
       };
@@ -111,7 +142,7 @@ const AddVersionForm: React.FC<AddVersionFormProps> = ({ projectId, onAddComplet
       const historyItem = {
         action: `Versão "${versionName}" adicionada`,
         timestamp: now.toLocaleDateString('pt-BR') + ' ' + now.toLocaleTimeString('pt-BR'),
-        data: { versionName, description, isRecommended }
+        data: { versionName, description, isRecommended, fileId }
       };
       
       const newHistory = project.history ? [historyItem, ...project.history] : [historyItem];
@@ -161,22 +192,72 @@ const AddVersionForm: React.FC<AddVersionFormProps> = ({ projectId, onAddComplet
           />
         </div>
         
-        <div className="space-y-2">
-          <Label htmlFor="audio-file">Arquivo de áudio</Label>
-          <div className="flex items-center gap-2">
-            <Input
-              id="audio-file"
-              type="file"
-              accept="audio/*"
-              onChange={handleFileChange}
-              required
-              className="flex-1"
-            />
+        <div className="space-y-3">
+          <Label>Método de adição do áudio</Label>
+          <div className="flex gap-4">
+            <Button
+              type="button"
+              variant={uploadMethod === 'drive' ? "default" : "outline"}
+              className={uploadMethod === 'drive' ? "bg-harmonia-green hover:bg-harmonia-green/90" : ""}
+              onClick={() => setUploadMethod('drive')}
+            >
+              Selecionar do Google Drive
+            </Button>
+            <Button
+              type="button"
+              variant={uploadMethod === 'upload' ? "default" : "outline"}
+              className={uploadMethod === 'upload' ? "bg-harmonia-green hover:bg-harmonia-green/90" : ""}
+              onClick={() => setUploadMethod('upload')}
+            >
+              Fazer upload de arquivo
+            </Button>
           </div>
-          <p className="text-sm text-muted-foreground">
-            Formatos aceitos: MP3, WAV, AAC. Tamanho máximo: 20MB
-          </p>
         </div>
+        
+        {uploadMethod === 'drive' ? (
+          <div className="space-y-2">
+            <Label htmlFor="drive-file">Arquivo do Google Drive</Label>
+            {audioFilesLoading ? (
+              <div className="flex items-center space-x-2">
+                <Loader2 className="h-4 w-4 animate-spin" />
+                <span>Carregando arquivos disponíveis...</span>
+              </div>
+            ) : (
+              <Select
+                value={selectedDriveFileId}
+                onValueChange={setSelectedDriveFileId}
+              >
+                <SelectTrigger className="w-full">
+                  <SelectValue placeholder="Selecione um arquivo de áudio" />
+                </SelectTrigger>
+                <SelectContent>
+                  {audioFiles.map(file => (
+                    <SelectItem key={file.id} value={file.id}>
+                      {file.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            )}
+          </div>
+        ) : (
+          <div className="space-y-2">
+            <Label htmlFor="audio-file">Arquivo de áudio</Label>
+            <div className="flex items-center gap-2">
+              <Input
+                id="audio-file"
+                type="file"
+                accept="audio/*"
+                onChange={handleFileChange}
+                required
+                className="flex-1"
+              />
+            </div>
+            <p className="text-sm text-muted-foreground">
+              Formatos aceitos: MP3, WAV, AAC. Tamanho máximo: 20MB
+            </p>
+          </div>
+        )}
         
         <div className="flex items-center space-x-2 pt-2">
           <Checkbox 

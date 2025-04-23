@@ -9,7 +9,7 @@ interface ProjectActionCardProps {
   onAddVersion: () => void;
   onExtendDeadline: () => void;
   previewUrl: string;
-  projectId: string; // Added this to make proper links
+  projectId: string; 
 }
 
 const ProjectActionCard: React.FC<ProjectActionCardProps> = ({ 
@@ -18,6 +18,11 @@ const ProjectActionCard: React.FC<ProjectActionCardProps> = ({
   previewUrl,
   projectId
 }) => {
+  // Ensure the preview URL is correctly formatted
+  const formattedPreviewUrl = previewUrl.startsWith('/') 
+    ? previewUrl 
+    : `/preview/${projectId}`;
+
   return (
     <Card>
       <CardHeader>
@@ -48,7 +53,7 @@ const ProjectActionCard: React.FC<ProjectActionCardProps> = ({
             className="w-full justify-start text-harmonia-green border-harmonia-green hover:bg-harmonia-green/10"
             asChild
           >
-            <Link to={`/preview/${projectId}`} target="_blank">
+            <Link to={formattedPreviewUrl} target="_blank">
               <Eye className="mr-2 h-4 w-4" />
               Ver como cliente
             </Link>

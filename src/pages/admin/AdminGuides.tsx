@@ -1,7 +1,6 @@
-
 import React from 'react';
 import AdminLayout from '@/components/admin/layout/AdminLayout';
-import { Button } from "@/components/ui/button";  // Changed from card to button
+import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { ArrowLeft, BookOpen, Lightbulb, HelpCircle, Video } from 'lucide-react';
 import { Link } from 'react-router-dom';
