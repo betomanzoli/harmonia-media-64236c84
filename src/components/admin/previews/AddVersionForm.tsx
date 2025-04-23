@@ -9,8 +9,8 @@ import { DialogFooter } from "@/components/ui/dialog";
 import { useToast } from '@/hooks/use-toast';
 
 interface AddVersionFormProps {
-  projectId: string; 
-  onAddComplete: (versionName: string) => void; 
+  projectId: string;
+  onAddComplete: (versionName: string) => void;
 }
 
 const AddVersionForm: React.FC<AddVersionFormProps> = ({ projectId, onAddComplete }) => {
@@ -36,19 +36,17 @@ const AddVersionForm: React.FC<AddVersionFormProps> = ({ projectId, onAddComplet
     if (!audioUrl.trim()) {
       toast({
         title: "Erro",
-        description: "A URL do áudio é obrigatória",
+        description: "O link do Google Drive é obrigatório",
         variant: "destructive"
       });
       return;
     }
     
-    // Check if the URL is a valid Google Drive link
-    const isDriveLink = audioUrl.includes('drive.google.com');
-    
-    if (!isDriveLink && !audioUrl.match(/^(http|https):\/\/[^ "]+$/)) {
+    // Validate Google Drive link
+    if (!audioUrl.includes('drive.google.com')) {
       toast({
         title: "Erro",
-        description: "Por favor, insira uma URL válida",
+        description: "Por favor, insira um link válido do Google Drive",
         variant: "destructive"
       });
       return;
@@ -56,68 +54,57 @@ const AddVersionForm: React.FC<AddVersionFormProps> = ({ projectId, onAddComplet
     
     setIsSubmitting(true);
     
-    // Process Google Drive links to extract file ID if needed
+    // Process Google Drive links to extract file ID and create streaming URL
     let processedUrl = audioUrl;
-    if (isDriveLink && audioUrl.includes('id=')) {
+    if (audioUrl.includes('id=')) {
       const fileIdMatch = audioUrl.match(/id=([^&]+)/);
       if (fileIdMatch && fileIdMatch[1]) {
         processedUrl = `https://drive.google.com/uc?export=view&id=${fileIdMatch[1]}`;
       }
     }
     
-    // In a production environment, this would be uploaded to storage
-    setTimeout(() => {
-      // Get the project from localStorage
-      const storedProjects = JSON.parse(localStorage.getItem('harmonIA_preview_projects') || '[]');
-      const projectIndex = storedProjects.findIndex((p: any) => p.id === projectId);
+    // Get the project from localStorage
+    const storedProjects = JSON.parse(localStorage.getItem('harmonIA_preview_projects') || '[]');
+    const projectIndex = storedProjects.findIndex((p: any) => p.id === projectId);
+    
+    if (projectIndex !== -1) {
+      const project = storedProjects[projectIndex];
       
-      if (projectIndex !== -1) {
-        const project = storedProjects[projectIndex];
-        
-        // Create new version object
-        const newVersion = {
-          id: `v${project.versions + 1}`,
-          name: versionName,
-          description: description,
-          audioUrl: processedUrl,
-          dateAdded: new Date().toLocaleDateString('pt-BR'),
-          recommended: isRecommended
-        };
-        
-        // Add the version to the project's versionsList or create it if it doesn't exist
-        if (!project.versionsList) {
-          project.versionsList = [newVersion];
-        } else {
-          // If this is marked as recommended, remove recommended from others
-          if (isRecommended) {
-            project.versionsList = project.versionsList.map((v: any) => ({
-              ...v,
-              recommended: false
-            }));
-          }
-          
-          project.versionsList.push(newVersion);
-        }
-        
-        // Increment the versions count
-        project.versions = (project.versionsList || []).length;
-        
-        // Update the project in localStorage
-        storedProjects[projectIndex] = project;
-        localStorage.setItem('harmonIA_preview_projects', JSON.stringify(storedProjects));
-        
-        // Call the callback
-        onAddComplete(versionName);
+      const newVersion = {
+        id: `v${(project.versionsList?.length || 0) + 1}`,
+        name: versionName,
+        description: description,
+        audioUrl: processedUrl,
+        dateAdded: new Date().toLocaleDateString('pt-BR'),
+        recommended: isRecommended
+      };
+      
+      if (!project.versionsList) {
+        project.versionsList = [newVersion];
       } else {
-        toast({
-          title: "Erro",
-          description: "Projeto não encontrado",
-          variant: "destructive"
-        });
+        if (isRecommended) {
+          project.versionsList = project.versionsList.map((v: any) => ({
+            ...v,
+            recommended: false
+          }));
+        }
+        project.versionsList.push(newVersion);
       }
       
-      setIsSubmitting(false);
-    }, 1000);
+      project.versions = (project.versionsList || []).length;
+      storedProjects[projectIndex] = project;
+      localStorage.setItem('harmonIA_preview_projects', JSON.stringify(storedProjects));
+      
+      onAddComplete(versionName);
+    } else {
+      toast({
+        title: "Erro",
+        description: "Projeto não encontrado",
+        variant: "destructive"
+      });
+    }
+    
+    setIsSubmitting(false);
   };
 
   return (
@@ -145,7 +132,7 @@ const AddVersionForm: React.FC<AddVersionFormProps> = ({ projectId, onAddComplet
       </div>
       
       <div className="space-y-2">
-        <Label htmlFor="audio-url">URL do Áudio (Google Drive ou outra fonte)</Label>
+        <Label htmlFor="audio-url">Link do Google Drive</Label>
         <Input 
           id="audio-url"
           value={audioUrl}
@@ -154,7 +141,8 @@ const AddVersionForm: React.FC<AddVersionFormProps> = ({ projectId, onAddComplet
           required
         />
         <p className="text-xs text-gray-500">
-          Cole o link de compartilhamento do Google Drive ou outra fonte de áudio online.
+          Cole o link de compartilhamento do Google Drive para a versão musical.
+          Certifique-se de que o link esteja configurado como "Qualquer pessoa com o link pode visualizar".
         </p>
       </div>
       

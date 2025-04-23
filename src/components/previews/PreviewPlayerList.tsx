@@ -1,9 +1,10 @@
 
-import React from 'react';
+import React, { useState } from 'react';
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Check } from 'lucide-react';
-import LimitedAudioPlayer from '@/components/LimitedAudioPlayer';
+import { Check, Play } from 'lucide-react';
+import { Textarea } from "@/components/ui/textarea";
+import { useToast } from '@/hooks/use-toast';
 
 interface MusicPreview {
   id: string;
@@ -27,6 +28,27 @@ const PreviewVersionsList: React.FC<PreviewVersionsListProps> = ({
   setSelectedVersion,
   isApproved
 }) => {
+  const [feedbacks, setFeedbacks] = useState<Record<string, string>>({});
+  const { toast } = useToast();
+
+  const handlePlay = (version: MusicPreview) => {
+    const audioUrl = version.audioUrl || version.url;
+    if (audioUrl) {
+      window.open(audioUrl, '_blank');
+      toast({
+        title: "Reproduzindo versão",
+        description: "A versão está sendo reproduzida em uma nova aba."
+      });
+    }
+  };
+
+  const handleFeedbackChange = (versionId: string, feedback: string) => {
+    setFeedbacks(prev => ({
+      ...prev,
+      [versionId]: feedback
+    }));
+  };
+
   if (!versions || versions.length === 0) {
     return (
       <div className="mb-10">
@@ -58,39 +80,56 @@ const PreviewVersionsList: React.FC<PreviewVersionsListProps> = ({
                   </span>
                 )}
               </div>
-              {selectedVersion === version.id ? (
+              <div className="flex gap-2">
                 <Button 
                   variant="outline" 
                   size="sm"
-                  className="bg-harmonia-green/10 text-harmonia-green border-harmonia-green"
-                  disabled
+                  onClick={() => handlePlay(version)}
+                  className="text-harmonia-green hover:bg-harmonia-green/10"
                 >
-                  <Check className="w-4 h-4 mr-2" />
-                  Selecionada
+                  <Play className="w-4 h-4 mr-2" />
+                  Ouvir
                 </Button>
-              ) : (
-                <Button 
-                  variant="outline" 
-                  size="sm"
-                  className="hover:bg-harmonia-green/10 hover:text-harmonia-green"
-                  onClick={() => setSelectedVersion(version.id)}
-                  disabled={isApproved}
-                >
-                  Selecionar
-                </Button>
-              )}
+                
+                {selectedVersion === version.id ? (
+                  <Button 
+                    variant="outline" 
+                    size="sm"
+                    className="bg-harmonia-green/10 text-harmonia-green border-harmonia-green"
+                    disabled
+                  >
+                    <Check className="w-4 h-4 mr-2" />
+                    Selecionada
+                  </Button>
+                ) : (
+                  <Button 
+                    variant="outline" 
+                    size="sm"
+                    className="hover:bg-harmonia-green/10 hover:text-harmonia-green"
+                    onClick={() => setSelectedVersion(version.id)}
+                    disabled={isApproved}
+                  >
+                    Selecionar
+                  </Button>
+                )}
+              </div>
             </div>
             
             <p className="text-gray-600 mb-4">{version.description}</p>
             
-            <div className="mb-4">
-              <LimitedAudioPlayer 
-                audioSrc={version.audioUrl || version.url || ''}
-                previewDuration={30}
-                title={version.title}
-                subtitle=""
-              />
-            </div>
+            {!isApproved && (
+              <div className="mt-4 pt-4 border-t">
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Suas considerações sobre esta versão:
+                </label>
+                <Textarea
+                  placeholder="Digite aqui seu feedback sobre esta versão..."
+                  value={feedbacks[version.id] || ''}
+                  onChange={(e) => handleFeedbackChange(version.id, e.target.value)}
+                  className="min-h-[100px]"
+                />
+              </div>
+            )}
           </Card>
         ))}
       </div>
