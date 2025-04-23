@@ -1,7 +1,5 @@
 
 import { useState, useEffect, useCallback } from 'react';
-import { supabase } from '@/integrations/supabase/client';
-import { useBriefings } from '@/hooks/admin/useBriefings';
 
 export interface VersionItem {
   id: string;
@@ -35,7 +33,6 @@ export const usePreviewProjects = () => {
   const [projects, setProjects] = useState<ProjectItem[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const { briefings } = useBriefings();
   
   // Load projects from local storage
   const loadProjects = useCallback(async () => {
@@ -88,25 +85,15 @@ export const usePreviewProjects = () => {
     return `P${(highestId + 1).toString().padStart(4, '0')}`;
   }, [projects]);
 
-  // Find corresponding briefing for a client
-  const findClientBriefing = useCallback((clientEmail: string) => {
-    return briefings.find(briefing => briefing.email === clientEmail);
-  }, [briefings]);
-
   // Add new project
   const addProject = useCallback((project: Omit<ProjectItem, "id">) => {
-    // Check if client has a briefing and use that ID if possible
-    const clientBriefing = findClientBriefing(project.clientEmail);
-    const briefingId = clientBriefing?.id;
-    
     // Generate ID based on highest existing ID
     const newId = generateProjectId();
     
     // Create the new project with the briefing ID if available
     const newProject: ProjectItem = {
       ...project,
-      id: newId,
-      briefingId: briefingId
+      id: newId
     };
     
     const updatedProjects = [...projects, newProject];
@@ -116,7 +103,7 @@ export const usePreviewProjects = () => {
     saveProjects(updatedProjects);
     
     return newId;
-  }, [projects, generateProjectId, findClientBriefing, saveProjects]);
+  }, [projects, generateProjectId, saveProjects]);
 
   // Delete project
   const deleteProject = useCallback((id: string) => {

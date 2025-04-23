@@ -9,7 +9,8 @@ interface MusicPreview {
   id: string;
   title: string;
   description: string;
-  audioUrl: string;
+  audioUrl?: string;
+  url?: string;
   recommended?: boolean;
 }
 
@@ -84,7 +85,7 @@ const PreviewVersionsList: React.FC<PreviewVersionsListProps> = ({
             
             <div className="mb-4">
               <LimitedAudioPlayer 
-                audioSrc={version.audioUrl}
+                audioSrc={version.audioUrl || version.url || ''}
                 previewDuration={30}
                 title={version.title}
                 subtitle=""

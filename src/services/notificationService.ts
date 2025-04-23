@@ -4,7 +4,6 @@
  * Responsável por enviar notificações aos clientes e administradores
  */
 import emailService from '@/services/emailService';
-import { supabase } from '@/integrations/supabase/client';
 
 export type NotificationType = 
   | 'new_preview' 
@@ -121,9 +120,12 @@ export const notificationService = {
           
         case 'new_order':
           if (data.clientEmail && data.clientName) {
-            // We need to add this function to the emailService
-            console.log(`Simulando envio de confirmação de pedido para: ${data.clientEmail}`);
-            // Since this function doesn't exist yet, we'll just log instead of trying to call it
+            await emailService.sendOrderConfirmation(
+              data.clientEmail,
+              data.clientName
+            );
+            
+            console.log(`E-mail de confirmação de pedido enviado para: ${data.clientEmail}`);
           }
           break;
       }

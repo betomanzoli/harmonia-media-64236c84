@@ -95,11 +95,16 @@ const emailService = {
     
     try {
       // Em produção, usaria o serviço de email do Supabase
-      // Mas aqui apenas simulamos o envio
-      console.log(`Email de confirmação de pedido simulado para ${email}`);
+      const result = await supabaseEmailService.sendPreviewNotification(
+        email, 
+        name, 
+        `${window.location.origin}/cliente`
+      );
+      
+      console.log(`Email de confirmação de pedido enviado para ${email}`);
       console.log(`Conteúdo: Olá ${name}, seu pedido foi recebido e está sendo processado.`);
       
-      return { success: true };
+      return result || { success: true };
     } catch (error) {
       console.error('Erro ao enviar email de confirmação de pedido:', error);
       return { success: false, error };

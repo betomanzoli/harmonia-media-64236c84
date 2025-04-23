@@ -60,6 +60,22 @@ const ExtraServiceCard: React.FC<ExtraServiceCardProps> = ({
   );
 
   const showPlagiarismDetailsButton = title.includes("Avaliação de Risco de Plágio");
+  
+  // Check if this is a WhatsApp contact service
+  const isWhatsAppService = 
+    title.includes("Composição sem IA (letra + melodia)") || 
+    title.includes("Composição sem IA (completa)");
+
+  // Customize button text based on service
+  const getButtonText = () => {
+    if (isWhatsAppService) {
+      return "Entre em contato";
+    }
+    if (price.toString().includes('Consultar')) {
+      return 'Solicitar Orçamento Personalizado';
+    }
+    return `Adicionar ${title}`;
+  };
 
   return (
     <>
@@ -87,9 +103,9 @@ const ExtraServiceCard: React.FC<ExtraServiceCardProps> = ({
         <div className="flex space-x-2">
           <Button 
             onClick={onServiceClick}
-            className="w-full bg-secondary hover:bg-secondary/90"
+            className={`w-full ${isWhatsAppService ? 'bg-green-600 hover:bg-green-700' : 'bg-secondary hover:bg-secondary/90'}`}
           >
-            {price.toString().includes('Consultar') ? 'Solicitar Orçamento Personalizado' : `Adicionar ${title}`}
+            {getButtonText()}
           </Button>
           {showPlagiarismDetailsButton && (
             <Button 
@@ -108,4 +124,3 @@ const ExtraServiceCard: React.FC<ExtraServiceCardProps> = ({
 };
 
 export default ExtraServiceCard;
-

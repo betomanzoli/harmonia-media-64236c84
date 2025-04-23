@@ -9,7 +9,8 @@ interface MusicPreview {
   id: string;
   title: string;
   description: string;
-  audioUrl: string;
+  audioUrl?: string;
+  url?: string;
   recommended?: boolean;
 }
 
@@ -49,15 +50,14 @@ export const usePreviewData = (projectId: string | undefined) => {
           // First check for versionsList array
           if (adminProject.versionsList && adminProject.versionsList.length > 0) {
             adminProject.versionsList.forEach(v => {
-              if (v.fileId || v.audioUrl) {
-                previews.push({
-                  id: v.id,
-                  title: v.name || `Versão ${v.id}`,
-                  description: v.description || '',
-                  audioUrl: v.audioUrl || `https://drive.google.com/uc?export=view&id=${v.fileId}`,
-                  recommended: v.recommended
-                });
-              }
+              previews.push({
+                id: v.id,
+                title: v.name || `Versão ${v.id}`,
+                description: v.description || '',
+                audioUrl: v.audioUrl || undefined,
+                url: v.url || undefined,
+                recommended: v.recommended
+              });
             });
           } 
           // If versionsList doesn't exist or is empty but versions count exists

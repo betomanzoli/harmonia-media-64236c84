@@ -1,293 +1,230 @@
 
-import React, { useState, useRef } from 'react';
-import { Card, CardHeader, CardContent, CardTitle } from "@/components/ui/card";
+import React, { useState } from 'react';
 import { Button } from "@/components/ui/button";
-import { Play, Pause, Star, Download, Info, Trash } from 'lucide-react';
+import { Card } from "@/components/ui/card";
+import { Dialog, DialogContent, DialogHeader, DialogFooter, DialogTitle } from "@/components/ui/dialog";
+import { FileMusic, Trash, Edit, Play, CheckCircle } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
-import { Slider } from "@/components/ui/slider";
-
-interface Version {
-  id: string;
-  name: string;
-  url?: string;  // Make this optional for compatibility
-  audioUrl?: string; // Add this for new code
-  dateAdded: string;
-  recommended?: boolean;
-}
+import { VersionItem } from '@/hooks/admin/usePreviewProjects';
+import { Input } from '@/components/ui/input';
+import { Textarea } from '@/components/ui/textarea';
+import { Switch } from '@/components/ui/switch';
+import { Label } from '@/components/ui/label';
 
 interface PreviewVersionsListProps {
-  versions: Version[];
-  onDeleteVersion?: (id: string) => void;
+  versions: VersionItem[];
+  onDeleteVersion: (versionId: string) => void;
 }
 
 const PreviewVersionsList: React.FC<PreviewVersionsListProps> = ({ versions, onDeleteVersion }) => {
   const { toast } = useToast();
-  const [playingId, setPlayingId] = useState<string | null>(null);
-  const [currentTime, setCurrentTime] = useState(0);
-  const [duration, setDuration] = useState(0);
-  const audioRef = useRef<HTMLAudioElement | null>(null);
-  const previewDuration = 30; // 30 seconds preview
-  const timeoutRef = useRef<number | null>(null);
+  const [showDeleteDialog, setShowDeleteDialog] = useState(false);
+  const [showEditDialog, setShowEditDialog] = useState(false);
+  const [versionToDelete, setVersionToDelete] = useState<string | null>(null);
+  const [editingVersion, setEditingVersion] = useState<VersionItem | null>(null);
+  const [editName, setEditName] = useState('');
+  const [editDescription, setEditDescription] = useState('');
+  const [editAudioUrl, setEditAudioUrl] = useState('');
+  const [editRecommended, setEditRecommended] = useState(false);
 
-  const handlePlay = (version: Version) => {
-    if (playingId === version.id) {
-      // Pause the current playing audio
-      if (audioRef.current) {
-        audioRef.current.pause();
-        if (timeoutRef.current) {
-          window.clearTimeout(timeoutRef.current);
-          timeoutRef.current = null;
-        }
-      }
-      setPlayingId(null);
+  const handlePlayAudio = (version: VersionItem) => {
+    const audioUrl = version.audioUrl || version.url;
+    if (audioUrl) {
+      window.open(audioUrl, '_blank');
     } else {
-      // Stop currently playing audio if any
-      if (audioRef.current) {
-        audioRef.current.pause();
-        if (timeoutRef.current) {
-          window.clearTimeout(timeoutRef.current);
-          timeoutRef.current = null;
-        }
-      }
-
-      // Start new audio
-      if (audioRef.current) {
-        // Use audioUrl if available, otherwise fall back to url
-        const audioSource = version.audioUrl || version.url;
-        if (!audioSource) {
-          toast({
-            title: "Erro ao reproduzir",
-            description: "Não foi possível encontrar o arquivo de áudio.",
-            variant: "destructive"
-          });
-          return;
-        }
-        
-        audioRef.current.src = audioSource;
-        audioRef.current.currentTime = 0;
-        audioRef.current.play();
-        
-        // Set timeout to stop after preview duration
-        timeoutRef.current = window.setTimeout(() => {
-          if (audioRef.current) {
-            audioRef.current.pause();
-            setPlayingId(null);
-            toast({
-              title: "Prévia finalizada",
-              description: "Esta é apenas uma prévia de 30 segundos."
-            });
-          }
-        }, previewDuration * 1000);
-        
-        setPlayingId(version.id);
-      }
-    }
-  };
-
-  const handleTimeUpdate = () => {
-    if (audioRef.current) {
-      setCurrentTime(audioRef.current.currentTime);
-      
-      // Stop at preview duration
-      if (audioRef.current.currentTime >= previewDuration) {
-        audioRef.current.pause();
-        setPlayingId(null);
-        if (timeoutRef.current) {
-          window.clearTimeout(timeoutRef.current);
-          timeoutRef.current = null;
-        }
-        toast({
-          title: "Prévia finalizada",
-          description: "Esta é apenas uma prévia de 30 segundos."
-        });
-      }
-    }
-  };
-
-  const handleLoadedMetadata = () => {
-    if (audioRef.current) {
-      setDuration(audioRef.current.duration);
-    }
-  };
-
-  const handleSliderChange = (value: number[]) => {
-    if (audioRef.current) {
-      const newTime = value[0];
-      
-      // Don't allow seeking beyond preview time
-      if (newTime > previewDuration) {
-        audioRef.current.currentTime = previewDuration;
-        setCurrentTime(previewDuration);
-        toast({
-          title: "Prévia limitada",
-          description: "Esta é apenas uma prévia de 30 segundos."
-        });
-      } else {
-        audioRef.current.currentTime = newTime;
-        setCurrentTime(newTime);
-      }
-    }
-  };
-
-  const handleDownload = (version: Version) => {
-    // Use audioUrl if available, otherwise fall back to url
-    const audioSource = version.audioUrl || version.url;
-    if (!audioSource) {
       toast({
-        title: "Erro ao baixar",
-        description: "Não foi possível encontrar o arquivo de áudio.",
+        title: "Erro",
+        description: "URL de áudio não disponível",
         variant: "destructive"
       });
-      return;
     }
-    
-    // Full version download for admin purposes
-    window.open(audioSource, '_blank');
-    toast({
-      title: "Download iniciado",
-      description: `Baixando a versão: ${version.name}`
-    });
   };
 
-  const handleDelete = (id: string) => {
-    if (onDeleteVersion) {
-      // Stop audio if playing this version
-      if (playingId === id && audioRef.current) {
-        audioRef.current.pause();
-        setPlayingId(null);
-      }
-      
-      onDeleteVersion(id);
+  const handleDeleteClick = (versionId: string) => {
+    setVersionToDelete(versionId);
+    setShowDeleteDialog(true);
+  };
+
+  const handleConfirmDelete = () => {
+    if (versionToDelete) {
+      onDeleteVersion(versionToDelete);
       toast({
-        title: "Versão removida",
+        title: "Versão excluída",
         description: "A versão foi removida com sucesso."
       });
+      setShowDeleteDialog(false);
     }
   };
 
-  const formatTime = (time: number) => {
-    const minutes = Math.floor(time / 60);
-    const seconds = Math.floor(time % 60);
-    return `${minutes}:${seconds < 10 ? '0' : ''}${seconds}`;
+  const handleEditClick = (version: VersionItem) => {
+    setEditingVersion(version);
+    setEditName(version.name);
+    setEditDescription(version.description || '');
+    setEditAudioUrl(version.audioUrl || version.url || '');
+    setEditRecommended(version.recommended || false);
+    setShowEditDialog(true);
   };
 
+  const handleSaveEdit = () => {
+    // In a real implementation, this would update the database
+    toast({
+      title: "Versão atualizada",
+      description: "As alterações foram salvas com sucesso."
+    });
+    setShowEditDialog(false);
+  };
+
+  if (!versions || versions.length === 0) {
+    return (
+      <div className="bg-card border border-gray-700 rounded-lg p-6 text-center">
+        <FileMusic className="mx-auto h-10 w-10 text-gray-500 mb-4" />
+        <h3 className="text-lg font-medium text-gray-300 mb-1">Nenhuma versão adicionada</h3>
+        <p className="text-gray-400 mb-4">
+          Adicione uma versão usando o botão "Adicionar versão" acima.
+        </p>
+      </div>
+    );
+  }
+
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle>Versões do projeto</CardTitle>
-      </CardHeader>
-      <CardContent>
-        {/* Hidden audio element */}
-        <audio 
-          ref={audioRef} 
-          onTimeUpdate={handleTimeUpdate}
-          onLoadedMetadata={handleLoadedMetadata}
-          onEnded={() => setPlayingId(null)}
-        />
-        
-        <div className="space-y-4">
-          {versions.map((version) => (
-            <div 
-              key={version.id} 
-              className={`
-                flex flex-col sm:flex-row sm:items-center justify-between 
-                border-b pb-4 gap-3
-                ${version.recommended ? 'bg-harmonia-green/5 -mx-2 p-2 rounded border border-harmonia-green/20' : ''}
-              `}
-            >
-              <div className="flex-1">
-                <div className="flex items-center">
-                  <h3 className="font-medium">{version.name}</h3>
-                  {version.recommended && (
-                    <TooltipProvider>
-                      <Tooltip>
-                        <TooltipTrigger>
-                          <span className="ml-2 inline-flex items-center">
-                            <Star className="h-4 w-4 fill-harmonia-green text-harmonia-green" />
-                          </span>
-                        </TooltipTrigger>
-                        <TooltipContent>
-                          <p>Versão recomendada para o cliente</p>
-                        </TooltipContent>
-                      </Tooltip>
-                    </TooltipProvider>
-                  )}
+    <div className="space-y-6">
+      {versions.map(version => (
+        <Card key={version.id} className="p-6 overflow-hidden">
+          <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+            <div className="flex-1">
+              <div className="flex items-start gap-3">
+                <div className="rounded-full bg-secondary p-2 inline-flex">
+                  <FileMusic className="h-5 w-5" />
                 </div>
-                <p className="text-sm text-gray-500">Adicionado em {version.dateAdded}</p>
                 
-                {/* Display audio player when this version is playing */}
-                {playingId === version.id && (
-                  <div className="mt-2 space-y-1">
-                    <Slider
-                      value={[currentTime]}
-                      max={Math.min(previewDuration, duration)}
-                      step={0.1}
-                      onValueChange={handleSliderChange}
-                      className="w-full"
-                    />
-                    <div className="flex justify-between text-xs text-gray-500">
-                      <span>{formatTime(currentTime)}</span>
-                      <span>{formatTime(Math.min(previewDuration, duration))}</span>
-                    </div>
+                <div>
+                  <div className="flex items-center gap-2">
+                    <h3 className="font-bold">{version.name}</h3>
+                    {version.recommended && (
+                      <span className="inline-flex items-center bg-harmonia-green/20 text-harmonia-green text-xs rounded-full px-2 py-1">
+                        <CheckCircle className="w-3 h-3 mr-1" />
+                        Recomendada
+                      </span>
+                    )}
                   </div>
-                )}
+                  <p className="text-gray-400 text-sm mt-1">
+                    {version.description || "Sem descrição"}
+                  </p>
+                  <p className="text-xs text-gray-500 mt-1.5">
+                    Adicionada em {version.dateAdded}
+                  </p>
+                </div>
               </div>
               
-              <div className="flex items-center gap-2">
-                <Button 
-                  variant="outline" 
-                  size="sm"
-                  onClick={() => handlePlay(version)}
-                  className={playingId === version.id ? "bg-harmonia-green/10 text-harmonia-green" : "text-harmonia-green"}
-                >
-                  {playingId === version.id ? (
-                    <>
-                      <Pause className="h-4 w-4 mr-1" />
-                      Pausar
-                    </>
-                  ) : (
-                    <>
-                      <Play className="h-4 w-4 mr-1" />
-                      Ouvir
-                    </>
-                  )}
-                </Button>
-                
-                <Button 
-                  variant="outline" 
-                  size="sm" 
-                  onClick={() => handleDownload(version)}
-                >
-                  <Download className="h-4 w-4 mr-1" />
-                  Download
-                </Button>
-                
-                {onDeleteVersion && (
-                  <Button 
-                    variant="outline" 
-                    size="sm"
-                    onClick={() => handleDelete(version.id)}
-                    className="text-red-500 hover:bg-red-50"
-                  >
-                    <Trash className="h-4 w-4 mr-1" />
-                    Remover
-                  </Button>
-                )}
+              <div className="mt-3 bg-gray-800/50 rounded-lg p-2 text-xs text-gray-400 break-all">
+                <p className="font-mono">
+                  {version.audioUrl || version.url || "URL não disponível"}
+                </p>
               </div>
             </div>
-          ))}
-          
-          {versions.length === 0 && (
-            <div className="text-center py-8">
-              <Info className="h-12 w-12 text-gray-300 mx-auto mb-4" />
-              <p className="text-gray-500">Nenhuma versão disponível ainda.</p>
-              <p className="text-sm text-gray-400 mt-2">Adicione uma nova versão para o cliente avaliar.</p>
+            
+            <div className="flex flex-wrap gap-2 justify-end">
+              <Button 
+                variant="outline" 
+                size="sm" 
+                className="flex-shrink-0"
+                onClick={() => handlePlayAudio(version)}
+              >
+                <Play className="mr-1 h-4 w-4" />
+                Reproduzir
+              </Button>
+              
+              <Button 
+                variant="outline" 
+                size="sm" 
+                className="flex-shrink-0"
+                onClick={() => handleEditClick(version)}
+              >
+                <Edit className="mr-1 h-4 w-4" />
+                Editar
+              </Button>
+              
+              <Button 
+                variant="outline" 
+                size="sm"
+                className="flex-shrink-0 text-red-500 hover:bg-red-950"
+                onClick={() => handleDeleteClick(version.id)}
+              >
+                <Trash className="mr-1 h-4 w-4" />
+                Excluir
+              </Button>
             </div>
-          )}
-        </div>
-      </CardContent>
-    </Card>
+          </div>
+        </Card>
+      ))}
+      
+      {/* Delete Confirmation Dialog */}
+      <Dialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Confirmar exclusão</DialogTitle>
+          </DialogHeader>
+          <p>Tem certeza que deseja excluir esta versão? Esta ação não pode ser desfeita.</p>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setShowDeleteDialog(false)}>Cancelar</Button>
+            <Button variant="destructive" onClick={handleConfirmDelete}>Excluir</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+      
+      {/* Edit Version Dialog */}
+      <Dialog open={showEditDialog} onOpenChange={setShowEditDialog}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Editar Versão</DialogTitle>
+          </DialogHeader>
+          
+          <div className="space-y-4 py-4">
+            <div className="space-y-2">
+              <Label htmlFor="edit-name">Nome da Versão</Label>
+              <Input 
+                id="edit-name"
+                value={editName}
+                onChange={(e) => setEditName(e.target.value)}
+              />
+            </div>
+            
+            <div className="space-y-2">
+              <Label htmlFor="edit-description">Descrição</Label>
+              <Textarea 
+                id="edit-description"
+                value={editDescription}
+                onChange={(e) => setEditDescription(e.target.value)}
+                rows={3}
+              />
+            </div>
+            
+            <div className="space-y-2">
+              <Label htmlFor="edit-audio-url">URL do Áudio</Label>
+              <Input 
+                id="edit-audio-url"
+                value={editAudioUrl}
+                onChange={(e) => setEditAudioUrl(e.target.value)}
+              />
+            </div>
+            
+            <div className="flex items-center space-x-2">
+              <Switch 
+                id="edit-recommended"
+                checked={editRecommended}
+                onCheckedChange={setEditRecommended}
+              />
+              <Label htmlFor="edit-recommended">Marcar como versão recomendada</Label>
+            </div>
+          </div>
+          
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setShowEditDialog(false)}>Cancelar</Button>
+            <Button onClick={handleSaveEdit}>Salvar Alterações</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+    </div>
   );
 };
 

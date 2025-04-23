@@ -75,11 +75,11 @@ export const extraServicePaymentLinks: Record<string, PaymentLinkData> = {
     preferenceId: '178571987-2be0a4e2-5c8e-4e64-b554-d4068d18d23a'
   },
   'Entrega Expressa': {
-    url: 'https://mpago.la/2grZyHu',
+    url: 'https://mpago.la/2grZyHu', 
     preferenceId: '178571987-d2c262a6-0251-40cb-99ed-37415eb90c1d'
   },
   'Partituras MusicXML/PDF': {
-    url: 'https://mpago.la/2grZyHu',
+    url: 'https://mpago.la/2grZyHu', // Using the 149 price point link
     preferenceId: '178571987-d2c262a6-0251-40cb-99ed-37415eb90c1d'
   },
   'Composição sem IA (letra)': {
@@ -87,12 +87,12 @@ export const extraServicePaymentLinks: Record<string, PaymentLinkData> = {
     preferenceId: '178571987-d2c262a6-0251-40cb-99ed-37415eb90c1d'
   },
   'Composição sem IA (letra + melodia)': {
-    url: 'https://mpago.li/1gjwJZY',
-    preferenceId: '178571987-1b5c6c1a-2cb8-4c9a-b67c-07519f43382f'
+    url: 'https://wa.me/5511999999999?text=Olá,%20tenho%20interesse%20no%20serviço%20de%20Composição%20sem%20IA%20(letra%20+%20melodia).%20Poderia%20me%20dar%20mais%20informações?',
+    preferenceId: 'whatsapp-contact'
   },
   'Composição sem IA (letra + melodia + gravação)': {
-    url: 'https://mpago.li/1gjwJZY',
-    preferenceId: '178571987-1b5c6c1a-2cb8-4c9a-b67c-07519f43382f'
+    url: 'https://wa.me/5511999999999?text=Olá,%20tenho%20interesse%20no%20serviço%20de%20Composição%20sem%20IA%20completa%20(letra%20+%20melodia%20+%20gravação).%20Poderia%20me%20dar%20mais%20informações?',
+    preferenceId: 'whatsapp-contact'
   },
   // Legacy service IDs
   'service79': {
@@ -120,7 +120,7 @@ export const extraServicePaymentLinks: Record<string, PaymentLinkData> = {
     preferenceId: '178571987-d2c262a6-0251-40cb-99ed-37415eb90c1d'
   },
   'service1499': {
-    url: 'https://mpago.li/1gjwJZY',
-    preferenceId: '178571987-1b5c6c1a-2cb8-4c9a-b67c-07519f43382f'
+    url: 'https://wa.me/5511999999999?text=Olá,%20tenho%20interesse%20no%20serviço%20de%20Composição%20sem%20IA.%20Poderia%20me%20dar%20mais%20informações?',
+    preferenceId: 'whatsapp-contact'
   }
 };
