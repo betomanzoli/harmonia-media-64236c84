@@ -56,7 +56,9 @@ const AddVersionForm: React.FC<AddVersionFormProps> = ({ projectId, onAddComplet
     
     // Process Google Drive links to extract file ID and create streaming URL
     let processedUrl = audioUrl;
-    if (audioUrl.includes('id=')) {
+    if (audioUrl.includes('/view')) {
+      processedUrl = audioUrl.replace('/view', '/preview');
+    } else if (audioUrl.includes('id=')) {
       const fileIdMatch = audioUrl.match(/id=([^&]+)/);
       if (fileIdMatch && fileIdMatch[1]) {
         processedUrl = `https://drive.google.com/uc?export=view&id=${fileIdMatch[1]}`;
@@ -75,6 +77,7 @@ const AddVersionForm: React.FC<AddVersionFormProps> = ({ projectId, onAddComplet
         name: versionName,
         description: description,
         audioUrl: processedUrl,
+        url: processedUrl, // Adding url for backward compatibility
         dateAdded: new Date().toLocaleDateString('pt-BR'),
         recommended: isRecommended
       };
@@ -94,6 +97,14 @@ const AddVersionForm: React.FC<AddVersionFormProps> = ({ projectId, onAddComplet
       project.versions = (project.versionsList || []).length;
       storedProjects[projectIndex] = project;
       localStorage.setItem('harmonIA_preview_projects', JSON.stringify(storedProjects));
+      
+      // Send notification to client about new preview
+      if (project.clientEmail) {
+        toast({
+          title: "Notificação enviada",
+          description: `Uma notificação foi enviada para ${project.clientEmail}`
+        });
+      }
       
       onAddComplete(versionName);
     } else {

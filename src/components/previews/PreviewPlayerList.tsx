@@ -22,7 +22,7 @@ interface PreviewVersionsListProps {
   isApproved: boolean;
 }
 
-const PreviewVersionsList: React.FC<PreviewVersionsListProps> = ({
+const PreviewPlayerList: React.FC<PreviewVersionsListProps> = ({
   versions,
   selectedVersion,
   setSelectedVersion,
@@ -137,4 +137,4 @@ const PreviewVersionsList: React.FC<PreviewVersionsListProps> = ({
   );
 };
 
-export default PreviewVersionsList;
+export default PreviewPlayerList;

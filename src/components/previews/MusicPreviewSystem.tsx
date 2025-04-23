@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useParams } from 'react-router-dom';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -21,7 +20,7 @@ interface MusicPreviewSystemProps {
   projectId?: string;
 }
 
-const MusicPreviewSystem: React.FC<MusicPreviewSystemProps> = ({ projectId: propProjectId }) => {
+const MusicPreviewSystem: React.FC<{ projectId?: string }> = ({ projectId: propProjectId }) => {
   const params = useParams<{ projectId: string }>();
   const projectId = propProjectId || params.projectId;
   const { toast } = useToast();
@@ -30,10 +29,8 @@ const MusicPreviewSystem: React.FC<MusicPreviewSystemProps> = ({ projectId: prop
   const [error, setError] = useState<string | null>(null);
   const navigate = useNavigate();
   
-  // Use the hook to fetch preview data
   const { projectData, setProjectData, isLoading } = usePreviewData(projectId);
   
-  // Add protection to prevent audio downloads
   useEffect(() => {
     const handleContextMenu = (e: MouseEvent) => {
       if ((e.target as HTMLElement)?.closest('audio')) {
@@ -54,7 +51,6 @@ const MusicPreviewSystem: React.FC<MusicPreviewSystemProps> = ({ projectId: prop
     };
   }, [toast]);
 
-  // Check if project exists once loading is complete
   useEffect(() => {
     if (!isLoading && !projectData) {
       setError("Prévias não encontradas ou expiradas. Este link pode não ser mais válido.");
@@ -76,14 +72,12 @@ const MusicPreviewSystem: React.FC<MusicPreviewSystemProps> = ({ projectId: prop
       description: "Obrigado pelo seu feedback. Nossa equipe já está analisando.",
     });
     
-    // Send notification for feedback received
     notificationService.notify('feedback_received', {
       projectId: projectId,
       clientName: projectData?.clientName || 'Cliente',
       message: feedback
     });
     
-    // Update status locally for demonstration purposes
     setProjectData(prev => prev ? {...prev, status: 'feedback' as const} : null);
   };
   
@@ -102,14 +96,12 @@ const MusicPreviewSystem: React.FC<MusicPreviewSystemProps> = ({ projectId: prop
       description: "Excelente escolha! Vamos finalizar sua música e entregar em breve.",
     });
     
-    // Send notification for approved preview
     notificationService.notify('preview_approved', {
       projectId: projectId,
       clientName: projectData?.clientName || 'Cliente',
       versionId: selectedVersion
     });
     
-    // Update status locally
     setProjectData(prev => prev ? {...prev, status: 'approved' as const} : null);
   };
   
