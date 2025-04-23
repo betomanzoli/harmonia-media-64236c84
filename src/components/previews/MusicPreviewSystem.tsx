@@ -158,9 +158,9 @@ const MusicPreviewSystem: React.FC<MusicPreviewSystemProps> = ({ projectId: prop
         
         <TabsContent value="versions">
           <PreviewPlayerList
-            previews={projectData.previews}
-            selectedPreview={selectedVersion}
-            setSelectedPreview={setSelectedVersion}
+            versions={projectData.previews}
+            selectedVersion={selectedVersion}
+            setSelectedVersion={setSelectedVersion}
             isApproved={projectData.status === 'approved'}
           />
         </TabsContent>

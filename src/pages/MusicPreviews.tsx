@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import Header from '@/components/Header';
@@ -178,9 +179,9 @@ const MusicPreviews: React.FC = () => {
             
             <TabsContent value="versions">
               <PreviewPlayerList 
-                previews={previewData.previews}
-                selectedPreview={selectedPreview}
-                setSelectedPreview={setSelectedPreview}
+                versions={previewData.previews}
+                selectedVersion={selectedPreview}
+                setSelectedVersion={setSelectedPreview}
                 isApproved={previewData.status === 'approved'}
               />
             </TabsContent>
