@@ -9,6 +9,7 @@ export interface VersionItem {
   description?: string;
   fileId?: string;
   audioUrl?: string;
+  url?: string; // Added the url property for backward compatibility
   dateAdded: string;
   recommended?: boolean;
 }

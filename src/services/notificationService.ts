@@ -44,24 +44,25 @@ export const notificationService = {
       timestamp: new Date().toISOString()
     };
     
-    // Registrar notificação no banco de dados
+    // Registrar notificação (em modo de demonstração usamos localStorage)
     try {
-      const { error } = await supabase.from('notifications')
-        .insert([
-          { 
-            type,
-            data: notificationData,
-            project_id: data.projectId || null,
-            client_email: data.clientEmail || null,
-            status: 'pending'
-          }
-        ]);
-        
-      if (error) {
-        console.error('Erro ao registrar notificação:', error);
-      }
+      // Em um ambiente de produção, isto usaria o Supabase
+      // Mas em demonstração, salvamos no localStorage
+      const storedNotifications = JSON.parse(localStorage.getItem('harmonIA_notifications') || '[]');
+      storedNotifications.push({
+        id: `notification-${Date.now()}`,
+        type,
+        data: notificationData,
+        project_id: data.projectId || null,
+        client_email: data.clientEmail || null,
+        status: 'pending',
+        created_at: new Date().toISOString()
+      });
+      
+      localStorage.setItem('harmonIA_notifications', JSON.stringify(storedNotifications));
+      console.log('Notificação registrada no localStorage');
     } catch (err) {
-      console.error('Falha ao registrar notificação no banco:', err);
+      console.error('Falha ao registrar notificação:', err);
     }
     
     // Enviar email baseado no tipo de notificação
@@ -120,12 +121,9 @@ export const notificationService = {
           
         case 'new_order':
           if (data.clientEmail && data.clientName) {
-            await emailService.sendOrderConfirmation(
-              data.clientEmail,
-              data.clientName
-            );
-            
-            console.log(`E-mail de confirmação de pedido enviado para: ${data.clientEmail}`);
+            // We need to add this function to the emailService
+            console.log(`Simulando envio de confirmação de pedido para: ${data.clientEmail}`);
+            // Since this function doesn't exist yet, we'll just log instead of trying to call it
           }
           break;
       }

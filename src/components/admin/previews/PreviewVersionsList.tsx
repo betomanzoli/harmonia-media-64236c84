@@ -10,7 +10,8 @@ import { Slider } from "@/components/ui/slider";
 interface Version {
   id: string;
   name: string;
-  url: string;
+  url?: string;  // Make this optional for compatibility
+  audioUrl?: string; // Add this for new code
   dateAdded: string;
   recommended?: boolean;
 }
@@ -52,7 +53,18 @@ const PreviewVersionsList: React.FC<PreviewVersionsListProps> = ({ versions, onD
 
       // Start new audio
       if (audioRef.current) {
-        audioRef.current.src = version.url;
+        // Use audioUrl if available, otherwise fall back to url
+        const audioSource = version.audioUrl || version.url;
+        if (!audioSource) {
+          toast({
+            title: "Erro ao reproduzir",
+            description: "Não foi possível encontrar o arquivo de áudio.",
+            variant: "destructive"
+          });
+          return;
+        }
+        
+        audioRef.current.src = audioSource;
         audioRef.current.currentTime = 0;
         audioRef.current.play();
         
@@ -119,8 +131,19 @@ const PreviewVersionsList: React.FC<PreviewVersionsListProps> = ({ versions, onD
   };
 
   const handleDownload = (version: Version) => {
+    // Use audioUrl if available, otherwise fall back to url
+    const audioSource = version.audioUrl || version.url;
+    if (!audioSource) {
+      toast({
+        title: "Erro ao baixar",
+        description: "Não foi possível encontrar o arquivo de áudio.",
+        variant: "destructive"
+      });
+      return;
+    }
+    
     // Full version download for admin purposes
-    window.open(version.url, '_blank');
+    window.open(audioSource, '_blank');
     toast({
       title: "Download iniciado",
       description: `Baixando a versão: ${version.name}`

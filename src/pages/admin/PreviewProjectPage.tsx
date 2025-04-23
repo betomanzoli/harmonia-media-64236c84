@@ -1,3 +1,4 @@
+
 import React, { useEffect, useState } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
@@ -189,14 +190,16 @@ const PreviewProjectPage: React.FC = () => {
               { 
                 id: 'v1', 
                 name: 'Versão Inicial', 
-                url: 'https://drive.google.com/uc?export=download&id=1H62ylCwQYJ23BLpygtvNmCgwTDcHX6Cl', 
+                audioUrl: 'https://drive.google.com/uc?export=download&id=1H62ylCwQYJ23BLpygtvNmCgwTDcHX6Cl',
+                url: 'https://drive.google.com/uc?export=download&id=1H62ylCwQYJ23BLpygtvNmCgwTDcHX6Cl', // Keep both for compatibility
                 dateAdded: '15/03/2025', 
                 recommended: true 
               },
               { 
                 id: 'v2', 
-                name: 'Versão Revisada', 
-                url: 'https://drive.google.com/uc?export=download&id=11c6JahRd5Lx0iKCL_gHZ0zrZ3LFBJ47a', 
+                name: 'Versão Revisada',
+                audioUrl: 'https://drive.google.com/uc?export=download&id=11c6JahRd5Lx0iKCL_gHZ0zrZ3LFBJ47a',
+                url: 'https://drive.google.com/uc?export=download&id=11c6JahRd5Lx0iKCL_gHZ0zrZ3LFBJ47a', // Keep both for compatibility
                 dateAdded: '22/03/2025' 
               }
             ];
@@ -224,7 +227,6 @@ const PreviewProjectPage: React.FC = () => {
             variant: "destructive"
           });
         }
-        setLoading(false);
       }, 500);
     }
   }, [projectId, projects, toast]);
