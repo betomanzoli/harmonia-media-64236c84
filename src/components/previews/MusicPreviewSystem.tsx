@@ -162,6 +162,7 @@ const MusicPreviewSystem: React.FC<{ projectId?: string }> = ({ projectId: propP
         <TabsContent value="feedback">
           <PreviewFeedbackForm 
             selectedPreview={selectedVersion}
+            projectId={actualProjectId || undefined}
             feedback={feedback}
             setFeedback={setFeedback}
             handleSubmit={handleSubmitFeedback}

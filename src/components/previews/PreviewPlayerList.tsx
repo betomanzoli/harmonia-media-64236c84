@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -74,11 +73,6 @@ const PreviewPlayerList: React.FC<PreviewVersionsListProps> = ({
             <div className="flex justify-between items-start mb-4">
               <div>
                 <h3 className="font-bold text-lg">{version.title}</h3>
-                {version.recommended && (
-                  <span className="inline-block px-2 py-1 bg-harmonia-green/20 text-harmonia-green text-xs rounded-full mt-1">
-                    Recomendada
-                  </span>
-                )}
               </div>
               <div className="flex gap-2">
                 <Button 

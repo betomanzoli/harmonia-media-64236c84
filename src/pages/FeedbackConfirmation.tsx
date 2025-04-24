@@ -10,13 +10,13 @@ import { CheckCircle2, ArrowRight, Clock, Calendar, Bell } from 'lucide-react';
 const FeedbackConfirmation: React.FC = () => {
   const navigate = useNavigate();
   
-  // Calcular data estimada (3 dias úteis a partir de hoje)
+  // Calculate estimated date (3 business days from today)
   const getEstimatedDate = () => {
     const date = new Date();
     let businessDays = 3;
     while (businessDays > 0) {
       date.setDate(date.getDate() + 1);
-      // Pular fins de semana (0 = domingo, 6 = sábado)
+      // Skip weekends (0 = Sunday, 6 = Saturday)
       if (date.getDay() !== 0 && date.getDay() !== 6) {
         businessDays--;
       }
