@@ -1,4 +1,3 @@
-
 import React, { useEffect, useState } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
@@ -27,7 +26,7 @@ const PreviewProjectPage: React.FC = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
   const [loading, setLoading] = useState(true);
-  const [project, setProject] = useState<any>(null);
+  const [project, setProject] = useState<ProjectItem | null>(null);
   const [showAddVersion, setShowAddVersion] = useState(false);
   const [showExtendDialog, setShowExtendDialog] = useState(false);
   const [showNotifyDialog, setShowNotifyDialog] = useState(false);
@@ -80,13 +79,13 @@ const PreviewProjectPage: React.FC = () => {
     if (isNaN(days) || days <= 0) {
       toast({
         title: "Erro",
-        description: "Por favor, informe um número v��lido de dias.",
+        description: "Por favor, informe um número válido de dias.",
         variant: "destructive"
       });
       return;
     }
 
-    const currentDate = new Date(project.expirationDate.split('/').reverse().join('-'));
+    const currentDate = new Date(project?.expirationDate.split('/').reverse().join('-') || '');
     currentDate.setDate(currentDate.getDate() + days);
     const newExpirationDate = currentDate.toLocaleDateString('pt-BR');
 
@@ -94,10 +93,10 @@ const PreviewProjectPage: React.FC = () => {
       ...project,
       expirationDate: newExpirationDate
     };
-    setProject(updatedProject);
+    setProject(updatedProject as ProjectItem);
     
-    if (updateProject) {
-      updateProject(projectId || '', { expirationDate: newExpirationDate });
+    if (updateProject && projectId) {
+      updateProject(projectId, { expirationDate: newExpirationDate });
     }
 
     toast({
@@ -112,19 +111,20 @@ const PreviewProjectPage: React.FC = () => {
   };
 
   const deleteVersion = (versionId: string) => {
-    if (!project || !project.versions) return;
+    if (!project || !project.versionsList) return;
     
-    const updatedVersions = project.versions.filter((v: any) => v.id !== versionId);
+    const updatedVersions = project.versionsList.filter(v => v.id !== versionId);
     
     const updatedProject = {
       ...project,
-      versions: updatedVersions
+      versionsList: updatedVersions,
+      versions: updatedVersions.length
     };
     
     setProject(updatedProject);
     
-    if (updateProject) {
-      updateProject(projectId || '', { 
+    if (updateProject && projectId) {
+      updateProject(projectId, { 
         versions: updatedVersions.length,
         versionsList: updatedVersions
       });
@@ -134,6 +134,8 @@ const PreviewProjectPage: React.FC = () => {
   };
 
   const updateProjectHistory = (actionType: string, data: any) => {
+    if (!project) return;
+    
     const now = new Date();
     const timestamp = now.toLocaleDateString('pt-BR') + ' ' + now.toLocaleTimeString('pt-BR');
     
@@ -161,73 +163,53 @@ const PreviewProjectPage: React.FC = () => {
       data
     };
 
-    if (!project.history) {
-      project.history = [];
-    }
-
-    const updatedHistory = [newHistoryItem, ...project.history];
+    const updatedHistory = project.history 
+      ? [newHistoryItem, ...project.history] 
+      : [newHistoryItem];
     
     setProject({
       ...project,
       history: updatedHistory
     });
     
-    if (updateProject) {
-      updateProject(projectId || '', { history: updatedHistory });
+    if (updateProject && projectId) {
+      updateProject(projectId, { history: updatedHistory });
     }
   };
 
   useEffect(() => {
     if (projectId) {
-      setTimeout(() => {
-        const foundProject = projects.find(p => p.id === projectId);
+      const foundProject = projects.find(p => p.id === projectId);
+      
+      if (foundProject) {
+        let enhancedProject = { ...foundProject };
         
-        if (foundProject) {
-          let enhancedProject = { ...foundProject };
-          
-          if (!enhancedProject.versionsList) {
-            enhancedProject.versionsList = [
-              { 
-                id: 'v1', 
-                name: 'Versão Inicial', 
-                audioUrl: 'https://drive.google.com/uc?export=download&id=1H62ylCwQYJ23BLpygtvNmCgwTDcHX6Cl',
-                url: 'https://drive.google.com/uc?export=download&id=1H62ylCwQYJ23BLpygtvNmCgwTDcHX6Cl', // Keep both for compatibility
-                dateAdded: '15/03/2025', 
-                recommended: true 
-              },
-              { 
-                id: 'v2', 
-                name: 'Versão Revisada',
-                audioUrl: 'https://drive.google.com/uc?export=download&id=11c6JahRd5Lx0iKCL_gHZ0zrZ3LFBJ47a',
-                url: 'https://drive.google.com/uc?export=download&id=11c6JahRd5Lx0iKCL_gHZ0zrZ3LFBJ47a', // Keep both for compatibility
-                dateAdded: '22/03/2025' 
-              }
-            ];
-          }
-          
-          if (!enhancedProject.feedback) {
-            enhancedProject.feedback = 'Apreciei a melodia principal e o conceito geral. Sugiro modificar a estrutura na seção do refrão para enfatizar mais a transição entre as estrofes. Também seria interessante adicionar algumas variações na progressão de acordes do final.';
-          }
-          
-          if (!enhancedProject.history) {
-            enhancedProject.history = [
-              { action: 'Cliente enviou feedback', timestamp: '25/03/2025 14:30' },
-              { action: 'Versão 2 adicionada', timestamp: '22/03/2025 10:15' },
-              { action: 'Cliente visualizou o projeto', timestamp: '18/03/2025 09:45' },
-              { action: 'Versão 1 adicionada', timestamp: '15/03/2025 16:20' },
-              { action: 'Projeto criado', timestamp: '15/03/2025 11:00' }
-            ];
-          }
-          
-          setProject(enhancedProject);
-        } else {
-          toast({
-            title: "Erro",
-            description: "Projeto não encontrado",
-            variant: "destructive"
-          });
+        if (!enhancedProject.versionsList) {
+          enhancedProject.versionsList = [];
         }
-      }, 500);
+        
+        if (!enhancedProject.feedback) {
+          enhancedProject.feedback = '';
+        }
+        
+        if (!enhancedProject.history) {
+          enhancedProject.history = [
+            { action: 'Projeto criado', timestamp: enhancedProject.createdAt }
+          ];
+        }
+        
+        setProject(enhancedProject);
+        console.log("Project found:", enhancedProject);
+      } else {
+        console.error(`Project with ID ${projectId} not found`);
+        toast({
+          title: "Erro",
+          description: "Projeto não encontrado",
+          variant: "destructive"
+        });
+      }
+      
+      setLoading(false);
     }
   }, [projectId, projects, toast]);
 
@@ -256,7 +238,11 @@ const PreviewProjectPage: React.FC = () => {
   }
 
   const isNearExpiration = () => {
+    if (!project.expirationDate) return false;
+    
     const expirationParts = project.expirationDate.split('/');
+    if (expirationParts.length !== 3) return false;
+    
     const expirationDate = new Date(
       parseInt(expirationParts[2]), 
       parseInt(expirationParts[1]) - 1, 

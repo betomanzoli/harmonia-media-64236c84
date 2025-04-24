@@ -1,227 +1,223 @@
 
 import React from 'react';
 import AdminLayout from '@/components/admin/layout/AdminLayout';
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
-import { Book, Video, FileText, ArrowLeft, ExternalLink } from 'lucide-react';
-import { Link } from 'react-router-dom';
+import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Button } from '@/components/ui/button';
+import { FileText, HelpCircle, Video, BookOpen, Lightbulb, ExternalLink } from 'lucide-react';
 
 const AdminGuides: React.FC = () => {
   return (
     <AdminLayout>
       <div className="space-y-6 p-6">
-        <div className="flex items-center justify-between">
-          <div>
-            <h1 className="text-3xl font-bold tracking-tight text-harmonia-green">Documentação e Guias</h1>
-            <p className="text-muted-foreground">
-              Recursos para ajudar você a utilizar o sistema da harmonIA
-            </p>
-          </div>
-          <Button 
-            variant="outline" 
-            size="sm" 
-            asChild
-            className="border-harmonia-green text-harmonia-green hover:bg-harmonia-green/10"
-          >
-            <Link to="/admin-j28s7d1k/dashboard">
-              <ArrowLeft className="mr-2 h-4 w-4" />
-              Voltar ao Dashboard
-            </Link>
-          </Button>
+        <div>
+          <h1 className="text-3xl font-bold mb-2">Documentação e Guias</h1>
+          <p className="text-muted-foreground">
+            Recursos para ajudar você a aproveitar ao máximo a plataforma HarmonIA
+          </p>
         </div>
         
-        <Tabs defaultValue="guides">
-          <TabsList className="mb-6 w-full max-w-md">
-            <TabsTrigger value="guides" className="flex-1">
-              <Book className="w-4 h-4 mr-2" />
-              Guias
-            </TabsTrigger>
-            <TabsTrigger value="videos" className="flex-1">
-              <Video className="w-4 h-4 mr-2" />
-              Vídeos
-            </TabsTrigger>
-            <TabsTrigger value="docs" className="flex-1">
-              <FileText className="w-4 h-4 mr-2" />
-              Documentação
-            </TabsTrigger>
+        <Tabs defaultValue="getting-started" className="space-y-4">
+          <TabsList>
+            <TabsTrigger value="getting-started">Primeiros Passos</TabsTrigger>
+            <TabsTrigger value="tutorials">Tutoriais</TabsTrigger>
+            <TabsTrigger value="faq">Perguntas Frequentes</TabsTrigger>
           </TabsList>
           
-          <TabsContent value="guides">
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              <Card>
-                <CardHeader className="pb-2">
-                  <CardTitle className="flex items-center text-lg">
-                    <span className="bg-harmonia-green/10 p-2 rounded-full mr-2">
-                      <Book className="h-5 w-5 text-harmonia-green" />
-                    </span>
-                    Primeiros passos
-                  </CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <p className="text-sm text-gray-600 mb-4">
-                    Um guia completo de introdução para os novos membros da equipe, com todas as informações essenciais.
-                  </p>
-                  <Button variant="outline" className="w-full" asChild>
-                    <a href="#" target="_blank" rel="noopener noreferrer">
-                      Acessar guia
-                      <ExternalLink className="ml-2 h-4 w-4" />
-                    </a>
-                  </Button>
-                </CardContent>
-              </Card>
-              
-              <Card>
-                <CardHeader className="pb-2">
-                  <CardTitle className="flex items-center text-lg">
-                    <span className="bg-harmonia-green/10 p-2 rounded-full mr-2">
-                      <Book className="h-5 w-5 text-harmonia-green" />
-                    </span>
-                    Sistema de prévias
-                  </CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <p className="text-sm text-gray-600 mb-4">
-                    Como gerenciar as prévias musicais, adicionar versões e acompanhar o feedback dos clientes.
-                  </p>
-                  <Button variant="outline" className="w-full" asChild>
-                    <a href="#" target="_blank" rel="noopener noreferrer">
-                      Acessar guia
-                      <ExternalLink className="ml-2 h-4 w-4" />
-                    </a>
-                  </Button>
-                </CardContent>
-              </Card>
-              
-              <Card>
-                <CardHeader className="pb-2">
-                  <CardTitle className="flex items-center text-lg">
-                    <span className="bg-harmonia-green/10 p-2 rounded-full mr-2">
-                      <Book className="h-5 w-5 text-harmonia-green" />
-                    </span>
-                    Boas práticas
-                  </CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <p className="text-sm text-gray-600 mb-4">
-                    Recomendações e boas práticas para garantir a qualidade no atendimento aos clientes.
-                  </p>
-                  <Button variant="outline" className="w-full" asChild>
-                    <a href="#" target="_blank" rel="noopener noreferrer">
-                      Acessar guia
-                      <ExternalLink className="ml-2 h-4 w-4" />
-                    </a>
-                  </Button>
-                </CardContent>
-              </Card>
-            </div>
+          <TabsContent value="getting-started" className="space-y-4">
+            <Card>
+              <CardHeader>
+                <CardTitle>Bem-vindo à HarmonIA</CardTitle>
+                <CardDescription>
+                  Guia básico para começar a usar a plataforma de prévias musicais
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="p-4 bg-gray-50 rounded-lg border">
+                  <div className="flex items-start space-x-4">
+                    <div className="bg-harmonia-green/20 p-2 rounded-lg">
+                      <Lightbulb className="h-8 w-8 text-harmonia-green" />
+                    </div>
+                    <div>
+                      <h3 className="font-medium text-lg mb-1">Visão Geral da Plataforma</h3>
+                      <p className="text-sm text-gray-600 mb-4">
+                        O sistema HarmonIA é uma plataforma completa para compartilhar prévias musicais 
+                        com seus clientes e receber feedback. Essa seção irá guiá-lo pelos recursos 
+                        básicos disponíveis.
+                      </p>
+                      
+                      <div className="space-y-3 text-sm">
+                        <div>
+                          <h4 className="font-medium mb-1">1. Criando um projeto</h4>
+                          <p className="text-gray-600">
+                            Inicie criando um novo projeto na seção "Prévias". Preencha as informações
+                            do cliente e detalhes do projeto. Um link único será gerado para compartilhamento.
+                          </p>
+                        </div>
+                        
+                        <div>
+                          <h4 className="font-medium mb-1">2. Adicionando versões musicais</h4>
+                          <p className="text-gray-600">
+                            Dentro do projeto, você pode adicionar diversas versões musicais. Faça upload
+                            dos arquivos de áudio e adicione descrições detalhadas para cada versão.
+                          </p>
+                        </div>
+                        
+                        <div>
+                          <h4 className="font-medium mb-1">3. Compartilhando com o cliente</h4>
+                          <p className="text-gray-600">
+                            Compartilhe o link do projeto com seu cliente. Eles poderão ouvir as versões,
+                            deixar feedback específico e selecionar uma versão preferida.
+                          </p>
+                        </div>
+                        
+                        <div>
+                          <h4 className="font-medium mb-1">4. Gerenciamento de feedback</h4>
+                          <p className="text-gray-600">
+                            Receba notificações quando seu cliente deixar um feedback. Você pode 
+                            acompanhar todas as interações e manter um histórico do desenvolvimento.
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </CardContent>
+              <CardFooter>
+                <Button variant="outline" className="w-full">
+                  <FileText className="mr-2 h-4 w-4" />
+                  Baixar Guia Completo (PDF)
+                </Button>
+              </CardFooter>
+            </Card>
           </TabsContent>
           
-          <TabsContent value="videos">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <Card>
-                <CardHeader className="pb-2">
-                  <CardTitle className="text-lg">Tutorial - Gerenciando Prévias</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="aspect-video bg-gray-200 rounded-md flex items-center justify-center mb-4">
-                    <Video className="h-10 w-10 text-gray-400" />
-                    <span className="ml-2 text-gray-500">Vídeo tutorial</span>
-                  </div>
-                  <p className="text-sm text-gray-600">
-                    Este vídeo mostra como gerenciar prévias musicais e interagir com os clientes através da plataforma.
-                  </p>
-                </CardContent>
-              </Card>
-              
-              <Card>
-                <CardHeader className="pb-2">
-                  <CardTitle className="text-lg">Tutorial - Fechando Projetos</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="aspect-video bg-gray-200 rounded-md flex items-center justify-center mb-4">
-                    <Video className="h-10 w-10 text-gray-400" />
-                    <span className="ml-2 text-gray-500">Vídeo tutorial</span>
-                  </div>
-                  <p className="text-sm text-gray-600">
-                    Aprenda o processo completo de finalização de projetos após a aprovação do cliente.
-                  </p>
-                </CardContent>
-              </Card>
-            </div>
+          <TabsContent value="tutorials" className="space-y-4">
+            <Card>
+              <CardHeader>
+                <CardTitle>Tutoriais em Vídeo</CardTitle>
+                <CardDescription>
+                  Aprenda a utilizar todos os recursos da plataforma com esses tutoriais
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <Card>
+                    <CardHeader className="pb-2">
+                      <CardTitle className="text-sm font-medium">
+                        Criando seu primeiro projeto
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent className="pt-0">
+                      <div className="bg-gray-200 h-40 rounded-lg flex items-center justify-center">
+                        <Video className="h-10 w-10 text-gray-400" />
+                      </div>
+                      <p className="text-xs text-gray-500 mt-2">
+                        Duração: 3:45 • Publicado em 12/03/2025
+                      </p>
+                    </CardContent>
+                    <CardFooter>
+                      <Button variant="ghost" size="sm" className="w-full">
+                        <ExternalLink className="mr-2 h-4 w-4" />
+                        Assistir Tutorial
+                      </Button>
+                    </CardFooter>
+                  </Card>
+                  
+                  <Card>
+                    <CardHeader className="pb-2">
+                      <CardTitle className="text-sm font-medium">
+                        Gerenciando feedback de clientes
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent className="pt-0">
+                      <div className="bg-gray-200 h-40 rounded-lg flex items-center justify-center">
+                        <Video className="h-10 w-10 text-gray-400" />
+                      </div>
+                      <p className="text-xs text-gray-500 mt-2">
+                        Duração: 5:12 • Publicado em 15/03/2025
+                      </p>
+                    </CardContent>
+                    <CardFooter>
+                      <Button variant="ghost" size="sm" className="w-full">
+                        <ExternalLink className="mr-2 h-4 w-4" />
+                        Assistir Tutorial
+                      </Button>
+                    </CardFooter>
+                  </Card>
+                </div>
+              </CardContent>
+            </Card>
           </TabsContent>
           
-          <TabsContent value="docs">
-            <div className="bg-white p-6 rounded-lg shadow">
-              <h3 className="text-xl font-semibold mb-4">Documentação Técnica</h3>
-              
-              <div className="space-y-4">
-                <div className="p-4 border border-gray-200 rounded-md hover:bg-gray-50 transition-colors">
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center">
-                      <FileText className="h-5 w-5 text-harmonia-green mr-3" />
-                      <div>
-                        <h4 className="font-medium">Manual do Admin</h4>
-                        <p className="text-sm text-gray-500">Documentação detalhada do painel administrativo</p>
-                      </div>
-                    </div>
-                    <Button variant="outline" size="sm" asChild>
-                      <a href="#" target="_blank" rel="noopener noreferrer">
-                        Ver
-                      </a>
-                    </Button>
+          <TabsContent value="faq" className="space-y-4">
+            <Card>
+              <CardHeader>
+                <CardTitle>Perguntas Frequentes</CardTitle>
+                <CardDescription>
+                  Respostas para as dúvidas mais comuns sobre a plataforma
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="space-y-4">
+                  <div className="p-4 bg-gray-50 rounded-lg border">
+                    <h3 className="font-medium flex items-center mb-2">
+                      <HelpCircle className="h-4 w-4 mr-2 text-harmonia-green" />
+                      Como faço para adicionar mais versões a um projeto existente?
+                    </h3>
+                    <p className="text-sm text-gray-600">
+                      Acesse a página do projeto, clique no botão "Adicionar versão" no topo da página.
+                      Preencha o formulário com o nome, descrição e faça o upload do arquivo de áudio.
+                    </p>
+                  </div>
+                  
+                  <div className="p-4 bg-gray-50 rounded-lg border">
+                    <h3 className="font-medium flex items-center mb-2">
+                      <HelpCircle className="h-4 w-4 mr-2 text-harmonia-green" />
+                      Os clientes precisam de uma conta para acessar as prévias?
+                    </h3>
+                    <p className="text-sm text-gray-600">
+                      Não, os clientes não precisam de uma conta. Eles recebem um link único que permite 
+                      acessar as prévias e deixar feedback sem necessidade de login.
+                    </p>
+                  </div>
+                  
+                  <div className="p-4 bg-gray-50 rounded-lg border">
+                    <h3 className="font-medium flex items-center mb-2">
+                      <HelpCircle className="h-4 w-4 mr-2 text-harmonia-green" />
+                      Como sou notificado quando um cliente deixa feedback?
+                    </h3>
+                    <p className="text-sm text-gray-600">
+                      Você receberá uma notificação por email e também dentro da plataforma sempre que 
+                      um cliente deixar um feedback ou aprovar uma versão musical.
+                    </p>
+                  </div>
+                  
+                  <div className="p-4 bg-gray-50 rounded-lg border">
+                    <h3 className="font-medium flex items-center mb-2">
+                      <HelpCircle className="h-4 w-4 mr-2 text-harmonia-green" />
+                      É possível limitar o tempo que o cliente tem para avaliar as prévias?
+                    </h3>
+                    <p className="text-sm text-gray-600">
+                      Sim, cada projeto tem uma data de expiração definida. Você pode estender esse prazo
+                      a qualquer momento na página de detalhes do projeto.
+                    </p>
                   </div>
                 </div>
-                
-                <div className="p-4 border border-gray-200 rounded-md hover:bg-gray-50 transition-colors">
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center">
-                      <FileText className="h-5 w-5 text-harmonia-green mr-3" />
-                      <div>
-                        <h4 className="font-medium">Integrações</h4>
-                        <p className="text-sm text-gray-500">Como integrar com outros sistemas e APIs</p>
-                      </div>
-                    </div>
-                    <Button variant="outline" size="sm" asChild>
-                      <a href="#" target="_blank" rel="noopener noreferrer">
-                        Ver
-                      </a>
-                    </Button>
-                  </div>
-                </div>
-                
-                <div className="p-4 border border-gray-200 rounded-md hover:bg-gray-50 transition-colors">
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center">
-                      <FileText className="h-5 w-5 text-harmonia-green mr-3" />
-                      <div>
-                        <h4 className="font-medium">Guia de Marcas</h4>
-                        <p className="text-sm text-gray-500">Padrões visuais e guias de marca harmonIA</p>
-                      </div>
-                    </div>
-                    <Button variant="outline" size="sm" asChild>
-                      <a href="#" target="_blank" rel="noopener noreferrer">
-                        Ver
-                      </a>
-                    </Button>
-                  </div>
-                </div>
-              </div>
-            </div>
+              </CardContent>
+              <CardFooter className="flex justify-between">
+                <Button variant="outline">
+                  <BookOpen className="mr-2 h-4 w-4" />
+                  FAQ Completo
+                </Button>
+                <Button variant="default">
+                  <HelpCircle className="mr-2 h-4 w-4" />
+                  Suporte
+                </Button>
+              </CardFooter>
+            </Card>
           </TabsContent>
         </Tabs>
-        
-        <div className="bg-harmonia-green/5 border border-harmonia-green/20 rounded-lg p-6 mt-8">
-          <h3 className="text-lg font-medium text-harmonia-green mb-2">Precisa de ajuda adicional?</h3>
-          <p className="text-sm text-gray-600 mb-4">
-            Entre em contato com o suporte técnico caso tenha dúvidas específicas ou precise de assistência personalizada.
-          </p>
-          <Button asChild>
-            <a href="mailto:suporte@harmonia.media" className="bg-harmonia-green hover:bg-harmonia-green/90">
-              Contatar suporte técnico
-            </a>
-          </Button>
-        </div>
       </div>
     </AdminLayout>
   );

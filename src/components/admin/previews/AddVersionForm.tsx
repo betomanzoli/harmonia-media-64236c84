@@ -74,6 +74,7 @@ const AddVersionForm: React.FC<AddVersionFormProps> = ({ projectId, onAddComplet
       if (!project.versionsList) {
         project.versionsList = [newVersion];
       } else {
+        // If setting this as recommended, remove recommendation from others
         if (isRecommended) {
           project.versionsList = project.versionsList.map((v: any) => ({
             ...v,
@@ -83,6 +84,7 @@ const AddVersionForm: React.FC<AddVersionFormProps> = ({ projectId, onAddComplet
         project.versionsList.push(newVersion);
       }
       
+      // Update the versions count
       project.versions = (project.versionsList || []).length;
       storedProjects[projectIndex] = project;
       localStorage.setItem('harmonIA_preview_projects', JSON.stringify(storedProjects));
