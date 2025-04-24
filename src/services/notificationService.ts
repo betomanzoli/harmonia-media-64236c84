@@ -1,3 +1,4 @@
+
 import { toast } from '@/hooks/use-toast';
 
 // Types
@@ -7,7 +8,9 @@ export type NotificationType =
   | 'preview_approved'  // Client approved a preview
   | 'payment_received'  // Payment received
   | 'project_completed' // Project completed
-  | 'project_updated';  // General project update
+  | 'project_updated'   // General project update
+  | 'briefing_received' // New briefing received
+  | 'new_order';        // New order received
 
 export interface NotificationData {
   projectId?: string;

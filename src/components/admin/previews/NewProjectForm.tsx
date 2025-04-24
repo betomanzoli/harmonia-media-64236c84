@@ -27,8 +27,8 @@ interface NewProjectFormProps {
 const NewProjectForm: React.FC<NewProjectFormProps> = ({ onAddProject }) => {
   const { addProject } = usePreviewProjects();
   const { toast } = useToast();
-  const [versions, setVersions] = useState<{title: string; description: string; audioFile: File | null}[]>([
-    { title: '', description: '', audioFile: null }
+  const [versions, setVersions] = useState<{title: string; description: string; audioUrl: string}[]>([
+    { title: '', description: '', audioUrl: '' }
   ]);
   const [isSubmitting, setIsSubmitting] = useState(false);
   
@@ -44,11 +44,11 @@ const NewProjectForm: React.FC<NewProjectFormProps> = ({ onAddProject }) => {
 
   const onSubmit = async (data: FormValues) => {
     // Verificar se todas as versões têm título e descrição
-    const invalidVersion = versions.find(v => !v.title || !v.description || !v.audioFile);
+    const invalidVersion = versions.find(v => !v.title || !v.description || !v.audioUrl);
     if (invalidVersion) {
       toast({
         title: "Informações incompletas",
-        description: "Todas as versões precisam ter título, descrição e arquivo de áudio.",
+        description: "Todas as versões precisam ter título, descrição e link do Google Drive.",
         variant: "destructive"
       });
       return;
@@ -108,7 +108,7 @@ const NewProjectForm: React.FC<NewProjectFormProps> = ({ onAddProject }) => {
       
       // Limpar formulário
       form.reset();
-      setVersions([{ title: '', description: '', audioFile: null }]);
+      setVersions([{ title: '', description: '', audioUrl: '' }]);
     } catch (error) {
       console.error('Erro ao criar projeto:', error);
       toast({
@@ -122,7 +122,7 @@ const NewProjectForm: React.FC<NewProjectFormProps> = ({ onAddProject }) => {
   };
 
   const addVersion = () => {
-    setVersions([...versions, { title: '', description: '', audioFile: null }]);
+    setVersions([...versions, { title: '', description: '', audioUrl: '' }]);
   };
 
   const removeVersion = (index: number) => {
@@ -152,12 +152,10 @@ const NewProjectForm: React.FC<NewProjectFormProps> = ({ onAddProject }) => {
     setVersions(newVersions);
   };
 
-  const handleFileChange = (index: number, event: React.ChangeEvent<HTMLInputElement>) => {
-    if (event.target.files && event.target.files.length > 0) {
-      const newVersions = [...versions];
-      newVersions[index].audioFile = event.target.files[0];
-      setVersions(newVersions);
-    }
+  const handleAudioUrlChange = (index: number, value: string) => {
+    const newVersions = [...versions];
+    newVersions[index].audioUrl = value;
+    setVersions(newVersions);
   };
 
   return (
@@ -267,7 +265,7 @@ const NewProjectForm: React.FC<NewProjectFormProps> = ({ onAddProject }) => {
                     onRemove={removeVersion}
                     onTitleChange={handleTitleChange}
                     onDescriptionChange={handleDescriptionChange}
-                    onFileChange={handleFileChange}
+                    onAudioUrlChange={handleAudioUrlChange}
                   />
                 ))}
               </div>
