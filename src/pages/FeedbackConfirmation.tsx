@@ -10,13 +10,11 @@ import { CheckCircle2, ArrowRight, Clock, Calendar, Bell } from 'lucide-react';
 const FeedbackConfirmation: React.FC = () => {
   const navigate = useNavigate();
   
-  // Calculate estimated date (3 business days from today)
   const getEstimatedDate = () => {
     const date = new Date();
     let businessDays = 3;
     while (businessDays > 0) {
       date.setDate(date.getDate() + 1);
-      // Skip weekends (0 = Sunday, 6 = Saturday)
       if (date.getDay() !== 0 && date.getDay() !== 6) {
         businessDays--;
       }
@@ -56,24 +54,6 @@ const FeedbackConfirmation: React.FC = () => {
                   Data estimada: <span className="text-harmonia-green font-bold">{getEstimatedDate()}</span>
                 </span>
               </div>
-            </div>
-            
-            <div className="bg-card border border-border rounded-lg p-6 text-left mb-8">
-              <h3 className="font-semibold mb-4">Próximos passos:</h3>
-              <ol className="space-y-3 text-gray-400">
-                <li className="flex items-start gap-2">
-                  <span className="bg-harmonia-green/20 text-harmonia-green rounded-full w-6 h-6 flex items-center justify-center flex-shrink-0">1</span>
-                  <span>Nossa equipe realizará os ajustes solicitados em sua música</span>
-                </li>
-                <li className="flex items-start gap-2">
-                  <span className="bg-harmonia-green/20 text-harmonia-green rounded-full w-6 h-6 flex items-center justify-center flex-shrink-0">2</span>
-                  <span>Você receberá uma notificação por email quando a versão revisada estiver pronta</span>
-                </li>
-                <li className="flex items-start gap-2">
-                  <span className="bg-harmonia-green/20 text-harmonia-green rounded-full w-6 h-6 flex items-center justify-center flex-shrink-0">3</span>
-                  <span>Após aprovação final, enviaremos todos os arquivos e documentação conforme seu pacote</span>
-                </li>
-              </ol>
             </div>
             
             <div className="p-4 bg-blue-500/10 border border-blue-500/30 rounded-lg mb-8 flex items-start gap-3">

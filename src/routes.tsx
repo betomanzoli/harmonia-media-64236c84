@@ -1,4 +1,3 @@
-
 import { createBrowserRouter } from 'react-router-dom';
 import Home from './pages/Home';
 import Calculator from './pages/Calculator';
@@ -33,6 +32,7 @@ import PrivacyPolicy from './pages/PrivacyPolicy';
 import Terms from './pages/Terms';
 import Packages from './pages/Packages';
 import OrderTracking from './pages/OrderTracking';
+import FeedbackConfirmation from './pages/FeedbackConfirmation';
 
 const router = createBrowserRouter([
   {
@@ -170,6 +170,10 @@ const router = createBrowserRouter([
   {
     path: '/preview/:projectId',
     element: <PublicLayout><PreviewPage /></PublicLayout>,
+  },
+  {
+    path: '/feedback-confirmacao',
+    element: <PublicLayout><FeedbackConfirmation /></PublicLayout>,
   },
   {
     path: '*',
