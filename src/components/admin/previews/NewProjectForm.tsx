@@ -77,7 +77,16 @@ const NewProjectForm: React.FC<NewProjectFormProps> = ({ onAddProject }) => {
             versions: versions.length,
             previewUrl: '',
             expirationDate: formattedExpirationDate,
-            lastActivityDate: formattedCreationDate
+            lastActivityDate: formattedCreationDate,
+            versionsList: versions.map((v, index) => ({
+              id: `v${index + 1}`,
+              name: v.title,
+              description: v.description,
+              audioUrl: v.audioUrl,
+              url: v.audioUrl,
+              dateAdded: formattedCreationDate,
+              recommended: index === 0 // Make the first version recommended by default
+            }))
           })
         : addProject({
             clientName: data.clientName,
@@ -88,7 +97,16 @@ const NewProjectForm: React.FC<NewProjectFormProps> = ({ onAddProject }) => {
             versions: versions.length,
             previewUrl: '',
             expirationDate: formattedExpirationDate,
-            lastActivityDate: formattedCreationDate
+            lastActivityDate: formattedCreationDate,
+            versionsList: versions.map((v, index) => ({
+              id: `v${index + 1}`,
+              name: v.title,
+              description: v.description,
+              audioUrl: v.audioUrl,
+              url: v.audioUrl,
+              dateAdded: formattedCreationDate,
+              recommended: index === 0 // Make the first version recommended by default
+            }))
           });
       
       // Notificar sobre novo projeto

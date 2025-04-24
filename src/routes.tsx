@@ -1,3 +1,4 @@
+
 import { createBrowserRouter } from 'react-router-dom';
 import Home from './pages/Home';
 import Calculator from './pages/Calculator';
@@ -139,16 +140,24 @@ const router = createBrowserRouter([
     element: <ProtectedRoute><AdminInvoices /></ProtectedRoute>,
   },
   {
-    path: '/admin-j28s7d1k/integrations',
-    element: <ProtectedRoute><AdminIntegrations /></ProtectedRoute>,
+    path: '/admin-j28s7d1k/analytics',
+    element: <ProtectedRoute><AdminStatistics /></ProtectedRoute>,
+  },
+  {
+    path: '/admin-j28s7d1k/statistics',
+    element: <ProtectedRoute><AdminStatistics /></ProtectedRoute>,
+  },
+  {
+    path: '/admin-j28s7d1k/guides',
+    element: <ProtectedRoute><AdminGuides /></ProtectedRoute>,
   },
   {
     path: '/admin-j28s7d1k/documentation',
     element: <ProtectedRoute><AdminGuides /></ProtectedRoute>,
   },
   {
-    path: '/admin-j28s7d1k/analytics',
-    element: <ProtectedRoute><AdminStatistics /></ProtectedRoute>,
+    path: '/admin-j28s7d1k/integrations',
+    element: <ProtectedRoute><AdminIntegrations /></ProtectedRoute>,
   },
   {
     path: '/admin-j28s7d1k/invoices',

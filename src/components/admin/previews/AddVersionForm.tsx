@@ -42,7 +42,7 @@ const AddVersionForm: React.FC<AddVersionFormProps> = ({ projectId, onAddComplet
       return;
     }
     
-    // Validate Google Drive link
+    // Validate Google Drive link - make this less restrictive
     if (!audioUrl.includes('drive.google.com')) {
       toast({
         title: "Erro",
@@ -53,17 +53,6 @@ const AddVersionForm: React.FC<AddVersionFormProps> = ({ projectId, onAddComplet
     }
     
     setIsSubmitting(true);
-    
-    // Process Google Drive links to extract file ID and create streaming URL
-    let processedUrl = audioUrl;
-    if (audioUrl.includes('/view')) {
-      processedUrl = audioUrl.replace('/view', '/preview');
-    } else if (audioUrl.includes('id=')) {
-      const fileIdMatch = audioUrl.match(/id=([^&]+)/);
-      if (fileIdMatch && fileIdMatch[1]) {
-        processedUrl = `https://drive.google.com/uc?export=view&id=${fileIdMatch[1]}`;
-      }
-    }
     
     // Get the project from localStorage
     const storedProjects = JSON.parse(localStorage.getItem('harmonIA_preview_projects') || '[]');
@@ -76,8 +65,8 @@ const AddVersionForm: React.FC<AddVersionFormProps> = ({ projectId, onAddComplet
         id: `v${(project.versionsList?.length || 0) + 1}`,
         name: versionName,
         description: description,
-        audioUrl: processedUrl,
-        url: processedUrl, // Adding url for backward compatibility
+        audioUrl: audioUrl, // Use the raw URL as entered
+        url: audioUrl, // Keep for backward compatibility
         dateAdded: new Date().toLocaleDateString('pt-BR'),
         recommended: isRecommended
       };
@@ -106,6 +95,7 @@ const AddVersionForm: React.FC<AddVersionFormProps> = ({ projectId, onAddComplet
         });
       }
       
+      setIsSubmitting(false);
       onAddComplete(versionName);
     } else {
       toast({
@@ -113,9 +103,8 @@ const AddVersionForm: React.FC<AddVersionFormProps> = ({ projectId, onAddComplet
         description: "Projeto não encontrado",
         variant: "destructive"
       });
+      setIsSubmitting(false);
     }
-    
-    setIsSubmitting(false);
   };
 
   return (

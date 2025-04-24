@@ -146,6 +146,14 @@ class NotificationService {
         title = 'Projeto atualizado';
         description = 'O projeto foi atualizado com novas informações';
         break;
+      case 'briefing_received':
+        title = 'Briefing recebido';
+        description = `Um novo briefing foi recebido de ${data.clientName || 'um cliente'}`;
+        break;
+      case 'new_order':
+        title = 'Novo pedido recebido';
+        description = `Um novo pedido foi recebido de ${data.clientName || 'um cliente'}`;
+        break;
     }
 
     // Display toast notification
