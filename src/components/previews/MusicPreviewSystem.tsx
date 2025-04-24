@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { useParams } from 'react-router-dom';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -75,7 +76,7 @@ const MusicPreviewSystem: React.FC<{ projectId?: string }> = ({ projectId: propP
     });
     
     notificationService.notify('feedback_received', {
-      projectId: projectId,
+      projectId: actualProjectId,
       clientName: projectData?.clientName || 'Cliente',
       message: feedback
     });
@@ -99,7 +100,7 @@ const MusicPreviewSystem: React.FC<{ projectId?: string }> = ({ projectId: propP
     });
     
     notificationService.notify('preview_approved', {
-      projectId: projectId,
+      projectId: actualProjectId,
       clientName: projectData?.clientName || 'Cliente',
       versionId: selectedVersion
     });
