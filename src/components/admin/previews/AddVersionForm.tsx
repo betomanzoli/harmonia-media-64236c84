@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -7,6 +6,7 @@ import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
 import { DialogFooter } from "@/components/ui/dialog";
 import { useToast } from '@/hooks/use-toast';
+import { generatePreviewLink } from '@/utils/previewLinkUtils';
 
 interface AddVersionFormProps {
   projectId: string;
@@ -42,7 +42,6 @@ const AddVersionForm: React.FC<AddVersionFormProps> = ({ projectId, onAddComplet
       return;
     }
     
-    // Validate Google Drive link - make this less restrictive
     if (!audioUrl.includes('drive.google.com')) {
       toast({
         title: "Erro",
@@ -61,20 +60,23 @@ const AddVersionForm: React.FC<AddVersionFormProps> = ({ projectId, onAddComplet
     if (projectIndex !== -1) {
       const project = storedProjects[projectIndex];
       
+      // Generate an encoded preview link
+      const encodedPreviewId = generatePreviewLink(project.id);
+      
       const newVersion = {
         id: `v${(project.versionsList?.length || 0) + 1}`,
         name: versionName,
         description: description,
-        audioUrl: audioUrl, // Use the raw URL as entered
+        audioUrl: audioUrl,
         url: audioUrl, // Keep for backward compatibility
         dateAdded: new Date().toLocaleDateString('pt-BR'),
-        recommended: isRecommended
+        recommended: isRecommended,
+        previewLink: `/preview/${encodedPreviewId}` // Store the encoded preview link
       };
       
       if (!project.versionsList) {
         project.versionsList = [newVersion];
       } else {
-        // If setting this as recommended, remove recommendation from others
         if (isRecommended) {
           project.versionsList = project.versionsList.map((v: any) => ({
             ...v,

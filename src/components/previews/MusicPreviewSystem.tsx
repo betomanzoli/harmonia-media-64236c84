@@ -15,6 +15,7 @@ import { Alert, AlertTitle, AlertDescription } from "@/components/ui/alert";
 import { AlertCircle } from 'lucide-react';
 import { Button } from "@/components/ui/button";
 import { useNavigate } from 'react-router-dom';
+import { getProjectIdFromPreviewLink } from '@/utils/previewLinkUtils';
 
 interface MusicPreviewSystemProps {
   projectId?: string;
@@ -22,14 +23,15 @@ interface MusicPreviewSystemProps {
 
 const MusicPreviewSystem: React.FC<{ projectId?: string }> = ({ projectId: propProjectId }) => {
   const params = useParams<{ projectId: string }>();
-  const projectId = propProjectId || params.projectId;
+  const encodedProjectId = propProjectId || params.projectId;
+  const actualProjectId = encodedProjectId ? getProjectIdFromPreviewLink(encodedProjectId) : null;
   const { toast } = useToast();
   const [selectedVersion, setSelectedVersion] = useState<string | null>(null);
   const [feedback, setFeedback] = useState('');
   const [error, setError] = useState<string | null>(null);
   const navigate = useNavigate();
   
-  const { projectData, setProjectData, isLoading } = usePreviewData(projectId);
+  const { projectData, setProjectData, isLoading } = usePreviewData(actualProjectId || undefined);
   
   useEffect(() => {
     const handleContextMenu = (e: MouseEvent) => {
