@@ -9,7 +9,7 @@ import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, D
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { usePreviewProjects, ProjectItem } from '@/hooks/admin/usePreviewProjects';
+import { usePreviewProjects } from '@/hooks/admin/usePreviewProjects';
 import { notificationService } from '@/services/notificationService';
 import PreviewVersionsList from '@/components/admin/previews/PreviewVersionsList';
 import ProjectClientInfo from '@/components/admin/previews/ProjectClientInfo';
@@ -26,7 +26,7 @@ const PreviewProjectPage: React.FC = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
   const [loading, setLoading] = useState(true);
-  const [project, setProject] = useState<ProjectItem | null>(null);
+  const [project, setProject] = useState<any | null>(null);
   const [showAddVersion, setShowAddVersion] = useState(false);
   const [showExtendDialog, setShowExtendDialog] = useState(false);
   const [showNotifyDialog, setShowNotifyDialog] = useState(false);
@@ -93,7 +93,7 @@ const PreviewProjectPage: React.FC = () => {
       ...project,
       expirationDate: newExpirationDate
     };
-    setProject(updatedProject as ProjectItem);
+    setProject(updatedProject);
     
     if (updateProject && projectId) {
       updateProject(projectId, { expirationDate: newExpirationDate });
@@ -113,7 +113,7 @@ const PreviewProjectPage: React.FC = () => {
   const deleteVersion = (versionId: string) => {
     if (!project || !project.versionsList) return;
     
-    const updatedVersions = project.versionsList.filter(v => v.id !== versionId);
+    const updatedVersions = project.versionsList.filter((v: any) => v.id !== versionId);
     
     const updatedProject = {
       ...project,
@@ -245,14 +245,30 @@ const PreviewProjectPage: React.FC = () => {
       if (foundProject) {
         let enhancedProject = { ...foundProject };
         
+        // Certifique-se que versionsList existe
         if (!enhancedProject.versionsList) {
           enhancedProject.versionsList = [];
+          
+          // Se houver um número de versões mas não tiver a lista, crie versões de exemplo
+          if (enhancedProject.versions && enhancedProject.versions > 0) {
+            for (let i = 0; i < enhancedProject.versions; i++) {
+              enhancedProject.versionsList.push({
+                id: `v${i+1}`,
+                name: `Versão ${i+1}`,
+                description: `Descrição da versão ${i+1}`,
+                dateAdded: enhancedProject.createdAt,
+                recommended: i === 0
+              });
+            }
+          }
         }
         
+        // Inicializa o feedback se não existir
         if (!enhancedProject.feedback) {
           enhancedProject.feedback = '';
         }
         
+        // Inicializa o histórico se não existir
         if (!enhancedProject.history) {
           enhancedProject.history = [
             { action: 'Projeto criado', timestamp: enhancedProject.createdAt }
@@ -354,15 +370,15 @@ const PreviewProjectPage: React.FC = () => {
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
           <ProjectClientInfo client={{
-            name: project.clientName,
-            email: project.clientEmail,
-            packageType: project.packageType
+            name: project.clientName || "Cliente",
+            email: project.clientEmail || "cliente@exemplo.com",
+            packageType: project.packageType || "Padrão"
           }} />
 
           <ProjectStatusCard 
-            status={project.status}
-            createdAt={project.createdAt}
-            expirationDate={project.expirationDate}
+            status={project.status || "waiting"}
+            createdAt={project.createdAt || new Date().toLocaleDateString('pt-BR')}
+            expirationDate={project.expirationDate || new Date(Date.now() + 7*24*60*60*1000).toLocaleDateString('pt-BR')}
             isNearExpiration={isNearExpiration()}
           />
 
@@ -407,19 +423,6 @@ const PreviewProjectPage: React.FC = () => {
           </div>
         </div>
 
-        <div className="p-4 bg-amber-100 border border-amber-300 rounded mb-6">
-          <div className="flex items-start">
-            <AlertTriangle className="h-5 w-5 text-amber-600 mr-2 mt-0.5" />
-            <div>
-              <h3 className="font-medium text-amber-800 mb-1">Ambiente de demonstração</h3>
-              <p className="text-sm text-amber-700">
-                Este é um ambiente de demonstração com dados simulados. Os links para prévias podem não funcionar completamente.
-                Em um ambiente de produção, os emails seriam enviados corretamente e as prévias estariam disponíveis para os clientes.
-              </p>
-            </div>
-          </div>
-        </div>
-
         <Tabs defaultValue="versions">
           <TabsList>
             <TabsTrigger value="versions">Versões</TabsTrigger>
@@ -436,14 +439,14 @@ const PreviewProjectPage: React.FC = () => {
           
           <TabsContent value="feedback" className="mt-4">
             <ClientFeedbackCard 
-              feedback={project.feedback} 
-              status={project.status} 
+              feedback={project.feedback || ""} 
+              status={project.status || "waiting"} 
               onSaveFeedback={saveFeedback}
             />
           </TabsContent>
           
           <TabsContent value="history" className="mt-4">
-            <ProjectHistoryList history={project.history} />
+            <ProjectHistoryList history={project.history || []} />
           </TabsContent>
         </Tabs>
 

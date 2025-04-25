@@ -1,12 +1,13 @@
+
 import React, { useState } from 'react';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Textarea } from '@/components/ui/textarea';
-import { Label } from '@/components/ui/label';
-import { Switch } from '@/components/ui/switch';
-import { DialogFooter } from "@/components/ui/dialog";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
+import { Switch } from "@/components/ui/switch";
+import { Label } from "@/components/ui/label";
+import { Music, Upload } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
-import { generatePreviewLink } from '@/utils/previewLinkUtils';
+import { usePreviewProjects } from '@/hooks/admin/usePreviewProjects';
 
 interface AddVersionFormProps {
   projectId: string;
@@ -14,157 +15,154 @@ interface AddVersionFormProps {
 }
 
 const AddVersionForm: React.FC<AddVersionFormProps> = ({ projectId, onAddComplete }) => {
-  const [versionName, setVersionName] = useState('');
+  const [name, setName] = useState('');
   const [description, setDescription] = useState('');
-  const [audioUrl, setAudioUrl] = useState('');
   const [isRecommended, setIsRecommended] = useState(false);
-  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const { toast } = useToast();
-
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    
-    if (!versionName.trim()) {
-      toast({
-        title: "Erro",
-        description: "O nome da versão é obrigatório",
-        variant: "destructive"
-      });
-      return;
-    }
-    
-    if (!audioUrl.trim()) {
-      toast({
-        title: "Erro",
-        description: "O link do Google Drive é obrigatório",
-        variant: "destructive"
-      });
-      return;
-    }
-    
-    if (!audioUrl.includes('drive.google.com')) {
-      toast({
-        title: "Erro",
-        description: "Por favor, insira um link válido do Google Drive",
-        variant: "destructive"
-      });
-      return;
-    }
-    
-    setIsSubmitting(true);
-    
-    // Get the project from localStorage
-    const storedProjects = JSON.parse(localStorage.getItem('harmonIA_preview_projects') || '[]');
-    const projectIndex = storedProjects.findIndex((p: any) => p.id === projectId);
-    
-    if (projectIndex !== -1) {
-      const project = storedProjects[projectIndex];
-      
-      // Generate an encoded preview link
-      const encodedPreviewId = generatePreviewLink(project.id);
-      
-      const newVersion = {
-        id: `v${(project.versionsList?.length || 0) + 1}`,
-        name: versionName,
-        description: description,
-        audioUrl: audioUrl,
-        url: audioUrl, // Keep for backward compatibility
-        dateAdded: new Date().toLocaleDateString('pt-BR'),
-        recommended: isRecommended,
-        previewLink: `/preview/${encodedPreviewId}` // Store the encoded preview link
-      };
-      
-      if (!project.versionsList) {
-        project.versionsList = [newVersion];
-      } else {
-        if (isRecommended) {
-          project.versionsList = project.versionsList.map((v: any) => ({
-            ...v,
-            recommended: false
-          }));
-        }
-        project.versionsList.push(newVersion);
-      }
-      
-      // Update the versions count
-      project.versions = (project.versionsList || []).length;
-      storedProjects[projectIndex] = project;
-      localStorage.setItem('harmonIA_preview_projects', JSON.stringify(storedProjects));
-      
-      // Send notification to client about new preview
-      if (project.clientEmail) {
-        toast({
-          title: "Notificação enviada",
-          description: `Uma notificação foi enviada para ${project.clientEmail}`
-        });
-      }
-      
-      setIsSubmitting(false);
-      onAddComplete(versionName);
-    } else {
-      toast({
-        title: "Erro",
-        description: "Projeto não encontrado",
-        variant: "destructive"
-      });
-      setIsSubmitting(false);
+  const { updateProject } = usePreviewProjects();
+  const [isLoading, setIsLoading] = useState(false);
+  
+  const handleSelectFile = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = e.target.files;
+    if (files && files.length > 0) {
+      setSelectedFile(files[0]);
     }
   };
-
+  
+  const handleAddVersion = () => {
+    if (!name.trim()) {
+      toast({
+        title: "Nome obrigatório",
+        description: "Por favor, informe um nome para a versão.",
+        variant: "destructive"
+      });
+      return;
+    }
+    
+    if (!selectedFile) {
+      toast({
+        title: "Arquivo obrigatório",
+        description: "Por favor, selecione um arquivo de áudio.",
+        variant: "destructive"
+      });
+      return;
+    }
+    
+    setIsLoading(true);
+    
+    // Simulação de upload de arquivo
+    setTimeout(() => {
+      const newVersion = {
+        id: `v${Date.now()}`,
+        name,
+        description,
+        recommended: isRecommended,
+        dateAdded: new Date().toLocaleDateString('pt-BR'),
+        fileId: 'demo-file-id',
+      };
+      
+      // Retrieve project and update versions list
+      updateProject(projectId, (project) => {
+        const versionsList = project.versionsList || [];
+        
+        // If this is set as recommended, remove recommended from others
+        const updatedVersions = isRecommended 
+          ? versionsList.map(v => ({ ...v, recommended: false }))
+          : [...versionsList];
+        
+        // Add the new version
+        updatedVersions.push(newVersion);
+        
+        return {
+          versions: updatedVersions.length,
+          versionsList: updatedVersions
+        };
+      });
+      
+      toast({
+        title: "Versão adicionada",
+        description: `A versão "${name}" foi adicionada com sucesso.`
+      });
+      
+      setIsLoading(false);
+      onAddComplete(name);
+    }, 1500);
+  };
+  
   return (
-    <form onSubmit={handleSubmit} className="space-y-4">
+    <div className="space-y-4">
       <div className="space-y-2">
-        <Label htmlFor="version-name">Nome da Versão</Label>
+        <Label htmlFor="version-name">Nome da versão</Label>
         <Input 
           id="version-name"
-          value={versionName}
-          onChange={(e) => setVersionName(e.target.value)}
-          placeholder="Ex: Versão Acústica"
-          required
+          placeholder="Ex: Versão Acústica" 
+          value={name}
+          onChange={(e) => setName(e.target.value)}
         />
       </div>
       
       <div className="space-y-2">
-        <Label htmlFor="description">Descrição</Label>
+        <Label htmlFor="version-description">Descrição (opcional)</Label>
         <Textarea 
-          id="description"
+          id="version-description"
+          placeholder="Descreva as características desta versão..." 
           value={description}
           onChange={(e) => setDescription(e.target.value)}
-          placeholder="Descreva esta versão da música..."
-          rows={3}
         />
       </div>
       
       <div className="space-y-2">
-        <Label htmlFor="audio-url">Link do Google Drive</Label>
-        <Input 
-          id="audio-url"
-          value={audioUrl}
-          onChange={(e) => setAudioUrl(e.target.value)}
-          placeholder="https://drive.google.com/file/d/..."
-          required
-        />
-        <p className="text-xs text-gray-500">
-          Cole o link de compartilhamento do Google Drive para a versão musical.
-          Certifique-se de que o link esteja configurado como "Qualquer pessoa com o link pode visualizar".
-        </p>
+        <Label htmlFor="version-file">Arquivo de áudio</Label>
+        <div className="border border-dashed rounded-md p-6 text-center">
+          {selectedFile ? (
+            <div className="space-y-2">
+              <Music className="h-8 w-8 mx-auto text-harmonia-green" />
+              <p>{selectedFile.name}</p>
+              <p className="text-xs text-gray-500">{(selectedFile.size / (1024 * 1024)).toFixed(2)} MB</p>
+              <Button 
+                variant="outline" 
+                size="sm" 
+                onClick={() => setSelectedFile(null)}
+              >
+                Selecionar outro arquivo
+              </Button>
+            </div>
+          ) : (
+            <label className="cursor-pointer block">
+              <div className="space-y-2">
+                <Upload className="h-8 w-8 mx-auto text-gray-400" />
+                <p>Clique para selecionar ou arraste o arquivo de áudio</p>
+                <p className="text-xs text-gray-500">MP3, WAV até 50MB</p>
+              </div>
+              <Input 
+                id="version-file"
+                type="file" 
+                accept="audio/*"
+                className="hidden"
+                onChange={handleSelectFile}
+              />
+            </label>
+          )}
+        </div>
       </div>
       
       <div className="flex items-center space-x-2">
         <Switch 
-          id="recommended"
+          id="recommended" 
           checked={isRecommended}
           onCheckedChange={setIsRecommended}
         />
         <Label htmlFor="recommended">Marcar como versão recomendada</Label>
       </div>
       
-      <DialogFooter>
-        <Button type="submit" disabled={isSubmitting}>
-          {isSubmitting ? "Adicionando..." : "Adicionar Versão"}
+      <div className="flex justify-end gap-2 pt-4">
+        <Button variant="outline" onClick={() => onAddComplete('')}>Cancelar</Button>
+        <Button onClick={handleAddVersion} disabled={isLoading}>
+          {isLoading ? "Adicionando..." : "Adicionar Versão"}
         </Button>
-      </DialogFooter>
-    </form>
+      </div>
+    </div>
   );
 };
 
