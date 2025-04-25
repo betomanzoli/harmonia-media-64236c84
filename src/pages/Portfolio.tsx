@@ -4,11 +4,19 @@ import Header from '@/components/Header';
 import Footer from '@/components/Footer';
 import Portfolio from '@/components/Portfolio';
 import { Button } from "@/components/ui/button";
-import { ArrowLeft } from 'lucide-react';
+import { ArrowLeft, Phone } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 
 const PortfolioPage: React.FC = () => {
   const navigate = useNavigate();
+
+  const handleWhatsAppContact = () => {
+    // Você pode definir aqui o número de telefone e a mensagem padrão
+    const phoneNumber = "5511999999999"; // Substitua pelo número correto
+    const message = "Olá! Gostaria de conhecer mais sobre suas músicas personalizadas.";
+    const whatsappUrl = `https://wa.me/${phoneNumber}?text=${encodeURIComponent(message)}`;
+    window.open(whatsappUrl, '_blank');
+  };
 
   return (
     <div className="min-h-screen bg-background text-foreground">
@@ -32,6 +40,14 @@ const PortfolioPage: React.FC = () => {
               Explore algumas das histórias que transformamos em música. Cada composição é única e feita especificamente 
               para atender aos desejos e necessidades de nossos clientes.
             </p>
+            
+            <Button 
+              onClick={handleWhatsAppContact}
+              className="mt-6 bg-green-600 hover:bg-green-700 text-white flex items-center gap-2"
+            >
+              <Phone className="w-4 h-4" />
+              Fale conosco pelo WhatsApp para exemplos
+            </Button>
           </div>
 
           <Portfolio />

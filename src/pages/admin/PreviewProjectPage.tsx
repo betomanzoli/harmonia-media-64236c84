@@ -1,11 +1,11 @@
+
 import React, { useEffect, useState } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import AdminLayout from '@/components/admin/layout/AdminLayout';
 import { useToast } from '@/hooks/use-toast';
-import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -153,6 +153,12 @@ const PreviewProjectPage: React.FC = () => {
       case 'version_deleted':
         actionDescription = `Versão removida`;
         break;
+      case 'status_updated':
+        actionDescription = `Status alterado para ${data.status}`;
+        break;
+      case 'feedback_recorded':
+        actionDescription = 'Feedback do cliente registrado';
+        break;
       default:
         actionDescription = 'Ação realizada';
     }
@@ -174,6 +180,61 @@ const PreviewProjectPage: React.FC = () => {
     
     if (updateProject && projectId) {
       updateProject(projectId, { history: updatedHistory });
+    }
+  };
+
+  // Função para atualizar o status do projeto
+  const updateProjectStatus = (newStatus: 'waiting' | 'feedback' | 'approved') => {
+    if (!project || project.status === newStatus) return;
+    
+    const updatedProject = {
+      ...project,
+      status: newStatus
+    };
+    
+    setProject(updatedProject);
+    
+    if (updateProject && projectId) {
+      updateProject(projectId, { status: newStatus });
+      
+      // Registrar a mudança de status no histórico
+      updateProjectHistory('status_updated', { 
+        previousStatus: project.status,
+        status: newStatus 
+      });
+      
+      toast({
+        title: "Status atualizado",
+        description: `O status do projeto foi atualizado para ${newStatus}.`,
+      });
+    }
+  };
+
+  // Função para salvar feedback do cliente
+  const saveFeedback = (feedbackText: string) => {
+    if (!project) return;
+    
+    const updatedProject = {
+      ...project,
+      feedback: feedbackText,
+      status: 'feedback' as const // Atualiza o status para feedback
+    };
+    
+    setProject(updatedProject);
+    
+    if (updateProject && projectId) {
+      updateProject(projectId, { 
+        feedback: feedbackText,
+        status: 'feedback'
+      });
+      
+      // Registrar o feedback no histórico
+      updateProjectHistory('feedback_recorded', { feedback: feedbackText });
+      
+      toast({
+        title: "Feedback salvo",
+        description: "O feedback do cliente foi registrado com sucesso.",
+      });
     }
   };
 
@@ -312,6 +373,39 @@ const PreviewProjectPage: React.FC = () => {
             projectId={projectId || ''}
           />
         </div>
+        
+        {/* Status control buttons */}
+        <div className="bg-card p-4 border rounded-md shadow-sm">
+          <h3 className="text-sm font-medium mb-3">Controle de status do projeto</h3>
+          <div className="flex flex-wrap gap-2">
+            <Button 
+              variant={project.status === 'waiting' ? 'default' : 'outline'} 
+              size="sm"
+              onClick={() => updateProjectStatus('waiting')}
+            >
+              <Clock className="mr-1 h-3 w-3" />
+              Aguardando avaliação
+            </Button>
+            <Button 
+              variant={project.status === 'feedback' ? 'default' : 'outline'} 
+              size="sm"
+              onClick={() => updateProjectStatus('feedback')}
+              className={project.status === 'feedback' ? 'bg-blue-600 hover:bg-blue-700' : ''}
+            >
+              <MessageCircle className="mr-1 h-3 w-3" />
+              Feedback recebido
+            </Button>
+            <Button 
+              variant={project.status === 'approved' ? 'default' : 'outline'} 
+              size="sm"
+              onClick={() => updateProjectStatus('approved')}
+              className={project.status === 'approved' ? 'bg-green-600 hover:bg-green-700' : ''}
+            >
+              <FileMusic className="mr-1 h-3 w-3" />
+              Aprovado
+            </Button>
+          </div>
+        </div>
 
         <div className="p-4 bg-amber-100 border border-amber-300 rounded mb-6">
           <div className="flex items-start">
@@ -341,7 +435,11 @@ const PreviewProjectPage: React.FC = () => {
           </TabsContent>
           
           <TabsContent value="feedback" className="mt-4">
-            <ClientFeedbackCard feedback={project.feedback} status={project.status} />
+            <ClientFeedbackCard 
+              feedback={project.feedback} 
+              status={project.status} 
+              onSaveFeedback={saveFeedback}
+            />
           </TabsContent>
           
           <TabsContent value="history" className="mt-4">

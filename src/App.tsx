@@ -16,8 +16,9 @@ import AdminLogin from './pages/admin/AdminLogin';
 import Dashboard from './pages/admin/Dashboard';
 import AdminBriefings from './pages/admin/AdminBriefings';
 import AdminPreviews from './pages/admin/AdminPreviews';
-import AdminBriefingPage from './pages/admin/AdminBriefings'; // Fallback for now
+import AdminBriefingPage from './pages/admin/AdminBriefingPage';
 import PreviewProjectPage from './pages/admin/PreviewProjectPage';
+import Briefing from './pages/Briefing';
 
 function App() {
   return (
@@ -29,9 +30,11 @@ function App() {
         <Route path="/servicos" element={<Services />} />
         <Route path="/portfolio" element={<PortfolioPage />} />
         <Route path="/calculadora" element={<Calculator />} />
+        <Route path="/briefing" element={<Briefing />} />
         <Route path="/previa/:previewId" element={<MusicPreviews />} />
         <Route path="/preview/:projectId" element={<PreviewPage />} />
         <Route path="/music-preview/:projectId" element={<MusicPreviewPage />} />
+        <Route path="/feedback-confirmacao" element={<FeedbackConfirmation />} />
         
         {/* Admin Routes */}
         <Route path="/admin-j28s7d1k/login" element={<AdminLogin />} />
@@ -40,9 +43,6 @@ function App() {
         <Route path="/admin-j28s7d1k/briefing/:briefingId" element={<AdminBriefingPage />} />
         <Route path="/admin-j28s7d1k/previews" element={<AdminPreviews />} />
         <Route path="/admin-j28s7d1k/preview/:projectId" element={<PreviewProjectPage />} />
-        
-        {/* Feedback Confirmation Route */}
-        <Route path="/feedback-confirmacao" element={<FeedbackConfirmation />} />
       </Routes>
     </Router>
   );
