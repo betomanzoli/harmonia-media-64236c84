@@ -33,7 +33,7 @@ const PreviewProjectPage: React.FC = () => {
   const [showHelpDialog, setShowHelpDialog] = useState(false);
   const [notificationMessage, setNotificationMessage] = useState('');
   const [extensionDays, setExtensionDays] = useState('7');
-  const { projects, updateProject } = usePreviewProjects();
+  const { projects, updateProject, getProjectById } = usePreviewProjects();
 
   const copyPreviewLink = () => {
     const link = `${window.location.origin}/preview/${projectId}`;
@@ -243,45 +243,11 @@ const PreviewProjectPage: React.FC = () => {
       const foundProject = projects.find(p => p.id === projectId);
       
       if (foundProject) {
-        let enhancedProject = { ...foundProject };
-        
-        // Certifique-se que versionsList existe
-        if (!enhancedProject.versionsList) {
-          enhancedProject.versionsList = [];
-          
-          // Se houver um número de versões mas não tiver a lista, crie versões de exemplo
-          if (enhancedProject.versions && enhancedProject.versions > 0) {
-            for (let i = 0; i < enhancedProject.versions; i++) {
-              enhancedProject.versionsList.push({
-                id: `v${i+1}`,
-                name: `Versão ${i+1}`,
-                description: `Descrição da versão ${i+1}`,
-                dateAdded: enhancedProject.createdAt,
-                recommended: i === 0
-              });
-            }
-          }
-        }
-        
-        // Inicializa o feedback se não existir
-        if (!enhancedProject.feedback) {
-          enhancedProject.feedback = '';
-        }
-        
-        // Inicializa o histórico se não existir
-        if (!enhancedProject.history) {
-          enhancedProject.history = [
-            { action: 'Projeto criado', timestamp: enhancedProject.createdAt }
-          ];
-        }
-        
-        setProject(enhancedProject);
-        console.log("Project found:", enhancedProject);
+        setProject(foundProject);
       } else {
-        console.error(`Project with ID ${projectId} not found`);
         toast({
-          title: "Erro",
-          description: "Projeto não encontrado",
+          title: "Projeto não encontrado",
+          description: `Não foi possível encontrar o projeto com ID ${projectId}.`,
           variant: "destructive"
         });
       }
@@ -293,8 +259,9 @@ const PreviewProjectPage: React.FC = () => {
   if (loading) {
     return (
       <AdminLayout>
-        <div className="flex items-center justify-center h-64">
-          <p className="text-gray-500">Carregando detalhes do projeto...</p>
+        <div className="flex items-center justify-center h-full p-8">
+          <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-gray-200"></div>
+          <span className="ml-2">Carregando...</span>
         </div>
       </AdminLayout>
     );
@@ -303,252 +270,232 @@ const PreviewProjectPage: React.FC = () => {
   if (!project) {
     return (
       <AdminLayout>
-        <div className="flex flex-col items-center justify-center h-64">
-          <h2 className="text-xl font-semibold mb-2">Projeto não encontrado</h2>
-          <p className="text-gray-500 mb-4">O projeto solicitado não existe ou foi removido.</p>
-          <Button asChild>
-            <Link to="/admin-j28s7d1k/previews">Voltar para lista de projetos</Link>
-          </Button>
+        <div className="bg-white p-8 rounded-lg shadow-lg">
+          <div className="flex items-center justify-center flex-col p-8 text-center">
+            <AlertTriangle className="h-12 w-12 text-amber-500 mb-4" />
+            <h2 className="text-2xl font-bold mb-2">Projeto não encontrado</h2>
+            <p className="text-gray-600 mb-6">
+              O projeto com ID {projectId} não foi encontrado no sistema.
+            </p>
+            <div className="flex gap-3">
+              <Button asChild>
+                <Link to="/admin-j28s7d1k/previews">
+                  <ArrowLeft className="mr-2 h-4 w-4" />
+                  Voltar às prévias
+                </Link>
+              </Button>
+            </div>
+          </div>
         </div>
       </AdminLayout>
     );
   }
 
-  const isNearExpiration = () => {
-    if (!project.expirationDate) return false;
-    
-    const expirationParts = project.expirationDate.split('/');
-    if (expirationParts.length !== 3) return false;
-    
-    const expirationDate = new Date(
-      parseInt(expirationParts[2]), 
-      parseInt(expirationParts[1]) - 1, 
-      parseInt(expirationParts[0])
-    );
-    const today = new Date();
-    const diffTime = expirationDate.getTime() - today.getTime();
-    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-    return diffDays <= 3 && diffDays >= 0;
-  };
-
   return (
     <AdminLayout>
-      <div className="space-y-6 p-6">
-        <div className="flex items-center justify-between">
+      <div className="space-y-6">
+        <div className="flex flex-col md:flex-row gap-4 items-start md:items-center justify-between bg-white p-4 rounded-lg shadow-md">
           <div>
-            <Button variant="outline" asChild className="mb-2">
-              <Link to="/admin-j28s7d1k/previews">
-                <ArrowLeft className="mr-2 h-4 w-4" />
-                Voltar para lista de projetos
-              </Link>
-            </Button>
-            <h1 className="text-2xl font-bold text-harmonia-green">Projeto {project.id}</h1>
+            <div className="flex items-center">
+              <Button 
+                variant="ghost" 
+                size="sm" 
+                asChild
+                className="mr-2"
+              >
+                <Link to="/admin-j28s7d1k/previews">
+                  <ArrowLeft className="mr-2 h-4 w-4" />
+                  Voltar
+                </Link>
+              </Button>
+              <h1 className="text-2xl font-bold">Projeto: {project.id}</h1>
+            </div>
+            <p className="text-gray-500">{project.clientName} - {project.packageType}</p>
           </div>
-          <div className="flex items-center gap-2">
+          
+          <div className="flex gap-2">
             <Button 
-              variant="outline" 
-              onClick={() => setShowHelpDialog(true)}
-              className="border-harmonia-green text-harmonia-green"
+              size="sm" 
+              className="flex items-center"
+              onClick={copyPreviewLink}
             >
-              <HelpCircle className="mr-2 h-4 w-4" />
-              Ajuda
-            </Button>
-            <Button variant="outline" onClick={copyPreviewLink}>
               <Copy className="mr-2 h-4 w-4" />
               Copiar link
             </Button>
-            <Button variant="outline" onClick={() => setShowAddVersion(true)}>
-              <FileMusic className="mr-2 h-4 w-4" />
-              Adicionar versão
-            </Button>
-            <Button onClick={() => setShowNotifyDialog(true)}>
+            <Button 
+              size="sm" 
+              onClick={() => setShowNotifyDialog(true)}
+            >
               <Send className="mr-2 h-4 w-4" />
-              Enviar notificação
+              Notificar cliente
             </Button>
           </div>
-        </div>
-
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
-          <ProjectClientInfo client={{
-            name: project.clientName || "Cliente",
-            email: project.clientEmail || "cliente@exemplo.com",
-            packageType: project.packageType || "Padrão"
-          }} />
-
-          <ProjectStatusCard 
-            status={project.status || "waiting"}
-            createdAt={project.createdAt || new Date().toLocaleDateString('pt-BR')}
-            expirationDate={project.expirationDate || new Date(Date.now() + 7*24*60*60*1000).toLocaleDateString('pt-BR')}
-            isNearExpiration={isNearExpiration()}
-          />
-
-          <ProjectActionCard 
-            onAddVersion={() => setShowAddVersion(true)}
-            onExtendDeadline={() => setShowExtendDialog(true)}
-            previewUrl={`/preview/${projectId}`}
-            projectId={projectId || ''}
-          />
         </div>
         
-        {/* Status control buttons */}
-        <div className="bg-card p-4 border rounded-md shadow-sm">
-          <h3 className="text-sm font-medium mb-3">Controle de status do projeto</h3>
-          <div className="flex flex-wrap gap-2">
-            <Button 
-              variant={project.status === 'waiting' ? 'default' : 'outline'} 
-              size="sm"
-              onClick={() => updateProjectStatus('waiting')}
-            >
-              <Clock className="mr-1 h-3 w-3" />
-              Aguardando avaliação
-            </Button>
-            <Button 
-              variant={project.status === 'feedback' ? 'default' : 'outline'} 
-              size="sm"
-              onClick={() => updateProjectStatus('feedback')}
-              className={project.status === 'feedback' ? 'bg-blue-600 hover:bg-blue-700' : ''}
-            >
-              <MessageCircle className="mr-1 h-3 w-3" />
-              Feedback recebido
-            </Button>
-            <Button 
-              variant={project.status === 'approved' ? 'default' : 'outline'} 
-              size="sm"
-              onClick={() => updateProjectStatus('approved')}
-              className={project.status === 'approved' ? 'bg-green-600 hover:bg-green-700' : ''}
-            >
-              <FileMusic className="mr-1 h-3 w-3" />
-              Aprovado
-            </Button>
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          <div className="md:col-span-2">
+            <Tabs defaultValue="versions">
+              <TabsList className="w-full">
+                <TabsTrigger value="versions" className="flex-1">
+                  <FileMusic className="mr-2 h-4 w-4" />
+                  Versões
+                </TabsTrigger>
+                <TabsTrigger value="feedback" className="flex-1">
+                  <MessageSquare className="mr-2 h-4 w-4" />
+                  Feedback
+                </TabsTrigger>
+                <TabsTrigger value="history" className="flex-1">
+                  <Clock className="mr-2 h-4 w-4" />
+                  Histórico
+                </TabsTrigger>
+              </TabsList>
+              
+              <TabsContent value="versions" className="p-4 bg-white rounded-lg shadow mt-2">
+                {showAddVersion ? (
+                  <AddVersionForm 
+                    projectId={project.id} 
+                    onAddComplete={(versionName) => {
+                      setShowAddVersion(false);
+                      if (versionName) {
+                        updateProjectHistory('version_added', { name: versionName });
+                        // Refresh project data
+                        const refreshedProject = getProjectById(project.id);
+                        if (refreshedProject) {
+                          setProject(refreshedProject);
+                        }
+                      }
+                    }} 
+                  />
+                ) : (
+                  <div className="space-y-4">
+                    <Button 
+                      className="mb-4"
+                      onClick={() => setShowAddVersion(true)}
+                    >
+                      <FileMusic className="mr-2 h-4 w-4" />
+                      Adicionar Nova Versão
+                    </Button>
+                    
+                    <PreviewVersionsList 
+                      versions={project.versionsList || []} 
+                      onDeleteVersion={deleteVersion}
+                    />
+                  </div>
+                )}
+              </TabsContent>
+              
+              <TabsContent value="feedback" className="space-y-4 p-4 bg-white rounded-lg shadow mt-2">
+                <ClientFeedbackCard 
+                  feedback={project.feedback || ''} 
+                  status={project.status}
+                  onSaveFeedback={saveFeedback}
+                  onStatusUpdate={updateProjectStatus}
+                />
+              </TabsContent>
+              
+              <TabsContent value="history" className="p-4 bg-white rounded-lg shadow mt-2">
+                <ProjectHistoryList history={project.history || []} />
+              </TabsContent>
+            </Tabs>
+          </div>
+          
+          <div className="space-y-6">
+            <ProjectClientInfo 
+              clientName={project.clientName}
+              clientEmail={project.clientEmail}
+              packageType={project.packageType}
+              createdAt={project.createdAt}
+              expirationDate={project.expirationDate}
+              lastActivityDate={project.lastActivityDate || project.createdAt}
+            />
+            
+            <ProjectStatusCard 
+              status={project.status} 
+              onStatusUpdate={updateProjectStatus}
+            />
+            
+            <ProjectActionCard 
+              onAddVersion={() => setShowAddVersion(true)}
+              onExtendDeadline={() => setShowExtendDialog(true)}
+              previewUrl={project.previewUrl || ''}
+              projectId={project.id}
+            />
           </div>
         </div>
-
-        <Tabs defaultValue="versions">
-          <TabsList>
-            <TabsTrigger value="versions">Versões</TabsTrigger>
-            <TabsTrigger value="feedback">Feedback</TabsTrigger>
-            <TabsTrigger value="history">Histórico</TabsTrigger>
-          </TabsList>
-          
-          <TabsContent value="versions" className="mt-4">
-            <PreviewVersionsList 
-              versions={project.versionsList || []} 
-              onDeleteVersion={deleteVersion}
-            />
-          </TabsContent>
-          
-          <TabsContent value="feedback" className="mt-4">
-            <ClientFeedbackCard 
-              feedback={project.feedback || ""} 
-              status={project.status || "waiting"} 
-              onSaveFeedback={saveFeedback}
-            />
-          </TabsContent>
-          
-          <TabsContent value="history" className="mt-4">
-            <ProjectHistoryList history={project.history || []} />
-          </TabsContent>
-        </Tabs>
-
-        <Dialog open={showAddVersion} onOpenChange={setShowAddVersion}>
-          <DialogContent className="sm:max-w-[650px] max-h-[90vh] overflow-auto">
-            <DialogHeader>
-              <DialogTitle>Adicionar nova versão</DialogTitle>
-              <DialogDescription>
-                Adicione uma nova versão musical ao projeto {project.id} do cliente {project.clientName}.
-              </DialogDescription>
-            </DialogHeader>
-            
-            <AddVersionForm 
-              projectId={projectId || ''} 
-              onAddComplete={(versionName) => {
-                setShowAddVersion(false);
-                updateProjectHistory('version_added', { name: versionName });
-                toast({
-                  title: "Versão adicionada",
-                  description: `A versão "${versionName}" foi adicionada com sucesso.`
-                });
-              }} 
-            />
-          </DialogContent>
-        </Dialog>
-
-        <Dialog open={showExtendDialog} onOpenChange={setShowExtendDialog}>
-          <DialogContent>
-            <DialogHeader>
-              <DialogTitle>Estender prazo de avaliação</DialogTitle>
-              <DialogDescription>
-                O prazo atual termina em {project.expirationDate}. Defina por quantos dias deseja estender.
-              </DialogDescription>
-            </DialogHeader>
-            
-            <div className="space-y-4 py-4">
-              <div className="space-y-2">
-                <label htmlFor="extension-days" className="text-sm font-medium">
-                  Dias adicionais
-                </label>
-                <Select value={extensionDays} onValueChange={setExtensionDays}>
-                  <SelectTrigger id="extension-days">
-                    <SelectValue placeholder="Selecione o número de dias" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="3">3 dias</SelectItem>
-                    <SelectItem value="5">5 dias</SelectItem>
-                    <SelectItem value="7">7 dias</SelectItem>
-                    <SelectItem value="10">10 dias</SelectItem>
-                    <SelectItem value="15">15 dias</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-            </div>
-            
-            <DialogFooter>
-              <Button variant="outline" onClick={() => setShowExtendDialog(false)}>Cancelar</Button>
-              <Button onClick={extendDeadline}>Estender prazo</Button>
-            </DialogFooter>
-          </DialogContent>
-        </Dialog>
-
-        <Dialog open={showNotifyDialog} onOpenChange={setShowNotifyDialog}>
-          <DialogContent>
-            <DialogHeader>
-              <DialogTitle>Enviar notificação ao cliente</DialogTitle>
-              <DialogDescription>
-                Envie uma notificação para o cliente sobre atualizações no projeto.
-              </DialogDescription>
-            </DialogHeader>
-            
-            <div className="space-y-4 py-4">
-              <div className="space-y-2">
-                <label htmlFor="notification-message" className="text-sm font-medium">
-                  Mensagem de notificação
-                </label>
-                <Textarea
-                  id="notification-message"
-                  placeholder="Digite a mensagem para o cliente..."
-                  value={notificationMessage}
-                  onChange={(e) => setNotificationMessage(e.target.value)}
-                  className="min-h-[100px]"
-                />
-              </div>
-            </div>
-            
-            <DialogFooter>
-              <Button variant="outline" onClick={() => setShowNotifyDialog(false)}>Cancelar</Button>
-              <Button onClick={sendNotification}>Enviar notificação</Button>
-            </DialogFooter>
-          </DialogContent>
-        </Dialog>
-
-        <Dialog open={showHelpDialog} onOpenChange={setShowHelpDialog}>
-          <DialogContent className="sm:max-w-[700px] max-h-[80vh] overflow-auto">
-            <DialogHeader>
-              <DialogTitle>Como usar o sistema de notificações</DialogTitle>
-            </DialogHeader>
-            <NotificationGuide />
-          </DialogContent>
-        </Dialog>
       </div>
+      
+      {/* Dialog para notificar o cliente */}
+      <Dialog open={showNotifyDialog} onOpenChange={setShowNotifyDialog}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Notificar Cliente</DialogTitle>
+            <DialogDescription>
+              Envie um e-mail para informar o cliente sobre a disponibilidade das prévias.
+            </DialogDescription>
+          </DialogHeader>
+          
+          <div className="space-y-4 py-4">
+            <div className="space-y-2">
+              <p className="text-sm font-medium">Cliente: {project.clientName}</p>
+              <p className="text-sm font-medium">Email: {project.clientEmail}</p>
+            </div>
+            
+            <div className="space-y-2">
+              <label htmlFor="message" className="text-sm font-medium">
+                Mensagem
+              </label>
+              <Textarea
+                id="message"
+                placeholder="Escreva uma mensagem para o cliente..."
+                value={notificationMessage}
+                onChange={(e) => setNotificationMessage(e.target.value)}
+              />
+            </div>
+          </div>
+          
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setShowNotifyDialog(false)}>Cancelar</Button>
+            <Button onClick={sendNotification}>Enviar Notificação</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+      
+      {/* Dialog para estender o prazo */}
+      <Dialog open={showExtendDialog} onOpenChange={setShowExtendDialog}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Estender Prazo</DialogTitle>
+            <DialogDescription>
+              Estenda o prazo para avaliação das prévias por parte do cliente.
+            </DialogDescription>
+          </DialogHeader>
+          
+          <div className="space-y-4 py-4">
+            <div className="space-y-2">
+              <label htmlFor="days" className="text-sm font-medium">
+                Quantidade de dias
+              </label>
+              <Input
+                id="days"
+                type="number"
+                min="1"
+                max="30"
+                value={extensionDays}
+                onChange={(e) => setExtensionDays(e.target.value)}
+              />
+            </div>
+            
+            <div className="space-y-1">
+              <p className="text-sm font-medium">Data atual de expiração: {project.expirationDate}</p>
+            </div>
+          </div>
+          
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setShowExtendDialog(false)}>Cancelar</Button>
+            <Button onClick={extendDeadline}>Estender Prazo</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </AdminLayout>
   );
 };
