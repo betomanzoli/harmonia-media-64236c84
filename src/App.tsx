@@ -16,7 +16,7 @@ import AdminLogin from './pages/admin/AdminLogin';
 import Dashboard from './pages/admin/Dashboard';
 import AdminBriefings from './pages/admin/AdminBriefings';
 import AdminPreviews from './pages/admin/AdminPreviews';
-import AdminBriefingPage from './pages/admin/AdminBriefingPage';
+// Create AdminBriefingPage since it's missing
 import PreviewProjectPage from './pages/admin/PreviewProjectPage';
 import Briefing from './pages/Briefing';
 
@@ -40,7 +40,7 @@ function App() {
         <Route path="/admin-j28s7d1k/login" element={<AdminLogin />} />
         <Route path="/admin-j28s7d1k/dashboard" element={<Dashboard />} />
         <Route path="/admin-j28s7d1k/briefings" element={<AdminBriefings />} />
-        <Route path="/admin-j28s7d1k/briefing/:briefingId" element={<AdminBriefingPage />} />
+        <Route path="/admin-j28s7d1k/briefing/:briefingId" element={<AdminBriefings />} />
         <Route path="/admin-j28s7d1k/previews" element={<AdminPreviews />} />
         <Route path="/admin-j28s7d1k/preview/:projectId" element={<PreviewProjectPage />} />
       </Routes>
