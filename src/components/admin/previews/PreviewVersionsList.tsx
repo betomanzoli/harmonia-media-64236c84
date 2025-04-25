@@ -3,12 +3,11 @@ import React, { useState } from 'react';
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Dialog, DialogContent, DialogHeader, DialogFooter, DialogTitle } from "@/components/ui/dialog";
-import { FileMusic, Trash, Edit, Play, CheckCircle } from 'lucide-react';
+import { FileMusic, Trash, Edit, Play } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { VersionItem } from '@/hooks/admin/usePreviewProjects';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
-import { Switch } from '@/components/ui/switch';
 import { Label } from '@/components/ui/label';
 
 interface PreviewVersionsListProps {
@@ -25,7 +24,6 @@ const PreviewVersionsList: React.FC<PreviewVersionsListProps> = ({ versions, onD
   const [editName, setEditName] = useState('');
   const [editDescription, setEditDescription] = useState('');
   const [editAudioUrl, setEditAudioUrl] = useState('');
-  const [editRecommended, setEditRecommended] = useState(false);
 
   const handlePlayAudio = (version: VersionItem) => {
     const audioUrl = version.audioUrl || version.url;
@@ -61,7 +59,6 @@ const PreviewVersionsList: React.FC<PreviewVersionsListProps> = ({ versions, onD
     setEditName(version.name);
     setEditDescription(version.description || '');
     setEditAudioUrl(version.audioUrl || version.url || '');
-    setEditRecommended(version.recommended || false);
     setShowEditDialog(true);
   };
 
@@ -100,12 +97,6 @@ const PreviewVersionsList: React.FC<PreviewVersionsListProps> = ({ versions, onD
                 <div>
                   <div className="flex items-center gap-2">
                     <h3 className="font-bold">{version.name}</h3>
-                    {version.recommended && (
-                      <span className="inline-flex items-center bg-harmonia-green/20 text-harmonia-green text-xs rounded-full px-2 py-1">
-                        <CheckCircle className="w-3 h-3 mr-1" />
-                        Recomendada
-                      </span>
-                    )}
                   </div>
                   <p className="text-gray-400 text-sm mt-1">
                     {version.description || "Sem descrição"}
@@ -206,15 +197,6 @@ const PreviewVersionsList: React.FC<PreviewVersionsListProps> = ({ versions, onD
                 value={editAudioUrl}
                 onChange={(e) => setEditAudioUrl(e.target.value)}
               />
-            </div>
-            
-            <div className="flex items-center space-x-2">
-              <Switch 
-                id="edit-recommended"
-                checked={editRecommended}
-                onCheckedChange={setEditRecommended}
-              />
-              <Label htmlFor="edit-recommended">Marcar como versão recomendada</Label>
             </div>
           </div>
           

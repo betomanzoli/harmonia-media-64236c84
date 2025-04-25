@@ -13,10 +13,11 @@ import PreviewLoadingState from './PreviewLoadingState';
 import PreviewFooter from './PreviewFooter';
 import { notificationService } from '@/services/notificationService';
 import { Alert, AlertTitle, AlertDescription } from "@/components/ui/alert";
-import { AlertCircle } from 'lucide-react';
+import { AlertCircle, Mail } from 'lucide-react';
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import { useNavigate } from 'react-router-dom';
-import { getProjectIdFromPreviewLink } from '@/utils/previewLinkUtils';
+import { getProjectIdFromPreviewLink, isEmailAuthorizedForProject, authorizeEmailForProject } from '@/utils/previewLinkUtils';
 
 interface MusicPreviewSystemProps {
   projectId?: string;
@@ -31,6 +32,9 @@ const MusicPreviewSystem: React.FC<{ projectId?: string }> = ({ projectId: propP
   const [feedback, setFeedback] = useState('');
   const [error, setError] = useState<string | null>(null);
   const navigate = useNavigate();
+  const [clientEmail, setClientEmail] = useState('');
+  const [isEmailVerified, setIsEmailVerified] = useState(false);
+  const [isSubmittingEmail, setIsSubmittingEmail] = useState(false);
   
   const { projectData, setProjectData, isLoading } = usePreviewData(actualProjectId || undefined);
   
@@ -60,6 +64,33 @@ const MusicPreviewSystem: React.FC<{ projectId?: string }> = ({ projectId: propP
     }
   }, [isLoading, projectData]);
 
+  const handleVerifyEmail = () => {
+    if (!clientEmail || !clientEmail.includes('@')) {
+      toast({
+        title: "Email inválido",
+        description: "Por favor, insira um email válido para acessar as prévias.",
+        variant: "destructive"
+      });
+      return;
+    }
+    
+    setIsSubmittingEmail(true);
+    
+    setTimeout(() => {
+      if (actualProjectId) {
+        // Store the verified email for this project
+        authorizeEmailForProject(clientEmail, actualProjectId);
+        setIsEmailVerified(true);
+        
+        toast({
+          title: "Email verificado",
+          description: "Acesso concedido às prévias musicais.",
+        });
+      }
+      setIsSubmittingEmail(false);
+    }, 1000);
+  };
+
   const handleSubmitFeedback = () => {
     if (!selectedVersion) {
       toast({
@@ -78,6 +109,7 @@ const MusicPreviewSystem: React.FC<{ projectId?: string }> = ({ projectId: propP
     notificationService.notify('feedback_received', {
       projectId: actualProjectId,
       clientName: projectData?.clientName || 'Cliente',
+      clientEmail: clientEmail,
       message: feedback
     });
     
@@ -102,11 +134,20 @@ const MusicPreviewSystem: React.FC<{ projectId?: string }> = ({ projectId: propP
     notificationService.notify('preview_approved', {
       projectId: actualProjectId,
       clientName: projectData?.clientName || 'Cliente',
+      clientEmail: clientEmail,
       versionId: selectedVersion
     });
     
     setProjectData(prev => prev ? {...prev, status: 'approved' as const} : null);
   };
+  
+  // Check if the email is already verified for this project
+  useEffect(() => {
+    if (actualProjectId && clientEmail) {
+      const verified = isEmailAuthorizedForProject(clientEmail, actualProjectId);
+      setIsEmailVerified(verified);
+    }
+  }, [actualProjectId, clientEmail]);
   
   if (isLoading) {
     return <PreviewLoadingState />;
@@ -129,6 +170,57 @@ const MusicPreviewSystem: React.FC<{ projectId?: string }> = ({ projectId: propP
             className="bg-harmonia-green hover:bg-harmonia-green/90"
           >
             Voltar para a página inicial
+          </Button>
+        </div>
+      </div>
+    );
+  }
+  
+  // Email verification screen
+  if (!isEmailVerified) {
+    return (
+      <div className="max-w-md mx-auto mt-20 p-6 border rounded-lg shadow-lg">
+        <div className="text-center mb-6">
+          <h2 className="text-2xl font-bold">Acesso às Prévias Musicais</h2>
+          <p className="text-gray-600 mt-2">
+            Por favor, verifique seu email para acessar as prévias do projeto "{projectData.projectTitle}".
+          </p>
+        </div>
+        
+        <div className="space-y-4">
+          <div className="space-y-2">
+            <label htmlFor="email" className="block text-sm font-medium text-gray-700">
+              Seu Email
+            </label>
+            <Input
+              id="email"
+              type="email"
+              placeholder="seuemail@exemplo.com"
+              value={clientEmail}
+              onChange={(e) => setClientEmail(e.target.value)}
+              className="w-full"
+            />
+            <p className="text-xs text-gray-500">
+              Este deve ser o mesmo email que você forneceu durante a contratação do projeto.
+            </p>
+          </div>
+          
+          <Button 
+            onClick={handleVerifyEmail}
+            className="w-full bg-harmonia-green hover:bg-harmonia-green/90"
+            disabled={isSubmittingEmail}
+          >
+            {isSubmittingEmail ? (
+              <span className="inline-flex items-center">
+                <span className="animate-spin mr-2 h-4 w-4 border-2 border-t-transparent border-white rounded-full"></span>
+                Verificando...
+              </span>
+            ) : (
+              <>
+                <Mail className="w-4 h-4 mr-2" />
+                Verificar Email
+              </>
+            )}
           </Button>
         </div>
       </div>
@@ -170,6 +262,7 @@ const MusicPreviewSystem: React.FC<{ projectId?: string }> = ({ projectId: propP
             handleApprove={handleApprove}
             status={projectData.status}
             versionTitle={projectData.previews.find(p => p.id === selectedVersion)?.title}
+            clientEmail={clientEmail}
           />
         </TabsContent>
       </Tabs>

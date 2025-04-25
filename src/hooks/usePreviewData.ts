@@ -11,7 +11,6 @@ interface MusicPreview {
   description: string;
   audioUrl?: string;
   url?: string;
-  recommended?: boolean;
 }
 
 interface PreviewProject {
@@ -26,7 +25,7 @@ export const usePreviewData = (projectId: string | undefined) => {
   const [projectData, setProjectData] = useState<PreviewProject | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const { audioFiles } = useGoogleDriveAudio(projectId);
-  const { projects, getProjectById } = usePreviewProjects();
+  const { projects, getProjectById, updateProject } = usePreviewProjects();
   
   useEffect(() => {
     if (!projectId) {
@@ -55,8 +54,7 @@ export const usePreviewData = (projectId: string | undefined) => {
                 title: v.name || `Versão ${v.id}`,
                 description: v.description || '',
                 audioUrl: v.audioUrl || undefined,
-                url: v.url || undefined,
-                recommended: v.recommended
+                url: v.url || undefined
               });
             });
           } 
@@ -68,8 +66,7 @@ export const usePreviewData = (projectId: string | undefined) => {
                 id: `v${i+1}`,
                 title: `Versão ${i+1}`,
                 description: 'Versão para aprovação',
-                audioUrl: `https://drive.google.com/uc?export=view&id=${fallbackFileId}`,
-                recommended: i === 0
+                audioUrl: `https://drive.google.com/uc?export=view&id=${fallbackFileId}`
               });
             }
           }
@@ -97,6 +94,13 @@ export const usePreviewData = (projectId: string | undefined) => {
         } else {
           console.error(`Project with ID ${projectId} not found`);
           setProjectData(null);
+          
+          // Notify admin that a user attempted to access a non-existent preview
+          notificationService.notify('preview_access_attempt', {
+            projectId,
+            timestamp: new Date().toISOString(),
+            message: 'Tentativa de acesso a uma prévia inexistente'
+          });
         }
       } catch (error) {
         console.error('Error fetching project data:', error);
@@ -109,5 +113,32 @@ export const usePreviewData = (projectId: string | undefined) => {
     fetchProjectData();
   }, [projectId, audioFiles, getProjectById]);
   
-  return { projectData, setProjectData, isLoading };
+  // Function to update project status when feedback is submitted or version is approved
+  const updateProjectStatus = (status: 'waiting' | 'feedback' | 'approved', selectedVersion?: string) => {
+    if (projectId && projectData) {
+      // Update local state
+      setProjectData({
+        ...projectData,
+        status
+      });
+      
+      // Update in admin system
+      if (updateProject) {
+        const updates: Record<string, any> = { status };
+        
+        if (selectedVersion) {
+          updates.selectedVersion = selectedVersion;
+        }
+        
+        updateProject(projectId, updates);
+      }
+    }
+  };
+  
+  return { 
+    projectData, 
+    setProjectData, 
+    isLoading,
+    updateProjectStatus
+  };
 };

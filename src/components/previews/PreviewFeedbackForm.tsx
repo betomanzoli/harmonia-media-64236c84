@@ -5,7 +5,6 @@ import { useForm } from "react-hook-form";
 import { useNavigate } from 'react-router-dom';
 import { useToast } from '@/hooks/use-toast';
 import { notificationService } from '@/services/notificationService';
-import emailService from '@/services/emailService';
 import { FeedbackSentimentSelector } from './feedback/FeedbackSentimentSelector';
 import { FeedbackForm } from './feedback/FeedbackForm';
 import { ApprovedFeedback } from './feedback/ApprovedFeedback';
@@ -22,6 +21,7 @@ interface PreviewFeedbackFormProps {
   handleSubmit?: (e: React.FormEvent) => void;
   handleApprove?: () => void;
   versionTitle?: string;
+  clientEmail?: string;
 }
 
 const PreviewFeedbackForm: React.FC<PreviewFeedbackFormProps> = ({ 
@@ -29,7 +29,11 @@ const PreviewFeedbackForm: React.FC<PreviewFeedbackFormProps> = ({
   selectedPreview, 
   status,
   handleApprove,
-  versionTitle
+  versionTitle,
+  feedback,
+  setFeedback,
+  handleSubmit,
+  clientEmail
 }) => {
   const navigate = useNavigate();
   const { toast } = useToast();
@@ -38,18 +42,18 @@ const PreviewFeedbackForm: React.FC<PreviewFeedbackFormProps> = ({
   
   const form = useForm<FeedbackData>({
     defaultValues: {
-      clientEmail: '',
+      clientEmail: clientEmail || '',
       clientName: '',
       projectId: projectId || '',
       selectedVersion: selectedPreview || '',
-      generalFeedback: '',
+      generalFeedback: feedback || '',
       rating: 0,
       preferredContactMethod: 'email',
       timestamp: new Date().toISOString()
     }
   });
   
-  const onFormSubmit = async (data: FeedbackData) => {
+  const onFormSubmit = (data: FeedbackData) => {
     if (!selectedPreview) {
       toast({
         title: 'Selecione uma versão',
@@ -59,35 +63,12 @@ const PreviewFeedbackForm: React.FC<PreviewFeedbackFormProps> = ({
       return;
     }
     
-    try {
-      notificationService.notify('feedback_received', {
-        projectId,
-        clientName: data.clientName,
-        clientEmail: data.clientEmail,
-        selectedVersion: selectedPreview,
-        feedback: data.generalFeedback,
-        rating: data.rating,
-        timestamp: data.timestamp
-      });
-      
-      await emailService.sendPreviewNotification(
-        data.clientEmail,
-        data.clientName,
-        `Feedback recebido para o projeto ${projectId}`
-      );
-      
+    if (handleSubmit) {
+      handleSubmit(new Event('submit') as any);
+    } else {
       toast({
         title: "Feedback enviado com sucesso!",
         description: "Agradecemos sua avaliação. Nossa equipe iniciará os ajustes em breve.",
-      });
-      
-      navigate('/feedback-confirmacao');
-    } catch (error) {
-      console.error('Erro ao enviar feedback:', error);
-      toast({
-        title: "Erro ao enviar feedback",
-        description: "Ocorreu um erro ao enviar seu feedback. Por favor, tente novamente.",
-        variant: "destructive"
       });
     }
   };
