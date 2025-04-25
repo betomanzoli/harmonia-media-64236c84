@@ -1,4 +1,3 @@
-
 import { toast } from '@/hooks/use-toast';
 
 // Types
@@ -10,7 +9,10 @@ export type NotificationType =
   | 'project_completed' // Project completed
   | 'project_updated'   // General project update
   | 'briefing_received' // New briefing received
-  | 'new_order';        // New order received
+  | 'new_order'         // New order received
+  | 'preview_viewed'    // When a preview is viewed
+  | 'preview_access_attempt'  // When someone attempts to access a preview
+  | 'preview_shared';   // When a preview is shared
 
 export interface NotificationData {
   projectId?: string;
@@ -153,6 +155,18 @@ class NotificationService {
       case 'new_order':
         title = 'Novo pedido recebido';
         description = `Um novo pedido foi recebido de ${data.clientName || 'um cliente'}`;
+        break;
+      case 'preview_viewed':
+        title = 'Prévia visualizada';
+        description = `A prévia foi visualizada pelo cliente ${data.clientName || 'Cliente'}`;
+        break;
+      case 'preview_access_attempt':
+        title = 'Tentativa de acesso à prévia';
+        description = `Uma tentativa de acesso à prévia foi feita pelo cliente ${data.clientName || 'Cliente'}`;
+        break;
+      case 'preview_shared':
+        title = 'Prévia compartilhada';
+        description = `A prévia foi compartilhada com o cliente ${data.clientName || 'Cliente'}`;
         break;
     }
 

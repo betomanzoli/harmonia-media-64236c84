@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import Header from '@/components/Header';
@@ -148,7 +147,10 @@ const MusicPreviews: React.FC = () => {
             
             <TabsContent value="versions">
               <PreviewPlayerList 
-                versions={projectData.previews}
+                versions={projectData.previews.map(preview => ({
+                  ...preview,
+                  description: preview.description || `Versão musical para ${projectData.clientName}`
+                }))}
                 selectedVersion={selectedPreview}
                 setSelectedVersion={setSelectedPreview}
                 isApproved={projectData.status === 'approved'}

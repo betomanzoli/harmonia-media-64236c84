@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useParams } from 'react-router-dom';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -78,7 +77,6 @@ const MusicPreviewSystem: React.FC<{ projectId?: string }> = ({ projectId: propP
     
     setTimeout(() => {
       if (actualProjectId) {
-        // Store the verified email for this project
         authorizeEmailForProject(clientEmail, actualProjectId);
         setIsEmailVerified(true);
         
@@ -141,7 +139,6 @@ const MusicPreviewSystem: React.FC<{ projectId?: string }> = ({ projectId: propP
     setProjectData(prev => prev ? {...prev, status: 'approved' as const} : null);
   };
   
-  // Check if the email is already verified for this project
   useEffect(() => {
     if (actualProjectId && clientEmail) {
       const verified = isEmailAuthorizedForProject(clientEmail, actualProjectId);
@@ -176,7 +173,6 @@ const MusicPreviewSystem: React.FC<{ projectId?: string }> = ({ projectId: propP
     );
   }
   
-  // Email verification screen
   if (!isEmailVerified) {
     return (
       <div className="max-w-md mx-auto mt-20 p-6 border rounded-lg shadow-lg">
@@ -245,7 +241,10 @@ const MusicPreviewSystem: React.FC<{ projectId?: string }> = ({ projectId: propP
         
         <TabsContent value="versions">
           <PreviewPlayerList
-            versions={projectData.previews}
+            versions={projectData.previews.map(preview => ({
+              ...preview,
+              description: preview.description || `Versão musical para ${projectData.clientName}`
+            }))}
             selectedVersion={selectedVersion}
             setSelectedVersion={setSelectedVersion}
             isApproved={projectData.status === 'approved'}
