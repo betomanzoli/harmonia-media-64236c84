@@ -10,13 +10,14 @@ import Calculator from './pages/Calculator';
 import MusicPreviews from './pages/MusicPreviews';
 import PreviewPage from './pages/PreviewPage';
 import MusicPreviewPage from './pages/MusicPreviewPage';
-import AdminLoginPage from './pages/admin/AdminLoginPage';
-import AdminDashboardPage from './pages/admin/AdminDashboardPage';
-import AdminBriefingsPage from './pages/admin/AdminBriefingsPage';
-import AdminPreviewsPage from './pages/admin/AdminPreviewsPage';
-import AdminBriefingPage from './pages/admin/BriefingPage';
-import AdminPreviewProjectPage from './pages/admin/PreviewProjectPage';
-import FeedbackConfirmation from './components/previews/feedback/FeedbackConfirmation';
+import FeedbackConfirmation from './pages/FeedbackConfirmation';
+// Import admin pages from correct paths
+import AdminLogin from './pages/admin/AdminLogin';
+import Dashboard from './pages/admin/Dashboard';
+import AdminBriefings from './pages/admin/AdminBriefings';
+import AdminPreviews from './pages/admin/AdminPreviews';
+import AdminBriefingPage from './pages/admin/AdminBriefings'; // Fallback for now
+import PreviewProjectPage from './pages/admin/PreviewProjectPage';
 
 function App() {
   return (
@@ -33,12 +34,12 @@ function App() {
         <Route path="/music-preview/:projectId" element={<MusicPreviewPage />} />
         
         {/* Admin Routes */}
-        <Route path="/admin-j28s7d1k/login" element={<AdminLoginPage />} />
-        <Route path="/admin-j28s7d1k/dashboard" element={<AdminDashboardPage />} />
-        <Route path="/admin-j28s7d1k/briefings" element={<AdminBriefingsPage />} />
+        <Route path="/admin-j28s7d1k/login" element={<AdminLogin />} />
+        <Route path="/admin-j28s7d1k/dashboard" element={<Dashboard />} />
+        <Route path="/admin-j28s7d1k/briefings" element={<AdminBriefings />} />
         <Route path="/admin-j28s7d1k/briefing/:briefingId" element={<AdminBriefingPage />} />
-        <Route path="/admin-j28s7d1k/previews" element={<AdminPreviewsPage />} />
-        <Route path="/admin-j28s7d1k/preview/:projectId" element={<AdminPreviewProjectPage />} />
+        <Route path="/admin-j28s7d1k/previews" element={<AdminPreviews />} />
+        <Route path="/admin-j28s7d1k/preview/:projectId" element={<PreviewProjectPage />} />
         
         {/* Feedback Confirmation Route */}
         <Route path="/feedback-confirmacao" element={<FeedbackConfirmation />} />
