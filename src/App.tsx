@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { BrowserRouter as Router, Route, Routes } from 'react-router-dom';
 import Home from './pages/Home';
@@ -38,11 +39,9 @@ function App() {
         <Route path="/admin-j28s7d1k/briefing/:briefingId" element={<AdminBriefingPage />} />
         <Route path="/admin-j28s7d1k/previews" element={<AdminPreviewsPage />} />
         <Route path="/admin-j28s7d1k/preview/:projectId" element={<AdminPreviewProjectPage />} />
-
-        {
-          path: "/feedback-confirmacao",
-          element: <FeedbackConfirmation />
-        },
+        
+        {/* Feedback Confirmation Route */}
+        <Route path="/feedback-confirmacao" element={<FeedbackConfirmation />} />
       </Routes>
     </Router>
   );
