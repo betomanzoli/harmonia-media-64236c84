@@ -20,7 +20,7 @@ const AddVersionForm: React.FC<AddVersionFormProps> = ({ projectId, onAddComplet
   const [isRecommended, setIsRecommended] = useState(false);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const { toast } = useToast();
-  const { updateProject } = usePreviewProjects();
+  const { updateProject, getProjectById } = usePreviewProjects();
   const [isLoading, setIsLoading] = useState(false);
   
   const handleSelectFile = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -62,8 +62,9 @@ const AddVersionForm: React.FC<AddVersionFormProps> = ({ projectId, onAddComplet
         fileId: 'demo-file-id',
       };
       
-      // Retrieve project and update versions list
-      updateProject(projectId, (project) => {
+      // Retrieve current project data
+      const project = getProjectById(projectId);
+      if (project) {
         const versionsList = project.versionsList || [];
         
         // If this is set as recommended, remove recommended from others
@@ -74,11 +75,12 @@ const AddVersionForm: React.FC<AddVersionFormProps> = ({ projectId, onAddComplet
         // Add the new version
         updatedVersions.push(newVersion);
         
-        return {
+        // Update the project with the new versions data
+        updateProject(projectId, {
           versions: updatedVersions.length,
           versionsList: updatedVersions
-        };
-      });
+        });
+      }
       
       toast({
         title: "Versão adicionada",
