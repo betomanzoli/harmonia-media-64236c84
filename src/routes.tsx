@@ -1,4 +1,5 @@
-import { createBrowserRouter } from 'react-router-dom';
+
+import { RouteObject } from 'react-router-dom';
 import Home from './pages/Home';
 import Calculator from './pages/Calculator';
 import Contact from './pages/Contact';
@@ -34,7 +35,8 @@ import Packages from './pages/Packages';
 import OrderTracking from './pages/OrderTracking';
 import FeedbackConfirmation from './pages/FeedbackConfirmation';
 
-const router = createBrowserRouter([
+// Export an array of route objects instead of a router
+const router: RouteObject[] = [
   {
     path: '/',
     element: <PublicLayout><Home /></PublicLayout>,
@@ -179,6 +181,6 @@ const router = createBrowserRouter([
     path: '*',
     element: <PublicLayout><NotFound /></PublicLayout>,
   },
-]);
+];
 
 export default router;
