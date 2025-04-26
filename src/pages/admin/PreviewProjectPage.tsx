@@ -101,8 +101,8 @@ const PreviewProjectPage: React.FC = () => {
 
   return (
     <AdminLayout>
-      <div className="p-6 max-h-screen overflow-auto">
-        <div className="flex items-center justify-between mb-6">
+      <div className="flex flex-col h-full overflow-hidden">
+        <div className="flex items-center justify-between p-6 border-b">
           <div className="flex items-center">
             <Button 
               variant="outline" 
@@ -136,56 +136,58 @@ const PreviewProjectPage: React.FC = () => {
           </div>
         </div>
 
-        <ProjectHeader 
-          projectTitle={`Prévia: ${project.id}`} 
-          clientName={project.clientName}
-          packageType={project.packageType}
-        />
+        <div className="p-6 overflow-auto">
+          <ProjectHeader 
+            projectTitle={`Prévia: ${project.id}`} 
+            clientName={project.clientName}
+            packageType={project.packageType}
+          />
 
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
-          <div className="lg:col-span-2">
-            <ClientFeedbackCard 
-              feedback={project.feedback || ''} 
-              status={project.status}
-              onSaveFeedback={handleFeedbackSave}
-              onStatusUpdate={handleStatusUpdate}
-            />
-          </div>
-          <div>
-            <div className="space-y-6">
-              <ProjectClientInfo 
-                clientName={project.clientName}
-                clientEmail={project.clientEmail}
-                packageType={project.packageType}
-                createdAt={project.createdAt}
-                expirationDate={project.expirationDate}
-                lastActivityDate={project.lastActivityDate}
-              />
-              
-              <ProjectStatusCard 
-                status={project.status} 
-                onStatusUpdate={handleStatusUpdate} 
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
+            <div className="lg:col-span-2">
+              <ClientFeedbackCard 
+                feedback={project.feedback || ''} 
+                status={project.status}
+                onSaveFeedback={handleFeedbackSave}
+                onStatusUpdate={handleStatusUpdate}
               />
             </div>
+            <div>
+              <div className="space-y-6">
+                <ProjectClientInfo 
+                  clientName={project.clientName}
+                  clientEmail={project.clientEmail}
+                  packageType={project.packageType}
+                  createdAt={project.createdAt}
+                  expirationDate={project.expirationDate}
+                  lastActivityDate={project.lastActivityDate}
+                />
+                
+                <ProjectStatusCard 
+                  status={project.status} 
+                  onStatusUpdate={handleStatusUpdate} 
+                />
+              </div>
+            </div>
           </div>
+          
+          {showAddForm && (
+            <Card className="mb-6">
+              <CardContent className="pt-6">
+                <AddVersionForm 
+                  projectId={project.id}
+                  onAddVersion={handleAddVersion}
+                  onCancel={() => setShowAddForm(false)}
+                />
+              </CardContent>
+            </Card>
+          )}
+          
+          <PreviewVersionsList 
+            versions={project.versionsList || []}
+            projectId={project.id}
+          />
         </div>
-        
-        {showAddForm && (
-          <Card className="mb-6">
-            <CardContent className="pt-6">
-              <AddVersionForm 
-                projectId={project.id}
-                onAddVersion={handleAddVersion}
-                onCancel={() => setShowAddForm(false)}
-              />
-            </CardContent>
-          </Card>
-        )}
-        
-        <PreviewVersionsList 
-          versions={project.versionsList || []}
-          projectId={project.id}
-        />
       </div>
     </AdminLayout>
   );

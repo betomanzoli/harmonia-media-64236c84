@@ -1,121 +1,105 @@
 
-import React, { useState } from 'react';
-import { Card } from "@/components/ui/card";
-import { useForm } from "react-hook-form";
-import { useNavigate } from 'react-router-dom';
-import { useToast } from '@/hooks/use-toast';
-import { notificationService } from '@/services/notificationService';
-import { FeedbackSentimentSelector } from './feedback/FeedbackSentimentSelector';
-import { FeedbackForm } from './feedback/FeedbackForm';
-import { ApprovedFeedback } from './feedback/ApprovedFeedback';
-import type { FeedbackData } from './types/feedback';
+import React from 'react';
+import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from "@/components/ui/card";
+import { Textarea } from "@/components/ui/textarea";
+import { Button } from "@/components/ui/button";
+import { MessageSquare, CheckCircle } from 'lucide-react';
+import { Alert, AlertDescription } from "@/components/ui/alert";
 
 interface PreviewFeedbackFormProps {
-  projectId?: string;
-  selectedPreview?: string | null;
-  onSubmit?: (feedback: FeedbackData) => void;
-  status: 'waiting' | 'feedback' | 'approved';
-  isSubmitting?: boolean;
-  feedback?: string;
-  setFeedback?: (feedback: string) => void;
-  handleSubmit?: (e: React.FormEvent) => void;
-  handleApprove?: () => void;
+  selectedPreview: string | null;
+  feedback: string;
+  setFeedback: (feedback: string) => void;
+  handleSubmit: () => void;
+  handleApprove: () => void;
+  status: string;
   versionTitle?: string;
-  clientEmail?: string;
 }
 
-const PreviewFeedbackForm: React.FC<PreviewFeedbackFormProps> = ({ 
-  projectId, 
-  selectedPreview, 
-  status,
-  handleApprove,
-  versionTitle,
+const PreviewFeedbackForm: React.FC<PreviewFeedbackFormProps> = ({
+  selectedPreview,
   feedback,
   setFeedback,
   handleSubmit,
-  clientEmail
+  handleApprove,
+  status,
+  versionTitle
 }) => {
-  const navigate = useNavigate();
-  const { toast } = useToast();
-  const [showContactFields, setShowContactFields] = useState(false);
-  const [feedbackSentiment, setFeedbackSentiment] = useState<'positive' | 'negative' | null>(null);
-  
-  const form = useForm<FeedbackData>({
-    defaultValues: {
-      clientEmail: clientEmail || '',
-      clientName: '',
-      projectId: projectId || '',
-      selectedVersion: selectedPreview || '',
-      generalFeedback: feedback || '',
-      rating: 0,
-      preferredContactMethod: 'email',
-      timestamp: new Date().toISOString()
-    }
-  });
-  
-  const onFormSubmit = (data: FeedbackData) => {
-    if (!selectedPreview) {
-      toast({
-        title: 'Selecione uma versão',
-        description: 'Por favor, selecione uma versão musical antes de enviar seu feedback.',
-        variant: 'destructive'
-      });
-      return;
-    }
-    
-    if (handleSubmit) {
-      handleSubmit(new Event('submit') as any);
-    } else {
-      toast({
-        title: "Feedback enviado com sucesso!",
-        description: "Agradecemos sua avaliação. Nossa equipe iniciará os ajustes em breve.",
-      });
-    }
-  };
-
-  if (status === 'approved') {
-    return <ApprovedFeedback projectId={projectId} />;
+  if (status === 'approved' || status === 'feedback') {
+    return (
+      <Card>
+        <CardHeader>
+          <CardTitle>Seu feedback já foi enviado</CardTitle>
+          <CardDescription>
+            {status === 'approved' 
+              ? 'Você já aprovou a música. Obrigado pelo seu feedback!'
+              : 'Você já enviou seu feedback. Nossa equipe está trabalhando nos ajustes solicitados.'}
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <Alert className={status === 'approved' ? 'bg-green-50' : 'bg-blue-50'}>
+            <AlertDescription>
+              {status === 'approved' 
+                ? 'Em breve entraremos em contato com a versão final da sua música.'
+                : 'Em breve você receberá uma notificação com as novas versões para avaliação.'}
+            </AlertDescription>
+          </Alert>
+        </CardContent>
+      </Card>
+    );
   }
-  
+
   return (
-    <Card className="p-6 border-l-4 border-l-harmonia-green mb-8">
-      <h3 className="text-xl font-bold mb-4">Envie seu feedback</h3>
-      
-      {!selectedPreview ? (
-        <div className="text-center py-6 bg-gray-50 rounded-md mb-4">
-          <p className="text-gray-500 mb-2">Por favor, selecione uma das versões acima para enviar seu feedback</p>
-          <p className="text-sm text-gray-400">Ouça cada versão e escolha a que mais se adequa às suas necessidades</p>
-        </div>
-      ) : (
-        <>
-          <div className="mb-6">
-            <div className="flex flex-wrap gap-3 mb-4">
-              <div className="bg-harmonia-green/10 text-harmonia-green px-3 py-1 rounded-full text-sm font-medium flex items-center">
-                <span className="mr-1">✓</span> Versão selecionada: {versionTitle}
-              </div>
-            </div>
-            
-            {!feedbackSentiment && (
-              <FeedbackSentimentSelector 
-                onSelect={setFeedbackSentiment}
-                versionTitle={versionTitle}
-              />
-            )}
+    <Card>
+      <CardHeader>
+        <CardTitle>Envie seu Feedback</CardTitle>
+        <CardDescription>
+          {selectedPreview 
+            ? `Envie seu feedback sobre a versão "${versionTitle || 'selecionada'}" ou aprove-a.`
+            : 'Selecione uma versão primeiro para enviar feedback.'}
+        </CardDescription>
+      </CardHeader>
+      <CardContent>
+        {!selectedPreview ? (
+          <div className="bg-amber-50 border border-amber-200 text-amber-800 p-4 rounded-md">
+            <p>Por favor, selecione uma versão na aba "Versões Propostas" antes de enviar feedback.</p>
           </div>
-          
-          {feedbackSentiment && (
-            <FeedbackForm 
-              form={form}
-              showContactFields={showContactFields}
-              onToggleContactFields={() => setShowContactFields(!showContactFields)}
-              onSubmit={onFormSubmit}
-              onApprove={handleApprove}
-              selectedVersion={selectedPreview}
-              feedbackSentiment={feedbackSentiment}
-            />
-          )}
-        </>
-      )}
+        ) : (
+          <div className="space-y-4">
+            <div>
+              <Textarea
+                placeholder="Escreva aqui seu feedback sobre a música... O que você gostou? O que gostaria de mudar?"
+                className="min-h-[150px]"
+                value={feedback}
+                onChange={(e) => setFeedback(e.target.value)}
+                disabled={!selectedPreview}
+              />
+            </div>
+            <div className="text-sm text-gray-500">
+              <p>Seu feedback é importante para que possamos entregar a música perfeita para você.</p>
+            </div>
+          </div>
+        )}
+      </CardContent>
+      <CardFooter className="flex flex-col sm:flex-row gap-3 sm:justify-between">
+        <Button
+          onClick={handleApprove}
+          disabled={!selectedPreview}
+          className="w-full sm:w-auto bg-green-600 hover:bg-green-700"
+        >
+          <CheckCircle className="h-4 w-4 mr-2" />
+          Aprovar esta Versão
+        </Button>
+        <Button
+          onClick={handleSubmit}
+          disabled={!selectedPreview || !feedback}
+          className="w-full sm:w-auto"
+          variant="outline"
+        >
+          <MessageSquare className="h-4 w-4 mr-2" />
+          Enviar Feedback
+        </Button>
+      </CardFooter>
     </Card>
   );
 };

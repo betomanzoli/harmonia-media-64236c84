@@ -64,7 +64,7 @@ const AdminPreviews: React.FC = () => {
   };
   
   const handleSendReminder = (projectId: string) => {
-    // In a real implementation, this would send an email reminder
+    // Em uma implementação real, isso enviaria um email de lembrete
     toast({
       title: "Lembrete enviado",
       description: "Um lembrete foi enviado para o cliente."
@@ -84,8 +84,8 @@ const AdminPreviews: React.FC = () => {
   
   return (
     <AdminLayout>
-      <div className="p-6 h-full overflow-auto">
-        <div className="flex justify-between items-center mb-6">
+      <div className="flex flex-col h-full">
+        <div className="flex justify-between items-center p-6 border-b">
           <div className="flex items-center">
             <Button 
               variant="outline" 
@@ -120,18 +120,20 @@ const AdminPreviews: React.FC = () => {
           </div>
         </div>
         
-        <div className="bg-white rounded-lg shadow mb-6">
-          <div className="p-6 border-b">
-            <h2 className="text-xl font-medium">Projetos de Prévias</h2>
-            <p className="text-gray-500 text-sm mt-1">Lista de todos os projetos de prévias musicais.</p>
+        <div className="p-6 flex-1 overflow-auto">
+          <div className="bg-white rounded-lg shadow mb-6">
+            <div className="p-6 border-b">
+              <h2 className="text-xl font-medium">Projetos de Prévias</h2>
+              <p className="text-gray-500 text-sm mt-1">Lista de todos os projetos de prévias musicais.</p>
+            </div>
+            
+            <ProjectsTable 
+              projects={projects}
+              isLoading={isLoading}
+              onDelete={confirmDeleteProject}
+              onSendReminder={handleSendReminder}
+            />
           </div>
-          
-          <ProjectsTable 
-            projects={projects}
-            isLoading={isLoading}
-            onDelete={confirmDeleteProject}
-            onSendReminder={handleSendReminder}
-          />
         </div>
         
         <Dialog open={showAddForm} onOpenChange={setShowAddForm}>
