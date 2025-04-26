@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { BrowserRouter as Router, Route, Routes } from 'react-router-dom';
+import { Routes, Route } from 'react-router-dom';
 import Home from './pages/Home';
 import Contact from './pages/Contact';
 import About from './pages/About';
@@ -30,37 +30,35 @@ import AdminClients from './pages/admin/AdminClients';
 
 function App() {
   return (
-    <Router>
-      <Routes>
-        <Route path="/" element={<Home />} />
-        <Route path="/contato" element={<Contact />} />
-        <Route path="/sobre" element={<About />} />
-        <Route path="/servicos" element={<Services />} />
-        <Route path="/portfolio" element={<PortfolioPage />} />
-        <Route path="/calculadora" element={<Calculator />} />
-        <Route path="/briefing" element={<Briefing />} />
-        <Route path="/previa/:previewId" element={<MusicPreviews />} />
-        <Route path="/preview/:projectId" element={<PreviewPage />} />
-        <Route path="/music-preview/:projectId" element={<MusicPreviewPage />} />
-        <Route path="/feedback-confirmacao" element={<FeedbackConfirmation />} />
-        
-        {/* Admin Routes */}
-        <Route path="/admin-j28s7d1k/login" element={<AdminLogin />} />
-        <Route path="/admin-j28s7d1k/dashboard" element={<Dashboard />} />
-        <Route path="/admin-j28s7d1k/briefings" element={<AdminBriefings />} />
-        <Route path="/admin-j28s7d1k/briefing/:briefingId" element={<AdminBriefingPage />} />
-        <Route path="/admin-j28s7d1k/previews" element={<AdminPreviews />} />
-        <Route path="/admin-j28s7d1k/preview/:projectId" element={<PreviewProjectPage />} />
-        <Route path="/admin-j28s7d1k/portfolio" element={<AdminPortfolio />} />
-        <Route path="/admin-j28s7d1k/invoices" element={<AdminInvoices />} />
-        <Route path="/admin-j28s7d1k/projects" element={<AdminProjects />} />
-        <Route path="/admin-j28s7d1k/statistics" element={<AdminStatistics />} />
-        <Route path="/admin-j28s7d1k/guides" element={<AdminGuides />} />
-        <Route path="/admin-j28s7d1k/storage" element={<AdminStorage />} />
-        <Route path="/admin-j28s7d1k/integrations" element={<AdminIntegrations />} />
-        <Route path="/admin-j28s7d1k/clients" element={<AdminClients />} />
-      </Routes>
-    </Router>
+    <Routes>
+      <Route path="/" element={<Home />} />
+      <Route path="/contato" element={<Contact />} />
+      <Route path="/sobre" element={<About />} />
+      <Route path="/servicos" element={<Services />} />
+      <Route path="/portfolio" element={<PortfolioPage />} />
+      <Route path="/calculadora" element={<Calculator />} />
+      <Route path="/briefing" element={<Briefing />} />
+      <Route path="/previa/:previewId" element={<MusicPreviews />} />
+      <Route path="/preview/:projectId" element={<PreviewPage />} />
+      <Route path="/music-preview/:projectId" element={<MusicPreviewPage />} />
+      <Route path="/feedback-confirmacao" element={<FeedbackConfirmation />} />
+      
+      {/* Admin Routes */}
+      <Route path="/admin-j28s7d1k/login" element={<AdminLogin />} />
+      <Route path="/admin-j28s7d1k/dashboard" element={<Dashboard />} />
+      <Route path="/admin-j28s7d1k/briefings" element={<AdminBriefings />} />
+      <Route path="/admin-j28s7d1k/briefing/:briefingId" element={<AdminBriefingPage />} />
+      <Route path="/admin-j28s7d1k/previews" element={<AdminPreviews />} />
+      <Route path="/admin-j28s7d1k/preview/:projectId" element={<PreviewProjectPage />} />
+      <Route path="/admin-j28s7d1k/portfolio" element={<AdminPortfolio />} />
+      <Route path="/admin-j28s7d1k/invoices" element={<AdminInvoices />} />
+      <Route path="/admin-j28s7d1k/projects" element={<AdminProjects />} />
+      <Route path="/admin-j28s7d1k/statistics" element={<AdminStatistics />} />
+      <Route path="/admin-j28s7d1k/guides" element={<AdminGuides />} />
+      <Route path="/admin-j28s7d1k/storage" element={<AdminStorage />} />
+      <Route path="/admin-j28s7d1k/integrations" element={<AdminIntegrations />} />
+      <Route path="/admin-j28s7d1k/clients" element={<AdminClients />} />
+    </Routes>
   );
 }
 

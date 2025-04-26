@@ -10,12 +10,14 @@ interface ClientFeedbackCardProps {
   feedback: string;
   status: string;
   onSaveFeedback?: (feedback: string) => void;
+  onStatusUpdate?: (status: 'waiting' | 'feedback' | 'approved') => void;
 }
 
 const ClientFeedbackCard: React.FC<ClientFeedbackCardProps> = ({ 
   feedback, 
   status,
-  onSaveFeedback
+  onSaveFeedback,
+  onStatusUpdate
 }) => {
   const [isEditing, setIsEditing] = useState(false);
   const [editedFeedback, setEditedFeedback] = useState(feedback);

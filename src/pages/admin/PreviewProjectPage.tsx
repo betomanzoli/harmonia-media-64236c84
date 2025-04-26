@@ -21,6 +21,30 @@ import AddVersionForm from '@/components/admin/previews/AddVersionForm';
 import NotificationGuide from '@/components/admin/guides/NotificationGuide';
 import { ArrowLeft, FileMusic, MessageCircle, Clock, Calendar, Send, Copy, HelpCircle, AlertTriangle } from 'lucide-react';
 
+// Update the interface for ClientFeedbackCard
+interface ClientFeedbackCardProps {
+  feedback: string;
+  status: string;
+  onSaveFeedback?: (feedback: string) => void;
+  onStatusUpdate?: (newStatus: 'waiting' | 'feedback' | 'approved') => void;
+}
+
+// Update the interface for ProjectClientInfo
+interface ProjectClientInfoProps {
+  clientName: string;
+  clientEmail: string;
+  packageType: string;
+  createdAt: string;
+  expirationDate: string;
+  lastActivityDate: string;
+}
+
+// Update the interface for ProjectStatusCard
+interface ProjectStatusCardProps {
+  status: string;
+  onStatusUpdate?: (newStatus: 'waiting' | 'feedback' | 'approved') => void;
+}
+
 const PreviewProjectPage: React.FC = () => {
   const { projectId } = useParams<{ projectId: string }>();
   const navigate = useNavigate();
@@ -341,7 +365,7 @@ const PreviewProjectPage: React.FC = () => {
                   Versões
                 </TabsTrigger>
                 <TabsTrigger value="feedback" className="flex-1">
-                  <MessageSquare className="mr-2 h-4 w-4" />
+                  <MessageCircle className="mr-2 h-4 w-4" />
                   Feedback
                 </TabsTrigger>
                 <TabsTrigger value="history" className="flex-1">

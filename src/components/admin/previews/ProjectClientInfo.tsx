@@ -1,53 +1,75 @@
 
 import React from 'react';
-import { Card, CardContent } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Mail, Package, User, ExternalLink } from 'lucide-react';
-
-interface ClientInfo {
-  name: string;
-  email: string;
-  packageType: string;
-}
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Mail, User, Calendar, Package } from 'lucide-react';
 
 interface ProjectClientInfoProps {
-  client: ClientInfo;
+  clientName: string;
+  clientEmail: string;
+  packageType: string;
+  createdAt: string;
+  expirationDate: string;
+  lastActivityDate: string;
 }
 
-const ProjectClientInfo: React.FC<ProjectClientInfoProps> = ({ client }) => {
-  const handleEmailClient = () => {
-    window.open(`mailto:${client.email}`);
-  };
-
+const ProjectClientInfo: React.FC<ProjectClientInfoProps> = ({ 
+  clientName,
+  clientEmail,
+  packageType,
+  createdAt,
+  expirationDate,
+  lastActivityDate
+}) => {
   return (
     <Card>
-      <CardContent className="p-6">
-        <div className="flex items-center gap-3 mb-4">
-          <div className="h-10 w-10 rounded-full bg-gray-100 flex items-center justify-center text-harmonia-green">
-            <User className="h-6 w-6" />
+      <CardHeader>
+        <CardTitle className="text-lg">Informações do Cliente</CardTitle>
+      </CardHeader>
+      <CardContent>
+        <div className="space-y-4">
+          <div className="flex items-start">
+            <User className="h-5 w-5 text-gray-400 mt-0.5 mr-3" />
+            <div>
+              <p className="font-medium">{clientName}</p>
+              <div className="flex items-center text-sm text-gray-500">
+                <Mail className="h-3.5 w-3.5 mr-1" />
+                {clientEmail}
+              </div>
+            </div>
           </div>
-          <div>
-            <h3 className="font-bold text-lg">{client.name}</h3>
-            <div className="flex items-center text-gray-500 text-sm">
-              <Mail className="h-3.5 w-3.5 mr-1" />
-              {client.email}
+          
+          <div className="flex items-center">
+            <Package className="h-5 w-5 text-gray-400 mr-3" />
+            <div>
+              <p className="text-sm text-gray-500">Pacote</p>
+              <p>{packageType}</p>
+            </div>
+          </div>
+          
+          <div className="flex items-center">
+            <Calendar className="h-5 w-5 text-gray-400 mr-3" />
+            <div>
+              <p className="text-sm text-gray-500">Data de Criação</p>
+              <p>{createdAt}</p>
+            </div>
+          </div>
+          
+          <div className="flex items-center">
+            <Calendar className="h-5 w-5 text-gray-400 mr-3" />
+            <div>
+              <p className="text-sm text-gray-500">Último Acesso</p>
+              <p>{lastActivityDate}</p>
+            </div>
+          </div>
+          
+          <div className="flex items-center">
+            <Calendar className="h-5 w-5 text-gray-400 mr-3" />
+            <div>
+              <p className="text-sm text-gray-500">Expiração</p>
+              <p>{expirationDate}</p>
             </div>
           </div>
         </div>
-        
-        <div className="flex items-center text-sm bg-gray-50 p-3 rounded-md mb-4">
-          <Package className="h-4 w-4 text-harmonia-green mr-2" />
-          <span>Pacote: <span className="font-medium">{client.packageType}</span></span>
-        </div>
-        
-        <Button 
-          variant="outline" 
-          className="w-full flex items-center justify-center gap-1"
-          onClick={handleEmailClient}
-        >
-          <Mail className="h-4 w-4" />
-          Enviar E-mail
-        </Button>
       </CardContent>
     </Card>
   );
