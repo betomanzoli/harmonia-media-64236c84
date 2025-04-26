@@ -2,7 +2,6 @@
 import React, { useEffect, useState } from 'react';
 import { SidebarProvider } from "@/components/ui/sidebar";
 import AdminSidebar from './AdminSidebar';
-import { AlertTriangle } from 'lucide-react';
 import { useLocation } from 'react-router-dom';
 import webhookService from '@/services/webhookService';
 

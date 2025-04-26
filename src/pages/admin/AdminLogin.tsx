@@ -5,7 +5,6 @@ import AdminLoginContainer from '@/components/admin/auth/login/AdminLoginContain
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/contexts/AuthContext';
 import { Loader2 } from 'lucide-react';
-import { localAuthService } from '@/lib/auth/localAuthService';
 
 const AdminLogin: React.FC = () => {
   const navigate = useNavigate();
@@ -19,29 +18,22 @@ const AdminLogin: React.FC = () => {
   
   // Check if already authenticated
   useEffect(() => {
-    console.log('AdminLogin montado, verificando autenticação...', authStatus);
+    console.log('AdminLogin mounted, checking authentication...', authStatus);
     
-    const timeoutId = setTimeout(() => {
-      // Adding a timeout to prevent infinite loading
-      setIsCheckingAuth(false);
-    }, 1000); // Reduced timeout to 1 second
-    
-    if (authStatus !== 'loading') {
-      clearTimeout(timeoutId);
-      setIsCheckingAuth(false);
-      
-      if (authStatus === 'authenticated') {
-        console.log('Usuário já autenticado, redirecionando para o dashboard');
-        navigate(from, { replace: true });
+    if (authStatus === 'authenticated') {
+      console.log('User already authenticated, redirecting to dashboard');
+      navigate(from, { replace: true });
+    } else {
+      // Only set isCheckingAuth to false when we have a definitive authStatus
+      if (authStatus !== 'loading') {
+        setIsCheckingAuth(false);
       }
     }
-    
-    return () => clearTimeout(timeoutId);
   }, [authStatus, navigate, from]);
   
   // Function to authenticate with correct credentials
   const authenticateAdmin = async (email: string, password: string): Promise<boolean> => {
-    console.log('Tentando autenticar com:', email);
+    console.log('Attempting to authenticate with:', email);
     
     try {
       const success = await login(email, password);
@@ -55,7 +47,7 @@ const AdminLogin: React.FC = () => {
         navigate(from, { replace: true });
         return true;
       } else {
-        console.log('Falha na autenticação');
+        console.log('Authentication failed');
         toast({
           title: 'Erro de autenticação',
           description: 'Credenciais inválidas',
@@ -64,7 +56,7 @@ const AdminLogin: React.FC = () => {
         return false;
       }
     } catch (error) {
-      console.error('Erro durante autenticação:', error);
+      console.error('Error during authentication:', error);
       toast({
         title: 'Erro de sistema',
         description: 'Ocorreu um erro ao tentar fazer login. Tente novamente.',

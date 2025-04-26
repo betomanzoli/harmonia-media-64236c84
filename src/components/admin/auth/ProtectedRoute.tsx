@@ -28,22 +28,16 @@ export const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children }) => {
 
   // Add a timeout to prevent infinite loading
   useEffect(() => {
-    // If loading takes more than 3 seconds, redirect to login
+    // If loading takes more than 2 seconds, check again
     const timeoutId = setTimeout(() => {
       if (authStatus === 'loading') {
-        console.log('Timeout atingido, redirecionando para login');
-        toast({
-          title: "Problema de autenticação",
-          description: "Não foi possível verificar seu login. Por favor, faça login novamente.",
-          variant: "destructive"
-        });
-        // Force redirect to login
-        window.location.href = '/admin-j28s7d1k/login';
+        console.log('Auth timeout reached, checking auth status again');
+        checkAuthStatus();
       }
-    }, 3000);
+    }, 2000);
 
     return () => clearTimeout(timeoutId);
-  }, [authStatus, toast]);
+  }, [authStatus, checkAuthStatus]);
 
   if (authStatus === 'loading') {
     return (
@@ -58,7 +52,7 @@ export const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children }) => {
 
   // If not authenticated, redirect to login with the current path in state
   if (authStatus !== 'authenticated') {
-    console.log('Usuário não autenticado, redirecionando para login');
+    console.log('User not authenticated, redirecting to login');
     
     // Use Navigate component instead of directly modifying window.location
     // This allows React Router to handle the navigation properly

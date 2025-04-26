@@ -31,8 +31,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     // This is a simplified mock implementation
     // In a real app, you'd check tokens in localStorage or cookies
     const storedToken = localStorage.getItem('admin-auth-token');
+    const storedUser = localStorage.getItem('admin-auth-user');
     
-    if (storedToken) {
+    if (storedToken && storedUser) {
       console.log('Auth token found, setting status to authenticated');
       setAuthStatus('authenticated');
     } else {
@@ -49,7 +50,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       // In a real app, you'd make an API call to validate credentials
       if ((username === 'admin@harmonia.com' && password === 'admin123456') || 
           (username === 'contato@harmonia.media' && password === 'i9!_b!ThA;2H6/bt')) {
-        localStorage.setItem('admin-auth-token', 'mock-token');
+        localStorage.setItem('admin-auth-token', 'mock-token-' + new Date().getTime());
         const userData = {
           email: username,
           name: username === 'admin@harmonia.com' ? 'Admin User' : 'Contato User',
@@ -60,25 +61,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         console.log('Login successful, token stored');
         return true;
       }
-      
-      // Supabase login attempt - disabled for now but ready for future implementation
-      // const { data, error } = await supabase.auth.signInWithPassword({
-      //   email: username,
-      //   password: password,
-      // });
-      
-      // if (error) {
-      //   console.log('Supabase login error:', error.message);
-      //   setAuthStatus('unauthenticated');
-      //   return false;
-      // }
-      
-      // if (data.user) {
-      //   localStorage.setItem('admin-auth-token', data.session?.access_token || '');
-      //   localStorage.setItem('admin-auth-user', JSON.stringify(data.user));
-      //   setAuthStatus('authenticated');
-      //   return true;
-      // }
       
       console.log('Login failed, invalid credentials');
       setAuthStatus('unauthenticated');
@@ -95,9 +77,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     localStorage.removeItem('admin-auth-token');
     localStorage.removeItem('admin-auth-user');
     setAuthStatus('unauthenticated');
-    
-    // For future Supabase implementation
-    // supabase.auth.signOut();
   };
 
   return (

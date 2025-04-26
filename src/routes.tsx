@@ -34,6 +34,7 @@ import Terms from './pages/Terms';
 import Packages from './pages/Packages';
 import OrderTracking from './pages/OrderTracking';
 import FeedbackConfirmation from './pages/FeedbackConfirmation';
+import ResetPassword from './pages/admin/ResetPassword';
 
 // Export an array of route objects instead of a router
 const router: RouteObject[] = [
@@ -100,6 +101,10 @@ const router: RouteObject[] = [
   {
     path: '/admin-j28s7d1k/login',
     element: <AdminLogin />,
+  },
+  {
+    path: '/admin-j28s7d1k/reset-password',
+    element: <ResetPassword />,
   },
   {
     path: '/admin-j28s7d1k/dashboard',
