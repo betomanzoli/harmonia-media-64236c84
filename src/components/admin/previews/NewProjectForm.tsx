@@ -24,7 +24,7 @@ const NewProjectForm: React.FC<NewProjectFormProps> = ({ onAddProject }) => {
   const [clientEmail, setClientEmail] = useState('');
   const [packageType, setPackageType] = useState('');
   const [versions, setVersions] = useState<Version[]>([
-    { title: '', description: '', audioUrl: '', recommended: false }
+    { title: '', description: '', audioUrl: '', recommended: true }
   ]);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const { toast } = useToast();
@@ -113,7 +113,7 @@ const NewProjectForm: React.FC<NewProjectFormProps> = ({ onAddProject }) => {
         setClientName('');
         setClientEmail('');
         setPackageType('');
-        setVersions([{ title: '', description: '', audioUrl: '', recommended: false }]);
+        setVersions([{ title: '', description: '', audioUrl: '', recommended: true }]);
         
         toast({
           title: "Projeto criado com sucesso",

@@ -7,6 +7,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
 import { Card } from "@/components/ui/card";
 import { X } from 'lucide-react';
+import { LimitedAudioPlayer } from '@/components/LimitedAudioPlayer';
 
 interface PreviewVersionInputProps {
   index: number;
@@ -76,7 +77,7 @@ const PreviewVersionInput: React.FC<PreviewVersionInputProps> = ({
         </div>
 
         <div>
-          <Label htmlFor={`version-audio-${index}`}>URL do Áudio</Label>
+          <Label htmlFor={`version-audio-${index}`}>Link do Google Drive</Label>
           <Input
             id={`version-audio-${index}`}
             value={audioUrl}
@@ -84,6 +85,16 @@ const PreviewVersionInput: React.FC<PreviewVersionInputProps> = ({
             placeholder="https://drive.google.com/file/d/..."
             required
           />
+          {audioUrl && (
+            <div className="mt-2">
+              <LimitedAudioPlayer
+                audioSrc={audioUrl}
+                previewDuration={30}
+                title={title}
+                subtitle="Prévia de 30 segundos"
+              />
+            </div>
+          )}
           <p className="text-sm text-gray-500 mt-1">
             Compartilhe o link do Google Drive como "Qualquer pessoa com o link pode visualizar"
           </p>
