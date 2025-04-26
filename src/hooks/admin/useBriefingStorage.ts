@@ -1,3 +1,4 @@
+
 import { useState } from 'react';
 import { useToast } from '@/hooks/use-toast';
 import { useFileUpload } from './useFileUpload';
@@ -78,7 +79,8 @@ export function useBriefingStorage() {
           description: "O briefing foi salvo com sucesso no Google Drive.",
         });
         
-        notificationService.notify('briefing_received', {
+        // Updated to use 'feedback_received' which is a valid NotificationType
+        notificationService.notify('feedback_received', {
           id: submissionId,
           clientName,
           clientEmail,

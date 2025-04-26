@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import AdminLayout from '@/components/admin/layout/AdminLayout';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
@@ -8,7 +7,7 @@ import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
 import { CloudOff, Mail, MessageSquare, Download, Upload, Check, AlertCircle, ExternalLink, RefreshCw } from 'lucide-react';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
-import { manageWebhookUrls } from '@/services/googleDriveService';
+import webhookService from '@/services/webhookService';
 
 const AdminIntegrations: React.FC = () => {
   const [activeTab, setActiveTab] = useState('storage');
@@ -28,7 +27,7 @@ const AdminIntegrations: React.FC = () => {
     provider: 'google-drive',
     folderId: '',
     accessToken: '••••••••••••••••••••••••••••••',
-    refreshToken: '••••••••••••••••••••••••••••••',
+    refreshToken: '••••••••���•••••••••••••••••••••',
     uploadEnabled: true,
     downloadEnabled: true
   });
@@ -51,12 +50,18 @@ const AdminIntegrations: React.FC = () => {
       setIsEmailConnected(true);
       
       // Get existing webhook URLs from storage
-      const savedUrls = manageWebhookUrls.getAll();
-      setWebhookUrls(prevState => ({
-        ...prevState,
-        ...savedUrls
-      }));
+      const loadWebhooks = async () => {
+        const savedUrl = await webhookService.getWebhookUrl();
+        if (savedUrl) {
+          setWebhookUrls({
+            previews: savedUrl,
+            briefings: savedUrl,
+            portfolio: savedUrl
+          });
+        }
+      };
       
+      loadWebhooks();
     }, 1000);
   }, []);
   
@@ -94,14 +99,14 @@ const AdminIntegrations: React.FC = () => {
     }));
   };
   
-  const saveWebhookUrl = (serviceType: string, url: string) => {
+  const saveWebhookUrl = async (serviceType: string, url: string) => {
     setWebhookUrls(prev => ({
       ...prev,
       [serviceType]: url
     }));
     
-    // Save to localStorage/service
-    manageWebhookUrls.set(serviceType, url);
+    // Save to service
+    await webhookService.saveWebhookUrl(url);
   };
   
   const handleWhatsappSettingChange = (setting: string, value: any) => {

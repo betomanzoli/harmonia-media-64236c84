@@ -1,10 +1,10 @@
-
 // Storage folders no Google Drive
 export const STORAGE_FOLDERS = {
   PROJECTS_BASE: '1D3_GsH5dC8W7mnPDEiep',
   PREVIEWS_BASE: '1H62ylCwQYJ23BLpygtvN',
   DOWNLOADS_BASE: '11c6JahRd5Lx0iKCL_gH',
   MARKETING_ASSETS: '1fCsWubN8pXwM-mRlDtn',
+  INVOICES: '1aBcDeFgHiJkLmN0pQrStU' // Added INVOICES folder ID
 };
 
 class GoogleDriveService {
@@ -50,3 +50,31 @@ class GoogleDriveService {
 }
 
 export const googleDriveService = new GoogleDriveService();
+
+// Add webhook URL management
+export const manageWebhookUrls = {
+  get: (serviceType: string): string => {
+    const key = `${serviceType}_webhookUrl`;
+    return localStorage.getItem(key) || '';
+  },
+  
+  set: (serviceType: string, url: string): void => {
+    const key = `${serviceType}_webhookUrl`;
+    localStorage.setItem(key, url);
+    // Trigger storage event for cross-component updates
+    window.dispatchEvent(new Event('storage'));
+  },
+  
+  getAll: (): Record<string, string> => {
+    const webhookUrls: Record<string, string> = {};
+    // Scan localStorage for webhook URLs
+    for (let i = 0; i < localStorage.length; i++) {
+      const key = localStorage.key(i);
+      if (key && key.endsWith('_webhookUrl')) {
+        const serviceType = key.replace('_webhookUrl', '');
+        webhookUrls[serviceType] = localStorage.getItem(key) || '';
+      }
+    }
+    return webhookUrls;
+  }
+};
