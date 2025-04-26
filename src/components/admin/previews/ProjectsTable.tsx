@@ -4,7 +4,7 @@ import { Table, TableBody, TableCaption, TableCell, TableHead, TableHeader, Tabl
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Link } from 'react-router-dom';
-import { Eye, Mail, Clock, CheckCircle, RefreshCw, MessageSquare, AlertTriangle, Download, Trash, Play } from 'lucide-react';
+import { Eye, Mail, Clock, CheckCircle, RefreshCw, MessageSquare, AlertTriangle, Trash, Play } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { ProjectItem } from '@/hooks/admin/usePreviewProjects';
 
@@ -70,7 +70,7 @@ const ProjectsTable: React.FC<ProjectsTableProps> = ({
       if (onSendReminder) {
         onSendReminder(project.id);
       }
-    }, 1500);
+    }, 800);
   };
 
   const handleDelete = (projectId: string) => {
@@ -87,6 +87,8 @@ const ProjectsTable: React.FC<ProjectsTableProps> = ({
 
   const isNearExpiration = (expirationDate: string) => {
     const parts = expirationDate.split('/');
+    if (parts.length !== 3) return false;
+    
     const expDate = new Date(parseInt(parts[2]), parseInt(parts[1]) - 1, parseInt(parts[0]));
     const today = new Date();
     const diffTime = expDate.getTime() - today.getTime();
@@ -109,7 +111,7 @@ const ProjectsTable: React.FC<ProjectsTableProps> = ({
           <AlertTriangle className="h-8 w-8 text-gray-400" />
         </div>
         <h3 className="text-lg font-medium text-gray-700">Nenhum projeto encontrado</h3>
-        <p className="text-gray-500 mt-1">Crie seu primeiro projeto clicando no botão abaixo.</p>
+        <p className="text-gray-500 mt-1">Crie seu primeiro projeto clicando no botão acima.</p>
       </div>
     );
   }
