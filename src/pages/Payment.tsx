@@ -10,81 +10,48 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ArrowLeft, CreditCard, ListChecks, AlertCircle } from 'lucide-react';
 import { useToast } from "@/hooks/use-toast";
 import ContractTermsDialog from "@/components/payment/ContractTermsDialog";
+import PaymentMethodsContainer from "@/components/payment/PaymentMethodsContainer";
+import { getPackageDetails, PackageId } from '@/lib/payment/packageData';
 
 const Payment: React.FC = () => {
   const { packageId } = useParams<{ packageId: string }>();
   const navigate = useNavigate();
   const { toast } = useToast();
   
-  const [packageDetails, setPackageDetails] = useState<{
-    id: string;
-    name: string;
-    price: number;
-    description: string;
-  } | null>(null);
-  
-  const [showTerms, setShowTerms] = useState(false);
+  const [packageDetails, setPackageDetails] = useState<ReturnType<typeof getPackageDetails> | null>(null);
   const [termsAccepted, setTermsAccepted] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
   
   useEffect(() => {
     // Verificar se o pacote existe
-    if (packageId) {
-      // Buscar detalhes do pacote com base no ID
-      if (packageId === 'essencial') {
-        setPackageDetails({
-          id: 'essencial',
-          name: 'Pacote Essencial',
-          price: 499,
-          description: 'Composição personalizada básica com 1 versão e ajustes'
-        });
-      } else if (packageId === 'premium') {
-        setPackageDetails({
-          id: 'premium',
-          name: 'Pacote Premium',
-          price: 799,
-          description: 'Composição personalizada com até 3 versões e mixagem profissional'
-        });
-      } else if (packageId === 'profissional') {
-        setPackageDetails({
-          id: 'profissional',
-          name: 'Pacote Profissional',
-          price: 1299,
-          description: 'Composição personalizada com músicos profissionais e direitos comerciais'
-        });
-      } else {
-        // Pacote não encontrado, redirecionar
-        toast({
-          title: "Pacote não encontrado",
-          description: "O pacote selecionado não está disponível.",
-          variant: "destructive"
-        });
-        navigate('/pacotes');
-      }
+    if (packageId && (packageId === 'essencial' || packageId === 'premium' || packageId === 'profissional')) {
+      setPackageDetails(getPackageDetails(packageId as PackageId));
+    } else {
+      // Pacote não encontrado, redirecionar
+      toast({
+        title: "Pacote não encontrado",
+        description: "O pacote selecionado não está disponível.",
+        variant: "destructive"
+      });
+      navigate('/pacotes');
     }
   }, [packageId, navigate, toast]);
 
-  const handleShowTerms = () => {
-    setShowTerms(true);
+  const handleAcceptTerms = async () => {
+    // Simulate API call to record terms acceptance
+    setIsProcessing(true);
+    await new Promise(resolve => setTimeout(resolve, 1000));
+    setTermsAccepted(true);
+    setIsProcessing(false);
+    return true;
   };
 
-  const handleContinuePayment = () => {
-    if (!termsAccepted) {
-      toast({
-        title: "Termos não aceitos",
-        description: "Você precisa aceitar os termos do contrato para continuar.",
-        variant: "destructive"
-      });
-      return;
-    }
+  const handleSelectPaymentMethod = (method: string, useDiscount: boolean = false) => {
+    // Prepare order ID
+    const orderId = `ORD-${Date.now().toString().slice(-6)}`;
     
-    setIsProcessing(true);
-    
-    // Simulação de processamento de pagamento
-    setTimeout(() => {
-      setIsProcessing(false);
-      navigate('/pagamento-retorno');
-    }, 2000);
+    // Navigate to payment processing page
+    navigate(`/pagamento-processando?packageId=${packageId}&orderId=${orderId}&discount=${useDiscount}&returnUrl=${encodeURIComponent(window.location.origin)}`);
   };
 
   if (!packageDetails) {
@@ -119,67 +86,13 @@ const Payment: React.FC = () => {
           <h1 className="text-3xl font-bold mb-8">Finalizar Compra</h1>
           
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-            <div className="md:col-span-2">
-              <Card>
-                <CardHeader>
-                  <CardTitle>Formas de Pagamento</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <Tabs defaultValue="card">
-                    <TabsList className="grid w-full grid-cols-2">
-                      <TabsTrigger value="card" className="flex items-center">
-                        <CreditCard className="h-4 w-4 mr-2" />
-                        Cartão de Crédito
-                      </TabsTrigger>
-                      <TabsTrigger value="pix" className="flex items-center">
-                        <svg className="h-4 w-4 mr-2" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                          <path d="M6.5 8.5L17.5 19.5M16 6.5L6 16.5" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
-                          <path d="M19.5 6.5L17.5 8.5" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
-                          <path d="M6.5 19.5L8.5 17.5" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
-                        </svg>
-                        PIX
-                      </TabsTrigger>
-                    </TabsList>
-                    <TabsContent value="card" className="pt-6">
-                      <div className="space-y-4">
-                        <Alert className="bg-amber-50 border-amber-200">
-                          <AlertCircle className="h-4 w-4 text-amber-700" />
-                          <AlertTitle className="text-amber-700">Ambiente de demonstração</AlertTitle>
-                          <AlertDescription className="text-amber-700">
-                            Este é um ambiente de demonstração. Nenhuma transação real será processada.
-                          </AlertDescription>
-                        </Alert>
-                        
-                        <div className="text-center mt-6">
-                          <Button onClick={handleShowTerms} className="w-full max-w-md mx-auto">
-                            <ListChecks className="h-4 w-4 mr-2" />
-                            Ver Contrato e Termos de Serviço
-                          </Button>
-                        </div>
-                      </div>
-                    </TabsContent>
-                    <TabsContent value="pix" className="pt-6">
-                      <div className="space-y-4">
-                        <Alert className="bg-amber-50 border-amber-200">
-                          <AlertCircle className="h-4 w-4 text-amber-700" />
-                          <AlertTitle className="text-amber-700">Ambiente de demonstração</AlertTitle>
-                          <AlertDescription className="text-amber-700">
-                            Este é um ambiente de demonstração. Nenhuma transação real será processada.
-                          </AlertDescription>
-                        </Alert>
-                        
-                        <div className="text-center mt-6">
-                          <Button onClick={handleShowTerms} className="w-full max-w-md mx-auto">
-                            <ListChecks className="h-4 w-4 mr-2" />
-                            Ver Contrato e Termos de Serviço
-                          </Button>
-                        </div>
-                      </div>
-                    </TabsContent>
-                  </Tabs>
-                </CardContent>
-              </Card>
-            </div>
+            <PaymentMethodsContainer 
+              isLoading={isProcessing}
+              onSelectMethod={handleSelectPaymentMethod}
+              packageId={packageId as PackageId}
+              hasAcceptedTerms={termsAccepted}
+              onAcceptTerms={handleAcceptTerms}
+            />
             
             <div>
               <Card>
@@ -206,20 +119,6 @@ const Payment: React.FC = () => {
                         <span>R$ {packageDetails.price.toFixed(2)}</span>
                       </div>
                     </div>
-                    
-                    <Button 
-                      onClick={handleContinuePayment} 
-                      disabled={!termsAccepted || isProcessing}
-                      className="w-full mt-4 bg-harmonia-green hover:bg-harmonia-green/90"
-                    >
-                      {isProcessing ? "Processando..." : "Finalizar Pedido"}
-                    </Button>
-                    
-                    {!termsAccepted && (
-                      <p className="text-xs text-center text-gray-500 mt-2">
-                        Você precisa aceitar os termos do contrato para continuar.
-                      </p>
-                    )}
                   </div>
                 </CardContent>
               </Card>
@@ -228,16 +127,6 @@ const Payment: React.FC = () => {
         </div>
       </main>
       <Footer />
-      
-      <ContractTermsDialog 
-        open={showTerms}
-        onOpenChange={setShowTerms}
-        packageId={packageId as any}
-        accepted={termsAccepted}
-        onAcceptedChange={setTermsAccepted}
-        onConfirm={handleContinuePayment}
-        isLoading={isProcessing}
-      />
     </div>
   );
 };
