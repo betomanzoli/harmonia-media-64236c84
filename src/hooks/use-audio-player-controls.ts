@@ -1,6 +1,7 @@
 
 import { useState, useRef, useEffect } from 'react';
-import { useToast } from "@/hooks/use-toast";
+import { setupAudioElement, handlePreviewLimit } from '@/lib/audio-controls/audio-utils';
+import { usePreviewTimer } from './audio/use-preview-timer';
 
 interface UseAudioPlayerControlsProps {
   audioSrc: string;
@@ -8,92 +9,59 @@ interface UseAudioPlayerControlsProps {
 }
 
 export const useAudioPlayerControls = ({ audioSrc, previewDuration = 30 }: UseAudioPlayerControlsProps) => {
-  const { toast } = useToast();
   const [isPlaying, setIsPlaying] = useState(false);
   const [currentTime, setCurrentTime] = useState(0);
   const [duration, setDuration] = useState(0);
   const [volume, setVolume] = useState(0.8);
   const [showVolumeControl, setShowVolumeControl] = useState(false);
   const audioRef = useRef<HTMLAudioElement | null>(null);
-  const previewTimerRef = useRef<number | null>(null);
+
+  const pauseAudio = () => {
+    if (!audioRef.current) return;
+    audioRef.current.pause();
+    setIsPlaying(false);
+  };
+
+  const { setupPreviewTimer, clearPreviewTimer } = usePreviewTimer({
+    isPlaying,
+    currentTime,
+    previewDuration,
+    onPause: pauseAudio
+  });
 
   useEffect(() => {
     if (audioRef.current) {
-      audioRef.current.pause();
-      audioRef.current.currentTime = 0;
+      setupAudioElement(audioRef);
       setIsPlaying(false);
       setCurrentTime(0);
     }
   }, [audioSrc]);
 
-  useEffect(() => {
-    return () => {
-      if (previewTimerRef.current) {
-        clearTimeout(previewTimerRef.current);
-      }
-    };
-  }, []);
-
   const togglePlay = () => {
     if (!audioRef.current) return;
 
     if (isPlaying) {
-      audioRef.current.pause();
-      if (previewTimerRef.current) {
-        clearTimeout(previewTimerRef.current);
-        previewTimerRef.current = null;
-      }
+      pauseAudio();
+      clearPreviewTimer();
     } else {
-      audioRef.current.play();
-      
-      if (previewDuration && !previewTimerRef.current) {
-        const remainingPreviewTime = Math.max(0, previewDuration - currentTime) * 1000;
-        
-        if (currentTime >= previewDuration) {
-          audioRef.current.pause();
-          audioRef.current.currentTime = 0;
-          setCurrentTime(0);
-          setIsPlaying(false);
-          toast({
-            title: "Prévia limitada",
-            description: "Esta é apenas uma prévia de 30 segundos. Entre em contato para ouvir a versão completa."
-          });
-          return;
-        }
-        
-        previewTimerRef.current = window.setTimeout(() => {
-          if (audioRef.current) {
-            audioRef.current.pause();
-            setIsPlaying(false);
-            toast({
-              title: "Prévia finalizada",
-              description: "Esta é apenas uma prévia de 30 segundos. Entre em contato para ouvir a versão completa."
-            });
-          }
-          previewTimerRef.current = null;
-        }, remainingPreviewTime);
+      const canPlay = setupPreviewTimer();
+      if (canPlay) {
+        audioRef.current.play();
+        setIsPlaying(true);
       }
     }
-    setIsPlaying(!isPlaying);
   };
 
   const handleTimeUpdate = () => {
-    if (audioRef.current) {
-      const current = audioRef.current.currentTime;
-      setCurrentTime(current);
-      
-      if (previewDuration && current >= previewDuration) {
-        audioRef.current.pause();
-        setIsPlaying(false);
-        if (previewTimerRef.current) {
-          clearTimeout(previewTimerRef.current);
-          previewTimerRef.current = null;
-        }
-        toast({
-          title: "Prévia finalizada",
-          description: "Esta é apenas uma prévia de 30 segundos. Entre em contato para ouvir a versão completa."
-        });
-      }
+    if (!audioRef.current) return;
+    
+    const current = audioRef.current.currentTime;
+    setCurrentTime(current);
+    
+    if (previewDuration && current >= previewDuration) {
+      pauseAudio();
+      clearPreviewTimer();
+      handlePreviewLimit();
     }
   };
 
@@ -104,18 +72,15 @@ export const useAudioPlayerControls = ({ audioSrc, previewDuration = 30 }: UseAu
   };
 
   const handleSliderChange = (value: number[]) => {
-    if (audioRef.current) {
-      if (previewDuration && value[0] > previewDuration) {
-        audioRef.current.currentTime = previewDuration;
-        setCurrentTime(previewDuration);
-        toast({
-          title: "Prévia limitada",
-          description: "Esta é apenas uma prévia de 30 segundos. Entre em contato para ouvir a versão completa."
-        });
-      } else {
-        audioRef.current.currentTime = value[0];
-        setCurrentTime(value[0]);
-      }
+    if (!audioRef.current) return;
+    
+    if (previewDuration && value[0] > previewDuration) {
+      audioRef.current.currentTime = previewDuration;
+      setCurrentTime(previewDuration);
+      handlePreviewLimit();
+    } else {
+      audioRef.current.currentTime = value[0];
+      setCurrentTime(value[0]);
     }
   };
 
