@@ -11,7 +11,7 @@ import PreviewInstructions from './PreviewInstructions';
 import PreviewPlayerList from './player/PreviewPlayerList';
 import PreviewFeedbackForm from './PreviewFeedbackForm';
 import PreviewNextSteps from './PreviewNextSteps';
-import { usePreviewData } from '@/hooks/usePreviewData';
+import { usePreviewData } from '@/hooks/use-preview-data';
 import { notificationService } from '@/services/notificationService';
 
 interface MusicPreviewSystemProps {
@@ -19,7 +19,7 @@ interface MusicPreviewSystemProps {
 }
 
 const MusicPreviewSystem: React.FC<MusicPreviewSystemProps> = ({ projectId }) => {
-  const { projectData, setProjectData, isLoading } = usePreviewData(projectId || undefined);
+  const { projectData, setProjectData, isLoading, actualProjectId } = usePreviewData(projectId || undefined);
   const [selectedPreview, setSelectedPreview] = useState<string | null>(null);
   const [feedback, setFeedback] = useState('');
   const navigate = useNavigate();
@@ -42,13 +42,13 @@ const MusicPreviewSystem: React.FC<MusicPreviewSystemProps> = ({ projectId }) =>
     
     // Notificar sobre feedback
     notificationService.notify('feedback_received', {
-      projectId,
+      projectId: actualProjectId,
       clientName: projectData?.clientName || 'Cliente',
-      message: feedback
+      message: feedback,
+      versionId: selectedPreview
     });
     
     setProjectData(prev => prev ? {...prev, status: 'feedback' as const} : null);
-    navigate('/feedback-confirmacao');
   };
   
   const handleApprove = () => {
@@ -68,14 +68,25 @@ const MusicPreviewSystem: React.FC<MusicPreviewSystemProps> = ({ projectId }) =>
     
     // Notificar sobre aprovação
     notificationService.notify('preview_approved', {
-      projectId,
+      projectId: actualProjectId,
       clientName: projectData?.clientName || 'Cliente',
       versionId: selectedPreview
     });
     
     setProjectData(prev => prev ? {...prev, status: 'approved' as const} : null);
-    navigate('/feedback-confirmacao');
   };
+
+  // Set the first or recommended preview as selected on load
+  useEffect(() => {
+    if (projectData?.previews && projectData.previews.length > 0) {
+      const recommendedPreview = projectData.previews.find(p => p.recommended);
+      if (recommendedPreview && !selectedPreview) {
+        setSelectedPreview(recommendedPreview.id);
+      } else if (!selectedPreview) {
+        setSelectedPreview(projectData.previews[0].id);
+      }
+    }
+  }, [projectData, selectedPreview]);
 
   if (isLoading) {
     return (
@@ -106,15 +117,6 @@ const MusicPreviewSystem: React.FC<MusicPreviewSystemProps> = ({ projectId }) =>
       </div>
     );
   }
-  
-  const recommendedVersion = projectData.previews.find(p => p.recommended)?.id;
-  useEffect(() => {
-    if (recommendedVersion && !selectedPreview) {
-      setSelectedPreview(recommendedVersion);
-    } else if (projectData.previews.length > 0 && !selectedPreview) {
-      setSelectedPreview(projectData.previews[0].id);
-    }
-  }, [projectData.previews, recommendedVersion, selectedPreview]);
 
   return (
     <div className="max-w-4xl mx-auto">

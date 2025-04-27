@@ -59,7 +59,9 @@ const NewProjectForm: React.FC<NewProjectFormProps> = ({ onAddProject }) => {
           description: v.description,
           audioUrl: v.audioUrl,
           dateAdded: new Date().toLocaleDateString('pt-BR'),
-          recommended: v.recommended
+          recommended: v.recommended,
+          // Extract fileId from Google Drive URL
+          fileId: v.audioUrl.match(/[-\w]{25,}/) ? v.audioUrl.match(/[-\w]{25,}/)![0] : ''
         }))
       };
       
@@ -84,7 +86,7 @@ const NewProjectForm: React.FC<NewProjectFormProps> = ({ onAddProject }) => {
   };
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-6">
+    <form onSubmit={handleSubmit} className="space-y-6 max-h-[70vh] overflow-y-auto pr-2">
       <ClientInfoForm 
         clientName={formState.clientName}
         clientEmail={formState.clientEmail}

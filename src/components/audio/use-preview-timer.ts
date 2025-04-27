@@ -24,37 +24,41 @@ export const usePreviewTimer = ({
     };
   }, []);
 
-  const setupPreviewTimer = () => {
-    if (previewDuration && !previewTimerRef.current) {
-      const remainingPreviewTime = Math.max(0, previewDuration - currentTime) * 1000;
-      
-      // If current time is already past preview duration, pause immediately
+  // Setup a new timer when isPlaying changes or when the timer is cleared
+  useEffect(() => {
+    if (isPlaying && previewDuration) {
       if (currentTime >= previewDuration) {
+        // If current time is already past preview duration, pause immediately
         onPause();
         handlePreviewEnd();
-        return false;
+        return;
       }
-      
+
+      // Clear any existing timer
+      if (previewTimerRef.current) {
+        clearTimeout(previewTimerRef.current);
+      }
+
+      // Set new timer for remaining time
+      const remainingPreviewTime = Math.max(0, previewDuration - currentTime) * 1000;
       previewTimerRef.current = window.setTimeout(() => {
         onPause();
         handlePreviewEnd();
         previewTimerRef.current = null;
       }, remainingPreviewTime);
-
-      return true;
-    }
-    return true;
-  };
-
-  const clearPreviewTimer = () => {
-    if (previewTimerRef.current) {
+    } else if (!isPlaying && previewTimerRef.current) {
+      // Clear timer when paused
       clearTimeout(previewTimerRef.current);
       previewTimerRef.current = null;
     }
-  };
+  }, [isPlaying, currentTime, previewDuration, onPause]);
 
   return {
-    setupPreviewTimer,
-    clearPreviewTimer
+    clearPreviewTimer: () => {
+      if (previewTimerRef.current) {
+        clearTimeout(previewTimerRef.current);
+        previewTimerRef.current = null;
+      }
+    }
   };
 };

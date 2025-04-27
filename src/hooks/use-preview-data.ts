@@ -1,103 +1,60 @@
 
 import { useState, useEffect } from 'react';
 import { useToast } from '@/hooks/use-toast';
+import { usePreviewProject } from '@/hooks/usePreviewProject';
+import { getProjectIdFromPreviewLink } from '@/utils/previewLinkUtils';
+import { usePreviewProjects } from '@/hooks/admin/usePreviewProjects';
 
-export interface MusicPreview {
-  id: string;
-  title: string;
-  description: string;
-  audioUrl: string;
-}
-
-export interface PreviewProject {
-  clientName: string;
-  projectTitle: string;
-  status: 'waiting' | 'feedback' | 'approved';
-  previews: MusicPreview[];
-}
-
-export interface PreviewProjectData {
-  projectId: string;
-  clientName: string;
-  packageType: string;
-  creationDate: string;
-  status: 'waiting' | 'feedback' | 'approved';
-}
-
-export const usePreviewData = (projectId: string | undefined) => {
+export const usePreviewData = (previewId: string | undefined) => {
+  const [actualProjectId, setActualProjectId] = useState<string | null>(null);
+  const { projectData, setProjectData, isLoading } = usePreviewProject(actualProjectId || undefined);
   const { toast } = useToast();
-  const [projectData, setProjectData] = useState<PreviewProject | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
+  const { updateProject } = usePreviewProjects();
   
   useEffect(() => {
-    if (!projectId) {
-      setIsLoading(false);
-      return;
-    }
-    
-    setIsLoading(true);
-    
-    // Primeiro, buscamos nos projetos salvos no localStorage
-    try {
-      const allProjects = JSON.parse(localStorage.getItem('preview-projects') || '[]');
-      const foundProject = allProjects.find((p: any) => p.id === projectId);
+    if (previewId) {
+      // Check if ID needs to be decoded
+      const decodedId = getProjectIdFromPreviewLink(previewId) || previewId;
+      setActualProjectId(decodedId);
       
-      if (foundProject) {
-        console.log('Projeto encontrado no localStorage:', foundProject);
-        
-        // Transformar o projeto no formato esperado
-        const formattedProject: PreviewProject = {
-          clientName: foundProject.clientName,
-          projectTitle: `Projeto ${foundProject.id}`,
-          status: foundProject.status as 'waiting' | 'feedback' | 'approved',
-          previews: foundProject.versionsList?.map((v: any) => ({
-            id: v.id,
-            title: v.name,
-            description: `Versão musical para ${foundProject.clientName}`,
-            audioUrl: v.url || 'https://drive.google.com/uc?export=download&id=1H62ylCwQYJ23BLpygtvNmCgwTDcHX6Cl'
-          })) || []
-        };
-        
-        setProjectData(formattedProject);
-        setIsLoading(false);
-        console.log('Dados do projeto formatados:', formattedProject);
-        return;
-      }
-    } catch (error) {
-      console.error('Erro ao buscar projeto no localStorage:', error);
+      console.log(`Carregando dados da prévia: ${decodedId}`);
     }
-    
-    // Se não encontrou no localStorage, usamos os dados de mock
-    const mockData: PreviewProject = {
-      clientName: 'Cliente Exemplo',
-      projectTitle: 'Projeto de Música Personalizada',
-      status: 'waiting',
-      previews: [
-        {
-          id: 'v1',
-          title: 'Versão Acústica',
-          description: 'Versão suave com violão e piano',
-          audioUrl: 'https://drive.google.com/uc?export=download&id=1H62ylCwQYJ23BLpygtvNmCgwTDcHX6Cl',
-        },
-        {
-          id: 'v2',
-          title: 'Versão Orquestral',
-          description: 'Arranjo completo com cordas e metais',
-          audioUrl: 'https://drive.google.com/uc?export=download&id=11c6JahRd5Lx0iKCL_gHZ0zrZ3LFBJ47a',
-        },
-        {
-          id: 'v3',
-          title: 'Versão Minimalista',
-          description: 'Abordagem simplificada com foco na melodia',
-          audioUrl: 'https://drive.google.com/uc?export=download&id=1fCsWubN8pXwM-mRlDtnQFTCkBbIkuUyW',
-        }
-      ]
-    };
-    
-    console.log('Usando dados de mock para o projeto:', projectId);
-    setProjectData(mockData);
-    setIsLoading(false);
-  }, [projectId]);
+  }, [previewId]);
+  
+  useEffect(() => {
+    if (!isLoading && !projectData && actualProjectId) {
+      toast({
+        title: "Prévia não encontrada",
+        description: "O código de prévia fornecido não é válido ou expirou.",
+        variant: "destructive"
+      });
+    }
+  }, [actualProjectId, projectData, isLoading, toast]);
 
-  return { projectData, setProjectData, isLoading };
+  // Update the project with new status in both hooks and local storage
+  const updateProjectStatus = (status: 'waiting' | 'feedback' | 'approved') => {
+    if (actualProjectId) {
+      // Update in preview projects storage
+      updateProject(actualProjectId, { 
+        status,
+        lastActivityDate: new Date().toLocaleDateString('pt-BR')
+      });
+      
+      // Update local state
+      if (projectData) {
+        setProjectData({
+          ...projectData,
+          status
+        });
+      }
+    }
+  };
+  
+  return { 
+    projectData, 
+    setProjectData, 
+    isLoading, 
+    actualProjectId,
+    updateProjectStatus
+  };
 };

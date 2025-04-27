@@ -13,6 +13,7 @@ import PreviewVersionsList from '@/components/admin/previews/PreviewVersionsList
 import ClientFeedbackCard from '@/components/admin/previews/ClientFeedbackCard';
 import AddVersionForm from '@/components/admin/previews/AddVersionForm';
 import { useToast } from "@/hooks/use-toast";
+import ProjectActionCard from '@/components/admin/previews/ProjectActionCard';
 
 const PreviewProjectPage: React.FC = () => {
   const { projectId } = useParams<{ projectId: string }>();
@@ -41,7 +42,11 @@ const PreviewProjectPage: React.FC = () => {
   const handleStatusUpdate = (newStatus: 'waiting' | 'feedback' | 'approved') => {
     if (!project) return;
     
-    const updatedProject = updateProject(project.id, { status: newStatus });
+    const updatedProject = updateProject(project.id, { 
+      status: newStatus,
+      lastActivityDate: new Date().toLocaleDateString('pt-BR')
+    });
+    
     if (updatedProject) {
       setProject(updatedProject);
       toast({
@@ -54,7 +59,11 @@ const PreviewProjectPage: React.FC = () => {
   const handleFeedbackSave = (feedback: string) => {
     if (!project) return;
     
-    const updatedProject = updateProject(project.id, { feedback });
+    const updatedProject = updateProject(project.id, { 
+      feedback,
+      lastActivityDate: new Date().toLocaleDateString('pt-BR')
+    });
+    
     if (updatedProject) {
       setProject(updatedProject);
       toast({
@@ -70,13 +79,25 @@ const PreviewProjectPage: React.FC = () => {
     // Get current list or initialize empty array
     const currentVersions = project.versionsList || [];
     
+    // Extract fileId from URL if provided
+    if (newVersion.audioUrl && !newVersion.fileId) {
+      const match = newVersion.audioUrl.match(/[-\w]{25,}/);
+      if (match) {
+        newVersion.fileId = match[0];
+      }
+    }
+    
     // Create updated versions list with new version
-    const updatedVersions = [...currentVersions, newVersion];
+    const updatedVersions = [...currentVersions, {
+      ...newVersion,
+      dateAdded: new Date().toLocaleDateString('pt-BR')
+    }];
     
     // Update project with new version list and count
     const updatedProject = updateProject(project.id, {
       versionsList: updatedVersions,
-      versions: updatedVersions.length
+      versions: updatedVersions.length,
+      lastActivityDate: new Date().toLocaleDateString('pt-BR')
     });
     
     if (updatedProject) {
@@ -85,6 +106,46 @@ const PreviewProjectPage: React.FC = () => {
       toast({
         title: "Versão adicionada",
         description: "A nova versão foi adicionada com sucesso."
+      });
+    }
+  };
+
+  const handleExtendDeadline = () => {
+    if (!project) return;
+    
+    // Extend by 30 days from today
+    const newExpirationDate = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toLocaleDateString('pt-BR');
+    
+    const updatedProject = updateProject(project.id, {
+      expirationDate: newExpirationDate,
+      lastActivityDate: new Date().toLocaleDateString('pt-BR')
+    });
+    
+    if (updatedProject) {
+      setProject(updatedProject);
+      toast({
+        title: "Prazo estendido",
+        description: `O prazo foi estendido até ${newExpirationDate}.`
+      });
+    }
+  };
+
+  const handleDeleteVersion = (versionId: string) => {
+    if (!project || !project.versionsList) return;
+    
+    const updatedVersions = project.versionsList.filter(v => v.id !== versionId);
+    
+    const updatedProject = updateProject(project.id, {
+      versionsList: updatedVersions,
+      versions: updatedVersions.length,
+      lastActivityDate: new Date().toLocaleDateString('pt-BR')
+    });
+    
+    if (updatedProject) {
+      setProject(updatedProject);
+      toast({
+        title: "Versão removida",
+        description: "A versão foi removida com sucesso."
       });
     }
   };
@@ -152,22 +213,27 @@ const PreviewProjectPage: React.FC = () => {
                 onStatusUpdate={handleStatusUpdate}
               />
             </div>
-            <div>
-              <div className="space-y-6">
-                <ProjectClientInfo 
-                  clientName={project.clientName}
-                  clientEmail={project.clientEmail}
-                  packageType={project.packageType}
-                  createdAt={project.createdAt}
-                  expirationDate={project.expirationDate}
-                  lastActivityDate={project.lastActivityDate}
-                />
-                
-                <ProjectStatusCard 
-                  status={project.status} 
-                  onStatusUpdate={handleStatusUpdate} 
-                />
-              </div>
+            <div className="space-y-6">
+              <ProjectClientInfo 
+                clientName={project.clientName}
+                clientEmail={project.clientEmail}
+                packageType={project.packageType}
+                createdAt={project.createdAt}
+                expirationDate={project.expirationDate}
+                lastActivityDate={project.lastActivityDate}
+              />
+              
+              <ProjectStatusCard 
+                status={project.status} 
+                onStatusUpdate={handleStatusUpdate} 
+              />
+
+              <ProjectActionCard
+                projectId={project.id}
+                previewUrl={`/preview/${project.id}`}
+                onAddVersion={() => setShowAddForm(true)} 
+                onExtendDeadline={handleExtendDeadline}
+              />
             </div>
           </div>
           
@@ -186,6 +252,7 @@ const PreviewProjectPage: React.FC = () => {
           <PreviewVersionsList 
             versions={project.versionsList || []}
             projectId={project.id}
+            onDeleteVersion={handleDeleteVersion}
           />
         </div>
       </div>

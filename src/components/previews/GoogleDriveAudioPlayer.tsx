@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Slider } from "@/components/ui/slider";
 import { Play, Pause, Volume2, Volume1, VolumeX, Lock } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
+import { usePreviewTimer } from '../audio/use-preview-timer';
 
 interface GoogleDriveAudioPlayerProps {
   fileId: string;
@@ -26,11 +27,26 @@ const GoogleDriveAudioPlayer: React.FC<GoogleDriveAudioPlayerProps> = ({
   const [duration, setDuration] = useState(0);
   const [volume, setVolume] = useState(0.8);
   const [showVolumeControl, setShowVolumeControl] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
+  const [audioError, setAudioError] = useState<string | null>(null);
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const { toast } = useToast();
 
   // Google Drive direct stream URL
   const audioUrl = `https://drive.google.com/uc?export=download&id=${fileId}`;
+
+  // Use our custom preview timer hook
+  const { clearPreviewTimer } = usePreviewTimer({
+    isPlaying,
+    currentTime,
+    previewDuration: isPreview ? previewDuration : undefined,
+    onPause: () => {
+      if (audioRef.current) {
+        audioRef.current.pause();
+        setIsPlaying(false);
+      }
+    }
+  });
 
   useEffect(() => {
     const audio = new Audio(audioUrl);
@@ -39,22 +55,12 @@ const GoogleDriveAudioPlayer: React.FC<GoogleDriveAudioPlayerProps> = ({
 
     const updateProgress = () => {
       setCurrentTime(audio.currentTime);
-      
-      // Se for prévia e passar do tempo limite, pare a reprodução
-      if (isPreview && audio.currentTime >= previewDuration) {
-        audio.pause();
-        audio.currentTime = 0;
-        setIsPlaying(false);
-        setCurrentTime(0);
-        toast({
-          title: "Prévia finalizada",
-          description: "Esta é apenas uma prévia de 30 segundos. A versão completa estará disponível após a aprovação.",
-        });
-      }
     };
 
     const handleAudioLoad = () => {
       setDuration(isPreview ? Math.min(previewDuration, audio.duration) : audio.duration);
+      setIsLoading(false);
+      setAudioError(null);
     };
 
     const handleAudioEnd = () => {
@@ -62,18 +68,44 @@ const GoogleDriveAudioPlayer: React.FC<GoogleDriveAudioPlayerProps> = ({
       setCurrentTime(0);
     };
 
+    const handleError = (e: ErrorEvent) => {
+      console.error("Erro ao carregar áudio:", e);
+      setIsLoading(false);
+      setAudioError("Não foi possível carregar o áudio. Verifique o link do Google Drive.");
+      toast({
+        title: "Erro ao carregar áudio",
+        description: "Verifique se o link do Google Drive está correto e compartilhado.",
+        variant: "destructive"
+      });
+    };
+
     audio.addEventListener('timeupdate', updateProgress);
     audio.addEventListener('loadedmetadata', handleAudioLoad);
     audio.addEventListener('ended', handleAudioEnd);
+    audio.addEventListener('error', handleError as EventListener);
+
+    // Start loading the audio
+    audio.load();
+
+    // Set a timeout to detect very slow loading or failed loads
+    const loadingTimeout = setTimeout(() => {
+      if (isLoading && !audio.duration) {
+        setAudioError("Tempo de carregamento excedido. Verifique a URL do arquivo.");
+        setIsLoading(false);
+      }
+    }, 10000); // 10 seconds timeout
 
     return () => {
+      clearTimeout(loadingTimeout);
+      clearPreviewTimer();
       audio.pause();
       audio.currentTime = 0;
       audio.removeEventListener('timeupdate', updateProgress);
       audio.removeEventListener('loadedmetadata', handleAudioLoad);
       audio.removeEventListener('ended', handleAudioEnd);
+      audio.removeEventListener('error', handleError as EventListener);
     };
-  }, [audioUrl, isPreview, previewDuration, toast, volume]);
+  }, [audioUrl, isPreview, previewDuration, toast, volume, clearPreviewTimer, isLoading]);
 
   useEffect(() => {
     if (audioRef.current) {
@@ -82,7 +114,7 @@ const GoogleDriveAudioPlayer: React.FC<GoogleDriveAudioPlayerProps> = ({
   }, [volume]);
 
   const togglePlay = () => {
-    if (!audioRef.current) return;
+    if (!audioRef.current || audioError) return;
 
     if (isPlaying) {
       audioRef.current.pause();
@@ -95,9 +127,10 @@ const GoogleDriveAudioPlayer: React.FC<GoogleDriveAudioPlayerProps> = ({
 
       audioRef.current.play().catch(error => {
         console.error("Erro ao reproduzir áudio:", error);
+        setAudioError("Erro ao reproduzir. Verifique o compartilhamento do arquivo no Google Drive.");
         toast({
           title: "Erro ao reproduzir",
-          description: "Não foi possível reproduzir o áudio do Google Drive. Tente novamente.",
+          description: "O arquivo do Google Drive não está acessível. Verifique as permissões de compartilhamento.",
           variant: "destructive"
         });
       });
@@ -106,7 +139,7 @@ const GoogleDriveAudioPlayer: React.FC<GoogleDriveAudioPlayerProps> = ({
   };
 
   const handleTimeChange = (value: number[]) => {
-    if (!audioRef.current) return;
+    if (!audioRef.current || audioError) return;
     
     const newTime = value[0];
     
@@ -165,52 +198,66 @@ const GoogleDriveAudioPlayer: React.FC<GoogleDriveAudioPlayerProps> = ({
           )}
         </div>
 
-        <div className="flex items-center space-x-3">
-          <Button
-            onClick={togglePlay}
-            variant="outline"
-            size="icon"
-            className="h-10 w-10 rounded-full border-harmonia-green text-harmonia-green hover:bg-harmonia-green/10"
-          >
-            {isPlaying ? <Pause size={18} /> : <Play size={18} />}
-          </Button>
+        {isLoading ? (
+          <div className="flex items-center justify-center h-10">
+            <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-harmonia-green"></div>
+            <span className="ml-2 text-sm text-gray-500">Carregando áudio...</span>
+          </div>
+        ) : audioError ? (
+          <div className="text-center py-2">
+            <p className="text-red-500 text-sm">{audioError}</p>
+            <p className="text-xs text-gray-500 mt-1">
+              Verifique se o link do Google Drive está correto e se o arquivo está compartilhado para "Qualquer pessoa com o link"
+            </p>
+          </div>
+        ) : (
+          <div className="flex items-center space-x-3">
+            <Button
+              onClick={togglePlay}
+              variant="outline"
+              size="icon"
+              className="h-10 w-10 rounded-full border-harmonia-green text-harmonia-green hover:bg-harmonia-green/10"
+            >
+              {isPlaying ? <Pause size={18} /> : <Play size={18} />}
+            </Button>
 
-          <div className="flex-1">
-            <Slider
-              value={[currentTime]}
-              max={maxDisplayTime || 100}
-              step={0.1}
-              onValueChange={handleTimeChange}
-              className="cursor-pointer"
-            />
-            <div className="flex justify-between text-xs text-gray-500 mt-1">
-              <span>{formatTime(currentTime)}</span>
-              <span>{formatTime(maxDisplayTime || 0)}</span>
+            <div className="flex-1">
+              <Slider
+                value={[currentTime]}
+                max={maxDisplayTime || 100}
+                step={0.1}
+                onValueChange={handleTimeChange}
+                className="cursor-pointer"
+              />
+              <div className="flex justify-between text-xs text-gray-500 mt-1">
+                <span>{formatTime(currentTime)}</span>
+                <span>{formatTime(maxDisplayTime || 0)}</span>
+              </div>
+            </div>
+
+            <div className="relative">
+              <Button
+                variant="ghost"
+                size="icon"
+                className="h-8 w-8 text-gray-500 hover:text-harmonia-green"
+                onClick={() => setShowVolumeControl(!showVolumeControl)}
+              >
+                <VolumeIcon />
+              </Button>
+              
+              {showVolumeControl && (
+                <div className="absolute bottom-full right-0 p-3 bg-white shadow-md rounded-md mb-2 w-32 z-10">
+                  <Slider
+                    value={[volume]}
+                    max={1}
+                    step={0.01}
+                    onValueChange={handleVolumeChange}
+                  />
+                </div>
+              )}
             </div>
           </div>
-
-          <div className="relative">
-            <Button
-              variant="ghost"
-              size="icon"
-              className="h-8 w-8 text-gray-500 hover:text-harmonia-green"
-              onClick={() => setShowVolumeControl(!showVolumeControl)}
-            >
-              <VolumeIcon />
-            </Button>
-            
-            {showVolumeControl && (
-              <div className="absolute bottom-full right-0 p-3 bg-white shadow-md rounded-md mb-2 w-32 z-10">
-                <Slider
-                  value={[volume]}
-                  max={1}
-                  step={0.01}
-                  onValueChange={handleVolumeChange}
-                />
-              </div>
-            )}
-          </div>
-        </div>
+        )}
       </div>
     </Card>
   );

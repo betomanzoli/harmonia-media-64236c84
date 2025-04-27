@@ -25,6 +25,7 @@ const PreviewPage: React.FC = () => {
           variant: "destructive"
         });
       } else {
+        // Log preview access for tracking
         console.log(`Visualização da prévia ${actualProjectId} registrada: ${new Date().toISOString()}`);
       }
     }

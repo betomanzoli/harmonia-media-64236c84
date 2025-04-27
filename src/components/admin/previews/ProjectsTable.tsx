@@ -21,192 +21,163 @@ const ProjectsTable: React.FC<ProjectsTableProps> = ({
   onDelete,
   onSendReminder
 }) => {
+  const [expandedId, setExpandedId] = useState<string | null>(null);
   const { toast } = useToast();
-  const [sendingReminder, setSendingReminder] = useState<string | null>(null);
 
   const getStatusBadge = (status: string) => {
-    switch (status) {
+    switch(status) {
       case 'waiting':
-        return (
-          <Badge variant="outline" className="bg-yellow-50 text-yellow-700 border-yellow-200">
-            <Clock className="h-3 w-3 mr-1" />
-            Aguardando avaliação
-          </Badge>
-        );
+        return <Badge className="bg-yellow-500/20 text-yellow-700 hover:bg-yellow-500/30">Aguardando</Badge>;
       case 'feedback':
-        return (
-          <Badge variant="outline" className="bg-blue-50 text-blue-700 border-blue-200">
-            <MessageSquare className="h-3 w-3 mr-1" />
-            Feedback recebido
-          </Badge>
-        );
+        return <Badge className="bg-purple-500/20 text-purple-700 hover:bg-purple-500/30">Feedback</Badge>;
       case 'approved':
-        return (
-          <Badge variant="outline" className="bg-green-50 text-green-700 border-green-200">
-            <CheckCircle className="h-3 w-3 mr-1" />
-            Aprovada
-          </Badge>
-        );
+        return <Badge className="bg-green-500/20 text-green-700 hover:bg-green-500/30">Aprovado</Badge>;
       default:
-        return (
-          <Badge variant="outline">
-            Desconhecido
-          </Badge>
-        );
+        return <Badge>Desconhecido</Badge>;
     }
   };
 
-  const handleSendReminder = (project: ProjectItem) => {
-    setSendingReminder(project.id);
-    
-    // Simulação de envio de lembrete
-    setTimeout(() => {
-      setSendingReminder(null);
-      toast({
-        title: "Lembrete enviado",
-        description: `Um email de lembrete foi enviado para ${project.clientName}`,
-      });
-      
-      if (onSendReminder) {
-        onSendReminder(project.id);
-      }
-    }, 800);
+  const getStatusIcon = (status: string) => {
+    switch(status) {
+      case 'waiting':
+        return <Clock className="h-4 w-4 text-yellow-500" />;
+      case 'feedback':
+        return <MessageSquare className="h-4 w-4 text-purple-500" />;
+      case 'approved':
+        return <CheckCircle className="h-4 w-4 text-green-500" />;
+      default:
+        return <AlertTriangle className="h-4 w-4 text-gray-500" />;
+    }
   };
 
-  const handleDelete = (projectId: string) => {
-    if (onDelete) {
-      onDelete(projectId);
+  const handleSendReminder = (id: string) => {
+    if (onSendReminder) {
+      onSendReminder(id);
     } else {
       toast({
-        title: "Função não implementada",
-        description: "A exclusão de projetos será implementada em breve.",
-        variant: "destructive"
+        title: "Lembrete enviado",
+        description: "Um lembrete foi enviado para o cliente.",
       });
     }
   };
 
-  const isNearExpiration = (expirationDate: string) => {
-    const parts = expirationDate.split('/');
-    if (parts.length !== 3) return false;
-    
-    const expDate = new Date(parseInt(parts[2]), parseInt(parts[1]) - 1, parseInt(parts[0]));
-    const today = new Date();
-    const diffTime = expDate.getTime() - today.getTime();
-    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-    return diffDays <= 3 && diffDays >= 0;
+  const getPreviewLink = (projectId: string) => {
+    return `/preview/${projectId}`;
   };
 
-  if (isLoading) {
-    return (
-      <div className="flex items-center justify-center p-8">
-        <RefreshCw className="h-8 w-8 animate-spin text-harmonia-green" />
-      </div>
-    );
-  }
-
-  if (!projects || projects.length === 0) {
-    return (
-      <div className="text-center py-8">
-        <div className="bg-gray-100 rounded-full p-4 w-16 h-16 mx-auto mb-4 flex items-center justify-center">
-          <AlertTriangle className="h-8 w-8 text-gray-400" />
-        </div>
-        <h3 className="text-lg font-medium text-gray-700">Nenhum projeto encontrado</h3>
-        <p className="text-gray-500 mt-1">Crie seu primeiro projeto clicando no botão acima.</p>
-      </div>
-    );
-  }
+  const getAdminDetailLink = (projectId: string) => {
+    return `/admin-j28s7d1k/previews/${projectId}`;
+  };
 
   return (
-    <Table>
-      <TableCaption>Lista de projetos de prévia</TableCaption>
-      <TableHeader>
-        <TableRow>
-          <TableHead>ID</TableHead>
-          <TableHead>Cliente</TableHead>
-          <TableHead>Pacote</TableHead>
-          <TableHead>Status</TableHead>
-          <TableHead>Versões</TableHead>
-          <TableHead>Expira em</TableHead>
-          <TableHead className="text-right">Ações</TableHead>
-        </TableRow>
-      </TableHeader>
-      <TableBody>
-        {projects.map((project) => (
-          <TableRow key={project.id}>
-            <TableCell className="font-medium">{project.id}</TableCell>
-            <TableCell>
-              <div>
-                <div className="font-medium">{project.clientName}</div>
-                <div className="text-sm text-muted-foreground">{project.clientEmail}</div>
-              </div>
-            </TableCell>
-            <TableCell>{project.packageType}</TableCell>
-            <TableCell>{getStatusBadge(project.status)}</TableCell>
-            <TableCell>{project.versions || 0}</TableCell>
-            <TableCell>
-              <div className="flex items-center">
-                {isNearExpiration(project.expirationDate) ? (
-                  <Badge variant="outline" className="bg-amber-50 text-amber-700 border-amber-200">
-                    <Clock className="h-3 w-3 mr-1" />
-                    {project.expirationDate}
-                  </Badge>
-                ) : (
-                  project.expirationDate
-                )}
-              </div>
-            </TableCell>
-            <TableCell className="text-right">
-              <div className="flex space-x-1 justify-end">
-                <Button 
-                  variant="outline" 
-                  size="icon"
-                  asChild
-                  className="h-8 w-8"
-                >
-                  <Link to={`/admin-j28s7d1k/previews/${project.id}`}>
-                    <Eye className="h-4 w-4" />
-                  </Link>
-                </Button>
-                
-                <Button 
-                  variant="outline" 
-                  size="icon"
-                  className="h-8 w-8"
-                  asChild
-                >
-                  <Link to={`/preview/${project.id}`} target="_blank">
-                    <Play className="h-4 w-4" />
-                  </Link>
-                </Button>
-                
-                <Button 
-                  variant="outline" 
-                  size="icon"
-                  className="h-8 w-8"
-                  onClick={() => handleSendReminder(project)}
-                  disabled={sendingReminder === project.id}
-                >
-                  {sendingReminder === project.id ? (
-                    <RefreshCw className="h-4 w-4 animate-spin" />
-                  ) : (
-                    <Mail className="h-4 w-4" />
-                  )}
-                </Button>
-                
-                <Button 
-                  variant="outline" 
-                  size="icon"
-                  className="h-8 w-8 text-red-500 hover:text-red-700 hover:bg-red-50"
-                  onClick={() => handleDelete(project.id)}
-                >
-                  <Trash className="h-4 w-4" />
-                </Button>
-              </div>
-            </TableCell>
+    <div className="overflow-x-auto">
+      <Table>
+        {projects.length === 0 && !isLoading && (
+          <TableCaption>Nenhum projeto encontrado.</TableCaption>
+        )}
+        <TableHeader>
+          <TableRow>
+            <TableHead>ID</TableHead>
+            <TableHead>Cliente</TableHead>
+            <TableHead>Pacote</TableHead>
+            <TableHead>Status</TableHead>
+            <TableHead>Versões</TableHead>
+            <TableHead>Data de Expiração</TableHead>
+            <TableHead className="text-right">Ações</TableHead>
           </TableRow>
-        ))}
-      </TableBody>
-    </Table>
+        </TableHeader>
+        <TableBody>
+          {isLoading ? (
+            <TableRow>
+              <TableCell colSpan={7} className="h-24 text-center">
+                <div className="flex justify-center items-center">
+                  <RefreshCw className="h-4 w-4 mr-2 animate-spin" />
+                  Carregando projetos...
+                </div>
+              </TableCell>
+            </TableRow>
+          ) : projects.length === 0 ? (
+            <TableRow>
+              <TableCell colSpan={7} className="h-24 text-center">
+                Nenhum projeto encontrado.
+              </TableCell>
+            </TableRow>
+          ) : (
+            projects.map((project) => (
+              <React.Fragment key={project.id}>
+                <TableRow className="hover:bg-gray-50">
+                  <TableCell className="font-medium">{project.id}</TableCell>
+                  <TableCell>
+                    <div className="flex flex-col">
+                      <span>{project.clientName}</span>
+                      <span className="text-xs text-muted-foreground">{project.clientEmail}</span>
+                    </div>
+                  </TableCell>
+                  <TableCell>{project.packageType}</TableCell>
+                  <TableCell>
+                    <div className="flex items-center space-x-2">
+                      {getStatusIcon(project.status)}
+                      <span>{getStatusBadge(project.status)}</span>
+                    </div>
+                  </TableCell>
+                  <TableCell>{project.versions || 0}</TableCell>
+                  <TableCell>{project.expirationDate}</TableCell>
+                  <TableCell className="text-right">
+                    <div className="flex items-center justify-end space-x-2">
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        className="h-8 w-8 p-0 text-blue-500 hover:text-blue-600 hover:bg-blue-50"
+                        title="Ver detalhes"
+                        asChild
+                      >
+                        <Link to={getAdminDetailLink(project.id)}>
+                          <Eye className="h-4 w-4" />
+                        </Link>
+                      </Button>
+                      
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        className="h-8 w-8 p-0 text-harmonia-green hover:text-harmonia-green hover:bg-harmonia-green/10"
+                        title="Ver prévia do cliente"
+                        asChild
+                      >
+                        <Link to={getPreviewLink(project.id)} target="_blank">
+                          <Play className="h-4 w-4" />
+                        </Link>
+                      </Button>
+                      
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        className="h-8 w-8 p-0 text-amber-500 hover:text-amber-600 hover:bg-amber-50"
+                        title="Enviar lembrete"
+                        onClick={() => handleSendReminder(project.id)}
+                      >
+                        <Mail className="h-4 w-4" />
+                      </Button>
+
+                      {onDelete && (
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          className="h-8 w-8 p-0 text-red-500 hover:text-red-600 hover:bg-red-50"
+                          title="Excluir projeto"
+                          onClick={() => onDelete(project.id)}
+                        >
+                          <Trash className="h-4 w-4" />
+                        </Button>
+                      )}
+                    </div>
+                  </TableCell>
+                </TableRow>
+              </React.Fragment>
+            ))
+          )}
+        </TableBody>
+      </Table>
+    </div>
   );
 };
 

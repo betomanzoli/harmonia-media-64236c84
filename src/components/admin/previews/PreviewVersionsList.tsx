@@ -1,102 +1,174 @@
 
 import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { VersionItem } from '@/hooks/admin/usePreviewProjects';
-import { Play, Download, Star } from 'lucide-react';
+import { Play, Pencil, Trash, Check } from 'lucide-react';
+import GoogleDriveAudioPlayer from '@/components/previews/GoogleDriveAudioPlayer';
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
+import { useToast } from '@/hooks/use-toast';
+import { useState } from 'react';
+
+interface VersionItem {
+  id: string;
+  name: string;
+  description?: string;
+  fileId?: string;
+  audioUrl?: string;
+  url?: string;
+  dateAdded: string;
+  recommended?: boolean;
+}
 
 interface PreviewVersionsListProps {
   versions: VersionItem[];
   projectId: string;
+  onDeleteVersion?: (id: string) => void;
 }
 
-const PreviewVersionsList: React.FC<PreviewVersionsListProps> = ({ versions, projectId }) => {
-  const handlePlayAudio = (url: string) => {
-    window.open(url, '_blank');
+const PreviewVersionsList: React.FC<PreviewVersionsListProps> = ({
+  versions,
+  projectId,
+  onDeleteVersion
+}) => {
+  const [versionToDelete, setVersionToDelete] = useState<string | null>(null);
+  const { toast } = useToast();
+  
+  const getFileId = (version: VersionItem): string => {
+    if (version.fileId) return version.fileId;
+    
+    const url = version.audioUrl || version.url || '';
+    const match = url.match(/[-\w]{25,}/);
+    return match ? match[0] : '';
   };
   
-  return (
-    <Card>
-      <CardHeader>
-        <CardTitle>Versões da Prévia</CardTitle>
-      </CardHeader>
-      <CardContent>
-        {versions.length === 0 ? (
-          <div className="text-center py-10 text-gray-500">
-            <p>Nenhuma versão foi adicionada ainda.</p>
-            <p className="text-sm mt-2">Clique em "Adicionar Versão" para criar a primeira versão.</p>
+  const handleConfirmDelete = () => {
+    if (versionToDelete && onDeleteVersion) {
+      onDeleteVersion(versionToDelete);
+      setVersionToDelete(null);
+    }
+  };
+  
+  const handlePlayAudio = (version: VersionItem) => {
+    const fileId = getFileId(version);
+    if (fileId) {
+      window.open(`https://drive.google.com/file/d/${fileId}/view`, '_blank');
+    } else {
+      toast({
+        title: "Erro ao reproduzir",
+        description: "Não foi possível encontrar o ID do arquivo de áudio.",
+        variant: "destructive"
+      });
+    }
+  };
+
+  if (!versions || versions.length === 0) {
+    return (
+      <div>
+        <CardHeader>
+          <CardTitle>Versões do Projeto</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="text-center py-4">
+            <p className="text-gray-500">Nenhuma versão adicionada.</p>
           </div>
-        ) : (
-          <div className="overflow-x-auto">
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Versão</TableHead>
-                  <TableHead>Data</TableHead>
-                  <TableHead>Status</TableHead>
-                  <TableHead className="text-right">Ações</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {versions.map((version) => (
-                  <TableRow key={version.id}>
-                    <TableCell>
-                      <div className="flex items-center">
+        </CardContent>
+      </div>
+    );
+  }
+
+  return (
+    <>
+      <Card>
+        <CardHeader>
+          <CardTitle>Versões do Projeto ({versions.length})</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="space-y-6">
+            {versions.map((version) => (
+              <Card key={version.id} className="overflow-hidden">
+                <div className={`p-4 border-l-4 ${version.recommended ? 'border-l-harmonia-green' : 'border-l-gray-200'}`}>
+                  <div className="flex justify-between items-start">
+                    <div>
+                      <div className="flex items-center space-x-2">
+                        <h3 className="font-medium">{version.name}</h3>
                         {version.recommended && (
-                          <Star className="h-4 w-4 text-yellow-500 mr-2 fill-yellow-500" />
+                          <Badge variant="outline" className="bg-harmonia-green/10 text-harmonia-green border-harmonia-green">
+                            <Check className="w-3 h-3 mr-1" /> Recomendada
+                          </Badge>
                         )}
-                        <div>
-                          <div className="font-medium">{version.name}</div>
-                          {version.description && (
-                            <div className="text-sm text-gray-500">{version.description}</div>
-                          )}
-                        </div>
                       </div>
-                    </TableCell>
-                    <TableCell>{version.dateAdded}</TableCell>
-                    <TableCell>
-                      <Badge variant="outline" className="bg-green-50 text-green-700 border-green-200">
-                        Ativa
-                      </Badge>
-                    </TableCell>
-                    <TableCell className="text-right">
-                      <div className="flex justify-end space-x-2">
-                        <Button 
-                          variant="outline" 
-                          size="sm" 
-                          onClick={() => handlePlayAudio(version.audioUrl || '')}
-                        >
-                          <Play className="h-3 w-3 mr-1" />
-                          Ouvir
-                        </Button>
-                        
+                      <p className="text-sm text-gray-500">
+                        Adicionada em: {version.dateAdded}
+                      </p>
+                    </div>
+                    <div className="flex space-x-2">
+                      <Button 
+                        variant="outline" 
+                        size="sm" 
+                        className="text-blue-600 hover:text-blue-700 hover:bg-blue-50"
+                        onClick={() => handlePlayAudio(version)}
+                      >
+                        <Play className="h-4 w-4 mr-2" />
+                        Ouvir completo
+                      </Button>
+                      {onDeleteVersion && (
                         <Button 
                           variant="outline" 
                           size="sm"
-                          asChild
+                          className="text-red-600 hover:text-red-700 hover:bg-red-50"
+                          onClick={() => setVersionToDelete(version.id)}
                         >
-                          <a 
-                            href={version.audioUrl} 
-                            target="_blank" 
-                            rel="noopener noreferrer"
-                            download={`preview_${projectId}_${version.name.replace(/\s+/g, '_')}.mp3`}
-                          >
-                            <Download className="h-3 w-3 mr-1" />
-                            Baixar
-                          </a>
+                          <Trash className="h-4 w-4" />
                         </Button>
+                      )}
+                    </div>
+                  </div>
+                  
+                  <div className="mt-3 text-sm">
+                    {version.description}
+                  </div>
+                  
+                  <div className="mt-4">
+                    {getFileId(version) ? (
+                      <GoogleDriveAudioPlayer
+                        fileId={getFileId(version)}
+                        title={version.name}
+                        isPreview={true}
+                      />
+                    ) : (
+                      <div className="p-3 bg-red-50 border border-red-200 rounded text-sm text-red-500">
+                        Nenhum arquivo de áudio vinculado. Adicione um ID de arquivo do Google Drive.
                       </div>
-                    </TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
+                    )}
+                  </div>
+                </div>
+              </Card>
+            ))}
           </div>
-        )}
-      </CardContent>
-    </Card>
+        </CardContent>
+      </Card>
+
+      <AlertDialog open={!!versionToDelete} onOpenChange={() => setVersionToDelete(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Excluir versão</AlertDialogTitle>
+            <AlertDialogDescription>
+              Tem certeza que deseja excluir esta versão? Esta ação não pode ser desfeita.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancelar</AlertDialogCancel>
+            <AlertDialogAction 
+              className="bg-red-600 hover:bg-red-700"
+              onClick={handleConfirmDelete}
+            >
+              Excluir
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+    </>
   );
 };
 
