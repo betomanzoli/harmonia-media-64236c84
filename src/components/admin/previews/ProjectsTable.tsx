@@ -61,12 +61,10 @@ const ProjectsTable: React.FC<ProjectsTableProps> = ({
     }
   };
 
-  const getPreviewLink = (projectId: string) => {
-    return `/preview/${projectId}`;
-  };
-
-  const getAdminDetailLink = (projectId: string) => {
-    return `/admin-j28s7d1k/previews/${projectId}`;
+  const handleDelete = (id: string) => {
+    if (onDelete) {
+      onDelete(id);
+    }
   };
 
   return (
@@ -129,9 +127,8 @@ const ProjectsTable: React.FC<ProjectsTableProps> = ({
                         size="sm"
                         className="h-8 w-8 p-0 bg-blue-50 text-blue-700 border-blue-300 hover:text-blue-800 hover:bg-blue-100"
                         title="Ver detalhes"
-                        asChild
                       >
-                        <Link to={getAdminDetailLink(project.id)}>
+                        <Link to={`/admin-j28s7d1k/previews/${project.id}`}>
                           <Eye className="h-4 w-4" />
                         </Link>
                       </Button>
@@ -141,11 +138,10 @@ const ProjectsTable: React.FC<ProjectsTableProps> = ({
                         size="sm"
                         className="h-8 w-8 p-0 bg-green-50 text-green-700 border-green-300 hover:text-green-800 hover:bg-green-100"
                         title="Ver prévia do cliente"
-                        asChild
                       >
-                        <Link to={getPreviewLink(project.id)} target="_blank">
+                        <a href={`/preview/${project.id}`} target="_blank" rel="noopener noreferrer">
                           <Play className="h-4 w-4" />
-                        </Link>
+                        </a>
                       </Button>
                       
                       <Button
@@ -164,7 +160,7 @@ const ProjectsTable: React.FC<ProjectsTableProps> = ({
                           size="sm"
                           className="h-8 w-8 p-0 bg-red-50 text-red-700 border-red-300 hover:text-red-800 hover:bg-red-100"
                           title="Excluir projeto"
-                          onClick={() => onDelete(project.id)}
+                          onClick={() => handleDelete(project.id)}
                         >
                           <Trash className="h-4 w-4" />
                         </Button>

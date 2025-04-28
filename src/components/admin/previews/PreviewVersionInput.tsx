@@ -1,12 +1,11 @@
 
 import React from 'react';
+import { Trash } from 'lucide-react';
+import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import { Button } from "@/components/ui/button";
-import { Label } from "@/components/ui/label";
-import { Card } from "@/components/ui/card";
-import { X } from 'lucide-react';
-import LimitedAudioPlayer from '@/components/LimitedAudioPlayer';
+import { Checkbox } from "@/components/ui/checkbox";
+import { Card, CardContent } from "@/components/ui/card";
 
 interface PreviewVersionInputProps {
   index: number;
@@ -27,76 +26,87 @@ const PreviewVersionInput: React.FC<PreviewVersionInputProps> = ({
   title,
   description,
   audioUrl,
+  recommended,
   onTitleChange,
   onDescriptionChange,
   onAudioUrlChange,
+  onRecommendedChange,
   onRemove,
-  canRemove,
+  canRemove
 }) => {
   return (
-    <Card className="p-4 mb-4 relative">
-      <div className="flex justify-between items-center mb-4">
-        <h4 className="font-medium">Versão {index + 1}</h4>
-        {canRemove && (
-          <Button
-            type="button"
-            variant="ghost"
-            size="sm"
-            onClick={() => onRemove(index)}
-            className="text-red-500 hover:text-red-600 hover:bg-red-50"
-          >
-            <X className="h-4 w-4" />
-          </Button>
-        )}
-      </div>
-
-      <div className="space-y-4">
-        <div>
-          <Label htmlFor={`version-title-${index}`}>Título da Versão</Label>
-          <Input
-            id={`version-title-${index}`}
-            value={title}
-            onChange={(e) => onTitleChange(index, e.target.value)}
-            placeholder="Ex: Versão Acústica"
-            required
-          />
-        </div>
-
-        <div>
-          <Label htmlFor={`version-description-${index}`}>Descrição</Label>
-          <Textarea
-            id={`version-description-${index}`}
-            value={description}
-            onChange={(e) => onDescriptionChange(index, e.target.value)}
-            placeholder="Descreva as características desta versão..."
-            required
-          />
-        </div>
-
-        <div>
-          <Label htmlFor={`version-audio-${index}`}>Link do Google Drive</Label>
-          <Input
-            id={`version-audio-${index}`}
-            value={audioUrl}
-            onChange={(e) => onAudioUrlChange(index, e.target.value)}
-            placeholder="https://drive.google.com/file/d/..."
-            required
-          />
-          {audioUrl && (
-            <div className="mt-2">
-              <LimitedAudioPlayer
-                audioSrc={audioUrl}
-                previewDuration={30}
-                title={title}
-                subtitle="Prévia de 30 segundos"
+    <Card className="relative">
+      <CardContent className="pt-6">
+        <div className="space-y-4">
+          <div className="flex justify-between items-center">
+            <h4 className="font-medium">Versão {index + 1}</h4>
+            {canRemove && (
+              <Button 
+                type="button" 
+                variant="ghost" 
+                size="sm"
+                className="text-red-600 hover:text-red-800"
+                onClick={() => onRemove(index)}
+              >
+                <Trash className="w-4 h-4" />
+              </Button>
+            )}
+          </div>
+          
+          <div className="space-y-3">
+            <div>
+              <label htmlFor={`version-title-${index}`} className="block text-sm font-medium mb-1">
+                Título
+              </label>
+              <Input
+                id={`version-title-${index}`}
+                placeholder="Ex: Versão Acústica"
+                value={title}
+                onChange={(e) => onTitleChange(index, e.target.value)}
               />
             </div>
-          )}
-          <p className="text-sm text-gray-500 mt-1">
-            Compartilhe o link do Google Drive como "Qualquer pessoa com o link pode visualizar"
-          </p>
+            
+            <div>
+              <label htmlFor={`version-description-${index}`} className="block text-sm font-medium mb-1">
+                Descrição
+              </label>
+              <Textarea
+                id={`version-description-${index}`}
+                placeholder="Descreva esta versão musical"
+                value={description}
+                onChange={(e) => onDescriptionChange(index, e.target.value)}
+                rows={2}
+              />
+            </div>
+            
+            <div>
+              <label htmlFor={`version-audio-${index}`} className="block text-sm font-medium mb-1">
+                URL do Google Drive
+              </label>
+              <Input
+                id={`version-audio-${index}`}
+                placeholder="https://drive.google.com/file/d/ID_DO_ARQUIVO/view"
+                value={audioUrl}
+                onChange={(e) => onAudioUrlChange(index, e.target.value)}
+              />
+              <p className="text-xs text-gray-500 mt-1">
+                Cole o link de compartilhamento do áudio no Google Drive
+              </p>
+            </div>
+            
+            <div className="flex items-center space-x-2">
+              <Checkbox 
+                id={`version-recommended-${index}`}
+                checked={recommended}
+                onCheckedChange={(checked) => onRecommendedChange(index, checked as boolean)}
+              />
+              <label htmlFor={`version-recommended-${index}`} className="text-sm font-medium">
+                Marcar como versão recomendada
+              </label>
+            </div>
+          </div>
         </div>
-      </div>
+      </CardContent>
     </Card>
   );
 };

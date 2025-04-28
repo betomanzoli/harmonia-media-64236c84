@@ -15,11 +15,11 @@ import { usePreviewData } from '@/hooks/use-preview-data';
 import { notificationService } from '@/services/notificationService';
 
 interface MusicPreviewSystemProps {
-  projectId?: string | null;
+  projectId: string;
 }
 
 const MusicPreviewSystem: React.FC<MusicPreviewSystemProps> = ({ projectId }) => {
-  const { projectData, isLoading, actualProjectId, updateProjectStatus } = usePreviewData(projectId || undefined);
+  const { projectData, isLoading, actualProjectId, updateProjectStatus } = usePreviewData(projectId);
   const [selectedPreview, setSelectedPreview] = useState<string | null>(null);
   const [feedback, setFeedback] = useState('');
   const navigate = useNavigate();
@@ -50,7 +50,7 @@ const MusicPreviewSystem: React.FC<MusicPreviewSystemProps> = ({ projectId }) =>
     if (updated) {
       // Notify
       notificationService.notify('feedback_received', {
-        projectId: actualProjectId,
+        projectId: actualProjectId || '',
         clientName: projectData?.clientName || 'Cliente',
         message: feedback,
         versionId: selectedPreview
@@ -79,7 +79,7 @@ const MusicPreviewSystem: React.FC<MusicPreviewSystemProps> = ({ projectId }) =>
     if (updated) {
       // Notify
       notificationService.notify('preview_approved', {
-        projectId: actualProjectId,
+        projectId: actualProjectId || '',
         clientName: projectData?.clientName || 'Cliente',
         versionId: selectedPreview
       });
