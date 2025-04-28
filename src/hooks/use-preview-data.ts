@@ -5,6 +5,15 @@ import { usePreviewProject } from '@/hooks/usePreviewProject';
 import { getProjectIdFromPreviewLink } from '@/utils/previewLinkUtils';
 import { usePreviewProjects } from '@/hooks/admin/usePreviewProjects';
 
+export interface PreviewProjectData {
+  clientName: string;
+  projectTitle: string;
+  projectId?: string;
+  packageType?: string;
+  creationDate?: string;
+  status: 'waiting' | 'feedback' | 'approved';
+}
+
 export const usePreviewData = (previewId: string | undefined) => {
   const [actualProjectId, setActualProjectId] = useState<string | null>(null);
   const { projectData, setProjectData, isLoading } = usePreviewProject(actualProjectId || undefined);
