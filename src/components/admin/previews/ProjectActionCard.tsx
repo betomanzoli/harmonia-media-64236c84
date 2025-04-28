@@ -5,21 +5,21 @@ import { Button } from "@/components/ui/button";
 import { FileMusic, Calendar, Eye } from 'lucide-react';
 import { Link } from 'react-router-dom';
 
-interface ProjectActionCardProps {
+export interface ProjectActionCardProps {
+  projectId: string; 
   onAddVersion: () => void;
   onExtendDeadline: () => void;
-  previewUrl: string;
-  projectId: string; 
+  previewUrl?: string;
 }
 
 const ProjectActionCard: React.FC<ProjectActionCardProps> = ({ 
+  projectId,
   onAddVersion, 
   onExtendDeadline,
-  previewUrl,
-  projectId
+  previewUrl = ''
 }) => {
   // Format the preview URL correctly to ensure it works
-  const formattedPreviewUrl = `/preview/${projectId}`;
+  const formattedPreviewUrl = previewUrl || `/preview/${projectId}`;
 
   return (
     <Card>

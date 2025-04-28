@@ -9,7 +9,7 @@ import { useToast } from "@/hooks/use-toast";
 import { VersionItem } from '@/hooks/admin/usePreviewProjects';
 import { v4 as uuidv4 } from 'uuid';
 
-interface AddVersionFormProps {
+export interface AddVersionFormProps {
   projectId: string;
   onAddVersion: (version: VersionItem) => void;
   onCancel: () => void;

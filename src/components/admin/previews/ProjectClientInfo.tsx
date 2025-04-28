@@ -3,13 +3,13 @@ import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Mail, User, Calendar, Package } from 'lucide-react';
 
-interface ProjectClientInfoProps {
+export interface ProjectClientInfoProps {
   clientName: string;
   clientEmail: string;
   packageType: string;
   createdAt: string;
   expirationDate: string;
-  lastActivityDate: string;
+  lastActivityDate?: string;
 }
 
 const ProjectClientInfo: React.FC<ProjectClientInfoProps> = ({ 
@@ -18,7 +18,7 @@ const ProjectClientInfo: React.FC<ProjectClientInfoProps> = ({
   packageType,
   createdAt,
   expirationDate,
-  lastActivityDate
+  lastActivityDate = "N/A"
 }) => {
   return (
     <Card>

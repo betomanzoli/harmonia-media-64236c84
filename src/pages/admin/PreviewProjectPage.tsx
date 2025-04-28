@@ -1,4 +1,3 @@
-
 import React, { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import AdminLayout from '@/components/admin/layout/AdminLayout';
@@ -80,10 +79,8 @@ const PreviewProjectPage: React.FC = () => {
   const handleAddVersion = (newVersion: VersionItem) => {
     if (!project) return;
     
-    // Get current list or initialize empty array
     const currentVersions = project.versionsList || [];
     
-    // Extract fileId from URL if provided
     if (newVersion.audioUrl && !newVersion.fileId) {
       const match = newVersion.audioUrl.match(/[-\w]{25,}/);
       if (match) {
@@ -91,13 +88,11 @@ const PreviewProjectPage: React.FC = () => {
       }
     }
     
-    // Create updated versions list with new version
     const updatedVersions = [...currentVersions, {
       ...newVersion,
       dateAdded: new Date().toLocaleDateString('pt-BR')
     }];
     
-    // Update project with new version list and count
     const updatedProject = updateProject(project.id, {
       versionsList: updatedVersions,
       versions: updatedVersions.length,
@@ -117,7 +112,6 @@ const PreviewProjectPage: React.FC = () => {
   const handleExtendDeadline = () => {
     if (!project) return;
     
-    // Extend by 30 days from today
     const newExpirationDate = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toLocaleDateString('pt-BR');
     
     const updatedProject = updateProject(project.id, {
@@ -215,6 +209,8 @@ const PreviewProjectPage: React.FC = () => {
                 clientEmail={project.clientEmail}
                 createdAt={project.createdAt}
                 expirationDate={project.expirationDate}
+                packageType={project.packageType}
+                lastActivityDate={project.lastActivityDate}
               />
             </div>
             
@@ -232,6 +228,7 @@ const PreviewProjectPage: React.FC = () => {
               <CardContent className="pt-6">
                 <h3 className="text-lg font-medium mb-4">Adicionar Nova Versão</h3>
                 <AddVersionForm 
+                  projectId={project.id}
                   onAddVersion={handleAddVersion} 
                   onCancel={() => setShowAddForm(false)}
                 />
@@ -252,8 +249,10 @@ const PreviewProjectPage: React.FC = () => {
             
             <div className="space-y-6">
               <ProjectActionCard 
-                projectId={project.id} 
+                projectId={project.id}
+                onAddVersion={() => setShowAddForm(true)}
                 onExtendDeadline={handleExtendDeadline}
+                previewUrl={`/preview/${project.id}`}
               />
               
               <ClientFeedbackCard 

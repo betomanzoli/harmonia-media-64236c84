@@ -11,13 +11,15 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { Clock, MessageSquare, CheckCircle } from 'lucide-react';
 
-interface ProjectStatusCardProps {
+export interface ProjectStatusCardProps {
   status: string;
+  lastActivityDate?: string;
   onStatusUpdate?: (newStatus: 'waiting' | 'feedback' | 'approved') => void;
 }
 
 const ProjectStatusCard: React.FC<ProjectStatusCardProps> = ({ 
   status, 
+  lastActivityDate,
   onStatusUpdate 
 }) => {
   const getStatusBadge = () => {
@@ -63,6 +65,12 @@ const ProjectStatusCard: React.FC<ProjectStatusCardProps> = ({
           <div>
             {getStatusBadge()}
           </div>
+          
+          {lastActivityDate && (
+            <div className="text-sm text-gray-500">
+              <p>Última atividade: {lastActivityDate}</p>
+            </div>
+          )}
           
           {onStatusUpdate && (
             <div className="pt-2 border-t">
