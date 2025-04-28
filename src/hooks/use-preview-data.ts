@@ -41,7 +41,7 @@ export const usePreviewData = (previewId: string | undefined) => {
   }, [actualProjectId, projectData, isLoading, toast]);
 
   // Update the project with new status in both hooks and local storage
-  const updateProjectStatus = (status: 'waiting' | 'feedback' | 'approved') => {
+  const updateProjectStatus = (status: 'waiting' | 'feedback' | 'approved', feedback?: string) => {
     console.log(`Updating project status to ${status} for project ${actualProjectId}`);
     
     if (actualProjectId) {
@@ -58,10 +58,17 @@ export const usePreviewData = (previewId: string | undefined) => {
       }
       
       // Update in preview projects storage
-      const updatedProject = updateProject(actualProjectId, { 
+      const updateData: any = { 
         status,
         lastActivityDate: new Date().toLocaleDateString('pt-BR')
-      });
+      };
+      
+      // Add feedback if provided
+      if (feedback) {
+        updateData.feedback = feedback;
+      }
+      
+      const updatedProject = updateProject(actualProjectId, updateData);
       
       console.log("Project updated with new status:", updatedProject);
       
@@ -72,7 +79,10 @@ export const usePreviewData = (previewId: string | undefined) => {
           status
         });
       }
+      
+      return updatedProject;
     }
+    return null;
   };
   
   return { 

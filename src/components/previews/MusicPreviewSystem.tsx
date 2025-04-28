@@ -13,19 +13,17 @@ import PreviewFeedbackForm from './PreviewFeedbackForm';
 import PreviewNextSteps from './PreviewNextSteps';
 import { usePreviewData } from '@/hooks/use-preview-data';
 import { notificationService } from '@/services/notificationService';
-import { usePreviewProjects } from '@/hooks/admin/usePreviewProjects';
 
 interface MusicPreviewSystemProps {
   projectId?: string | null;
 }
 
 const MusicPreviewSystem: React.FC<MusicPreviewSystemProps> = ({ projectId }) => {
-  const { projectData, setProjectData, isLoading, actualProjectId, updateProjectStatus } = usePreviewData(projectId || undefined);
+  const { projectData, isLoading, actualProjectId, updateProjectStatus } = usePreviewData(projectId || undefined);
   const [selectedPreview, setSelectedPreview] = useState<string | null>(null);
   const [feedback, setFeedback] = useState('');
   const navigate = useNavigate();
   const { toast } = useToast();
-  const { updateProject } = usePreviewProjects();
 
   const handleSubmitFeedback = () => {
     if (!selectedPreview) {
@@ -46,17 +44,10 @@ const MusicPreviewSystem: React.FC<MusicPreviewSystemProps> = ({ projectId }) =>
       return;
     }
     
-    // Update project status in localStorage
-    if (actualProjectId) {
-      updateProject(actualProjectId, {
-        status: 'feedback',
-        feedback: feedback,
-        lastActivityDate: new Date().toLocaleDateString('pt-BR')
-      });
-      
-      // Update the UI
-      updateProjectStatus('feedback');
-      
+    // Update project status with feedback
+    const updated = updateProjectStatus('feedback', feedback);
+    
+    if (updated) {
       // Notify
       notificationService.notify('feedback_received', {
         projectId: actualProjectId,
@@ -64,12 +55,12 @@ const MusicPreviewSystem: React.FC<MusicPreviewSystemProps> = ({ projectId }) =>
         message: feedback,
         versionId: selectedPreview
       });
+      
+      toast({
+        title: "Feedback enviado!",
+        description: "Obrigado pelo seu feedback. Nossa equipe já está trabalhando nas modificações.",
+      });
     }
-    
-    toast({
-      title: "Feedback enviado!",
-      description: "Obrigado pelo seu feedback. Nossa equipe já está trabalhando nas modificações.",
-    });
   };
   
   const handleApprove = () => {
@@ -82,29 +73,22 @@ const MusicPreviewSystem: React.FC<MusicPreviewSystemProps> = ({ projectId }) =>
       return;
     }
     
-    // Update project status in localStorage
-    if (actualProjectId) {
-      updateProject(actualProjectId, {
-        status: 'approved',
-        feedback: feedback || "Cliente aprovou sem comentários adicionais.",
-        lastActivityDate: new Date().toLocaleDateString('pt-BR')
-      });
-      
-      // Update the UI
-      updateProjectStatus('approved');
-      
+    // Update project status, include feedback if provided
+    const updated = updateProjectStatus('approved', feedback || "Cliente aprovou sem comentários adicionais.");
+    
+    if (updated) {
       // Notify
       notificationService.notify('preview_approved', {
         projectId: actualProjectId,
         clientName: projectData?.clientName || 'Cliente',
         versionId: selectedPreview
       });
+      
+      toast({
+        title: "Música aprovada!",
+        description: "Estamos felizes que você gostou! Vamos finalizar sua música e entregar em breve.",
+      });
     }
-    
-    toast({
-      title: "Música aprovada!",
-      description: "Estamos felizes que você gostou! Vamos finalizar sua música e entregar em breve.",
-    });
   };
 
   // Set the first preview as selected on load

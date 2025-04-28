@@ -5,7 +5,7 @@ import AdminLayout from '@/components/admin/layout/AdminLayout';
 import { usePreviewProjects, ProjectItem, VersionItem } from '@/hooks/admin/usePreviewProjects';
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import { ArrowLeft, Plus, Download } from 'lucide-react';
+import { ArrowLeft, Plus, Check, AlertCircle } from 'lucide-react';
 import ProjectHeader from '@/components/admin/previews/ProjectHeader';
 import ProjectClientInfo from '@/components/admin/previews/ProjectClientInfo';
 import ProjectStatusCard from '@/components/admin/previews/ProjectStatusCard';
@@ -14,6 +14,7 @@ import ClientFeedbackCard from '@/components/admin/previews/ClientFeedbackCard';
 import AddVersionForm from '@/components/admin/previews/AddVersionForm';
 import { useToast } from "@/hooks/use-toast";
 import ProjectActionCard from '@/components/admin/previews/ProjectActionCard';
+import { Alert, AlertTitle, AlertDescription } from "@/components/ui/alert";
 
 const PreviewProjectPage: React.FC = () => {
   const { projectId } = useParams<{ projectId: string }>();
@@ -93,9 +94,7 @@ const PreviewProjectPage: React.FC = () => {
     // Create updated versions list with new version
     const updatedVersions = [...currentVersions, {
       ...newVersion,
-      dateAdded: new Date().toLocaleDateString('pt-BR'),
-      // Remove recommended field since we're removing that feature
-      recommended: false
+      dateAdded: new Date().toLocaleDateString('pt-BR')
     }];
     
     // Update project with new version list and count
@@ -211,33 +210,19 @@ const PreviewProjectPage: React.FC = () => {
 
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
             <div className="lg:col-span-2">
-              <ClientFeedbackCard 
-                feedback={project.feedback || ''} 
-                status={project.status}
-                onSaveFeedback={handleFeedbackSave}
-                onStatusUpdate={handleStatusUpdate}
-              />
-            </div>
-            <div className="space-y-6">
               <ProjectClientInfo 
                 clientName={project.clientName}
                 clientEmail={project.clientEmail}
-                packageType={project.packageType}
                 createdAt={project.createdAt}
                 expirationDate={project.expirationDate}
-                lastActivityDate={project.lastActivityDate}
               />
-              
+            </div>
+            
+            <div>
               <ProjectStatusCard 
-                status={project.status} 
-                onStatusUpdate={handleStatusUpdate} 
-              />
-
-              <ProjectActionCard
-                projectId={project.id}
-                previewUrl={`/preview/${project.id}`}
-                onAddVersion={() => setShowAddForm(true)} 
-                onExtendDeadline={handleExtendDeadline}
+                status={project.status}
+                lastActivityDate={project.lastActivityDate}
+                onStatusUpdate={handleStatusUpdate}
               />
             </div>
           </div>
@@ -245,20 +230,59 @@ const PreviewProjectPage: React.FC = () => {
           {showAddForm && (
             <Card className="mb-6">
               <CardContent className="pt-6">
+                <h3 className="text-lg font-medium mb-4">Adicionar Nova Versão</h3>
                 <AddVersionForm 
-                  projectId={project.id}
-                  onAddVersion={handleAddVersion}
+                  onAddVersion={handleAddVersion} 
                   onCancel={() => setShowAddForm(false)}
                 />
               </CardContent>
             </Card>
           )}
           
-          <PreviewVersionsList 
-            versions={project.versionsList || []}
-            projectId={project.id}
-            onDeleteVersion={handleDeleteVersion}
-          />
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
+            <div className="lg:col-span-2">
+              <Card>
+                <PreviewVersionsList 
+                  versions={project.versionsList || []}
+                  projectId={project.id}
+                  onDeleteVersion={handleDeleteVersion}
+                />
+              </Card>
+            </div>
+            
+            <div className="space-y-6">
+              <ProjectActionCard 
+                projectId={project.id} 
+                onExtendDeadline={handleExtendDeadline}
+              />
+              
+              <ClientFeedbackCard 
+                feedback={project.feedback || ''} 
+                onSaveFeedback={handleFeedbackSave}
+                status={project.status}
+              />
+            </div>
+          </div>
+          
+          {project.status === 'feedback' && (
+            <Alert className="mb-6">
+              <AlertCircle className="h-4 w-4" />
+              <AlertTitle>Feedback recebido do cliente</AlertTitle>
+              <AlertDescription>
+                O cliente enviou feedback para este projeto. Por favor, analise e atualize o status quando apropriado.
+              </AlertDescription>
+            </Alert>
+          )}
+          
+          {project.status === 'approved' && (
+            <Alert className="mb-6 bg-green-50 text-green-700 border-green-200">
+              <Check className="h-4 w-4" />
+              <AlertTitle>Projeto aprovado pelo cliente</AlertTitle>
+              <AlertDescription>
+                O cliente aprovou o projeto. Você pode prosseguir com a finalização e entrega.
+              </AlertDescription>
+            </Alert>
+          )}
         </div>
       </div>
     </AdminLayout>

@@ -1,3 +1,4 @@
+
 import { useState } from 'react';
 import { useToast } from "@/hooks/use-toast";
 
@@ -5,7 +6,6 @@ export interface Version {
   title: string;
   description: string;
   audioUrl: string;
-  recommended: boolean;
 }
 
 export const useNewProjectForm = () => {
@@ -13,13 +13,13 @@ export const useNewProjectForm = () => {
   const [clientEmail, setClientEmail] = useState('');
   const [packageType, setPackageType] = useState('');
   const [versions, setVersions] = useState<Version[]>([
-    { title: '', description: '', audioUrl: '', recommended: false }
+    { title: '', description: '', audioUrl: '' }
   ]);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const { toast } = useToast();
 
   const addVersion = () => {
-    setVersions([...versions, { title: '', description: '', audioUrl: '', recommended: false }]);
+    setVersions([...versions, { title: '', description: '', audioUrl: '' }]);
   };
 
   const removeVersion = (index: number) => {
@@ -34,16 +34,9 @@ export const useNewProjectForm = () => {
     }
   };
 
-  const updateVersion = (index: number, field: keyof Version, value: string | boolean) => {
+  const updateVersion = (index: number, field: keyof Version, value: string) => {
     const updatedVersions = [...versions];
     updatedVersions[index] = { ...updatedVersions[index], [field]: value };
-    
-    if (field === 'recommended' && value === true) {
-      updatedVersions.forEach((v, i) => {
-        if (i !== index) v.recommended = false;
-      });
-    }
-    
     setVersions(updatedVersions);
   };
 
@@ -51,7 +44,7 @@ export const useNewProjectForm = () => {
     setClientName('');
     setClientEmail('');
     setPackageType('');
-    setVersions([{ title: '', description: '', audioUrl: '', recommended: false }]);
+    setVersions([{ title: '', description: '', audioUrl: '' }]);
   };
 
   return {

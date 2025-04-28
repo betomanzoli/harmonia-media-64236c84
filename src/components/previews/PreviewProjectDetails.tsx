@@ -1,6 +1,7 @@
 
 import React from 'react';
-import { Card } from "@/components/ui/card";
+import { Card, CardHeader, CardContent } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
 import { PreviewProjectData } from '@/hooks/use-preview-data';
 
 interface PreviewProjectDetailsProps {
@@ -8,28 +9,51 @@ interface PreviewProjectDetailsProps {
 }
 
 const PreviewProjectDetails: React.FC<PreviewProjectDetailsProps> = ({ projectData }) => {
+  const getStatusBadge = (status: 'waiting' | 'feedback' | 'approved') => {
+    switch (status) {
+      case 'waiting':
+        return <Badge className="bg-yellow-100 text-yellow-800 border-yellow-300">Aguardando Avaliação</Badge>;
+      case 'feedback':
+        return <Badge className="bg-purple-100 text-purple-800 border-purple-300">Feedback Recebido</Badge>;
+      case 'approved':
+        return <Badge className="bg-green-100 text-green-800 border-green-300">Aprovado</Badge>;
+      default:
+        return <Badge>Desconhecido</Badge>;
+    }
+  };
+
   return (
-    <div className="mb-8">
-      <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-4">
-        <h1 className="text-2xl md:text-3xl font-bold">{projectData.projectId}</h1>
-        <div className="flex flex-wrap gap-2 mt-2 md:mt-0">
-          <span className="px-3 py-1 bg-gray-100 rounded-full text-sm">{projectData.packageType}</span>
-          <span className="px-3 py-1 bg-gray-100 rounded-full text-sm">{projectData.creationDate}</span>
-          <span className="px-3 py-1 bg-harmonia-green/20 text-harmonia-green rounded-full text-sm font-medium">
-            {projectData.status === 'waiting' ? 'Aguardando Avaliação' : 
-             projectData.status === 'feedback' ? 'Em Revisão' : 'Aprovado'}
-          </span>
+    <Card className="mb-8">
+      <CardHeader className="pb-2">
+        <div className="flex justify-between items-start">
+          <div>
+            <h1 className="text-2xl font-bold text-gray-900">
+              {projectData.projectTitle}
+            </h1>
+            <p className="text-gray-500 mt-1">
+              Cliente: {projectData.clientName}
+            </p>
+          </div>
+          <div>
+            {getStatusBadge(projectData.status)}
+          </div>
         </div>
-      </div>
-      
-      <Card className="p-6 mb-8 border-l-4 border-l-harmonia-green">
-        <h2 className="text-xl font-bold mb-2">Olá, {projectData.clientName}!</h2>
-        <p className="text-gray-600">
-          Estamos felizes em apresentar as prévias musicais do seu projeto. Por favor, ouça cada versão 
-          e selecione a que mais lhe agrada. Você pode adicionar comentários específicos para ajustes na versão escolhida.
-        </p>
-      </Card>
-    </div>
+      </CardHeader>
+      <CardContent>
+        <div className="text-sm text-gray-600">
+          {projectData.packageType && (
+            <div className="mb-1">
+              <span className="font-medium">Pacote:</span> {projectData.packageType}
+            </div>
+          )}
+          {projectData.creationDate && (
+            <div>
+              <span className="font-medium">Data de criação:</span> {projectData.creationDate}
+            </div>
+          )}
+        </div>
+      </CardContent>
+    </Card>
   );
 };
 

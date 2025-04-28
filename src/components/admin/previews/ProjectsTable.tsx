@@ -27,11 +27,11 @@ const ProjectsTable: React.FC<ProjectsTableProps> = ({
   const getStatusBadge = (status: string) => {
     switch(status) {
       case 'waiting':
-        return <Badge className="bg-yellow-500/20 text-yellow-700 hover:bg-yellow-500/30">Aguardando</Badge>;
+        return <Badge className="bg-yellow-100 text-yellow-800 border-yellow-300 hover:bg-yellow-200">Aguardando</Badge>;
       case 'feedback':
-        return <Badge className="bg-purple-500/20 text-purple-700 hover:bg-purple-500/30">Feedback</Badge>;
+        return <Badge className="bg-purple-100 text-purple-800 border-purple-300 hover:bg-purple-200">Feedback</Badge>;
       case 'approved':
-        return <Badge className="bg-green-500/20 text-green-700 hover:bg-green-500/30">Aprovado</Badge>;
+        return <Badge className="bg-green-100 text-green-800 border-green-300 hover:bg-green-200">Aprovado</Badge>;
       default:
         return <Badge>Desconhecido</Badge>;
     }
@@ -40,11 +40,11 @@ const ProjectsTable: React.FC<ProjectsTableProps> = ({
   const getStatusIcon = (status: string) => {
     switch(status) {
       case 'waiting':
-        return <Clock className="h-4 w-4 text-yellow-500" />;
+        return <Clock className="h-4 w-4 text-yellow-600" />;
       case 'feedback':
-        return <MessageSquare className="h-4 w-4 text-purple-500" />;
+        return <MessageSquare className="h-4 w-4 text-purple-600" />;
       case 'approved':
-        return <CheckCircle className="h-4 w-4 text-green-500" />;
+        return <CheckCircle className="h-4 w-4 text-green-600" />;
       default:
         return <AlertTriangle className="h-4 w-4 text-gray-500" />;
     }
@@ -76,14 +76,14 @@ const ProjectsTable: React.FC<ProjectsTableProps> = ({
           <TableCaption>Nenhum projeto encontrado.</TableCaption>
         )}
         <TableHeader>
-          <TableRow>
-            <TableHead>ID</TableHead>
-            <TableHead>Cliente</TableHead>
-            <TableHead>Pacote</TableHead>
-            <TableHead>Status</TableHead>
-            <TableHead>Versões</TableHead>
-            <TableHead>Data de Expiração</TableHead>
-            <TableHead className="text-right">Ações</TableHead>
+          <TableRow className="bg-gray-100 border-b-2 border-gray-300">
+            <TableHead className="text-gray-800 font-bold">ID</TableHead>
+            <TableHead className="text-gray-800 font-bold">Cliente</TableHead>
+            <TableHead className="text-gray-800 font-bold">Pacote</TableHead>
+            <TableHead className="text-gray-800 font-bold">Status</TableHead>
+            <TableHead className="text-gray-800 font-bold">Versões</TableHead>
+            <TableHead className="text-gray-800 font-bold">Data de Expiração</TableHead>
+            <TableHead className="text-right text-gray-800 font-bold">Ações</TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
@@ -105,29 +105,29 @@ const ProjectsTable: React.FC<ProjectsTableProps> = ({
           ) : (
             projects.map((project) => (
               <React.Fragment key={project.id}>
-                <TableRow className="hover:bg-gray-50">
-                  <TableCell className="font-medium">{project.id}</TableCell>
+                <TableRow className="hover:bg-gray-50 border-b border-gray-200">
+                  <TableCell className="font-medium text-gray-800">{project.id}</TableCell>
                   <TableCell>
                     <div className="flex flex-col">
-                      <span>{project.clientName}</span>
-                      <span className="text-xs text-muted-foreground">{project.clientEmail}</span>
+                      <span className="text-gray-800 font-medium">{project.clientName}</span>
+                      <span className="text-xs text-gray-600">{project.clientEmail}</span>
                     </div>
                   </TableCell>
-                  <TableCell>{project.packageType}</TableCell>
+                  <TableCell className="text-gray-800">{project.packageType}</TableCell>
                   <TableCell>
                     <div className="flex items-center space-x-2">
                       {getStatusIcon(project.status)}
                       <span>{getStatusBadge(project.status)}</span>
                     </div>
                   </TableCell>
-                  <TableCell>{project.versions || 0}</TableCell>
-                  <TableCell>{project.expirationDate}</TableCell>
+                  <TableCell className="text-gray-800">{project.versions || 0}</TableCell>
+                  <TableCell className="text-gray-800">{project.expirationDate}</TableCell>
                   <TableCell className="text-right">
                     <div className="flex items-center justify-end space-x-2">
                       <Button
                         variant="outline"
                         size="sm"
-                        className="h-8 w-8 p-0 text-blue-500 hover:text-blue-600 hover:bg-blue-50"
+                        className="h-8 w-8 p-0 bg-blue-50 text-blue-700 border-blue-300 hover:text-blue-800 hover:bg-blue-100"
                         title="Ver detalhes"
                         asChild
                       >
@@ -139,7 +139,7 @@ const ProjectsTable: React.FC<ProjectsTableProps> = ({
                       <Button
                         variant="outline"
                         size="sm"
-                        className="h-8 w-8 p-0 text-harmonia-green hover:text-harmonia-green hover:bg-harmonia-green/10"
+                        className="h-8 w-8 p-0 bg-green-50 text-green-700 border-green-300 hover:text-green-800 hover:bg-green-100"
                         title="Ver prévia do cliente"
                         asChild
                       >
@@ -151,7 +151,7 @@ const ProjectsTable: React.FC<ProjectsTableProps> = ({
                       <Button
                         variant="outline"
                         size="sm"
-                        className="h-8 w-8 p-0 text-amber-500 hover:text-amber-600 hover:bg-amber-50"
+                        className="h-8 w-8 p-0 bg-amber-50 text-amber-700 border-amber-300 hover:text-amber-800 hover:bg-amber-100"
                         title="Enviar lembrete"
                         onClick={() => handleSendReminder(project.id)}
                       >
@@ -162,7 +162,7 @@ const ProjectsTable: React.FC<ProjectsTableProps> = ({
                         <Button
                           variant="outline"
                           size="sm"
-                          className="h-8 w-8 p-0 text-red-500 hover:text-red-600 hover:bg-red-50"
+                          className="h-8 w-8 p-0 bg-red-50 text-red-700 border-red-300 hover:text-red-800 hover:bg-red-100"
                           title="Excluir projeto"
                           onClick={() => onDelete(project.id)}
                         >

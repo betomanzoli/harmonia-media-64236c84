@@ -3,9 +3,8 @@ import React, { useState, useEffect, useRef } from 'react';
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Slider } from "@/components/ui/slider";
-import { Play, Pause, Volume2, Volume1, VolumeX, Lock } from 'lucide-react';
+import { Play, Pause, Volume2, Volume1, VolumeX } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
-import { usePreviewTimer } from '../audio/use-preview-timer';
 
 interface GoogleDriveAudioPlayerProps {
   fileId: string;
@@ -32,25 +31,15 @@ const GoogleDriveAudioPlayer: React.FC<GoogleDriveAudioPlayerProps> = ({
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const { toast } = useToast();
 
-  // Use streaming URL instead of direct download
-  // This helps prevent direct downloads while allowing playback
-  const audioUrl = `https://docs.google.com/uc?export=view&id=${fileId}`;
-
-  // Use our custom preview timer hook
-  const { clearPreviewTimer } = usePreviewTimer({
-    isPlaying,
-    currentTime,
-    previewDuration: isPreview ? previewDuration : undefined,
-    onPause: () => {
-      if (audioRef.current) {
-        audioRef.current.pause();
-        setIsPlaying(false);
-      }
-    }
-  });
+  // Use embedded player URL instead of direct download link
+  // This will open in an embedded player rather than downloading
+  const audioUrl = `https://drive.google.com/file/d/${fileId}/preview`;
+  
+  // For audio streaming we'll use the view endpoint
+  const streamUrl = `https://drive.google.com/uc?export=view&id=${fileId}`;
 
   useEffect(() => {
-    const audio = new Audio(audioUrl);
+    const audio = new Audio(streamUrl);
     audio.volume = volume;
     audioRef.current = audio;
     
@@ -89,15 +78,6 @@ const GoogleDriveAudioPlayer: React.FC<GoogleDriveAudioPlayerProps> = ({
     audio.addEventListener('ended', handleAudioEnd);
     audio.addEventListener('error', handleError as EventListener);
 
-    // Attempt to load the audio
-    audio.load();
-    
-    // Handle security errors
-    window.addEventListener('securitypolicyviolation', (e) => {
-      console.error('Security policy violation:', e);
-      setAudioError("Erro de política de segurança. Verifique as permissões de compartilhamento do arquivo.");
-    });
-
     // Set a timeout to detect very slow loading or failed loads
     const loadingTimeout = setTimeout(() => {
       if (isLoading && !audio.duration) {
@@ -109,21 +89,33 @@ const GoogleDriveAudioPlayer: React.FC<GoogleDriveAudioPlayerProps> = ({
 
     return () => {
       clearTimeout(loadingTimeout);
-      clearPreviewTimer();
       audio.pause();
-      audio.currentTime = 0;
       audio.removeEventListener('timeupdate', updateProgress);
       audio.removeEventListener('loadedmetadata', handleAudioLoad);
       audio.removeEventListener('ended', handleAudioEnd);
       audio.removeEventListener('error', handleError as EventListener);
     };
-  }, [audioUrl, toast, volume, clearPreviewTimer, isLoading, fileId]);
+  }, [audioUrl, toast, volume, fileId, isLoading, streamUrl]);
 
   useEffect(() => {
     if (audioRef.current) {
       audioRef.current.volume = volume;
     }
   }, [volume]);
+
+  // Limit preview playback if configured
+  useEffect(() => {
+    if (isPreview && isPlaying && previewDuration && currentTime >= previewDuration) {
+      if (audioRef.current) {
+        audioRef.current.pause();
+        setIsPlaying(false);
+        toast({
+          title: "Prévia finalizada",
+          description: `Você escutou os ${previewDuration} segundos de prévia disponíveis.`,
+        });
+      }
+    }
+  }, [currentTime, isPlaying, isPreview, previewDuration, toast]);
 
   const togglePlay = () => {
     if (!audioRef.current || audioError) return;
@@ -177,6 +169,11 @@ const GoogleDriveAudioPlayer: React.FC<GoogleDriveAudioPlayerProps> = ({
     return <Volume2 size={18} />;
   };
 
+  // Open in Google Drive embedded player (prevents download)
+  const handleOpenInDrive = () => {
+    window.open(audioUrl, '_blank');
+  };
+
   return (
     <Card className="p-4 shadow-sm">
       <div className="flex flex-col space-y-3">
@@ -197,7 +194,17 @@ const GoogleDriveAudioPlayer: React.FC<GoogleDriveAudioPlayerProps> = ({
         ) : audioError ? (
           <div className="text-center py-2">
             <p className="text-red-500 text-sm">{audioError}</p>
-            <p className="text-xs text-gray-500 mt-1">
+            <div className="mt-2">
+              <Button 
+                onClick={handleOpenInDrive} 
+                size="sm" 
+                variant="outline" 
+                className="text-harmonia-green hover:bg-harmonia-green/10"
+              >
+                Abrir no Google Drive
+              </Button>
+            </div>
+            <p className="text-xs text-gray-500 mt-3">
               Verifique se o link do Google Drive está correto e se o arquivo está compartilhado para "Qualquer pessoa com o link"
             </p>
           </div>
@@ -222,7 +229,9 @@ const GoogleDriveAudioPlayer: React.FC<GoogleDriveAudioPlayerProps> = ({
               />
               <div className="flex justify-between text-xs text-gray-500 mt-1">
                 <span>{formatTime(currentTime)}</span>
-                <span>{formatTime(duration || 0)}</span>
+                <span>
+                  {isPreview && previewDuration ? `${formatTime(Math.min(previewDuration, duration || 0))}` : formatTime(duration || 0)}
+                </span>
               </div>
             </div>
 

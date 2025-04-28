@@ -85,7 +85,7 @@ const NewProjectForm: React.FC<NewProjectFormProps> = ({ onAddProject }) => {
   };
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-6 max-h-[70vh] overflow-y-auto pr-2">
+    <form onSubmit={handleSubmit} className="space-y-6">
       <ClientInfoForm 
         clientName={formState.clientName}
         clientEmail={formState.clientEmail}
@@ -104,7 +104,7 @@ const NewProjectForm: React.FC<NewProjectFormProps> = ({ onAddProject }) => {
           </Button>
         </div>
 
-        <div className="space-y-4 max-h-[40vh] overflow-y-auto pr-2 pb-4">
+        <div className="space-y-4 max-h-[50vh] overflow-y-auto pr-2 pb-4">
           {formState.versions.map((version, index) => (
             <div key={index} className="version-container">
               <PreviewVersionInput
@@ -116,25 +116,23 @@ const NewProjectForm: React.FC<NewProjectFormProps> = ({ onAddProject }) => {
                 onTitleChange={(i, value) => actions.updateVersion(i, 'title', value)}
                 onDescriptionChange={(i, value) => actions.updateVersion(i, 'description', value)}
                 onAudioUrlChange={(i, value) => actions.updateVersion(i, 'audioUrl', value)}
-                onRecommendedChange={() => {}}
+                onRecommendedChange={(i, value) => {}}
                 onRemove={actions.removeVersion}
                 canRemove={formState.versions.length > 1}
-                hideRecommended={true}
               />
-              {index < formState.versions.length - 1 && (
-                <div className="mt-2 mb-4 flex justify-end">
-                  <Button 
-                    type="button" 
-                    onClick={actions.addVersion} 
-                    variant="outline"
-                    size="sm"
-                    className="text-sm"
-                  >
-                    <Plus className="w-3 h-3 mr-1" />
-                    Adicionar outra versão
-                  </Button>
-                </div>
-              )}
+              
+              <div className="mt-2 mb-4 flex justify-end">
+                <Button 
+                  type="button" 
+                  onClick={actions.addVersion} 
+                  variant="outline"
+                  size="sm"
+                  className="text-sm"
+                >
+                  <Plus className="w-3 h-3 mr-1" />
+                  Adicionar outra versão
+                </Button>
+              </div>
             </div>
           ))}
         </div>
