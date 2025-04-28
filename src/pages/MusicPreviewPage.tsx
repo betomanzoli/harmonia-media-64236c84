@@ -57,7 +57,7 @@ const MusicPreviewPage: React.FC = () => {
 
   return (
     <div className="min-h-screen pt-20">
-      <MusicPreviewSystem />
+      <MusicPreviewSystem projectId={projectId || ""} />
     </div>
   );
 };

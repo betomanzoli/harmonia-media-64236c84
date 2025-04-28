@@ -1,8 +1,7 @@
-
 import { useState, useEffect } from 'react';
 import { usePreviewProjects, ProjectItem } from '@/hooks/admin/usePreviewProjects';
 
-interface PreviewData {
+export interface PreviewProjectData {
   clientName: string;
   projectTitle: string;
   status: 'waiting' | 'feedback' | 'approved';
@@ -13,10 +12,12 @@ interface PreviewData {
     audioUrl: string;
     recommended?: boolean;
   }[];
+  packageType?: string;
+  creationDate?: string;
 }
 
 export const usePreviewData = (projectId: string | undefined) => {
-  const [projectData, setProjectData] = useState<PreviewData | null>(null);
+  const [projectData, setProjectData] = useState<PreviewProjectData | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [actualProjectId, setActualProjectId] = useState<string | null>(null);
   const { getProjectById, updateProject } = usePreviewProjects();
@@ -30,16 +31,13 @@ export const usePreviewData = (projectId: string | undefined) => {
       return;
     }
 
-    // Set the actual project ID
     setActualProjectId(projectId);
     
-    // Get project from admin projects
     const adminProject = getProjectById(projectId);
     
     if (adminProject) {
       console.log('Project found:', adminProject);
       
-      // Create previews from project versions list
       const previews = adminProject.versionsList?.map(v => ({
         id: v.id,
         title: v.name || `Versão ${v.id}`,
@@ -48,7 +46,6 @@ export const usePreviewData = (projectId: string | undefined) => {
         recommended: v.recommended
       })) || [];
       
-      // If no previews but versions exist, create a fallback
       if (previews.length === 0 && adminProject.versions > 0) {
         for (let i = 0; i < adminProject.versions; i++) {
           previews.push({
@@ -56,12 +53,11 @@ export const usePreviewData = (projectId: string | undefined) => {
             title: `Versão ${i+1}`,
             description: 'Versão para aprovação',
             audioUrl: 'https://drive.google.com/file/d/1H62ylCwQYJ23BLpygtvNmCgwTDcHX6Cl/preview',
-            recommended: i === 0 // Mark first version as recommended
+            recommended: i === 0
           });
         }
       }
 
-      // Create project data
       setProjectData({
         clientName: adminProject.clientName,
         projectTitle: adminProject.packageType || 'Música Personalizada',
@@ -88,7 +84,6 @@ export const usePreviewData = (projectId: string | undefined) => {
         ]
       });
     } else {
-      // Fallback to mock data
       console.log('Project not found, using fallback data');
       setProjectData({
         clientName: 'Cliente Exemplo',
@@ -120,7 +115,6 @@ export const usePreviewData = (projectId: string | undefined) => {
     setIsLoading(false);
   }, [projectId, getProjectById]);
 
-  // Function to update project status and feedback
   const updateProjectStatus = (newStatus: 'waiting' | 'feedback' | 'approved', feedback?: string) => {
     if (!actualProjectId) return false;
 
