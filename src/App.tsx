@@ -1,6 +1,6 @@
 
 import React, { useState, useEffect } from 'react';
-import { BrowserRouter as Router, Routes, Route, useLocation } from 'react-router-dom';
+import { Routes, Route, useLocation } from 'react-router-dom';
 
 // Pages
 import HomePage from './pages/HomePage';
@@ -22,10 +22,10 @@ import ChatbotButton from './components/chatbot/ChatbotButton';
 
 const App: React.FC = () => {
   return (
-    <Router>
+    <>
       <ScrollToTop />
       <AppRoutes />
-    </Router>
+    </>
   );
 };
 
