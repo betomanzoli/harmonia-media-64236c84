@@ -1,10 +1,9 @@
 
 import React from 'react';
-import AboutPage from './About';
+import About from './About';
 
-// This is just a wrapper to maintain the import structure in App.tsx
-const About: React.FC = () => {
-  return <AboutPage />;
+const AboutPage: React.FC = () => {
+  return <About />;
 };
 
-export default About;
+export default AboutPage;

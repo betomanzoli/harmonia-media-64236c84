@@ -1,83 +1,116 @@
 
-import React, { useEffect, useState } from 'react';
-import { useNavigate, useLocation } from 'react-router-dom';
-import AdminLoginContainer from '@/components/admin/auth/login/AdminLoginContainer';
-import { useToast } from '@/hooks/use-toast';
-import { useAuth } from '@/contexts/AuthContext';
-import { Loader2 } from 'lucide-react';
+import React, { useState } from 'react';
+import { useNavigate, Link } from 'react-router-dom';
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardFooter,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { Label } from "@/components/ui/label";
+import { useToast } from "@/hooks/use-toast";
+import { Lock, User } from 'lucide-react';
 
 const AdminLogin: React.FC = () => {
+  const [username, setUsername] = useState('');
+  const [password, setPassword] = useState('');
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const navigate = useNavigate();
-  const location = useLocation();
   const { toast } = useToast();
-  const { authStatus, login } = useAuth();
-  const [isCheckingAuth, setIsCheckingAuth] = useState(true);
-  
-  // Get the pathname to redirect to after login
-  const from = location.state?.from?.pathname || '/admin-j28s7d1k/dashboard';
-  
-  // Check if already authenticated
-  useEffect(() => {
-    console.log('AdminLogin mounted, checking authentication...', authStatus);
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    setIsSubmitting(true);
     
-    if (authStatus === 'authenticated') {
-      console.log('User already authenticated, redirecting to dashboard');
-      navigate(from, { replace: true });
-    } else {
-      // Only set isCheckingAuth to false when we have a definitive authStatus
-      if (authStatus !== 'loading') {
-        setIsCheckingAuth(false);
-      }
-    }
-  }, [authStatus, navigate, from]);
-  
-  // Function to authenticate with correct credentials
-  const authenticateAdmin = async (email: string, password: string): Promise<boolean> => {
-    console.log('Attempting to authenticate with:', email);
-    
-    try {
-      const success = await login(email, password);
-      
-      if (success) {
+    // Simulação de autenticação (em um ambiente real, seria substituído por uma API real)
+    setTimeout(() => {
+      if (username === 'admin' && password === 'admin') {
         toast({
-          title: 'Login realizado com sucesso!',
-          description: 'Redirecionando para o painel administrativo...'
+          title: "Login realizado com sucesso",
+          description: "Bem-vindo ao painel administrativo.",
         });
-        
-        navigate(from, { replace: true });
-        return true;
+        navigate('/admin-j28s7d1k/dashboard');
       } else {
-        console.log('Authentication failed');
         toast({
-          title: 'Erro de autenticação',
-          description: 'Credenciais inválidas',
-          variant: 'destructive'
+          title: "Erro de autenticação",
+          description: "Usuário ou senha incorretos.",
+          variant: "destructive"
         });
-        return false;
+        setIsSubmitting(false);
       }
-    } catch (error) {
-      console.error('Error during authentication:', error);
-      toast({
-        title: 'Erro de sistema',
-        description: 'Ocorreu um erro ao tentar fazer login. Tente novamente.',
-        variant: 'destructive'
-      });
-      return false;
-    }
+    }, 1000);
   };
-  
-  if (authStatus === 'loading' || isCheckingAuth) {
-    return (
-      <div className="flex items-center justify-center min-h-screen bg-gradient-to-b from-gray-900 to-black">
-        <div className="flex flex-col items-center gap-2">
-          <Loader2 className="h-8 w-8 animate-spin text-harmonia-green" />
-          <p className="text-gray-500">Verificando autenticação...</p>
-        </div>
-      </div>
-    );
-  }
-  
-  return <AdminLoginContainer onAuthenticate={authenticateAdmin} />;
+
+  return (
+    <div className="flex items-center justify-center min-h-screen bg-gray-100 p-4">
+      <Card className="w-full max-w-md">
+        <CardHeader className="space-y-1">
+          <div className="flex items-center justify-between">
+            <CardTitle className="text-2xl">Acesso Administrativo</CardTitle>
+            <Lock className="h-6 w-6 text-gray-500" />
+          </div>
+          <CardDescription>
+            Insira suas credenciais para acessar o painel administrativo
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <form onSubmit={handleSubmit}>
+            <div className="grid gap-4">
+              <div className="grid gap-2">
+                <Label htmlFor="username">Usuário</Label>
+                <div className="relative">
+                  <User className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
+                  <Input
+                    id="username"
+                    className="pl-9"
+                    placeholder="admin"
+                    value={username}
+                    onChange={(e) => setUsername(e.target.value)}
+                    required
+                  />
+                </div>
+              </div>
+              <div className="grid gap-2">
+                <div className="flex items-center justify-between">
+                  <Label htmlFor="password">Senha</Label>
+                  <Link 
+                    to="/admin-j28s7d1k/reset-password" 
+                    className="text-xs text-gray-500 hover:text-gray-900"
+                  >
+                    Esqueceu sua senha?
+                  </Link>
+                </div>
+                <div className="relative">
+                  <Lock className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
+                  <Input
+                    id="password"
+                    type="password"
+                    className="pl-9"
+                    placeholder="••••••••"
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    required
+                  />
+                </div>
+              </div>
+              <Button type="submit" className="w-full" disabled={isSubmitting}>
+                {isSubmitting ? "Entrando..." : "Entrar"}
+              </Button>
+            </div>
+          </form>
+        </CardContent>
+        <CardFooter className="flex flex-col items-center">
+          <p className="text-sm text-gray-500 mt-2">
+            Use <strong>admin</strong> para usuário e senha durante o desenvolvimento
+          </p>
+        </CardFooter>
+      </Card>
+    </div>
+  );
 };
 
 export default AdminLogin;

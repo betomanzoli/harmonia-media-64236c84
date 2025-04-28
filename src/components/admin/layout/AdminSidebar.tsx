@@ -1,195 +1,68 @@
 
 import React from 'react';
-import { Link, useLocation, useNavigate } from 'react-router-dom';
+import { NavLink } from 'react-router-dom';
 import { 
-  CreditCard, 
-  Database, 
-  LayoutDashboard, 
-  Music, 
-  File, 
-  FileQuestion, 
-  RefreshCcw, 
-  LineChart, 
-  ExternalLink, 
-  BookOpenText,
+  LayoutDashboard,
+  Music,
+  FileText,
+  Users,
   Settings,
-  Share2,
-  LogOut
+  CreditCard,
+  FileBox,
+  LineChart,
+  Link2,
+  HelpCircle
 } from 'lucide-react';
-import { useAuth } from '@/contexts/AuthContext';
-import { useToast } from '@/hooks/use-toast';
+import { cn } from "@/lib/utils";
 
-import { 
-  Sidebar, 
-  SidebarFooter, 
-  SidebarHeader, 
-  SidebarContent, 
-  SidebarMenu, 
-  SidebarGroup,
-  SidebarMenuItem,
-  SidebarMenuButton,
-  SidebarTrigger
-} from '@/components/ui/sidebar';
+interface NavItemProps {
+  href: string;
+  icon: React.ElementType;
+  label: string;
+}
+
+const NavItem: React.FC<NavItemProps> = ({ href, icon: Icon, label }) => {
+  return (
+    <NavLink 
+      to={href}
+      className={({ isActive }) => cn(
+        "flex items-center px-4 py-3 text-sm font-medium rounded-lg",
+        isActive 
+          ? "bg-gray-800 text-white" 
+          : "text-gray-400 hover:text-white hover:bg-gray-700"
+      )}
+    >
+      <Icon className="mr-3 w-5 h-5" />
+      <span>{label}</span>
+    </NavLink>
+  );
+};
 
 const AdminSidebar: React.FC = () => {
-  const location = useLocation();
-  const navigate = useNavigate();
-  const { logout } = useAuth();
-  const { toast } = useToast();
-  const activePath = location.pathname;
-  
-  const isActive = (path: string) => {
-    return activePath === path || activePath.startsWith(`${path}/`);
-  };
-  
-  const handleLogout = () => {
-    logout();
-    toast({
-      title: "Logout realizado",
-      description: "Você foi desconectado com sucesso."
-    });
-    navigate('/admin-login');
-  };
-  
   return (
-    <Sidebar className="h-screen border-r border-gray-800 fixed left-0">
-      <SidebarHeader className="px-6 py-4">
-        <div className="flex items-center gap-2">
-          <div className="w-8 h-8 rounded-full bg-harmonia-green flex items-center justify-center">
-            <span className="text-white text-md font-bold">H</span>
-          </div>
-          <div className="flex flex-col">
-            <span className="text-white font-medium">harmonIA</span>
-            <span className="text-gray-400 text-xs">Painel Administrativo</span>
-          </div>
-        </div>
-        <SidebarTrigger />
-      </SidebarHeader>
-      <SidebarContent>
-        <SidebarMenu>
-          <SidebarGroup>
-            <SidebarMenuItem>
-              <Link to="/admin-j28s7d1k/dashboard">
-                <SidebarMenuButton 
-                  isActive={isActive('/admin-j28s7d1k/dashboard')}
-                >
-                  <LayoutDashboard size={18} />
-                  <span>Dashboard</span>
-                </SidebarMenuButton>
-              </Link>
-            </SidebarMenuItem>
-            <SidebarMenuItem>
-              <Link to="/admin-j28s7d1k/previews">
-                <SidebarMenuButton 
-                  isActive={isActive('/admin-j28s7d1k/previews')}
-                >
-                  <Music size={18} />
-                  <span>Prévias</span>
-                </SidebarMenuButton>
-              </Link>
-            </SidebarMenuItem>
-            <SidebarMenuItem>
-              <Link to="/admin-j28s7d1k/portfolio">
-                <SidebarMenuButton 
-                  isActive={isActive('/admin-j28s7d1k/portfolio')}
-                >
-                  <RefreshCcw size={18} />
-                  <span>Portfólio</span>
-                </SidebarMenuButton>
-              </Link>
-            </SidebarMenuItem>
-            <SidebarMenuItem>
-              <Link to="/admin-j28s7d1k/invoices">
-                <SidebarMenuButton 
-                  isActive={isActive('/admin-j28s7d1k/invoices')}
-                >
-                  <CreditCard size={18} />
-                  <span>Faturas</span>
-                </SidebarMenuButton>
-              </Link>
-            </SidebarMenuItem>
-            <SidebarMenuItem>
-              <Link to="/admin-j28s7d1k/briefings">
-                <SidebarMenuButton 
-                  isActive={isActive('/admin-j28s7d1k/briefings')}
-                >
-                  <FileQuestion size={18} />
-                  <span>Briefings</span>
-                </SidebarMenuButton>
-              </Link>
-            </SidebarMenuItem>
-            <SidebarMenuItem>
-              <Link to="/admin-j28s7d1k/projects">
-                <SidebarMenuButton 
-                  isActive={isActive('/admin-j28s7d1k/projects')}
-                >
-                  <File size={18} />
-                  <span>Projetos</span>
-                </SidebarMenuButton>
-              </Link>
-            </SidebarMenuItem>
-            <SidebarMenuItem>
-              <Link to="/admin-j28s7d1k/statistics">
-                <SidebarMenuButton 
-                  isActive={isActive('/admin-j28s7d1k/statistics')}
-                >
-                  <LineChart size={18} />
-                  <span>Estatísticas</span>
-                </SidebarMenuButton>
-              </Link>
-            </SidebarMenuItem>
-            <SidebarMenuItem>
-              <Link to="/admin-j28s7d1k/guides">
-                <SidebarMenuButton 
-                  isActive={isActive('/admin-j28s7d1k/guides')}
-                >
-                  <BookOpenText size={18} />
-                  <span>Guias</span>
-                </SidebarMenuButton>
-              </Link>
-            </SidebarMenuItem>
-            <SidebarMenuItem>
-              <Link to="/admin-j28s7d1k/storage">
-                <SidebarMenuButton 
-                  isActive={isActive('/admin-j28s7d1k/storage')}
-                >
-                  <Database size={18} />
-                  <span>Armazenamento</span>
-                </SidebarMenuButton>
-              </Link>
-            </SidebarMenuItem>
-            <SidebarMenuItem>
-              <Link to="/admin-j28s7d1k/integrations">
-                <SidebarMenuButton 
-                  isActive={isActive('/admin-j28s7d1k/integrations')}
-                >
-                  <Share2 size={18} />
-                  <span>Integrações</span>
-                </SidebarMenuButton>
-              </Link>
-            </SidebarMenuItem>
-          </SidebarGroup>
-        </SidebarMenu>
-      </SidebarContent>
-      <SidebarFooter>
-        <div className="px-6 py-3 flex flex-col gap-2">
-          <a 
-            href="/"
-            className="flex items-center gap-2 text-gray-400 hover:text-white transition-colors text-sm"
-          >
-            <ExternalLink size={14} />
-            <span>Site público</span>
-          </a>
-          <button 
-            className="flex items-center gap-2 text-gray-400 hover:text-white transition-colors text-sm"
-            onClick={handleLogout}
-          >
-            <LogOut size={14} />
-            <span>Sair</span>
-          </button>
-        </div>
-      </SidebarFooter>
-    </Sidebar>
+    <div className="hidden md:flex flex-col bg-gray-900 w-64 px-4 py-8 overflow-y-auto">
+      <div className="mb-8 text-center">
+        <h1 className="text-2xl font-bold text-white">harmonIA</h1>
+        <p className="text-gray-400 text-sm">Painel Administrativo</p>
+      </div>
+      
+      <div className="flex flex-col flex-1 space-y-1">
+        <NavItem href="/admin-j28s7d1k/dashboard" icon={LayoutDashboard} label="Dashboard" />
+        <NavItem href="/admin-j28s7d1k/previews" icon={Music} label="Prévias" />
+        <NavItem href="/admin-j28s7d1k/briefings" icon={FileText} label="Briefings" />
+        <NavItem href="/admin-j28s7d1k/projects" icon={Music} label="Projetos" />
+        <NavItem href="/admin-j28s7d1k/clients" icon={Users} label="Clientes" />
+        <NavItem href="/admin-j28s7d1k/payments" icon={CreditCard} label="Pagamentos" />
+        <NavItem href="/admin-j28s7d1k/storage" icon={FileBox} label="Arquivos" />
+        <NavItem href="/admin-j28s7d1k/statistics" icon={LineChart} label="Estatísticas" />
+        <NavItem href="/admin-j28s7d1k/integrations" icon={Link2} label="Integrações" />
+        <NavItem href="/admin-j28s7d1k/guides" icon={HelpCircle} label="Guias" />
+      </div>
+      
+      <div className="mt-auto">
+        <NavItem href="/admin-j28s7d1k/settings" icon={Settings} label="Configurações" />
+      </div>
+    </div>
   );
 };
 

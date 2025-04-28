@@ -1,39 +1,36 @@
 
-import React, { useState } from 'react';
+import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { ProjectItem } from '@/hooks/admin/usePreviewProjects';
-import { Link } from 'react-router-dom';
-import { Eye, Send, Clock, FileCheck, MessageSquare, Loader2, AlarmCheck } from 'lucide-react';
 import { Badge } from "@/components/ui/badge";
-import { useToast } from '@/hooks/use-toast';
-import { notificationService } from '@/services/notificationService';
+import { Link } from 'react-router-dom';
+import { Eye, Send, Clock, FileCheck, MessageSquare, Loader2 } from 'lucide-react';
+import { ProjectItem } from '@/hooks/admin/usePreviewProjects';
 
 interface ProjectsListCardProps {
   projects: ProjectItem[];
   isLoading?: boolean;
 }
 
-const ProjectsListCard: React.FC<ProjectsListCardProps> = ({ 
+export const ProjectsListCard: React.FC<ProjectsListCardProps> = ({ 
   projects,
   isLoading = false
 }) => {
-  const { toast } = useToast();
-  const [sendingReminder, setSendingReminder] = useState<string | null>(null);
-  
+  // Status label helper function
   const getStatusLabel = (status: string) => {
     switch (status) {
       case 'waiting':
-        return <Badge variant="outline" className="bg-yellow-900/20 text-yellow-500 border-yellow-500/30">Aguardando avaliação</Badge>;
+        return <Badge variant="outline" className="bg-yellow-50 text-yellow-600 border-yellow-300">Aguardando</Badge>;
       case 'feedback':
-        return <Badge variant="outline" className="bg-blue-900/20 text-blue-500 border-blue-500/30">Feedback recebido</Badge>;
+        return <Badge variant="outline" className="bg-blue-50 text-blue-600 border-blue-300">Feedback</Badge>;
       case 'approved':
-        return <Badge variant="outline" className="bg-green-900/20 text-green-500 border-green-500/30">Música aprovada</Badge>;
+        return <Badge variant="outline" className="bg-green-50 text-green-600 border-green-300">Aprovado</Badge>;
       default:
-        return <Badge variant="outline">Não definido</Badge>;
+        return <Badge variant="outline">Desconhecido</Badge>;
     }
   };
   
+  // Status icon helper function
   const getStatusIcon = (status: string) => {
     switch (status) {
       case 'waiting':
@@ -45,61 +42,6 @@ const ProjectsListCard: React.FC<ProjectsListCardProps> = ({
       default:
         return null;
     }
-  };
-  
-  const sendReminder = async (projectId: string) => {
-    setSendingReminder(projectId);
-    
-    const project = projects.find(p => p.id === projectId);
-    
-    if (project) {
-      try {
-        // Simular envio de lembrete
-        notificationService.notify('new_preview', {
-          projectId,
-          clientName: project.clientName,
-          clientEmail: project.clientEmail,
-          message: 'Este é um lembrete para avaliação das prévias musicais enviadas a você.'
-        });
-        
-        toast({
-          title: "Lembrete enviado",
-          description: `Um lembrete foi enviado para ${project.clientName}.`,
-        });
-      } catch (error) {
-        console.error('Erro ao enviar lembrete:', error);
-        toast({
-          title: "Erro",
-          description: "Não foi possível enviar o lembrete.",
-          variant: "destructive"
-        });
-      } finally {
-        setSendingReminder(null);
-      }
-    }
-  };
-  
-  const isExpiringToday = (date: string) => {
-    const today = new Date();
-    const expirationDate = date.split('/').reverse().join('-');
-    return new Date(expirationDate).toDateString() === today.toDateString();
-  };
-
-  const sortProjects = (projectsList: ProjectItem[]) => {
-    return [...projectsList].sort((a, b) => {
-      // Primeiro os com status 'waiting'
-      if (a.status === 'waiting' && b.status !== 'waiting') return -1;
-      if (a.status !== 'waiting' && b.status === 'waiting') return 1;
-      
-      // Em seguida, os com status 'feedback'
-      if (a.status === 'feedback' && b.status !== 'feedback') return -1;
-      if (a.status !== 'feedback' && b.status === 'feedback') return 1;
-      
-      // Por fim, por data de criação (mais recentes primeiro)
-      const dateA = a.createdAt.split('/').reverse().join('-');
-      const dateB = b.createdAt.split('/').reverse().join('-');
-      return new Date(dateB).getTime() - new Date(dateA).getTime();
-    });
   };
 
   return (
@@ -134,15 +76,12 @@ const ProjectsListCard: React.FC<ProjectsListCardProps> = ({
                 </tr>
               </thead>
               <tbody className="divide-y divide-border">
-                {sortProjects(projects).map(project => (
+                {projects.map(project => (
                   <tr key={project.id} className="hover:bg-muted/30 transition-colors">
                     <td className="px-4 py-3 whitespace-nowrap">
                       <div className="flex items-center">
                         {getStatusIcon(project.status)}
                         <span className="ml-2 font-medium">{project.id}</span>
-                      </div>
-                      <div className="text-xs text-muted-foreground mt-1">
-                        {project.packageType} • {project.versions} versões
                       </div>
                     </td>
                     <td className="px-4 py-3 whitespace-nowrap">
@@ -156,12 +95,7 @@ const ProjectsListCard: React.FC<ProjectsListCardProps> = ({
                       {project.createdAt}
                     </td>
                     <td className="px-4 py-3 whitespace-nowrap text-sm">
-                      <div className="flex items-center">
-                        {isExpiringToday(project.expirationDate) && (
-                          <AlarmCheck className="h-4 w-4 text-orange-500 mr-1" />
-                        )}
-                        {project.expirationDate}
-                      </div>
+                      {project.expirationDate}
                     </td>
                     <td className="px-4 py-3 whitespace-nowrap text-right text-sm">
                       <div className="flex justify-end gap-2">
@@ -174,20 +108,9 @@ const ProjectsListCard: React.FC<ProjectsListCardProps> = ({
                         <Button 
                           variant="outline" 
                           size="sm"
-                          onClick={() => sendReminder(project.id)}
-                          disabled={sendingReminder === project.id || project.status === 'approved'}
                         >
-                          {sendingReminder === project.id ? (
-                            <>
-                              <Loader2 className="h-3.5 w-3.5 animate-spin mr-1" />
-                              Enviando...
-                            </>
-                          ) : (
-                            <>
-                              <Send className="h-3.5 w-3.5 mr-1" />
-                              Enviar lembrete
-                            </>
-                          )}
+                          <Send className="h-3.5 w-3.5 mr-1" />
+                          Enviar lembrete
                         </Button>
                       </div>
                     </td>
@@ -201,5 +124,3 @@ const ProjectsListCard: React.FC<ProjectsListCardProps> = ({
     </Card>
   );
 };
-
-export default ProjectsListCard;

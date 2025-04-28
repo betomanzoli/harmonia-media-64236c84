@@ -1,10 +1,9 @@
 
 import React from 'react';
-import ContactPage from './Contact';
+import Contact from './Contact';
 
-// This is just a wrapper to maintain the import structure in App.tsx
-const Contact: React.FC = () => {
-  return <ContactPage />;
+const ContactPage: React.FC = () => {
+  return <Contact />;
 };
 
-export default Contact;
+export default ContactPage;

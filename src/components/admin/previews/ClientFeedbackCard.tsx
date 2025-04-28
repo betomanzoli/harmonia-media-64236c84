@@ -1,118 +1,103 @@
 
 import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import { MessageSquare, Clock, CheckCircle, Edit, Save } from 'lucide-react';
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
+import { MessageSquare } from 'lucide-react';
 
 interface ClientFeedbackCardProps {
   feedback: string;
   status: string;
-  onSaveFeedback?: (feedback: string) => void;
-  onStatusUpdate?: (status: 'waiting' | 'feedback' | 'approved') => void;
+  onSaveFeedback: (feedback: string) => void;
 }
 
-const ClientFeedbackCard: React.FC<ClientFeedbackCardProps> = ({ 
-  feedback, 
+const ClientFeedbackCard: React.FC<ClientFeedbackCardProps> = ({
+  feedback,
   status,
-  onSaveFeedback,
-  onStatusUpdate
+  onSaveFeedback
 }) => {
-  const [isEditing, setIsEditing] = useState(false);
-  const [editedFeedback, setEditedFeedback] = useState(feedback);
+  const [editMode, setEditMode] = useState(false);
+  const [feedbackText, setFeedbackText] = useState(feedback || '');
   
   const handleSave = () => {
-    if (onSaveFeedback) {
-      onSaveFeedback(editedFeedback);
-    }
-    setIsEditing(false);
-  };
-  
-  const getStatusBadge = () => {
-    switch (status) {
-      case 'waiting':
-        return (
-          <Badge variant="outline" className="flex items-center gap-1 bg-yellow-100 text-yellow-800 border-yellow-300">
-            <Clock className="h-3 w-3" />
-            Aguardando avaliação
-          </Badge>
-        );
-      case 'feedback':
-        return (
-          <Badge variant="outline" className="flex items-center gap-1 bg-blue-100 text-blue-800 border-blue-300">
-            <MessageSquare className="h-3 w-3" />
-            Feedback recebido
-          </Badge>
-        );
-      case 'approved':
-        return (
-          <Badge variant="outline" className="flex items-center gap-1 bg-green-100 text-green-800 border-green-300">
-            <CheckCircle className="h-3 w-3" />
-            Projeto aprovado
-          </Badge>
-        );
-      default:
-        return null;
-    }
+    onSaveFeedback(feedbackText);
+    setEditMode(false);
   };
   
   return (
     <Card>
-      <CardHeader className="flex flex-row items-center justify-between">
-        <CardTitle className="text-lg font-medium">
+      <CardHeader>
+        <CardTitle className="text-lg flex items-center">
+          <MessageSquare className="h-5 w-5 mr-2 text-gray-500" />
           Feedback do Cliente
         </CardTitle>
-        <div className="flex items-center gap-3">
-          {getStatusBadge()}
-          
-          {onSaveFeedback && (
-            isEditing ? (
+      </CardHeader>
+      <CardContent className="space-y-4">
+        {editMode ? (
+          <>
+            <Textarea
+              value={feedbackText}
+              onChange={(e) => setFeedbackText(e.target.value)}
+              className="min-h-[120px]"
+              placeholder="Digite o feedback do cliente"
+            />
+            <div className="flex justify-end space-x-2">
               <Button 
                 variant="outline" 
-                size="sm" 
-                onClick={handleSave} 
-                className="border-green-500 text-green-500 hover:bg-green-50"
+                size="sm"
+                onClick={() => {
+                  setFeedbackText(feedback);
+                  setEditMode(false);
+                }}
               >
-                <Save className="h-3.5 w-3.5 mr-1" />
+                Cancelar
+              </Button>
+              <Button 
+                size="sm"
+                onClick={handleSave}
+              >
                 Salvar
               </Button>
-            ) : (
+            </div>
+          </>
+        ) : feedback ? (
+          <>
+            <div className="bg-gray-50 p-4 rounded-md border text-sm">
+              {feedback}
+            </div>
+            <div className="flex justify-end">
               <Button 
                 variant="outline" 
-                size="sm" 
-                onClick={() => setIsEditing(true)} 
-                className="border-blue-500 text-blue-500 hover:bg-blue-50"
+                size="sm"
+                onClick={() => setEditMode(true)}
               >
-                <Edit className="h-3.5 w-3.5 mr-1" />
-                Editar
+                Editar Feedback
               </Button>
-            )
-          )}
-        </div>
-      </CardHeader>
-      <CardContent>
-        {status === 'waiting' && !feedback && (
-          <div className="bg-yellow-50 border border-yellow-200 text-yellow-800 p-4 rounded-md">
-            <p>O cliente ainda não enviou feedback para este projeto.</p>
-          </div>
-        )}
-        
-        {isEditing ? (
-          <Textarea 
-            value={editedFeedback} 
-            onChange={(e) => setEditedFeedback(e.target.value)}
-            placeholder="Insira o feedback do cliente aqui..."
-            className="min-h-[150px]"
-          />
-        ) : feedback ? (
-          <div className="bg-background border p-4 rounded-md whitespace-pre-wrap">
-            {feedback}
-          </div>
+            </div>
+          </>
         ) : (
-          <div className="text-muted-foreground italic">
-            Nenhum feedback registrado.
-          </div>
+          <>
+            <div className="text-center p-4 bg-gray-50 rounded-md border border-dashed">
+              {status === 'feedback' ? (
+                <p className="text-sm text-muted-foreground">
+                  O cliente enviou feedback, mas ele ainda não foi registrado.
+                </p>
+              ) : (
+                <p className="text-sm text-muted-foreground">
+                  O cliente ainda não enviou nenhum feedback.
+                </p>
+              )}
+            </div>
+            <div className="flex justify-end">
+              <Button 
+                variant="outline" 
+                size="sm"
+                onClick={() => setEditMode(true)}
+              >
+                Adicionar Feedback
+              </Button>
+            </div>
+          </>
         )}
       </CardContent>
     </Card>

@@ -1,10 +1,9 @@
 
 import React from 'react';
-import ServicesPage from './Services';
+import Services from './Services';
 
-// This is just a wrapper to maintain the import structure in App.tsx
-const Services: React.FC = () => {
-  return <ServicesPage />;
+const ServicesPage: React.FC = () => {
+  return <Services />;
 };
 
-export default Services;
+export default ServicesPage;

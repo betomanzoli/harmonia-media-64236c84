@@ -2,61 +2,55 @@
 import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { FileMusic, Calendar, Eye } from 'lucide-react';
 import { Link } from 'react-router-dom';
+import { Plus, Calendar, Eye } from 'lucide-react';
 
 export interface ProjectActionCardProps {
-  projectId: string; 
+  projectId: string;
   onAddVersion: () => void;
   onExtendDeadline: () => void;
-  previewUrl?: string;
+  previewUrl: string;
 }
 
-const ProjectActionCard: React.FC<ProjectActionCardProps> = ({ 
+const ProjectActionCard: React.FC<ProjectActionCardProps> = ({
   projectId,
-  onAddVersion, 
+  onAddVersion,
   onExtendDeadline,
-  previewUrl = ''
+  previewUrl
 }) => {
-  // Format the preview URL correctly to ensure it works
-  const formattedPreviewUrl = previewUrl || `/preview/${projectId}`;
-
   return (
     <Card>
       <CardHeader>
-        <CardTitle className="text-lg">Ações rápidas</CardTitle>
+        <CardTitle className="text-lg">Ações</CardTitle>
       </CardHeader>
-      <CardContent>
-        <div className="space-y-3">
-          <Button 
-            variant="outline" 
-            className="w-full justify-start"
-            onClick={onAddVersion}
-          >
-            <FileMusic className="mr-2 h-4 w-4" />
-            Enviar nova versão
-          </Button>
-          
-          <Button 
-            variant="outline" 
-            className="w-full justify-start"
-            onClick={onExtendDeadline}
-          >
-            <Calendar className="mr-2 h-4 w-4" />
-            Estender prazo
-          </Button>
-          
-          <Button 
-            variant="outline" 
-            className="w-full justify-start text-harmonia-green border-harmonia-green hover:bg-harmonia-green/10"
-            asChild
-          >
-            <Link to={formattedPreviewUrl} target="_blank">
-              <Eye className="mr-2 h-4 w-4" />
-              Ver como cliente
-            </Link>
-          </Button>
-        </div>
+      <CardContent className="space-y-3">
+        <Button 
+          className="w-full flex justify-start"
+          onClick={onAddVersion}
+        >
+          <Plus className="h-4 w-4 mr-2" />
+          Adicionar Nova Versão
+        </Button>
+        
+        <Button
+          variant="outline"
+          className="w-full flex justify-start"
+          onClick={onExtendDeadline}
+        >
+          <Calendar className="h-4 w-4 mr-2" />
+          Estender Prazo (+ 30 dias)
+        </Button>
+        
+        <Button
+          variant="outline"
+          className="w-full flex justify-start"
+          asChild
+        >
+          <Link to={previewUrl} target="_blank">
+            <Eye className="h-4 w-4 mr-2" />
+            Ver Página do Cliente
+          </Link>
+        </Button>
       </CardContent>
     </Card>
   );

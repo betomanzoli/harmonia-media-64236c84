@@ -1,3 +1,4 @@
+
 import React, { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import AdminLayout from '@/components/admin/layout/AdminLayout';
@@ -217,7 +218,6 @@ const PreviewProjectPage: React.FC = () => {
             <div>
               <ProjectStatusCard 
                 status={project.status}
-                lastActivityDate={project.lastActivityDate}
                 onStatusUpdate={handleStatusUpdate}
               />
             </div>

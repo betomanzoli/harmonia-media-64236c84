@@ -1,10 +1,9 @@
 
 import React from 'react';
-import NotFoundPage from './NotFound';
+import NotFound from './NotFound';
 
-// This is just a wrapper to maintain the import structure in App.tsx
-const NotFound: React.FC = () => {
-  return <NotFoundPage />;
+const NotFoundPage: React.FC = () => {
+  return <NotFound />;
 };
 
-export default NotFound;
+export default NotFoundPage;
