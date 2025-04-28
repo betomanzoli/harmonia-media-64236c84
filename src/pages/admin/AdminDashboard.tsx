@@ -1,14 +1,10 @@
 
 import React from 'react';
-import AdminLayout from '@/components/admin/layout/AdminLayout';
-import DashboardContent from '@/components/admin/dashboard/DashboardContent';
+import Dashboard from './Dashboard';
 
+// This is just a wrapper to maintain the import structure in App.tsx
 const AdminDashboard: React.FC = () => {
-  return (
-    <AdminLayout>
-      <DashboardContent />
-    </AdminLayout>
-  );
+  return <Dashboard />;
 };
 
 export default AdminDashboard;
