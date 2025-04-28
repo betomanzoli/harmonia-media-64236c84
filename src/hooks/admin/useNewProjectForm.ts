@@ -1,4 +1,3 @@
-
 import { useState } from 'react';
 import { useToast } from "@/hooks/use-toast";
 
@@ -14,7 +13,7 @@ export const useNewProjectForm = () => {
   const [clientEmail, setClientEmail] = useState('');
   const [packageType, setPackageType] = useState('');
   const [versions, setVersions] = useState<Version[]>([
-    { title: '', description: '', audioUrl: '', recommended: true }
+    { title: '', description: '', audioUrl: '', recommended: false }
   ]);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const { toast } = useToast();
@@ -52,7 +51,7 @@ export const useNewProjectForm = () => {
     setClientName('');
     setClientEmail('');
     setPackageType('');
-    setVersions([{ title: '', description: '', audioUrl: '', recommended: true }]);
+    setVersions([{ title: '', description: '', audioUrl: '', recommended: false }]);
   };
 
   return {

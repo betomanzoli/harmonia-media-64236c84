@@ -25,10 +25,13 @@ const PreviewProjectPage: React.FC = () => {
 
   useEffect(() => {
     if (projectId) {
+      console.log("Looking for project with ID:", projectId);
       const projectData = getProjectById(projectId);
       if (projectData) {
+        console.log("Project found:", projectData);
         setProject(projectData);
       } else {
+        console.error("Project not found with ID:", projectId);
         toast({
           title: "Projeto não encontrado",
           description: "O projeto solicitado não foi encontrado.",
@@ -90,7 +93,9 @@ const PreviewProjectPage: React.FC = () => {
     // Create updated versions list with new version
     const updatedVersions = [...currentVersions, {
       ...newVersion,
-      dateAdded: new Date().toLocaleDateString('pt-BR')
+      dateAdded: new Date().toLocaleDateString('pt-BR'),
+      // Remove recommended field since we're removing that feature
+      recommended: false
     }];
     
     // Update project with new version list and count

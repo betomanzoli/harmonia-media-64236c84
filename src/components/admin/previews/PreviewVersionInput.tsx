@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -20,6 +21,7 @@ interface PreviewVersionInputProps {
   onRecommendedChange: (index: number, value: boolean) => void;
   onRemove: (index: number) => void;
   canRemove: boolean;
+  hideRecommended?: boolean;
 }
 
 const PreviewVersionInput: React.FC<PreviewVersionInputProps> = ({
@@ -34,6 +36,7 @@ const PreviewVersionInput: React.FC<PreviewVersionInputProps> = ({
   onRecommendedChange,
   onRemove,
   canRemove,
+  hideRecommended = true,
 }) => {
   return (
     <Card className="p-4 mb-4 relative">
@@ -99,16 +102,18 @@ const PreviewVersionInput: React.FC<PreviewVersionInputProps> = ({
           </p>
         </div>
 
-        <div className="flex items-center space-x-2">
-          <Checkbox
-            id={`version-recommended-${index}`}
-            checked={recommended}
-            onCheckedChange={(checked) => onRecommendedChange(index, checked === true)}
-          />
-          <Label htmlFor={`version-recommended-${index}`}>
-            Marcar como versão recomendada
-          </Label>
-        </div>
+        {!hideRecommended && (
+          <div className="flex items-center space-x-2">
+            <Checkbox
+              id={`version-recommended-${index}`}
+              checked={recommended}
+              onCheckedChange={(checked) => onRecommendedChange(index, checked === true)}
+            />
+            <Label htmlFor={`version-recommended-${index}`}>
+              Marcar como versão recomendada
+            </Label>
+          </div>
+        )}
       </div>
     </Card>
   );

@@ -41,8 +41,9 @@ export const usePreviewProjects = () => {
       // Try to load from localStorage
       const storedProjects = localStorage.getItem('harmonIA_preview_projects');
       if (storedProjects) {
-        setProjects(JSON.parse(storedProjects));
-        console.log('Projects loaded from localStorage');
+        const parsedProjects = JSON.parse(storedProjects);
+        console.log('Projects loaded from localStorage:', parsedProjects);
+        setProjects(parsedProjects);
       } else {
         // Initialize with empty array if nothing found
         setProjects([]);
@@ -59,9 +60,13 @@ export const usePreviewProjects = () => {
 
   // Save projects to local storage
   const saveProjects = useCallback(async (updatedProjects: ProjectItem[]) => {
-    // Save to localStorage as backup
-    localStorage.setItem('harmonIA_preview_projects', JSON.stringify(updatedProjects));
-    console.log('Projects saved to localStorage');
+    try {
+      // Save to localStorage
+      localStorage.setItem('harmonIA_preview_projects', JSON.stringify(updatedProjects));
+      console.log('Projects saved to localStorage:', updatedProjects);
+    } catch (error) {
+      console.error('Error saving projects:', error);
+    }
   }, []);
 
   // Load projects on component mount
@@ -71,10 +76,15 @@ export const usePreviewProjects = () => {
 
   // Get project by ID
   const getProjectById = useCallback((id: string) => {
-    return projects.find(project => project.id === id) || null;
+    console.log("Getting project by ID:", id);
+    console.log("Available projects:", projects);
+    
+    const project = projects.find(project => project.id === id);
+    console.log("Found project:", project);
+    return project || null;
   }, [projects]);
 
-  // Generate unique project ID linked to briefing if available
+  // Generate unique project ID
   const generateProjectId = useCallback(() => {
     // Get the highest existing project number
     const highestId = projects.reduce((max, project) => {
@@ -97,6 +107,9 @@ export const usePreviewProjects = () => {
     };
     
     const updatedProjects = [...projects, newProject];
+    console.log("Adding new project:", newProject);
+    console.log("Updated projects list:", updatedProjects);
+    
     setProjects(updatedProjects);
     
     // Save to storage
@@ -108,32 +121,49 @@ export const usePreviewProjects = () => {
   // Delete project
   const deleteProject = useCallback((id: string) => {
     const updatedProjects = projects.filter(project => project.id !== id);
-    setProjects(updatedProjects);
+    console.log(`Deleting project ${id}`);
+    console.log("Updated project list:", updatedProjects);
     
-    // Update local storage
+    setProjects(updatedProjects);
     saveProjects(updatedProjects);
   }, [projects, saveProjects]);
 
   // Update project
   const updateProject = useCallback((id: string, updates: Partial<ProjectItem>) => {
-    const updatedProjects = projects.map(project => 
-      project.id === id ? { ...project, ...updates } : project
-    );
+    console.log(`Updating project ${id} with:`, updates);
+    
+    const projectIndex = projects.findIndex(p => p.id === id);
+    if (projectIndex === -1) {
+      console.error(`Project ${id} not found for updating`);
+      return null;
+    }
+    
+    const updatedProject = {
+      ...projects[projectIndex],
+      ...updates,
+      lastActivityDate: updates.lastActivityDate || new Date().toLocaleDateString('pt-BR')
+    };
+    
+    const updatedProjects = [...projects];
+    updatedProjects[projectIndex] = updatedProject;
+    
+    console.log("Updated project:", updatedProject);
+    console.log("Updated project list:", updatedProjects);
     
     setProjects(updatedProjects);
     saveProjects(updatedProjects);
     
-    return updatedProjects.find(p => p.id === id);
+    return updatedProject;
   }, [projects, saveProjects]);
 
   return {
     projects,
     isLoading,
     error,
+    loadProjects,
     getProjectById,
     addProject,
     deleteProject,
-    updateProject,
-    loadProjects
+    updateProject
   };
 };

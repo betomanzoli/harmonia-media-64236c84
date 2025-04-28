@@ -59,7 +59,6 @@ const NewProjectForm: React.FC<NewProjectFormProps> = ({ onAddProject }) => {
           description: v.description,
           audioUrl: v.audioUrl,
           dateAdded: new Date().toLocaleDateString('pt-BR'),
-          recommended: v.recommended,
           // Extract fileId from Google Drive URL
           fileId: v.audioUrl.match(/[-\w]{25,}/) ? v.audioUrl.match(/[-\w]{25,}/)![0] : ''
         }))
@@ -105,25 +104,43 @@ const NewProjectForm: React.FC<NewProjectFormProps> = ({ onAddProject }) => {
           </Button>
         </div>
 
-        {formState.versions.map((version, index) => (
-          <PreviewVersionInput
-            key={index}
-            index={index}
-            title={version.title}
-            description={version.description}
-            audioUrl={version.audioUrl}
-            recommended={version.recommended}
-            onTitleChange={(i, value) => actions.updateVersion(i, 'title', value)}
-            onDescriptionChange={(i, value) => actions.updateVersion(i, 'description', value)}
-            onAudioUrlChange={(i, value) => actions.updateVersion(i, 'audioUrl', value)}
-            onRecommendedChange={(i, value) => actions.updateVersion(i, 'recommended', value)}
-            onRemove={actions.removeVersion}
-            canRemove={formState.versions.length > 1}
-          />
-        ))}
+        <div className="space-y-4 max-h-[40vh] overflow-y-auto pr-2 pb-4">
+          {formState.versions.map((version, index) => (
+            <div key={index} className="version-container">
+              <PreviewVersionInput
+                index={index}
+                title={version.title}
+                description={version.description}
+                audioUrl={version.audioUrl}
+                recommended={false}
+                onTitleChange={(i, value) => actions.updateVersion(i, 'title', value)}
+                onDescriptionChange={(i, value) => actions.updateVersion(i, 'description', value)}
+                onAudioUrlChange={(i, value) => actions.updateVersion(i, 'audioUrl', value)}
+                onRecommendedChange={() => {}}
+                onRemove={actions.removeVersion}
+                canRemove={formState.versions.length > 1}
+                hideRecommended={true}
+              />
+              {index < formState.versions.length - 1 && (
+                <div className="mt-2 mb-4 flex justify-end">
+                  <Button 
+                    type="button" 
+                    onClick={actions.addVersion} 
+                    variant="outline"
+                    size="sm"
+                    className="text-sm"
+                  >
+                    <Plus className="w-3 h-3 mr-1" />
+                    Adicionar outra versão
+                  </Button>
+                </div>
+              )}
+            </div>
+          ))}
+        </div>
       </div>
       
-      <div className="flex justify-end">
+      <div className="flex justify-end sticky bottom-0 pt-4 bg-white">
         <Button type="submit" disabled={formState.isSubmitting}>
           {formState.isSubmitting ? 'Criando...' : 'Criar Projeto'}
         </Button>

@@ -13,17 +13,19 @@ import PreviewFeedbackForm from './PreviewFeedbackForm';
 import PreviewNextSteps from './PreviewNextSteps';
 import { usePreviewData } from '@/hooks/use-preview-data';
 import { notificationService } from '@/services/notificationService';
+import { usePreviewProjects } from '@/hooks/admin/usePreviewProjects';
 
 interface MusicPreviewSystemProps {
   projectId?: string | null;
 }
 
 const MusicPreviewSystem: React.FC<MusicPreviewSystemProps> = ({ projectId }) => {
-  const { projectData, setProjectData, isLoading, actualProjectId } = usePreviewData(projectId || undefined);
+  const { projectData, setProjectData, isLoading, actualProjectId, updateProjectStatus } = usePreviewData(projectId || undefined);
   const [selectedPreview, setSelectedPreview] = useState<string | null>(null);
   const [feedback, setFeedback] = useState('');
   const navigate = useNavigate();
   const { toast } = useToast();
+  const { updateProject } = usePreviewProjects();
 
   const handleSubmitFeedback = () => {
     if (!selectedPreview) {
@@ -35,20 +37,39 @@ const MusicPreviewSystem: React.FC<MusicPreviewSystemProps> = ({ projectId }) =>
       return;
     }
     
+    if (!feedback.trim()) {
+      toast({
+        title: "Feedback vazio",
+        description: "Por favor, escreva seu feedback antes de enviar.",
+        variant: "destructive"
+      });
+      return;
+    }
+    
+    // Update project status in localStorage
+    if (actualProjectId) {
+      updateProject(actualProjectId, {
+        status: 'feedback',
+        feedback: feedback,
+        lastActivityDate: new Date().toLocaleDateString('pt-BR')
+      });
+      
+      // Update the UI
+      updateProjectStatus('feedback');
+      
+      // Notify
+      notificationService.notify('feedback_received', {
+        projectId: actualProjectId,
+        clientName: projectData?.clientName || 'Cliente',
+        message: feedback,
+        versionId: selectedPreview
+      });
+    }
+    
     toast({
       title: "Feedback enviado!",
       description: "Obrigado pelo seu feedback. Nossa equipe já está trabalhando nas modificações.",
     });
-    
-    // Notificar sobre feedback
-    notificationService.notify('feedback_received', {
-      projectId: actualProjectId,
-      clientName: projectData?.clientName || 'Cliente',
-      message: feedback,
-      versionId: selectedPreview
-    });
-    
-    setProjectData(prev => prev ? {...prev, status: 'feedback' as const} : null);
   };
   
   const handleApprove = () => {
@@ -61,30 +82,35 @@ const MusicPreviewSystem: React.FC<MusicPreviewSystemProps> = ({ projectId }) =>
       return;
     }
     
+    // Update project status in localStorage
+    if (actualProjectId) {
+      updateProject(actualProjectId, {
+        status: 'approved',
+        feedback: feedback || "Cliente aprovou sem comentários adicionais.",
+        lastActivityDate: new Date().toLocaleDateString('pt-BR')
+      });
+      
+      // Update the UI
+      updateProjectStatus('approved');
+      
+      // Notify
+      notificationService.notify('preview_approved', {
+        projectId: actualProjectId,
+        clientName: projectData?.clientName || 'Cliente',
+        versionId: selectedPreview
+      });
+    }
+    
     toast({
       title: "Música aprovada!",
       description: "Estamos felizes que você gostou! Vamos finalizar sua música e entregar em breve.",
     });
-    
-    // Notificar sobre aprovação
-    notificationService.notify('preview_approved', {
-      projectId: actualProjectId,
-      clientName: projectData?.clientName || 'Cliente',
-      versionId: selectedPreview
-    });
-    
-    setProjectData(prev => prev ? {...prev, status: 'approved' as const} : null);
   };
 
-  // Set the first or recommended preview as selected on load
+  // Set the first preview as selected on load
   useEffect(() => {
-    if (projectData?.previews && projectData.previews.length > 0) {
-      const recommendedPreview = projectData.previews.find(p => p.recommended);
-      if (recommendedPreview && !selectedPreview) {
-        setSelectedPreview(recommendedPreview.id);
-      } else if (!selectedPreview) {
-        setSelectedPreview(projectData.previews[0].id);
-      }
+    if (projectData?.previews && projectData.previews.length > 0 && !selectedPreview) {
+      setSelectedPreview(projectData.previews[0].id);
     }
   }, [projectData, selectedPreview]);
 

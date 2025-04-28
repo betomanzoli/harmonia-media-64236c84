@@ -18,20 +18,20 @@ export const usePreviewData = (previewId: string | undefined) => {
   const [actualProjectId, setActualProjectId] = useState<string | null>(null);
   const { projectData, setProjectData, isLoading } = usePreviewProject(actualProjectId || undefined);
   const { toast } = useToast();
-  const { updateProject } = usePreviewProjects();
+  const { updateProject, getProjectById } = usePreviewProjects();
   
   useEffect(() => {
     if (previewId) {
       // Check if ID needs to be decoded
       const decodedId = getProjectIdFromPreviewLink(previewId) || previewId;
+      console.log(`Setting actual project ID: ${decodedId} from preview ID: ${previewId}`);
       setActualProjectId(decodedId);
-      
-      console.log(`Carregando dados da prévia: ${decodedId}`);
     }
   }, [previewId]);
   
   useEffect(() => {
     if (!isLoading && !projectData && actualProjectId) {
+      console.error(`Project data not found for ID: ${actualProjectId}`);
       toast({
         title: "Prévia não encontrada",
         description: "O código de prévia fornecido não é válido ou expirou.",
@@ -42,12 +42,28 @@ export const usePreviewData = (previewId: string | undefined) => {
 
   // Update the project with new status in both hooks and local storage
   const updateProjectStatus = (status: 'waiting' | 'feedback' | 'approved') => {
+    console.log(`Updating project status to ${status} for project ${actualProjectId}`);
+    
     if (actualProjectId) {
+      // First check if project exists
+      const project = getProjectById(actualProjectId);
+      if (!project) {
+        console.error(`Project ${actualProjectId} not found for status update`);
+        toast({
+          title: "Erro ao atualizar status",
+          description: "Projeto não encontrado. Tente recarregar a página.",
+          variant: "destructive"
+        });
+        return;
+      }
+      
       // Update in preview projects storage
-      updateProject(actualProjectId, { 
+      const updatedProject = updateProject(actualProjectId, { 
         status,
         lastActivityDate: new Date().toLocaleDateString('pt-BR')
       });
+      
+      console.log("Project updated with new status:", updatedProject);
       
       // Update local state
       if (projectData) {

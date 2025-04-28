@@ -12,7 +12,6 @@ interface MusicPreview {
   audioUrl?: string;
   url?: string;
   fileId?: string;
-  recommended?: boolean;
 }
 
 interface PreviewPlayerListProps {
@@ -60,11 +59,6 @@ const PreviewPlayerList: React.FC<PreviewPlayerListProps> = ({
             <div className="flex justify-between items-start mb-4">
               <div>
                 <h3 className="font-bold text-lg">{version.title}</h3>
-                {version.recommended && (
-                  <span className="inline-block px-2 py-1 bg-harmonia-green/20 text-harmonia-green text-xs rounded-full mt-1">
-                    Recomendada
-                  </span>
-                )}
               </div>
               {selectedVersion === version.id ? (
                 <Button 
@@ -96,9 +90,8 @@ const PreviewPlayerList: React.FC<PreviewPlayerListProps> = ({
                 <GoogleDriveAudioPlayer
                   fileId={getFileId(version)}
                   title={version.title}
-                  subtitle="Prévia 30 segundos"
+                  subtitle="Pré-visualização de áudio"
                   isPreview={true}
-                  previewDuration={30}
                 />
               ) : (
                 <div className="bg-red-50 border border-red-200 rounded-md p-3 text-sm text-red-500">

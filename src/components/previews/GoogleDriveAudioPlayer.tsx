@@ -32,8 +32,9 @@ const GoogleDriveAudioPlayer: React.FC<GoogleDriveAudioPlayerProps> = ({
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const { toast } = useToast();
 
-  // Google Drive direct stream URL
-  const audioUrl = `https://drive.google.com/uc?export=download&id=${fileId}`;
+  // Use streaming URL instead of direct download
+  // This helps prevent direct downloads while allowing playback
+  const audioUrl = `https://docs.google.com/uc?export=view&id=${fileId}`;
 
   // Use our custom preview timer hook
   const { clearPreviewTimer } = usePreviewTimer({
@@ -52,13 +53,17 @@ const GoogleDriveAudioPlayer: React.FC<GoogleDriveAudioPlayerProps> = ({
     const audio = new Audio(audioUrl);
     audio.volume = volume;
     audioRef.current = audio;
+    
+    // Add CORS header to prevent downloading
+    audio.crossOrigin = "anonymous";
 
     const updateProgress = () => {
       setCurrentTime(audio.currentTime);
     };
 
     const handleAudioLoad = () => {
-      setDuration(isPreview ? Math.min(previewDuration, audio.duration) : audio.duration);
+      console.log("Audio loaded successfully:", fileId);
+      setDuration(audio.duration);
       setIsLoading(false);
       setAudioError(null);
     };
@@ -69,12 +74,12 @@ const GoogleDriveAudioPlayer: React.FC<GoogleDriveAudioPlayerProps> = ({
     };
 
     const handleError = (e: ErrorEvent) => {
-      console.error("Erro ao carregar áudio:", e);
+      console.error("Erro ao carregar áudio:", e, "FileID:", fileId);
       setIsLoading(false);
       setAudioError("Não foi possível carregar o áudio. Verifique o link do Google Drive.");
       toast({
         title: "Erro ao carregar áudio",
-        description: "Verifique se o link do Google Drive está correto e compartilhado.",
+        description: "Verifique se o link do Google Drive está correto e compartilhado com acesso público.",
         variant: "destructive"
       });
     };
@@ -84,13 +89,20 @@ const GoogleDriveAudioPlayer: React.FC<GoogleDriveAudioPlayerProps> = ({
     audio.addEventListener('ended', handleAudioEnd);
     audio.addEventListener('error', handleError as EventListener);
 
-    // Start loading the audio
+    // Attempt to load the audio
     audio.load();
+    
+    // Handle security errors
+    window.addEventListener('securitypolicyviolation', (e) => {
+      console.error('Security policy violation:', e);
+      setAudioError("Erro de política de segurança. Verifique as permissões de compartilhamento do arquivo.");
+    });
 
     // Set a timeout to detect very slow loading or failed loads
     const loadingTimeout = setTimeout(() => {
       if (isLoading && !audio.duration) {
-        setAudioError("Tempo de carregamento excedido. Verifique a URL do arquivo.");
+        console.log("Audio load timeout for file:", fileId);
+        setAudioError("Tempo de carregamento excedido. Verifique a URL do arquivo e as permissões de compartilhamento.");
         setIsLoading(false);
       }
     }, 10000); // 10 seconds timeout
@@ -105,7 +117,7 @@ const GoogleDriveAudioPlayer: React.FC<GoogleDriveAudioPlayerProps> = ({
       audio.removeEventListener('ended', handleAudioEnd);
       audio.removeEventListener('error', handleError as EventListener);
     };
-  }, [audioUrl, isPreview, previewDuration, toast, volume, clearPreviewTimer, isLoading]);
+  }, [audioUrl, toast, volume, clearPreviewTimer, isLoading, fileId]);
 
   useEffect(() => {
     if (audioRef.current) {
@@ -119,18 +131,18 @@ const GoogleDriveAudioPlayer: React.FC<GoogleDriveAudioPlayerProps> = ({
     if (isPlaying) {
       audioRef.current.pause();
     } else {
-      // Se for prévia e o tempo atual estiver no limite, volte ao início
-      if (isPreview && currentTime >= previewDuration) {
+      // Reinicia se estiver no final
+      if (currentTime >= duration - 0.1) {
         audioRef.current.currentTime = 0;
         setCurrentTime(0);
       }
 
       audioRef.current.play().catch(error => {
-        console.error("Erro ao reproduzir áudio:", error);
-        setAudioError("Erro ao reproduzir. Verifique o compartilhamento do arquivo no Google Drive.");
+        console.error("Erro ao reproduzir áudio:", error, "FileID:", fileId);
+        setAudioError("Erro ao reproduzir. O arquivo pode estar com restrições de acesso.");
         toast({
           title: "Erro ao reproduzir",
-          description: "O arquivo do Google Drive não está acessível. Verifique as permissões de compartilhamento.",
+          description: "O arquivo não está acessível. Verifique se o link do Google Drive está compartilhado como 'Qualquer pessoa com o link'.",
           variant: "destructive"
         });
       });
@@ -142,19 +154,8 @@ const GoogleDriveAudioPlayer: React.FC<GoogleDriveAudioPlayerProps> = ({
     if (!audioRef.current || audioError) return;
     
     const newTime = value[0];
-    
-    // Se for prévia, não permita deslizar além do tempo permitido
-    if (isPreview && newTime > previewDuration) {
-      audioRef.current.currentTime = previewDuration;
-      setCurrentTime(previewDuration);
-      toast({
-        title: "Prévia limitada",
-        description: "Esta é apenas uma prévia de 30 segundos.",
-      });
-    } else {
-      audioRef.current.currentTime = newTime;
-      setCurrentTime(newTime);
-    }
+    audioRef.current.currentTime = newTime;
+    setCurrentTime(newTime);
   };
 
   const handleVolumeChange = (value: number[]) => {
@@ -176,9 +177,6 @@ const GoogleDriveAudioPlayer: React.FC<GoogleDriveAudioPlayerProps> = ({
     return <Volume2 size={18} />;
   };
 
-  // Calcular o tempo máximo para exibição
-  const maxDisplayTime = isPreview ? Math.min(previewDuration, duration) : duration;
-
   return (
     <Card className="p-4 shadow-sm">
       <div className="flex flex-col space-y-3">
@@ -189,13 +187,6 @@ const GoogleDriveAudioPlayer: React.FC<GoogleDriveAudioPlayerProps> = ({
               <p className="text-xs text-gray-500">{subtitle}</p>
             )}
           </div>
-          
-          {isPreview && (
-            <span className="text-xs px-2 py-0.5 bg-harmonia-green/20 text-harmonia-green rounded-full flex items-center">
-              <Lock className="w-3 h-3 mr-1" />
-              Prévia 30s
-            </span>
-          )}
         </div>
 
         {isLoading ? (
@@ -224,14 +215,14 @@ const GoogleDriveAudioPlayer: React.FC<GoogleDriveAudioPlayerProps> = ({
             <div className="flex-1">
               <Slider
                 value={[currentTime]}
-                max={maxDisplayTime || 100}
+                max={duration || 100}
                 step={0.1}
                 onValueChange={handleTimeChange}
                 className="cursor-pointer"
               />
               <div className="flex justify-between text-xs text-gray-500 mt-1">
                 <span>{formatTime(currentTime)}</span>
-                <span>{formatTime(maxDisplayTime || 0)}</span>
+                <span>{formatTime(duration || 0)}</span>
               </div>
             </div>
 
