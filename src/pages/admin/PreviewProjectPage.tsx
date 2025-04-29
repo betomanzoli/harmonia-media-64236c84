@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import AdminLayout from '@/components/admin/layout/AdminLayout';
 import { Card } from '@/components/ui/card';
@@ -33,7 +34,8 @@ const PreviewProjectPage: React.FC = () => {
     const currentVersions = project.versionsList || [];
     
     // Se a nova versão for marcada como final, adiciona um indicador
-    const versionTitle = newVersion.final ? 
+    const isFinalVersion = newVersion.final === true;
+    const versionTitle = isFinalVersion ? 
       `FINAL - ${newVersion.name}` : 
       newVersion.name;
     
@@ -55,7 +57,7 @@ const PreviewProjectPage: React.FC = () => {
     updatedVersions = [...updatedVersions, versionToAdd];
     
     // Update history
-    const historyAction = newVersion.final ? 
+    const historyAction = isFinalVersion ? 
       `Versão final adicionada: ${versionTitle}` : 
       `Nova versão adicionada: ${versionTitle}`;
     
@@ -76,7 +78,7 @@ const PreviewProjectPage: React.FC = () => {
     });
     
     toast({
-      title: newVersion.final ? "Versão final adicionada" : "Versão adicionada",
+      title: isFinalVersion ? "Versão final adicionada" : "Versão adicionada",
       description: `${versionTitle} foi adicionada ao projeto com sucesso.`,
     });
   };

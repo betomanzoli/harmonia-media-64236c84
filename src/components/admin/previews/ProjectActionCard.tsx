@@ -1,15 +1,13 @@
 
 import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
-import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
-import { Label } from "@/components/ui/label";
-import { Copy, CalendarPlus, MessageSquare, Clock, Mail, CheckCircle } from 'lucide-react';
+import { Copy, CalendarPlus, CheckCircle } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import AddVersionDialog from './AddVersionDialog';
 import { VersionItem } from '@/hooks/admin/usePreviewProjects';
+import ProjectActionButton from './components/ProjectActionButton';
+import ContactClientActions from './components/ContactClientActions';
+import DeadlineExtensionDialog from './components/DeadlineExtensionDialog';
 
 interface ProjectActionCardProps {
   projectId: string;
@@ -53,54 +51,6 @@ const ProjectActionCard: React.FC<ProjectActionCardProps> = ({
         });
       });
   };
-  
-  const handleWhatsApp = () => {
-    if (!clientPhone) {
-      toast({
-        title: "Telefone não disponível",
-        description: "Nenhum número de telefone registrado para este cliente.",
-        variant: "destructive"
-      });
-      return;
-    }
-    
-    // Format phone number (remove non-digits)
-    const formattedPhone = clientPhone.replace(/\D/g, '');
-    
-    // Prepare message text
-    const message = encodeURIComponent(
-      `Olá! Sua prévia musical já está disponível para avaliação. Acesse: ${window.location.origin}/preview/${projectId}`
-    );
-    
-    // Create WhatsApp link
-    const whatsappUrl = `https://wa.me/${formattedPhone}?text=${message}`;
-    
-    // Open in new tab
-    window.open(whatsappUrl, '_blank');
-  };
-  
-  const handleEmail = () => {
-    if (!clientEmail) {
-      toast({
-        title: "Email não disponível",
-        description: "Nenhum endereço de email registrado para este cliente.",
-        variant: "destructive"
-      });
-      return;
-    }
-    
-    // Prepare email subject and body
-    const subject = encodeURIComponent("Sua prévia musical está disponível");
-    const body = encodeURIComponent(
-      `Olá!\n\nSua prévia musical já está disponível para avaliação.\n\nAcesse: ${window.location.origin}/preview/${projectId}\n\nAguardamos seu feedback!\n\nAtenciosamente,\nEquipe harmonIA`
-    );
-    
-    // Create mailto link
-    const mailtoUrl = `mailto:${clientEmail}?subject=${subject}&body=${body}`;
-    
-    // Open in new tab/email client
-    window.location.href = mailtoUrl;
-  };
 
   const handleAddFinalVersion = (version: VersionItem) => {
     // Adicione 'final: true' à versão
@@ -119,67 +69,52 @@ const ProjectActionCard: React.FC<ProjectActionCardProps> = ({
         <CardTitle className="text-lg">Ações</CardTitle>
       </CardHeader>
       <CardContent className="space-y-4">
-        <Button 
-          className="w-full flex justify-start" 
+        <ProjectActionButton 
+          icon={Copy}
           onClick={() => setIsVersionDialogOpen(true)}
+          variant="default"
+          className="w-full"
         >
-          <Copy className="mr-2 h-4 w-4" />
           Adicionar Nova Versão
-        </Button>
+        </ProjectActionButton>
         
         {projectStatus === 'approved' && (
-          <Button 
-            className="w-full flex justify-start bg-green-600 hover:bg-green-700" 
+          <ProjectActionButton 
+            icon={CheckCircle}
             onClick={() => setIsFinalVersionDialogOpen(true)}
+            variant="default"
+            className="w-full bg-green-600 hover:bg-green-700"
           >
-            <CheckCircle className="mr-2 h-4 w-4" />
             Adicionar Versão Final
-          </Button>
+          </ProjectActionButton>
         )}
         
-        <Button 
-          variant="outline" 
-          className="w-full flex justify-start"
+        <ProjectActionButton 
+          icon={CalendarPlus}
           onClick={() => setIsDeadlineConfirmOpen(true)}
+          variant="outline"
+          className="w-full"
         >
-          <CalendarPlus className="mr-2 h-4 w-4" />
           Estender Prazo (+7 dias)
-        </Button>
+        </ProjectActionButton>
         
-        <Button 
-          variant="outline" 
-          className="w-full flex justify-start"
+        <ProjectActionButton 
+          icon={Copy}
           onClick={handleCopyLink}
+          variant="outline"
+          className="w-full"
         >
-          <Copy className="mr-2 h-4 w-4" />
           Copiar Link de Prévia
-        </Button>
+        </ProjectActionButton>
         
-        <div className="pt-2 border-t border-gray-100 mt-4">
-          <h3 className="text-sm font-medium mb-2">Contatar Cliente</h3>
-          <div className="grid grid-cols-2 gap-2">
-            <Button 
-              variant="outline" 
-              className="flex justify-start"
-              onClick={handleWhatsApp}
-            >
-              <MessageSquare className="mr-2 h-4 w-4" />
-              WhatsApp
-            </Button>
-            
-            <Button 
-              variant="outline" 
-              className="flex justify-start"
-              onClick={handleEmail}
-            >
-              <Mail className="mr-2 h-4 w-4" />
-              Email
-            </Button>
-          </div>
-        </div>
+        <ContactClientActions
+          projectId={projectId}
+          clientPhone={clientPhone}
+          clientEmail={clientEmail}
+        />
       </CardContent>
       
-      {/* Use the AddVersionDialog with correct props */}
+      {/* Version Dialogs */}
       <AddVersionDialog 
         projectId={projectId}
         isOpen={isVersionDialogOpen}
@@ -188,7 +123,6 @@ const ProjectActionCard: React.FC<ProjectActionCardProps> = ({
         onAddVersion={onAddVersion}
       />
 
-      {/* Diálogo para versões finais */}
       <AddVersionDialog 
         projectId={projectId}
         isOpen={isFinalVersionDialogOpen}
@@ -197,38 +131,12 @@ const ProjectActionCard: React.FC<ProjectActionCardProps> = ({
         onAddVersion={onAddVersion}
       />
       
-      {/* Extend Deadline Confirmation Dialog */}
-      <Dialog open={isDeadlineConfirmOpen} onOpenChange={setIsDeadlineConfirmOpen}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Estender Prazo</DialogTitle>
-            <DialogDescription>
-              Tem certeza que deseja estender o prazo da prévia por mais 7 dias?
-            </DialogDescription>
-          </DialogHeader>
-          
-          <div className="flex items-center justify-center py-4">
-            <Clock className="h-12 w-12 text-amber-500" />
-          </div>
-          
-          <DialogFooter>
-            <Button 
-              variant="outline" 
-              onClick={() => setIsDeadlineConfirmOpen(false)}
-            >
-              Cancelar
-            </Button>
-            <Button 
-              onClick={() => {
-                onExtendDeadline();
-                setIsDeadlineConfirmOpen(false);
-              }}
-            >
-              Confirmar Extensão
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+      {/* Deadline Extension Dialog */}
+      <DeadlineExtensionDialog
+        isOpen={isDeadlineConfirmOpen}
+        onClose={() => setIsDeadlineConfirmOpen(false)}
+        onConfirm={onExtendDeadline}
+      />
     </Card>
   );
 };

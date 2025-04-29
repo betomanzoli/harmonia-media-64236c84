@@ -1,4 +1,3 @@
-
 import { useState, useEffect, useCallback } from 'react';
 
 export interface VersionItem {
@@ -10,6 +9,7 @@ export interface VersionItem {
   url?: string; // Added the url property for backward compatibility
   dateAdded: string;
   recommended?: boolean;
+  final?: boolean;
 }
 
 export interface ProjectItem {

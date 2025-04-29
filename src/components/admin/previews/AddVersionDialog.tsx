@@ -1,6 +1,6 @@
 
 import React, { useState } from 'react';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Plus } from "lucide-react";
 import AddVersionForm from './AddVersionForm';
@@ -8,7 +8,7 @@ import { VersionItem } from '@/hooks/admin/usePreviewProjects';
 
 interface AddVersionDialogProps {
   projectId: string;
-  onAddVersion?: (newVersion: VersionItem) => void;
+  onAddVersion: (newVersion: VersionItem) => void;
   // Adding isOpen and onClose props to match how it's being used
   isOpen?: boolean;
   onClose?: () => void;
@@ -54,12 +54,12 @@ const AddVersionDialog: React.FC<AddVersionDialogProps> = ({
 
   return (
     <Dialog open={isDialogOpen} onOpenChange={handleOpenChange}>
-      <DialogTrigger asChild>
+      {!isOpen && (
         <Button className="w-full flex justify-start">
           <Plus className="h-4 w-4 mr-2" />
           Adicionar Nova Versão
         </Button>
-      </DialogTrigger>
+      )}
       <DialogContent className="sm:max-w-[550px]">
         <DialogHeader>
           <DialogTitle>Adicionar Nova Versão</DialogTitle>
