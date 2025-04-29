@@ -27,7 +27,15 @@ export interface ProjectItem {
   briefingId?: string;
   versionsList?: VersionItem[];
   feedback?: string;
-  history?: any[];
+  history?: {
+    action: string;
+    timestamp: string;
+    data?: {
+      message?: string;
+      status?: string;
+      version?: string;
+    };
+  }[];
 }
 
 export const usePreviewProjects = () => {
@@ -171,6 +179,61 @@ export const usePreviewProjects = () => {
     const formattedUpdates = { ...updates };
     if (updates.packageType) {
       formattedUpdates.packageType = formatPackageType(updates.packageType);
+    }
+    
+    // Add history entry if feedback is provided
+    if (updates.status === 'feedback' && updates.feedback) {
+      const feedbackEntry = {
+        action: "Cliente enviou feedback",
+        timestamp: new Date().toLocaleString('pt-BR'),
+        data: { 
+          message: updates.feedback,
+          status: 'feedback'
+        }
+      };
+      
+      if (!formattedUpdates.history) {
+        formattedUpdates.history = [...(projects[projectIndex].history || []), feedbackEntry];
+      } else {
+        formattedUpdates.history = [...formattedUpdates.history, feedbackEntry];
+      }
+    }
+    
+    // Add history entry if status changed to approved
+    if (updates.status === 'approved' && projects[projectIndex].status !== 'approved') {
+      const approvalEntry = {
+        action: "Cliente aprovou o projeto",
+        timestamp: new Date().toLocaleString('pt-BR'),
+        data: { 
+          message: "O cliente aprovou uma das versões propostas.",
+          status: 'approved' 
+        }
+      };
+      
+      if (!formattedUpdates.history) {
+        formattedUpdates.history = [...(projects[projectIndex].history || []), approvalEntry];
+      } else {
+        formattedUpdates.history = [...formattedUpdates.history, approvalEntry];
+      }
+    }
+    
+    // Add history entry if deadline extended
+    if (updates.expirationDate && 
+        updates.expirationDate !== projects[projectIndex].expirationDate && 
+        !updates.history?.some(h => h.action.includes("Prazo estendido"))) {
+      const deadlineEntry = {
+        action: "Prazo estendido",
+        timestamp: new Date().toLocaleString('pt-BR'),
+        data: { 
+          message: `Prazo estendido para ${updates.expirationDate}` 
+        }
+      };
+      
+      if (!formattedUpdates.history) {
+        formattedUpdates.history = [...(projects[projectIndex].history || []), deadlineEntry];
+      } else {
+        formattedUpdates.history = [...formattedUpdates.history, deadlineEntry];
+      }
     }
     
     const updatedProject = {

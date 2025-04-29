@@ -3,6 +3,7 @@ import React, { useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import MusicPreviewSystem from '@/components/previews/MusicPreviewSystem';
 import { useToast } from '@/hooks/use-toast';
+import PublicLayout from '@/layouts/PublicLayout';
 
 const MusicPreviewPage: React.FC = () => {
   const { projectId } = useParams<{ projectId: string }>();
@@ -56,7 +57,7 @@ const MusicPreviewPage: React.FC = () => {
   }, [toast]);
 
   return (
-    <div className="min-h-screen pt-20">
+    <div className="min-h-screen bg-gray-50 pt-16 pb-16">
       <MusicPreviewSystem projectId={projectId || ""} />
     </div>
   );

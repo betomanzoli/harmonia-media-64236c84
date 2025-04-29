@@ -80,7 +80,7 @@ const MusicPreviewSystem: React.FC<MusicPreviewSystemProps> = ({ projectId }) =>
   };
 
   return (
-    <div className="max-w-4xl mx-auto px-4">
+    <div className="max-w-4xl mx-auto px-4 bg-white rounded-lg shadow-sm my-8 p-6">
       <PreviewHeader 
         projectData={{
           projectTitle: formatPackageType(projectData.projectTitle),
@@ -103,8 +103,8 @@ const MusicPreviewSystem: React.FC<MusicPreviewSystemProps> = ({ projectId }) =>
               selectedPreview={selectedVersion}
               feedback=""
               setFeedback={() => {}}
-              handleSubmit={() => handleFeedbackSubmit('neutral', '')}
-              handleApprove={() => handleFeedbackSubmit('positive', '')}
+              handleSubmit={handleSubmitFeedback => handleFeedbackSubmit('neutral', handleSubmitFeedback)}
+              handleApprove={handleApproveFeedback => handleFeedbackSubmit('positive', handleApproveFeedback)}
               status={projectData.status}
             />
           )}
@@ -119,7 +119,10 @@ const MusicPreviewSystem: React.FC<MusicPreviewSystemProps> = ({ projectId }) =>
             projectData={projectData}
           />
           <PreviewInstructions status={projectData.status} />
-          <PreviewCountdown />
+          <PreviewCountdown 
+            days={14}
+            action="para avaliação"
+          />
           <SharePreviewDialog />
           <PreviewCopyright />
         </div>

@@ -23,7 +23,7 @@ export const usePreviewProject = (projectId: string | undefined) => {
   const { toast } = useToast();
   const [projectData, setProjectData] = useState<PreviewProject | null>(null);
   const { audioFiles, isLoading } = useGoogleDriveAudio();
-  const { getProjectById } = usePreviewProjects();
+  const { getProjectById, updateProject } = usePreviewProjects();
   
   useEffect(() => {
     if (!projectId) return;

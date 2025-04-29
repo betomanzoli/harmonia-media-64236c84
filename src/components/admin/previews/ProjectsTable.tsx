@@ -94,7 +94,8 @@ const ProjectsTable: React.FC<ProjectsTableProps> = ({
           ) : projects.length === 0 ? (
             <TableRow>
               <TableCell colSpan={7} className="text-center py-8 text-gray-500">
-                Nenhum projeto de prévia encontrado.
+                <h3 className="font-bold text-xl mb-2">Projetos de Prévias</h3>
+                <p>Nenhum projeto de prévia encontrado.</p>
               </TableCell>
             </TableRow>
           ) : (
