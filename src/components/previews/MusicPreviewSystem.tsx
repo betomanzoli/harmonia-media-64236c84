@@ -22,6 +22,7 @@ const MusicPreviewSystem: React.FC<MusicPreviewSystemProps> = ({ projectId }) =>
   const { toast } = useToast();
   const [feedbackSubmitted, setFeedbackSubmitted] = useState(false);
   const [selectedVersion, setSelectedVersion] = useState<string | null>(null);
+  const [feedback, setFeedback] = useState('');
 
   if (isLoading) {
     return <PreviewLoadingState />;
@@ -58,11 +59,8 @@ const MusicPreviewSystem: React.FC<MusicPreviewSystemProps> = ({ projectId }) =>
       .join(' ');
   };
 
-  const handleFeedbackSubmit = (sentiment: 'positive' | 'neutral' | 'negative', comments: string) => {
-    const success = updateProjectStatus(
-      sentiment === 'positive' ? 'approved' : 'feedback',
-      comments
-    );
+  const handleFeedbackSubmit = (comments: string = feedback) => {
+    const success = updateProjectStatus('feedback', comments);
     
     if (success) {
       setFeedbackSubmitted(true);
@@ -74,6 +72,24 @@ const MusicPreviewSystem: React.FC<MusicPreviewSystemProps> = ({ projectId }) =>
       toast({
         title: "Erro ao enviar feedback",
         description: "Houve um problema ao enviar seu feedback. Tente novamente mais tarde.",
+        variant: "destructive"
+      });
+    }
+  };
+
+  const handleApprove = (comments: string = feedback) => {
+    const success = updateProjectStatus('approved', comments);
+    
+    if (success) {
+      setFeedbackSubmitted(true);
+      toast({
+        title: "Prévia aprovada!",
+        description: "Obrigado por aprovar a prévia! Finalizaremos sua música em breve.",
+      });
+    } else {
+      toast({
+        title: "Erro ao aprovar prévia",
+        description: "Houve um problema ao aprovar a prévia. Tente novamente mais tarde.",
         variant: "destructive"
       });
     }
@@ -101,10 +117,10 @@ const MusicPreviewSystem: React.FC<MusicPreviewSystemProps> = ({ projectId }) =>
           {!feedbackSubmitted && projectData.status !== 'approved' && (
             <PreviewFeedbackForm 
               selectedPreview={selectedVersion}
-              feedback=""
-              setFeedback={() => {}}
-              handleSubmit={handleSubmitFeedback => handleFeedbackSubmit('neutral', handleSubmitFeedback)}
-              handleApprove={handleApproveFeedback => handleFeedbackSubmit('positive', handleApproveFeedback)}
+              feedback={feedback}
+              setFeedback={setFeedback}
+              handleSubmit={handleFeedbackSubmit}
+              handleApprove={handleApprove}
               status={projectData.status}
             />
           )}

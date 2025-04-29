@@ -9,18 +9,51 @@ import { VersionItem } from '@/hooks/admin/usePreviewProjects';
 interface AddVersionDialogProps {
   projectId: string;
   onAddVersion: (newVersion: VersionItem) => void;
+  // Adding isOpen and onClose props to match how it's being used
+  isOpen?: boolean;
+  onClose?: () => void;
+  onSubmit?: (version: VersionItem) => void;
 }
 
-const AddVersionDialog: React.FC<AddVersionDialogProps> = ({ projectId, onAddVersion }) => {
-  const [open, setOpen] = useState(false);
+const AddVersionDialog: React.FC<AddVersionDialogProps> = ({ 
+  projectId, 
+  onAddVersion,
+  isOpen,
+  onClose,
+  onSubmit
+}) => {
+  // Use local state only if isOpen is not provided from props
+  const [localOpen, setLocalOpen] = useState(false);
+  
+  // Determine if dialog is open based on props or local state
+  const isDialogOpen = isOpen !== undefined ? isOpen : localOpen;
+  
+  const handleOpenChange = (open: boolean) => {
+    if (isOpen !== undefined && onClose) {
+      // If controlled from parent
+      if (!open) onClose();
+    } else {
+      // If controlled locally
+      setLocalOpen(open);
+    }
+  };
 
   const handleAddVersion = (version: VersionItem) => {
-    onAddVersion(version);
-    setOpen(false);
+    if (onSubmit) {
+      onSubmit(version);
+    } else {
+      onAddVersion(version);
+    }
+    
+    if (isOpen !== undefined && onClose) {
+      onClose();
+    } else {
+      setLocalOpen(false);
+    }
   };
 
   return (
-    <Dialog open={open} onOpenChange={setOpen}>
+    <Dialog open={isDialogOpen} onOpenChange={handleOpenChange}>
       <DialogTrigger asChild>
         <Button className="w-full flex justify-start">
           <Plus className="h-4 w-4 mr-2" />
@@ -34,7 +67,7 @@ const AddVersionDialog: React.FC<AddVersionDialogProps> = ({ projectId, onAddVer
         <AddVersionForm 
           projectId={projectId}
           onAddVersion={handleAddVersion}
-          onCancel={() => setOpen(false)}
+          onCancel={() => handleOpenChange(false)}
         />
       </DialogContent>
     </Dialog>

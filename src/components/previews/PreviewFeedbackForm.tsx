@@ -1,5 +1,5 @@
 
-import React from 'react';
+import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from "@/components/ui/card";
 import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
@@ -10,8 +10,9 @@ interface PreviewFeedbackFormProps {
   selectedPreview: string | null;
   feedback: string;
   setFeedback: (feedback: string) => void;
-  handleSubmit: () => void;
-  handleApprove: () => void;
+  // Update the function signatures to match how they're being called
+  handleSubmit: (feedback?: string) => void;
+  handleApprove: (feedback?: string) => void;
   status: string;
   versionTitle?: string;
 }
@@ -25,6 +26,22 @@ const PreviewFeedbackForm: React.FC<PreviewFeedbackFormProps> = ({
   status,
   versionTitle
 }) => {
+  const [localFeedback, setLocalFeedback] = useState(feedback || '');
+
+  // Update local feedback when prop changes
+  React.useEffect(() => {
+    setLocalFeedback(feedback);
+  }, [feedback]);
+
+  // Update parent's state if setFeedback is provided
+  const handleFeedbackChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
+    const newValue = e.target.value;
+    setLocalFeedback(newValue);
+    if (setFeedback) {
+      setFeedback(newValue);
+    }
+  };
+
   if (status === 'approved' || status === 'feedback') {
     return (
       <Card>
@@ -70,8 +87,8 @@ const PreviewFeedbackForm: React.FC<PreviewFeedbackFormProps> = ({
               <Textarea
                 placeholder="Escreva aqui seu feedback sobre a música... O que você gostou? O que gostaria de mudar?"
                 className="min-h-[150px]"
-                value={feedback}
-                onChange={(e) => setFeedback(e.target.value)}
+                value={localFeedback}
+                onChange={handleFeedbackChange}
                 disabled={!selectedPreview}
               />
             </div>
@@ -83,7 +100,7 @@ const PreviewFeedbackForm: React.FC<PreviewFeedbackFormProps> = ({
       </CardContent>
       <CardFooter className="flex flex-col sm:flex-row gap-3 sm:justify-between">
         <Button
-          onClick={handleApprove}
+          onClick={() => handleApprove(localFeedback)}
           disabled={!selectedPreview}
           className="w-full sm:w-auto bg-green-600 hover:bg-green-700"
         >
@@ -91,8 +108,8 @@ const PreviewFeedbackForm: React.FC<PreviewFeedbackFormProps> = ({
           Aprovar esta Versão
         </Button>
         <Button
-          onClick={handleSubmit}
-          disabled={!selectedPreview || !feedback}
+          onClick={() => handleSubmit(localFeedback)}
+          disabled={!selectedPreview || !localFeedback}
           className="w-full sm:w-auto"
           variant="outline"
         >

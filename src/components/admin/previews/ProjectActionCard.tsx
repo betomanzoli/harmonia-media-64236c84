@@ -155,14 +155,12 @@ const ProjectActionCard: React.FC<ProjectActionCardProps> = ({
         </div>
       </CardContent>
       
-      {/* Add Version Dialog */}
+      {/* Use the AddVersionDialog with correct props */}
       <AddVersionDialog 
-        isOpen={isVersionDialogOpen} 
+        projectId={projectId}
+        isOpen={isVersionDialogOpen}
         onClose={() => setIsVersionDialogOpen(false)}
-        onSubmit={(version) => {
-          onAddVersion(version);
-          setIsVersionDialogOpen(false);
-        }}
+        onSubmit={onAddVersion}
       />
       
       {/* Extend Deadline Confirmation Dialog */}
