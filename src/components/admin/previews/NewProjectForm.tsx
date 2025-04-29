@@ -1,11 +1,10 @@
 
-import React, { useState } from 'react';
+import React from 'react';
 import { Button } from "@/components/ui/button";
 import { Plus } from 'lucide-react';
 import PreviewVersionInput from './PreviewVersionInput';
 import { useToast } from "@/hooks/use-toast";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Input } from "@/components/ui/input";
+import { useNewProjectForm } from '@/hooks/admin/useNewProjectForm';
 import ClientInfoForm from './ClientInfoForm';
 
 interface NewProjectFormProps {
@@ -13,42 +12,13 @@ interface NewProjectFormProps {
 }
 
 const NewProjectForm: React.FC<NewProjectFormProps> = ({ onAddProject }) => {
-  const [clientName, setClientName] = useState('');
-  const [clientEmail, setClientEmail] = useState('');
-  const [packageType, setPackageType] = useState('');
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  const [versions, setVersions] = useState([
-    { title: 'Versão 1', description: 'Primeira opção musical', audioUrl: '' }
-  ]);
+  const { 
+    formState: { clientName, clientEmail, packageType, versions, isSubmitting },
+    setters: { setClientName, setClientEmail, setPackageType, setIsSubmitting },
+    actions: { addVersion, removeVersion, updateVersion, resetForm }
+  } = useNewProjectForm();
+  
   const { toast } = useToast();
-
-  const addVersion = () => {
-    setVersions([
-      ...versions,
-      { title: `Versão ${versions.length + 1}`, description: `Opção musical ${versions.length + 1}`, audioUrl: '' }
-    ]);
-  };
-
-  const updateVersion = (index: number, field: string, value: string) => {
-    const updatedVersions = [...versions];
-    updatedVersions[index] = { ...updatedVersions[index], [field]: value };
-    setVersions(updatedVersions);
-  };
-
-  const removeVersion = (index: number) => {
-    if (versions.length > 1) {
-      const updatedVersions = [...versions];
-      updatedVersions.splice(index, 1);
-      setVersions(updatedVersions);
-    }
-  };
-
-  const resetForm = () => {
-    setClientName('');
-    setClientEmail('');
-    setPackageType('');
-    setVersions([{ title: 'Versão 1', description: 'Primeira opção musical', audioUrl: '' }]);
-  };
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
