@@ -3,8 +3,9 @@ import React, { useState, useEffect, useRef } from 'react';
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Slider } from "@/components/ui/slider";
-import { Play, Pause, Volume2, Volume1, VolumeX } from 'lucide-react';
+import { Play, Pause, Volume2, Volume1, VolumeX, ExternalLink } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
+import { Dialog, DialogContent, DialogTrigger } from '@/components/ui/dialog';
 
 interface GoogleDriveAudioPlayerProps {
   fileId: string;
@@ -65,12 +66,9 @@ const GoogleDriveAudioPlayer: React.FC<GoogleDriveAudioPlayerProps> = ({
     const handleError = (e: ErrorEvent) => {
       console.error("Erro ao carregar áudio:", e, "FileID:", fileId);
       setIsLoading(false);
-      setAudioError("Não foi possível carregar o áudio. Verifique o link do Google Drive.");
-      toast({
-        title: "Erro ao carregar áudio",
-        description: "Verifique se o link do Google Drive está correto e compartilhado com acesso público.",
-        variant: "destructive"
-      });
+      // Don't set error message to avoid showing error to client
+      // setAudioError("Não foi possível carregar o áudio. Verifique o link do Google Drive.");
+      setAudioError(null);
     };
 
     audio.addEventListener('timeupdate', updateProgress);
@@ -82,7 +80,8 @@ const GoogleDriveAudioPlayer: React.FC<GoogleDriveAudioPlayerProps> = ({
     const loadingTimeout = setTimeout(() => {
       if (isLoading && !audio.duration) {
         console.log("Audio load timeout for file:", fileId);
-        setAudioError("Tempo de carregamento excedido. Verifique a URL do arquivo e as permissões de compartilhamento.");
+        // Don't show error message to client
+        setAudioError(null);
         setIsLoading(false);
       }
     }, 10000); // 10 seconds timeout
@@ -131,12 +130,8 @@ const GoogleDriveAudioPlayer: React.FC<GoogleDriveAudioPlayerProps> = ({
 
       audioRef.current.play().catch(error => {
         console.error("Erro ao reproduzir áudio:", error, "FileID:", fileId);
-        setAudioError("Erro ao reproduzir. O arquivo pode estar com restrições de acesso.");
-        toast({
-          title: "Erro ao reproduzir",
-          description: "O arquivo não está acessível. Verifique se o link do Google Drive está compartilhado como 'Qualquer pessoa com o link'.",
-          variant: "destructive"
-        });
+        // Don't show error message to client
+        setAudioError(null);
       });
     }
     setIsPlaying(!isPlaying);
@@ -193,20 +188,27 @@ const GoogleDriveAudioPlayer: React.FC<GoogleDriveAudioPlayerProps> = ({
           </div>
         ) : audioError ? (
           <div className="text-center py-2">
-            <p className="text-red-500 text-sm">{audioError}</p>
-            <div className="mt-2">
-              <Button 
-                onClick={handleOpenInDrive} 
-                size="sm" 
-                variant="outline" 
-                className="text-harmonia-green hover:bg-harmonia-green/10"
-              >
-                Abrir no Google Drive
-              </Button>
-            </div>
-            <p className="text-xs text-gray-500 mt-3">
-              Verifique se o link do Google Drive está correto e se o arquivo está compartilhado para "Qualquer pessoa com o link"
-            </p>
+            <Dialog>
+              <DialogTrigger asChild>
+                <Button 
+                  size="sm" 
+                  variant="outline" 
+                  className="text-harmonia-green hover:bg-harmonia-green/10"
+                >
+                  <ExternalLink className="h-4 w-4 mr-2" />
+                  Ouvir no Google Drive
+                </Button>
+              </DialogTrigger>
+              <DialogContent className="sm:max-w-[800px] p-0">
+                <iframe 
+                  src={audioUrl}
+                  title={title} 
+                  width="100%" 
+                  height="500px"
+                  className="border-0"
+                ></iframe>
+              </DialogContent>
+            </Dialog>
           </div>
         ) : (
           <div className="flex items-center space-x-3">
@@ -256,6 +258,27 @@ const GoogleDriveAudioPlayer: React.FC<GoogleDriveAudioPlayerProps> = ({
                 </div>
               )}
             </div>
+
+            <Dialog>
+              <DialogTrigger asChild>
+                <Button 
+                  variant="ghost" 
+                  size="icon" 
+                  className="h-8 w-8 text-gray-500 hover:text-harmonia-green"
+                >
+                  <ExternalLink size={18} />
+                </Button>
+              </DialogTrigger>
+              <DialogContent className="sm:max-w-[800px] p-0">
+                <iframe 
+                  src={audioUrl}
+                  title={title} 
+                  width="100%" 
+                  height="500px"
+                  className="border-0"
+                ></iframe>
+              </DialogContent>
+            </Dialog>
           </div>
         )}
       </div>

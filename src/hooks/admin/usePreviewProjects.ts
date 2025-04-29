@@ -16,6 +16,7 @@ export interface ProjectItem {
   id: string;
   clientName: string;
   clientEmail: string;
+  clientPhone?: string;
   packageType: string;
   createdAt: string;
   status: 'waiting' | 'feedback' | 'approved';
@@ -74,6 +75,24 @@ export const usePreviewProjects = () => {
     loadProjects();
   }, [loadProjects]);
 
+  // Format package type with capitalized first letter
+  const formatPackageType = (packageType: string): string => {
+    if (!packageType) return "Projeto de Música Personalizada";
+    
+    // Split by spaces and capitalize first letter of each word
+    return packageType
+      .split(' ')
+      .map(word => {
+        if (word.toLowerCase() === 'essencial' || 
+            word.toLowerCase() === 'premium' || 
+            word.toLowerCase() === 'profissional') {
+          return word.charAt(0).toUpperCase() + word.slice(1).toLowerCase();
+        }
+        return word;
+      })
+      .join(' ');
+  };
+
   // Get project by ID
   const getProjectById = useCallback((id: string) => {
     console.log("Getting project by ID:", id);
@@ -81,6 +100,12 @@ export const usePreviewProjects = () => {
     
     const project = projects.find(project => project.id === id);
     console.log("Found project:", project);
+    
+    // Format package type if project exists
+    if (project) {
+      project.packageType = formatPackageType(project.packageType);
+    }
+    
     return project || null;
   }, [projects]);
 
@@ -103,7 +128,11 @@ export const usePreviewProjects = () => {
     // Create the new project with the briefing ID if available
     const newProject: ProjectItem = {
       ...project,
-      id: newId
+      id: newId,
+      packageType: formatPackageType(project.packageType || ""),
+      // Set default expiration date to 30 days from now if not provided
+      expirationDate: project.expirationDate || 
+        new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toLocaleDateString('pt-BR')
     };
     
     const updatedProjects = [...projects, newProject];
@@ -138,9 +167,15 @@ export const usePreviewProjects = () => {
       return null;
     }
     
+    // Format package type if provided
+    const formattedUpdates = { ...updates };
+    if (updates.packageType) {
+      formattedUpdates.packageType = formatPackageType(updates.packageType);
+    }
+    
     const updatedProject = {
       ...projects[projectIndex],
-      ...updates,
+      ...formattedUpdates,
       lastActivityDate: updates.lastActivityDate || new Date().toLocaleDateString('pt-BR')
     };
     
