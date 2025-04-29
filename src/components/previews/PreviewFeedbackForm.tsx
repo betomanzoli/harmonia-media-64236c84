@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from "@/components/ui/card";
 import { Textarea } from "@/components/ui/textarea";
@@ -10,7 +9,6 @@ interface PreviewFeedbackFormProps {
   selectedPreview: string | null;
   feedback: string;
   setFeedback: (feedback: string) => void;
-  // Update the function signatures to match how they're being called
   handleSubmit: (feedback?: string) => void;
   handleApprove: (feedback?: string) => void;
   status: string;
@@ -28,12 +26,10 @@ const PreviewFeedbackForm: React.FC<PreviewFeedbackFormProps> = ({
 }) => {
   const [localFeedback, setLocalFeedback] = useState(feedback || '');
 
-  // Update local feedback when prop changes
   React.useEffect(() => {
     setLocalFeedback(feedback);
   }, [feedback]);
 
-  // Update parent's state if setFeedback is provided
   const handleFeedbackChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
     const newValue = e.target.value;
     setLocalFeedback(newValue);

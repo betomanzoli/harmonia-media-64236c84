@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -161,6 +160,7 @@ const ProjectActionCard: React.FC<ProjectActionCardProps> = ({
         isOpen={isVersionDialogOpen}
         onClose={() => setIsVersionDialogOpen(false)}
         onSubmit={onAddVersion}
+        onAddVersion={onAddVersion}
       />
       
       {/* Extend Deadline Confirmation Dialog */}

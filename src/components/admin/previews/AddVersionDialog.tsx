@@ -8,7 +8,7 @@ import { VersionItem } from '@/hooks/admin/usePreviewProjects';
 
 interface AddVersionDialogProps {
   projectId: string;
-  onAddVersion: (newVersion: VersionItem) => void;
+  onAddVersion?: (newVersion: VersionItem) => void;
   // Adding isOpen and onClose props to match how it's being used
   isOpen?: boolean;
   onClose?: () => void;
@@ -41,7 +41,7 @@ const AddVersionDialog: React.FC<AddVersionDialogProps> = ({
   const handleAddVersion = (version: VersionItem) => {
     if (onSubmit) {
       onSubmit(version);
-    } else {
+    } else if (onAddVersion) {
       onAddVersion(version);
     }
     
