@@ -16,10 +16,17 @@ import { ProjectItem } from '@/hooks/admin/usePreviewProjects';
 
 interface ProjectsTableProps {
   projects: ProjectItem[];
+  isLoading?: boolean;
   onDelete: (id: string) => void;
+  onSendReminder?: (id: string) => void;
 }
 
-const ProjectsTable: React.FC<ProjectsTableProps> = ({ projects, onDelete }) => {
+const ProjectsTable: React.FC<ProjectsTableProps> = ({ 
+  projects, 
+  isLoading = false,
+  onDelete,
+  onSendReminder 
+}) => {
   // Format package type with capitalized first letter
   const formatPackageType = (packageType: string): string => {
     if (!packageType) return "Projeto de Música Personalizada";
@@ -75,7 +82,16 @@ const ProjectsTable: React.FC<ProjectsTableProps> = ({ projects, onDelete }) => 
           </TableRow>
         </TableHeader>
         <TableBody>
-          {projects.length === 0 ? (
+          {isLoading ? (
+            <TableRow>
+              <TableCell colSpan={7} className="text-center py-8 text-gray-500">
+                <div className="flex justify-center">
+                  <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-primary" />
+                </div>
+                <p className="mt-2">Carregando projetos...</p>
+              </TableCell>
+            </TableRow>
+          ) : projects.length === 0 ? (
             <TableRow>
               <TableCell colSpan={7} className="text-center py-8 text-gray-500">
                 Nenhum projeto de prévia encontrado.
@@ -102,7 +118,7 @@ const ProjectsTable: React.FC<ProjectsTableProps> = ({ projects, onDelete }) => 
                       className="text-gray-500 hover:text-primary"
                       asChild
                     >
-                      <Link to={`/admin/previews/${project.id}`}>
+                      <Link to={`/admin-j28s7d1k/previews/${project.id}`}>
                         <Eye className="h-4 w-4" />
                       </Link>
                     </Button>

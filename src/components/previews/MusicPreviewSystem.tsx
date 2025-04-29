@@ -21,6 +21,7 @@ const MusicPreviewSystem: React.FC<MusicPreviewSystemProps> = ({ projectId }) =>
   const { projectData, isLoading, updateProjectStatus } = usePreviewData(projectId);
   const { toast } = useToast();
   const [feedbackSubmitted, setFeedbackSubmitted] = useState(false);
+  const [selectedVersion, setSelectedVersion] = useState<string | null>(null);
 
   if (isLoading) {
     return <PreviewLoadingState />;
@@ -81,37 +82,44 @@ const MusicPreviewSystem: React.FC<MusicPreviewSystemProps> = ({ projectId }) =>
   return (
     <div className="max-w-4xl mx-auto px-4">
       <PreviewHeader 
-        clientName={projectData.clientName}
-        projectTitle={formatPackageType(projectData.projectTitle)}
+        projectData={{
+          projectTitle: formatPackageType(projectData.projectTitle),
+          clientName: projectData.clientName,
+          status: projectData.status
+        }}
       />
       
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 mb-8">
         <div className="lg:col-span-2 space-y-8">
           <PreviewPlayerList 
-            previews={projectData.previews}
+            versions={projectData.previews}
+            selectedVersion={selectedVersion}
+            setSelectedVersion={setSelectedVersion}
+            isApproved={projectData.status === 'approved'}
           />
           
           {!feedbackSubmitted && projectData.status !== 'approved' && (
-            <PreviewFeedbackForm onSubmit={handleFeedbackSubmit} />
+            <PreviewFeedbackForm 
+              selectedPreview={selectedVersion}
+              feedback=""
+              setFeedback={() => {}}
+              handleSubmit={() => handleFeedbackSubmit('neutral', '')}
+              handleApprove={() => handleFeedbackSubmit('positive', '')}
+              status={projectData.status}
+            />
           )}
 
           {(feedbackSubmitted || projectData.status === 'approved') && (
-            <PreviewNextSteps />
+            <PreviewNextSteps status={projectData.status} />
           )}
         </div>
         
         <div className="space-y-8">
           <PreviewProjectDetails 
-            clientName={projectData.clientName}
-            projectTitle={formatPackageType(projectData.projectTitle)}
-            packageType={formatPackageType(projectData.packageType || "")}
-            creationDate={projectData.creationDate}
+            projectData={projectData}
           />
-          <PreviewInstructions />
-          <PreviewCountdown 
-            days={14}
-            action="para avaliação"
-          />
+          <PreviewInstructions status={projectData.status} />
+          <PreviewCountdown />
           <SharePreviewDialog />
           <PreviewCopyright />
         </div>
