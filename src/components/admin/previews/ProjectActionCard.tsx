@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -5,7 +6,7 @@ import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, D
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
-import { Copy, CalendarPlus, MessageSquare, Clock, Mail } from 'lucide-react';
+import { Copy, CalendarPlus, MessageSquare, Clock, Mail, CheckCircle } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import AddVersionDialog from './AddVersionDialog';
 import { VersionItem } from '@/hooks/admin/usePreviewProjects';
@@ -17,6 +18,7 @@ interface ProjectActionCardProps {
   previewUrl: string;
   clientPhone?: string;
   clientEmail?: string;
+  projectStatus?: string;
 }
 
 const ProjectActionCard: React.FC<ProjectActionCardProps> = ({
@@ -25,10 +27,12 @@ const ProjectActionCard: React.FC<ProjectActionCardProps> = ({
   onExtendDeadline,
   previewUrl,
   clientPhone = '',
-  clientEmail = ''
+  clientEmail = '',
+  projectStatus = 'waiting'
 }) => {
   const { toast } = useToast();
   const [isVersionDialogOpen, setIsVersionDialogOpen] = useState(false);
+  const [isFinalVersionDialogOpen, setIsFinalVersionDialogOpen] = useState(false);
   const [isDeadlineConfirmOpen, setIsDeadlineConfirmOpen] = useState(false);
   
   const handleCopyLink = () => {
@@ -98,6 +102,17 @@ const ProjectActionCard: React.FC<ProjectActionCardProps> = ({
     window.location.href = mailtoUrl;
   };
 
+  const handleAddFinalVersion = (version: VersionItem) => {
+    // Adicione 'final: true' à versão
+    const finalVersion = {
+      ...version,
+      final: true
+    };
+    
+    onAddVersion(finalVersion);
+    setIsFinalVersionDialogOpen(false);
+  };
+
   return (
     <Card>
       <CardHeader>
@@ -111,6 +126,16 @@ const ProjectActionCard: React.FC<ProjectActionCardProps> = ({
           <Copy className="mr-2 h-4 w-4" />
           Adicionar Nova Versão
         </Button>
+        
+        {projectStatus === 'approved' && (
+          <Button 
+            className="w-full flex justify-start bg-green-600 hover:bg-green-700" 
+            onClick={() => setIsFinalVersionDialogOpen(true)}
+          >
+            <CheckCircle className="mr-2 h-4 w-4" />
+            Adicionar Versão Final
+          </Button>
+        )}
         
         <Button 
           variant="outline" 
@@ -160,6 +185,15 @@ const ProjectActionCard: React.FC<ProjectActionCardProps> = ({
         isOpen={isVersionDialogOpen}
         onClose={() => setIsVersionDialogOpen(false)}
         onSubmit={onAddVersion}
+        onAddVersion={onAddVersion}
+      />
+
+      {/* Diálogo para versões finais */}
+      <AddVersionDialog 
+        projectId={projectId}
+        isOpen={isFinalVersionDialogOpen}
+        onClose={() => setIsFinalVersionDialogOpen(false)}
+        onSubmit={handleAddFinalVersion}
         onAddVersion={onAddVersion}
       />
       

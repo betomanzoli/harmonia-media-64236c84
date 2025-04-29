@@ -6,6 +6,7 @@ import PreviewVersionInput from './PreviewVersionInput';
 import { useToast } from "@/hooks/use-toast";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Input } from "@/components/ui/input";
+import ClientInfoForm from './ClientInfoForm';
 
 interface NewProjectFormProps {
   onAddProject: (project: any) => string | null;
@@ -122,40 +123,15 @@ const NewProjectForm: React.FC<NewProjectFormProps> = ({ onAddProject }) => {
     <form onSubmit={handleSubmit} className="space-y-6">
       <div className="space-y-4">
         <h3 className="text-lg font-semibold">Informações do Cliente</h3>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <div className="space-y-2">
-            <label htmlFor="clientName" className="block text-sm font-medium">Nome do Cliente</label>
-            <Input
-              id="clientName"
-              value={clientName}
-              onChange={(e) => setClientName(e.target.value)}
-              placeholder="Ex: João Silva"
-            />
-          </div>
-          <div className="space-y-2">
-            <label htmlFor="clientEmail" className="block text-sm font-medium">Email do Cliente</label>
-            <Input
-              id="clientEmail"
-              type="email"
-              value={clientEmail}
-              onChange={(e) => setClientEmail(e.target.value)}
-              placeholder="Ex: joao@exemplo.com"
-            />
-          </div>
-        </div>
-        <div className="space-y-2">
-          <label htmlFor="packageType" className="block text-sm font-medium">Tipo de Pacote</label>
-          <Select value={packageType} onValueChange={setPackageType}>
-            <SelectTrigger>
-              <SelectValue placeholder="Selecione um pacote" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="Essencial">Essencial</SelectItem>
-              <SelectItem value="Premium">Premium</SelectItem>
-              <SelectItem value="Personalizado">Personalizado</SelectItem>
-            </SelectContent>
-          </Select>
-        </div>
+        
+        <ClientInfoForm 
+          clientName={clientName}
+          clientEmail={clientEmail}
+          packageType={packageType}
+          onClientNameChange={setClientName}
+          onClientEmailChange={setClientEmail}
+          onPackageTypeChange={setPackageType}
+        />
       </div>
 
       <div className="space-y-4">

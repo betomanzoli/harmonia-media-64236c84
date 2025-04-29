@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import AdminLayout from '@/components/admin/layout/AdminLayout';
 import { Card } from '@/components/ui/card';
@@ -33,6 +32,16 @@ const PreviewProjectPage: React.FC = () => {
     
     const currentVersions = project.versionsList || [];
     
+    // Se a nova versão for marcada como final, adiciona um indicador
+    const versionTitle = newVersion.final ? 
+      `FINAL - ${newVersion.name}` : 
+      newVersion.name;
+    
+    const versionToAdd = {
+      ...newVersion,
+      name: versionTitle
+    };
+    
     // If the new version is marked as recommended, remove recommended from others
     let updatedVersions = currentVersions;
     if (newVersion.recommended) {
@@ -43,11 +52,15 @@ const PreviewProjectPage: React.FC = () => {
     }
     
     // Add the new version
-    updatedVersions = [...updatedVersions, newVersion];
+    updatedVersions = [...updatedVersions, versionToAdd];
     
     // Update history
+    const historyAction = newVersion.final ? 
+      `Versão final adicionada: ${versionTitle}` : 
+      `Nova versão adicionada: ${versionTitle}`;
+    
     const historyEntry = {
-      action: `Nova versão adicionada: ${newVersion.name}`,
+      action: historyAction,
       timestamp: new Date().toLocaleString('pt-BR'),
       data: { message: newVersion.description || 'Sem descrição' }
     };
@@ -63,8 +76,8 @@ const PreviewProjectPage: React.FC = () => {
     });
     
     toast({
-      title: "Versão adicionada",
-      description: `${newVersion.name} foi adicionada ao projeto com sucesso.`,
+      title: newVersion.final ? "Versão final adicionada" : "Versão adicionada",
+      description: `${versionTitle} foi adicionada ao projeto com sucesso.`,
     });
   };
 
@@ -195,6 +208,7 @@ const PreviewProjectPage: React.FC = () => {
               previewUrl={previewUrl}
               clientPhone={project.clientPhone || ''}
               clientEmail={project.clientEmail || ''}
+              projectStatus={project.status}
             />
           </div>
         </div>

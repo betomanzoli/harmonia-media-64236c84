@@ -52,7 +52,7 @@ const ClientInfoForm: React.FC<ClientInfoFormProps> = ({
           value={packageType} 
           onValueChange={onPackageTypeChange}
         >
-          <SelectTrigger>
+          <SelectTrigger id="package-type" className="bg-white">
             <SelectValue placeholder="Selecione o pacote" />
           </SelectTrigger>
           <SelectContent>

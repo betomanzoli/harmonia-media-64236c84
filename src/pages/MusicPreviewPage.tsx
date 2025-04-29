@@ -57,7 +57,7 @@ const MusicPreviewPage: React.FC = () => {
   }, [toast]);
 
   return (
-    <div className="min-h-screen bg-gray-50 pt-16 pb-16">
+    <div className="min-h-screen bg-gray-900 pt-16 pb-16">
       <MusicPreviewSystem projectId={projectId || ""} />
     </div>
   );
