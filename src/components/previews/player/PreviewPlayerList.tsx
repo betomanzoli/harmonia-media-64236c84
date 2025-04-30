@@ -48,6 +48,12 @@ const PreviewPlayerList: React.FC<PreviewPlayerListProps> = ({
     }
     
     // Otherwise use the provided audioUrl or url
+    if (version.audioUrl) {
+      window.open(version.audioUrl, '_blank');
+      return;
+    }
+    
+    // Fall back to onPlay handler
     onPlay(version);
   };
   

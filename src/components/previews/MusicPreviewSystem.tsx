@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import PreviewHeader from './PreviewHeader';
 import PreviewPlayerList from './player/PreviewPlayerList';
@@ -151,6 +152,7 @@ const MusicPreviewSystem: React.FC<MusicPreviewSystemProps> = ({ projectId }) =>
               handleSubmit={handleFeedbackSubmit}
               handleApprove={handleApprove}
               status={projectData.status}
+              versionTitle={projectData.previews.find(p => p.id === selectedVersion)?.title}
             />
           )}
 

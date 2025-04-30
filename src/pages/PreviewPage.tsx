@@ -19,7 +19,7 @@ const PreviewPage: React.FC = () => {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gray-100">
         <div className="bg-white p-6 rounded-lg shadow-sm text-center">
-          <h2 className="text-2xl font-bold text-gray-800 mb-4">ID do projeto não encontrado</h2>
+          <h2 className="text-2xl font-bold text-black mb-4">ID do projeto não encontrado</h2>
         </div>
       </div>
     );
