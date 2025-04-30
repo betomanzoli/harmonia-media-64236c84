@@ -10,6 +10,10 @@ export interface VersionItem {
   dateAdded: string;
   recommended?: boolean;
   final?: boolean;
+  additionalLinks?: {
+    label: string;
+    url: string;
+  }[];
 }
 
 export interface ProjectItem {

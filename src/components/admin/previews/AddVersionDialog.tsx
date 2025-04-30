@@ -13,6 +13,7 @@ interface AddVersionDialogProps {
   isOpen?: boolean;
   onClose?: () => void;
   onSubmit?: (version: VersionItem) => void;
+  isFinalVersion?: boolean;
 }
 
 const AddVersionDialog: React.FC<AddVersionDialogProps> = ({
@@ -20,7 +21,8 @@ const AddVersionDialog: React.FC<AddVersionDialogProps> = ({
   onAddVersion,
   isOpen,
   onClose,
-  onSubmit
+  onSubmit,
+  isFinalVersion = false
 }) => {
   // Use local state only if isOpen is not provided from props
   const [localOpen, setLocalOpen] = useState(false);
@@ -64,9 +66,14 @@ const AddVersionDialog: React.FC<AddVersionDialogProps> = ({
       
       <DialogContent className="sm:max-w-[550px]">
         <DialogHeader>
-          <DialogTitle>Adicionar Nova Versão</DialogTitle>
+          <DialogTitle>{isFinalVersion ? "Adicionar Versão Final" : "Adicionar Nova Versão"}</DialogTitle>
         </DialogHeader>
-        <AddVersionForm projectId={projectId} onAddVersion={handleAddVersion} onCancel={() => handleOpenChange(false)} />
+        <AddVersionForm 
+          projectId={projectId} 
+          onAddVersion={handleAddVersion} 
+          onCancel={() => handleOpenChange(false)} 
+          isFinalVersion={isFinalVersion} 
+        />
       </DialogContent>
     </Dialog>
   );

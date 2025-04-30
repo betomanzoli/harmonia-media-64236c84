@@ -17,6 +17,7 @@ interface ProjectActionCardProps {
   clientPhone?: string;
   clientEmail?: string;
   projectStatus?: string;
+  packageType?: string;
 }
 
 const ProjectActionCard: React.FC<ProjectActionCardProps> = ({
@@ -26,7 +27,8 @@ const ProjectActionCard: React.FC<ProjectActionCardProps> = ({
   previewUrl,
   clientPhone = '',
   clientEmail = '',
-  projectStatus = 'waiting'
+  projectStatus = 'waiting',
+  packageType = ''
 }) => {
   const { toast } = useToast();
   const [isVersionDialogOpen, setIsVersionDialogOpen] = useState(false);
@@ -129,6 +131,7 @@ const ProjectActionCard: React.FC<ProjectActionCardProps> = ({
         onClose={() => setIsFinalVersionDialogOpen(false)}
         onSubmit={handleAddFinalVersion}
         onAddVersion={onAddVersion}
+        isFinalVersion={true}
       />
       
       {/* Deadline Extension Dialog */}

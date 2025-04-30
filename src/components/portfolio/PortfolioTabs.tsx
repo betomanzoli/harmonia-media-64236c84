@@ -1,121 +1,154 @@
 
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
-import { Music, Sliders, Layers, Calculator } from 'lucide-react';
-import ExamplesList, { AudioExampleItem } from './ExamplesList';
-import AudioVersions from './AudioVersions';
 import { Button } from "@/components/ui/button";
-import { Link } from 'react-router-dom';
+import { ChevronDown } from 'lucide-react';
+import AudioCard from './AudioCard';
 
-interface ComparisonExample {
+interface AudioExample {
+  id: string;
   title: string;
-  subtitle: string;
-  versions: {
-    name: string;
-    audioSrc: string;
-    description: string;
-  }[];
-  type: "comparison" | "stems";
+  description: string;
+  audioUrl: string;
+  type: 'example' | 'comparison' | 'stem';
+  featured?: boolean;
 }
 
 interface PortfolioTabsProps {
-  initialExamples: AudioExampleItem[];
-  extraExamples: AudioExampleItem[];
-  comparisonExamples: ComparisonExample[];
+  initialExamples: AudioExample[];
+  extraExamples: AudioExample[];
+  comparisonExamples: AudioExample[];
   showAll: boolean;
   onShowMore: () => void;
 }
 
-const PortfolioTabs: React.FC<PortfolioTabsProps> = ({ 
+const PortfolioTabs: React.FC<PortfolioTabsProps> = ({
   initialExamples,
   extraExamples,
   comparisonExamples,
   showAll,
   onShowMore
 }) => {
+  const [activeTab, setActiveTab] = useState('exemplos');
+  const [portfolioItems, setPortfolioItems] = useState<AudioExample[]>([]);
+  
+  useEffect(() => {
+    // Try loading from localStorage
+    const storedItems = localStorage.getItem('harmonIA_portfolio_items');
+    
+    if (storedItems) {
+      try {
+        setPortfolioItems(JSON.parse(storedItems));
+      } catch (error) {
+        console.error('Error parsing portfolio items:', error);
+        // Fallback to provided examples
+        setPortfolioItems([...initialExamples, ...extraExamples, ...comparisonExamples]);
+      }
+    } else {
+      // Use provided examples if localStorage is empty
+      setPortfolioItems([...initialExamples, ...extraExamples, ...comparisonExamples]);
+    }
+  }, [initialExamples, extraExamples, comparisonExamples]);
+
+  // Filter items by type
+  const examples = portfolioItems.filter(item => item.type === 'example');
+  const comparisons = portfolioItems.filter(item => item.type === 'comparison');
+  const stems = portfolioItems.filter(item => item.type === 'stem');
+  
+  // Display featured items first
+  const sortedExamples = [...examples].sort((a, b) => 
+    (b.featured ? 1 : 0) - (a.featured ? 1 : 0)
+  );
+  
+  // Limit the number of examples shown if showAll is false
+  const displayedExamples = showAll ? sortedExamples : sortedExamples.slice(0, 3);
+
   return (
     <>
-      <Tabs defaultValue="exemplos" className="w-full mb-10">
-        <TabsList className="grid grid-cols-3 max-w-md mx-auto">
+      <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full mb-20">
+        <TabsList className="grid grid-cols-3 max-w-md mx-auto mb-10">
           <TabsTrigger value="exemplos" className="data-[state=active]:bg-harmonia-green">
-            <Music className="w-4 h-4 mr-1" /> Exemplos
+            Exemplos
           </TabsTrigger>
           <TabsTrigger value="comparacoes" className="data-[state=active]:bg-harmonia-green">
-            <Sliders className="w-4 h-4 mr-1" /> Comparações
+            Comparações
           </TabsTrigger>
           <TabsTrigger value="stems" className="data-[state=active]:bg-harmonia-green">
-            <Layers className="w-4 h-4 mr-1" /> Stems
+            Stems
           </TabsTrigger>
         </TabsList>
-        
-        <TabsContent value="exemplos" className="mt-6">
-          <ExamplesList 
-            initialExamples={initialExamples}
-            extraExamples={extraExamples}
-            showAll={showAll}
-            onShowMore={onShowMore}
-          />
+
+        <TabsContent value="exemplos" className="space-y-8">
+          {displayedExamples.length > 0 ? (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {displayedExamples.map(example => (
+                <AudioCard
+                  key={example.id}
+                  title={example.title}
+                  description={example.description}
+                  audioUrl={example.audioUrl}
+                  featured={example.featured}
+                />
+              ))}
+            </div>
+          ) : (
+            <div className="text-center py-12">
+              <p className="text-gray-400">Nenhum exemplo disponível no momento.</p>
+            </div>
+          )}
+          
+          {!showAll && sortedExamples.length > 3 && (
+            <div className="flex justify-center mt-8">
+              <Button 
+                variant="outline" 
+                onClick={onShowMore}
+                className="flex items-center"
+              >
+                Ver Mais Exemplos
+                <ChevronDown className="ml-2 h-4 w-4" />
+              </Button>
+            </div>
+          )}
         </TabsContent>
-        
-        <TabsContent value="comparacoes" className="mt-6">
-          <div className="space-y-10">
-            {comparisonExamples.filter(ex => ex.type === "comparison").map((example, index) => (
-              <AudioVersions
-                key={index}
-                title={example.title}
-                subtitle={example.subtitle}
-                versions={example.versions}
-                type="comparison"
-              />
-            ))}
-          </div>
+
+        <TabsContent value="comparacoes">
+          {comparisons.length > 0 ? (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {comparisons.map(example => (
+                <AudioCard
+                  key={example.id}
+                  title={example.title}
+                  description={example.description}
+                  audioUrl={example.audioUrl}
+                />
+              ))}
+            </div>
+          ) : (
+            <div className="text-center py-12">
+              <p className="text-gray-400">Nenhuma comparação disponível no momento.</p>
+            </div>
+          )}
         </TabsContent>
-        
-        <TabsContent value="stems" className="mt-6">
-          <div className="space-y-10">
-            {comparisonExamples.filter(ex => ex.type === "stems").map((example, index) => (
-              <AudioVersions
-                key={index}
-                title={example.title}
-                subtitle={example.subtitle}
-                versions={example.versions}
-                type="stems"
-              />
-            ))}
-          </div>
+
+        <TabsContent value="stems">
+          {stems.length > 0 ? (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {stems.map(example => (
+                <AudioCard
+                  key={example.id}
+                  title={example.title}
+                  description={example.description}
+                  audioUrl={example.audioUrl}
+                />
+              ))}
+            </div>
+          ) : (
+            <div className="text-center py-12">
+              <p className="text-gray-400">Nenhum stem disponível no momento.</p>
+            </div>
+          )}
         </TabsContent>
       </Tabs>
-
-      {/* Contact CTA */}
-      <div className="bg-gradient-to-r from-background via-black to-background p-6 rounded-lg border border-border mt-10 mb-16">
-        <div className="text-center mb-6">
-          <h3 className="text-xl font-bold mb-2">Quer escutar as versões completas?</h3>
-          <p className="text-gray-400">Entre em contato conosco para agendar uma apresentação ou solicitar acesso ao nosso portfólio completo.</p>
-        </div>
-        <div className="flex justify-center">
-          <Button asChild className="bg-harmonia-green hover:bg-harmonia-green/90 flex items-center gap-2">
-            <Link to="/contato">
-              Entre em Contato
-            </Link>
-          </Button>
-        </div>
-      </div>
-      
-      {/* Calculator CTA */}
-      <div className="bg-gradient-to-r from-background via-black to-background p-6 rounded-lg border border-border mt-10 mb-16">
-        <div className="text-center mb-6">
-          <h3 className="text-xl font-bold mb-2">Pronto para criar sua música personalizada?</h3>
-          <p className="text-gray-400">Calcule o preço para começar seu projeto musical.</p>
-        </div>
-        <div className="flex justify-center">
-          <Button asChild className="bg-harmonia-green hover:bg-harmonia-green/90 flex items-center gap-2">
-            <Link to="/calculadora">
-              <Calculator className="w-4 h-4" />
-              Calcular Preço
-            </Link>
-          </Button>
-        </div>
-      </div>
     </>
   );
 };

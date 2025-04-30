@@ -1,377 +1,339 @@
 
 import React, { useState, useEffect } from 'react';
 import AdminLayout from '@/components/admin/layout/AdminLayout';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
+import { ArrowLeft, Plus, RefreshCw, Trash2, Edit } from 'lucide-react';
+import { useToast } from '@/hooks/use-toast';
+import { Link } from 'react-router-dom';
+import { 
+  Card, 
+  CardContent, 
+  CardHeader, 
+  CardTitle, 
+  CardDescription 
+} from "@/components/ui/card";
+import { 
+  Table, 
+  TableBody, 
+  TableCell, 
+  TableHead, 
+  TableHeader, 
+  TableRow 
+} from "@/components/ui/table";
+import { 
+  Dialog, 
+  DialogContent, 
+  DialogHeader, 
+  DialogTitle,
+  DialogFooter,
+  DialogDescription
+} from "@/components/ui/dialog";
+import { 
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
-import { Input } from "@/components/ui/input";
-import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
-import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { PlusCircle, Search, Eye, Pencil, Trash, Upload, Music, Play, MoreHorizontal, X } from 'lucide-react';
+import { Separator } from '@/components/ui/separator';
+import AddPortfolioItemForm from '@/components/admin/portfolio/AddPortfolioItemForm';
 
-// Mock portfolio items
-const mockPortfolioItems = [
-  {
-    id: 'PF001',
-    title: 'Amor Eterno',
-    description: 'Balada romântica para casamento, com piano e violino.',
-    category: 'Romântica',
-    status: 'published',
-    addedAt: '15/05/2023',
-    projectId: 'P045'
-  },
-  {
-    id: 'PF002',
-    title: 'Jingle ModaStyle',
-    description: 'Jingle comercial com ritmo animado e voz feminina.',
-    category: 'Comercial',
-    status: 'published',
-    addedAt: '28/05/2023',
-    projectId: 'P046'
-  },
-  {
-    id: 'PF003',
-    title: 'Crescimento Empresarial',
-    description: 'Trilha instrumental motivacional para vídeo corporativo.',
-    category: 'Corporativa',
-    status: 'draft',
-    addedAt: '10/06/2023',
-    projectId: 'P050'
-  },
-  {
-    id: 'PF004',
-    title: 'Unidos pela Medicina',
-    description: 'Música para formatura com elementos épicos e emocionantes.',
-    category: 'Comemorativa',
-    status: 'published',
-    addedAt: '22/06/2023',
-    projectId: 'P051'
-  }
-];
+interface PortfolioItem {
+  id: string;
+  title: string;
+  description: string;
+  audioUrl: string;
+  fileId?: string;
+  type: 'example' | 'comparison' | 'stem';
+  dateAdded: string;
+  featured?: boolean;
+}
 
 const AdminPortfolio: React.FC = () => {
-  const [portfolioItems, setPortfolioItems] = useState<any[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [searchQuery, setSearchQuery] = useState('');
-  const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
-  
-  // Form state for new item
-  const [newItem, setNewItem] = useState({
-    title: '',
-    description: '',
-    category: 'Romântica',
-    projectId: '',
-    audioFile: null as File | null,
-    imageFile: null as File | null
-  });
+  const [portfolioItems, setPortfolioItems] = useState<PortfolioItem[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [activeTab, setActiveTab] = useState('all');
+  const [showAddForm, setShowAddForm] = useState(false);
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [itemToDelete, setItemToDelete] = useState<string | null>(null);
+  const { toast } = useToast();
   
   useEffect(() => {
-    // Simulate API loading
-    setTimeout(() => {
-      setPortfolioItems(mockPortfolioItems);
-      setLoading(false);
-    }, 800);
+    loadPortfolioItems();
   }, []);
   
-  const filteredItems = portfolioItems.filter(item => 
-    item.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    item.description.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    item.category.toLowerCase().includes(searchQuery.toLowerCase())
-  );
-  
-  const getStatusBadge = (status: string) => {
-    switch(status) {
-      case 'published':
-        return <Badge className="bg-green-100 text-green-800">Publicado</Badge>;
-      case 'draft':
-        return <Badge className="bg-gray-100 text-gray-800">Rascunho</Badge>;
-      default:
-        return <Badge>Desconhecido</Badge>;
+  const loadPortfolioItems = async () => {
+    setIsLoading(true);
+    
+    try {
+      // Load from localStorage for now
+      const storedItems = localStorage.getItem('harmonIA_portfolio_items');
+      
+      if (storedItems) {
+        setPortfolioItems(JSON.parse(storedItems));
+      } else {
+        // Sample items for testing
+        const sampleItems = [
+          {
+            id: 'p1',
+            title: 'Aniversário de Casamento',
+            description: 'Composição romântica para comemorar 10 anos de casamento',
+            audioUrl: 'https://drive.google.com/uc?export=download&id=1H62ylCwQYJ23BLpygtvNmCgwTDcHX6Cl',
+            fileId: '1H62ylCwQYJ23BLpygtvNmCgwTDcHX6Cl',
+            type: 'example' as const,
+            dateAdded: new Date().toLocaleDateString('pt-BR'),
+            featured: true
+          },
+          {
+            id: 'p2',
+            title: 'Comparação: AI vs Versão Finalizada',
+            description: 'Demonstração da diferença entre a versão inicial gerada por IA e a versão finalizada',
+            audioUrl: 'https://drive.google.com/uc?export=download&id=11c6JahRd5Lx0iKCL_gHZ0zrZ3LFBJ47a',
+            fileId: '11c6JahRd5Lx0iKCL_gHZ0zrZ3LFBJ47a',
+            type: 'comparison' as const,
+            dateAdded: new Date().toLocaleDateString('pt-BR')
+          }
+        ];
+        
+        setPortfolioItems(sampleItems);
+        localStorage.setItem('harmonIA_portfolio_items', JSON.stringify(sampleItems));
+      }
+    } catch (error) {
+      console.error('Erro ao carregar itens do portfólio:', error);
+      toast({
+        title: "Erro ao carregar portfólio",
+        description: "Ocorreu um erro ao carregar os itens do portfólio",
+        variant: "destructive"
+      });
+    } finally {
+      setIsLoading(false);
     }
   };
   
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
-    const { name, value } = e.target;
-    setNewItem(prev => ({ ...prev, [name]: value }));
-  };
-  
-  const handleSelectChange = (value: string) => {
-    setNewItem(prev => ({ ...prev, category: value }));
-  };
-  
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>, fileType: 'audio' | 'image') => {
-    if (e.target.files && e.target.files[0]) {
-      setNewItem(prev => ({ 
-        ...prev, 
-        [fileType === 'audio' ? 'audioFile' : 'imageFile']: e.target.files![0]
-      }));
-    }
-  };
-  
-  const handleAddItem = () => {
-    const newItemId = `PF${String(portfolioItems.length + 1).padStart(3, '0')}`;
-    
-    const today = new Date();
-    const formattedDate = `${today.getDate().toString().padStart(2, '0')}/${
-      (today.getMonth() + 1).toString().padStart(2, '0')}/${today.getFullYear()}`;
-    
-    const item = {
-      id: newItemId,
-      title: newItem.title,
-      description: newItem.description,
-      category: newItem.category,
-      status: 'draft',
-      addedAt: formattedDate,
-      projectId: newItem.projectId || `P${Math.floor(Math.random() * 900) + 100}`
+  const handleAddItem = (item: Omit<PortfolioItem, 'id'>) => {
+    const newItem = {
+      ...item,
+      id: `p${Date.now()}`,
+      dateAdded: new Date().toLocaleDateString('pt-BR')
     };
     
-    setPortfolioItems([...portfolioItems, item]);
-    setIsAddDialogOpen(false);
+    const updatedItems = [...portfolioItems, newItem];
+    setPortfolioItems(updatedItems);
+    localStorage.setItem('harmonIA_portfolio_items', JSON.stringify(updatedItems));
     
-    // Reset form
-    setNewItem({
-      title: '',
-      description: '',
-      category: 'Romântica',
-      projectId: '',
-      audioFile: null,
-      imageFile: null
+    toast({
+      title: "Item adicionado",
+      description: "Item adicionado ao portfólio com sucesso."
+    });
+    
+    setShowAddForm(false);
+    return newItem.id;
+  };
+  
+  const confirmDeleteItem = (id: string) => {
+    setItemToDelete(id);
+    setShowDeleteConfirm(true);
+  };
+  
+  const handleDeleteItem = () => {
+    if (!itemToDelete) return;
+    
+    const updatedItems = portfolioItems.filter(item => item.id !== itemToDelete);
+    setPortfolioItems(updatedItems);
+    localStorage.setItem('harmonIA_portfolio_items', JSON.stringify(updatedItems));
+    
+    toast({
+      title: "Item removido",
+      description: "Item removido do portfólio com sucesso."
+    });
+    
+    setShowDeleteConfirm(false);
+    setItemToDelete(null);
+  };
+  
+  const handleToggleFeatured = (id: string) => {
+    const updatedItems = portfolioItems.map(item => {
+      if (item.id === id) {
+        return { ...item, featured: !item.featured };
+      }
+      return item;
+    });
+    
+    setPortfolioItems(updatedItems);
+    localStorage.setItem('harmonIA_portfolio_items', JSON.stringify(updatedItems));
+    
+    toast({
+      title: "Item atualizado",
+      description: "Status de destaque atualizado com sucesso."
     });
   };
   
-  const handleDeleteItem = (id: string) => {
-    setPortfolioItems(portfolioItems.filter(item => item.id !== id));
+  const getFilteredItems = () => {
+    if (activeTab === 'all') return portfolioItems;
+    return portfolioItems.filter(item => item.type === activeTab);
   };
   
+  const getItemTypeLabel = (type: string) => {
+    switch (type) {
+      case 'example': return 'Exemplo';
+      case 'comparison': return 'Comparação';
+      case 'stem': return 'Stem';
+      default: return type;
+    }
+  };
+
   return (
     <AdminLayout>
-      <div className="p-6">
-        <div className="flex justify-between items-center mb-6">
-          <h1 className="text-2xl font-bold">Gerenciamento do Portfólio</h1>
-          <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
-            <DialogTrigger asChild>
-              <Button>
-                <PlusCircle className="mr-2 h-4 w-4" />
-                Adicionar ao Portfólio
-              </Button>
-            </DialogTrigger>
-            <DialogContent className="sm:max-w-[525px]">
-              <DialogHeader>
-                <DialogTitle>Adicionar Item ao Portfólio</DialogTitle>
-                <DialogDescription>
-                  Preencha os detalhes para adicionar uma nova música ao portfólio.
-                </DialogDescription>
-              </DialogHeader>
-              <div className="grid gap-4 py-4">
-                <div className="grid grid-cols-4 items-center gap-4">
-                  <Label htmlFor="title" className="text-right">
-                    Título
-                  </Label>
-                  <Input
-                    id="title"
-                    name="title"
-                    value={newItem.title}
-                    onChange={handleInputChange}
-                    className="col-span-3"
-                  />
-                </div>
-                <div className="grid grid-cols-4 items-center gap-4">
-                  <Label htmlFor="category" className="text-right">
-                    Categoria
-                  </Label>
-                  <Select value={newItem.category} onValueChange={handleSelectChange}>
-                    <SelectTrigger className="col-span-3">
-                      <SelectValue placeholder="Selecione a categoria" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="Romântica">Romântica</SelectItem>
-                      <SelectItem value="Comercial">Comercial</SelectItem>
-                      <SelectItem value="Corporativa">Corporativa</SelectItem>
-                      <SelectItem value="Comemorativa">Comemorativa</SelectItem>
-                      <SelectItem value="Podcast">Tema para Podcast</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-                <div className="grid grid-cols-4 items-center gap-4">
-                  <Label htmlFor="projectId" className="text-right">
-                    ID do Projeto
-                  </Label>
-                  <Input
-                    id="projectId"
-                    name="projectId"
-                    value={newItem.projectId}
-                    onChange={handleInputChange}
-                    className="col-span-3"
-                    placeholder="Opcional - ex: P123"
-                  />
-                </div>
-                <div className="grid grid-cols-4 items-start gap-4">
-                  <Label htmlFor="description" className="text-right pt-2">
-                    Descrição
-                  </Label>
-                  <Textarea
-                    id="description"
-                    name="description"
-                    value={newItem.description}
-                    onChange={handleInputChange}
-                    className="col-span-3"
-                    rows={3}
-                  />
-                </div>
-                <div className="grid grid-cols-4 items-center gap-4">
-                  <Label htmlFor="audioFile" className="text-right">
-                    Áudio
-                  </Label>
-                  <div className="col-span-3">
-                    <div className="flex items-center space-x-2">
-                      <Input
-                        id="audioFile"
-                        type="file"
-                        onChange={(e) => handleFileChange(e, 'audio')}
-                        accept="audio/*"
-                        className="hidden"
-                      />
-                      <Label
-                        htmlFor="audioFile"
-                        className="cursor-pointer inline-flex items-center px-4 py-2 border border-gray-300 shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none"
-                      >
-                        <Upload className="mr-2 h-4 w-4" />
-                        Selecionar áudio
-                      </Label>
-                      {newItem.audioFile && (
-                        <span className="text-sm text-gray-500">
-                          {newItem.audioFile.name}
-                        </span>
-                      )}
-                    </div>
-                  </div>
-                </div>
-                <div className="grid grid-cols-4 items-center gap-4">
-                  <Label htmlFor="imageFile" className="text-right">
-                    Imagem
-                  </Label>
-                  <div className="col-span-3">
-                    <div className="flex items-center space-x-2">
-                      <Input
-                        id="imageFile"
-                        type="file"
-                        onChange={(e) => handleFileChange(e, 'image')}
-                        accept="image/*"
-                        className="hidden"
-                      />
-                      <Label
-                        htmlFor="imageFile"
-                        className="cursor-pointer inline-flex items-center px-4 py-2 border border-gray-300 shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none"
-                      >
-                        <Upload className="mr-2 h-4 w-4" />
-                        Selecionar imagem
-                      </Label>
-                      {newItem.imageFile && (
-                        <span className="text-sm text-gray-500">
-                          {newItem.imageFile.name}
-                        </span>
-                      )}
-                    </div>
-                  </div>
-                </div>
-              </div>
-              <DialogFooter>
-                <Button variant="outline" onClick={() => setIsAddDialogOpen(false)}>Cancelar</Button>
-                <Button onClick={handleAddItem}>Adicionar</Button>
-              </DialogFooter>
-            </DialogContent>
-          </Dialog>
+      <div className="flex flex-col h-full bg-gray-100">
+        <div className="flex justify-between items-center p-6 border-b bg-white">
+          <div className="flex items-center">
+            <Button 
+              variant="outline" 
+              size="sm" 
+              asChild
+              className="mr-4"
+            >
+              <Link to="/admin-j28s7d1k/dashboard">
+                <ArrowLeft className="h-4 w-4 mr-2" />
+                Voltar
+              </Link>
+            </Button>
+            <h1 className="text-2xl font-bold">Gerenciador de Portfólio</h1>
+          </div>
+          <div className="flex space-x-2">
+            <Button 
+              variant="outline" 
+              size="sm" 
+              onClick={loadPortfolioItems}
+            >
+              <RefreshCw className={`h-4 w-4 mr-2 ${isLoading ? 'animate-spin' : ''}`} />
+              Atualizar
+            </Button>
+            
+            <Button 
+              size="sm"
+              onClick={() => setShowAddForm(true)}
+            >
+              <Plus className="h-4 w-4 mr-2" />
+              Adicionar Item
+            </Button>
+          </div>
         </div>
         
-        <Card>
-          <CardHeader>
-            <CardTitle>Músicas do Portfólio</CardTitle>
-            <CardDescription>
-              Gerencie as músicas exibidas no portfólio público do site.
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className="flex justify-between mb-4">
-              <div className="relative w-full md:w-64">
-                <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
-                <Input
-                  placeholder="Buscar no portfólio..."
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  className="pl-8"
-                />
-              </div>
-            </div>
-            
-            {loading ? (
-              <div className="text-center py-4">
-                <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-gray-200"></div>
-                <p className="mt-2 text-sm text-gray-500">Carregando itens do portfólio...</p>
-              </div>
-            ) : (
-              <div className="overflow-x-auto">
+        <div className="p-6 flex-1 overflow-auto">
+          <Card className="bg-white shadow mb-6">
+            <CardHeader className="pb-3">
+              <CardTitle>Itens do Portfólio</CardTitle>
+              <CardDescription>
+                Gerencie os exemplos de músicas exibidos no site.
+              </CardDescription>
+              
+              <Tabs 
+                defaultValue="all" 
+                value={activeTab} 
+                onValueChange={setActiveTab}
+                className="mt-4"
+              >
+                <TabsList>
+                  <TabsTrigger value="all">Todos ({portfolioItems.length})</TabsTrigger>
+                  <TabsTrigger value="example">Exemplos ({portfolioItems.filter(i => i.type === 'example').length})</TabsTrigger>
+                  <TabsTrigger value="comparison">Comparações ({portfolioItems.filter(i => i.type === 'comparison').length})</TabsTrigger>
+                  <TabsTrigger value="stem">Stems ({portfolioItems.filter(i => i.type === 'stem').length})</TabsTrigger>
+                </TabsList>
+              </Tabs>
+            </CardHeader>
+            <CardContent>
+              {isLoading ? (
+                <div className="flex justify-center py-20">
+                  <RefreshCw className="h-8 w-8 animate-spin text-gray-400" />
+                </div>
+              ) : getFilteredItems().length > 0 ? (
                 <Table>
                   <TableHeader>
                     <TableRow>
-                      <TableHead>ID</TableHead>
                       <TableHead>Título</TableHead>
-                      <TableHead>Descrição</TableHead>
-                      <TableHead>Categoria</TableHead>
+                      <TableHead>Tipo</TableHead>
+                      <TableHead>Data</TableHead>
                       <TableHead>Status</TableHead>
-                      <TableHead>Adicionado</TableHead>
-                      <TableHead>Projeto</TableHead>
                       <TableHead className="text-right">Ações</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    {filteredItems.map((item) => (
+                    {getFilteredItems().map((item) => (
                       <TableRow key={item.id}>
-                        <TableCell className="font-medium">{item.id}</TableCell>
-                        <TableCell>{item.title}</TableCell>
-                        <TableCell className="max-w-xs truncate">{item.description}</TableCell>
-                        <TableCell>{item.category}</TableCell>
-                        <TableCell>{getStatusBadge(item.status)}</TableCell>
-                        <TableCell>{item.addedAt}</TableCell>
-                        <TableCell>{item.projectId}</TableCell>
+                        <TableCell className="font-medium">{item.title}</TableCell>
+                        <TableCell>
+                          <Badge variant="outline">
+                            {getItemTypeLabel(item.type)}
+                          </Badge>
+                        </TableCell>
+                        <TableCell>{item.dateAdded}</TableCell>
+                        <TableCell>
+                          {item.featured ? (
+                            <Badge className="bg-green-500">Em destaque</Badge>
+                          ) : (
+                            <Badge variant="outline">Normal</Badge>
+                          )}
+                        </TableCell>
                         <TableCell className="text-right">
-                          <div className="flex justify-end space-x-2">
-                            <Button variant="outline" size="sm">
-                              <Play className="h-4 w-4" />
-                            </Button>
-                            <Button variant="outline" size="sm">
-                              <Pencil className="h-4 w-4" />
-                            </Button>
-                            <Button 
-                              variant="outline" 
-                              size="sm"
-                              className="text-red-600 hover:text-red-700 hover:bg-red-50"
-                              onClick={() => handleDeleteItem(item.id)}
-                            >
-                              <Trash className="h-4 w-4" />
-                            </Button>
-                          </div>
+                          <DropdownMenu>
+                            <DropdownMenuTrigger asChild>
+                              <Button variant="ghost" size="sm">
+                                Ações
+                              </Button>
+                            </DropdownMenuTrigger>
+                            <DropdownMenuContent align="end">
+                              <DropdownMenuLabel>Opções</DropdownMenuLabel>
+                              <DropdownMenuSeparator />
+                              <DropdownMenuItem onClick={() => handleToggleFeatured(item.id)}>
+                                {item.featured ? 'Remover destaque' : 'Marcar como destaque'}
+                              </DropdownMenuItem>
+                              <DropdownMenuItem onClick={() => confirmDeleteItem(item.id)} className="text-red-600">
+                                Remover
+                              </DropdownMenuItem>
+                            </DropdownMenuContent>
+                          </DropdownMenu>
                         </TableCell>
                       </TableRow>
                     ))}
-                    {filteredItems.length === 0 && (
-                      <TableRow>
-                        <TableCell colSpan={8} className="text-center py-4">
-                          <div className="flex flex-col items-center">
-                            <Music className="h-10 w-10 text-gray-400 mb-2" />
-                            <p className="text-gray-500">Nenhum item encontrado no portfólio.</p>
-                          </div>
-                        </TableCell>
-                      </TableRow>
-                    )}
                   </TableBody>
                 </Table>
-              </div>
-            )}
-          </CardContent>
-        </Card>
+              ) : (
+                <div className="text-center py-10 text-gray-500">
+                  Nenhum item encontrado.
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        </div>
+        
+        <Dialog open={showAddForm} onOpenChange={setShowAddForm}>
+          <DialogContent className="max-w-2xl">
+            <DialogHeader>
+              <DialogTitle>Adicionar Item ao Portfólio</DialogTitle>
+            </DialogHeader>
+            <Separator className="my-4" />
+            <AddPortfolioItemForm onAdd={handleAddItem} onCancel={() => setShowAddForm(false)} />
+          </DialogContent>
+        </Dialog>
+        
+        <Dialog open={showDeleteConfirm} onOpenChange={setShowDeleteConfirm}>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>Confirmar exclusão</DialogTitle>
+              <DialogDescription>
+                Você tem certeza que deseja excluir este item do portfólio? Esta ação não pode ser desfeita.
+              </DialogDescription>
+            </DialogHeader>
+            <DialogFooter>
+              <Button variant="outline" onClick={() => setShowDeleteConfirm(false)}>Cancelar</Button>
+              <Button variant="destructive" onClick={handleDeleteItem}>Excluir</Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
       </div>
     </AdminLayout>
   );

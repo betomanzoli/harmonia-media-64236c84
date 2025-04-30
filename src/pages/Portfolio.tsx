@@ -6,13 +6,13 @@ import Portfolio from '@/components/Portfolio';
 import { Button } from "@/components/ui/button";
 import { ArrowLeft, Phone } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
+import { siteConfig } from '@/config/site';
 
 const PortfolioPage: React.FC = () => {
   const navigate = useNavigate();
 
   const handleWhatsAppContact = () => {
-    // Você pode definir aqui o número de telefone e a mensagem padrão
-    const phoneNumber = "5511999999999"; // Substitua pelo número correto
+    const phoneNumber = siteConfig.contact.whatsapp;
     const message = "Olá! Gostaria de conhecer mais sobre suas músicas personalizadas.";
     const whatsappUrl = `https://wa.me/${phoneNumber}?text=${encodeURIComponent(message)}`;
     window.open(whatsappUrl, '_blank');

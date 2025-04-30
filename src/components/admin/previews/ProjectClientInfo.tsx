@@ -1,9 +1,9 @@
 
 import React from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { User, Mail, Calendar, Package } from 'lucide-react';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { User, Mail, Package, Calendar, Clock, CalendarClock } from 'lucide-react';
 
-export interface ProjectClientInfoProps {
+interface ProjectClientInfoProps {
   clientName: string;
   clientEmail: string;
   packageType: string;
@@ -18,58 +18,57 @@ const ProjectClientInfo: React.FC<ProjectClientInfoProps> = ({
   packageType,
   createdAt,
   expirationDate,
-  lastActivityDate
+  lastActivityDate,
 }) => {
   return (
-    <Card>
+    <Card className="bg-gray-100 text-gray-900">
       <CardHeader>
         <CardTitle className="text-lg">Informações do Cliente</CardTitle>
       </CardHeader>
       <CardContent className="space-y-4">
-        <div className="flex items-start space-x-3">
+        <div className="flex items-start gap-2">
           <User className="h-5 w-5 text-gray-400 mt-0.5" />
           <div>
             <p className="font-medium">{clientName}</p>
-            <p className="text-sm text-gray-500">Nome do cliente</p>
           </div>
         </div>
         
-        <div className="flex items-start space-x-3">
+        <div className="flex items-start gap-2">
           <Mail className="h-5 w-5 text-gray-400 mt-0.5" />
           <div>
             <p className="font-medium">{clientEmail}</p>
-            <p className="text-sm text-gray-500">Email de contato</p>
           </div>
         </div>
         
-        <div className="flex items-start space-x-3">
+        <div className="flex items-start gap-2">
           <Package className="h-5 w-5 text-gray-400 mt-0.5" />
           <div>
-            <p className="font-medium">{packageType}</p>
-            <p className="text-sm text-gray-500">Tipo de pacote</p>
+            <p className="font-medium">Pacote</p>
+            <p className="text-sm text-gray-500">{packageType}</p>
           </div>
         </div>
         
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 pt-2">
-          <div className="flex flex-col">
-            <span className="text-xs text-gray-500 mb-1 flex items-center">
-              <Calendar className="h-3 w-3 mr-1" /> Criado em
-            </span>
-            <span className="font-medium">{createdAt}</span>
+        <div className="flex items-start gap-2">
+          <Calendar className="h-5 w-5 text-gray-400 mt-0.5" />
+          <div>
+            <p className="font-medium">Data de Criação</p>
+            <p className="text-sm text-gray-500">{createdAt}</p>
           </div>
-          
-          <div className="flex flex-col">
-            <span className="text-xs text-gray-500 mb-1 flex items-center">
-              <Calendar className="h-3 w-3 mr-1" /> Expira em
-            </span>
-            <span className="font-medium">{expirationDate}</span>
+        </div>
+        
+        <div className="flex items-start gap-2">
+          <Clock className="h-5 w-5 text-gray-400 mt-0.5" />
+          <div>
+            <p className="font-medium">Data de Expiração</p>
+            <p className="text-sm text-gray-500">{expirationDate}</p>
           </div>
-          
-          <div className="flex flex-col">
-            <span className="text-xs text-gray-500 mb-1 flex items-center">
-              <Calendar className="h-3 w-3 mr-1" /> Última atividade
-            </span>
-            <span className="font-medium">{lastActivityDate}</span>
+        </div>
+        
+        <div className="flex items-start gap-2">
+          <CalendarClock className="h-5 w-5 text-gray-400 mt-0.5" />
+          <div>
+            <p className="font-medium">Última Atividade</p>
+            <p className="text-sm text-gray-500">{lastActivityDate}</p>
           </div>
         </div>
       </CardContent>

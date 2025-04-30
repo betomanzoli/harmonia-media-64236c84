@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import AdminLayout from '@/components/admin/layout/AdminLayout';
 import { usePreviewProjects } from '@/hooks/admin/usePreviewProjects';
@@ -83,8 +84,8 @@ const AdminPreviews: React.FC = () => {
   
   return (
     <AdminLayout>
-      <div className="flex flex-col h-full">
-        <div className="flex justify-between items-center p-6 border-b">
+      <div className="flex flex-col h-full bg-gray-100">
+        <div className="flex justify-between items-center p-6 border-b bg-white">
           <div className="flex items-center">
             <Button 
               variant="outline" 

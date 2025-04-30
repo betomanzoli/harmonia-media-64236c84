@@ -177,7 +177,7 @@ const PreviewProjectPage: React.FC = () => {
 
   return (
     <AdminLayout>
-      <div className="space-y-6">
+      <div className="space-y-6 bg-gray-100 p-6 min-h-screen">
         <ProjectHeader 
           projectTitle={formatPackageType(project.packageType || "Projeto de Música Personalizada")} 
           clientName={project.clientName}
@@ -211,6 +211,7 @@ const PreviewProjectPage: React.FC = () => {
               clientPhone={project.clientPhone || ''}
               clientEmail={project.clientEmail || ''}
               projectStatus={project.status}
+              packageType={project.packageType}
             />
           </div>
         </div>

@@ -20,12 +20,13 @@ const MusicPreviews: React.FC = () => {
   
   const [selectedPreview, setSelectedPreview] = useState<string | null>(null);
   const [feedback, setFeedback] = useState('');
-  const { projectData, setProjectData, isLoading } = usePreviewData(previewId);
+  const { projectData, setProjectData, isLoading, actualProjectId } = usePreviewData(previewId);
   
   useEffect(() => {
     console.log("Preview ID:", previewId);
+    console.log("Actual Project ID:", actualProjectId);
     
-    if (!isLoading && !projectData) {
+    if (!isLoading && !projectData && actualProjectId) {
       console.log("Preview data não encontrado");
       toast({
         title: "Preview não encontrado",
@@ -33,7 +34,7 @@ const MusicPreviews: React.FC = () => {
         variant: "destructive"
       });
     }
-  }, [previewId, projectData, isLoading, toast]);
+  }, [previewId, projectData, isLoading, toast, actualProjectId]);
   
   const handleSubmitFeedback = () => {
     if (!selectedPreview) {
@@ -52,7 +53,7 @@ const MusicPreviews: React.FC = () => {
     
     // Notify about feedback
     notificationService.notify('feedback_received', {
-      projectId: previewId,
+      projectId: actualProjectId || previewId,
       clientName: projectData?.clientName || 'Cliente',
       message: feedback
     });
@@ -77,7 +78,7 @@ const MusicPreviews: React.FC = () => {
     
     // Notify about approval
     notificationService.notify('preview_approved', {
-      projectId: previewId,
+      projectId: actualProjectId || previewId,
       clientName: projectData?.clientName || 'Cliente',
       versionId: selectedPreview
     });
