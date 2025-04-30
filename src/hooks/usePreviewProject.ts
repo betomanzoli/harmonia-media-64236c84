@@ -118,5 +118,39 @@ export const usePreviewProject = (projectId: string | undefined) => {
     }
   }, [projectId, getProjectById, audioFiles]);
   
-  return { projectData, setProjectData, isLoading };
+  // Add the missing updateProjectStatus function
+  const updateProjectStatus = (newStatus: 'approved' | 'feedback', comments: string) => {
+    if (!projectId || !projectData) return false;
+
+    console.log(`Atualizando status do projeto ${projectId} para ${newStatus}`);
+    console.log(`Feedback do cliente: ${comments}`);
+    
+    // Update the project in the admin system
+    if (projectId) {
+      const updates = {
+        status: newStatus,
+        feedback: comments,
+        lastActivityDate: new Date().toLocaleDateString('pt-BR')
+      };
+      
+      const updated = updateProject(projectId, updates);
+      
+      if (updated) {
+        // Update local state
+        setProjectData(prev => {
+          if (!prev) return null;
+          return {
+            ...prev,
+            status: newStatus
+          };
+        });
+        
+        return true;
+      }
+    }
+    
+    return false;
+  };
+  
+  return { projectData, setProjectData, isLoading, updateProjectStatus };
 };
