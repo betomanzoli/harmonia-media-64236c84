@@ -11,6 +11,7 @@ interface PreviewVersionCardProps {
     description: string;
     audioUrl?: string;
     url?: string;
+    fileId?: string;
     recommended?: boolean;
   };
   isSelected: boolean;
@@ -72,7 +73,7 @@ const PreviewVersionCard: React.FC<PreviewVersionCardProps> = ({
         </div>
       </CardHeader>
       <CardContent>
-        <p className="text-sm text-gray-700 mb-4">{version.description}</p>
+        <p className="text-sm text-black mb-4">{version.description}</p>
         
         <div className="flex justify-between items-center">
           <div className="flex space-x-2">

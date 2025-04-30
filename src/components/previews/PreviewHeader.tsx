@@ -41,7 +41,7 @@ const PreviewHeader: React.FC<PreviewHeaderProps> = ({ projectData }) => {
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center">
         <div>
           <h1 className="text-2xl md:text-3xl font-bold text-black mb-2">{projectData.projectTitle}</h1>
-          <p className="text-gray-700">Cliente: {projectData.clientName}</p>
+          <p className="text-black">Cliente: {projectData.clientName}</p>
         </div>
         
         <div className={`mt-4 md:mt-0 px-3 py-1 rounded-full text-sm font-medium ${getStatusColor(projectData.status)}`}>
@@ -51,7 +51,7 @@ const PreviewHeader: React.FC<PreviewHeaderProps> = ({ projectData }) => {
       
       <div className="mt-6 pt-6 border-t">
         <h2 className="text-xl font-semibold text-black mb-2">Avaliação de Prévias Musicais</h2>
-        <p className="text-gray-700">
+        <p className="text-black">
           Abaixo você encontrará as versões musicais para avaliação. 
           Ouça cada uma delas e escolha sua favorita ou envie um feedback para ajustes.
         </p>

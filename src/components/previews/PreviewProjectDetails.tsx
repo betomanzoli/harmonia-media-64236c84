@@ -23,8 +23,8 @@ const PreviewProjectDetails: React.FC<PreviewProjectDetailsProps> = ({ projectDa
           <div className="flex items-start">
             <Package className="h-5 w-5 text-gray-500 mr-3 mt-0.5" />
             <div>
-              <div className="text-sm font-medium text-gray-900">Pacote</div>
-              <div className="text-sm text-gray-700">
+              <div className="text-sm font-medium text-black">Pacote</div>
+              <div className="text-sm text-black">
                 {projectData.packageType || projectData.projectTitle}
               </div>
             </div>
@@ -33,8 +33,8 @@ const PreviewProjectDetails: React.FC<PreviewProjectDetailsProps> = ({ projectDa
           <div className="flex items-start">
             <Music className="h-5 w-5 text-gray-500 mr-3 mt-0.5" />
             <div>
-              <div className="text-sm font-medium text-gray-900">Tipo de Projeto</div>
-              <div className="text-sm text-gray-700">
+              <div className="text-sm font-medium text-black">Tipo de Projeto</div>
+              <div className="text-sm text-black">
                 Música Personalizada
               </div>
             </div>
@@ -43,8 +43,8 @@ const PreviewProjectDetails: React.FC<PreviewProjectDetailsProps> = ({ projectDa
           <div className="flex items-start">
             <Calendar className="h-5 w-5 text-gray-500 mr-3 mt-0.5" />
             <div>
-              <div className="text-sm font-medium text-gray-900">Data de Criação</div>
-              <div className="text-sm text-gray-700">
+              <div className="text-sm font-medium text-black">Data de Criação</div>
+              <div className="text-sm text-black">
                 {projectData.creationDate || new Date().toLocaleDateString('pt-BR')}
               </div>
             </div>

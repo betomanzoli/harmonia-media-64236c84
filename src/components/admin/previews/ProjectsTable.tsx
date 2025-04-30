@@ -72,13 +72,13 @@ const ProjectsTable: React.FC<ProjectsTableProps> = ({
       <Table>
         <TableHeader className="bg-gray-50">
           <TableRow>
-            <TableHead className="font-medium text-gray-700">Cliente</TableHead>
-            <TableHead className="font-medium text-gray-700">Pacote</TableHead>
-            <TableHead className="font-medium text-gray-700">Status</TableHead>
-            <TableHead className="font-medium text-gray-700">Versões</TableHead>
-            <TableHead className="font-medium text-gray-700">Criado em</TableHead>
-            <TableHead className="font-medium text-gray-700">Expira em</TableHead>
-            <TableHead className="font-medium text-gray-700 text-right">Ações</TableHead>
+            <TableHead className="font-medium text-black">Cliente</TableHead>
+            <TableHead className="font-medium text-black">Pacote</TableHead>
+            <TableHead className="font-medium text-black">Status</TableHead>
+            <TableHead className="font-medium text-black">Versões</TableHead>
+            <TableHead className="font-medium text-black">Criado em</TableHead>
+            <TableHead className="font-medium text-black">Expira em</TableHead>
+            <TableHead className="font-medium text-black text-right">Ações</TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
@@ -93,7 +93,7 @@ const ProjectsTable: React.FC<ProjectsTableProps> = ({
             </TableRow>
           ) : projects.length === 0 ? (
             <TableRow>
-              <TableCell colSpan={7} className="text-center py-8 text-gray-500">
+              <TableCell colSpan={7} className="text-center py-8 text-black">
                 <h3 className="font-bold text-xl mb-2">Projetos de Prévias</h3>
                 <p>Nenhum projeto de prévia encontrado.</p>
               </TableCell>
@@ -101,16 +101,16 @@ const ProjectsTable: React.FC<ProjectsTableProps> = ({
           ) : (
             projects.map((project) => (
               <TableRow key={project.id}>
-                <TableCell className="font-medium">{project.clientName}</TableCell>
-                <TableCell>{formatPackageType(project.packageType || "")}</TableCell>
+                <TableCell className="font-medium text-black">{project.clientName}</TableCell>
+                <TableCell className="text-black">{formatPackageType(project.packageType || "")}</TableCell>
                 <TableCell>
                   <Badge className={statusColor(project.status)}>
                     {statusText(project.status)}
                   </Badge>
                 </TableCell>
-                <TableCell>{project.versions || 0}</TableCell>
-                <TableCell>{project.createdAt}</TableCell>
-                <TableCell>{project.expirationDate || "N/A"}</TableCell>
+                <TableCell className="text-black">{project.versions || 0}</TableCell>
+                <TableCell className="text-black">{project.createdAt}</TableCell>
+                <TableCell className="text-black">{project.expirationDate || "N/A"}</TableCell>
                 <TableCell className="text-right">
                   <div className="flex justify-end gap-2">
                     <Button

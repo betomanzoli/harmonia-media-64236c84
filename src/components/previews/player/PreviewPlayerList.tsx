@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Card } from "@/components/ui/card";
 import PreviewVersionCard from './PreviewVersionCard';
@@ -41,6 +40,14 @@ const PreviewPlayerList: React.FC<PreviewPlayerListProps> = ({
 
   // Handle playing the version audio
   const handlePlay = (version: MusicPreview) => {
+    // If version has fileId, create a Google Drive URL
+    if (version.fileId) {
+      const driveUrl = `https://drive.google.com/file/d/${version.fileId}/view`;
+      window.open(driveUrl, '_blank');
+      return;
+    }
+    
+    // Otherwise use the provided audioUrl or url
     onPlay(version);
   };
   

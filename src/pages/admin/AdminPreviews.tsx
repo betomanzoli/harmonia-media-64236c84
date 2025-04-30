@@ -98,7 +98,7 @@ const AdminPreviews: React.FC = () => {
                 Voltar
               </Link>
             </Button>
-            <h1 className="text-2xl font-bold">Gerenciador de Prévias</h1>
+            <h1 className="text-2xl font-bold text-black">Projetos de Prévias</h1>
           </div>
           <div className="flex space-x-2">
             <Button 
@@ -123,7 +123,7 @@ const AdminPreviews: React.FC = () => {
         <div className="p-6 flex-1 overflow-auto">
           <div className="bg-white rounded-lg shadow mb-6">
             <div className="p-6 border-b">
-              <h2 className="text-xl font-medium">Projetos de Prévias</h2>
+              <h2 className="text-xl font-medium text-black">Projetos de Prévias</h2>
               <p className="text-gray-500 text-sm mt-1">Lista de todos os projetos de prévias musicais.</p>
             </div>
             
