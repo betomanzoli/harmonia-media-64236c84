@@ -3,18 +3,11 @@ import React from 'react';
 import AudioExample from './AudioExample';
 import { Button } from "@/components/ui/button";
 import { Plus } from 'lucide-react';
-
-export interface AudioExampleItem {
-  title: string;
-  subtitle: string;
-  audioSrc: string;
-  genre: string;
-  type: string;
-}
+import { AudioExample as AudioExampleType } from './audioData';
 
 interface ExamplesListProps {
-  initialExamples: AudioExampleItem[];
-  extraExamples: AudioExampleItem[];
+  initialExamples: AudioExampleType[];
+  extraExamples: AudioExampleType[];
   showAll: boolean;
   onShowMore: () => void;
   onDelete?: (title: string) => void;
@@ -38,9 +31,9 @@ const ExamplesList: React.FC<ExamplesListProps> = ({
           <AudioExample 
             key={index}
             title={example.title}
-            subtitle={example.subtitle}
-            audioSrc={example.audioSrc}
-            genre={example.genre}
+            subtitle={example.description}
+            audioSrc={example.audioUrl}
+            genre={example.type}
             type={example.type}
             onDelete={onDelete}
             isAdmin={isAdmin}

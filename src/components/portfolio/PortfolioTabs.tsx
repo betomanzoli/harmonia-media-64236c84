@@ -4,15 +4,7 @@ import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
 import { ChevronDown } from 'lucide-react';
 import AudioCard from './AudioCard';
-
-interface AudioExample {
-  id: string;
-  title: string;
-  description: string;
-  audioUrl: string;
-  type: 'example' | 'comparison' | 'stem';
-  featured?: boolean;
-}
+import { AudioExample } from './audioData';
 
 interface PortfolioTabsProps {
   initialExamples: AudioExample[];
