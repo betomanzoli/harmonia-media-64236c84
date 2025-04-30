@@ -62,7 +62,7 @@ const PreviewVersionCard: React.FC<PreviewVersionCardProps> = ({
     >
       <CardHeader className="flex flex-row items-start justify-between pb-2">
         <div className="flex items-center">
-          <CardTitle className="text-lg">{version.title}</CardTitle>
+          <CardTitle className="text-lg text-black">{version.title}</CardTitle>
           {version.recommended && (
             <span className="ml-2 text-yellow-500 flex items-center text-sm font-medium">
               <Star className="h-4 w-4 fill-yellow-500" />
@@ -72,7 +72,7 @@ const PreviewVersionCard: React.FC<PreviewVersionCardProps> = ({
         </div>
       </CardHeader>
       <CardContent>
-        <p className="text-sm text-gray-500 mb-4">{version.description}</p>
+        <p className="text-sm text-gray-700 mb-4">{version.description}</p>
         
         <div className="flex justify-between items-center">
           <div className="flex space-x-2">

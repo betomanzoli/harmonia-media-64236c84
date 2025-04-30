@@ -1,8 +1,5 @@
 
 import React from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import { Clock, MessageSquare, CheckCircle } from 'lucide-react';
 
 interface PreviewHeaderProps {
   projectData: {
@@ -13,53 +10,53 @@ interface PreviewHeaderProps {
 }
 
 const PreviewHeader: React.FC<PreviewHeaderProps> = ({ projectData }) => {
-  const getStatusBadge = (status: string) => {
+  const getStatusLabel = (status: string) => {
     switch (status) {
       case 'waiting':
-        return (
-          <Badge variant="outline" className="flex items-center gap-1 bg-yellow-100 text-yellow-800 border-yellow-300">
-            <Clock className="h-3 w-3" />
-            Aguardando sua avaliação
-          </Badge>
-        );
+        return 'Aguardando avaliação';
       case 'feedback':
-        return (
-          <Badge variant="outline" className="flex items-center gap-1 bg-blue-100 text-blue-800 border-blue-300">
-            <MessageSquare className="h-3 w-3" />
-            Em ajustes conforme seu feedback
-          </Badge>
-        );
+        return 'Feedback enviado';
       case 'approved':
-        return (
-          <Badge variant="outline" className="flex items-center gap-1 bg-green-100 text-green-800 border-green-300">
-            <CheckCircle className="h-3 w-3" />
-            Música aprovada
-          </Badge>
-        );
+        return 'Prévia aprovada';
       default:
-        return null;
+        return 'Em andamento';
+    }
+  };
+
+  const getStatusColor = (status: string) => {
+    switch (status) {
+      case 'waiting':
+        return 'bg-yellow-100 text-yellow-700';
+      case 'feedback':
+        return 'bg-blue-100 text-blue-700';
+      case 'approved':
+        return 'bg-green-100 text-green-700';
+      default:
+        return 'bg-gray-100 text-gray-700';
     }
   };
 
   return (
-    <Card className="mb-8">
-      <CardHeader>
-        <div className="flex flex-col md:flex-row md:justify-between md:items-center gap-4">
-          <CardTitle className="text-2xl">{projectData.projectTitle}</CardTitle>
-          {getStatusBadge(projectData.status)}
+    <div className="mb-8">
+      <div className="flex flex-col md:flex-row justify-between items-start md:items-center">
+        <div>
+          <h1 className="text-2xl md:text-3xl font-bold text-black mb-2">{projectData.projectTitle}</h1>
+          <p className="text-gray-700">Cliente: {projectData.clientName}</p>
         </div>
-      </CardHeader>
-      <CardContent>
-        <div className="flex flex-col md:flex-row md:justify-between md:items-center gap-2">
-          <p className="text-gray-600">
-            Cliente: <span className="font-medium">{projectData.clientName}</span>
-          </p>
-          <p className="text-sm text-gray-500">
-            Data: {new Date().toLocaleDateString('pt-BR')}
-          </p>
+        
+        <div className={`mt-4 md:mt-0 px-3 py-1 rounded-full text-sm font-medium ${getStatusColor(projectData.status)}`}>
+          {getStatusLabel(projectData.status)}
         </div>
-      </CardContent>
-    </Card>
+      </div>
+      
+      <div className="mt-6 pt-6 border-t">
+        <h2 className="text-xl font-semibold text-black mb-2">Avaliação de Prévias Musicais</h2>
+        <p className="text-gray-700">
+          Abaixo você encontrará as versões musicais para avaliação. 
+          Ouça cada uma delas e escolha sua favorita ou envie um feedback para ajustes.
+        </p>
+      </div>
+    </div>
   );
 };
 

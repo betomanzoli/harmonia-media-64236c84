@@ -1,56 +1,54 @@
 
 import React from 'react';
-import { Card, CardHeader, CardContent } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
-import { PreviewProjectData } from '@/hooks/use-preview-data';
+import { Card, CardContent, CardTitle } from '@/components/ui/card';
+import { Calendar, Music, Package } from 'lucide-react';
 
 interface PreviewProjectDetailsProps {
-  projectData: PreviewProjectData;
+  projectData: {
+    projectTitle: string;
+    clientName: string;
+    status: string;
+    packageType?: string;
+    creationDate?: string;
+  };
 }
 
 const PreviewProjectDetails: React.FC<PreviewProjectDetailsProps> = ({ projectData }) => {
-  const getStatusBadge = (status: 'waiting' | 'feedback' | 'approved') => {
-    switch (status) {
-      case 'waiting':
-        return <Badge className="bg-yellow-100 text-yellow-800 border-yellow-300">Aguardando Avaliação</Badge>;
-      case 'feedback':
-        return <Badge className="bg-purple-100 text-purple-800 border-purple-300">Feedback Recebido</Badge>;
-      case 'approved':
-        return <Badge className="bg-green-100 text-green-800 border-green-300">Aprovado</Badge>;
-      default:
-        return <Badge>Desconhecido</Badge>;
-    }
-  };
-
   return (
-    <Card className="mb-8">
-      <CardHeader className="pb-2">
-        <div className="flex justify-between items-start">
-          <div>
-            <h1 className="text-2xl font-bold text-gray-900">
-              {projectData.projectTitle}
-            </h1>
-            <p className="text-gray-500 mt-1">
-              Cliente: {projectData.clientName}
-            </p>
-          </div>
-          <div>
-            {getStatusBadge(projectData.status)}
-          </div>
-        </div>
-      </CardHeader>
-      <CardContent>
-        <div className="text-sm text-gray-600">
-          {projectData.packageType && (
-            <div className="mb-1">
-              <span className="font-medium">Pacote:</span> {projectData.packageType}
-            </div>
-          )}
-          {projectData.creationDate && (
+    <Card>
+      <CardContent className="pt-6">
+        <CardTitle className="text-lg font-medium text-black mb-4">Detalhes do Projeto</CardTitle>
+        
+        <div className="space-y-4">
+          <div className="flex items-start">
+            <Package className="h-5 w-5 text-gray-500 mr-3 mt-0.5" />
             <div>
-              <span className="font-medium">Data de criação:</span> {projectData.creationDate}
+              <div className="text-sm font-medium text-gray-900">Pacote</div>
+              <div className="text-sm text-gray-700">
+                {projectData.packageType || projectData.projectTitle}
+              </div>
             </div>
-          )}
+          </div>
+          
+          <div className="flex items-start">
+            <Music className="h-5 w-5 text-gray-500 mr-3 mt-0.5" />
+            <div>
+              <div className="text-sm font-medium text-gray-900">Tipo de Projeto</div>
+              <div className="text-sm text-gray-700">
+                Música Personalizada
+              </div>
+            </div>
+          </div>
+          
+          <div className="flex items-start">
+            <Calendar className="h-5 w-5 text-gray-500 mr-3 mt-0.5" />
+            <div>
+              <div className="text-sm font-medium text-gray-900">Data de Criação</div>
+              <div className="text-sm text-gray-700">
+                {projectData.creationDate || new Date().toLocaleDateString('pt-BR')}
+              </div>
+            </div>
+          </div>
         </div>
       </CardContent>
     </Card>

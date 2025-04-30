@@ -95,6 +95,24 @@ const MusicPreviewSystem: React.FC<MusicPreviewSystemProps> = ({ projectId }) =>
     }
   };
 
+  const handlePlayVersion = (version: any) => {
+    const audioUrl = version.audioUrl || version.url;
+    if (audioUrl) {
+      // Abrir link em nova guia
+      window.open(audioUrl, '_blank');
+      toast({
+        title: "Reproduzindo prévia",
+        description: `Reproduzindo ${version.title} em nova aba`,
+      });
+    } else {
+      toast({
+        title: "Erro ao reproduzir",
+        description: "Não foi possível reproduzir esta versão.",
+        variant: "destructive"
+      });
+    }
+  };
+
   return (
     <div className="max-w-4xl mx-auto px-4 bg-white rounded-lg shadow-sm my-8 p-6">
       <PreviewHeader 
@@ -112,6 +130,7 @@ const MusicPreviewSystem: React.FC<MusicPreviewSystemProps> = ({ projectId }) =>
             selectedVersion={selectedVersion}
             setSelectedVersion={setSelectedVersion}
             isApproved={projectData.status === 'approved'}
+            onPlay={handlePlayVersion}
           />
           
           {!feedbackSubmitted && projectData.status !== 'approved' && (
