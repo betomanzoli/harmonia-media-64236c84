@@ -9,6 +9,7 @@ interface MusicPreview {
   title: string;
   description: string;
   audioUrl: string;
+  fileId?: string;
   recommended?: boolean;
 }
 
@@ -40,6 +41,7 @@ export const usePreviewProject = (projectId: string | undefined) => {
         title: v.name || `Versão ${v.id}`,
         description: v.description || '',
         audioUrl: `https://drive.google.com/uc?export=download&id=${v.fileId || audioFiles[0]?.id || '1H62ylCwQYJ23BLpygtvNmCgwTDcHX6Cl'}`,
+        fileId: v.fileId,
         recommended: v.recommended
       })) || [];
       
@@ -52,6 +54,7 @@ export const usePreviewProject = (projectId: string | undefined) => {
             title: `Versão ${i+1}`,
             description: 'Versão para aprovação',
             audioUrl: `https://drive.google.com/uc?export=download&id=${fallbackFileId}`,
+            fileId: fallbackFileId,
             recommended: i === 0 // Mark first version as recommended
           });
         }
@@ -68,18 +71,21 @@ export const usePreviewProject = (projectId: string | undefined) => {
             title: 'Versão Acústica',
             description: 'Versão suave com violão e piano',
             audioUrl: 'https://drive.google.com/uc?export=download&id=1H62ylCwQYJ23BLpygtvNmCgwTDcHX6Cl',
+            fileId: '1H62ylCwQYJ23BLpygtvNmCgwTDcHX6Cl'
           },
           {
             id: 'v2',
             title: 'Versão Orquestral',
             description: 'Arranjo completo com cordas e metais',
             audioUrl: 'https://drive.google.com/uc?export=download&id=11c6JahRd5Lx0iKCL_gHZ0zrZ3LFBJ47a',
+            fileId: '11c6JahRd5Lx0iKCL_gHZ0zrZ3LFBJ47a'
           },
           {
             id: 'v3',
             title: 'Versão Minimalista',
             description: 'Abordagem simplificada com foco na melodia',
             audioUrl: 'https://drive.google.com/uc?export=download&id=1fCsWubN8pXwM-mRlDtnQFTCkBbIkuUyW',
+            fileId: '1fCsWubN8pXwM-mRlDtnQFTCkBbIkuUyW'
           }
         ]
       });
@@ -100,25 +106,28 @@ export const usePreviewProject = (projectId: string | undefined) => {
             title: 'Versão Acústica',
             description: 'Versão suave com violão e piano',
             audioUrl: 'https://drive.google.com/uc?export=download&id=1H62ylCwQYJ23BLpygtvNmCgwTDcHX6Cl',
+            fileId: '1H62ylCwQYJ23BLpygtvNmCgwTDcHX6Cl'
           },
           {
             id: 'v2',
             title: 'Versão Orquestral',
             description: 'Arranjo completo com cordas e metais',
             audioUrl: 'https://drive.google.com/uc?export=download&id=11c6JahRd5Lx0iKCL_gHZ0zrZ3LFBJ47a',
+            fileId: '11c6JahRd5Lx0iKCL_gHZ0zrZ3LFBJ47a'
           },
           {
             id: 'v3',
             title: 'Versão Minimalista',
             description: 'Abordagem simplificada com foco na melodia',
             audioUrl: 'https://drive.google.com/uc?export=download&id=1fCsWubN8pXwM-mRlDtnQFTCkBbIkuUyW',
+            fileId: '1fCsWubN8pXwM-mRlDtnQFTCkBbIkuUyW'
           }
         ]
       });
     }
   }, [projectId, getProjectById, audioFiles]);
   
-  // Add the missing updateProjectStatus function
+  // Update project status function
   const updateProjectStatus = (newStatus: 'approved' | 'feedback', comments: string) => {
     if (!projectId || !projectData) return false;
 

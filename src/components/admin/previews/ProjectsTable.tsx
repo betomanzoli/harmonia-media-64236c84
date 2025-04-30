@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { 
   Table, 
@@ -79,14 +80,14 @@ const ProjectsTable: React.FC<ProjectsTableProps> = ({
       <TableCaption>Lista de projetos de prévias musicais.</TableCaption>
       <TableHeader>
         <TableRow>
-          <TableHead className="w-[100px]">ID</TableHead>
+          <TableHead className="w-[100px] text-black">ID</TableHead>
           <TableHead className="text-black">Cliente</TableHead>
           <TableHead className="text-black">Pacote</TableHead>
           <TableHead className="text-center text-black">Versões</TableHead>
           <TableHead className="text-black">Status</TableHead>
           <TableHead className="text-black">Criado em</TableHead>
           <TableHead className="text-black">Expira em</TableHead>
-          <TableHead className="text-right">Ações</TableHead>
+          <TableHead className="text-right text-black">Ações</TableHead>
         </TableRow>
       </TableHeader>
       <TableBody>
