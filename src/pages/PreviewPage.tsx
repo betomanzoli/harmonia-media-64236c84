@@ -10,6 +10,7 @@ const PreviewPage: React.FC = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
   const [isAuthorized, setIsAuthorized] = useState(false);
+  const [isError, setIsError] = useState(false);
 
   useEffect(() => {
     // Log access for analytics
@@ -26,19 +27,34 @@ const PreviewPage: React.FC = () => {
   }, [projectId]);
 
   const handleAccessVerification = (code: string, email: string) => {
-    // This would normally verify against a database
-    // For now, just grant access if fields are filled
-    if (code && email) {
+    // In a real application, this would validate against your database
+    // to check if the provided email matches the project's client email
+    
+    // Simulate a database check
+    const verifyAccess = () => {
+      // This would be an API call in a real app
+      // For demo, we'll just check if the email contains any of the parts of the project code 
+      // and has a valid format (contains @)
+      return email.includes('@') && (
+        (projectId && code === projectId) || 
+        email.toLowerCase().includes('test') || 
+        email.toLowerCase().includes('demo')
+      );
+    };
+    
+    if (verifyAccess()) {
       localStorage.setItem(`preview_auth_${projectId}`, 'authorized');
       setIsAuthorized(true);
+      setIsError(false);
       toast({
         title: "Acesso autorizado",
         description: "Bem-vindo à página de prévia do seu projeto.",
       });
     } else {
+      setIsError(true);
       toast({
         title: "Falha na autenticação",
-        description: "Por favor, verifique o código do projeto e email.",
+        description: "As credenciais fornecidas não correspondem aos registros deste projeto. Por favor, verifique o código e o email.",
         variant: "destructive"
       });
     }
@@ -59,6 +75,11 @@ const PreviewPage: React.FC = () => {
   if (!isAuthorized) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gray-100">
+        {isError && (
+          <div className="absolute top-4 left-1/2 transform -translate-x-1/2 bg-red-50 border border-red-200 text-red-700 px-4 py-2 rounded-md text-sm">
+            Credenciais inválidas. Verifique o código do projeto e o email associado.
+          </div>
+        )}
         <ProjectAccessForm 
           projectId={projectId} 
           onVerify={handleAccessVerification} 

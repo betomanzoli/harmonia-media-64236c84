@@ -51,7 +51,7 @@ export const packagePaymentLinks: Record<string, PackagePaymentLinks> = {
   }
 };
 
-// Extra services payment links (for future implementation)
+// Extra services payment links
 export const extraServicePaymentLinks: Record<string, PaymentLinkData> = {
   // Map each service ID to its payment link
   'Revisão Extra': {
@@ -87,8 +87,8 @@ export const extraServicePaymentLinks: Record<string, PaymentLinkData> = {
     preferenceId: '178571987-d2c262a6-0251-40cb-99ed-37415eb90c1d'
   },
   'Composição sem IA (letra + melodia)': {
-    url: 'https://wa.me/5511999999999?text=Olá,%20tenho%20interesse%20no%20serviço%20de%20Composição%20sem%20IA%20(letra%20+%20melodia).%20Poderia%20me%20dar%20mais%20informações?',
-    preferenceId: 'whatsapp-contact'
+    url: 'https://mpago.li/1gjwJZY',
+    preferenceId: '178571987-1b5c6c1a-2c8b-4c9a-b67c-07519f43382f'
   },
   'Composição sem IA (letra + melodia + gravação)': {
     url: 'https://wa.me/5511999999999?text=Olá,%20tenho%20interesse%20no%20serviço%20de%20Composição%20sem%20IA%20completa%20(letra%20+%20melodia%20+%20gravação).%20Poderia%20me%20dar%20mais%20informações?',
@@ -120,7 +120,7 @@ export const extraServicePaymentLinks: Record<string, PaymentLinkData> = {
     preferenceId: '178571987-d2c262a6-0251-40cb-99ed-37415eb90c1d'
   },
   'service1499': {
-    url: 'https://wa.me/5511999999999?text=Olá,%20tenho%20interesse%20no%20serviço%20de%20Composição%20sem%20IA.%20Poderia%20me%20dar%20mais%20informações?',
-    preferenceId: 'whatsapp-contact'
+    url: 'https://mpago.li/1gjwJZY',
+    preferenceId: '178571987-1b5c6c1a-2c8b-4c9a-b67c-07519f43382f'
   }
 };

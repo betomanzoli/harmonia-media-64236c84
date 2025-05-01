@@ -4,7 +4,8 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
-import { Music, Mail, Key } from 'lucide-react';
+import { Music, Mail, Key, AlertCircle } from 'lucide-react';
+import { Alert, AlertDescription } from "@/components/ui/alert";
 
 interface ProjectAccessFormProps {
   projectId: string;
@@ -15,13 +16,30 @@ const ProjectAccessForm: React.FC<ProjectAccessFormProps> = ({ projectId, onVeri
   const [code, setCode] = useState(projectId || '');
   const [email, setEmail] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
+    setError(null);
     
-    // Simulate loading
+    // Perform validation
+    if (!code.trim()) {
+      setError('Por favor, informe o código do projeto.');
+      setIsLoading(false);
+      return;
+    }
+    
+    if (!email.trim() || !email.includes('@')) {
+      setError('Por favor, informe um email válido.');
+      setIsLoading(false);
+      return;
+    }
+    
+    // Simulate verification against a database
     setTimeout(() => {
+      // In a real app, you would verify this against your database
+      // For now, we'll just call the onVerify function which decides if access is allowed
       onVerify(code, email);
       setIsLoading(false);
     }, 1000);
@@ -41,6 +59,13 @@ const ProjectAccessForm: React.FC<ProjectAccessFormProps> = ({ projectId, onVeri
         </CardHeader>
         <CardContent>
           <form onSubmit={handleSubmit} className="space-y-4">
+            {error && (
+              <Alert variant="destructive" className="mb-4">
+                <AlertCircle className="h-4 w-4" />
+                <AlertDescription>{error}</AlertDescription>
+              </Alert>
+            )}
+            
             <div className="space-y-2">
               <Label htmlFor="projectCode">Código do Projeto</Label>
               <div className="relative">

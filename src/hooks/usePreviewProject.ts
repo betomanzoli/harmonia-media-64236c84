@@ -1,187 +1,187 @@
 
 import { useState, useEffect } from 'react';
 import { useToast } from '@/hooks/use-toast';
-import { useGoogleDriveAudio } from '@/hooks/audio/useGoogleDriveAudio';
-import { usePreviewProjects } from '@/hooks/admin/usePreviewProjects';
 
-interface MusicPreview {
+// Define the basic project types for the preview system
+interface ProjectVersion {
   id: string;
   title: string;
   description: string;
   audioUrl: string;
-  fileId?: string;
   recommended?: boolean;
+  createdAt: string;
 }
 
-interface PreviewProject {
+interface FeedbackRecord {
+  id: string;
+  content: string;
+  createdAt: string;
+  status: 'pending' | 'processed';
+  userId?: string;
+  versionId?: string;
+}
+
+export interface PreviewProject {
+  id: string;
+  projectTitle?: string;
   clientName: string;
-  projectTitle: string;
+  packageType?: string;
   status: 'waiting' | 'feedback' | 'approved';
-  previews: MusicPreview[];
+  createdAt?: string;
+  expirationDate?: string;
+  versions?: ProjectVersion[];
+  feedbackHistory?: FeedbackRecord[];
 }
 
-export const usePreviewProject = (projectId: string | undefined) => {
-  const { toast } = useToast();
+export const usePreviewProject = (projectId?: string) => {
   const [projectData, setProjectData] = useState<PreviewProject | null>(null);
-  const { audioFiles, isLoading: audioLoading } = useGoogleDriveAudio();
-  const { getProjectById, updateProject } = usePreviewProjects();
   const [isLoading, setIsLoading] = useState(true);
-  
+  const { toast } = useToast();
+
   useEffect(() => {
     if (!projectId) {
       setIsLoading(false);
       return;
     }
 
-    setIsLoading(true);
-    
-    // Get project from admin projects
-    const adminProject = getProjectById(projectId);
-    
-    if (adminProject) {
-      console.log('Project found in admin system:', adminProject);
-      
-      // Create previews from project versions list
-      const previews: MusicPreview[] = adminProject.versionsList?.map(v => ({
-        id: v.id,
-        title: v.name || `Versão ${v.id}`,
-        description: v.description || '',
-        audioUrl: `https://drive.google.com/uc?export=download&id=${v.fileId || audioFiles[0]?.id || '1H62ylCwQYJ23BLpygtvNmCgwTDcHX6Cl'}`,
-        fileId: v.fileId,
-        recommended: v.recommended
-      })) || [];
-      
-      // If no previews but versions exist, create a fallback
-      if (previews.length === 0 && adminProject.versions > 0) {
-        for (let i = 0; i < adminProject.versions; i++) {
-          const fallbackFileId = audioFiles[i % audioFiles.length]?.id || '1H62ylCwQYJ23BLpygtvNmCgwTDcHX6Cl';
-          previews.push({
-            id: `v${i+1}`,
-            title: `Versão ${i+1}`,
-            description: 'Versão para aprovação',
-            audioUrl: `https://drive.google.com/uc?export=download&id=${fallbackFileId}`,
-            fileId: fallbackFileId,
-            recommended: i === 0 // Mark first version as recommended
-          });
-        }
-      }
-
-      // Create project data
-      setProjectData({
-        clientName: adminProject.clientName,
-        projectTitle: adminProject.packageType || 'Música Personalizada',
-        status: adminProject.status as 'waiting' | 'feedback' | 'approved',
-        previews: previews.length > 0 ? previews : [
-          {
-            id: 'v1',
-            title: 'Versão Acústica',
-            description: 'Versão suave com violão e piano',
-            audioUrl: 'https://drive.google.com/uc?export=download&id=1H62ylCwQYJ23BLpygtvNmCgwTDcHX6Cl',
-            fileId: '1H62ylCwQYJ23BLpygtvNmCgwTDcHX6Cl'
-          },
-          {
-            id: 'v2',
-            title: 'Versão Orquestral',
-            description: 'Arranjo completo com cordas e metais',
-            audioUrl: 'https://drive.google.com/uc?export=download&id=11c6JahRd5Lx0iKCL_gHZ0zrZ3LFBJ47a',
-            fileId: '11c6JahRd5Lx0iKCL_gHZ0zrZ3LFBJ47a'
-          },
-          {
-            id: 'v3',
-            title: 'Versão Minimalista',
-            description: 'Abordagem simplificada com foco na melodia',
-            audioUrl: 'https://drive.google.com/uc?export=download&id=1fCsWubN8pXwM-mRlDtnQFTCkBbIkuUyW',
-            fileId: '1fCsWubN8pXwM-mRlDtnQFTCkBbIkuUyW'
-          }
-        ]
-      });
-      
-      // Log preview access
-      console.log(`Cliente acessando prévia: ${projectId}, data: ${new Date().toISOString()}`);
-    } else {
-      console.error(`Project with ID ${projectId} not found in admin system`);
-      
-      // Fallback to mock data if project not found
-      setProjectData({
-        clientName: 'Cliente Exemplo',
-        projectTitle: 'Projeto de Música Personalizada',
-        status: 'waiting',
-        previews: [
-          {
-            id: 'v1',
-            title: 'Versão Acústica',
-            description: 'Versão suave com violão e piano',
-            audioUrl: 'https://drive.google.com/uc?export=download&id=1H62ylCwQYJ23BLpygtvNmCgwTDcHX6Cl',
-            fileId: '1H62ylCwQYJ23BLpygtvNmCgwTDcHX6Cl'
-          },
-          {
-            id: 'v2',
-            title: 'Versão Orquestral',
-            description: 'Arranjo completo com cordas e metais',
-            audioUrl: 'https://drive.google.com/uc?export=download&id=11c6JahRd5Lx0iKCL_gHZ0zrZ3LFBJ47a',
-            fileId: '11c6JahRd5Lx0iKCL_gHZ0zrZ3LFBJ47a'
-          },
-          {
-            id: 'v3',
-            title: 'Versão Minimalista',
-            description: 'Abordagem simplificada com foco na melodia',
-            audioUrl: 'https://drive.google.com/uc?export=download&id=1fCsWubN8pXwM-mRlDtnQFTCkBbIkuUyW',
-            fileId: '1fCsWubN8pXwM-mRlDtnQFTCkBbIkuUyW'
-          }
-        ]
-      });
-    }
-    
-    setIsLoading(false);
-  }, [projectId, getProjectById, audioFiles]);
-  
-  // Update project status function
-  const updateProjectStatus = (newStatus: 'approved' | 'feedback', comments: string) => {
-    if (!projectId || !projectData) return false;
-
-    console.log(`Atualizando status do projeto ${projectId} para ${newStatus}`);
-    console.log(`Feedback do cliente: ${comments}`);
-    
-    // Update the project in the admin system
-    if (projectId) {
-      // Add history entry
-      const historyAction = newStatus === 'approved' 
-        ? 'Prévia aprovada pelo cliente' 
-        : 'Feedback recebido do cliente';
-      
-      const historyEntry = {
-        action: historyAction,
-        timestamp: new Date().toLocaleString('pt-BR'),
-        data: {
-          message: comments || 'Sem comentários adicionais'
-        }
-      };
-      
-      const updates = {
-        status: newStatus,
-        feedback: comments,
-        lastActivityDate: new Date().toLocaleDateString('pt-BR'),
-        history: [historyEntry]
-      };
-      
-      const updated = updateProject(projectId, updates);
-      
-      if (updated) {
-        // Update local state
-        setProjectData(prev => {
-          if (!prev) return null;
-          return {
-            ...prev,
-            status: newStatus
-          };
-        });
+    // In a real app, this would be an API call to fetch the project data
+    // For now, we'll just simulate it
+    const fetchProjectData = async () => {
+      setIsLoading(true);
+      try {
+        // Simulate API call delay
+        await new Promise(resolve => setTimeout(resolve, 800));
         
-        return true;
+        // This is mock data - in a real app, you would fetch this from your API
+        const mockProject: PreviewProject = {
+          id: projectId,
+          projectTitle: "Música para Maria e João",
+          clientName: "Carlos Silva",
+          packageType: "Pacote Profissional",
+          status: "waiting",
+          createdAt: new Date().toISOString(),
+          expirationDate: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString(), // 7 days from now
+          versions: [
+            {
+              id: "v1",
+              title: "Versão Romântica",
+              description: "Uma versão mais suave e romântica, ideal para momentos íntimos.",
+              audioUrl: "https://example.com/song1.mp3",
+              recommended: true,
+              createdAt: new Date().toISOString()
+            },
+            {
+              id: "v2",
+              title: "Versão Animada",
+              description: "Uma versão mais alegre e animada, perfeita para celebrações.",
+              audioUrl: "https://example.com/song2.mp3",
+              createdAt: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000).toISOString()
+            }
+          ],
+          feedbackHistory: []
+        };
+        
+        // Get data from localStorage if it exists (to preserve state between page refreshes)
+        const savedProjectData = localStorage.getItem(`previewProject_${projectId}`);
+        if (savedProjectData) {
+          setProjectData(JSON.parse(savedProjectData));
+        } else {
+          setProjectData(mockProject);
+          localStorage.setItem(`previewProject_${projectId}`, JSON.stringify(mockProject));
+        }
+      } catch (error) {
+        toast({
+          title: "Erro ao carregar projeto",
+          description: "Não foi possível carregar os dados do projeto.",
+          variant: "destructive"
+        });
+        console.error("Error fetching project data:", error);
+      } finally {
+        setIsLoading(false);
       }
+    };
+
+    fetchProjectData();
+  }, [projectId, toast]);
+
+  // Function to update the project status and add feedback to history
+  const updateProjectStatus = (newStatus: 'feedback' | 'approved', comments: string) => {
+    if (!projectData) return;
+    
+    // Create a feedback record
+    const feedbackRecord: FeedbackRecord = {
+      id: `feedback_${Date.now()}`,
+      content: comments,
+      createdAt: new Date().toISOString(),
+      status: 'pending'
+    };
+    
+    // Update the project data with new status and feedback
+    const updatedProject = {
+      ...projectData,
+      status: newStatus,
+      feedbackHistory: [
+        ...(projectData.feedbackHistory || []),
+        feedbackRecord
+      ]
+    };
+    
+    // If the status is "feedback", simulate creating a new version based on feedback
+    if (newStatus === 'feedback') {
+      // In a real app, this would trigger a notification to your team
+      // that a new round of feedback has been received
+      console.log(`Feedback received for project ${projectData.id}:`, comments);
+      
+      // For demo purposes, we'll add a "New version" flag to show the feedback cycle
+      // In a real app, your team would create a new version based on the feedback
+      localStorage.setItem(`feedback_pending_${projectData.id}`, 'true');
+      
+      // Simulate the flow where your team would get notified and later add a new version
+      setTimeout(() => {
+        // Check if the component is still mounted before updating
+        const storedProject = localStorage.getItem(`previewProject_${projectData.id}`);
+        if (storedProject) {
+          const project = JSON.parse(storedProject);
+          
+          // Add a new version based on feedback (in a real app, your team would do this)
+          const newVersion: ProjectVersion = {
+            id: `v${(project.versions?.length || 0) + 1}`,
+            title: `Versão Revisada (após feedback)`,
+            description: "Esta versão foi criada com base no seu feedback anterior.",
+            audioUrl: "https://example.com/song_revised.mp3",
+            recommended: true,
+            createdAt: new Date().toISOString()
+          };
+          
+          const updatedVersions = [
+            newVersion,
+            ...(project.versions || [])
+          ];
+          
+          // Update the stored project with the new version
+          const updatedWithNewVersion = {
+            ...project,
+            versions: updatedVersions,
+            status: 'waiting' // Reset to waiting for feedback on the new version
+          };
+          
+          localStorage.setItem(`previewProject_${projectData.id}`, JSON.stringify(updatedWithNewVersion));
+          localStorage.removeItem(`feedback_pending_${projectData.id}`);
+        }
+      }, 30000); // Simulate a delay before new version is created (30 seconds)
     }
     
-    return false;
+    // Save to state and localStorage
+    setProjectData(updatedProject);
+    localStorage.setItem(`previewProject_${projectData.id}`, JSON.stringify(updatedProject));
+    
+    return true;
   };
-  
-  return { projectData, setProjectData, isLoading, updateProjectStatus };
+
+  return {
+    projectData,
+    isLoading,
+    updateProjectStatus,
+    setProjectData
+  };
 };

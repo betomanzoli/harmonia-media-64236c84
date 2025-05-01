@@ -84,7 +84,7 @@ export const extraServicesData: ExtraService[] = [
   {
     id: "Entrega Expressa",
     title: "Entrega Expressa (48h)",
-    price: 149,  // Corrected price
+    price: 149,
     description: "Priorize seu projeto e receba sua música finalizada em até 48 horas.",
     features: [
       "• Sujeito à disponibilidade da equipe",
@@ -95,7 +95,7 @@ export const extraServicesData: ExtraService[] = [
   {
     id: "Partituras MusicXML/PDF",
     title: "Partituras MusicXML/PDF",
-    price: 149,  // Corrected price
+    price: 149,
     description: "Receba a partitura completa da sua música em formato MusicXML ou PDF, ideal para músicos e bandas.",
     features: [
       "• Prazo: Até 7 dias úteis após a entrega do áudio",
