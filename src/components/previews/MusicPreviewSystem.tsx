@@ -126,10 +126,10 @@ const MusicPreviewSystem: React.FC<MusicPreviewSystemProps> = ({ projectId }) =>
         onShareClick={() => setIsShareDialogOpen(true)}
       />
       
-      {projectData?.versions && projectData?.versions.length > 0 && (
+      {projectData?.versions && projectData.versions.length > 0 && (
         <div className="mt-8">
           <PreviewPlayerList 
-            versions={projectData?.versions}
+            versions={projectData.versions}
             selectedVersion={selectedVersion}
             setSelectedVersion={setSelectedVersion}
             isApproved={projectData.status === 'approved'}
@@ -156,7 +156,7 @@ const MusicPreviewSystem: React.FC<MusicPreviewSystemProps> = ({ projectId }) =>
       
       {projectData?.expirationDate && (
         <div className="mt-8">
-          <PreviewCountdown expirationDate={projectData?.expirationDate} />
+          <PreviewCountdown expirationDate={projectData.expirationDate} />
         </div>
       )}
       
