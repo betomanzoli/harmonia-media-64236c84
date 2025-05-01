@@ -23,12 +23,18 @@ interface PreviewProject {
 export const usePreviewProject = (projectId: string | undefined) => {
   const { toast } = useToast();
   const [projectData, setProjectData] = useState<PreviewProject | null>(null);
-  const { audioFiles, isLoading } = useGoogleDriveAudio();
+  const { audioFiles, isLoading: audioLoading } = useGoogleDriveAudio();
   const { getProjectById, updateProject } = usePreviewProjects();
+  const [isLoading, setIsLoading] = useState(true);
   
   useEffect(() => {
-    if (!projectId) return;
+    if (!projectId) {
+      setIsLoading(false);
+      return;
+    }
 
+    setIsLoading(true);
+    
     // Get project from admin projects
     const adminProject = getProjectById(projectId);
     
@@ -125,6 +131,8 @@ export const usePreviewProject = (projectId: string | undefined) => {
         ]
       });
     }
+    
+    setIsLoading(false);
   }, [projectId, getProjectById, audioFiles]);
   
   // Update project status function
@@ -136,10 +144,24 @@ export const usePreviewProject = (projectId: string | undefined) => {
     
     // Update the project in the admin system
     if (projectId) {
+      // Add history entry
+      const historyAction = newStatus === 'approved' 
+        ? 'Prévia aprovada pelo cliente' 
+        : 'Feedback recebido do cliente';
+      
+      const historyEntry = {
+        action: historyAction,
+        timestamp: new Date().toLocaleString('pt-BR'),
+        data: {
+          message: comments || 'Sem comentários adicionais'
+        }
+      };
+      
       const updates = {
         status: newStatus,
         feedback: comments,
-        lastActivityDate: new Date().toLocaleDateString('pt-BR')
+        lastActivityDate: new Date().toLocaleDateString('pt-BR'),
+        history: [historyEntry]
       };
       
       const updated = updateProject(projectId, updates);
