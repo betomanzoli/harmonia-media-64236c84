@@ -124,7 +124,7 @@ const SharePreviewDialog: React.FC<SharePreviewDialogProps> = ({
               </Button>
             </div>
             <p className="text-xs text-gray-500 mt-1">
-              Este é um link codificado que não mostra o ID do projeto diretamente.
+              Este é um link codificado que não mostra o ID do projeto diretamente. Este link pode ser compartilhado sem necessidade de autenticação.
             </p>
           </div>
           

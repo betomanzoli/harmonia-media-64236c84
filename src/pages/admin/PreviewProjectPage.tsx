@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import AdminLayout from '@/components/admin/layout/AdminLayout';
 import { Card } from '@/components/ui/card';
@@ -199,4 +198,5 @@ const PreviewProjectPage: React.FC = () => {
       </div>
     </AdminLayout>;
 };
+
 export default PreviewProjectPage;

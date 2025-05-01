@@ -4,6 +4,7 @@ import { useParams, useNavigate } from 'react-router-dom';
 import MusicPreviewSystem from '@/components/previews/MusicPreviewSystem';
 import ProjectAccessForm from '@/components/previews/ProjectAccessForm';
 import { useToast } from '@/hooks/use-toast';
+import { getProjectIdFromPreviewLink } from '@/utils/previewLinkUtils';
 
 const PreviewPage: React.FC = () => {
   const { projectId } = useParams<{ projectId: string }>();
@@ -11,12 +12,24 @@ const PreviewPage: React.FC = () => {
   const { toast } = useToast();
   const [isAuthorized, setIsAuthorized] = useState(false);
   const [isError, setIsError] = useState(false);
+  const [actualProjectId, setActualProjectId] = useState<string | null>(null);
 
   useEffect(() => {
     // Log access for analytics
     if (projectId) {
       console.log(`Acesso à prévia: ${projectId}, Data: ${new Date().toISOString()}`);
       window.scrollTo(0, 0);
+      
+      // Check if this is an encoded ID that needs to be decoded
+      const decodedId = getProjectIdFromPreviewLink(projectId);
+      if (decodedId) {
+        // If this is an encoded link, we consider it pre-authorized
+        setActualProjectId(decodedId);
+        setIsAuthorized(true);
+        return;
+      }
+      
+      setActualProjectId(projectId);
       
       // Check if already authenticated for this project
       const authStatus = localStorage.getItem(`preview_auth_${projectId}`);
@@ -78,7 +91,7 @@ const PreviewPage: React.FC = () => {
     );
   }
 
-  // Show authentication form if not authorized yet
+  // Show authentication form if not authorized yet and not using an encoded link
   if (!isAuthorized) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gray-100">
@@ -97,7 +110,7 @@ const PreviewPage: React.FC = () => {
 
   return (
     <div className="min-h-screen bg-gray-100 pt-8 pb-16">
-      <MusicPreviewSystem projectId={projectId} />
+      <MusicPreviewSystem projectId={actualProjectId || projectId} />
     </div>
   );
 };

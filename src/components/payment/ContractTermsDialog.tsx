@@ -20,7 +20,7 @@ interface ContractTermsDialogProps {
 const getContractContent = (packageId: PackageId): string => {
   // Contrato base para todos os pacotes
   let contractBase = `
-    <h3 class="text-lg font-semibold mb-2">Contrato de Prestação de Serviços - Música Personalizada</h3>
+    <h3 class="text-lg font-semibold mb-2">Contrato de Prestação de Serviços - Pacote ${packageId.charAt(0).toUpperCase() + packageId.slice(1)}</h3>
     
     <p class="mb-2">Por meio deste instrumento particular, a empresa HarmonIA, prestadora de serviços de produção musical, doravante denominada CONTRATADA, e o cliente, doravante denominado CONTRATANTE, estabelecem as seguintes cláusulas:</p>
     
@@ -115,7 +115,7 @@ const ContractTermsDialog: React.FC<ContractTermsDialogProps> = ({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-3xl">
         <DialogHeader>
-          <DialogTitle>Contrato de Prestação de Serviços</DialogTitle>
+          <DialogTitle>Contrato de Prestação de Serviços - Pacote {packageId.charAt(0).toUpperCase() + packageId.slice(1)}</DialogTitle>
           <DialogDescription>
             Por favor, leia com atenção o contrato abaixo antes de prosseguir com o pagamento.
           </DialogDescription>
