@@ -1,9 +1,17 @@
 
 import React from 'react';
-import Services from './Services';
+import Header from '@/components/Header';
+import Footer from '@/components/Footer';
+import Services from '@/components/Services';
 
 const ServicesPage: React.FC = () => {
-  return <Services />;
+  return (
+    <div className="min-h-screen bg-background">
+      <Header />
+      <Services />
+      <Footer />
+    </div>
+  );
 };
 
 export default ServicesPage;
