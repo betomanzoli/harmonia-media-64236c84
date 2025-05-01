@@ -23,14 +23,21 @@ interface FeedbackRecord {
 
 export interface PreviewProject {
   id: string;
-  projectTitle?: string;
+  projectTitle: string; // Changed from optional to required
   clientName: string;
   packageType?: string;
   status: 'waiting' | 'feedback' | 'approved';
-  createdAt?: string;
+  createdAt: string; // Changed from optional to required
   expirationDate?: string;
-  versions?: ProjectVersion[];
+  versions: ProjectVersion[]; // Changed from optional to required, with empty array as default
   feedbackHistory?: FeedbackRecord[];
+  previews?: Array<{ // Added previews property to match usage in MusicPreviews.tsx
+    id: string;
+    title: string;
+    description?: string;
+    audioUrl: string;
+    recommended?: boolean;
+  }>;
 }
 
 export const usePreviewProject = (projectId?: string) => {
@@ -76,6 +83,21 @@ export const usePreviewProject = (projectId?: string) => {
               description: "Uma versão mais alegre e animada, perfeita para celebrações.",
               audioUrl: "https://example.com/song2.mp3",
               createdAt: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000).toISOString()
+            }
+          ],
+          previews: [  // Add previews property to mock data
+            {
+              id: "v1",
+              title: "Versão Romântica",
+              description: "Uma versão mais suave e romântica, ideal para momentos íntimos.",
+              audioUrl: "https://example.com/song1.mp3",
+              recommended: true,
+            },
+            {
+              id: "v2",
+              title: "Versão Animada",
+              description: "Uma versão mais alegre e animada, perfeita para celebrações.",
+              audioUrl: "https://example.com/song2.mp3"
             }
           ],
           feedbackHistory: []

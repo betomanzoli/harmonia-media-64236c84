@@ -122,6 +122,9 @@ const MusicPreviews: React.FC = () => {
     );
   }
   
+  // Create a versions array from previews if it exists, or use an empty array
+  const versionsForPlayer = projectData.previews || projectData.versions || [];
+  
   return (
     <div className="min-h-screen bg-background text-foreground">
       <Header />
@@ -154,7 +157,7 @@ const MusicPreviews: React.FC = () => {
             
             <TabsContent value="versions">
               <PreviewPlayerList 
-                versions={projectData.previews.map(preview => ({
+                versions={versionsForPlayer.map(preview => ({
                   ...preview,
                   description: preview.description || `Versão musical para ${projectData.clientName}`
                 }))}
@@ -172,7 +175,7 @@ const MusicPreviews: React.FC = () => {
                 handleSubmit={handleSubmitFeedback}
                 handleApprove={handleApprove}
                 status={projectData.status}
-                versionTitle={projectData.previews.find(p => p.id === selectedPreview)?.title}
+                versionTitle={versionsForPlayer.find(p => p.id === selectedPreview)?.title}
               />
             </TabsContent>
           </Tabs>

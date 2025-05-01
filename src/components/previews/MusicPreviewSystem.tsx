@@ -17,23 +17,6 @@ interface MusicPreviewSystemProps {
   projectId: string;
 }
 
-// Updated interface to include all the required properties
-interface PreviewProject {
-  projectTitle?: string;
-  clientName: string;
-  packageType?: string;
-  status: 'waiting' | 'feedback' | 'approved';
-  createdAt?: string;
-  expirationDate?: string;
-  versions?: Array<{
-    id: string;
-    title: string;
-    description: string;
-    audioUrl: string;
-    recommended?: boolean;
-  }>;
-}
-
 const MusicPreviewSystem: React.FC<MusicPreviewSystemProps> = ({ projectId }) => {
   const { projectData, isLoading, updateProjectStatus } = usePreviewProject(projectId);
   const { toast } = useToast();
@@ -118,11 +101,11 @@ const MusicPreviewSystem: React.FC<MusicPreviewSystemProps> = ({ projectId }) =>
   return (
     <div className="max-w-4xl mx-auto px-4">
       <PreviewHeader 
-        projectTitle={projectData.projectTitle || 'Projeto sem nome'} 
-        clientName={projectData.clientName || 'Cliente'} 
+        projectTitle={projectData.projectTitle} 
+        clientName={projectData.clientName} 
         packageType={packageType}
-        status={projectData.status || 'waiting'}
-        createdAt={projectData.createdAt || new Date().toISOString()}
+        status={projectData.status}
+        createdAt={projectData.createdAt}
         onShareClick={() => setIsShareDialogOpen(true)}
       />
       
@@ -151,7 +134,13 @@ const MusicPreviewSystem: React.FC<MusicPreviewSystemProps> = ({ projectId }) =>
       )}
       
       <div className="mt-8">
-        <PreviewProjectDetails projectData={projectData} />
+        <PreviewProjectDetails projectData={{
+          projectTitle: projectData.projectTitle,
+          clientName: projectData.clientName,
+          status: projectData.status,
+          packageType: projectData.packageType,
+          creationDate: projectData.createdAt
+        }} />
       </div>
       
       {projectData.expirationDate && (
@@ -161,12 +150,12 @@ const MusicPreviewSystem: React.FC<MusicPreviewSystemProps> = ({ projectId }) =>
       )}
       
       <div className="mt-8">
-        <PreviewInstructions status={projectData.status || 'waiting'} />
+        <PreviewInstructions status={projectData.status} />
       </div>
       
       {feedbackSubmitted && (
         <div className="mt-8">
-          <PreviewNextSteps status={projectData.status || 'waiting'} />
+          <PreviewNextSteps status={projectData.status} />
         </div>
       )}
       
@@ -178,7 +167,7 @@ const MusicPreviewSystem: React.FC<MusicPreviewSystemProps> = ({ projectId }) =>
         isOpen={isShareDialogOpen}
         onOpenChange={setIsShareDialogOpen}
         projectId={projectId}
-        projectTitle={projectData.projectTitle || 'Projeto sem nome'}
+        projectTitle={projectData.projectTitle}
       />
     </div>
   );

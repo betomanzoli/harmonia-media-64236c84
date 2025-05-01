@@ -1,7 +1,7 @@
 
 import { useState, useEffect } from 'react';
 import { useToast } from '@/hooks/use-toast';
-import { usePreviewProject } from '@/hooks/usePreviewProject';
+import { usePreviewProject, PreviewProject } from '@/hooks/usePreviewProject';
 import { getProjectIdFromPreviewLink } from '@/utils/previewLinkUtils';
 
 export const usePreviewData = (previewId: string | undefined) => {
