@@ -23,6 +23,13 @@ const PreviewPage: React.FC = () => {
       if (authStatus === 'authorized') {
         setIsAuthorized(true);
       }
+      
+      // Se vier da área de administração, permitir acesso direto
+      const isFromAdmin = localStorage.getItem('admin_preview_access') === 'true';
+      if (isFromAdmin) {
+        setIsAuthorized(true);
+        localStorage.removeItem('admin_preview_access');
+      }
     }
   }, [projectId]);
 

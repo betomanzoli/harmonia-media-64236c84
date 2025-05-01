@@ -23,15 +23,15 @@ interface FeedbackRecord {
 
 export interface PreviewProject {
   id: string;
-  projectTitle: string; // Changed from optional to required
+  projectTitle: string;
   clientName: string;
   packageType?: string;
   status: 'waiting' | 'feedback' | 'approved';
-  createdAt: string; // Changed from optional to required
+  createdAt: string;
   expirationDate?: string;
-  versions: ProjectVersion[]; // Changed from optional to required, with empty array as default
+  versions: ProjectVersion[];
   feedbackHistory?: FeedbackRecord[];
-  previews?: Array<{ // Added previews property to match usage in MusicPreviews.tsx
+  previews?: Array<{
     id: string;
     title: string;
     description?: string;

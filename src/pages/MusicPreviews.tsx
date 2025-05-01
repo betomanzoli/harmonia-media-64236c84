@@ -20,7 +20,7 @@ const MusicPreviews: React.FC = () => {
   
   const [selectedPreview, setSelectedPreview] = useState<string | null>(null);
   const [feedback, setFeedback] = useState('');
-  const { projectData, setProjectData, isLoading, actualProjectId } = usePreviewData(previewId);
+  const { projectData, isLoading, actualProjectId, updateProjectStatus } = usePreviewData(previewId);
   
   useEffect(() => {
     console.log("Preview ID:", previewId);
@@ -58,7 +58,9 @@ const MusicPreviews: React.FC = () => {
       message: feedback
     });
     
-    setProjectData(prev => prev ? {...prev, status: 'feedback' as const} : null);
+    if (updateProjectStatus) {
+      updateProjectStatus('feedback', feedback);
+    }
   };
   
   const handleApprove = () => {
@@ -83,7 +85,9 @@ const MusicPreviews: React.FC = () => {
       versionId: selectedPreview
     });
     
-    setProjectData(prev => prev ? {...prev, status: 'approved' as const} : null);
+    if (updateProjectStatus) {
+      updateProjectStatus('approved', feedback);
+    }
   };
   
   if (isLoading) {
@@ -122,8 +126,8 @@ const MusicPreviews: React.FC = () => {
     );
   }
   
-  // Create a versions array from previews if it exists, or use an empty array
-  const versionsForPlayer = projectData.previews || projectData.versions || [];
+  // Use versions if available, otherwise use previews, or fall back to empty array
+  const versionsForPlayer = projectData.versions || projectData.previews || [];
   
   return (
     <div className="min-h-screen bg-background text-foreground">

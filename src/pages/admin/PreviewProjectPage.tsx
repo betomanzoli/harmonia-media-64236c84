@@ -1,4 +1,5 @@
-import React, { useState } from 'react';
+
+import React, { useState, useEffect } from 'react';
 import AdminLayout from '@/components/admin/layout/AdminLayout';
 import { Card } from '@/components/ui/card';
 import ProjectHeader from '@/components/admin/previews/ProjectHeader';
@@ -6,9 +7,10 @@ import PreviewVersionsList from '@/components/admin/previews/PreviewVersionsList
 import ProjectClientInfo from '@/components/admin/previews/ProjectClientInfo';
 import ProjectActionCard from '@/components/admin/previews/ProjectActionCard';
 import ProjectHistoryList from '@/components/admin/previews/ProjectHistoryList';
-import { useParams } from 'react-router-dom';
+import { useParams, useNavigate } from 'react-router-dom';
 import { usePreviewProjects, VersionItem } from '@/hooks/admin/usePreviewProjects';
 import { useToast } from '@/hooks/use-toast';
+
 const PreviewProjectPage: React.FC = () => {
   const {
     projectId
@@ -22,7 +24,10 @@ const PreviewProjectPage: React.FC = () => {
   const {
     toast
   } = useToast();
+  const navigate = useNavigate();
   const project = projectId ? getProjectById(projectId) : null;
+  
+  // Verifica se o projeto existe
   if (!project) {
     return <AdminLayout>
         <Card className="p-6">
@@ -30,6 +35,7 @@ const PreviewProjectPage: React.FC = () => {
         </Card>
       </AdminLayout>;
   }
+  
   const handleAddVersion = (newVersion: VersionItem) => {
     if (!projectId) return;
     const currentVersions = project.versionsList || [];
@@ -77,6 +83,7 @@ const PreviewProjectPage: React.FC = () => {
       description: `${versionTitle} foi adicionada ao projeto com sucesso.`
     });
   };
+  
   const handleExtendDeadline = () => {
     if (!projectId) return;
 
@@ -151,11 +158,32 @@ const PreviewProjectPage: React.FC = () => {
     }).join(' ');
   };
 
+  // Função para ver a prévia como cliente
+  const handleViewAsClient = () => {
+    // Sinaliza que o acesso é do administrador
+    localStorage.setItem('admin_preview_access', 'true');
+    // Navega para a página de prévia do cliente
+    navigate(`/preview/${projectId}`);
+  };
+
   // Gera o link de prévia para o cliente
   const previewUrl = `/preview/${projectId}`;
+  
   return <AdminLayout>
-      <div className="space-y-6 p-6 min-h-screen bg-slate-400">
-        <ProjectHeader projectTitle={formatPackageType(project.packageType || "Projeto de Música Personalizada")} clientName={project.clientName} packageType={formatPackageType(project.packageType)} />
+      <div className="space-y-6 p-6 min-h-screen bg-slate-50">
+        <div className="flex justify-between items-center">
+          <ProjectHeader 
+            projectTitle={formatPackageType(project.packageType || "Projeto de Música Personalizada")} 
+            clientName={project.clientName} 
+            packageType={formatPackageType(project.packageType)} 
+          />
+          <button
+            onClick={handleViewAsClient}
+            className="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded"
+          >
+            Ver como cliente
+          </button>
+        </div>
         
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
           <div className="md:col-span-2 space-y-6">
