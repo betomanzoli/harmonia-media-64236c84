@@ -10,7 +10,12 @@ interface PreviewHeaderProps {
   packageType: string;
   status: string;
   createdAt: string;
-  onShareClick: () => void;
+  onShareClick?: () => void;
+  projectData?: {
+    projectTitle: string;
+    clientName: string;
+    status: 'approved' | 'feedback' | 'waiting';
+  };
 }
 
 const PreviewHeader: React.FC<PreviewHeaderProps> = ({
@@ -19,8 +24,14 @@ const PreviewHeader: React.FC<PreviewHeaderProps> = ({
   packageType,
   status,
   createdAt,
-  onShareClick
+  onShareClick,
+  projectData
 }) => {
+  // If projectData is provided, use its values (used in MusicPreviews.tsx)
+  const title = projectData?.projectTitle || projectTitle;
+  const client = projectData?.clientName || clientName;
+  const currentStatus = projectData?.status || status;
+
   const formatDate = (dateString: string) => {
     try {
       const date = new Date(dateString);
@@ -61,26 +72,28 @@ const PreviewHeader: React.FC<PreviewHeaderProps> = ({
     <div className="bg-white p-6 rounded-lg shadow-sm">
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-4">
         <div>
-          <h1 className="text-2xl font-bold text-black">{projectTitle}</h1>
+          <h1 className="text-2xl font-bold text-black">{title}</h1>
           <p className="text-gray-500">{packageType}</p>
         </div>
         
-        <Button 
-          variant="outline" 
-          size="sm" 
-          className="mt-2 sm:mt-0"
-          onClick={onShareClick}
-        >
-          <Share className="h-4 w-4 mr-2" />
-          Compartilhar
-        </Button>
+        {onShareClick && (
+          <Button 
+            variant="outline" 
+            size="sm" 
+            className="mt-2 sm:mt-0"
+            onClick={onShareClick}
+          >
+            <Share className="h-4 w-4 mr-2" />
+            Compartilhar
+          </Button>
+        )}
       </div>
       
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center">
         <div className="flex flex-col space-y-1">
           <div className="flex items-center">
             <span className="text-sm text-gray-500 mr-2">Cliente:</span>
-            <span className="text-sm font-medium">{clientName}</span>
+            <span className="text-sm font-medium">{client}</span>
           </div>
           <div className="flex items-center">
             <span className="text-sm text-gray-500 mr-2">Data de criação:</span>
@@ -89,7 +102,7 @@ const PreviewHeader: React.FC<PreviewHeaderProps> = ({
         </div>
         
         <div className="mt-2 sm:mt-0">
-          {getStatusBadge(status)}
+          {getStatusBadge(currentStatus)}
         </div>
       </div>
     </div>

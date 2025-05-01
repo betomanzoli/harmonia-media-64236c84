@@ -17,7 +17,7 @@ interface MusicPreviewSystemProps {
   projectId: string;
 }
 
-// Define interface to match the properties used
+// Updated interface to match all the properties used in the component
 interface PreviewProject {
   projectTitle?: string;
   clientName: string;
@@ -121,7 +121,7 @@ const MusicPreviewSystem: React.FC<MusicPreviewSystemProps> = ({ projectId }) =>
         projectTitle={projectData.projectTitle || 'Projeto sem nome'} 
         clientName={projectData.clientName || 'Cliente'} 
         packageType={packageType}
-        status={projectData.status || 'pending'}
+        status={projectData.status || 'waiting'}
         createdAt={projectData.createdAt || new Date().toISOString()}
         onShareClick={() => setIsShareDialogOpen(true)}
       />
@@ -161,12 +161,12 @@ const MusicPreviewSystem: React.FC<MusicPreviewSystemProps> = ({ projectId }) =>
       )}
       
       <div className="mt-8">
-        <PreviewInstructions status={projectData.status || 'pending'} />
+        <PreviewInstructions status={projectData.status || 'waiting'} />
       </div>
       
       {feedbackSubmitted && (
         <div className="mt-8">
-          <PreviewNextSteps status={projectData.status || 'pending'} />
+          <PreviewNextSteps status={projectData.status || 'waiting'} />
         </div>
       )}
       
