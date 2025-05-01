@@ -17,6 +17,23 @@ interface MusicPreviewSystemProps {
   projectId: string;
 }
 
+// Define interface to match the properties used
+interface PreviewProject {
+  projectTitle?: string;
+  clientName: string;
+  packageType?: string;
+  status: 'waiting' | 'feedback' | 'approved';
+  createdAt?: string;
+  expirationDate?: string;
+  versions?: Array<{
+    id: string;
+    title: string;
+    description: string;
+    audioUrl: string;
+    recommended?: boolean;
+  }>;
+}
+
 const MusicPreviewSystem: React.FC<MusicPreviewSystemProps> = ({ projectId }) => {
   const { projectData, isLoading, updateProjectStatus } = usePreviewProject(projectId);
   const { toast } = useToast();
@@ -43,7 +60,7 @@ const MusicPreviewSystem: React.FC<MusicPreviewSystemProps> = ({ projectId }) =>
   }
 
   // Format package type with capitalized first letter
-  const formatPackageType = (packageType: string): string => {
+  const formatPackageType = (packageType: string | undefined): string => {
     if (!packageType) return "Projeto de Música Personalizada";
     
     // Split by spaces and capitalize first letter of each word
@@ -96,12 +113,12 @@ const MusicPreviewSystem: React.FC<MusicPreviewSystemProps> = ({ projectId }) =>
     });
   };
 
-  const packageType = formatPackageType(projectData.packageType || '');
+  const packageType = formatPackageType(projectData.packageType);
 
   return (
     <div className="max-w-4xl mx-auto px-4">
       <PreviewHeader 
-        projectName={projectData.projectName || 'Projeto sem nome'} 
+        projectTitle={projectData.projectTitle || 'Projeto sem nome'} 
         clientName={projectData.clientName || 'Cliente'} 
         packageType={packageType}
         status={projectData.status || 'pending'}
@@ -114,7 +131,8 @@ const MusicPreviewSystem: React.FC<MusicPreviewSystemProps> = ({ projectId }) =>
           <PreviewPlayerList 
             versions={projectData.versions}
             selectedVersion={selectedVersion}
-            onSelectVersion={setSelectedVersion}
+            setSelectedVersion={setSelectedVersion}
+            isApproved={projectData.status === 'approved'}
           />
         </div>
       )}
@@ -122,10 +140,12 @@ const MusicPreviewSystem: React.FC<MusicPreviewSystemProps> = ({ projectId }) =>
       {!feedbackSubmitted && (
         <div className="mt-8">
           <PreviewFeedbackForm 
-            onFeedbackChange={setFeedback} 
             feedback={feedback}
-            onSubmit={handleFeedbackSubmit}
-            onApprove={handleApprove}
+            setFeedback={setFeedback}
+            handleSubmit={handleFeedbackSubmit}
+            handleApprove={handleApprove}
+            selectedPreview={selectedVersion}
+            status={projectData.status}
           />
         </div>
       )}
@@ -134,14 +154,14 @@ const MusicPreviewSystem: React.FC<MusicPreviewSystemProps> = ({ projectId }) =>
         <PreviewProjectDetails projectData={projectData} />
       </div>
       
-      {projectData.expiresAt && (
+      {projectData.expirationDate && (
         <div className="mt-8">
-          <PreviewCountdown expiresAt={projectData.expiresAt} />
+          <PreviewCountdown expirationDate={projectData.expirationDate} />
         </div>
       )}
       
       <div className="mt-8">
-        <PreviewInstructions />
+        <PreviewInstructions status={projectData.status || 'pending'} />
       </div>
       
       {feedbackSubmitted && (
@@ -157,8 +177,8 @@ const MusicPreviewSystem: React.FC<MusicPreviewSystemProps> = ({ projectId }) =>
       <SharePreviewDialog 
         isOpen={isShareDialogOpen}
         onOpenChange={setIsShareDialogOpen}
-        projectId={projectId} 
-        projectName={projectData.projectName || 'Projeto sem nome'}
+        projectId={projectId}
+        projectTitle={projectData.projectTitle || 'Projeto sem nome'}
       />
     </div>
   );

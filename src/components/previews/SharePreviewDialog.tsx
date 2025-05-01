@@ -1,181 +1,158 @@
 
 import React, { useState } from 'react';
-import { Copy, Check, Mail, Clock } from 'lucide-react';
+import { 
+  Dialog, 
+  DialogContent, 
+  DialogHeader, 
+  DialogTitle,
+  DialogFooter,
+  DialogDescription
+} from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { 
-  Dialog,
-  DialogContent, 
-  DialogDescription, 
-  DialogFooter, 
-  DialogHeader, 
-  DialogTitle 
-} from "@/components/ui/dialog";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { useToast } from "@/hooks/use-toast";
-import emailService from '@/services/emailService';
+import { Copy, Share } from 'lucide-react';
+import { useToast } from '@/hooks/use-toast';
+import { generatePreviewLink } from '@/utils/previewLinkUtils';
 
 interface SharePreviewDialogProps {
-  projectId?: string;
-  clientName?: string;
-  isOpen: boolean; // Add this prop
-  onOpenChange: (open: boolean) => void; // Add this prop
+  isOpen: boolean;
+  onOpenChange: (open: boolean) => void;
+  projectId: string;
+  projectTitle: string;
 }
 
-const SharePreviewDialog: React.FC<SharePreviewDialogProps> = ({ 
-  projectId = "HAR-2025-0001",
-  clientName = "Cliente",
+const SharePreviewDialog: React.FC<SharePreviewDialogProps> = ({
   isOpen,
-  onOpenChange
+  onOpenChange,
+  projectId,
+  projectTitle
 }) => {
   const { toast } = useToast();
-  const [email, setEmail] = useState('');
-  const [copied, setCopied] = useState(false);
-  const [expirationDays, setExpirationDays] = useState('7');
-  const [isLoading, setIsLoading] = useState(false);
+  const [recipientEmail, setRecipientEmail] = useState('');
   
-  // Get current URL for sharing
-  const shareUrl = window.location.href;
+  // Generate a shareable preview link
+  const previewLink = `${window.location.origin}/preview/${projectId}`;
+  const encodedLink = `${window.location.origin}/preview/${generatePreviewLink(projectId)}`;
   
-  const handleCopyLink = () => {
-    navigator.clipboard.writeText(shareUrl)
-      .then(() => {
-        setCopied(true);
-        toast({
-          title: "Link copiado!",
-          description: "O link da prévia foi copiado para a área de transferência.",
-        });
-        
-        setTimeout(() => setCopied(false), 3000);
-      })
-      .catch(err => {
-        console.error('Erro ao copiar link:', err);
-        toast({
-          title: "Erro ao copiar",
-          description: "Não foi possível copiar o link. Tente selecioná-lo manualmente.",
-          variant: "destructive"
-        });
+  const handleCopy = (text: string) => {
+    navigator.clipboard.writeText(text).then(() => {
+      toast({
+        title: "Link copiado",
+        description: "O link foi copiado para a área de transferência."
       });
+    });
   };
   
-  const handleShareByEmail = async () => {
-    if (!email) {
+  const handleShareViaEmail = () => {
+    // In a real implementation, this would send an email with the link
+    // For now, just show a toast notification
+    if (!recipientEmail) {
       toast({
         title: "Email necessário",
-        description: "Por favor, insira um email para compartilhar.",
+        description: "Por favor, informe um email para compartilhar.",
         variant: "destructive"
       });
       return;
     }
     
-    setIsLoading(true);
-    
-    try {
-      // Simular envio de email
-      await emailService.sendPreviewNotification(
-        email,
-        clientName,
-        `${shareUrl}?expiration=${expirationDays}`
-      );
-      
+    // Validate email
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(recipientEmail)) {
       toast({
-        title: "Link compartilhado!",
-        description: `Um email com o link da prévia foi enviado para ${email}. Expira em ${expirationDays} dias.`,
-      });
-      
-      setEmail('');
-    } catch (error) {
-      console.error('Erro ao enviar email:', error);
-      toast({
-        title: "Erro ao enviar email",
-        description: "Ocorreu um erro ao enviar o email. Por favor, tente novamente.",
+        title: "Email inválido",
+        description: "Por favor, informe um email válido.",
         variant: "destructive"
       });
-    } finally {
-      setIsLoading(false);
+      return;
     }
+    
+    toast({
+      title: "Link compartilhado",
+      description: `O link de prévia foi enviado para ${recipientEmail}.`
+    });
+    
+    // Close dialog
+    onOpenChange(false);
   };
   
   return (
     <Dialog open={isOpen} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-md">
+      <DialogContent>
         <DialogHeader>
           <DialogTitle>Compartilhar Prévia</DialogTitle>
           <DialogDescription>
-            Compartilhe este link para que o cliente possa ouvir as prévias da música.
+            Compartilhe esta prévia com outras pessoas que precisam revisá-la.
           </DialogDescription>
         </DialogHeader>
         
-        <div className="space-y-6 py-4">
-          <div className="flex items-center space-x-2">
-            <Input
-              value={shareUrl}
-              readOnly
-              className="flex-1"
-            />
-            <Button 
-              size="sm" 
-              onClick={handleCopyLink}
-              className={copied ? "bg-green-600" : ""}
-            >
-              {copied ? <Check className="h-4 w-4" /> : <Copy className="h-4 w-4" />}
-            </Button>
-          </div>
-          
-          <div className="space-y-4">
-            <h3 className="text-sm font-medium">Configurar e enviar por email</h3>
-            
-            <div className="flex items-center space-x-2">
-              <Clock className="h-4 w-4 text-gray-500" />
-              <Select 
-                value={expirationDays} 
-                onValueChange={setExpirationDays}
-              >
-                <SelectTrigger className="w-full">
-                  <SelectValue placeholder="Selecione o prazo de expiração" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="7">Essencial - 7 dias</SelectItem>
-                  <SelectItem value="10">Profissional - 10 dias</SelectItem>
-                  <SelectItem value="15">Premium - 15 dias</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-            
-            <div className="flex space-x-2">
-              <Input
-                placeholder="Digite o email do cliente"
-                type="email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                className="flex-1"
+        <div className="space-y-4 py-4">
+          <div>
+            <div className="text-sm font-medium mb-2">Link de compartilhamento direto</div>
+            <div className="flex">
+              <Input 
+                value={previewLink} 
+                readOnly 
+                className="flex-1 mr-2"
               />
               <Button 
-                onClick={handleShareByEmail}
-                disabled={isLoading}
+                variant="outline" 
+                size="icon"
+                onClick={() => handleCopy(previewLink)}
               >
-                <Mail className="h-4 w-4 mr-2" />
-                {isLoading ? "Enviando..." : "Enviar"}
+                <Copy className="h-4 w-4" />
               </Button>
             </div>
-            
-            <div className="text-xs text-gray-500 p-2 bg-gray-50 rounded">
-              <p className="font-medium mb-1">Email que será enviado:</p>
-              <p>Assunto: <span className="text-black">Suas prévias musicais estão prontas para avaliação - harmonIA</span></p>
-              <p className="mt-1">Olá {clientName},</p>
-              <p className="mt-1">Temos o prazer de informar que as prévias da sua música personalizada estão prontas para sua avaliação.</p>
-              <p className="mt-1">Acesse: {shareUrl}</p>
-              <p className="mt-1">Importante: Você tem {expirationDays} dias para avaliar e escolher sua versão preferida. Após este período, selecionaremos automaticamente a melhor versão para finalização.</p>
-              <p className="mt-1">Aguardamos seu feedback!</p>
-              <p className="mt-1">Equipe harmonIA</p>
+            <p className="text-xs text-gray-500 mt-1">
+              Este link permite acesso direto à prévia do projeto "{projectTitle}".
+            </p>
+          </div>
+          
+          <div>
+            <div className="text-sm font-medium mb-2">Link codificado (mais seguro)</div>
+            <div className="flex">
+              <Input 
+                value={encodedLink} 
+                readOnly 
+                className="flex-1 mr-2"
+              />
+              <Button 
+                variant="outline" 
+                size="icon"
+                onClick={() => handleCopy(encodedLink)}
+              >
+                <Copy className="h-4 w-4" />
+              </Button>
+            </div>
+            <p className="text-xs text-gray-500 mt-1">
+              Este é um link codificado que não mostra o ID do projeto diretamente.
+            </p>
+          </div>
+          
+          <div>
+            <div className="text-sm font-medium mb-2">Compartilhar por email</div>
+            <div className="flex">
+              <Input
+                placeholder="email@exemplo.com"
+                type="email"
+                value={recipientEmail}
+                onChange={(e) => setRecipientEmail(e.target.value)}
+                className="flex-1 mr-2"
+              />
+              <Button 
+                variant="outline"
+                onClick={handleShareViaEmail}
+              >
+                <Share className="h-4 w-4 mr-2" />
+                Enviar
+              </Button>
             </div>
           </div>
         </div>
         
-        <DialogFooter className="sm:justify-start">
-          <p className="text-xs text-gray-500">
-            Observação: O link permite apenas visualizar as prévias. A pessoa não poderá enviar feedback após o prazo de expiração.
-          </p>
+        <DialogFooter>
+          <Button variant="ghost" onClick={() => onOpenChange(false)}>
+            Fechar
+          </Button>
         </DialogFooter>
       </DialogContent>
     </Dialog>

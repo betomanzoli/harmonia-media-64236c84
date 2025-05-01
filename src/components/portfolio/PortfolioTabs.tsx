@@ -80,8 +80,7 @@ const PortfolioTabs: React.FC<PortfolioTabsProps> = ({
               title={example.title}
               description={example.description}
               audioUrl={example.audioUrl}
-              imageUrl={example.imageUrl}
-              tags={example.tags}
+              featured={example.featured}
             />
           ))}
         </div>
