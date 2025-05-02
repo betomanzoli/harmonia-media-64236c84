@@ -30,23 +30,47 @@ export const usePreviewData = (previewId: string | undefined) => {
   }, [actualProjectId, projectData, isLoading, toast]);
 
   // Função para atualizar o status do projeto e adicionar informação ao histórico
-  const updateProjectStatus = (newStatus: 'approved' | 'feedback', comments: string) => {
+  const updateProjectStatus = (newStatus: 'waiting' | 'feedback' | 'approved', comments: string = '') => {
     try {
       if (!actualProjectId || !projectData) return false;
 
       console.log(`Atualizando status do projeto ${actualProjectId} para ${newStatus}`);
       console.log(`Feedback do cliente: ${comments}`);
       
-      // TODO: Esta função deveria enviar uma requisição à API para atualizar o status
-      // Mas para este MVP, apenas atualizamos o estado local
-      
+      // Atualizar o estado local
       setProjectData((prev) => {
         if (!prev) return null;
+        
+        // Adicionar o feedback ao histórico se fornecido
+        const updatedFeedbackHistory = prev.feedbackHistory || [];
+        
+        if (comments.trim()) {
+          updatedFeedbackHistory.push({
+            id: `feedback_${Date.now()}`,
+            content: comments,
+            createdAt: new Date().toISOString(),
+            status: 'pending',
+            versionId: actualProjectId
+          });
+        }
+        
         return {
           ...prev,
-          status: newStatus
+          status: newStatus,
+          feedbackHistory: updatedFeedbackHistory
         };
       });
+
+      // Persistir nos dados locais
+      if (projectData) {
+        localStorage.setItem(
+          `previewProject_${actualProjectId}`, 
+          JSON.stringify({
+            ...projectData,
+            status: newStatus
+          })
+        );
+      }
 
       return true;
     } catch (error) {
