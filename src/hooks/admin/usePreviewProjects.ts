@@ -1,6 +1,10 @@
-
 import { useState, useEffect, useCallback } from 'react';
 import { useToast } from '@/hooks/use-toast';
+
+export interface AdditionalLink {
+  label: string;
+  url: string;
+}
 
 export interface VersionItem {
   id: string;
@@ -9,8 +13,10 @@ export interface VersionItem {
   audioUrl: string;
   fileId?: string;
   createdAt: string;
+  dateAdded?: string; // Added this property
   recommended?: boolean;
   final?: boolean;
+  additionalLinks?: AdditionalLink[]; // Added this property
 }
 
 export interface FeedbackItem {
@@ -19,6 +25,15 @@ export interface FeedbackItem {
   createdAt: string;
   status: 'pending' | 'processed';
   versionId?: string;
+}
+
+export interface HistoryEntry {
+  action: string;
+  timestamp: string;
+  data?: {
+    message: string;
+    [key: string]: any;
+  };
 }
 
 export interface ProjectItem {
@@ -34,6 +49,8 @@ export interface ProjectItem {
   versionsList?: VersionItem[];
   feedbackHistory?: FeedbackItem[];
   feedback?: string;
+  history?: HistoryEntry[]; // Added this property
+  lastActivityDate?: string; // Added this property
 }
 
 // Mock data storage (in a real app, this would be an API call)
@@ -218,7 +235,9 @@ export const usePreviewProjects = () => {
       versions: project.versionsList?.length || 0,
       packageType: project.packageType || 'Música Personalizada',
       versionsList: project.versionsList || [],
-      feedbackHistory: []
+      feedbackHistory: [],
+      history: [],
+      lastActivityDate: new Date().toISOString()
     };
     
     mockProjects = [newProject, ...mockProjects];
