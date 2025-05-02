@@ -66,134 +66,16 @@ export const usePreviewProjects = () => {
   const loadProjects = useCallback(async () => {
     setIsLoading(true);
     try {
-      const storedProjects = localStorage.getItem('preview_projects');
-      if (storedProjects) {
+      // Always try to get from localStorage first
+      const storedProjects = localStorage.getItem('harmonIA_preview_projects');
+      
+      if (storedProjects && JSON.parse(storedProjects).length > 0) {
+        // Use stored projects if they exist
         mockProjects = JSON.parse(storedProjects);
       } else {
-        // Initialize with some mock data if there are no stored projects
-        mockProjects = [
-          {
-            id: 'P0001',
-            clientName: 'Carlos Silva',
-            clientEmail: 'carlos@example.com',
-            clientPhone: '5511987654321',
-            status: 'waiting',
-            createdAt: new Date().toISOString(),
-            expirationDate: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString(),
-            versions: 2,
-            packageType: 'Pacote Profissional',
-            versionsList: [
-              {
-                id: 'v1',
-                name: 'Versão Romântica',
-                description: 'Uma versão mais suave e romântica, ideal para momentos íntimos.',
-                audioUrl: 'https://example.com/song1.mp3',
-                createdAt: new Date().toISOString(),
-                recommended: true
-              },
-              {
-                id: 'v2',
-                name: 'Versão Animada',
-                description: 'Uma versão mais alegre e animada, perfeita para celebrações.',
-                audioUrl: 'https://example.com/song2.mp3',
-                createdAt: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000).toISOString()
-              }
-            ],
-            feedbackHistory: []
-          },
-          {
-            id: 'P0002',
-            clientName: 'Maria Oliveira',
-            clientEmail: 'maria@example.com',
-            clientPhone: '5511912345678',
-            status: 'feedback',
-            createdAt: new Date(Date.now() - 5 * 24 * 60 * 60 * 1000).toISOString(),
-            expirationDate: new Date(Date.now() + 2 * 24 * 60 * 60 * 1000).toISOString(),
-            versions: 3,
-            packageType: 'Pacote Premium',
-            versionsList: [
-              {
-                id: 'v1',
-                name: 'Versão Clássica',
-                description: 'Arranjo com piano e violino',
-                audioUrl: 'https://example.com/song3.mp3',
-                createdAt: new Date(Date.now() - 5 * 24 * 60 * 60 * 1000).toISOString(),
-              },
-              {
-                id: 'v2',
-                name: 'Versão Pop',
-                description: 'Arranjo moderno com batidas eletrônicas',
-                audioUrl: 'https://example.com/song4.mp3',
-                createdAt: new Date(Date.now() - 4 * 24 * 60 * 60 * 1000).toISOString(),
-              },
-              {
-                id: 'v3',
-                name: 'Versão Acústica',
-                description: 'Versão simplificada com violão',
-                audioUrl: 'https://example.com/song5.mp3',
-                createdAt: new Date(Date.now() - 3 * 24 * 60 * 60 * 1000).toISOString(),
-                recommended: true
-              }
-            ],
-            feedbackHistory: [
-              {
-                id: 'f1',
-                content: 'Gostei muito da versão acústica, mas poderia ter um pouco mais de violão no refrão.',
-                createdAt: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000).toISOString(),
-                status: 'pending',
-                versionId: 'v3'
-              }
-            ],
-            feedback: 'Gostei muito da versão acústica, mas poderia ter um pouco mais de violão no refrão.'
-          },
-          {
-            id: 'P0003',
-            clientName: 'João Pereira',
-            clientEmail: 'joao@example.com',
-            clientPhone: '5511987654321',
-            status: 'approved',
-            createdAt: new Date(Date.now() - 10 * 24 * 60 * 60 * 1000).toISOString(),
-            expirationDate: new Date(Date.now() - 3 * 24 * 60 * 60 * 1000).toISOString(),
-            versions: 2,
-            packageType: 'Pacote Essencial',
-            versionsList: [
-              {
-                id: 'v1',
-                name: 'Versão Original',
-                description: 'Composição original conforme briefing',
-                audioUrl: 'https://example.com/song6.mp3',
-                createdAt: new Date(Date.now() - 10 * 24 * 60 * 60 * 1000).toISOString(),
-              },
-              {
-                id: 'v2',
-                name: 'Versão Refinada',
-                description: 'Versão com ajustes conforme feedback',
-                audioUrl: 'https://example.com/song7.mp3',
-                createdAt: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString(),
-                recommended: true
-              },
-              {
-                id: 'vfinal',
-                name: 'Versão Final',
-                description: 'Versão masterizada para entrega',
-                audioUrl: 'https://example.com/song_final.mp3',
-                createdAt: new Date(Date.now() - 5 * 24 * 60 * 60 * 1000).toISOString(),
-                final: true
-              }
-            ],
-            feedbackHistory: [
-              {
-                id: 'f1',
-                content: 'Ficou maravilhoso! Aprovado!',
-                createdAt: new Date(Date.now() - 6 * 24 * 60 * 60 * 1000).toISOString(),
-                status: 'processed',
-                versionId: 'v2'
-              }
-            ],
-            feedback: 'Ficou maravilhoso! Aprovado!'
-          }
-        ];
-        localStorage.setItem('preview_projects', JSON.stringify(mockProjects));
+        // Initialize with empty array if no projects
+        mockProjects = [];
+        localStorage.setItem('harmonIA_preview_projects', JSON.stringify(mockProjects));
       }
       
       setProjects(mockProjects);
@@ -216,7 +98,7 @@ export const usePreviewProjects = () => {
     loadProjects();
   }, [loadProjects]);
   
-  // Add a new project
+  // Add a new project - Ensure we're generating encoded preview links
   const addProject = (project: Partial<ProjectItem>) => {
     // Generate ID
     const newId = `P${String(mockProjects.length + 1).padStart(4, '0')}`;
@@ -224,6 +106,9 @@ export const usePreviewProjects = () => {
     // Create expiration date (default to 7 days)
     const expirationDate = new Date();
     expirationDate.setDate(expirationDate.getDate() + 7);
+    
+    // Generate an encoded preview link for this project
+    const encodedPreviewId = generatePreviewLink(newId);
     
     const newProject: ProjectItem = {
       id: newId,
@@ -235,6 +120,7 @@ export const usePreviewProjects = () => {
       expirationDate: expirationDate.toISOString(),
       versions: project.versionsList?.length || 0,
       packageType: project.packageType || 'Música Personalizada',
+      previewUrl: `/preview/${encodedPreviewId}`, // Use encoded ID here
       versionsList: project.versionsList || [],
       feedbackHistory: [],
       history: [],
@@ -245,7 +131,7 @@ export const usePreviewProjects = () => {
     setProjects([...mockProjects]);
     
     // Save to localStorage
-    localStorage.setItem('preview_projects', JSON.stringify(mockProjects));
+    localStorage.setItem('harmonIA_preview_projects', JSON.stringify(mockProjects));
     
     return newId;
   };
@@ -256,7 +142,7 @@ export const usePreviewProjects = () => {
     setProjects([...mockProjects]);
     
     // Save to localStorage
-    localStorage.setItem('preview_projects', JSON.stringify(mockProjects));
+    localStorage.setItem('harmonIA_preview_projects', JSON.stringify(mockProjects));
   };
 
   // Get a single project by ID
@@ -279,7 +165,7 @@ export const usePreviewProjects = () => {
     setProjects([...mockProjects]);
     
     // Save to localStorage
-    localStorage.setItem('preview_projects', JSON.stringify(mockProjects));
+    localStorage.setItem('harmonIA_preview_projects', JSON.stringify(mockProjects));
     
     return mockProjects[index];
   };
@@ -309,7 +195,7 @@ export const usePreviewProjects = () => {
     setProjects([...mockProjects]);
     
     // Save to localStorage
-    localStorage.setItem('preview_projects', JSON.stringify(mockProjects));
+    localStorage.setItem('harmonIA_preview_projects', JSON.stringify(mockProjects));
     
     return version;
   };
@@ -325,7 +211,7 @@ export const usePreviewProjects = () => {
     setProjects([...mockProjects]);
     
     // Save to localStorage
-    localStorage.setItem('preview_projects', JSON.stringify(mockProjects));
+    localStorage.setItem('harmonIA_preview_projects', JSON.stringify(mockProjects));
     
     return true;
   };
@@ -344,7 +230,7 @@ export const usePreviewProjects = () => {
     setProjects([...mockProjects]);
     
     // Save to localStorage
-    localStorage.setItem('preview_projects', JSON.stringify(mockProjects));
+    localStorage.setItem('harmonIA_preview_projects', JSON.stringify(mockProjects));
     
     return true;
   };

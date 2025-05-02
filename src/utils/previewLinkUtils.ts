@@ -1,3 +1,4 @@
+
 import { v4 as uuidv4 } from 'uuid';
 
 // Create a more secure mapping between encoded IDs and project IDs
@@ -8,7 +9,7 @@ const authorizedEmails = new Map<string, string[]>();
 
 export const generatePreviewLink = (projectId: string): string => {
   // Generate a unique encoded ID that's harder to guess
-  const encodedId = uuidv4().replace(/-/g, ''); 
+  const encodedId = uuidv4().replace(/-/g, '') + '-' + projectId; 
   
   // Store the mapping
   previewLinksMap.set(encodedId, projectId);
@@ -33,6 +34,14 @@ export const getProjectIdFromPreviewLink = (encodedId: string): string | null =>
     // Add to in-memory map if found
     if (projectId) {
       previewLinksMap.set(encodedId, projectId);
+    }
+  }
+  
+  // Special case for encoded IDs that already contain the project ID (e.g. uuid-P0001)
+  if (!projectId && encodedId.includes('-P')) {
+    const potentialId = encodedId.split('-').pop();
+    if (potentialId && potentialId.startsWith('P')) {
+      return potentialId;
     }
   }
   

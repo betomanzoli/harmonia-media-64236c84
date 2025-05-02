@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import AdminLayout from '@/components/admin/layout/AdminLayout';
@@ -101,8 +100,8 @@ const PreviewProjectPage: React.FC = () => {
     );
   }
 
-  // Prepare preview URL from project ID
-  const previewUrl = `${window.location.origin}/preview/${projectId}`;
+  // Only use the encoded URL
+  const previewUrl = encodedUrl || '';
 
   return (
     <AdminLayout>
@@ -141,7 +140,7 @@ const PreviewProjectPage: React.FC = () => {
               projectId={projectId as string} 
               onAddVersion={handleAddVersion}
               onExtendDeadline={handleExtendDeadline}
-              previewUrl={encodedUrl || previewUrl}
+              previewUrl={previewUrl}
               clientPhone={project.clientPhone}
               clientEmail={project.clientEmail}
               projectStatus={project.status}

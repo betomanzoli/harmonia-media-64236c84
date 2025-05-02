@@ -20,31 +20,29 @@ const PreviewPage: React.FC = () => {
       console.log(`Acesso à prévia: ${projectId}, Data: ${new Date().toISOString()}`);
       window.scrollTo(0, 0);
       
-      // Check if this is an encoded ID that needs to be decoded
+      // Always try to decode the ID
       const decodedId = getProjectIdFromPreviewLink(projectId);
+      
       if (decodedId) {
         // If this is an encoded link, we consider it pre-authorized
         setActualProjectId(decodedId);
         setIsAuthorized(true);
         return;
+      } else {
+        // No valid project mapping found
+        toast({
+          title: "Link inválido",
+          description: "O link de prévia que você está tentando acessar não é válido.",
+          variant: "destructive"
+        });
+        setIsError(true);
+        return;
       }
       
-      setActualProjectId(projectId);
-      
-      // Check if already authenticated for this project
-      const authStatus = localStorage.getItem(`preview_auth_${projectId}`);
-      if (authStatus === 'authorized') {
-        setIsAuthorized(true);
-      }
-      
-      // Se vier da área de administração, permitir acesso direto
-      const isFromAdmin = localStorage.getItem('admin_preview_access') === 'true';
-      if (isFromAdmin) {
-        setIsAuthorized(true);
-        localStorage.removeItem('admin_preview_access');
-      }
+      // We no longer support direct project ID access
+      // Only encoded links are allowed
     }
-  }, [projectId]);
+  }, [projectId, toast]);
 
   const handleAccessVerification = (code: string, email: string) => {
     // In a real application, this would validate against your database
@@ -91,15 +89,21 @@ const PreviewPage: React.FC = () => {
     );
   }
 
+  if (isError) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gray-100">
+        <div className="bg-white p-6 rounded-lg shadow-sm text-center">
+          <h2 className="text-2xl font-bold text-black mb-4">Link de prévia inválido</h2>
+          <p className="text-gray-600">O link que você acessou não existe ou já expirou.</p>
+        </div>
+      </div>
+    );
+  }
+
   // Show authentication form if not authorized yet and not using an encoded link
   if (!isAuthorized) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gray-100">
-        {isError && (
-          <div className="absolute top-4 left-1/2 transform -translate-x-1/2 bg-red-50 border border-red-200 text-red-700 px-4 py-2 rounded-md text-sm">
-            Credenciais inválidas. Verifique o código do projeto e o email associado.
-          </div>
-        )}
         <ProjectAccessForm 
           projectId={projectId} 
           onVerify={handleAccessVerification} 
