@@ -13,10 +13,10 @@ export interface VersionItem {
   audioUrl: string;
   fileId?: string;
   createdAt: string;
-  dateAdded?: string; // Added this property
+  dateAdded?: string;
   recommended?: boolean;
   final?: boolean;
-  additionalLinks?: AdditionalLink[]; // Added this property
+  additionalLinks?: AdditionalLink[];
 }
 
 export interface FeedbackItem {
@@ -46,11 +46,12 @@ export interface ProjectItem {
   expirationDate: string;
   versions: number;
   packageType: string;
+  previewUrl?: string; // Added previewUrl property to fix the TypeScript error
   versionsList?: VersionItem[];
   feedbackHistory?: FeedbackItem[];
   feedback?: string;
-  history?: HistoryEntry[]; // Added this property
-  lastActivityDate?: string; // Added this property
+  history?: HistoryEntry[];
+  lastActivityDate?: string;
 }
 
 // Mock data storage (in a real app, this would be an API call)
