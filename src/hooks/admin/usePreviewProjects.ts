@@ -1,271 +1,449 @@
+
 import { useState, useEffect, useCallback } from 'react';
+import { useToast } from '@/hooks/use-toast';
 
 export interface VersionItem {
   id: string;
   name: string;
   description?: string;
+  audioUrl: string;
   fileId?: string;
-  audioUrl?: string;
-  url?: string; // Added the url property for backward compatibility
-  dateAdded: string;
+  createdAt: string;
   recommended?: boolean;
   final?: boolean;
-  additionalLinks?: {
-    label: string;
-    url: string;
-  }[];
+}
+
+export interface FeedbackItem {
+  id: string;
+  content: string;
+  createdAt: string;
+  status: 'pending' | 'processed';
+  versionId?: string;
 }
 
 export interface ProjectItem {
   id: string;
   clientName: string;
-  clientEmail: string;
+  clientEmail?: string;
   clientPhone?: string;
-  packageType: string;
+  status: string;
   createdAt: string;
-  status: 'waiting' | 'feedback' | 'approved';
-  versions: number;
-  previewUrl: string;
   expirationDate: string;
-  lastActivityDate: string;
-  briefingId?: string;
+  versions: number;
+  packageType: string;
   versionsList?: VersionItem[];
+  feedbackHistory?: FeedbackItem[];
   feedback?: string;
-  history?: {
-    action: string;
-    timestamp: string;
-    data?: {
-      message?: string;
-      status?: string;
-      version?: string;
-    };
-  }[];
 }
+
+// Mock data storage (in a real app, this would be an API call)
+let mockProjects: ProjectItem[] = [];
 
 export const usePreviewProjects = () => {
   const [projects, setProjects] = useState<ProjectItem[]>([]);
-  const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  
-  // Load projects from local storage
+  const [isLoading, setIsLoading] = useState(true);
+  const { toast } = useToast();
+
+  // Load projects from localStorage or initialize with mock data
   const loadProjects = useCallback(async () => {
     setIsLoading(true);
     try {
-      // Try to load from localStorage
-      const storedProjects = localStorage.getItem('harmonIA_preview_projects');
+      const storedProjects = localStorage.getItem('preview_projects');
       if (storedProjects) {
-        const parsedProjects = JSON.parse(storedProjects);
-        console.log('Projects loaded from localStorage:', parsedProjects);
-        setProjects(parsedProjects);
+        mockProjects = JSON.parse(storedProjects);
       } else {
-        // Initialize with empty array if nothing found
-        setProjects([]);
-        console.log('No projects found, initialized with empty array');
+        // Initialize with some mock data if there are no stored projects
+        mockProjects = [
+          {
+            id: 'P0001',
+            clientName: 'Carlos Silva',
+            clientEmail: 'carlos@example.com',
+            clientPhone: '5511987654321',
+            status: 'waiting',
+            createdAt: new Date().toISOString(),
+            expirationDate: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString(),
+            versions: 2,
+            packageType: 'Pacote Profissional',
+            versionsList: [
+              {
+                id: 'v1',
+                name: 'Versão Romântica',
+                description: 'Uma versão mais suave e romântica, ideal para momentos íntimos.',
+                audioUrl: 'https://example.com/song1.mp3',
+                createdAt: new Date().toISOString(),
+                recommended: true
+              },
+              {
+                id: 'v2',
+                name: 'Versão Animada',
+                description: 'Uma versão mais alegre e animada, perfeita para celebrações.',
+                audioUrl: 'https://example.com/song2.mp3',
+                createdAt: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000).toISOString()
+              }
+            ],
+            feedbackHistory: []
+          },
+          {
+            id: 'P0002',
+            clientName: 'Maria Oliveira',
+            clientEmail: 'maria@example.com',
+            clientPhone: '5511912345678',
+            status: 'feedback',
+            createdAt: new Date(Date.now() - 5 * 24 * 60 * 60 * 1000).toISOString(),
+            expirationDate: new Date(Date.now() + 2 * 24 * 60 * 60 * 1000).toISOString(),
+            versions: 3,
+            packageType: 'Pacote Premium',
+            versionsList: [
+              {
+                id: 'v1',
+                name: 'Versão Clássica',
+                description: 'Arranjo com piano e violino',
+                audioUrl: 'https://example.com/song3.mp3',
+                createdAt: new Date(Date.now() - 5 * 24 * 60 * 60 * 1000).toISOString(),
+              },
+              {
+                id: 'v2',
+                name: 'Versão Pop',
+                description: 'Arranjo moderno com batidas eletrônicas',
+                audioUrl: 'https://example.com/song4.mp3',
+                createdAt: new Date(Date.now() - 4 * 24 * 60 * 60 * 1000).toISOString(),
+              },
+              {
+                id: 'v3',
+                name: 'Versão Acústica',
+                description: 'Versão simplificada com violão',
+                audioUrl: 'https://example.com/song5.mp3',
+                createdAt: new Date(Date.now() - 3 * 24 * 60 * 60 * 1000).toISOString(),
+                recommended: true
+              }
+            ],
+            feedbackHistory: [
+              {
+                id: 'f1',
+                content: 'Gostei muito da versão acústica, mas poderia ter um pouco mais de violão no refrão.',
+                createdAt: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000).toISOString(),
+                status: 'pending',
+                versionId: 'v3'
+              }
+            ],
+            feedback: 'Gostei muito da versão acústica, mas poderia ter um pouco mais de violão no refrão.'
+          },
+          {
+            id: 'P0003',
+            clientName: 'João Pereira',
+            clientEmail: 'joao@example.com',
+            clientPhone: '5511987654321',
+            status: 'approved',
+            createdAt: new Date(Date.now() - 10 * 24 * 60 * 60 * 1000).toISOString(),
+            expirationDate: new Date(Date.now() - 3 * 24 * 60 * 60 * 1000).toISOString(),
+            versions: 2,
+            packageType: 'Pacote Essencial',
+            versionsList: [
+              {
+                id: 'v1',
+                name: 'Versão Original',
+                description: 'Composição original conforme briefing',
+                audioUrl: 'https://example.com/song6.mp3',
+                createdAt: new Date(Date.now() - 10 * 24 * 60 * 60 * 1000).toISOString(),
+              },
+              {
+                id: 'v2',
+                name: 'Versão Refinada',
+                description: 'Versão com ajustes conforme feedback',
+                audioUrl: 'https://example.com/song7.mp3',
+                createdAt: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString(),
+                recommended: true
+              },
+              {
+                id: 'vfinal',
+                name: 'Versão Final',
+                description: 'Versão masterizada para entrega',
+                audioUrl: 'https://example.com/song_final.mp3',
+                createdAt: new Date(Date.now() - 5 * 24 * 60 * 60 * 1000).toISOString(),
+                final: true
+              }
+            ],
+            feedbackHistory: [
+              {
+                id: 'f1',
+                content: 'Ficou maravilhoso! Aprovado!',
+                createdAt: new Date(Date.now() - 6 * 24 * 60 * 60 * 1000).toISOString(),
+                status: 'processed',
+                versionId: 'v2'
+              }
+            ],
+            feedback: 'Ficou maravilhoso! Aprovado!'
+          }
+        ];
+        localStorage.setItem('preview_projects', JSON.stringify(mockProjects));
       }
-    } catch (err: any) {
-      console.error('Error loading projects:', err);
-      setError(err.message || 'Failed to load projects');
-      setProjects([]);
+      
+      setProjects(mockProjects);
+    } catch (error) {
+      console.error('Error loading projects:', error);
+      toast({
+        title: "Erro ao carregar projetos",
+        description: "Não foi possível carregar a lista de projetos. Por favor, tente novamente.",
+        variant: "destructive"
+      });
     } finally {
       setIsLoading(false);
     }
-  }, []);
 
-  // Save projects to local storage
-  const saveProjects = useCallback(async (updatedProjects: ProjectItem[]) => {
-    try {
-      // Save to localStorage
-      localStorage.setItem('harmonIA_preview_projects', JSON.stringify(updatedProjects));
-      console.log('Projects saved to localStorage:', updatedProjects);
-    } catch (error) {
-      console.error('Error saving projects:', error);
-    }
-  }, []);
-
-  // Load projects on component mount
+    return mockProjects;
+  }, [toast]);
+  
+  // Initialize projects on component mount
   useEffect(() => {
     loadProjects();
   }, [loadProjects]);
-
-  // Format package type with capitalized first letter
-  const formatPackageType = (packageType: string): string => {
-    if (!packageType) return "Projeto de Música Personalizada";
+  
+  // Add a new project
+  const addProject = (project: Partial<ProjectItem>) => {
+    // Generate ID
+    const newId = `P${String(mockProjects.length + 1).padStart(4, '0')}`;
     
-    // Split by spaces and capitalize first letter of each word
-    return packageType
-      .split(' ')
-      .map(word => {
-        if (word.toLowerCase() === 'essencial' || 
-            word.toLowerCase() === 'premium' || 
-            word.toLowerCase() === 'profissional') {
-          return word.charAt(0).toUpperCase() + word.slice(1).toLowerCase();
-        }
-        return word;
-      })
-      .join(' ');
-  };
-
-  // Get project by ID
-  const getProjectById = useCallback((id: string) => {
-    console.log("Getting project by ID:", id);
-    console.log("Available projects:", projects);
+    // Create expiration date (default to 7 days)
+    const expirationDate = new Date();
+    expirationDate.setDate(expirationDate.getDate() + 7);
     
-    const project = projects.find(project => project.id === id);
-    console.log("Found project:", project);
-    
-    // Format package type if project exists
-    if (project) {
-      project.packageType = formatPackageType(project.packageType);
-    }
-    
-    return project || null;
-  }, [projects]);
-
-  // Generate unique project ID
-  const generateProjectId = useCallback(() => {
-    // Get the highest existing project number
-    const highestId = projects.reduce((max, project) => {
-      const idNum = parseInt(project.id.replace('P', ''));
-      return isNaN(idNum) ? max : Math.max(max, idNum);
-    }, 0);
-    
-    return `P${(highestId + 1).toString().padStart(4, '0')}`;
-  }, [projects]);
-
-  // Add new project
-  const addProject = useCallback((project: Omit<ProjectItem, "id">) => {
-    // Generate ID based on highest existing ID
-    const newId = generateProjectId();
-    
-    // Create the new project with the briefing ID if available
     const newProject: ProjectItem = {
-      ...project,
       id: newId,
-      packageType: formatPackageType(project.packageType || ""),
-      // Set default expiration date to 30 days from now if not provided
-      expirationDate: project.expirationDate || 
-        new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toLocaleDateString('pt-BR')
+      clientName: project.clientName || 'Cliente',
+      clientEmail: project.clientEmail,
+      clientPhone: project.clientPhone,
+      status: 'waiting',
+      createdAt: new Date().toISOString(),
+      expirationDate: expirationDate.toISOString(),
+      versions: project.versionsList?.length || 0,
+      packageType: project.packageType || 'Música Personalizada',
+      versionsList: project.versionsList || [],
+      feedbackHistory: []
     };
     
-    const updatedProjects = [...projects, newProject];
-    console.log("Adding new project:", newProject);
-    console.log("Updated projects list:", updatedProjects);
+    mockProjects = [newProject, ...mockProjects];
+    setProjects([...mockProjects]);
     
-    setProjects(updatedProjects);
-    
-    // Save to storage
-    saveProjects(updatedProjects);
+    // Save to localStorage
+    localStorage.setItem('preview_projects', JSON.stringify(mockProjects));
     
     return newId;
-  }, [projects, generateProjectId, saveProjects]);
+  };
+  
+  // Delete a project
+  const deleteProject = (projectId: string) => {
+    mockProjects = mockProjects.filter(p => p.id !== projectId);
+    setProjects([...mockProjects]);
+    
+    // Save to localStorage
+    localStorage.setItem('preview_projects', JSON.stringify(mockProjects));
+  };
 
-  // Delete project
-  const deleteProject = useCallback((id: string) => {
-    const updatedProjects = projects.filter(project => project.id !== id);
-    console.log(`Deleting project ${id}`);
-    console.log("Updated project list:", updatedProjects);
+  // Get a single project by ID
+  const getProjectById = (projectId: string) => {
+    return mockProjects.find(p => p.id === projectId);
+  };
+  
+  // Update a project
+  const updateProject = (projectId: string, updates: Partial<ProjectItem>) => {
+    const index = mockProjects.findIndex(p => p.id === projectId);
+    if (index === -1) return null;
     
-    setProjects(updatedProjects);
-    saveProjects(updatedProjects);
-  }, [projects, saveProjects]);
-
-  // Update project
-  const updateProject = useCallback((id: string, updates: Partial<ProjectItem>) => {
-    console.log(`Updating project ${id} with:`, updates);
+    mockProjects[index] = { ...mockProjects[index], ...updates };
     
-    const projectIndex = projects.findIndex(p => p.id === id);
-    if (projectIndex === -1) {
-      console.error(`Project ${id} not found for updating`);
-      return null;
+    // Update version count if versions list was updated
+    if (updates.versionsList) {
+      mockProjects[index].versions = updates.versionsList.length;
     }
     
-    // Format package type if provided
-    const formattedUpdates = { ...updates };
-    if (updates.packageType) {
-      formattedUpdates.packageType = formatPackageType(updates.packageType);
+    setProjects([...mockProjects]);
+    
+    // Save to localStorage
+    localStorage.setItem('preview_projects', JSON.stringify(mockProjects));
+    
+    return mockProjects[index];
+  };
+  
+  // Add a version to a project
+  const addVersion = (projectId: string, version: VersionItem) => {
+    const project = mockProjects.find(p => p.id === projectId);
+    if (!project) return null;
+    
+    if (!project.versionsList) {
+      project.versionsList = [];
     }
     
-    // Add history entry if feedback is provided
-    if (updates.status === 'feedback' && updates.feedback) {
-      const feedbackEntry = {
-        action: "Cliente enviou feedback",
-        timestamp: new Date().toLocaleString('pt-BR'),
-        data: { 
-          message: updates.feedback,
-          status: 'feedback'
-        }
-      };
-      
-      if (!formattedUpdates.history) {
-        formattedUpdates.history = [...(projects[projectIndex].history || []), feedbackEntry];
-      } else {
-        formattedUpdates.history = [...formattedUpdates.history, feedbackEntry];
-      }
+    // Generate a version ID if not provided
+    if (!version.id) {
+      version.id = `v${project.versionsList.length + 1}`;
     }
     
-    // Add history entry if status changed to approved
-    if (updates.status === 'approved' && projects[projectIndex].status !== 'approved') {
-      const approvalEntry = {
-        action: "Cliente aprovou o projeto",
-        timestamp: new Date().toLocaleString('pt-BR'),
-        data: { 
-          message: "O cliente aprovou uma das versões propostas.",
-          status: 'approved' 
-        }
-      };
-      
-      if (!formattedUpdates.history) {
-        formattedUpdates.history = [...(projects[projectIndex].history || []), approvalEntry];
-      } else {
-        formattedUpdates.history = [...formattedUpdates.history, approvalEntry];
-      }
+    // Set creation timestamp if not provided
+    if (!version.createdAt) {
+      version.createdAt = new Date().toISOString();
     }
     
-    // Add history entry if deadline extended
-    if (updates.expirationDate && 
-        updates.expirationDate !== projects[projectIndex].expirationDate && 
-        !updates.history?.some(h => h.action.includes("Prazo estendido"))) {
-      const deadlineEntry = {
-        action: "Prazo estendido",
-        timestamp: new Date().toLocaleString('pt-BR'),
-        data: { 
-          message: `Prazo estendido para ${updates.expirationDate}` 
-        }
-      };
-      
-      if (!formattedUpdates.history) {
-        formattedUpdates.history = [...(projects[projectIndex].history || []), deadlineEntry];
-      } else {
-        formattedUpdates.history = [...formattedUpdates.history, deadlineEntry];
-      }
-    }
+    project.versionsList.push(version);
+    project.versions = project.versionsList.length;
     
-    const updatedProject = {
-      ...projects[projectIndex],
-      ...formattedUpdates,
-      lastActivityDate: updates.lastActivityDate || new Date().toLocaleDateString('pt-BR')
-    };
+    setProjects([...mockProjects]);
     
-    const updatedProjects = [...projects];
-    updatedProjects[projectIndex] = updatedProject;
+    // Save to localStorage
+    localStorage.setItem('preview_projects', JSON.stringify(mockProjects));
     
-    console.log("Updated project:", updatedProject);
-    console.log("Updated project list:", updatedProjects);
+    return version;
+  };
+  
+  // Delete a version from a project
+  const deleteVersion = (projectId: string, versionId: string) => {
+    const project = mockProjects.find(p => p.id === projectId);
+    if (!project || !project.versionsList) return false;
     
-    setProjects(updatedProjects);
-    saveProjects(updatedProjects);
+    project.versionsList = project.versionsList.filter(v => v.id !== versionId);
+    project.versions = project.versionsList.length;
     
-    return updatedProject;
-  }, [projects, saveProjects]);
+    setProjects([...mockProjects]);
+    
+    // Save to localStorage
+    localStorage.setItem('preview_projects', JSON.stringify(mockProjects));
+    
+    return true;
+  };
+  
+  // Extend a project's deadline by 7 days
+  const extendDeadline = (projectId: string) => {
+    const project = mockProjects.find(p => p.id === projectId);
+    if (!project) return false;
+    
+    const currentExpiration = new Date(project.expirationDate);
+    const newExpiration = new Date(currentExpiration);
+    newExpiration.setDate(currentExpiration.getDate() + 7);
+    
+    project.expirationDate = newExpiration.toISOString();
+    
+    setProjects([...mockProjects]);
+    
+    // Save to localStorage
+    localStorage.setItem('preview_projects', JSON.stringify(mockProjects));
+    
+    return true;
+  };
 
   return {
     projects,
     isLoading,
-    error,
-    loadProjects,
-    getProjectById,
     addProject,
     deleteProject,
-    updateProject
+    getProjectById,
+    updateProject,
+    loadProjects,
+    addVersion,
+    deleteVersion,
+    extendDeadline
+  };
+};
+
+// Hook for working with a single preview project
+export const usePreviewProject = (projectId?: string) => {
+  const [project, setProject] = useState<ProjectItem | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const { 
+    getProjectById, 
+    updateProject: updateProjectInList, 
+    addVersion: addVersionToProject,
+    deleteVersion: deleteVersionFromProject,
+    extendDeadline: extendProjectDeadline
+  } = usePreviewProjects();
+  
+  useEffect(() => {
+    if (!projectId) {
+      setIsLoading(false);
+      return;
+    }
+    
+    const fetchProject = async () => {
+      setIsLoading(true);
+      
+      try {
+        const foundProject = getProjectById(projectId);
+        
+        if (foundProject) {
+          setProject(foundProject);
+        } else {
+          // If project is not found in the list, try to get from localStorage
+          const localProject = localStorage.getItem(`previewProject_${projectId}`);
+          if (localProject) {
+            setProject(JSON.parse(localProject));
+          } else {
+            setProject(null);
+          }
+        }
+      } catch (error) {
+        console.error('Error fetching project:', error);
+        setProject(null);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+    
+    fetchProject();
+  }, [projectId, getProjectById]);
+  
+  const updateProject = (projectId: string, updates: Partial<ProjectItem>) => {
+    const updated = updateProjectInList(projectId, updates);
+    if (updated) {
+      setProject(updated);
+    }
+    return updated;
+  };
+  
+  const addVersion = (projectId: string, version: VersionItem) => {
+    const addedVersion = addVersionToProject(projectId, version);
+    if (addedVersion && project) {
+      const updatedVersionsList = [...(project.versionsList || []), addedVersion];
+      setProject({
+        ...project,
+        versionsList: updatedVersionsList,
+        versions: updatedVersionsList.length
+      });
+    }
+    return addedVersion;
+  };
+  
+  const deleteVersion = (projectId: string, versionId: string) => {
+    const success = deleteVersionFromProject(projectId, versionId);
+    if (success && project && project.versionsList) {
+      const updatedVersionsList = project.versionsList.filter(v => v.id !== versionId);
+      setProject({
+        ...project,
+        versionsList: updatedVersionsList,
+        versions: updatedVersionsList.length
+      });
+    }
+    return success;
+  };
+  
+  const extendDeadline = (projectId: string) => {
+    const success = extendProjectDeadline(projectId);
+    if (success && project) {
+      const currentExpiration = new Date(project.expirationDate);
+      const newExpiration = new Date(currentExpiration);
+      newExpiration.setDate(currentExpiration.getDate() + 7);
+      
+      setProject({
+        ...project,
+        expirationDate: newExpiration.toISOString()
+      });
+    }
+    return success;
+  };
+  
+  return {
+    project,
+    isLoading,
+    updateProject,
+    addVersion,
+    deleteVersion,
+    extendDeadline
   };
 };
