@@ -31,6 +31,7 @@ export const generateMockPreviews = (): ProjectItem[] => {
           description: "Versão com violão e voz, arranjo minimalista",
           audioUrl: "https://samplelib.com/lib/preview/mp3/sample-3s.mp3",
           dateAdded: "10/04/2025",
+          createdAt: new Date("2025-04-10").toISOString(), // Add the required createdAt property
           recommended: false
         },
         {
@@ -39,6 +40,7 @@ export const generateMockPreviews = (): ProjectItem[] => {
           description: "Versão com banda completa, arranjo final sugerido",
           audioUrl: "https://samplelib.com/lib/preview/mp3/sample-6s.mp3",
           dateAdded: "12/04/2025",
+          createdAt: new Date("2025-04-12").toISOString(), // Add the required createdAt property
           recommended: true
         }
       ]
@@ -61,6 +63,7 @@ export const generateMockPreviews = (): ProjectItem[] => {
           description: "Primeira versão para avaliação",
           audioUrl: "https://samplelib.com/lib/preview/mp3/sample-9s.mp3",
           dateAdded: "05/04/2025",
+          createdAt: new Date("2025-04-05").toISOString(), // Add the required createdAt property
           recommended: true
         }
       ],
@@ -84,6 +87,7 @@ export const generateMockPreviews = (): ProjectItem[] => {
           description: "Primeiro conceito da música",
           audioUrl: "https://samplelib.com/lib/preview/mp3/sample-12s.mp3",
           dateAdded: "01/04/2025",
+          createdAt: new Date("2025-04-01").toISOString(), // Add the required createdAt property
           recommended: false
         },
         {
@@ -92,6 +96,7 @@ export const generateMockPreviews = (): ProjectItem[] => {
           description: "Ajustes após primeiro feedback",
           audioUrl: "https://samplelib.com/lib/preview/mp3/sample-15s.mp3",
           dateAdded: "02/04/2025",
+          createdAt: new Date("2025-04-02").toISOString(), // Add the required createdAt property
           recommended: false
         },
         {
@@ -100,6 +105,7 @@ export const generateMockPreviews = (): ProjectItem[] => {
           description: "Versão aprovada pelo cliente",
           audioUrl: "https://samplelib.com/lib/preview/mp3/sample-9s.mp3",
           dateAdded: "03/04/2025",
+          createdAt: new Date("2025-04-03").toISOString(), // Add the required createdAt property
           recommended: true
         }
       ]

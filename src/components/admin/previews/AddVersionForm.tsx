@@ -107,6 +107,7 @@ const AddVersionForm: React.FC<AddVersionFormProps> = ({
         description,
         audioUrl,
         fileId,
+        createdAt: new Date().toISOString(), // Add the required createdAt property
         dateAdded: new Date().toLocaleDateString('pt-BR'),
         recommended,
         final: isFinalVersion,
