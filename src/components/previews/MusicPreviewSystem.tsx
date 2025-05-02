@@ -96,26 +96,32 @@ const MusicPreviewSystem: React.FC<MusicPreviewSystemProps> = ({ projectId }) =>
     });
   };
 
+  // Ensures we have the necessary properties
+  const projectTitle = projectData.projectTitle || "Projeto de Música Personalizada";
+  const clientName = projectData.clientName || "Cliente";
+  const status = projectData.status || "waiting";
   const packageType = formatPackageType(projectData.packageType);
+  const createdAt = projectData.createdAt || new Date().toISOString();
+  const versions = projectData.versions || [];
 
   return (
     <div className="max-w-4xl mx-auto px-4">
       <PreviewHeader 
-        projectTitle={projectData.projectTitle} 
-        clientName={projectData.clientName} 
+        projectTitle={projectTitle}
+        clientName={clientName}
         packageType={packageType}
-        status={projectData.status}
-        createdAt={projectData.createdAt}
+        status={status}
+        createdAt={createdAt}
         onShareClick={() => setIsShareDialogOpen(true)}
       />
       
-      {projectData.versions && projectData.versions.length > 0 && (
+      {versions.length > 0 && (
         <div className="mt-8">
           <PreviewPlayerList 
-            versions={projectData.versions}
+            versions={versions}
             selectedVersion={selectedVersion}
             setSelectedVersion={setSelectedVersion}
-            isApproved={projectData.status === 'approved'}
+            isApproved={status === 'approved'}
           />
         </div>
       )}
@@ -128,18 +134,18 @@ const MusicPreviewSystem: React.FC<MusicPreviewSystemProps> = ({ projectId }) =>
             handleSubmit={handleFeedbackSubmit}
             handleApprove={handleApprove}
             selectedPreview={selectedVersion}
-            status={projectData.status}
+            status={status}
           />
         </div>
       )}
       
       <div className="mt-8">
         <PreviewProjectDetails projectData={{
-          projectTitle: projectData.projectTitle,
-          clientName: projectData.clientName,
-          status: projectData.status,
+          projectTitle: projectTitle,
+          clientName: clientName,
+          status: status,
           packageType: projectData.packageType,
-          creationDate: projectData.createdAt
+          creationDate: createdAt
         }} />
       </div>
       
@@ -150,12 +156,12 @@ const MusicPreviewSystem: React.FC<MusicPreviewSystemProps> = ({ projectId }) =>
       )}
       
       <div className="mt-8">
-        <PreviewInstructions status={projectData.status} />
+        <PreviewInstructions status={status} />
       </div>
       
       {feedbackSubmitted && (
         <div className="mt-8">
-          <PreviewNextSteps status={projectData.status} />
+          <PreviewNextSteps status={status} />
         </div>
       )}
       
@@ -167,7 +173,7 @@ const MusicPreviewSystem: React.FC<MusicPreviewSystemProps> = ({ projectId }) =>
         isOpen={isShareDialogOpen}
         onOpenChange={setIsShareDialogOpen}
         projectId={projectId}
-        projectTitle={projectData.projectTitle}
+        projectTitle={projectTitle}
       />
     </div>
   );

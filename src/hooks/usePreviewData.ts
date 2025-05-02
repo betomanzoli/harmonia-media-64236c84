@@ -48,9 +48,6 @@ export const usePreviewData = (previewId: string | undefined) => {
         };
       });
 
-      // Informações do histórico são salvas no AdminProjects
-      // através do hook usePreviewProjects -> updateProject
-
       return true;
     } catch (error) {
       console.error('Erro ao atualizar status:', error);

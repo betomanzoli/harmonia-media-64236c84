@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { useToast } from '@/hooks/use-toast';
 
@@ -112,12 +111,12 @@ export const usePreviewProject = (projectId?: string) => {
           localStorage.setItem(`previewProject_${projectId}`, JSON.stringify(mockProject));
         }
       } catch (error) {
+        console.error('Error fetching preview project:', error);
         toast({
-          title: "Erro ao carregar projeto",
-          description: "Não foi possível carregar os dados do projeto.",
+          title: "Erro ao carregar prévia",
+          description: "Não foi possível carregar os dados da prévia. Por favor, tente novamente.",
           variant: "destructive"
         });
-        console.error("Error fetching project data:", error);
       } finally {
         setIsLoading(false);
       }
@@ -126,84 +125,30 @@ export const usePreviewProject = (projectId?: string) => {
     fetchProjectData();
   }, [projectId, toast]);
 
-  // Function to update the project status and add feedback to history
-  const updateProjectStatus = (newStatus: 'feedback' | 'approved', comments: string) => {
-    if (!projectData) return;
-    
-    // Create a feedback record
-    const feedbackRecord: FeedbackRecord = {
-      id: `feedback_${Date.now()}`,
-      content: comments,
-      createdAt: new Date().toISOString(),
-      status: 'pending'
-    };
-    
-    // Update the project data with new status and feedback
-    const updatedProject = {
-      ...projectData,
-      status: newStatus,
-      feedbackHistory: [
-        ...(projectData.feedbackHistory || []),
-        feedbackRecord
-      ]
-    };
-    
-    // If the status is "feedback", simulate creating a new version based on feedback
-    if (newStatus === 'feedback') {
-      // In a real app, this would trigger a notification to your team
-      // that a new round of feedback has been received
-      console.log(`Feedback received for project ${projectData.id}:`, comments);
-      
-      // For demo purposes, we'll add a "New version" flag to show the feedback cycle
-      // In a real app, your team would create a new version based on the feedback
-      localStorage.setItem(`feedback_pending_${projectData.id}`, 'true');
-      
-      // Simulate the flow where your team would get notified and later add a new version
-      setTimeout(() => {
-        // Check if the component is still mounted before updating
-        const storedProject = localStorage.getItem(`previewProject_${projectData.id}`);
-        if (storedProject) {
-          const project = JSON.parse(storedProject);
-          
-          // Add a new version based on feedback (in a real app, your team would do this)
-          const newVersion: ProjectVersion = {
-            id: `v${(project.versions?.length || 0) + 1}`,
-            title: `Versão Revisada (após feedback)`,
-            description: "Esta versão foi criada com base no seu feedback anterior.",
-            audioUrl: "https://example.com/song_revised.mp3",
-            recommended: true,
-            createdAt: new Date().toISOString()
-          };
-          
-          const updatedVersions = [
-            newVersion,
-            ...(project.versions || [])
-          ];
-          
-          // Update the stored project with the new version
-          const updatedWithNewVersion = {
-            ...project,
-            versions: updatedVersions,
-            status: 'waiting' // Reset to waiting for feedback on the new version
-          };
-          
-          localStorage.setItem(`previewProject_${projectData.id}`, JSON.stringify(updatedWithNewVersion));
-          localStorage.removeItem(`feedback_pending_${projectData.id}`);
-        }
-      }, 30000); // Simulate a delay before new version is created (30 seconds)
+  // Update project status
+  const updateProjectStatus = (status: 'waiting' | 'feedback' | 'approved', feedback?: string) => {
+    console.log(`Updating project ${projectId} status to ${status}`);
+    if (feedback) {
+      console.log(`Feedback: ${feedback}`);
     }
     
-    // Save to state and localStorage
-    setProjectData(updatedProject);
-    localStorage.setItem(`previewProject_${projectData.id}`, JSON.stringify(updatedProject));
+    setProjectData(prevData => {
+      if (!prevData) return null;
+      
+      return {
+        ...prevData,
+        status
+      };
+    });
     
+    // In a real app, this would be an API call to update the project status
     return true;
   };
 
   return {
     projectData,
+    setProjectData,
     isLoading,
-    updateProjectStatus,
-    setProjectData
+    updateProjectStatus
   };
 };
