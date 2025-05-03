@@ -29,6 +29,7 @@ export const getProjectIdFromPreviewLink = (encodedId: string): string | null =>
     return null;
   }
   
-  // The last part should be the project ID
-  return parts[parts.length - 1];
+  // The project ID is everything after the first dash
+  // This handles project IDs that might contain dashes themselves
+  return parts.slice(1).join('-');
 };

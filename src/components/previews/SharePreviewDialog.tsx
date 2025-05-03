@@ -30,9 +30,12 @@ const SharePreviewDialog: React.FC<SharePreviewDialogProps> = ({
   const { toast } = useToast();
   const [recipientEmail, setRecipientEmail] = useState('');
   
-  // Generate a shareable preview link
-  const previewLink = `${window.location.origin}/preview/${projectId}`;
-  const encodedLink = `${window.location.origin}/preview/${generatePreviewLink(projectId)}`;
+  // Gerar o link codificado para o preview
+  const encodedId = generatePreviewLink(projectId);
+  const encodedLink = `${window.location.origin}/preview/${encodedId}`;
+  
+  // Manter como referência o link direto antigo, mas enfatizar o uso do link codificado
+  const directLink = `${window.location.origin}/preview/${projectId}`;
   
   const handleCopy = (text: string) => {
     navigator.clipboard.writeText(text).then(() => {
@@ -87,28 +90,7 @@ const SharePreviewDialog: React.FC<SharePreviewDialogProps> = ({
         
         <div className="space-y-4 py-4">
           <div>
-            <div className="text-sm font-medium mb-2">Link de compartilhamento direto</div>
-            <div className="flex">
-              <Input 
-                value={previewLink} 
-                readOnly 
-                className="flex-1 mr-2"
-              />
-              <Button 
-                variant="outline" 
-                size="icon"
-                onClick={() => handleCopy(previewLink)}
-              >
-                <Copy className="h-4 w-4" />
-              </Button>
-            </div>
-            <p className="text-xs text-gray-500 mt-1">
-              Este link permite acesso direto à prévia do projeto "{projectTitle}".
-            </p>
-          </div>
-          
-          <div>
-            <div className="text-sm font-medium mb-2">Link codificado (mais seguro)</div>
+            <div className="text-sm font-medium mb-2">Link codificado (recomendado)</div>
             <div className="flex">
               <Input 
                 value={encodedLink} 
@@ -125,6 +107,27 @@ const SharePreviewDialog: React.FC<SharePreviewDialogProps> = ({
             </div>
             <p className="text-xs text-gray-500 mt-1">
               Este é um link codificado que não mostra o ID do projeto diretamente. Este link pode ser compartilhado sem necessidade de autenticação.
+            </p>
+          </div>
+          
+          <div>
+            <div className="text-sm font-medium mb-2">Link direto (menos seguro)</div>
+            <div className="flex">
+              <Input 
+                value={directLink} 
+                readOnly 
+                className="flex-1 mr-2"
+              />
+              <Button 
+                variant="outline" 
+                size="icon"
+                onClick={() => handleCopy(directLink)}
+              >
+                <Copy className="h-4 w-4" />
+              </Button>
+            </div>
+            <p className="text-xs text-gray-500 mt-1">
+              Este link permite acesso direto à prévia do projeto "{projectTitle}".
             </p>
           </div>
           
