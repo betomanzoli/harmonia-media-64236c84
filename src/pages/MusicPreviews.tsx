@@ -16,29 +16,9 @@ const MusicPreviews: React.FC = () => {
   
   const [selectedPreview, setSelectedPreview] = useState<string | null>(null);
   const [feedback, setFeedback] = useState('');
-  const [isValidLink, setIsValidLink] = useState<boolean | null>(null);
   
-  // Verify the link encoding first
-  useEffect(() => {
-    if (previewId) {
-      // Attempt to decode the preview ID
-      const decodedId = getProjectIdFromPreviewLink(previewId);
-      
-      // If we couldn't decode it, it's not a valid link
-      if (!decodedId) {
-        setIsValidLink(false);
-        toast({
-          title: "Link inválido",
-          description: "O link de prévia que você está tentando acessar não é válido.",
-          variant: "destructive"
-        });
-      } else {
-        setIsValidLink(true);
-      }
-    }
-  }, [previewId, toast]);
-  
-  const { projectData, isLoading, actualProjectId, updateProjectStatus } = usePreviewData(isValidLink ? previewId : undefined);
+  // Direct use of previewId in usePreviewData - it will handle both encoded and direct IDs
+  const { projectData, isLoading, actualProjectId, updateProjectStatus } = usePreviewData(previewId);
   
   useEffect(() => {
     console.log("Preview ID:", previewId);
@@ -119,25 +99,13 @@ const MusicPreviews: React.FC = () => {
     );
   }
   
-  // Invalid link state
-  if (isValidLink === false) {
-    return (
-      <MusicPreviewContainer>
-        <PreviewError 
-          title="Link de prévia inválido"
-          message="O link que você está tentando acessar não é válido." 
-        />
-      </MusicPreviewContainer>
-    );
-  }
-  
   // Project not found state
   if (!projectData) {
     return (
       <MusicPreviewContainer>
         <PreviewError 
           title="Preview não encontrado"
-          message="O código de preview fornecido não é válido ou expirou." 
+          description="O código de preview fornecido não é válido ou expirou." 
         />
       </MusicPreviewContainer>
     );

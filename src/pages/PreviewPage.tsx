@@ -20,27 +20,51 @@ const PreviewPage: React.FC = () => {
       console.log(`Acesso à prévia: ${projectId}, Data: ${new Date().toISOString()}`);
       window.scrollTo(0, 0);
       
-      // Always try to decode the ID
+      // First try to decode the ID in case it's an encoded preview link
       const decodedId = getProjectIdFromPreviewLink(projectId);
       
       if (decodedId) {
         // If this is an encoded link, we consider it pre-authorized
+        console.log("Link codificado detectado, ID do projeto:", decodedId);
         setActualProjectId(decodedId);
         setIsAuthorized(true);
         return;
-      } else {
+      }
+      
+      // For backward compatibility, also support direct project IDs
+      // Check if the project exists in localStorage
+      try {
+        const storedProjects = localStorage.getItem('harmonIA_preview_projects');
+        if (storedProjects) {
+          const projects = JSON.parse(storedProjects);
+          const projectExists = projects.some((p: any) => p.id === projectId);
+          
+          if (projectExists) {
+            console.log("ID de projeto direto encontrado:", projectId);
+            setActualProjectId(projectId);
+            
+            // Check if admin access or previously authorized
+            const isAdmin = localStorage.getItem('admin_preview_access') === 'true';
+            const isPreviouslyAuthorized = localStorage.getItem(`preview_auth_${projectId}`) === 'authorized';
+            
+            if (isAdmin || isPreviouslyAuthorized) {
+              setIsAuthorized(true);
+            }
+            return;
+          }
+        }
+        
         // No valid project mapping found
+        setIsError(true);
         toast({
           title: "Link inválido",
           description: "O link de prévia que você está tentando acessar não é válido.",
           variant: "destructive"
         });
+      } catch (error) {
+        console.error("Erro ao verificar projeto:", error);
         setIsError(true);
-        return;
       }
-      
-      // We no longer support direct project ID access
-      // Only encoded links are allowed
     }
   }, [projectId, toast]);
 
@@ -51,13 +75,29 @@ const PreviewPage: React.FC = () => {
     // Simulate a database check
     const verifyAccess = () => {
       // This would be an API call in a real app
-      // For demo, we'll just check if the email contains any of the parts of the project code 
-      // and has a valid format (contains @)
-      return email.includes('@') && (
-        (projectId && code === projectId) || 
-        email.toLowerCase().includes('test') || 
-        email.toLowerCase().includes('demo')
-      );
+      try {
+        const storedProjects = localStorage.getItem('harmonIA_preview_projects');
+        if (storedProjects) {
+          const projects = JSON.parse(storedProjects);
+          const project = projects.find((p: any) => p.id === projectId);
+          
+          if (project) {
+            // Match by email or code
+            return (email.toLowerCase() === project.clientEmail?.toLowerCase()) || 
+                   (code === projectId);
+          }
+        }
+        
+        // Fallback for demo
+        return email.includes('@') && (
+          (projectId && code === projectId) || 
+          email.toLowerCase().includes('test') || 
+          email.toLowerCase().includes('demo')
+        );
+      } catch (error) {
+        console.error("Erro na verificação de acesso:", error);
+        return false;
+      }
     };
     
     if (verifyAccess()) {

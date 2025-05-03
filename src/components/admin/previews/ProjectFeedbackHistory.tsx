@@ -31,7 +31,7 @@ const ProjectFeedbackHistory: React.FC<ProjectFeedbackHistoryProps> = ({
     }
   };
   
-  if (feedbackHistory.length === 0) {
+  if (!feedbackHistory || feedbackHistory.length === 0) {
     return (
       <Card>
         <CardHeader>
@@ -56,7 +56,7 @@ const ProjectFeedbackHistory: React.FC<ProjectFeedbackHistoryProps> = ({
         <ScrollArea className="h-[300px] pr-4">
           <div className="space-y-6">
             {feedbackHistory.map((feedback, index) => (
-              <div key={feedback.id} className="relative">
+              <div key={feedback.id || index} className="relative">
                 {index !== feedbackHistory.length - 1 && (
                   <div className="absolute left-6 top-12 w-px h-full bg-gray-200" />
                 )}

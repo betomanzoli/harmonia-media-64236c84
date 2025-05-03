@@ -1,7 +1,7 @@
 
 import { useState, useEffect } from 'react';
 import { useToast } from '@/hooks/use-toast';
-import { usePreviewProject, ProjectItem } from '@/hooks/admin/usePreviewProjects';
+import { usePreviewProjects, ProjectItem } from '@/hooks/admin/usePreviewProjects';
 import { getProjectIdFromPreviewLink } from '@/utils/previewLinkUtils';
 
 export const usePreviewData = (previewId: string | undefined) => {
@@ -12,16 +12,13 @@ export const usePreviewData = (previewId: string | undefined) => {
   
   useEffect(() => {
     if (previewId) {
-      // Always try to decode the preview ID
+      // Try to decode the preview ID if it's in the encoded format
+      // If not, treat it as a direct project ID (for backward compatibility)
       const decodedId = getProjectIdFromPreviewLink(previewId);
+      const projectId = decodedId || previewId;
       
-      if (!decodedId) {
-        setIsLoading(false);
-        return;
-      }
-      
-      setActualProjectId(decodedId);
-      console.log(`Carregando dados da prévia: ${decodedId}`);
+      setActualProjectId(projectId);
+      console.log(`Carregando dados da prévia: ${projectId}`);
       
       // Load project data
       setIsLoading(true);
@@ -31,12 +28,13 @@ export const usePreviewData = (previewId: string | undefined) => {
         const storedProjects = localStorage.getItem('harmonIA_preview_projects');
         if (storedProjects) {
           const projects = JSON.parse(storedProjects);
-          const project = projects.find((p: ProjectItem) => p.id === decodedId);
+          const project = projects.find((p: ProjectItem) => p.id === projectId);
           
           if (project) {
+            console.log('Projeto encontrado:', project);
             setProjectData(project);
           } else {
-            console.log(`Projeto não encontrado: ${decodedId}`);
+            console.log(`Projeto não encontrado: ${projectId}`);
           }
         }
       } catch (error) {
