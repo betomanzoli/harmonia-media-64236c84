@@ -1,13 +1,13 @@
 
 import React from 'react';
-import { AudioExample } from './audioData';
+import { AudioExample as AudioExampleType } from './audioData';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
 import { ChevronRight } from 'lucide-react';
-import AudioExample from './AudioExample';
+import AudioExampleComponent from './AudioExample';
 
 export interface PortfolioTabsProps {
-  examples: AudioExample[];
+  examples: AudioExampleType[];
   selectedCategory: string;
   setSelectedCategory: React.Dispatch<React.SetStateAction<string>>;
   showAll: boolean;
@@ -24,7 +24,7 @@ const PortfolioTabs: React.FC<PortfolioTabsProps> = ({
   // Filter examples by category
   const filteredExamples = selectedCategory === 'all' 
     ? examples 
-    : examples.filter(example => example.category === selectedCategory);
+    : examples.filter(example => example.categories.includes(selectedCategory));
 
   return (
     <div className="mt-12">
@@ -40,7 +40,13 @@ const PortfolioTabs: React.FC<PortfolioTabsProps> = ({
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         {filteredExamples.map((example) => (
-          <AudioExample key={example.id} example={example} />
+          <AudioExampleComponent 
+            key={example.id} 
+            title={example.title}
+            subtitle={example.description}
+            audioSrc={example.audioUrl}
+            type={example.type}
+          />
         ))}
       </div>
 
