@@ -1,111 +1,62 @@
 
 import React from 'react';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import AudioCard from './AudioCard';
-import ComparisonPlayer from './ComparisonPlayer';
 import { AudioExample } from './audioData';
+import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
+import { Button } from "@/components/ui/button";
+import { ChevronRight } from 'lucide-react';
+import AudioExample from './AudioExample';
 
 export interface PortfolioTabsProps {
-  selectedCategory: string;
-  onSelectCategory: (category: string) => void;
   examples: AudioExample[];
-  comparisonExamples: AudioExample[];
+  selectedCategory: string;
+  setSelectedCategory: React.Dispatch<React.SetStateAction<string>>;
+  showAll: boolean;
+  onShowMore: () => void;
 }
 
-const PortfolioTabs: React.FC<PortfolioTabsProps> = ({
-  selectedCategory,
-  onSelectCategory,
-  examples,
-  comparisonExamples
+const PortfolioTabs: React.FC<PortfolioTabsProps> = ({ 
+  examples, 
+  selectedCategory, 
+  setSelectedCategory, 
+  showAll, 
+  onShowMore 
 }) => {
+  // Filter examples by category
   const filteredExamples = selectedCategory === 'all' 
     ? examples 
-    : examples.filter(example => example.categories.includes(selectedCategory));
+    : examples.filter(example => example.category === selectedCategory);
 
   return (
-    <Tabs defaultValue="examples" className="w-full">
-      <TabsList className="grid w-full max-w-md mx-auto grid-cols-2 mb-8">
-        <TabsTrigger value="examples">Exemplos de Músicas</TabsTrigger>
-        <TabsTrigger value="comparisons">Antes & Depois</TabsTrigger>
-      </TabsList>
-      
-      <TabsContent value="examples" className="space-y-8">
-        <div className="flex flex-wrap justify-center gap-4 mb-6">
-          <button
-            className={`px-4 py-2 rounded-full text-sm ${
-              selectedCategory === 'all' 
-                ? 'bg-harmonia-green text-white' 
-                : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-            }`}
-            onClick={() => onSelectCategory('all')}
+    <div className="mt-12">
+      <Tabs value={selectedCategory} onValueChange={setSelectedCategory}>
+        <TabsList className="grid grid-cols-3 md:grid-cols-5 mb-8">
+          <TabsTrigger value="all">Todos</TabsTrigger>
+          <TabsTrigger value="original">Original</TabsTrigger>
+          <TabsTrigger value="jingle">Jingles</TabsTrigger>
+          <TabsTrigger value="soundtrack">Trilhas</TabsTrigger>
+          <TabsTrigger value="corporate">Corporativo</TabsTrigger>
+        </TabsList>
+      </Tabs>
+
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        {filteredExamples.map((example) => (
+          <AudioExample key={example.id} example={example} />
+        ))}
+      </div>
+
+      {!showAll && examples.length > 6 && (
+        <div className="text-center mt-8">
+          <Button 
+            onClick={onShowMore}
+            variant="outline" 
+            className="px-6"
           >
-            Todos
-          </button>
-          <button
-            className={`px-4 py-2 rounded-full text-sm ${
-              selectedCategory === 'romantic' 
-                ? 'bg-harmonia-green text-white' 
-                : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-            }`}
-            onClick={() => onSelectCategory('romantic')}
-          >
-            Românticas
-          </button>
-          <button
-            className={`px-4 py-2 rounded-full text-sm ${
-              selectedCategory === 'commercial' 
-                ? 'bg-harmonia-green text-white' 
-                : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-            }`}
-            onClick={() => onSelectCategory('commercial')}
-          >
-            Comerciais
-          </button>
-          <button
-            className={`px-4 py-2 rounded-full text-sm ${
-              selectedCategory === 'special-date' 
-                ? 'bg-harmonia-green text-white' 
-                : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-            }`}
-            onClick={() => onSelectCategory('special-date')}
-          >
-            Datas Especiais
-          </button>
+            Ver mais exemplos
+            <ChevronRight className="ml-2 h-4 w-4" />
+          </Button>
         </div>
-        
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {filteredExamples.map(example => (
-            <AudioCard 
-              key={example.id}
-              title={example.title}
-              description={example.description}
-              audioUrl={example.audioUrl}
-              featured={example.featured}
-            />
-          ))}
-        </div>
-        
-        {filteredExamples.length === 0 && (
-          <p className="text-center text-gray-500">
-            Nenhum exemplo encontrado para esta categoria.
-          </p>
-        )}
-      </TabsContent>
-      
-      <TabsContent value="comparisons">
-        <div className="space-y-8 max-w-3xl mx-auto">
-          {comparisonExamples.map(example => (
-            <ComparisonPlayer
-              key={example.id}
-              title={example.title}
-              description={example.description}
-              beforeUrl={example.beforeUrl || ''}
-              afterUrl={example.audioUrl}
-            />
-          ))}
-        </div>
-      </TabsContent>
-    </Tabs>
+      )}
+    </div>
   );
 };
 

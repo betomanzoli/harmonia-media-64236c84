@@ -1,21 +1,17 @@
+
 import React, { useState, useEffect } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
-import Header from '@/components/Header';
-import Footer from '@/components/Footer';
+import { useParams } from 'react-router-dom';
 import { useToast } from "@/hooks/use-toast";
-import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
-import PreviewFeedbackForm from '@/components/previews/PreviewFeedbackForm';
-import PreviewHeader from '@/components/previews/PreviewHeader';
-import PreviewInstructions from '@/components/previews/PreviewInstructions';
-import PreviewPlayerList from '@/components/previews/player/PreviewPlayerList';
-import PreviewNextSteps from '@/components/previews/PreviewNextSteps';
+import MusicPreviewContainer from '@/components/previews/MusicPreviewContainer';
+import PreviewLoader from '@/components/previews/PreviewLoader';
+import PreviewError from '@/components/previews/PreviewError';
+import PreviewContent from '@/components/previews/PreviewContent';
 import { usePreviewData } from '@/hooks/usePreviewData';
 import { notificationService } from '@/services/notificationService';
 import { getProjectIdFromPreviewLink } from '@/utils/previewLinkUtils';
 
 const MusicPreviews: React.FC = () => {
   const { previewId } = useParams<{ previewId: string }>();
-  const navigate = useNavigate();
   const { toast } = useToast();
   
   const [selectedPreview, setSelectedPreview] = useState<string | null>(null);
@@ -114,141 +110,57 @@ const MusicPreviews: React.FC = () => {
     }
   };
   
+  // Loading state
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-background text-foreground">
-        <Header />
-        <div className="pt-24 pb-20 px-6 md:px-10 flex items-center justify-center">
-          <div className="text-center">
-            <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-harmonia-green"></div>
-            <p className="mt-4 text-gray-500">Carregando prévias...</p>
-          </div>
-        </div>
-        <Footer />
-      </div>
+      <MusicPreviewContainer>
+        <PreviewLoader />
+      </MusicPreviewContainer>
     );
   }
   
-  // Show error if the link is invalid
+  // Invalid link state
   if (isValidLink === false) {
     return (
-      <div className="min-h-screen bg-background text-foreground">
-        <Header />
-        <div className="pt-24 pb-20 px-6 md:px-10 flex items-center justify-center">
-          <div className="text-center max-w-md">
-            <h1 className="text-2xl font-bold mb-4">Link de prévia inválido</h1>
-            <p className="text-gray-400 mb-6">O link que você está tentando acessar não é válido.</p>
-            <button 
-              onClick={() => navigate('/')}
-              className="bg-harmonia-green hover:bg-harmonia-green/90 text-white px-4 py-2 rounded"
-            >
-              Voltar à página inicial
-            </button>
-          </div>
-        </div>
-        <Footer />
-      </div>
+      <MusicPreviewContainer>
+        <PreviewError 
+          title="Link de prévia inválido"
+          message="O link que você está tentando acessar não é válido." 
+        />
+      </MusicPreviewContainer>
     );
   }
   
+  // Project not found state
   if (!projectData) {
     return (
-      <div className="min-h-screen bg-background text-foreground">
-        <Header />
-        <div className="pt-24 pb-20 px-6 md:px-10 flex items-center justify-center">
-          <div className="text-center max-w-md">
-            <h1 className="text-2xl font-bold mb-4">Preview não encontrado</h1>
-            <p className="text-gray-400 mb-6">O código de preview fornecido não é v��lido ou expirou.</p>
-            <button 
-              onClick={() => navigate('/')}
-              className="bg-harmonia-green hover:bg-harmonia-green/90 text-white px-4 py-2 rounded"
-            >
-              Voltar à página inicial
-            </button>
-          </div>
-        </div>
-        <Footer />
-      </div>
+      <MusicPreviewContainer>
+        <PreviewError 
+          title="Preview não encontrado"
+          message="O código de preview fornecido não é válido ou expirou." 
+        />
+      </MusicPreviewContainer>
     );
   }
   
   // Make sure versionsForPlayer is always an array
   const versionsForPlayer = Array.isArray(projectData?.versionsList) 
     ? projectData.versionsList 
-    : (Array.isArray(projectData?.versions) ? projectData.versions : []);
+    : (Array.isArray(projectData?.previews) ? projectData.previews : []);
   
   return (
-    <div className="min-h-screen bg-background text-foreground">
-      <Header />
-      <main className="pt-24 pb-20 px-6 md:px-10">
-        <div className="max-w-4xl mx-auto">
-          <PreviewHeader 
-            projectTitle=""
-            clientName=""
-            packageType="Música Personalizada"
-            status="waiting"
-            createdAt={new Date().toISOString()}
-            projectData={{
-              projectTitle: projectData?.projectTitle || projectData?.packageType || '',
-              clientName: projectData?.clientName || '',
-              status: projectData?.status === 'waiting' || projectData?.status === 'feedback' || projectData?.status === 'approved' 
-                ? projectData.status 
-                : 'waiting'
-            }}
-          />
-          
-          <PreviewInstructions 
-            status={projectData?.status === 'waiting' || projectData?.status === 'feedback' || projectData?.status === 'approved' 
-              ? projectData.status 
-              : 'waiting'} 
-          />
-          
-          <Tabs defaultValue="versions" className="mb-10">
-            <TabsList className="w-full mb-6">
-              <TabsTrigger value="versions" className="flex-1 data-[state=active]:bg-harmonia-green">
-                Versões Propostas
-              </TabsTrigger>
-              <TabsTrigger value="feedback" className="flex-1 data-[state=active]:bg-harmonia-green">
-                Enviar Feedback
-              </TabsTrigger>
-            </TabsList>
-            
-            <TabsContent value="versions">
-              <PreviewPlayerList 
-                versions={versionsForPlayer.map(preview => ({
-                  ...preview,
-                  description: preview.description || `Versão musical para ${projectData?.clientName || 'Cliente'}`
-                }))}
-                selectedVersion={selectedPreview}
-                setSelectedVersion={setSelectedPreview}
-                isApproved={projectData?.status === 'approved'}
-              />
-            </TabsContent>
-            
-            <TabsContent value="feedback">
-              <PreviewFeedbackForm 
-                selectedPreview={selectedPreview}
-                feedback={feedback}
-                setFeedback={setFeedback}
-                handleSubmit={handleSubmitFeedback}
-                handleApprove={handleApprove}
-                status={projectData?.status === 'waiting' || projectData?.status === 'feedback' || projectData?.status === 'approved' 
-                  ? projectData.status 
-                  : 'waiting'}
-                versionTitle={versionsForPlayer.find(p => p.id === selectedPreview)?.name}
-              />
-            </TabsContent>
-          </Tabs>
-          
-          <PreviewNextSteps 
-            status={projectData?.status === 'waiting' || projectData?.status === 'feedback' || projectData?.status === 'approved' 
-              ? projectData.status 
-              : 'waiting'} 
-          />
-        </div>
-      </main>
-      <Footer />
-    </div>
+    <MusicPreviewContainer>
+      <PreviewContent
+        projectData={projectData}
+        selectedPreview={selectedPreview}
+        setSelectedPreview={setSelectedPreview}
+        feedback={feedback}
+        setFeedback={setFeedback}
+        handleSubmitFeedback={handleSubmitFeedback}
+        handleApprove={handleApprove}
+        versionsForPlayer={versionsForPlayer}
+      />
+    </MusicPreviewContainer>
   );
 };
 
