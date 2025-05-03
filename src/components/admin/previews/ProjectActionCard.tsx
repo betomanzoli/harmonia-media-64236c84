@@ -93,7 +93,12 @@ const ProjectActionCard: React.FC<ProjectActionCardProps> = ({
             <DialogHeader>
               <DialogTitle>Adicionar Nova Versão</DialogTitle>
             </DialogHeader>
-            <AddVersionForm onAddVersion={handleAddVersion} packageType={packageType} />
+            <AddVersionForm 
+              onAddVersion={handleAddVersion} 
+              onCancel={() => setShowAddVersion(false)} 
+              projectId={projectId}
+              packageType={packageType}
+            />
           </DialogContent>
         </Dialog>
 
@@ -101,9 +106,8 @@ const ProjectActionCard: React.FC<ProjectActionCardProps> = ({
           isOpen={showContactActions} 
           onOpenChange={setShowContactActions}
           clientEmail={clientEmail || ''} 
-          previewUrl={fullEncodedUrl} 
-          projectStatus={projectStatus || 'waiting'} 
           projectId={projectId}
+          clientPhone={clientPhone}
         />
 
         <DeadlineExtensionDialog

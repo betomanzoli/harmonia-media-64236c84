@@ -15,17 +15,19 @@ interface AdditionalLink {
 }
 
 interface AddVersionFormProps {
-  projectId: string;
   onAddVersion: (version: VersionItem) => void;
   onCancel: () => void;
   isFinalVersion?: boolean;
+  projectId: string;
+  packageType?: string;
 }
 
 const AddVersionForm: React.FC<AddVersionFormProps> = ({ 
   projectId, 
   onAddVersion, 
   onCancel,
-  isFinalVersion = false
+  isFinalVersion = false,
+  packageType
 }) => {
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');

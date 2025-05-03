@@ -3,17 +3,22 @@ import React from 'react';
 import { MessageSquare, Mail } from 'lucide-react';
 import ProjectActionButton from './ProjectActionButton';
 import { useToast } from '@/hooks/use-toast';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 
 interface ContactClientActionsProps {
   clientPhone?: string;
   clientEmail?: string;
   projectId: string;
+  isOpen: boolean;
+  onOpenChange: (open: boolean) => void;
 }
 
 const ContactClientActions: React.FC<ContactClientActionsProps> = ({
   clientPhone,
   clientEmail,
-  projectId
+  projectId,
+  isOpen,
+  onOpenChange
 }) => {
   const { toast } = useToast();
 
@@ -66,26 +71,33 @@ const ContactClientActions: React.FC<ContactClientActionsProps> = ({
   };
 
   return (
-    <div className="pt-2 border-t border-gray-100 mt-4">
-      <h3 className="text-sm font-medium mb-2">Contatar Cliente</h3>
-      <div className="grid grid-cols-2 gap-2">
-        <ProjectActionButton
-          icon={MessageSquare}
-          onClick={handleWhatsApp}
-          variant="outline"
-        >
-          WhatsApp
-        </ProjectActionButton>
-        
-        <ProjectActionButton
-          icon={Mail}
-          onClick={handleEmail}
-          variant="outline"
-        >
-          Email
-        </ProjectActionButton>
-      </div>
-    </div>
+    <Dialog open={isOpen} onOpenChange={onOpenChange}>
+      <DialogContent className="max-w-md">
+        <DialogHeader>
+          <DialogTitle>Contatar Cliente</DialogTitle>
+        </DialogHeader>
+        <div className="pt-2 mt-4">
+          <h3 className="text-sm font-medium mb-2">Contatar Cliente</h3>
+          <div className="grid grid-cols-2 gap-2">
+            <ProjectActionButton
+              icon={MessageSquare}
+              onClick={handleWhatsApp}
+              variant="outline"
+            >
+              WhatsApp
+            </ProjectActionButton>
+            
+            <ProjectActionButton
+              icon={Mail}
+              onClick={handleEmail}
+              variant="outline"
+            >
+              Email
+            </ProjectActionButton>
+          </div>
+        </div>
+      </DialogContent>
+    </Dialog>
   );
 };
 
