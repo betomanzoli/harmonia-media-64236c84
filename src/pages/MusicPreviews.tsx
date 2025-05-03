@@ -172,8 +172,10 @@ const MusicPreviews: React.FC = () => {
     );
   }
   
-  // Use versions if available, otherwise use versionsList, or fall back to empty array
-  const versionsForPlayer = projectData?.versionsList || projectData?.versions || [];
+  // Make sure versionsForPlayer is always an array
+  const versionsForPlayer = Array.isArray(projectData?.versionsList) 
+    ? projectData.versionsList 
+    : (Array.isArray(projectData?.versions) ? projectData.versions : []);
   
   return (
     <div className="min-h-screen bg-background text-foreground">
