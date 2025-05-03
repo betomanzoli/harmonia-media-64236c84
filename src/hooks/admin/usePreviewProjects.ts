@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useToast } from '@/hooks/use-toast';
+import { generatePreviewLink } from '@/utils/previewLinkUtils';
 
 export interface AdditionalLink {
   label: string;
@@ -46,8 +47,10 @@ export interface ProjectItem {
   expirationDate: string;
   versions: number;
   packageType: string;
-  previewUrl?: string; // Added previewUrl property to fix the TypeScript error
+  previewUrl?: string; 
   versionsList?: VersionItem[];
+  previews?: VersionItem[]; // Adding this for backwards compatibility
+  projectTitle?: string; // Adding this property to fix the error
   feedbackHistory?: FeedbackItem[];
   feedback?: string;
   history?: HistoryEntry[];
@@ -120,6 +123,7 @@ export const usePreviewProjects = () => {
       expirationDate: expirationDate.toISOString(),
       versions: project.versionsList?.length || 0,
       packageType: project.packageType || 'Música Personalizada',
+      projectTitle: project.projectTitle || project.packageType || 'Música Personalizada',
       previewUrl: `/preview/${encodedPreviewId}`, // Use encoded ID here
       versionsList: project.versionsList || [],
       feedbackHistory: [],

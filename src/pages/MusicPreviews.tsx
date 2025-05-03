@@ -81,6 +81,7 @@ const MusicPreviews: React.FC = () => {
     });
     
     if (updateProjectStatus) {
+      // Use the type-safe value
       updateProjectStatus('feedback', feedback);
     }
   };
@@ -108,6 +109,7 @@ const MusicPreviews: React.FC = () => {
     });
     
     if (updateProjectStatus) {
+      // Use the type-safe value
       updateProjectStatus('approved', feedback);
     }
   };
@@ -170,8 +172,8 @@ const MusicPreviews: React.FC = () => {
     );
   }
   
-  // Use versions if available, otherwise use previews, or fall back to empty array
-  const versionsForPlayer = projectData.versions || projectData.previews || [];
+  // Use versions if available, otherwise use versionsList, or fall back to empty array
+  const versionsForPlayer = projectData?.versionsList || projectData?.versions || [];
   
   return (
     <div className="min-h-screen bg-background text-foreground">
@@ -185,13 +187,19 @@ const MusicPreviews: React.FC = () => {
             status="waiting"
             createdAt={new Date().toISOString()}
             projectData={{
-              projectTitle: projectData.projectTitle,
-              clientName: projectData.clientName,
-              status: projectData.status
+              projectTitle: projectData?.projectTitle || projectData?.packageType || '',
+              clientName: projectData?.clientName || '',
+              status: projectData?.status === 'waiting' || projectData?.status === 'feedback' || projectData?.status === 'approved' 
+                ? projectData.status 
+                : 'waiting'
             }}
           />
           
-          <PreviewInstructions status={projectData.status} />
+          <PreviewInstructions 
+            status={projectData?.status === 'waiting' || projectData?.status === 'feedback' || projectData?.status === 'approved' 
+              ? projectData.status 
+              : 'waiting'} 
+          />
           
           <Tabs defaultValue="versions" className="mb-10">
             <TabsList className="w-full mb-6">
@@ -207,11 +215,11 @@ const MusicPreviews: React.FC = () => {
               <PreviewPlayerList 
                 versions={versionsForPlayer.map(preview => ({
                   ...preview,
-                  description: preview.description || `Versão musical para ${projectData.clientName}`
+                  description: preview.description || `Versão musical para ${projectData?.clientName || 'Cliente'}`
                 }))}
                 selectedVersion={selectedPreview}
                 setSelectedVersion={setSelectedPreview}
-                isApproved={projectData.status === 'approved'}
+                isApproved={projectData?.status === 'approved'}
               />
             </TabsContent>
             
@@ -222,13 +230,19 @@ const MusicPreviews: React.FC = () => {
                 setFeedback={setFeedback}
                 handleSubmit={handleSubmitFeedback}
                 handleApprove={handleApprove}
-                status={projectData.status}
-                versionTitle={versionsForPlayer.find(p => p.id === selectedPreview)?.title}
+                status={projectData?.status === 'waiting' || projectData?.status === 'feedback' || projectData?.status === 'approved' 
+                  ? projectData.status 
+                  : 'waiting'}
+                versionTitle={versionsForPlayer.find(p => p.id === selectedPreview)?.name}
               />
             </TabsContent>
           </Tabs>
           
-          <PreviewNextSteps status={projectData.status} />
+          <PreviewNextSteps 
+            status={projectData?.status === 'waiting' || projectData?.status === 'feedback' || projectData?.status === 'approved' 
+              ? projectData.status 
+              : 'waiting'} 
+          />
         </div>
       </main>
       <Footer />
