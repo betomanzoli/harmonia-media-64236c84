@@ -1,4 +1,6 @@
+
 import React, { useState, useEffect } from 'react';
+import { useParams, useNavigate } from 'react-router-dom';
 import AdminLayout from '@/components/admin/layout/AdminLayout';
 import { Card } from '@/components/ui/card';
 import ProjectHeader from '@/components/admin/previews/ProjectHeader';
@@ -6,9 +8,11 @@ import PreviewVersionsList from '@/components/admin/previews/PreviewVersionsList
 import ProjectClientInfo from '@/components/admin/previews/ProjectClientInfo';
 import ProjectActionCard from '@/components/admin/previews/ProjectActionCard';
 import ProjectHistoryList from '@/components/admin/previews/ProjectHistoryList';
+import ProjectFeedbackHistory from '@/components/admin/previews/ProjectFeedbackHistory';
 import { useParams, useNavigate } from 'react-router-dom';
 import { usePreviewProjects, VersionItem } from '@/hooks/admin/usePreviewProjects';
 import { useToast } from '@/hooks/use-toast';
+import { generatePreviewLink } from '@/utils/previewLinkUtils';
 
 const PreviewProjectPage: React.FC = () => {
   const {
@@ -25,6 +29,16 @@ const PreviewProjectPage: React.FC = () => {
   } = useToast();
   const navigate = useNavigate();
   const project = projectId ? getProjectById(projectId) : null;
+  const [encodedLinkUrl, setEncodedLinkUrl] = useState<string>('');
+  
+  useEffect(() => {
+    if (projectId) {
+      // Generate the encoded link
+      const encodedLink = generatePreviewLink(projectId);
+      const fullUrl = `${window.location.origin}/preview/${encodedLink}`;
+      setEncodedLinkUrl(fullUrl);
+    }
+  }, [projectId]);
   
   // Verifica se o projeto existe
   if (!project) {
@@ -161,12 +175,12 @@ const PreviewProjectPage: React.FC = () => {
   const handleViewAsClient = () => {
     // Sinaliza que o acesso é do administrador
     localStorage.setItem('admin_preview_access', 'true');
-    // Navega para a página de prévia do cliente
-    navigate(`/preview/${projectId}`);
+    
+    // Use the encoded preview link instead of direct project ID
+    const encodedLink = generatePreviewLink(projectId);
+    // Navega para a página de prévia do cliente com o link codificado
+    navigate(`/preview/${encodedLink}`);
   };
-
-  // Gera o link de prévia para o cliente
-  const previewUrl = `/preview/${projectId}`;
   
   return <AdminLayout>
       <div className="space-y-6 p-6 min-h-screen bg-slate-50">
@@ -187,12 +201,22 @@ const PreviewProjectPage: React.FC = () => {
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
           <div className="md:col-span-2 space-y-6">
             <PreviewVersionsList versions={project.versionsList || []} projectId={projectId} onDeleteVersion={handleDeleteVersion} />
+            <ProjectFeedbackHistory projectId={projectId} feedbackHistory={project.feedbackHistory || []} />
             <ProjectHistoryList history={project.history || []} />
           </div>
           
           <div className="space-y-6">
             <ProjectClientInfo clientName={project.clientName} clientEmail={project.clientEmail || "email@exemplo.com"} packageType={formatPackageType(project.packageType || "Pacote Básico")} createdAt={project.createdAt || new Date().toLocaleDateString('pt-BR')} expirationDate={project.expirationDate || "N/A"} lastActivityDate={project.lastActivityDate || new Date().toLocaleDateString('pt-BR')} />
-            <ProjectActionCard projectId={projectId} onAddVersion={handleAddVersion} onExtendDeadline={handleExtendDeadline} previewUrl={previewUrl} clientPhone={project.clientPhone || ''} clientEmail={project.clientEmail || ''} projectStatus={project.status} packageType={project.packageType} />
+            <ProjectActionCard 
+              projectId={projectId} 
+              onAddVersion={handleAddVersion} 
+              onExtendDeadline={handleExtendDeadline} 
+              previewUrl={encodedLinkUrl} 
+              clientPhone={project.clientPhone || ''} 
+              clientEmail={project.clientEmail || ''} 
+              projectStatus={project.status} 
+              packageType={project.packageType} 
+            />
           </div>
         </div>
       </div>

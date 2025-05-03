@@ -1,13 +1,15 @@
 
 import React, { useState } from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Copy, CalendarPlus, CheckCircle } from 'lucide-react';
-import { useToast } from '@/hooks/use-toast';
-import AddVersionDialog from './AddVersionDialog';
-import { VersionItem } from '@/hooks/admin/usePreviewProjects';
-import ProjectActionButton from './components/ProjectActionButton';
+import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Clipboard, Send, PhoneCall, Calendar, Plus } from 'lucide-react';
+import { useToast } from "@/hooks/use-toast";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import AddVersionForm from './AddVersionForm';
 import ContactClientActions from './components/ContactClientActions';
 import DeadlineExtensionDialog from './components/DeadlineExtensionDialog';
+import { VersionItem } from '@/hooks/admin/usePreviewProjects';
+import { generatePreviewLink } from '@/utils/previewLinkUtils';
 
 interface ProjectActionCardProps {
   projectId: string;
@@ -25,121 +27,91 @@ const ProjectActionCard: React.FC<ProjectActionCardProps> = ({
   onAddVersion,
   onExtendDeadline,
   previewUrl,
-  clientPhone = '',
-  clientEmail = '',
-  projectStatus = 'waiting',
-  packageType = ''
+  clientPhone,
+  clientEmail,
+  projectStatus,
+  packageType
 }) => {
+  const [showAddVersion, setShowAddVersion] = useState(false);
+  const [showContactActions, setShowContactActions] = useState(false);
+  const [showDeadlineDialog, setShowDeadlineDialog] = useState(false);
   const { toast } = useToast();
-  const [isVersionDialogOpen, setIsVersionDialogOpen] = useState(false);
-  const [isFinalVersionDialogOpen, setIsFinalVersionDialogOpen] = useState(false);
-  const [isDeadlineConfirmOpen, setIsDeadlineConfirmOpen] = useState(false);
+
+  // Generate encoded preview link on component mount
+  const encodedPreviewLink = generatePreviewLink(projectId);
+  const fullEncodedUrl = `${window.location.origin}/preview/${encodedPreviewLink}`;
   
   const handleCopyLink = () => {
-    const fullUrl = `${window.location.origin}/preview/${projectId}`;
-    navigator.clipboard.writeText(fullUrl)
-      .then(() => {
-        toast({
-          title: "Link copiado!",
-          description: "O link de prévia foi copiado para a área de transferência."
-        });
-      })
-      .catch(err => {
-        console.error('Erro ao copiar link:', err);
-        toast({
-          title: "Erro",
-          description: "Não foi possível copiar o link.",
-          variant: "destructive"
-        });
-      });
+    // Use the encoded link instead of direct link
+    navigator.clipboard.writeText(fullEncodedUrl);
+    toast({
+      title: "Link copiado",
+      description: "O link de prévia foi copiado para a área de transferência."
+    });
   };
 
-  const handleAddFinalVersion = (version: VersionItem) => {
-    // Adicione 'final: true' à versão
-    const finalVersion = {
-      ...version,
-      final: true
-    };
-    
-    onAddVersion(finalVersion);
-    setIsFinalVersionDialogOpen(false);
+  const handleAddVersion = (version: VersionItem) => {
+    onAddVersion(version);
+    setShowAddVersion(false);
   };
 
   return (
     <Card>
       <CardHeader>
-        <CardTitle className="text-lg">Ações</CardTitle>
+        <CardTitle className="text-lg">Ações do Projeto</CardTitle>
       </CardHeader>
       <CardContent className="space-y-4">
-        <ProjectActionButton 
-          icon={Copy}
-          onClick={() => setIsVersionDialogOpen(true)}
-          variant="default"
-          className="w-full"
-        >
-          Adicionar Nova Versão
-        </ProjectActionButton>
-        
-        {projectStatus === 'approved' && (
-          <ProjectActionButton 
-            icon={CheckCircle}
-            onClick={() => setIsFinalVersionDialogOpen(true)}
-            variant="default"
-            className="w-full bg-green-600 hover:bg-green-700"
-          >
-            Adicionar Versão Final
-          </ProjectActionButton>
-        )}
-        
-        <ProjectActionButton 
-          icon={CalendarPlus}
-          onClick={() => setIsDeadlineConfirmOpen(true)}
-          variant="outline"
-          className="w-full"
-        >
-          Estender Prazo (+7 dias)
-        </ProjectActionButton>
-        
-        <ProjectActionButton 
-          icon={Copy}
-          onClick={handleCopyLink}
-          variant="outline"
-          className="w-full"
-        >
-          Copiar Link de Prévia
-        </ProjectActionButton>
-        
-        <ContactClientActions
+        <div className="grid grid-cols-1 gap-3">
+          <Button onClick={handleCopyLink} className="w-full">
+            <Clipboard className="h-4 w-4 mr-2" />
+            Copiar link de prévia
+          </Button>
+          
+          <Button onClick={() => setShowContactActions(true)} variant="outline" className="w-full">
+            <Send className="h-4 w-4 mr-2" />
+            Enviar link ao cliente
+          </Button>
+          
+          <Button onClick={() => window.open(`tel:${clientPhone || ''}`)} variant="outline" className="w-full" disabled={!clientPhone}>
+            <PhoneCall className="h-4 w-4 mr-2" />
+            Ligar para cliente
+          </Button>
+          
+          <Button onClick={() => setShowDeadlineDialog(true)} variant="outline" className="w-full">
+            <Calendar className="h-4 w-4 mr-2" />
+            Estender prazo
+          </Button>
+          
+          <Button onClick={() => setShowAddVersion(true)} variant="secondary" className="w-full">
+            <Plus className="h-4 w-4 mr-2" />
+            Adicionar versão
+          </Button>
+        </div>
+
+        <Dialog open={showAddVersion} onOpenChange={setShowAddVersion}>
+          <DialogContent className="max-w-md">
+            <DialogHeader>
+              <DialogTitle>Adicionar Nova Versão</DialogTitle>
+            </DialogHeader>
+            <AddVersionForm onAddVersion={handleAddVersion} packageType={packageType} />
+          </DialogContent>
+        </Dialog>
+
+        <ContactClientActions 
+          isOpen={showContactActions} 
+          onOpenChange={setShowContactActions}
+          clientEmail={clientEmail || ''} 
+          previewUrl={fullEncodedUrl} 
+          projectStatus={projectStatus || 'waiting'} 
           projectId={projectId}
-          clientPhone={clientPhone}
-          clientEmail={clientEmail}
+        />
+
+        <DeadlineExtensionDialog
+          isOpen={showDeadlineDialog}
+          onOpenChange={setShowDeadlineDialog}
+          onConfirm={onExtendDeadline}
         />
       </CardContent>
-      
-      {/* Version Dialogs */}
-      <AddVersionDialog 
-        projectId={projectId}
-        isOpen={isVersionDialogOpen}
-        onClose={() => setIsVersionDialogOpen(false)}
-        onSubmit={onAddVersion}
-        onAddVersion={onAddVersion}
-      />
-
-      <AddVersionDialog 
-        projectId={projectId}
-        isOpen={isFinalVersionDialogOpen}
-        onClose={() => setIsFinalVersionDialogOpen(false)}
-        onSubmit={handleAddFinalVersion}
-        onAddVersion={onAddVersion}
-        isFinalVersion={true}
-      />
-      
-      {/* Deadline Extension Dialog */}
-      <DeadlineExtensionDialog
-        isOpen={isDeadlineConfirmOpen}
-        onClose={() => setIsDeadlineConfirmOpen(false)}
-        onConfirm={onExtendDeadline}
-      />
     </Card>
   );
 };

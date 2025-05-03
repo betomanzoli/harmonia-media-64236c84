@@ -8,7 +8,6 @@ import PreviewError from '@/components/previews/PreviewError';
 import PreviewContent from '@/components/previews/PreviewContent';
 import { usePreviewData } from '@/hooks/usePreviewData';
 import { notificationService } from '@/services/notificationService';
-import { getProjectIdFromPreviewLink } from '@/utils/previewLinkUtils';
 
 const MusicPreviews: React.FC = () => {
   const { previewId } = useParams<{ previewId: string }>();
@@ -25,10 +24,10 @@ const MusicPreviews: React.FC = () => {
     console.log("Actual Project ID:", actualProjectId);
     
     if (!isLoading && !projectData && actualProjectId) {
-      console.log("Preview data não encontrado");
+      console.log("Preview data not found");
       toast({
-        title: "Preview não encontrado",
-        description: "O código de preview fornecido não é válido ou expirou.",
+        title: "Preview not found",
+        description: "The provided preview code is not valid or has expired.",
         variant: "destructive"
       });
     }
@@ -37,22 +36,22 @@ const MusicPreviews: React.FC = () => {
   const handleSubmitFeedback = () => {
     if (!selectedPreview) {
       toast({
-        title: "Selecione uma versão",
-        description: "Por favor, selecione uma das versões antes de enviar.",
+        title: "Select a version",
+        description: "Please select one of the versions before submitting.",
         variant: "destructive"
       });
       return;
     }
     
     toast({
-      title: "Feedback enviado!",
-      description: "Obrigado pelo seu feedback. Nossa equipe já está trabalhando nas modificações.",
+      title: "Feedback sent!",
+      description: "Thank you for your feedback. Our team is working on the modifications.",
     });
     
     // Notify about feedback
     notificationService.notify('feedback_received', {
       projectId: actualProjectId || previewId,
-      clientName: projectData?.clientName || 'Cliente',
+      clientName: projectData?.clientName || 'Client',
       message: feedback
     });
     
@@ -65,22 +64,22 @@ const MusicPreviews: React.FC = () => {
   const handleApprove = () => {
     if (!selectedPreview) {
       toast({
-        title: "Selecione uma versão",
-        description: "Por favor, selecione uma das versões antes de aprovar.",
+        title: "Select a version",
+        description: "Please select one of the versions before approving.",
         variant: "destructive"
       });
       return;
     }
     
     toast({
-      title: "Música aprovada!",
-      description: "Estamos felizes que você gostou! Vamos finalizar sua música e entregar em breve.",
+      title: "Music approved!",
+      description: "We're happy you liked it! We'll finalize your music and deliver it soon.",
     });
     
     // Notify about approval
     notificationService.notify('preview_approved', {
       projectId: actualProjectId || previewId,
-      clientName: projectData?.clientName || 'Cliente',
+      clientName: projectData?.clientName || 'Client',
       versionId: selectedPreview
     });
     
@@ -104,8 +103,8 @@ const MusicPreviews: React.FC = () => {
     return (
       <MusicPreviewContainer>
         <PreviewError 
-          title="Preview não encontrado"
-          description="O código de preview fornecido não é válido ou expirou." 
+          title="Preview not found"
+          description="The provided preview code is not valid or has expired." 
         />
       </MusicPreviewContainer>
     );

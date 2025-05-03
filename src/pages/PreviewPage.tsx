@@ -17,7 +17,7 @@ const PreviewPage: React.FC = () => {
   useEffect(() => {
     // Log access for analytics
     if (projectId) {
-      console.log(`Acesso à prévia: ${projectId}, Data: ${new Date().toISOString()}`);
+      console.log(`Preview access: ${projectId}, Date: ${new Date().toISOString()}`);
       window.scrollTo(0, 0);
       
       // First try to decode the ID in case it's an encoded preview link
@@ -25,9 +25,10 @@ const PreviewPage: React.FC = () => {
       
       if (decodedId) {
         // If this is an encoded link, we consider it pre-authorized
-        console.log("Link codificado detectado, ID do projeto:", decodedId);
+        console.log("Encoded link detected, Project ID:", decodedId);
         setActualProjectId(decodedId);
         setIsAuthorized(true);
+        setIsError(false);
         return;
       }
       
@@ -40,7 +41,7 @@ const PreviewPage: React.FC = () => {
           const projectExists = projects.some((p: any) => p.id === projectId);
           
           if (projectExists) {
-            console.log("ID de projeto direto encontrado:", projectId);
+            console.log("Direct project ID found:", projectId);
             setActualProjectId(projectId);
             
             // Check if admin access or previously authorized
@@ -49,20 +50,22 @@ const PreviewPage: React.FC = () => {
             
             if (isAdmin || isPreviouslyAuthorized) {
               setIsAuthorized(true);
+              setIsError(false);
             }
             return;
           }
         }
         
         // No valid project mapping found
+        console.log("Invalid project ID:", projectId);
         setIsError(true);
         toast({
-          title: "Link inválido",
-          description: "O link de prévia que você está tentando acessar não é válido.",
+          title: "Invalid link",
+          description: "The preview link you are trying to access is not valid.",
           variant: "destructive"
         });
       } catch (error) {
-        console.error("Erro ao verificar projeto:", error);
+        console.error("Error verifying project:", error);
         setIsError(true);
       }
     }
@@ -95,7 +98,7 @@ const PreviewPage: React.FC = () => {
           email.toLowerCase().includes('demo')
         );
       } catch (error) {
-        console.error("Erro na verificação de acesso:", error);
+        console.error("Error in access verification:", error);
         return false;
       }
     };
@@ -105,14 +108,14 @@ const PreviewPage: React.FC = () => {
       setIsAuthorized(true);
       setIsError(false);
       toast({
-        title: "Acesso autorizado",
-        description: "Bem-vindo à página de prévia do seu projeto.",
+        title: "Access authorized",
+        description: "Welcome to the preview page of your project.",
       });
     } else {
       setIsError(true);
       toast({
-        title: "Falha na autenticação",
-        description: "As credenciais fornecidas não correspondem aos registros deste projeto. Por favor, verifique o código e o email.",
+        title: "Authentication failed",
+        description: "The credentials provided do not match this project's records. Please verify the code and email.",
         variant: "destructive"
       });
     }
@@ -122,8 +125,8 @@ const PreviewPage: React.FC = () => {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gray-100">
         <div className="bg-white p-6 rounded-lg shadow-sm text-center">
-          <h2 className="text-2xl font-bold text-black mb-4">ID do projeto não encontrado</h2>
-          <p className="text-gray-600">O link que você acessou não é válido.</p>
+          <h2 className="text-2xl font-bold text-black mb-4">Project ID not found</h2>
+          <p className="text-gray-600">The link you accessed is not valid.</p>
         </div>
       </div>
     );
@@ -133,8 +136,8 @@ const PreviewPage: React.FC = () => {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gray-100">
         <div className="bg-white p-6 rounded-lg shadow-sm text-center">
-          <h2 className="text-2xl font-bold text-black mb-4">Link de prévia inválido</h2>
-          <p className="text-gray-600">O link que você acessou não existe ou já expirou.</p>
+          <h2 className="text-2xl font-bold text-black mb-4">Invalid preview link</h2>
+          <p className="text-gray-600">The link you accessed does not exist or has expired.</p>
         </div>
       </div>
     );

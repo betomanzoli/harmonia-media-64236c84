@@ -18,27 +18,29 @@ export const usePreviewData = (previewId: string | undefined) => {
       const projectId = decodedId || previewId;
       
       setActualProjectId(projectId);
-      console.log(`Carregando dados da prévia: ${projectId}`);
+      console.log(`Loading preview data for project ID: ${projectId}`);
       
       // Load project data
       setIsLoading(true);
       
       try {
-        // Try to get from localStorage
+        // Get from localStorage
         const storedProjects = localStorage.getItem('harmonIA_preview_projects');
         if (storedProjects) {
           const projects = JSON.parse(storedProjects);
           const project = projects.find((p: ProjectItem) => p.id === projectId);
           
           if (project) {
-            console.log('Projeto encontrado:', project);
+            console.log('Project found:', project);
             setProjectData(project);
           } else {
-            console.log(`Projeto não encontrado: ${projectId}`);
+            console.log(`Project not found for ID: ${projectId}`);
           }
+        } else {
+          console.log('No projects found in localStorage');
         }
       } catch (error) {
-        console.error('Erro ao carregar dados do projeto:', error);
+        console.error('Error loading project data:', error);
       } finally {
         setIsLoading(false);
       }
@@ -47,23 +49,13 @@ export const usePreviewData = (previewId: string | undefined) => {
     }
   }, [previewId]);
   
-  useEffect(() => {
-    if (!isLoading && !projectData && actualProjectId) {
-      toast({
-        title: "Prévia não encontrada",
-        description: "O código de prévia fornecido não é válido ou expirou.",
-        variant: "destructive"
-      });
-    }
-  }, [actualProjectId, projectData, isLoading, toast]);
-
-  // Função para atualizar o status do projeto e adicionar informação ao histórico
+  // Function to update project status and add information to history
   const updateProjectStatus = (newStatus: 'waiting' | 'feedback' | 'approved', comments: string = '') => {
     try {
       if (!actualProjectId || !projectData) return false;
 
-      console.log(`Atualizando status do projeto ${actualProjectId} para ${newStatus}`);
-      console.log(`Feedback do cliente: ${comments}`);
+      console.log(`Updating status of project ${actualProjectId} to ${newStatus}`);
+      console.log(`Client feedback: ${comments}`);
       
       // Get all projects
       const storedProjects = localStorage.getItem('harmonIA_preview_projects');
@@ -110,7 +102,7 @@ export const usePreviewData = (previewId: string | undefined) => {
 
       return true;
     } catch (error) {
-      console.error('Erro ao atualizar status:', error);
+      console.error('Error updating status:', error);
       return false;
     }
   };
