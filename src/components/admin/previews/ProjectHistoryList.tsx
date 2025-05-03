@@ -9,6 +9,7 @@ interface HistoryEntry {
     message?: string;
     status?: string;
     version?: string;
+    [key: string]: any;
   };
 }
 
@@ -23,7 +24,7 @@ const ProjectHistoryList: React.FC<ProjectHistoryListProps> = ({ history = [] })
         <CardTitle className="text-lg">Histórico do Projeto</CardTitle>
       </CardHeader>
       <CardContent className="p-0">
-        {history.length > 0 ? (
+        {history && history.length > 0 ? (
           <ul className="divide-y">
             {history.map((entry, index) => (
               <li key={index} className="p-4">

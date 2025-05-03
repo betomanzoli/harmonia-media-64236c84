@@ -35,12 +35,15 @@ export const usePreviewData = (previewId: string | undefined) => {
             setProjectData(project);
           } else {
             console.log(`Project not found for ID: ${projectId}`);
+            setProjectData(null); // Explicitly set to null if not found
           }
         } else {
           console.log('No projects found in localStorage');
+          setProjectData(null);
         }
       } catch (error) {
         console.error('Error loading project data:', error);
+        setProjectData(null);
       } finally {
         setIsLoading(false);
       }
@@ -87,16 +90,24 @@ export const usePreviewData = (previewId: string | undefined) => {
           // Update lastActivityDate
           projects[projectIndex].lastActivityDate = new Date().toISOString();
           
+          // Add history entry
+          if (!projects[projectIndex].history) {
+            projects[projectIndex].history = [];
+          }
+          
+          projects[projectIndex].history.push({
+            action: `Status changed to ${newStatus}`,
+            timestamp: new Date().toLocaleString('pt-BR'),
+            data: {
+              message: comments || `Client changed project status to ${newStatus}`
+            }
+          });
+          
           // Save back to localStorage
           localStorage.setItem('harmonIA_preview_projects', JSON.stringify(projects));
           
           // Update local state
-          setProjectData({
-            ...projectData,
-            status: newStatus,
-            feedback: comments || projectData.feedback,
-            feedbackHistory: projects[projectIndex].feedbackHistory
-          });
+          setProjectData(projects[projectIndex]);
         }
       }
 

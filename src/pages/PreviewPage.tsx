@@ -22,24 +22,28 @@ const PreviewPage: React.FC = () => {
       
       // First try to decode the ID in case it's an encoded preview link
       const decodedId = getProjectIdFromPreviewLink(projectId);
+      console.log("Decoded ID:", decodedId);
       
-      if (decodedId) {
-        // If this is an encoded link, we consider it pre-authorized
-        console.log("Encoded link detected, Project ID:", decodedId);
-        setActualProjectId(decodedId);
-        setIsAuthorized(true);
-        setIsError(false);
-        return;
-      }
-      
-      // For backward compatibility, also support direct project IDs
-      // Check if the project exists in localStorage
+      // Try to find project either by decoded ID or direct ID
       try {
         const storedProjects = localStorage.getItem('harmonIA_preview_projects');
         if (storedProjects) {
           const projects = JSON.parse(storedProjects);
-          const projectExists = projects.some((p: any) => p.id === projectId);
           
+          // First check if it's an encoded link
+          if (decodedId) {
+            const projectExists = projects.some((p: any) => p.id === decodedId);
+            if (projectExists) {
+              console.log("Encoded link project found:", decodedId);
+              setActualProjectId(decodedId);
+              setIsAuthorized(true);
+              setIsError(false);
+              return;
+            }
+          }
+          
+          // For backward compatibility, also check direct project ID
+          const projectExists = projects.some((p: any) => p.id === projectId);
           if (projectExists) {
             console.log("Direct project ID found:", projectId);
             setActualProjectId(projectId);
@@ -54,16 +58,15 @@ const PreviewPage: React.FC = () => {
             }
             return;
           }
+          
+          // No valid project found
+          console.log("No valid project found for:", projectId);
+          setIsError(true);
+        } else {
+          // No projects in localStorage
+          console.log("No projects in localStorage");
+          setIsError(true);
         }
-        
-        // No valid project mapping found
-        console.log("Invalid project ID:", projectId);
-        setIsError(true);
-        toast({
-          title: "Invalid link",
-          description: "The preview link you are trying to access is not valid.",
-          variant: "destructive"
-        });
       } catch (error) {
         console.error("Error verifying project:", error);
         setIsError(true);
@@ -82,10 +85,19 @@ const PreviewPage: React.FC = () => {
         const storedProjects = localStorage.getItem('harmonIA_preview_projects');
         if (storedProjects) {
           const projects = JSON.parse(storedProjects);
-          const project = projects.find((p: any) => p.id === projectId);
           
+          // First check if we have a decoded ID
+          if (actualProjectId) {
+            const project = projects.find((p: any) => p.id === actualProjectId);
+            if (project) {
+              return (email.toLowerCase() === project.clientEmail?.toLowerCase()) || 
+                    (code === actualProjectId);
+            }
+          }
+          
+          // Then check for direct project ID
+          const project = projects.find((p: any) => p.id === projectId);
           if (project) {
-            // Match by email or code
             return (email.toLowerCase() === project.clientEmail?.toLowerCase()) || 
                    (code === projectId);
           }
@@ -112,7 +124,6 @@ const PreviewPage: React.FC = () => {
         description: "Welcome to the preview page of your project.",
       });
     } else {
-      setIsError(true);
       toast({
         title: "Authentication failed",
         description: "The credentials provided do not match this project's records. Please verify the code and email.",
@@ -143,7 +154,7 @@ const PreviewPage: React.FC = () => {
     );
   }
 
-  // Show authentication form if not authorized yet and not using an encoded link
+  // Show authentication form if not authorized yet
   if (!isAuthorized) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gray-100">

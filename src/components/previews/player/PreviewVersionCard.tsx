@@ -1,24 +1,25 @@
 
-import React, { useState } from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import React from 'react';
+import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Play, VolumeX, Volume2, Star } from 'lucide-react';
+import { Check, Play } from 'lucide-react';
+
+interface MusicPreview {
+  id: string;
+  title: string;
+  description: string;
+  audioUrl?: string;
+  url?: string;
+  recommended?: boolean;
+}
 
 interface PreviewVersionCardProps {
-  version: {
-    id: string;
-    title: string;
-    description: string;
-    audioUrl?: string;
-    url?: string;
-    fileId?: string;
-    recommended?: boolean;
-  };
+  version: MusicPreview;
   isSelected: boolean;
   isApproved: boolean;
   feedback?: string;
+  onPlay?: (version: MusicPreview) => void;
   onSelect: (id: string) => void;
-  onPlay: (version: any) => void;
   onFeedbackChange?: (id: string, feedback: string) => void;
 }
 
@@ -27,87 +28,74 @@ const PreviewVersionCard: React.FC<PreviewVersionCardProps> = ({
   isSelected,
   isApproved,
   feedback,
-  onSelect,
   onPlay,
+  onSelect,
   onFeedbackChange
 }) => {
-  const [isPlaying, setIsPlaying] = useState(false);
-  const [isMuted, setIsMuted] = useState(false);
-
-  const handlePlay = (e: React.MouseEvent) => {
-    e.stopPropagation();
-    setIsPlaying(true);
-    onPlay(version);
-    setTimeout(() => setIsPlaying(false), 1000);
-  };
-
-  const toggleMute = (e: React.MouseEvent) => {
-    e.stopPropagation();
-    setIsMuted(!isMuted);
-  };
-
-  const handleSelect = () => {
-    if (!isApproved) {
-      onSelect(version.id);
-    }
-  };
-
   return (
     <Card 
-      className={`
-        cursor-pointer transition-all hover:border-harmonia-green/50
-        ${isSelected ? 'border-2 border-harmonia-green shadow-md' : ''}
-        ${isApproved && isSelected ? 'border-green-500' : ''}
-      `}
-      onClick={handleSelect}
+      className={`p-6 transition-all ${
+        isSelected ? 'border-green-500 ring-1 ring-green-500' : 'hover:border-green-400'
+      }`}
     >
-      <CardHeader className="flex flex-row items-start justify-between pb-2">
-        <div className="flex items-center">
-          <CardTitle className="text-lg text-black">{version.title}</CardTitle>
+      <div className="flex justify-between items-start mb-4 flex-wrap">
+        <div>
+          <h3 className="font-bold text-lg">{version.title}</h3>
           {version.recommended && (
-            <span className="ml-2 text-yellow-500 flex items-center text-sm font-medium">
-              <Star className="h-4 w-4 fill-yellow-500" />
-              <span className="ml-1">Recomendada</span>
+            <span className="inline-block px-2 py-1 bg-green-100 text-green-700 text-xs rounded-full mt-1">
+              Recomendada
             </span>
           )}
         </div>
-      </CardHeader>
-      <CardContent>
-        <p className="text-sm text-black mb-4">{version.description}</p>
-        
-        <div className="flex justify-between items-center">
-          <div className="flex space-x-2">
+        <div className="flex gap-2 flex-wrap mt-2 sm:mt-0">
+          <Button 
+            variant="outline" 
+            size="sm"
+            className="flex items-center"
+            onClick={() => onPlay && onPlay(version)}
+          >
+            <Play className="w-4 h-4 mr-1" /> Ouvir
+          </Button>
+          
+          {isSelected ? (
             <Button 
               variant="outline" 
               size="sm"
-              onClick={handlePlay}
-              className="flex items-center"
+              className="bg-green-50 text-green-700 border-green-300"
+              disabled
             >
-              <Play className="h-4 w-4 mr-1" />
-              Ouvir
-            </Button>
-            
-            <Button 
-              variant="ghost" 
-              size="icon"
-              onClick={toggleMute}
-              className="h-8 w-8"
-            >
-              {isMuted ? (
-                <VolumeX className="h-4 w-4" />
-              ) : (
-                <Volume2 className="h-4 w-4" />
-              )}
-            </Button>
-          </div>
-          
-          {isSelected && (
-            <span className="text-sm font-medium text-harmonia-green">
+              <Check className="w-4 h-4 mr-2" />
               Selecionada
-            </span>
+            </Button>
+          ) : (
+            <Button 
+              variant="outline" 
+              size="sm"
+              className="hover:bg-green-50 hover:text-green-700"
+              onClick={() => onSelect(version.id)}
+            >
+              Selecionar
+            </Button>
           )}
         </div>
-      </CardContent>
+      </div>
+      
+      <p className="text-gray-600 mb-4">{version.description}</p>
+      
+      {onFeedbackChange && (
+        <div className="mt-4">
+          <label className="block text-sm font-medium text-gray-700 mb-1">
+            Feedback específico para esta versão:
+          </label>
+          <textarea
+            className="w-full p-2 border rounded-md"
+            rows={2}
+            value={feedback}
+            onChange={(e) => onFeedbackChange(version.id, e.target.value)}
+            placeholder="Escreva seu feedback específico para esta versão..."
+          />
+        </div>
+      )}
     </Card>
   );
 };
