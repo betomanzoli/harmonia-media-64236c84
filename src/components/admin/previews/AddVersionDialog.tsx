@@ -1,80 +1,44 @@
 
-import React, { useState } from 'react';
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { Button } from "@/components/ui/button";
-import { Plus } from "lucide-react";
+import React from 'react';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import AddVersionForm from './AddVersionForm';
 import { VersionItem } from '@/hooks/admin/usePreviewProjects';
 
 interface AddVersionDialogProps {
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
   projectId: string;
-  onAddVersion: (newVersion: VersionItem) => void;
-  isOpen?: boolean;
-  onClose?: () => void;
-  onSubmit?: (version: VersionItem) => void;
-  isFinalVersion?: boolean;
-  packageType?: string;
+  onSubmit: (version: VersionItem) => void;
+  projectStatus?: 'waiting' | 'feedback' | 'approved';
 }
 
 const AddVersionDialog: React.FC<AddVersionDialogProps> = ({
+  open,
+  onOpenChange,
   projectId,
-  onAddVersion,
-  isOpen,
-  onClose,
   onSubmit,
-  isFinalVersion = false,
-  packageType
+  projectStatus = 'waiting'
 }) => {
-  // Use local state only if isOpen is not provided from props
-  const [localOpen, setLocalOpen] = useState(false);
-
-  // Determine if dialog is open based on props or local state
-  const isDialogOpen = isOpen !== undefined ? isOpen : localOpen;
+  console.log(`AddVersionDialog - Project Status: ${projectStatus}`);
   
-  const handleOpenChange = (open: boolean) => {
-    if (isOpen !== undefined && onClose) {
-      // If controlled from parent
-      if (!open) onClose();
-    } else {
-      // If controlled locally
-      setLocalOpen(open);
-    }
+  const handleVersionSubmit = (version: VersionItem) => {
+    onSubmit(version);
+    onOpenChange(false);
   };
   
-  const handleAddVersion = (version: VersionItem) => {
-    if (onSubmit) {
-      onSubmit(version);
-    } else if (onAddVersion) {
-      onAddVersion(version);
-    }
+  const dialogTitle = projectStatus === 'approved' 
+    ? "Adicionar Versão Final" 
+    : "Adicionar Nova Versão";
     
-    if (isOpen !== undefined && onClose) {
-      onClose();
-    } else {
-      setLocalOpen(false);
-    }
-  };
-  
   return (
-    <Dialog open={isDialogOpen} onOpenChange={handleOpenChange}>
-      {/* Only render the trigger button if not externally controlled */}
-      {isOpen === undefined && (
-        <Button variant="outline" onClick={() => setLocalOpen(true)}>
-          <Plus className="w-4 h-4 mr-2" />
-          Adicionar Nova Versão
-        </Button>
-      )}
-      
-      <DialogContent className="sm:max-w-[550px]">
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent className="sm:max-w-[600px]">
         <DialogHeader>
-          <DialogTitle>{isFinalVersion ? "Adicionar Versão Final" : "Adicionar Nova Versão"}</DialogTitle>
+          <DialogTitle>{dialogTitle}</DialogTitle>
         </DialogHeader>
         <AddVersionForm 
-          projectId={projectId} 
-          onAddVersion={handleAddVersion} 
-          onCancel={() => handleOpenChange(false)} 
-          isFinalVersion={isFinalVersion} 
-          packageType={packageType}
+          onSubmit={handleVersionSubmit} 
+          projectStatus={projectStatus}
         />
       </DialogContent>
     </Dialog>

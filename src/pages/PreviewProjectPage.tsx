@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import AdminLayout from '@/components/admin/layout/AdminLayout';
@@ -31,8 +30,10 @@ const PreviewProjectPage: React.FC = () => {
 
   useEffect(() => {
     if (projectId) {
-      // Generate and store encoded URL for this project
+      // Generate deterministic encoded URL for this project
       const encoded = generatePreviewLink(projectId);
+      console.log(`Generated encoded link for ${projectId}: ${encoded}`);
+      
       const fullUrl = `${window.location.origin}/preview/${encoded}`;
       setEncodedUrl(fullUrl);
       
@@ -101,7 +102,7 @@ const PreviewProjectPage: React.FC = () => {
     );
   }
 
-  // Only use the encoded URL
+  // Always use the encoded URL only
   const previewUrl = encodedUrl || '';
 
   return (

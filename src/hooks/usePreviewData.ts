@@ -2,7 +2,7 @@
 import { useState, useEffect } from 'react';
 import { useToast } from '@/hooks/use-toast';
 import { usePreviewProjects, ProjectItem } from '@/hooks/admin/usePreviewProjects';
-import { getProjectIdFromPreviewLink } from '@/utils/previewLinkUtils';
+import { getProjectIdFromPreviewLink, isValidEncodedPreviewLink } from '@/utils/previewLinkUtils';
 
 export const usePreviewData = (previewId: string | undefined) => {
   const [actualProjectId, setActualProjectId] = useState<string | null>(null);
@@ -12,16 +12,40 @@ export const usePreviewData = (previewId: string | undefined) => {
   
   useEffect(() => {
     if (previewId) {
-      // Log para depuração
-      console.log(`usePreviewData chamado com previewId: ${previewId}`);
+      // Log for debugging
+      console.log(`usePreviewData called with previewId: ${previewId}`);
       
-      // Try to decode the preview ID if it's in the encoded format
-      // If not, treat it as a direct project ID (for backward compatibility)
-      const decodedId = getProjectIdFromPreviewLink(previewId);
-      const projectId = decodedId || previewId;
+      // Check if this is an encoded link or direct ID
+      const isEncodedLink = isValidEncodedPreviewLink(previewId);
+      console.log("Is encoded preview link:", isEncodedLink);
+      
+      // For encoded links, decode the project ID
+      // For direct IDs, only allow admin access
+      const isAdmin = localStorage.getItem('admin_preview_access') === 'true';
+      let projectId: string | null = null;
+      
+      if (isEncodedLink) {
+        // Process encoded link
+        const decodedId = getProjectIdFromPreviewLink(previewId);
+        console.log(`Decoded project ID: ${decodedId}`);
+        projectId = decodedId;
+      } else if (isAdmin) {
+        // Allow direct access for admins only
+        console.log(`Admin direct access for ID: ${previewId}`);
+        projectId = previewId;
+      } else {
+        // Invalid link for non-admin users
+        console.log("Invalid direct link access for non-admin user");
+        projectId = null;
+      }
       
       setActualProjectId(projectId);
-      console.log(`ID do projeto decodificado/direto: ${projectId}`);
+      
+      if (!projectId) {
+        console.log("No valid project ID, skipping data load");
+        setIsLoading(false);
+        return;
+      }
       
       // Load project data
       setIsLoading(true);
@@ -29,25 +53,25 @@ export const usePreviewData = (previewId: string | undefined) => {
       try {
         // Get from localStorage
         const storedProjects = localStorage.getItem('harmonIA_preview_projects');
-        console.log('Projetos em localStorage:', storedProjects);
+        console.log('Projects in localStorage:', storedProjects ? 'Found' : 'Not found');
         
         if (storedProjects) {
           const projects = JSON.parse(storedProjects);
           const project = projects.find((p: ProjectItem) => p.id === projectId);
           
           if (project) {
-            console.log('Projeto encontrado:', project);
+            console.log('Project found:', project);
             setProjectData(project);
           } else {
-            console.log(`Projeto não encontrado para ID: ${projectId}`);
-            setProjectData(null); // Explicitly set to null if not found
+            console.log(`Project not found for ID: ${projectId}`);
+            setProjectData(null);
           }
         } else {
-          console.log('Nenhum projeto encontrado no localStorage');
+          console.log('No projects found in localStorage');
           setProjectData(null);
         }
       } catch (error) {
-        console.error('Erro ao carregar dados do projeto:', error);
+        console.error('Error loading project data:', error);
         setProjectData(null);
       } finally {
         setIsLoading(false);
@@ -62,8 +86,8 @@ export const usePreviewData = (previewId: string | undefined) => {
     try {
       if (!actualProjectId || !projectData) return false;
 
-      console.log(`Atualizando status do projeto ${actualProjectId} para ${newStatus}`);
-      console.log(`Feedback do cliente: ${comments}`);
+      console.log(`Updating project ${actualProjectId} status to ${newStatus}`);
+      console.log(`Client feedback: ${comments}`);
       
       // Get all projects
       const storedProjects = localStorage.getItem('harmonIA_preview_projects');
@@ -114,13 +138,13 @@ export const usePreviewData = (previewId: string | undefined) => {
           // Update local state
           setProjectData(projects[projectIndex]);
           
-          console.log('Projeto atualizado com sucesso:', projects[projectIndex]);
+          console.log('Project successfully updated:', projects[projectIndex]);
         }
       }
 
       return true;
     } catch (error) {
-      console.error('Erro ao atualizar status:', error);
+      console.error('Error updating status:', error);
       return false;
     }
   };

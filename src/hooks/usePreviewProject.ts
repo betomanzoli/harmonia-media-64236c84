@@ -1,7 +1,7 @@
 
 import { useState, useEffect } from 'react';
 import { useToast } from '@/hooks/use-toast';
-import { getProjectIdFromPreviewLink } from '@/utils/previewLinkUtils';
+import { getProjectIdFromPreviewLink, isValidEncodedPreviewLink } from '@/utils/previewLinkUtils';
 
 interface MusicPreview {
   id: string;
@@ -35,30 +35,55 @@ export const usePreviewProject = (projectId: string | undefined) => {
         return;
       }
       
-      console.log(`usePreviewProject: Carregando dados para projectId=${projectId}`);
+      console.log(`usePreviewProject: Loading data for projectId=${projectId}`);
       setIsLoading(true);
 
       try {
-        // Primeiro tenta decodificar o ID em caso de ser um link codificado
-        const decodedId = getProjectIdFromPreviewLink(projectId);
-        const actualId = decodedId || projectId;
-        console.log(`usePreviewProject: ID decodificado=${decodedId}, ID final=${actualId}`);
-        setActualProjectId(actualId);
+        // Check if this is an encoded link or direct ID
+        const isEncodedLink = isValidEncodedPreviewLink(projectId);
+        console.log("Is encoded preview link:", isEncodedLink);
+        
+        // Only allow encoded links or admin access for direct links
+        const isAdmin = localStorage.getItem('admin_preview_access') === 'true';
+        let decodedId: string | null = null;
+        
+        if (isEncodedLink) {
+          // Process encoded link
+          decodedId = getProjectIdFromPreviewLink(projectId);
+          console.log(`usePreviewProject: Decoded ID=${decodedId}`);
+        } else if (isAdmin) {
+          // Allow direct access for admins
+          decodedId = projectId;
+          console.log(`usePreviewProject: Admin direct access for ID=${projectId}`);
+        } else {
+          // Invalid link for non-admin users
+          console.log("usePreviewProject: Invalid direct link access for non-admin user");
+          decodedId = null;
+        }
+        
+        if (!decodedId) {
+          console.log("usePreviewProject: No valid project ID, skipping data load");
+          setProjectData(null);
+          setIsLoading(false);
+          return;
+        }
+        
+        setActualProjectId(decodedId);
 
-        // Busca o projeto no localStorage
+        // Load project from localStorage
         const storedProjects = localStorage.getItem('harmonIA_preview_projects');
         if (!storedProjects) {
-          console.log('usePreviewProject: Nenhum projeto encontrado no localStorage');
+          console.log('usePreviewProject: No projects found in localStorage');
           setProjectData(null);
           setIsLoading(false);
           return;
         }
 
         const projects = JSON.parse(storedProjects);
-        const project = projects.find((p: any) => p.id === actualId);
+        const project = projects.find((p: any) => p.id === decodedId);
         
         if (project) {
-          console.log('usePreviewProject: Projeto encontrado:', project);
+          console.log('usePreviewProject: Project found:', project);
           
           const versions = project.versionsList?.map((v: any) => ({
             id: v.id,
@@ -69,7 +94,7 @@ export const usePreviewProject = (projectId: string | undefined) => {
           })) || [];
           
           if (versions.length === 0 && project.versions > 0) {
-            // Fallback se não houver versionsList mas o contador de versões > 0
+            // Fallback if no versionsList but versions count > 0
             for (let i = 0; i < project.versions; i++) {
               versions.push({
                 id: `v${i+1}`,
@@ -105,11 +130,11 @@ export const usePreviewProject = (projectId: string | undefined) => {
             ]
           });
         } else {
-          console.log(`usePreviewProject: Projeto não encontrado para id=${actualId}`);
+          console.log(`usePreviewProject: Project not found for id=${decodedId}`);
           setProjectData(null);
         }
       } catch (error) {
-        console.error('usePreviewProject: Erro ao carregar dados do projeto:', error);
+        console.error('usePreviewProject: Error loading project data:', error);
         setProjectData(null);
       } finally {
         setIsLoading(false);
@@ -121,16 +146,16 @@ export const usePreviewProject = (projectId: string | undefined) => {
 
   const updateProjectStatus = (newStatus: 'waiting' | 'feedback' | 'approved', comments: string = '') => {
     if (!actualProjectId) {
-      console.error('usePreviewProject: Não é possível atualizar o status sem um ID de projeto válido');
+      console.error('usePreviewProject: Cannot update status without a valid project ID');
       return false;
     }
 
     try {
-      console.log(`usePreviewProject: Atualizando status para ${newStatus}`);
+      console.log(`usePreviewProject: Updating status to ${newStatus}`);
       
       const storedProjects = localStorage.getItem('harmonIA_preview_projects');
       if (!storedProjects) {
-        console.error('usePreviewProject: Nenhum projeto encontrado no localStorage');
+        console.error('usePreviewProject: No projects found in localStorage');
         return false;
       }
 
@@ -138,18 +163,18 @@ export const usePreviewProject = (projectId: string | undefined) => {
       const projectIndex = projects.findIndex((p: any) => p.id === actualProjectId);
       
       if (projectIndex === -1) {
-        console.error(`usePreviewProject: Projeto não encontrado para id=${actualProjectId}`);
+        console.error(`usePreviewProject: Project not found for id=${actualProjectId}`);
         return false;
       }
       
-      // Atualiza o status
+      // Update status
       projects[projectIndex].status = newStatus;
       
-      // Adiciona feedback se fornecido
+      // Add feedback if provided
       if (comments) {
         projects[projectIndex].feedback = comments;
         
-        // Adiciona ao histórico de feedback
+        // Add to feedback history
         if (!projects[projectIndex].feedbackHistory) {
           projects[projectIndex].feedbackHistory = [];
         }
@@ -162,7 +187,7 @@ export const usePreviewProject = (projectId: string | undefined) => {
         });
       }
       
-      // Adiciona ao histórico geral
+      // Add to general history
       if (!projects[projectIndex].history) {
         projects[projectIndex].history = [];
       }
@@ -175,13 +200,13 @@ export const usePreviewProject = (projectId: string | undefined) => {
         }
       });
       
-      // Atualiza data da última atividade
+      // Update last activity date
       projects[projectIndex].lastActivityDate = new Date().toISOString();
       
-      // Salva de volta ao localStorage
+      // Save back to localStorage
       localStorage.setItem('harmonIA_preview_projects', JSON.stringify(projects));
       
-      // Atualiza dados locais
+      // Update local state
       if (projectData) {
         setProjectData({
           ...projectData,
@@ -189,10 +214,10 @@ export const usePreviewProject = (projectId: string | undefined) => {
         });
       }
       
-      console.log('usePreviewProject: Status atualizado com sucesso');
+      console.log('usePreviewProject: Status successfully updated');
       return true;
     } catch (error) {
-      console.error('usePreviewProject: Erro ao atualizar o status:', error);
+      console.error('usePreviewProject: Error updating status:', error);
       return false;
     }
   };

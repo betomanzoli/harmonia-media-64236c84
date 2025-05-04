@@ -31,8 +31,10 @@ const PreviewProjectPage: React.FC = () => {
   
   useEffect(() => {
     if (projectId) {
-      // Generate the encoded link
+      // Generate the encoded link - now using a deterministic hash
       const encodedLink = generatePreviewLink(projectId);
+      console.log(`Admin: Generated encoded link for ${projectId}: ${encodedLink}`);
+      
       const fullUrl = `${window.location.origin}/preview/${encodedLink}`;
       setEncodedLinkUrl(fullUrl);
     }
@@ -174,9 +176,11 @@ const PreviewProjectPage: React.FC = () => {
     // Sinaliza que o acesso é do administrador
     localStorage.setItem('admin_preview_access', 'true');
     
-    // Use the encoded preview link instead of direct project ID
-    const encodedLink = generatePreviewLink(projectId);
-    // Navega para a página de prévia do cliente com o link codificado
+    // Always use the encoded preview link instead of direct project ID
+    const encodedLink = generatePreviewLink(projectId as string);
+    console.log(`Admin viewing as client with encoded link: ${encodedLink}`);
+    
+    // Navigate to preview page with encoded link
     navigate(`/preview/${encodedLink}`);
   };
   

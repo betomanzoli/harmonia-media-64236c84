@@ -17,6 +17,8 @@ export interface VersionItem {
   dateAdded?: string;
   recommended?: boolean;
   final?: boolean;
+  finalVersionUrl?: string;
+  stemsUrl?: string;
   additionalLinks?: AdditionalLink[];
 }
 

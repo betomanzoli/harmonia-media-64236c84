@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import PreviewHeader from './PreviewHeader';
 import PreviewPlayerList from './player/PreviewPlayerList';
 import PreviewFeedbackForm from './PreviewFeedbackForm';
@@ -20,10 +20,21 @@ interface MusicPreviewSystemProps {
 const MusicPreviewSystem: React.FC<MusicPreviewSystemProps> = ({ projectId }) => {
   const { projectData, isLoading, updateProjectStatus } = usePreviewProject(projectId);
   const { toast } = useToast();
-  const [feedbackSubmitted, setFeedbackSubmitted] = useState(false);
   const [selectedVersion, setSelectedVersion] = useState<string | null>(null);
   const [feedback, setFeedback] = useState('');
   const [isShareDialogOpen, setIsShareDialogOpen] = useState(false);
+  const [feedbackSubmitted, setFeedbackSubmitted] = useState(false);
+
+  // When project data loads, check if feedback was already submitted based on status
+  useEffect(() => {
+    if (projectData) {
+      console.log("Project status:", projectData.status);
+      // If project status is feedback or approved, mark feedback as submitted
+      if (projectData.status === 'feedback' || projectData.status === 'approved') {
+        setFeedbackSubmitted(true);
+      }
+    }
+  }, [projectData]);
 
   if (isLoading) {
     return <PreviewLoadingState />;
@@ -70,12 +81,27 @@ const MusicPreviewSystem: React.FC<MusicPreviewSystemProps> = ({ projectId }) =>
       return;
     }
     
-    updateProjectStatus('feedback', comments);
-    setFeedbackSubmitted(true);
-    toast({
-      title: "Feedback enviado",
-      description: "Agradecemos pelo seu feedback! Nossa equipe irá analisá-lo em breve.",
-    });
+    console.log("Submitting feedback for project:", projectId);
+    console.log("Selected version:", selectedVersion);
+    console.log("Feedback content:", comments);
+    
+    const success = updateProjectStatus('feedback', comments);
+    
+    if (success) {
+      console.log("Successfully updated project status to 'feedback'");
+      setFeedbackSubmitted(true);
+      toast({
+        title: "Feedback enviado",
+        description: "Agradecemos pelo seu feedback! Nossa equipe irá analisá-lo em breve.",
+      });
+    } else {
+      console.error("Failed to update project status");
+      toast({
+        title: "Erro ao enviar feedback",
+        description: "Houve um problema ao salvar seu feedback. Por favor, tente novamente.",
+        variant: "destructive"
+      });
+    }
   };
 
   const handleApprove = (comments: string = feedback) => {
@@ -88,12 +114,27 @@ const MusicPreviewSystem: React.FC<MusicPreviewSystemProps> = ({ projectId }) =>
       return;
     }
     
-    updateProjectStatus('approved', comments);
-    setFeedbackSubmitted(true);
-    toast({
-      title: "Prévia aprovada",
-      description: "Agradecemos pela aprovação! Nossa equipe irá finalizar seu projeto em breve.",
-    });
+    console.log("Approving project:", projectId);
+    console.log("Selected version:", selectedVersion);
+    console.log("Approval comments:", comments);
+    
+    const success = updateProjectStatus('approved', comments);
+    
+    if (success) {
+      console.log("Successfully updated project status to 'approved'");
+      setFeedbackSubmitted(true);
+      toast({
+        title: "Prévia aprovada",
+        description: "Agradecemos pela aprovação! Nossa equipe irá finalizar seu projeto em breve.",
+      });
+    } else {
+      console.error("Failed to update project status");
+      toast({
+        title: "Erro ao aprovar prévia",
+        description: "Houve um problema ao processar sua aprovação. Por favor, tente novamente.",
+        variant: "destructive"
+      });
+    }
   };
 
   // Ensures we have the necessary properties
@@ -136,6 +177,15 @@ const MusicPreviewSystem: React.FC<MusicPreviewSystemProps> = ({ projectId }) =>
             selectedPreview={selectedVersion}
             status={status}
           />
+        </div>
+      )}
+      
+      {feedbackSubmitted && status === 'feedback' && (
+        <div className="mt-8 bg-blue-50 p-6 rounded-lg border border-blue-200">
+          <h3 className="text-xl font-medium text-blue-700 mb-2">Feedback Enviado</h3>
+          <p className="text-blue-600">
+            Seu feedback foi enviado com sucesso. Nossa equipe irá analisá-lo e retornar em breve.
+          </p>
         </div>
       )}
       

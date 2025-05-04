@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { Card } from "@/components/ui/card";
 import PreviewVersionCard from './PreviewVersionCard';
@@ -11,6 +12,8 @@ interface MusicPreview {
   url?: string;
   fileId?: string;
   recommended?: boolean;
+  finalVersionUrl?: string;
+  stemsUrl?: string;
 }
 
 interface PreviewPlayerListProps {
@@ -29,6 +32,9 @@ const PreviewPlayerList: React.FC<PreviewPlayerListProps> = ({
   onPlay = () => {}
 }) => {
   const { toast } = useToast();
+  
+  console.log("PreviewPlayerList - isApproved:", isApproved);
+  console.log("PreviewPlayerList - versions:", versions);
 
   if (!versions || versions.length === 0) {
     return (

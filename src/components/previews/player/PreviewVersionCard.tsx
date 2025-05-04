@@ -2,7 +2,7 @@
 import React from 'react';
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Check, Play } from 'lucide-react';
+import { Check, Play, Download } from 'lucide-react';
 
 interface MusicPreview {
   id: string;
@@ -11,6 +11,8 @@ interface MusicPreview {
   audioUrl?: string;
   url?: string;
   recommended?: boolean;
+  finalVersionUrl?: string;
+  stemsUrl?: string;
 }
 
 interface PreviewVersionCardProps {
@@ -32,7 +34,20 @@ const PreviewVersionCard: React.FC<PreviewVersionCardProps> = ({
   onSelect,
   onFeedbackChange
 }) => {
-  console.log('Renderizando PreviewVersionCard:', { isSelected, isApproved, version });
+  console.log('Rendering PreviewVersionCard:', { isSelected, isApproved, version });
+  
+  const handleDownloadFinal = () => {
+    if (version.finalVersionUrl) {
+      window.open(version.finalVersionUrl, '_blank');
+    }
+  };
+  
+  const handleDownloadStems = () => {
+    if (version.stemsUrl) {
+      window.open(version.stemsUrl, '_blank');
+    }
+  };
+  
   return (
     <Card 
       className={`p-6 transition-all ${
@@ -49,6 +64,7 @@ const PreviewVersionCard: React.FC<PreviewVersionCardProps> = ({
           )}
         </div>
         <div className="flex gap-2 flex-wrap mt-2 sm:mt-0">
+          {/* Play button - always visible */}
           <Button 
             variant="outline" 
             size="sm"
@@ -58,6 +74,7 @@ const PreviewVersionCard: React.FC<PreviewVersionCardProps> = ({
             <Play className="w-4 h-4 mr-1" /> Ouvir
           </Button>
           
+          {/* Selection button logic */}
           {isSelected ? (
             <Button 
               variant="outline" 
@@ -76,6 +93,32 @@ const PreviewVersionCard: React.FC<PreviewVersionCardProps> = ({
               onClick={() => onSelect(version.id)}
             >
               Selecionar
+            </Button>
+          )}
+          
+          {/* Final Version download button - only for approved projects */}
+          {isApproved && version.finalVersionUrl && (
+            <Button 
+              variant="outline" 
+              size="sm"
+              className="bg-blue-50 text-blue-700 border-blue-300 hover:bg-blue-100"
+              onClick={handleDownloadFinal}
+            >
+              <Download className="w-4 h-4 mr-2" />
+              Versão Final
+            </Button>
+          )}
+          
+          {/* Stems download button - only for approved projects with specific packages */}
+          {isApproved && version.stemsUrl && (
+            <Button 
+              variant="outline" 
+              size="sm"
+              className="bg-purple-50 text-purple-700 border-purple-300 hover:bg-purple-100"
+              onClick={handleDownloadStems}
+            >
+              <Download className="w-4 h-4 mr-2" />
+              Stems
             </Button>
           )}
         </div>

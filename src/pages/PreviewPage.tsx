@@ -4,7 +4,7 @@ import { useParams, useNavigate } from 'react-router-dom';
 import MusicPreviewSystem from '@/components/previews/MusicPreviewSystem';
 import ProjectAccessForm from '@/components/previews/ProjectAccessForm';
 import { useToast } from '@/hooks/use-toast';
-import { getProjectIdFromPreviewLink } from '@/utils/previewLinkUtils';
+import { getProjectIdFromPreviewLink, isValidEncodedPreviewLink } from '@/utils/previewLinkUtils';
 
 const PreviewPage: React.FC = () => {
   const { projectId } = useParams<{ projectId: string }>();
@@ -17,49 +17,44 @@ const PreviewPage: React.FC = () => {
   useEffect(() => {
     // Log access for analytics
     if (projectId) {
-      console.log(`Preview access: ${projectId}, Date: ${new Date().toISOString()}`);
-      console.log('Verificando acesso para projectId:', projectId);
+      console.log(`Preview access attempt: ${projectId}, Date: ${new Date().toISOString()}`);
       window.scrollTo(0, 0);
       
-      // First try to decode the ID in case it's an encoded preview link
-      const decodedId = getProjectIdFromPreviewLink(projectId);
-      console.log("ID decodificado:", decodedId);
+      // Validate if this is an encoded preview link
+      const isEncodedLink = isValidEncodedPreviewLink(projectId);
+      console.log("Is encoded preview link:", isEncodedLink);
       
-      // Try to find project either by decoded ID or direct ID
+      if (!isEncodedLink) {
+        console.log("Invalid link format - not an encoded preview link");
+        setIsError(true);
+        return;
+      }
+      
+      // Decode the project ID
+      const decodedId = getProjectIdFromPreviewLink(projectId);
+      console.log("Decoded project ID:", decodedId);
+      
+      if (!decodedId) {
+        console.log("Failed to decode project ID");
+        setIsError(true);
+        return;
+      }
+      
+      // Set the actual project ID and attempt to find the project
+      setActualProjectId(decodedId);
+      
       try {
         const storedProjects = localStorage.getItem('harmonIA_preview_projects');
-        console.log('Projetos armazenados:', storedProjects);
+        console.log('Projects in localStorage:', storedProjects ? 'Found' : 'Not found');
         
         if (storedProjects) {
           const projects = JSON.parse(storedProjects);
           
-          // First check if it's an encoded link
-          if (decodedId) {
-            const projectExists = projects.some((p: any) => p.id === decodedId);
-            if (projectExists) {
-              console.log("Projeto com link codificado encontrado:", decodedId);
-              setActualProjectId(decodedId);
-              
-              // Check if admin access or previously authorized
-              const isAdmin = localStorage.getItem('admin_preview_access') === 'true';
-              const isPreviouslyAuthorized = localStorage.getItem(`preview_auth_${projectId}`) === 'authorized';
-              
-              if (isAdmin || isPreviouslyAuthorized) {
-                setIsAuthorized(true);
-                setIsError(false);
-              } else {
-                // Não está autorizado, mas o projeto existe
-                setIsError(false);
-              }
-              return;
-            }
-          }
+          // Check if project exists
+          const projectExists = projects.some((p: any) => p.id === decodedId);
           
-          // For backward compatibility, also check direct project ID
-          const projectExists = projects.some((p: any) => p.id === projectId);
           if (projectExists) {
-            console.log("ID direto de projeto encontrado:", projectId);
-            setActualProjectId(projectId);
+            console.log("Project found:", decodedId);
             
             // Check if admin access or previously authorized
             const isAdmin = localStorage.getItem('admin_preview_access') === 'true';
@@ -69,68 +64,53 @@ const PreviewPage: React.FC = () => {
               setIsAuthorized(true);
               setIsError(false);
             } else {
-              // Não está autorizado, mas o projeto existe
+              // Not authorized, but the project exists
               setIsError(false);
             }
             return;
           }
           
           // No valid project found
-          console.log("Nenhum projeto válido encontrado para:", projectId);
+          console.log("No valid project found for:", decodedId);
           setIsError(true);
         } else {
           // No projects in localStorage
-          console.log("Nenhum projeto no localStorage");
+          console.log("No projects in localStorage");
           setIsError(true);
         }
       } catch (error) {
-        console.error("Erro ao verificar projeto:", error);
+        console.error("Error verifying project:", error);
         setIsError(true);
       }
     }
   }, [projectId]);
 
   const handleAccessVerification = (code: string, email: string) => {
-    // In a real application, this would validate against your database
-    // to check if the provided email matches the project's client email
+    console.log('Verifying access with code:', code, 'and email:', email);
     
     // Simulate a database check
     const verifyAccess = () => {
-      console.log('Verificando acesso com código:', code, 'e email:', email);
-      
       // This would be an API call in a real app
       try {
         const storedProjects = localStorage.getItem('harmonIA_preview_projects');
-        if (storedProjects) {
+        if (storedProjects && actualProjectId) {
           const projects = JSON.parse(storedProjects);
+          const project = projects.find((p: any) => p.id === actualProjectId);
           
-          // First check if we have a decoded ID
-          if (actualProjectId) {
-            const project = projects.find((p: any) => p.id === actualProjectId);
-            if (project) {
-              console.log('Projeto encontrado para autorização:', project);
-              return (email.toLowerCase() === project.clientEmail?.toLowerCase()) || 
-                    (code === actualProjectId);
-            }
-          }
-          
-          // Then check for direct project ID
-          const project = projects.find((p: any) => p.id === projectId);
           if (project) {
-            console.log('Projeto encontrado para autorização (ID direto):', project);
+            console.log('Project found for authorization:', project);
             return (email.toLowerCase() === project.clientEmail?.toLowerCase()) || 
-                   (code === projectId);
+                  (code === actualProjectId);
           }
         }
         
         // Fallback for demo
         return email.includes('@') && (
-          (projectId && code === projectId) || 
           email.toLowerCase().includes('test') || 
           email.toLowerCase().includes('demo')
         );
       } catch (error) {
-        console.error("Erro na verificação de acesso:", error);
+        console.error("Error in access verification:", error);
         return false;
       }
     };

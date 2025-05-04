@@ -20,12 +20,12 @@ const MusicPreviews: React.FC = () => {
   const { projectData, isLoading, actualProjectId, updateProjectStatus } = usePreviewData(previewId);
   
   useEffect(() => {
-    console.log("Preview ID recebido:", previewId);
-    console.log("ID de projeto real (após decodificação):", actualProjectId);
-    console.log("Dados do projeto carregados:", projectData);
+    console.log("Preview ID received:", previewId);
+    console.log("Actual project ID (after decoding):", actualProjectId);
+    console.log("Project data loaded:", projectData);
     
     if (!isLoading && !projectData && actualProjectId) {
-      console.log("Dados da prévia não encontrados");
+      console.log("Preview data not found");
       toast({
         title: "Prévia não encontrada",
         description: "O código de prévia fornecido não é válido ou expirou.",
@@ -44,21 +44,36 @@ const MusicPreviews: React.FC = () => {
       return;
     }
     
-    toast({
-      title: "Feedback enviado!",
-      description: "Obrigado pelo seu feedback. Nossa equipe está trabalhando nas modificações.",
-    });
+    // Make sure to log what we're doing
+    console.log("Submitting feedback for project:", actualProjectId);
+    console.log("Selected preview:", selectedPreview);
+    console.log("Feedback content:", feedback);
     
-    // Notify about feedback
-    notificationService.notify('feedback_received', {
-      projectId: actualProjectId || previewId,
-      clientName: projectData?.clientName || 'Cliente',
-      message: feedback
-    });
+    // Update project status - ensure this saves to localStorage
+    const success = updateProjectStatus('feedback', feedback);
     
-    if (updateProjectStatus) {
-      // Use the type-safe value
-      updateProjectStatus('feedback', feedback);
+    if (success) {
+      console.log("Successfully updated project status to 'feedback'");
+      
+      toast({
+        title: "Feedback enviado!",
+        description: "Obrigado pelo seu feedback. Nossa equipe está trabalhando nas modificações.",
+      });
+      
+      // Notify about feedback
+      notificationService.notify('feedback_received', {
+        projectId: actualProjectId || previewId,
+        clientName: projectData?.clientName || 'Cliente',
+        message: feedback
+      });
+    } else {
+      console.error("Failed to update project status");
+      
+      toast({
+        title: "Erro ao enviar feedback",
+        description: "Houve um problema ao salvar seu feedback. Por favor, tente novamente.",
+        variant: "destructive"
+      });
     }
   };
   
@@ -72,21 +87,36 @@ const MusicPreviews: React.FC = () => {
       return;
     }
     
-    toast({
-      title: "Música aprovada!",
-      description: "Ficamos felizes que você gostou! Finalizaremos sua música e entregaremos em breve.",
-    });
+    // Make sure to log what we're doing
+    console.log("Approving project:", actualProjectId);
+    console.log("Selected preview:", selectedPreview);
+    console.log("Approval comments:", feedback);
     
-    // Notify about approval
-    notificationService.notify('preview_approved', {
-      projectId: actualProjectId || previewId,
-      clientName: projectData?.clientName || 'Cliente',
-      versionId: selectedPreview
-    });
+    // Update project status - ensure this saves to localStorage
+    const success = updateProjectStatus('approved', feedback);
     
-    if (updateProjectStatus) {
-      // Use the type-safe value
-      updateProjectStatus('approved', feedback);
+    if (success) {
+      console.log("Successfully updated project status to 'approved'");
+      
+      toast({
+        title: "Música aprovada!",
+        description: "Ficamos felizes que você gostou! Finalizaremos sua música e entregaremos em breve.",
+      });
+      
+      // Notify about approval
+      notificationService.notify('preview_approved', {
+        projectId: actualProjectId || previewId,
+        clientName: projectData?.clientName || 'Cliente',
+        versionId: selectedPreview
+      });
+    } else {
+      console.error("Failed to update project status");
+      
+      toast({
+        title: "Erro ao aprovar prévia",
+        description: "Houve um problema ao processar sua aprovação. Por favor, tente novamente.",
+        variant: "destructive"
+      });
     }
   };
   
@@ -111,15 +141,15 @@ const MusicPreviews: React.FC = () => {
     );
   }
   
-  console.log("Renderizando com dados do projeto:", projectData);
-  console.log("Listas de versões disponíveis:", projectData?.versionsList, projectData?.previews);
+  console.log("Rendering with project data:", projectData);
+  console.log("Available version lists:", projectData?.versionsList, projectData?.previews);
   
   // Make sure versionsForPlayer is always an array
   const versionsForPlayer = Array.isArray(projectData?.versionsList) 
     ? projectData.versionsList 
     : (Array.isArray(projectData?.previews) ? projectData.previews : []);
   
-  console.log("Versões para o player:", versionsForPlayer);
+  console.log("Versions for player:", versionsForPlayer);
   
   return (
     <MusicPreviewContainer>
