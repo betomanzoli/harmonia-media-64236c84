@@ -19,8 +19,8 @@ export const usePreviewData = (previewId: string | undefined) => {
       const isEncodedLink = isValidEncodedPreviewLink(previewId);
       console.log("Is encoded preview link:", isEncodedLink);
       
-      // For encoded links, decode the project ID
-      // For direct IDs, only allow admin access
+      // For backwards compatibility, we still support direct project IDs
+      // but only when accessed by admin users
       const isAdmin = localStorage.getItem('admin_preview_access') === 'true';
       let projectId: string | null = null;
       
