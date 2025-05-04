@@ -17,31 +17,15 @@ const PreviewPage: React.FC = () => {
   useEffect(() => {
     // Log access for analytics
     if (projectId) {
-      console.log(`Preview access attempt: ${projectId}, Date: ${new Date().toISOString()}`);
+      console.log(`Preview access: ${projectId}, Date: ${new Date().toISOString()}`);
+      console.log('Verificando acesso para projectId:', projectId);
       window.scrollTo(0, 0);
       
-      // First check if this is an encoded link (should have a dash)
-      const isEncodedLink = projectId.includes('-');
-      
-      // If it's not an encoded link, reject it immediately
-      if (!isEncodedLink) {
-        console.log("Rejecting direct project ID access:", projectId);
-        setIsError(true);
-        return;
-      }
-      
-      // Try to decode the encoded link
+      // First try to decode the ID in case it's an encoded preview link
       const decodedId = getProjectIdFromPreviewLink(projectId);
-      console.log("Decoded project ID:", decodedId);
+      console.log("ID decodificado:", decodedId);
       
-      // If decoding failed or returned null, reject access
-      if (!decodedId) {
-        console.log("Invalid encoded link format:", projectId);
-        setIsError(true);
-        return;
-      }
-      
-      // Try to find project by decoded ID
+      // Try to find project either by decoded ID or direct ID
       try {
         const storedProjects = localStorage.getItem('harmonIA_preview_projects');
         console.log('Projetos armazenados:', storedProjects);
@@ -49,11 +33,33 @@ const PreviewPage: React.FC = () => {
         if (storedProjects) {
           const projects = JSON.parse(storedProjects);
           
-          // Check if project exists with decoded ID
-          const projectExists = projects.some((p: any) => p.id === decodedId);
+          // First check if it's an encoded link
+          if (decodedId) {
+            const projectExists = projects.some((p: any) => p.id === decodedId);
+            if (projectExists) {
+              console.log("Projeto com link codificado encontrado:", decodedId);
+              setActualProjectId(decodedId);
+              
+              // Check if admin access or previously authorized
+              const isAdmin = localStorage.getItem('admin_preview_access') === 'true';
+              const isPreviouslyAuthorized = localStorage.getItem(`preview_auth_${projectId}`) === 'authorized';
+              
+              if (isAdmin || isPreviouslyAuthorized) {
+                setIsAuthorized(true);
+                setIsError(false);
+              } else {
+                // Não está autorizado, mas o projeto existe
+                setIsError(false);
+              }
+              return;
+            }
+          }
+          
+          // For backward compatibility, also check direct project ID
+          const projectExists = projects.some((p: any) => p.id === projectId);
           if (projectExists) {
-            console.log("Project found with decoded ID:", decodedId);
-            setActualProjectId(decodedId);
+            console.log("ID direto de projeto encontrado:", projectId);
+            setActualProjectId(projectId);
             
             // Check if admin access or previously authorized
             const isAdmin = localStorage.getItem('admin_preview_access') === 'true';
@@ -63,19 +69,22 @@ const PreviewPage: React.FC = () => {
               setIsAuthorized(true);
               setIsError(false);
             } else {
-              // Not authorized yet, but project exists
+              // Não está autorizado, mas o projeto existe
               setIsError(false);
             }
-          } else {
-            console.log("Project not found for decoded ID:", decodedId);
-            setIsError(true);
+            return;
           }
+          
+          // No valid project found
+          console.log("Nenhum projeto válido encontrado para:", projectId);
+          setIsError(true);
         } else {
-          console.log("No projects in localStorage");
+          // No projects in localStorage
+          console.log("Nenhum projeto no localStorage");
           setIsError(true);
         }
       } catch (error) {
-        console.error("Error verifying project:", error);
+        console.error("Erro ao verificar projeto:", error);
         setIsError(true);
       }
     }
@@ -87,7 +96,7 @@ const PreviewPage: React.FC = () => {
     
     // Simulate a database check
     const verifyAccess = () => {
-      console.log('Verifying access with code:', code, 'and email:', email);
+      console.log('Verificando acesso com código:', code, 'e email:', email);
       
       // This would be an API call in a real app
       try {
@@ -99,21 +108,29 @@ const PreviewPage: React.FC = () => {
           if (actualProjectId) {
             const project = projects.find((p: any) => p.id === actualProjectId);
             if (project) {
-              console.log('Project found for authorization:', project);
+              console.log('Projeto encontrado para autorização:', project);
               return (email.toLowerCase() === project.clientEmail?.toLowerCase()) || 
                     (code === actualProjectId);
             }
+          }
+          
+          // Then check for direct project ID
+          const project = projects.find((p: any) => p.id === projectId);
+          if (project) {
+            console.log('Projeto encontrado para autorização (ID direto):', project);
+            return (email.toLowerCase() === project.clientEmail?.toLowerCase()) || 
+                   (code === projectId);
           }
         }
         
         // Fallback for demo
         return email.includes('@') && (
-          (actualProjectId && code === actualProjectId) || 
+          (projectId && code === projectId) || 
           email.toLowerCase().includes('test') || 
           email.toLowerCase().includes('demo')
         );
       } catch (error) {
-        console.error("Error in access verification:", error);
+        console.error("Erro na verificação de acesso:", error);
         return false;
       }
     };
@@ -151,7 +168,7 @@ const PreviewPage: React.FC = () => {
       <div className="min-h-screen flex items-center justify-center bg-gray-100">
         <div className="bg-white p-6 rounded-lg shadow-sm text-center">
           <h2 className="text-2xl font-bold text-black mb-4">Link de prévia inválido</h2>
-          <p className="text-gray-600">O link que você acessou não existe ou expirou. Por favor, use o link codificado enviado pelo administrador.</p>
+          <p className="text-gray-600">O link que você acessou não existe ou expirou.</p>
         </div>
       </div>
     );
