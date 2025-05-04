@@ -31,10 +31,16 @@ const PreviewProjectPage: React.FC = () => {
   
   useEffect(() => {
     if (projectId) {
-      // Generate the encoded link
+      // Generate the encoded link - this will now be persistent
       const encodedLink = generatePreviewLink(projectId);
       const fullUrl = `${window.location.origin}/preview/${encodedLink}`;
       setEncodedLinkUrl(fullUrl);
+      
+      console.log('Encoded preview link generated (admin):', {
+        projectId,
+        encodedLink,
+        fullUrl
+      });
     }
   }, [projectId]);
   
@@ -174,10 +180,20 @@ const PreviewProjectPage: React.FC = () => {
     // Sinaliza que o acesso é do administrador
     localStorage.setItem('admin_preview_access', 'true');
     
-    // Use the encoded preview link instead of direct project ID
-    const encodedLink = generatePreviewLink(projectId);
-    // Navega para a página de prévia do cliente com o link codificado
-    navigate(`/preview/${encodedLink}`);
+    // Use the encoded preview link from state (persistent)
+    const encodedId = encodedLinkUrl.split('/').pop();
+    if (encodedId) {
+      // Directly navigate to the preview page with the encoded link
+      console.log(`Admin viewing as client with encoded ID: ${encodedId}`);
+      navigate(`/preview/${encodedId}`);
+    } else {
+      console.error('Failed to extract encoded ID from URL');
+      toast({
+        title: "Erro",
+        description: "Falha ao gerar link de prévia.",
+        variant: "destructive"
+      });
+    }
   };
   
   return <AdminLayout>

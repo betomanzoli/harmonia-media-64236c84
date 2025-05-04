@@ -12,8 +12,8 @@ export const usePreviewData = (previewId: string | undefined) => {
   
   useEffect(() => {
     if (previewId) {
-      // Log para depuração
-      console.log(`usePreviewData chamado com previewId: ${previewId}`);
+      // Log for debugging
+      console.log(`usePreviewData called with previewId: ${previewId}`);
       
       // Try to decode the preview ID if it's in the encoded format
       // If not, treat it as a direct project ID (for backward compatibility)
@@ -21,7 +21,7 @@ export const usePreviewData = (previewId: string | undefined) => {
       const projectId = decodedId || previewId;
       
       setActualProjectId(projectId);
-      console.log(`ID do projeto decodificado/direto: ${projectId}`);
+      console.log(`Decoded/direct project ID: ${projectId}`);
       
       // Load project data
       setIsLoading(true);
@@ -29,25 +29,25 @@ export const usePreviewData = (previewId: string | undefined) => {
       try {
         // Get from localStorage
         const storedProjects = localStorage.getItem('harmonIA_preview_projects');
-        console.log('Projetos em localStorage:', storedProjects);
+        console.log('Projects in localStorage:', storedProjects);
         
         if (storedProjects) {
           const projects = JSON.parse(storedProjects);
           const project = projects.find((p: ProjectItem) => p.id === projectId);
           
           if (project) {
-            console.log('Projeto encontrado:', project);
+            console.log('Project found:', project);
             setProjectData(project);
           } else {
-            console.log(`Projeto não encontrado para ID: ${projectId}`);
+            console.log(`Project not found for ID: ${projectId}`);
             setProjectData(null); // Explicitly set to null if not found
           }
         } else {
-          console.log('Nenhum projeto encontrado no localStorage');
+          console.log('No projects found in localStorage');
           setProjectData(null);
         }
       } catch (error) {
-        console.error('Erro ao carregar dados do projeto:', error);
+        console.error('Error loading project data:', error);
         setProjectData(null);
       } finally {
         setIsLoading(false);
@@ -62,8 +62,8 @@ export const usePreviewData = (previewId: string | undefined) => {
     try {
       if (!actualProjectId || !projectData) return false;
 
-      console.log(`Atualizando status do projeto ${actualProjectId} para ${newStatus}`);
-      console.log(`Feedback do cliente: ${comments}`);
+      console.log(`Updating project ${actualProjectId} status to ${newStatus}`);
+      console.log(`Client feedback: ${comments}`);
       
       // Get all projects
       const storedProjects = localStorage.getItem('harmonIA_preview_projects');
@@ -104,7 +104,8 @@ export const usePreviewData = (previewId: string | undefined) => {
             action: `Status alterado para ${newStatus}`,
             timestamp: new Date().toLocaleString('pt-BR'),
             data: {
-              message: comments || `Cliente alterou o status do projeto para ${newStatus}`
+              message: comments || `Cliente alterou o status do projeto para ${newStatus}`,
+              status: newStatus
             }
           });
           
@@ -112,15 +113,16 @@ export const usePreviewData = (previewId: string | undefined) => {
           localStorage.setItem('harmonIA_preview_projects', JSON.stringify(projects));
           
           // Update local state
-          setProjectData(projects[projectIndex]);
+          setProjectData({...projects[projectIndex]});
           
-          console.log('Projeto atualizado com sucesso:', projects[projectIndex]);
+          console.log('Project successfully updated:', projects[projectIndex]);
+          return true;
         }
       }
 
-      return true;
+      return false;
     } catch (error) {
-      console.error('Erro ao atualizar status:', error);
+      console.error('Error updating status:', error);
       return false;
     }
   };
