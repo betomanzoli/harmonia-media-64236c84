@@ -94,10 +94,8 @@ const ProjectActionCard: React.FC<ProjectActionCardProps> = ({
               <DialogTitle>Adicionar Nova Versão</DialogTitle>
             </DialogHeader>
             <AddVersionForm 
-              onAddVersion={handleAddVersion} 
-              onCancel={() => setShowAddVersion(false)} 
-              projectId={projectId}
-              packageType={packageType}
+              onSubmit={handleAddVersion}
+              projectStatus={projectStatus as 'waiting' | 'feedback' | 'approved'}
             />
           </DialogContent>
         </Dialog>

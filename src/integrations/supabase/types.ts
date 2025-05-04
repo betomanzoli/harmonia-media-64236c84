@@ -11,21 +11,36 @@ export type Database = {
     Tables: {
       admin_users: {
         Row: {
+          active: boolean | null
           created_at: string | null
           created_by: string | null
+          email: string | null
           id: number
+          name: string | null
+          role: string | null
+          updated_at: string | null
           user_id: string
         }
         Insert: {
+          active?: boolean | null
           created_at?: string | null
           created_by?: string | null
+          email?: string | null
           id?: number
-          user_id?: string
+          name?: string | null
+          role?: string | null
+          updated_at?: string | null
+          user_id: string
         }
         Update: {
+          active?: boolean | null
           created_at?: string | null
           created_by?: string | null
+          email?: string | null
           id?: number
+          name?: string | null
+          role?: string | null
+          updated_at?: string | null
           user_id?: string
         }
         Relationships: []
@@ -36,7 +51,11 @@ export type Database = {
           created_at: string | null
           description: string | null
           duration: number | null
+          featured: boolean | null
           id: number
+          project_id: string | null
+          status: string | null
+          tags: Json | null
           title: string
           updated_at: string | null
           user_id: string | null
@@ -46,7 +65,11 @@ export type Database = {
           created_at?: string | null
           description?: string | null
           duration?: number | null
+          featured?: boolean | null
           id?: number
+          project_id?: string | null
+          status?: string | null
+          tags?: Json | null
           title: string
           updated_at?: string | null
           user_id?: string | null
@@ -56,70 +79,422 @@ export type Database = {
           created_at?: string | null
           description?: string | null
           duration?: number | null
+          featured?: boolean | null
           id?: number
+          project_id?: string | null
+          status?: string | null
+          tags?: Json | null
           title?: string
           updated_at?: string | null
           user_id?: string | null
+        }
+        Relationships: []
+      }
+      briefing_questions: {
+        Row: {
+          briefing_template_id: string
+          created_at: string | null
+          help_text: string | null
+          id: string
+          options: Json | null
+          order: number | null
+          question_text: string | null
+          question_type: string | null
+          required: boolean | null
+          updated_at: string | null
+        }
+        Insert: {
+          briefing_template_id: string
+          created_at?: string | null
+          help_text?: string | null
+          id?: string
+          options?: Json | null
+          order?: number | null
+          question_text?: string | null
+          question_type?: string | null
+          required?: boolean | null
+          updated_at?: string | null
+        }
+        Update: {
+          briefing_template_id?: string
+          created_at?: string | null
+          help_text?: string | null
+          id?: string
+          options?: Json | null
+          order?: number | null
+          question_text?: string | null
+          question_type?: string | null
+          required?: boolean | null
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
+      briefing_responses: {
+        Row: {
+          client_briefing_id: string
+          created_at: string | null
+          file_urls: Json | null
+          id: string
+          question_id: string | null
+          response_data: Json | null
+          response_text: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          client_briefing_id: string
+          created_at?: string | null
+          file_urls?: Json | null
+          id?: string
+          question_id?: string | null
+          response_data?: Json | null
+          response_text?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          client_briefing_id?: string
+          created_at?: string | null
+          file_urls?: Json | null
+          id?: string
+          question_id?: string | null
+          response_data?: Json | null
+          response_text?: string | null
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
+      briefing_templates: {
+        Row: {
+          active: boolean | null
+          created_at: string | null
+          description: string | null
+          id: string
+          order_sequence: number | null
+          package_id: string
+          title: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          active?: boolean | null
+          created_at?: string | null
+          description?: string | null
+          id?: string
+          order_sequence?: number | null
+          package_id: string
+          title?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          active?: boolean | null
+          created_at?: string | null
+          description?: string | null
+          id?: string
+          order_sequence?: number | null
+          package_id?: string
+          title?: string | null
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
+      client_briefings: {
+        Row: {
+          client_id: string
+          completion_rate: number | null
+          created_at: string | null
+          id: string
+          notes: string | null
+          package_id: string | null
+          project_id: string | null
+          status: string | null
+          submitted_at: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          client_id: string
+          completion_rate?: number | null
+          created_at?: string | null
+          id?: string
+          notes?: string | null
+          package_id?: string | null
+          project_id?: string | null
+          status?: string | null
+          submitted_at?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          client_id?: string
+          completion_rate?: number | null
+          created_at?: string | null
+          id?: string
+          notes?: string | null
+          package_id?: string | null
+          project_id?: string | null
+          status?: string | null
+          submitted_at?: string | null
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
+      packages: {
+        Row: {
+          active: boolean | null
+          created_at: string
+          description: string
+          features: Json
+          id: string
+          name: string
+          price: number | null
+          updated_at: string
+        }
+        Insert: {
+          active?: boolean | null
+          created_at?: string
+          description: string
+          features: Json
+          id?: string
+          name: string
+          price?: number | null
+          updated_at?: string
+        }
+        Update: {
+          active?: boolean | null
+          created_at?: string
+          description?: string
+          features?: Json
+          id?: string
+          name?: string
+          price?: number | null
+          updated_at?: string
         }
         Relationships: []
       }
       portfolio_items: {
         Row: {
+          category: string | null
+          client_id: string | null
           created_at: string | null
           description: string | null
+          featured: boolean | null
           id: number
           image_url: string | null
+          project_id: string | null
+          status: string | null
+          tags: Json | null
           title: string
           updated_at: string | null
           user_id: string | null
         }
         Insert: {
+          category?: string | null
+          client_id?: string | null
           created_at?: string | null
           description?: string | null
+          featured?: boolean | null
           id?: number
           image_url?: string | null
+          project_id?: string | null
+          status?: string | null
+          tags?: Json | null
           title: string
           updated_at?: string | null
           user_id?: string | null
         }
         Update: {
+          category?: string | null
+          client_id?: string | null
           created_at?: string | null
           description?: string | null
+          featured?: boolean | null
           id?: number
           image_url?: string | null
+          project_id?: string | null
+          status?: string | null
+          tags?: Json | null
           title?: string
           updated_at?: string | null
           user_id?: string | null
         }
         Relationships: []
       }
-      qualification_submissions: {
+      project_files: {
         Row: {
-          created_at: string
-          id: number
+          created_at: string | null
+          file_name: string | null
+          file_size: number | null
+          file_type: string | null
+          file_url: string | null
+          id: string
+          notes: string | null
+          project_id: string
+          uploaded_by: string | null
+          version: number | null
         }
         Insert: {
-          created_at?: string
-          id?: number
+          created_at?: string | null
+          file_name?: string | null
+          file_size?: number | null
+          file_type?: string | null
+          file_url?: string | null
+          id?: string
+          notes?: string | null
+          project_id: string
+          uploaded_by?: string | null
+          version?: number | null
         }
         Update: {
+          created_at?: string | null
+          file_name?: string | null
+          file_size?: number | null
+          file_type?: string | null
+          file_url?: string | null
+          id?: string
+          notes?: string | null
+          project_id?: string
+          uploaded_by?: string | null
+          version?: number | null
+        }
+        Relationships: []
+      }
+      project_history: {
+        Row: {
+          created_at: string | null
+          description: string | null
+          event_type: string | null
+          id: string
+          new_value: Json | null
+          performed_by: string | null
+          previous_value: Json | null
+          project_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          description?: string | null
+          event_type?: string | null
+          id?: string
+          new_value?: Json | null
+          performed_by?: string | null
+          previous_value?: Json | null
+          project_id: string
+        }
+        Update: {
+          created_at?: string | null
+          description?: string | null
+          event_type?: string | null
+          id?: string
+          new_value?: Json | null
+          performed_by?: string | null
+          previous_value?: Json | null
+          project_id?: string
+        }
+        Relationships: []
+      }
+      projects: {
+        Row: {
+          client_id: string
+          created_at: string | null
+          deadline: string | null
+          description: string | null
+          id: string
+          package_id: string | null
+          preview_code: string | null
+          status: string | null
+          tags: Json | null
+          title: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          client_id: string
+          created_at?: string | null
+          deadline?: string | null
+          description?: string | null
+          id?: string
+          package_id?: string | null
+          preview_code?: string | null
+          status?: string | null
+          tags?: Json | null
+          title?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          client_id?: string
+          created_at?: string | null
+          deadline?: string | null
+          description?: string | null
+          id?: string
+          package_id?: string | null
+          preview_code?: string | null
+          status?: string | null
+          tags?: Json | null
+          title?: string | null
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
+      qualification_submissions: {
+        Row: {
+          attachments: Json | null
+          created_at: string
+          description: string | null
+          feedback: string | null
+          id: number
+          status: string | null
+          type: string | null
+          updated_at: string | null
+          user_id: string | null
+        }
+        Insert: {
+          attachments?: Json | null
           created_at?: string
+          description?: string | null
+          feedback?: string | null
           id?: number
+          status?: string | null
+          type?: string | null
+          updated_at?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          attachments?: Json | null
+          created_at?: string
+          description?: string | null
+          feedback?: string | null
+          id?: number
+          status?: string | null
+          type?: string | null
+          updated_at?: string | null
+          user_id?: string | null
         }
         Relationships: []
       }
       system_settings: {
         Row: {
           created_at: string
+          description: string | null
           id: number
+          key: string | null
+          type: string | null
+          updated_at: string | null
+          updated_by: string | null
+          value: string | null
         }
         Insert: {
           created_at?: string
+          description?: string | null
           id?: number
+          key?: string | null
+          type?: string | null
+          updated_at?: string | null
+          updated_by?: string | null
+          value?: string | null
         }
         Update: {
           created_at?: string
+          description?: string | null
           id?: number
+          key?: string | null
+          type?: string | null
+          updated_at?: string | null
+          updated_by?: string | null
+          value?: string | null
         }
         Relationships: []
       }

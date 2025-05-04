@@ -1,6 +1,26 @@
 
 import { v4 as uuidv4 } from 'uuid';
-import { createHash } from 'crypto';
+
+/**
+ * Simple string hashing function that produces a deterministic hash
+ * @param str - String to hash
+ * @returns A deterministic hash string
+ */
+const simpleHash = (str: string): string => {
+  let hash = 0;
+  const salt = 'harmonIA-preview-salt';
+  const input = str + salt;
+  
+  for (let i = 0; i < input.length; i++) {
+    const char = input.charCodeAt(i);
+    hash = ((hash << 5) - hash) + char;
+    hash = hash & hash; // Convert to 32bit integer
+  }
+  
+  // Convert to hex string with fixed length of 8 characters
+  const hexHash = (hash >>> 0).toString(16).padStart(8, '0').slice(0, 8);
+  return hexHash;
+};
 
 /**
  * Generates an encoded preview link with a deterministic hash prefix for a project
@@ -10,10 +30,7 @@ import { createHash } from 'crypto';
 export const generatePreviewLink = (projectId: string): string => {
   // Generate a deterministic hash based on the project ID
   // This ensures the same project always gets the same encoded link
-  const hash = createHash('md5')
-    .update(projectId + 'harmonIA-preview-salt')
-    .digest('hex')
-    .slice(0, 8);
+  const hash = simpleHash(projectId);
   
   return `${hash}-${projectId}`;
 };
@@ -68,10 +85,7 @@ export const isValidEncodedPreviewLink = (previewId: string): boolean => {
   
   // Extract project ID and verify the hash matches what we'd generate
   const projectId = parts.slice(1).join('-');
-  const expectedHash = createHash('md5')
-    .update(projectId + 'harmonIA-preview-salt')
-    .digest('hex')
-    .slice(0, 8);
+  const expectedHash = simpleHash(projectId);
   
   // Return true if the hash matches what we expect for this project ID
   return hashPart === expectedHash;
