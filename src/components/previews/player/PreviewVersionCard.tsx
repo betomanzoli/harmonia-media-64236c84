@@ -32,6 +32,7 @@ const PreviewVersionCard: React.FC<PreviewVersionCardProps> = ({
   onSelect,
   onFeedbackChange
 }) => {
+  console.log('Renderizando PreviewVersionCard:', { isSelected, isApproved, version });
   return (
     <Card 
       className={`p-6 transition-all ${

@@ -18,8 +18,9 @@ interface ProjectHistoryListProps {
 }
 
 const ProjectHistoryList: React.FC<ProjectHistoryListProps> = ({ history = [] }) => {
+  console.log('Histórico recebido em ProjectHistoryList:', history);
   return (
-    <Card className="bg-gray-100 text-gray-900">
+    <Card className="bg-white text-gray-900">
       <CardHeader className="border-b">
         <CardTitle className="text-lg">Histórico do Projeto</CardTitle>
       </CardHeader>
