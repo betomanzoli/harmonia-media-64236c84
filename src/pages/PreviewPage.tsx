@@ -141,15 +141,20 @@ const PreviewPage: React.FC = () => {
     
     // Try to verify access using Supabase
     try {
-      // Check if the email matches the client's email
-      const { data: clientData, error: clientError } = await supabase
-        .from('profiles')
-        .select('email')
-        .eq('id', actualProjectId)
-        .maybeSingle();
-        
-      if (clientError && clientError.code !== 'PGRST116') { // PGRST116 is "not found"
-        console.error('Error fetching client data for verification:', clientError);
+      // Check if the email matches the client's email from users table
+      let clientEmail = null;
+      try {
+        const { data: clientData, error: clientError } = await supabase
+          .from('users')
+          .select('email')
+          .eq('id', actualProjectId)
+          .maybeSingle();
+          
+        if (!clientError && clientData) {
+          clientEmail = clientData.email;
+        }
+      } catch (err) {
+        console.error('Error fetching client email:', err);
       }
       
       // Also check against the project preview_code if available
@@ -164,15 +169,20 @@ const PreviewPage: React.FC = () => {
       }
       
       // If we have a client ID from the project, try to get their email
-      let clientEmail = clientData?.email;
       if (!clientEmail && projectData?.client_id) {
-        const { data: projectClientData } = await supabase
-          .from('profiles')
-          .select('email')
-          .eq('id', projectData.client_id)
-          .maybeSingle();
-          
-        clientEmail = projectClientData?.email;
+        try {
+          const { data: projectClientData } = await supabase
+            .from('users')
+            .select('email')
+            .eq('id', projectData.client_id)
+            .maybeSingle();
+            
+          if (projectClientData) {
+            clientEmail = projectClientData.email;
+          }
+        } catch (err) {
+          console.error('Error fetching client email from project client_id:', err);
+        }
       }
       
       const isEmailValid = clientEmail && email.toLowerCase() === clientEmail.toLowerCase();

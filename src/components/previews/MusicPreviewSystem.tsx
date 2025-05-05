@@ -17,6 +17,19 @@ interface MusicPreviewSystemProps {
   projectId: string;
 }
 
+// Define the MusicPreview interface to match what PreviewPlayerList expects
+interface MusicPreview {
+  id: string;
+  title: string;
+  description: string;
+  audioUrl?: string;
+  recommended?: boolean;
+  url?: string;
+  fileId?: string;
+  finalVersionUrl?: string;
+  stemsUrl?: string;
+}
+
 const MusicPreviewSystem: React.FC<MusicPreviewSystemProps> = ({ projectId }) => {
   const { projectData, isLoading, updateProjectStatus } = usePreviewData(projectId);
   const { toast } = useToast();
@@ -147,10 +160,44 @@ const MusicPreviewSystem: React.FC<MusicPreviewSystemProps> = ({ projectId }) =>
   const packageType = formatPackageType(projectData.packageType);
   const createdAt = projectData.createdAt || new Date().toISOString();
   
-  // Prepare versions array from either versionsList or previews
-  const versions = Array.isArray(projectData.versionsList) 
-    ? projectData.versionsList 
-    : (Array.isArray(projectData.previews) ? projectData.previews : []);
+  // Convert versionsList to MusicPreview format
+  let versionsForPlayer: MusicPreview[] = [];
+  
+  if (Array.isArray(projectData.versionsList)) {
+    versionsForPlayer = projectData.versionsList.map(v => ({
+      id: v.id,
+      title: v.name || `Versão ${v.id}`,
+      description: v.description || '',
+      audioUrl: v.audioUrl || '',
+      recommended: v.recommended || false
+    }));
+  } else if (Array.isArray(projectData.previews)) {
+    versionsForPlayer = projectData.previews;
+  }
+  
+  // If no versions available, add sample data for demonstration
+  if (versionsForPlayer.length === 0) {
+    versionsForPlayer = [
+      {
+        id: 'v1',
+        title: 'Versão Acústica',
+        description: 'Versão suave com violão e piano',
+        audioUrl: 'https://drive.google.com/file/d/1H62ylCwQYJ23BLpygtvNmCgwTDcHX6Cl/preview',
+      },
+      {
+        id: 'v2',
+        title: 'Versão Orquestral',
+        description: 'Arranjo completo com cordas e metais',
+        audioUrl: 'https://drive.google.com/file/d/11c6JahRd5Lx0iKCL_gHZ0zrZ3LFBJ47a/preview',
+      },
+      {
+        id: 'v3',
+        title: 'Versão Minimalista',
+        description: 'Abordagem simplificada com foco na melodia',
+        audioUrl: 'https://drive.google.com/file/d/1fCsWubN8pXwM-mRlDtnQFTCkBbIkuUyW/preview',
+      }
+    ];
+  }
 
   return (
     <div className="max-w-4xl mx-auto px-4">
@@ -163,10 +210,10 @@ const MusicPreviewSystem: React.FC<MusicPreviewSystemProps> = ({ projectId }) =>
         onShareClick={() => setIsShareDialogOpen(true)}
       />
       
-      {versions.length > 0 ? (
+      {versionsForPlayer.length > 0 ? (
         <div className="mt-8">
           <PreviewPlayerList 
-            versions={versions}
+            versions={versionsForPlayer}
             selectedVersion={selectedVersion}
             setSelectedVersion={setSelectedVersion}
             isApproved={status === 'approved'}

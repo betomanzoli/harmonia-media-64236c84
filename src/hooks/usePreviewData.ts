@@ -117,24 +117,34 @@ export const usePreviewData = (previewId: string | undefined) => {
           console.error('Error fetching project files:', filesError);
         }
         
-        // Get client info
-        const { data: clientData, error: clientError } = await supabase
-          .from('profiles')
-          .select('first_name, last_name, email')
-          .eq('id', projectFromSupabase.client_id)
-          .single();
-          
-        if (clientError && clientError.code !== 'PGRST116') { // PGRST116 is "not found"
-          console.error('Error fetching client data:', clientError);
+        // Get client info - use users table which is accessible with anon key
+        let clientName = 'Cliente';
+        let clientEmail = '';
+        
+        if (projectFromSupabase.client_id) {
+          try {
+            const { data: userData, error: userError } = await supabase
+              .from('users')
+              .select('full_name, email')
+              .eq('id', projectFromSupabase.client_id)
+              .single();
+              
+            if (!userError && userData) {
+              clientName = userData.full_name || 'Cliente';
+              clientEmail = userData.email || '';
+            }
+          } catch (userError) {
+            console.error('Error fetching client data:', userError);
+          }
         }
         
         // Convert Supabase data to ProjectItem format
         const convertedProject: ProjectItem = {
           id: projectFromSupabase.id,
-          clientName: clientData ? `${clientData.first_name} ${clientData.last_name}` : 'Cliente',
-          clientEmail: clientData?.email,
+          clientName: clientName,
+          clientEmail: clientEmail,
           packageType: projectFromSupabase.packages?.name || 'Música Personalizada',
-          status: projectFromSupabase.status as 'waiting' | 'feedback' | 'approved' || 'waiting',
+          status: (projectFromSupabase.status as 'waiting' | 'feedback' | 'approved') || 'waiting',
           createdAt: new Date(projectFromSupabase.created_at).toLocaleDateString('pt-BR'),
           lastActivityDate: new Date(projectFromSupabase.updated_at).toLocaleDateString('pt-BR'),
           expirationDate: projectFromSupabase.deadline ? new Date(projectFromSupabase.deadline).toLocaleDateString('pt-BR') : undefined,
