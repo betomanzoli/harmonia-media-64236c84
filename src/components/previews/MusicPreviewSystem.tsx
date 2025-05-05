@@ -30,13 +30,15 @@ interface MusicPreview {
   stemsUrl?: string;
 }
 
-// Define VersionItem to match the structure in projectData.versionsList
-interface VersionItem {
+// Define our own VersionItem interface to avoid conflicts
+interface PreviewVersionItem {
   id: string;
   name: string;
-  description: string;
+  description?: string;
   audioUrl: string;
   recommended?: boolean;
+  final?: boolean;
+  createdAt?: string;
 }
 
 const MusicPreviewSystem: React.FC<MusicPreviewSystemProps> = ({ projectId }) => {
@@ -173,7 +175,7 @@ const MusicPreviewSystem: React.FC<MusicPreviewSystemProps> = ({ projectId }) =>
   let versionsForPlayer: MusicPreview[] = [];
   
   if (Array.isArray(projectData.versionsList)) {
-    versionsForPlayer = projectData.versionsList.map((v: VersionItem) => ({
+    versionsForPlayer = projectData.versionsList.map((v: PreviewVersionItem) => ({
       id: v.id,
       title: v.name || `Versão ${v.id}`,
       description: v.description || '',

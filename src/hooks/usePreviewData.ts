@@ -129,7 +129,7 @@ export const usePreviewData = (previewId: string | undefined) => {
             const { data: userData } = await supabase
               .from('admin_users')
               .select('name, email')
-              .eq('id', projectFromSupabase.client_id)
+              .eq('user_id', projectFromSupabase.client_id)
               .maybeSingle();
               
             if (userData && userData.name) {

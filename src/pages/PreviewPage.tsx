@@ -152,9 +152,6 @@ const PreviewPage: React.FC = () => {
         console.error('Error fetching project data for verification:', projectError);
       }
       
-      // Check if we have a client email to verify against
-      let clientEmail = null;
-      
       // Since we don't have 'clients' table, we need to adapt
       // For this example, we'll just compare preview_code
       // and allow test/demo emails
