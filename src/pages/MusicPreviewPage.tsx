@@ -54,8 +54,8 @@ const MusicPreviewPage: React.FC = () => {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gray-100">
         <div className="bg-white p-6 rounded-lg shadow-sm text-center">
-          <h2 className="text-2xl font-bold text-black mb-4">Link de prévia inválido</h2>
-          <p className="text-black">O código de prévia fornecido não é válido ou expirou.</p>
+          <h2 className="text-2xl font-bold text-gray-800 mb-4">Link de prévia inválido</h2>
+          <p className="text-gray-700">O código de prévia fornecido não é válido ou expirou.</p>
         </div>
       </div>
     );

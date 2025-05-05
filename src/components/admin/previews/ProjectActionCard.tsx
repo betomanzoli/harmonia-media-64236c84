@@ -42,7 +42,7 @@ const ProjectActionCard: React.FC<ProjectActionCardProps> = ({
   const fullEncodedUrl = `${window.location.origin}/preview/${encodedPreviewLink}`;
   
   const handleCopyLink = () => {
-    // Use the encoded link instead of direct link
+    // Use the encoded link
     navigator.clipboard.writeText(fullEncodedUrl);
     toast({
       title: "Link copiado",

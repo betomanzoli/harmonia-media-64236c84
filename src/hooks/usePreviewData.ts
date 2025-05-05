@@ -25,7 +25,7 @@ export const usePreviewData = (previewId: string | undefined) => {
       let projectId: string | null = null;
       
       if (isEncodedLink) {
-        // Process encoded link
+        // Process encoded link - valid for both anonymous and admin users
         const decodedId = getProjectIdFromPreviewLink(previewId);
         console.log(`Decoded project ID: ${decodedId}`);
         projectId = decodedId;

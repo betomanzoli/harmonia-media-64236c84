@@ -1,4 +1,3 @@
-
 import React, { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import MusicPreviewSystem from '@/components/previews/MusicPreviewSystem';
@@ -65,6 +64,7 @@ const PreviewPage: React.FC = () => {
               setIsError(false);
             } else {
               // Not authorized, but the project exists
+              // Keep isError as false so the ProjectAccessForm will be shown
               setIsError(false);
             }
             return;
@@ -136,8 +136,8 @@ const PreviewPage: React.FC = () => {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gray-100">
         <div className="bg-white p-6 rounded-lg shadow-sm text-center">
-          <h2 className="text-2xl font-bold text-black mb-4">ID do projeto não encontrado</h2>
-          <p className="text-gray-600">O link que você acessou não é válido.</p>
+          <h2 className="text-2xl font-bold text-gray-800 mb-4">ID do projeto não encontrado</h2>
+          <p className="text-gray-700">O link que você acessou não é válido.</p>
         </div>
       </div>
     );
@@ -147,8 +147,8 @@ const PreviewPage: React.FC = () => {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gray-100">
         <div className="bg-white p-6 rounded-lg shadow-sm text-center">
-          <h2 className="text-2xl font-bold text-black mb-4">Link de prévia inválido</h2>
-          <p className="text-gray-600">O link que você acessou não existe ou expirou.</p>
+          <h2 className="text-2xl font-bold text-gray-800 mb-4">Link de prévia inválido</h2>
+          <p className="text-gray-700">O link que você acessou não existe ou expirou.</p>
         </div>
       </div>
     );
