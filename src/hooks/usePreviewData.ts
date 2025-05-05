@@ -3,6 +3,7 @@ import { useState, useEffect } from 'react';
 import { useToast } from '@/hooks/use-toast';
 import { usePreviewProjects, ProjectItem } from '@/hooks/admin/usePreviewProjects';
 import { getProjectIdFromPreviewLink, isValidEncodedPreviewLink } from '@/utils/previewLinkUtils';
+import { supabase } from '@/integrations/supabase/client';
 
 export const usePreviewData = (previewId: string | undefined) => {
   const [actualProjectId, setActualProjectId] = useState<string | null>(null);
@@ -48,49 +49,136 @@ export const usePreviewData = (previewId: string | undefined) => {
       }
       
       // Load project data
-      setIsLoading(true);
-      
-      try {
-        // Get from localStorage
-        const storedProjects = localStorage.getItem('harmonIA_preview_projects');
-        console.log('Projects in localStorage:', storedProjects ? 'Found' : 'Not found');
-        
-        if (storedProjects) {
-          const projects = JSON.parse(storedProjects);
-          const project = projects.find((p: ProjectItem) => p.id === projectId);
-          
-          if (project) {
-            console.log('Project found:', project);
-            setProjectData(project);
-          } else {
-            console.log(`Project not found for ID: ${projectId}`);
-            setProjectData(null);
-          }
-        } else {
-          console.log('No projects found in localStorage');
-          setProjectData(null);
-        }
-      } catch (error) {
-        console.error('Error loading project data:', error);
-        setProjectData(null);
-      } finally {
-        setIsLoading(false);
-      }
+      loadProjectData(projectId);
     } else {
       setIsLoading(false);
     }
   }, [previewId]);
+
+  // Function to load project data from localStorage or Supabase
+  const loadProjectData = async (projectId: string) => {
+    setIsLoading(true);
+    let projectFromStorage = null;
+    
+    try {
+      // First try to get from localStorage
+      const storedProjects = localStorage.getItem('harmonIA_preview_projects');
+      console.log('Projects in localStorage:', storedProjects ? 'Found' : 'Not found');
+      
+      if (storedProjects) {
+        const projects = JSON.parse(storedProjects);
+        projectFromStorage = projects.find((p: ProjectItem) => p.id === projectId);
+        
+        if (projectFromStorage) {
+          console.log('Project found in localStorage:', projectFromStorage);
+          setProjectData(projectFromStorage);
+          setIsLoading(false);
+          return;
+        }
+      }
+      
+      // If not found in localStorage, try to fetch from Supabase
+      console.log('Project not found in localStorage, fetching from Supabase:', projectId);
+      
+      const { data: projectFromSupabase, error } = await supabase
+        .from('projects')
+        .select(`
+          id,
+          title,
+          description,
+          client_id,
+          status,
+          package_id,
+          created_at,
+          updated_at,
+          deadline,
+          preview_code,
+          packages(name)
+        `)
+        .eq('id', projectId)
+        .single();
+        
+      if (error) {
+        console.error('Error fetching project from Supabase:', error);
+        throw error;
+      }
+      
+      if (projectFromSupabase) {
+        console.log('Project found in Supabase:', projectFromSupabase);
+        
+        // Fetch versions (project files)
+        const { data: projectFiles, error: filesError } = await supabase
+          .from('project_files')
+          .select('*')
+          .eq('project_id', projectId)
+          .eq('file_type', 'preview');
+          
+        if (filesError) {
+          console.error('Error fetching project files:', filesError);
+        }
+        
+        // Get client info
+        const { data: clientData, error: clientError } = await supabase
+          .from('profiles')
+          .select('first_name, last_name, email')
+          .eq('id', projectFromSupabase.client_id)
+          .single();
+          
+        if (clientError && clientError.code !== 'PGRST116') { // PGRST116 is "not found"
+          console.error('Error fetching client data:', clientError);
+        }
+        
+        // Convert Supabase data to ProjectItem format
+        const convertedProject: ProjectItem = {
+          id: projectFromSupabase.id,
+          clientName: clientData ? `${clientData.first_name} ${clientData.last_name}` : 'Cliente',
+          clientEmail: clientData?.email,
+          packageType: projectFromSupabase.packages?.name || 'Música Personalizada',
+          status: projectFromSupabase.status as 'waiting' | 'feedback' | 'approved' || 'waiting',
+          createdAt: new Date(projectFromSupabase.created_at).toLocaleDateString('pt-BR'),
+          lastActivityDate: new Date(projectFromSupabase.updated_at).toLocaleDateString('pt-BR'),
+          expirationDate: projectFromSupabase.deadline ? new Date(projectFromSupabase.deadline).toLocaleDateString('pt-BR') : undefined,
+          versionsList: projectFiles ? projectFiles.map((file, index) => ({
+            id: file.id,
+            name: file.file_name || `Versão ${index + 1}`,
+            description: file.notes || '',
+            audioUrl: file.file_url || '',
+            recommended: index === 0,
+            final: false,
+            createdAt: new Date(file.created_at).toISOString()
+          })) : [],
+          versions: projectFiles ? projectFiles.length : 0,
+          feedback: '',
+          feedbackHistory: [],
+          history: []
+        };
+        
+        console.log('Converted project data:', convertedProject);
+        setProjectData(convertedProject);
+      } else {
+        console.log('Project not found in Supabase');
+        setProjectData(null);
+      }
+    } catch (error) {
+      console.error('Error loading project data:', error);
+      setProjectData(null);
+    } finally {
+      setIsLoading(false);
+    }
+  };
   
   // Function to update project status and add information to history
-  const updateProjectStatus = (newStatus: 'waiting' | 'feedback' | 'approved', comments: string = '') => {
+  const updateProjectStatus = async (newStatus: 'waiting' | 'feedback' | 'approved', comments: string = '') => {
     try {
       if (!actualProjectId || !projectData) return false;
 
       console.log(`Updating project ${actualProjectId} status to ${newStatus}`);
       console.log(`Client feedback: ${comments}`);
       
-      // Get all projects
+      // First try to update in localStorage for admin users
+      let localUpdateSuccessful = false;
       const storedProjects = localStorage.getItem('harmonIA_preview_projects');
+      
       if (storedProjects) {
         const projects = JSON.parse(storedProjects);
         const projectIndex = projects.findIndex((p: ProjectItem) => p.id === actualProjectId);
@@ -138,8 +226,52 @@ export const usePreviewData = (previewId: string | undefined) => {
           // Update local state
           setProjectData(projects[projectIndex]);
           
-          console.log('Project successfully updated:', projects[projectIndex]);
+          console.log('Project successfully updated in localStorage:', projects[projectIndex]);
+          localUpdateSuccessful = true;
         }
+      }
+      
+      // Also try to update in Supabase
+      try {
+        // Update project status
+        const { error: projectUpdateError } = await supabase
+          .from('projects')
+          .update({ 
+            status: newStatus,
+            updated_at: new Date().toISOString()
+          })
+          .eq('id', actualProjectId);
+          
+        if (projectUpdateError) {
+          console.error('Error updating project status in Supabase:', projectUpdateError);
+        } else {
+          console.log('Project status successfully updated in Supabase');
+        }
+        
+        // Add feedback to project_history
+        if (comments.trim()) {
+          const { error: historyError } = await supabase
+            .from('project_history')
+            .insert({
+              project_id: actualProjectId,
+              event_type: 'feedback',
+              description: comments,
+              new_value: { status: newStatus }
+            });
+            
+          if (historyError) {
+            console.error('Error adding feedback to project history in Supabase:', historyError);
+          } else {
+            console.log('Feedback successfully added to project history in Supabase');
+          }
+        }
+      } catch (supabaseError) {
+        console.error('Error updating project in Supabase:', supabaseError);
+        // If Supabase update failed but localStorage update succeeded, still return true
+        if (localUpdateSuccessful) {
+          return true;
+        }
+        return false;
       }
 
       return true;

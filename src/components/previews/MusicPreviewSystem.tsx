@@ -9,7 +9,7 @@ import PreviewNextSteps from './PreviewNextSteps';
 import SharePreviewDialog from './SharePreviewDialog';
 import PreviewCountdown from './PreviewCountdown';
 import PreviewLoadingState from './PreviewLoadingState';
-import { usePreviewProject } from '@/hooks/usePreviewProject';
+import { usePreviewData } from '@/hooks/usePreviewData';
 import PreviewProjectDetails from './PreviewProjectDetails';
 import { useToast } from '@/hooks/use-toast';
 
@@ -18,7 +18,7 @@ interface MusicPreviewSystemProps {
 }
 
 const MusicPreviewSystem: React.FC<MusicPreviewSystemProps> = ({ projectId }) => {
-  const { projectData, isLoading, updateProjectStatus } = usePreviewProject(projectId);
+  const { projectData, isLoading, updateProjectStatus } = usePreviewData(projectId);
   const { toast } = useToast();
   const [selectedVersion, setSelectedVersion] = useState<string | null>(null);
   const [feedback, setFeedback] = useState('');
@@ -32,6 +32,9 @@ const MusicPreviewSystem: React.FC<MusicPreviewSystemProps> = ({ projectId }) =>
       // If project status is feedback or approved, mark feedback as submitted
       if (projectData.status === 'feedback' || projectData.status === 'approved') {
         setFeedbackSubmitted(true);
+      } else {
+        // Reset feedback submitted state if a new version was added after previous feedback
+        setFeedbackSubmitted(false);
       }
     }
   }, [projectData]);
@@ -44,8 +47,8 @@ const MusicPreviewSystem: React.FC<MusicPreviewSystemProps> = ({ projectId }) =>
     return (
       <div className="max-w-4xl mx-auto px-4 py-8">
         <div className="bg-white p-8 rounded-lg shadow-sm text-center">
-          <h2 className="text-2xl font-bold text-black mb-4">Prévia não encontrada</h2>
-          <p className="text-black">
+          <h2 className="text-2xl font-bold text-gray-800 mb-4">Prévia não encontrada</h2>
+          <p className="text-gray-700">
             A prévia que você está tentando acessar não existe ou expirou.
           </p>
         </div>
@@ -143,7 +146,11 @@ const MusicPreviewSystem: React.FC<MusicPreviewSystemProps> = ({ projectId }) =>
   const status = projectData.status || "waiting";
   const packageType = formatPackageType(projectData.packageType);
   const createdAt = projectData.createdAt || new Date().toISOString();
-  const versions = projectData.versions || [];
+  
+  // Prepare versions array from either versionsList or previews
+  const versions = Array.isArray(projectData.versionsList) 
+    ? projectData.versionsList 
+    : (Array.isArray(projectData.previews) ? projectData.previews : []);
 
   return (
     <div className="max-w-4xl mx-auto px-4">
@@ -156,7 +163,7 @@ const MusicPreviewSystem: React.FC<MusicPreviewSystemProps> = ({ projectId }) =>
         onShareClick={() => setIsShareDialogOpen(true)}
       />
       
-      {versions.length > 0 && (
+      {versions.length > 0 ? (
         <div className="mt-8">
           <PreviewPlayerList 
             versions={versions}
@@ -164,6 +171,13 @@ const MusicPreviewSystem: React.FC<MusicPreviewSystemProps> = ({ projectId }) =>
             setSelectedVersion={setSelectedVersion}
             isApproved={status === 'approved'}
           />
+        </div>
+      ) : (
+        <div className="mt-8 bg-white p-6 rounded-lg shadow-sm text-center">
+          <h3 className="text-xl font-medium text-gray-800 mb-2">Nenhuma versão disponível</h3>
+          <p className="text-gray-600">
+            No momento não há versões disponíveis para este projeto. Por favor, volte mais tarde.
+          </p>
         </div>
       )}
       
