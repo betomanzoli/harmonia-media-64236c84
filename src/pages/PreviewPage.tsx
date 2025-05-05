@@ -54,17 +54,13 @@ const PreviewPage: React.FC = () => {
 
   // Function to verify project access first in localStorage then in Supabase
   const verifyProjectAccess = async (decodedId: string, encodedId: string) => {
-    let projectExists = false;
-    
     try {
-      // First check localStorage
+      // Primeiro verificar localStorage (para compatibilidade)
       const storedProjects = localStorage.getItem('harmonIA_preview_projects');
-      console.log('Projects in localStorage:', storedProjects ? 'Found' : 'Not found');
+      let projectExists = false;
       
       if (storedProjects) {
         const projects = JSON.parse(storedProjects);
-        
-        // Check if project exists in localStorage
         projectExists = projects.some((p: any) => p.id === decodedId);
         
         if (projectExists) {
@@ -74,31 +70,32 @@ const PreviewPage: React.FC = () => {
         }
       }
       
-      // If not found in localStorage, check Supabase
-      console.log("Project not found in localStorage, checking Supabase");
-      
-      const { data: projectFromSupabase, error } = await supabase
-        .from('projects')
-        .select('id')
-        .eq('id', decodedId)
-        .maybeSingle();
-        
-      if (error) {
-        console.error('Error checking project in Supabase:', error);
-        setIsError(true);
-        setIsLoading(false);
-        return;
+      // Se não encontrar no localStorage, verificar no Supabase
+      if (!projectExists) {
+        const { data, error } = await supabase
+          .from('projects')
+          .select('id')
+          .eq('id', decodedId)
+          .maybeSingle();
+          
+        if (error) {
+          console.error('Error checking project in Supabase:', error);
+          setIsError(true);
+          setIsLoading(false);
+          return;
+        }
+
+        projectExists = !!data;
       }
       
-      if (projectFromSupabase) {
-        console.log("Project found in Supabase:", projectFromSupabase);
-        projectExists = true;
+      if (projectExists) {
+        console.log("Project found:", decodedId);
         handleAuthorizationCheck(encodedId);
         return;
       }
       
-      // Project not found in either location
-      console.log("Project not found in Supabase or localStorage");
+      // No valid project found
+      console.log("No valid project found for:", decodedId);
       setIsError(true);
       setIsLoading(false);
     } catch (error) {
@@ -152,8 +149,7 @@ const PreviewPage: React.FC = () => {
         console.error('Error fetching project data for verification:', projectError);
       }
       
-      // Since we don't have 'clients' table, we need to adapt
-      // For this example, we'll just compare preview_code
+      // For this implementation, we'll just compare preview_code
       // and allow test/demo emails
       
       const isCodeValid = projectData?.preview_code && code === projectData.preview_code;

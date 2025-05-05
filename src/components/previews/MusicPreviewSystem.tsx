@@ -171,7 +171,7 @@ const MusicPreviewSystem: React.FC<MusicPreviewSystemProps> = ({ projectId }) =>
   const packageType = formatPackageType(projectData.packageType);
   const createdAt = projectData.createdAt || new Date().toISOString();
   
-  // Convert versionsList to MusicPreview format
+  // Convert versionsList to MusicPreview format (properly typed now)
   let versionsForPlayer: MusicPreview[] = [];
   
   if (Array.isArray(projectData.versionsList)) {
