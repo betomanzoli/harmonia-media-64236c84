@@ -1,6 +1,6 @@
 
 import React, { useState, useEffect } from 'react';
-import { Routes, Route, useLocation, BrowserRouter } from 'react-router-dom';
+import { Routes, Route, useLocation } from 'react-router-dom';
 import ScrollToTop from './components/ScrollToTop';
 import ChatbotButton from './components/chatbot/ChatbotButton';
 
@@ -43,10 +43,10 @@ import AdminGuides from './pages/admin/AdminGuides';
 
 const App: React.FC = () => {
   return (
-    <BrowserRouter>
+    <>
       <ScrollToTop />
       <AppRoutes />
-    </BrowserRouter>
+    </>
   );
 };
 

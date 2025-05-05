@@ -30,6 +30,15 @@ interface MusicPreview {
   stemsUrl?: string;
 }
 
+// Define VersionItem to match the structure in projectData.versionsList
+interface VersionItem {
+  id: string;
+  name: string;
+  description: string;
+  audioUrl: string;
+  recommended?: boolean;
+}
+
 const MusicPreviewSystem: React.FC<MusicPreviewSystemProps> = ({ projectId }) => {
   const { projectData, isLoading, updateProjectStatus } = usePreviewData(projectId);
   const { toast } = useToast();
@@ -205,7 +214,7 @@ const MusicPreviewSystem: React.FC<MusicPreviewSystemProps> = ({ projectId }) =>
         projectTitle={projectTitle}
         clientName={clientName}
         packageType={packageType}
-        status={status}
+        status={status as 'waiting' | 'feedback' | 'approved'}
         createdAt={createdAt}
         onShareClick={() => setIsShareDialogOpen(true)}
       />
@@ -236,7 +245,7 @@ const MusicPreviewSystem: React.FC<MusicPreviewSystemProps> = ({ projectId }) =>
             handleSubmit={handleFeedbackSubmit}
             handleApprove={handleApprove}
             selectedPreview={selectedVersion}
-            status={status}
+            status={status as 'waiting' | 'feedback' | 'approved'}
           />
         </div>
       )}
@@ -254,7 +263,7 @@ const MusicPreviewSystem: React.FC<MusicPreviewSystemProps> = ({ projectId }) =>
         <PreviewProjectDetails projectData={{
           projectTitle: projectTitle,
           clientName: clientName,
-          status: status,
+          status: status as 'waiting' | 'feedback' | 'approved',
           packageType: projectData.packageType,
           creationDate: createdAt
         }} />
@@ -267,12 +276,12 @@ const MusicPreviewSystem: React.FC<MusicPreviewSystemProps> = ({ projectId }) =>
       )}
       
       <div className="mt-8">
-        <PreviewInstructions status={status} />
+        <PreviewInstructions status={status as 'waiting' | 'feedback' | 'approved'} />
       </div>
       
       {feedbackSubmitted && (
         <div className="mt-8">
-          <PreviewNextSteps status={status} />
+          <PreviewNextSteps status={status as 'waiting' | 'feedback' | 'approved'} />
         </div>
       )}
       

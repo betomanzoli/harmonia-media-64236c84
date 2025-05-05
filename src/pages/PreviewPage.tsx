@@ -141,23 +141,7 @@ const PreviewPage: React.FC = () => {
     
     // Try to verify access using Supabase
     try {
-      // Check if the email matches the client's email from users table
-      let clientEmail = null;
-      try {
-        const { data: clientData, error: clientError } = await supabase
-          .from('users')
-          .select('email')
-          .eq('id', actualProjectId)
-          .maybeSingle();
-          
-        if (!clientError && clientData) {
-          clientEmail = clientData.email;
-        }
-      } catch (err) {
-        console.error('Error fetching client email:', err);
-      }
-      
-      // Also check against the project preview_code if available
+      // Check the project preview_code if available
       const { data: projectData, error: projectError } = await supabase
         .from('projects')
         .select('preview_code, client_id')
@@ -168,20 +152,21 @@ const PreviewPage: React.FC = () => {
         console.error('Error fetching project data for verification:', projectError);
       }
       
-      // If we have a client ID from the project, try to get their email
-      if (!clientEmail && projectData?.client_id) {
+      // Check if we have a client email to verify against
+      let clientEmail = null;
+      if (projectData?.client_id) {
         try {
-          const { data: projectClientData } = await supabase
-            .from('users')
+          const { data: clientData } = await supabase
+            .from('clients')
             .select('email')
             .eq('id', projectData.client_id)
             .maybeSingle();
             
-          if (projectClientData) {
-            clientEmail = projectClientData.email;
+          if (clientData) {
+            clientEmail = clientData.email;
           }
         } catch (err) {
-          console.error('Error fetching client email from project client_id:', err);
+          console.error('Error fetching client email from client_id:', err);
         }
       }
       

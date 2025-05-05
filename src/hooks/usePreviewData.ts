@@ -117,24 +117,24 @@ export const usePreviewData = (previewId: string | undefined) => {
           console.error('Error fetching project files:', filesError);
         }
         
-        // Get client info - use users table which is accessible with anon key
+        // Get client info - use client_id to lookup in clients table
         let clientName = 'Cliente';
         let clientEmail = '';
         
         if (projectFromSupabase.client_id) {
           try {
-            const { data: userData, error: userError } = await supabase
-              .from('users')
-              .select('full_name, email')
+            const { data: clientData } = await supabase
+              .from('clients')
+              .select('name, email')
               .eq('id', projectFromSupabase.client_id)
               .single();
               
-            if (!userError && userData) {
-              clientName = userData.full_name || 'Cliente';
-              clientEmail = userData.email || '';
+            if (clientData) {
+              clientName = clientData.name || 'Cliente';
+              clientEmail = clientData.email || '';
             }
-          } catch (userError) {
-            console.error('Error fetching client data:', userError);
+          } catch (clientError) {
+            console.error('Error fetching client data:', clientError);
           }
         }
         
