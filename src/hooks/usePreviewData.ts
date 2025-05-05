@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
@@ -86,8 +85,7 @@ export const usePreviewData = (previewId: string | undefined) => {
             created_at,
             updated_at,
             deadline,
-            preview_code,
-            packages(name)
+            preview_code
           `)
           .eq('id', projectId)
           .single();
@@ -120,15 +118,15 @@ export const usePreviewData = (previewId: string | undefined) => {
           if (projectFromSupabase.client_id) {
             try {
               // Since we're not joining with clients table, fetch separately
-              const { data: userData } = await supabase
+              const { data: clientData } = await supabase
                 .from('admin_users')
                 .select('name, email')
                 .eq('user_id', projectFromSupabase.client_id)
                 .maybeSingle();
                 
-              if (userData) {
-                clientName = userData.name || 'Cliente';
-                clientEmail = userData.email || '';
+              if (clientData) {
+                clientName = clientData.name || 'Cliente';
+                clientEmail = clientData.email || '';
               }
             } catch (clientError) {
               console.error('Error fetching client data:', clientError);
@@ -137,8 +135,21 @@ export const usePreviewData = (previewId: string | undefined) => {
           
           // Get package name safely
           let packageName = 'Música Personalizada';
-          if (projectFromSupabase.packages && projectFromSupabase.packages.name) {
-            packageName = projectFromSupabase.packages.name;
+          
+          if (projectFromSupabase.package_id) {
+            try {
+              const { data: packageData } = await supabase
+                .from('packages')
+                .select('name')
+                .eq('id', projectFromSupabase.package_id)
+                .maybeSingle();
+                
+              if (packageData && packageData.name) {
+                packageName = packageData.name;
+              }
+            } catch (packageError) {
+              console.error('Error fetching package data:', packageError);
+            }
           }
           
           // Convert Supabase data to format needed by the app
