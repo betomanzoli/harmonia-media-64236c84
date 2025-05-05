@@ -154,23 +154,11 @@ const PreviewPage: React.FC = () => {
       
       // Check if we have a client email to verify against
       let clientEmail = null;
-      if (projectData?.client_id) {
-        try {
-          const { data: clientData } = await supabase
-            .from('clients')
-            .select('email')
-            .eq('id', projectData.client_id)
-            .maybeSingle();
-            
-          if (clientData) {
-            clientEmail = clientData.email;
-          }
-        } catch (err) {
-          console.error('Error fetching client email from client_id:', err);
-        }
-      }
       
-      const isEmailValid = clientEmail && email.toLowerCase() === clientEmail.toLowerCase();
+      // Since we don't have 'clients' table, we need to adapt
+      // For this example, we'll just compare preview_code
+      // and allow test/demo emails
+      
       const isCodeValid = projectData?.preview_code && code === projectData.preview_code;
       
       // For demo purposes, also allow test/demo emails
@@ -179,7 +167,7 @@ const PreviewPage: React.FC = () => {
         email.toLowerCase().includes('demo')
       );
       
-      const isAuthorized = isEmailValid || isCodeValid || isTestEmail;
+      const isAuthorized = isCodeValid || isTestEmail;
       
       if (isAuthorized) {
         localStorage.setItem(`preview_auth_${projectId}`, 'authorized');

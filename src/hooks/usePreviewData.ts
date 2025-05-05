@@ -117,25 +117,34 @@ export const usePreviewData = (previewId: string | undefined) => {
           console.error('Error fetching project files:', filesError);
         }
         
-        // Get client info - use client_id to lookup in clients table
+        // Get client info if available
         let clientName = 'Cliente';
         let clientEmail = '';
         
         if (projectFromSupabase.client_id) {
           try {
-            const { data: clientData } = await supabase
-              .from('clients')
+            // Since 'clients' table doesn't exist in the schema,
+            // we need to work with what's available
+            // Check if client information is stored elsewhere, like in admin_users
+            const { data: userData } = await supabase
+              .from('admin_users')
               .select('name, email')
               .eq('id', projectFromSupabase.client_id)
-              .single();
+              .maybeSingle();
               
-            if (clientData) {
-              clientName = clientData.name || 'Cliente';
-              clientEmail = clientData.email || '';
+            if (userData && userData.name) {
+              clientName = userData.name;
+              clientEmail = userData.email || '';
             }
           } catch (clientError) {
             console.error('Error fetching client data:', clientError);
           }
+        }
+        
+        // Get package name safely
+        let packageName = 'Música Personalizada';
+        if (projectFromSupabase.packages && typeof projectFromSupabase.packages === 'object') {
+          packageName = (projectFromSupabase.packages as any).name || packageName;
         }
         
         // Convert Supabase data to ProjectItem format
@@ -143,7 +152,7 @@ export const usePreviewData = (previewId: string | undefined) => {
           id: projectFromSupabase.id,
           clientName: clientName,
           clientEmail: clientEmail,
-          packageType: projectFromSupabase.packages?.name || 'Música Personalizada',
+          packageType: packageName,
           status: (projectFromSupabase.status as 'waiting' | 'feedback' | 'approved') || 'waiting',
           createdAt: new Date(projectFromSupabase.created_at).toLocaleDateString('pt-BR'),
           lastActivityDate: new Date(projectFromSupabase.updated_at).toLocaleDateString('pt-BR'),

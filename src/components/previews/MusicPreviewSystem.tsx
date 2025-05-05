@@ -173,7 +173,7 @@ const MusicPreviewSystem: React.FC<MusicPreviewSystemProps> = ({ projectId }) =>
   let versionsForPlayer: MusicPreview[] = [];
   
   if (Array.isArray(projectData.versionsList)) {
-    versionsForPlayer = projectData.versionsList.map(v => ({
+    versionsForPlayer = projectData.versionsList.map((v: VersionItem) => ({
       id: v.id,
       title: v.name || `Versão ${v.id}`,
       description: v.description || '',
