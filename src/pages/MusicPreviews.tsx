@@ -152,10 +152,22 @@ const MusicPreviews: React.FC = () => {
   
   console.log("Versions for player:", versionsForPlayer);
 
-  // Create a ProjectItem with required expirationDate
+  // Create a ProjectItem with required expirationDate and all other required properties
   const projectItemData: ProjectItem = {
-    ...(projectData as unknown as Record<string, any>),
-    expirationDate: projectData.expirationDate || new Date().toISOString(), // Ensure expirationDate exists
+    id: projectData.id || actualProjectId || 'unknown',
+    clientName: projectData.clientName || 'Cliente',
+    projectTitle: projectData.projectTitle || 'Música Personalizada',
+    packageType: projectData.packageType || 'standard',
+    status: projectData.status || 'waiting',
+    createdAt: projectData.createdAt || new Date().toISOString(),
+    lastActivityDate: projectData.lastActivityDate || new Date().toISOString(),
+    expirationDate: projectData.expirationDate || new Date().toISOString(),
+    versions: projectData.versions || 0,
+    versionsList: projectData.versionsList || [],
+    feedbackHistory: projectData.feedbackHistory || [],
+    history: projectData.history || [],
+    // Include any other required properties from the ProjectItem type
+    // Use defaults for any properties that might be missing
   };
   
   return (

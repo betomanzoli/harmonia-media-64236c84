@@ -22,7 +22,7 @@ export interface MusicPreview {
 }
 
 export interface ProjectData {
-  id: string;
+  id?: string;
   clientName: string;
   clientEmail?: string;
   projectTitle: string;
@@ -31,16 +31,29 @@ export interface ProjectData {
   createdAt: string;
   lastActivityDate: string;
   expirationDate?: string;
-  versionsList: ProjectVersion[];
+  versionsList?: ProjectVersion[];
   previews?: MusicPreview[];
-  versions: number;
+  versions?: number;
   feedback?: string;
-  feedbackHistory: any[];
-  history: any[];
+  feedbackHistory?: any[];
+  history?: any[];
 }
 
-export interface ProjectItem extends Omit<ProjectData, 'expirationDate'> {
-  expirationDate: string; // Mark as required for ProjectItem
+export interface ProjectItem {
+  id: string;
+  clientName: string;
+  projectTitle: string;
+  packageType: string;
+  status: 'waiting' | 'feedback' | 'approved';
+  createdAt: string;
+  lastActivityDate: string;
+  expirationDate: string;
+  versions: number;
+  versionsList: ProjectVersion[];
+  feedbackHistory: any[];
+  history: any[];
+  previews?: MusicPreview[];
+  feedback?: string;
 }
 
 export interface PreviewProjectData {
