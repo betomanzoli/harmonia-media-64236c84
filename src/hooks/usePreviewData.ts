@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { usePreviewProjects } from '@/hooks/admin/usePreviewProjects';
 import { ProjectData, MusicPreview, ProjectVersion } from '@/types/project.types';
@@ -50,12 +49,12 @@ export const usePreviewData = (projectId: string | undefined) => {
             if (data.id === projectId) {
               const { data: duplicates, error: dupError } = await supabase
                 .from('projects')
-                .select('count(*)')
+                .select('count')
                 .eq('preview_code', data.preview_code)
                 .neq('id', projectId);
                 
-              if (duplicates && duplicates.length > 0 && duplicates[0].count > 0) {
-                console.warn(`⚠️ Warning: Found ${duplicates[0].count} other projects with the same preview code`);
+              if (duplicates && duplicates.length > 0) {
+                console.warn(`⚠️ Warning: Found other projects with the same preview code`);
                 // We'll continue with this project since the ID matches exactly
               }
             }

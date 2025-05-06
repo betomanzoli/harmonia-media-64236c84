@@ -37,11 +37,11 @@ try {
   supabase
     .from('projects')
     .select('count(*)', { count: 'exact', head: true })
-    .then(({ count, error }) => {
+    .then(({ data, error }) => {
       if (error) {
         console.error('❌ Erro na conexão Supabase:', error);
       } else {
-        console.log(`✅ Conexão Supabase validada: ${count} projetos encontrados.`);
+        console.log(`✅ Conexão Supabase validada: ${data ? data.count : 0} projetos encontrados.`);
       }
     })
     .catch(err => {

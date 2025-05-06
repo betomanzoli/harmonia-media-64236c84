@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useParams } from 'react-router-dom';
 import { useToast } from "@/hooks/use-toast";
@@ -160,10 +159,10 @@ const MusicPreviews: React.FC = () => {
             id: v.id,
             title: v.name || `Versão ${v.id}`,
             description: v.description || 'Sem descrição',
-            audioUrl: v.audioUrl || v.file_url || '',
+            audioUrl: v.audioUrl || (v as any).file_url || '',
             recommended: v.recommended || false,
             name: v.name || `Versão ${v.id}`,
-            createdAt: v.createdAt || v.created_at || new Date().toISOString()
+            createdAt: v.createdAt || new Date().toISOString()
           }))
         : []);
   
