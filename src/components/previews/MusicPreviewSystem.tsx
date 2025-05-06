@@ -148,13 +148,13 @@ const MusicPreviewSystem: React.FC<MusicPreviewSystemProps> = ({ projectId }) =>
   const packageType = formatPackageType(projectData.packageType);
   const createdAt = projectData.createdAt || new Date().toISOString();
   
-  // Convert versionsList to MusicPreview format
+  // Convert versionsList to MusicPreview format with explicit type conversion
   let versionsForPlayer: MusicPreview[] = [];
   
   if (Array.isArray(projectData.versionsList)) {
-    versionsForPlayer = projectData.versionsList.map((v: ProjectVersion) => ({
+    versionsForPlayer = projectData.versionsList.map((v: ProjectVersion): MusicPreview => ({
       id: v.id,
-      title: v.name || `Versão ${v.id}`,
+      title: v.name || `Versão ${v.id}`, // Ensure title is set from name
       description: v.description || '',
       audioUrl: v.audioUrl || '',
       recommended: v.recommended || false

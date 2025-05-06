@@ -8,7 +8,7 @@ import PreviewError from '@/components/previews/PreviewError';
 import PreviewContent from '@/components/previews/PreviewContent';
 import { usePreviewData } from '@/hooks/usePreviewData';
 import { notificationService } from '@/services/notificationService';
-import { ProjectData } from '@/components/previews/types';
+import { ProjectData, ProjectItem } from '@/components/previews/types';
 
 const MusicPreviews: React.FC = () => {
   const { previewId } = useParams<{ previewId: string }>();
@@ -151,11 +151,17 @@ const MusicPreviews: React.FC = () => {
     : (Array.isArray(projectData?.previews) ? projectData.previews : []);
   
   console.log("Versions for player:", versionsForPlayer);
+
+  // Create a ProjectItem with required expirationDate
+  const projectItemData: ProjectItem = {
+    ...(projectData as unknown as Record<string, any>),
+    expirationDate: projectData.expirationDate || new Date().toISOString(), // Ensure expirationDate exists
+  };
   
   return (
     <MusicPreviewContainer>
       <PreviewContent
-        projectData={projectData as ProjectData}
+        projectData={projectItemData}
         selectedPreview={selectedPreview}
         setSelectedPreview={setSelectedPreview}
         feedback={feedback}

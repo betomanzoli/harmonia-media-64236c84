@@ -39,7 +39,10 @@ const AppRoutes: React.FC = () => {
   return (
     <Routes>
       {/* Rotas públicas */}
-      <Route element={<PublicLayout />}>
+      <Route element={<PublicLayout>
+        {/* Public layout children container */}
+        <Outlet />
+      </PublicLayout>}>
         <Route index element={<HomePage />} />
         <Route path="sobre" element={<AboutPage />} />
         <Route path="servicos" element={<ServicesPage />} />
@@ -68,7 +71,10 @@ const AppRoutes: React.FC = () => {
         <Route path="login" element={<AdminLogin />} />
         <Route path="reset-password" element={<ResetPassword />} />
         <Route path="audio-database" element={<AudioDatabase />} />
-        <Route element={<ProtectedRoute />}>
+        <Route element={<ProtectedRoute>
+          {/* Protected route children container */}
+          <Outlet />
+        </ProtectedRoute>}>
           <Route path="dashboard" element={<AdminDashboard />} />
           <Route path="portfolio" element={<AdminPortfolio />} />
           <Route path="settings" element={<AdminSettings />} />
@@ -86,5 +92,8 @@ const AppRoutes: React.FC = () => {
     </Routes>
   );
 };
+
+// Import Outlet component for nested routes
+import { Outlet } from 'react-router-dom';
 
 export default AppRoutes;
