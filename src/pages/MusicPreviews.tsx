@@ -9,6 +9,8 @@ import PreviewContent from '@/components/previews/PreviewContent';
 import { usePreviewData } from '@/hooks/usePreviewData';
 import { notificationService } from '@/services/notificationService';
 import { ProjectItem, MusicPreview } from '@/types/project.types';
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
+import { AlertCircle } from 'lucide-react';
 
 const MusicPreviews: React.FC = () => {
   const { previewId } = useParams<{ previewId: string }>();
@@ -18,22 +20,24 @@ const MusicPreviews: React.FC = () => {
   const [feedback, setFeedback] = useState('');
   
   // Direct use of previewId in usePreviewData - it will handle both encoded and direct IDs
-  const { projectData, isLoading, actualProjectId, updateProjectStatus } = usePreviewData(previewId);
+  const { projectData, isLoading, isError, errorMessage, actualProjectId, updateProjectStatus } = usePreviewData(previewId);
   
   useEffect(() => {
-    console.log("Preview ID received:", previewId);
-    console.log("Actual project ID (after decoding):", actualProjectId);
-    console.log("Project data loaded:", projectData);
+    console.log("🔍 Preview ID received:", previewId);
+    console.log("🔍 Actual project ID (after decoding):", actualProjectId);
+    console.log("🔍 Project data loaded:", projectData);
+    console.log("🔍 Loading state:", isLoading);
+    console.log("🔍 Error state:", isError, errorMessage);
     
     if (!isLoading && !projectData && actualProjectId) {
-      console.log("Preview data not found");
+      console.log("❌ Preview data not found");
       toast({
         title: "Prévia não encontrada",
         description: "O código de prévia fornecido não é válido ou expirou.",
         variant: "destructive"
       });
     }
-  }, [previewId, projectData, isLoading, toast, actualProjectId]);
+  }, [previewId, projectData, isLoading, toast, actualProjectId, isError, errorMessage]);
   
   const handleSubmitFeedback = () => {
     if (!selectedPreview) {
@@ -46,15 +50,15 @@ const MusicPreviews: React.FC = () => {
     }
     
     // Make sure to log what we're doing
-    console.log("Submitting feedback for project:", actualProjectId);
-    console.log("Selected preview:", selectedPreview);
-    console.log("Feedback content:", feedback);
+    console.log("🔍 Submitting feedback for project:", actualProjectId);
+    console.log("🔍 Selected preview:", selectedPreview);
+    console.log("🔍 Feedback content:", feedback);
     
-    // Update project status - ensure this saves to localStorage
+    // Update project status - ensure this saves to Supabase/localStorage
     const success = updateProjectStatus('feedback', feedback);
     
     if (success) {
-      console.log("Successfully updated project status to 'feedback'");
+      console.log("✅ Successfully updated project status to 'feedback'");
       
       toast({
         title: "Feedback enviado!",
@@ -68,7 +72,7 @@ const MusicPreviews: React.FC = () => {
         message: feedback
       });
     } else {
-      console.error("Failed to update project status");
+      console.error("❌ Failed to update project status");
       
       toast({
         title: "Erro ao enviar feedback",
@@ -89,15 +93,15 @@ const MusicPreviews: React.FC = () => {
     }
     
     // Make sure to log what we're doing
-    console.log("Approving project:", actualProjectId);
-    console.log("Selected preview:", selectedPreview);
-    console.log("Approval comments:", feedback);
+    console.log("🔍 Approving project:", actualProjectId);
+    console.log("🔍 Selected preview:", selectedPreview);
+    console.log("🔍 Approval comments:", feedback);
     
-    // Update project status - ensure this saves to localStorage
+    // Update project status - ensure this saves to Supabase/localStorage
     const success = updateProjectStatus('approved', feedback);
     
     if (success) {
-      console.log("Successfully updated project status to 'approved'");
+      console.log("✅ Successfully updated project status to 'approved'");
       
       toast({
         title: "Música aprovada!",
@@ -111,7 +115,7 @@ const MusicPreviews: React.FC = () => {
         versionId: selectedPreview
       });
     } else {
-      console.error("Failed to update project status");
+      console.error("❌ Failed to update project status");
       
       toast({
         title: "Erro ao aprovar prévia",
@@ -131,36 +135,39 @@ const MusicPreviews: React.FC = () => {
   }
   
   // Project not found state
-  if (!projectData) {
+  if (isError || !projectData) {
     return (
       <MusicPreviewContainer>
         <PreviewError 
           title="Prévia não encontrada"
-          description="O código de prévia fornecido não é válido ou expirou." 
+          description={errorMessage || "O código de prévia fornecido não é válido ou expirou."} 
         />
       </MusicPreviewContainer>
     );
   }
   
-  console.log("Rendering with project data:", projectData);
-  console.log("Available version lists:", projectData?.versionsList, projectData?.previews);
+  console.log("🔍 Rendering with project data:", projectData);
+  console.log("🔍 Available version lists:", projectData?.versionsList, projectData?.previews);
   
   // Make sure versionsForPlayer is always an array of MusicPreview
   const versionsForPlayer: MusicPreview[] = Array.isArray(projectData?.previews) 
-    ? projectData.previews
+    ? projectData.previews.map(p => ({
+        ...p,
+        description: p.description || 'Sem descrição' // Ensure description exists
+      }))
     : (Array.isArray(projectData?.versionsList) 
         ? projectData.versionsList.map(v => ({
             id: v.id,
             title: v.name || `Versão ${v.id}`,
-            description: v.description || '',
-            audioUrl: v.audioUrl,
-            recommended: v.recommended,
+            description: v.description || 'Sem descrição',
+            audioUrl: v.audioUrl || v.file_url || '',
+            recommended: v.recommended || false,
             name: v.name || `Versão ${v.id}`,
-            createdAt: v.createdAt || new Date().toISOString()
+            createdAt: v.createdAt || v.created_at || new Date().toISOString()
           }))
         : []);
   
-  console.log("Versions for player:", versionsForPlayer);
+  console.log("🔍 Versions for player:", versionsForPlayer);
 
   // Create a complete ProjectItem with required fields
   const projectItemData: ProjectItem = {
@@ -172,7 +179,7 @@ const MusicPreviews: React.FC = () => {
     createdAt: projectData.createdAt || new Date().toISOString(),
     lastActivityDate: projectData.lastActivityDate || new Date().toISOString(),
     expirationDate: projectData.expirationDate || new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString(),
-    versions: projectData.versions || 0,
+    versions: projectData.versions || versionsForPlayer.length || 0,
     versionsList: projectData.versionsList || [],
     feedbackHistory: projectData.feedbackHistory || [],
     history: projectData.history || [],
@@ -180,6 +187,15 @@ const MusicPreviews: React.FC = () => {
   
   return (
     <MusicPreviewContainer>
+      {projectData.id === 'fallback-project' && (
+        <Alert variant="warning" className="mb-4">
+          <AlertCircle className="h-4 w-4" />
+          <AlertTitle>Aviso</AlertTitle>
+          <AlertDescription>
+            Esta é uma visualização de demonstração. Não foi possível encontrar este projeto no sistema.
+          </AlertDescription>
+        </Alert>
+      )}
       <PreviewContent
         projectData={projectItemData}
         selectedPreview={selectedPreview}

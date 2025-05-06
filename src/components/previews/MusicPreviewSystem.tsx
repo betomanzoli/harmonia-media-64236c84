@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import PreviewHeader from './PreviewHeader';
 import PreviewPlayerList from './player/PreviewPlayerList';
@@ -12,23 +13,30 @@ import { usePreviewData } from '@/hooks/usePreviewData';
 import PreviewProjectDetails from './PreviewProjectDetails';
 import { useToast } from '@/hooks/use-toast';
 import { MusicPreview } from '@/types/project.types';
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
+import { AlertCircle } from 'lucide-react';
 
 interface MusicPreviewSystemProps {
   projectId: string;
 }
 
 const MusicPreviewSystem: React.FC<MusicPreviewSystemProps> = ({ projectId }) => {
-  const { projectData, isLoading, updateProjectStatus } = usePreviewData(projectId);
+  const { projectData, isLoading, isError, errorMessage, updateProjectStatus } = usePreviewData(projectId);
   const { toast } = useToast();
   const [selectedVersion, setSelectedVersion] = useState<string | null>(null);
   const [feedback, setFeedback] = useState('');
   const [isShareDialogOpen, setIsShareDialogOpen] = useState(false);
   const [feedbackSubmitted, setFeedbackSubmitted] = useState(false);
 
-  // When project data loads, check if feedback was already submitted based on status
+  // Logging project details for debugging
   useEffect(() => {
+    console.log("🔍 MusicPreviewSystem - Project data loaded:", projectData);
+    console.log("🔍 MusicPreviewSystem - Loading state:", isLoading);
+    console.log("🔍 MusicPreviewSystem - Error state:", isError);
+
+    // When project data loads, check if feedback was already submitted based on status
     if (projectData) {
-      console.log("Project status:", projectData.status);
+      console.log("🔍 Project status:", projectData.status);
       // If project status is feedback or approved, mark feedback as submitted
       if (projectData.status === 'feedback' || projectData.status === 'approved') {
         setFeedbackSubmitted(true);
@@ -37,19 +45,19 @@ const MusicPreviewSystem: React.FC<MusicPreviewSystemProps> = ({ projectId }) =>
         setFeedbackSubmitted(false);
       }
     }
-  }, [projectData]);
+  }, [projectData, isLoading, isError]);
 
   if (isLoading) {
     return <PreviewLoadingState />;
   }
 
-  if (!projectData) {
+  if (isError || !projectData) {
     return (
       <div className="max-w-4xl mx-auto px-4 py-8">
         <div className="bg-white p-8 rounded-lg shadow-sm text-center">
           <h2 className="text-2xl font-bold text-gray-800 mb-4">Prévia não encontrada</h2>
           <p className="text-gray-700">
-            A prévia que você está tentando acessar não existe ou expirou.
+            {errorMessage || "A prévia que você está tentando acessar não existe ou expirou."}
           </p>
         </div>
       </div>
@@ -199,6 +207,16 @@ const MusicPreviewSystem: React.FC<MusicPreviewSystemProps> = ({ projectId }) =>
 
   return (
     <div className="max-w-4xl mx-auto px-4">
+      {projectData.id === 'fallback-project' && (
+        <Alert variant="warning" className="mb-4">
+          <AlertCircle className="h-4 w-4" />
+          <AlertTitle>Aviso</AlertTitle>
+          <AlertDescription>
+            Esta é uma visualização de demonstração. Não foi possível encontrar este projeto no sistema.
+          </AlertDescription>
+        </Alert>
+      )}
+
       <PreviewHeader 
         projectTitle={projectTitle}
         clientName={clientName}

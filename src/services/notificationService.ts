@@ -1,78 +1,85 @@
-
-type NotificationType = 
-  | 'new_preview' 
-  | 'feedback_received' 
-  | 'preview_approved' 
-  | 'payment_received'
-  | 'project_created';
-
-interface NotificationData {
-  projectId?: string;
-  clientName?: string;
-  clientEmail?: string;
-  message?: string;
-  versionId?: string;
+interface NotificationPayload {
   [key: string]: any;
 }
 
 class NotificationService {
-  notify(type: NotificationType, data: NotificationData) {
-    // Em uma implementação real, isso enviaria notificações para os canais adequados
-    // como webhook, email, SMS, etc.
-    console.log(`[Notificação ${type}]:`, data);
+  private handlers: Record<string, Array<(data: any) => void>> = {};
+
+  // Register a handler for a specific event type
+  public subscribe(eventType: string, handler: (data: any) => void): () => void {
+    if (!this.handlers[eventType]) {
+      this.handlers[eventType] = [];
+    }
+    this.handlers[eventType].push(handler);
     
-    // Armazenar notificação no localStorage para persistência
-    const notifications = this.getStoredNotifications();
+    // Return unsubscribe function
+    return () => {
+      this.handlers[eventType] = this.handlers[eventType].filter(h => h !== handler);
+    };
+  }
+
+  // Trigger notification for an event type
+  public notify(eventType: string, payload: NotificationPayload): void {
+    console.log(`📢 Notification service: ${eventType}`, payload);
     
-    notifications.push({
-      id: `notification-${Date.now()}`,
-      type,
-      data,
-      timestamp: new Date().toISOString()
-    });
+    // Save to localStorage for persistence
+    try {
+      const notifications = this.getStoredNotifications();
+      notifications.push({ 
+        type: eventType, 
+        payload, 
+        timestamp: new Date().toISOString() 
+      });
+      
+      // Keep only the most recent 100 notifications
+      if (notifications.length > 100) {
+        notifications.shift();
+      }
+      
+      localStorage.setItem('harmonIA_notifications', JSON.stringify(notifications));
+    } catch (error) {
+      console.error('Error storing notification:', error);
+    }
     
-    localStorage.setItem('harmonIA_notifications', JSON.stringify(notifications));
+    // Call registered handlers
+    if (this.handlers[eventType]) {
+      this.handlers[eventType].forEach(handler => {
+        try {
+          handler(payload);
+        } catch (error) {
+          console.error(`Error in notification handler for ${eventType}:`, error);
+        }
+      });
+    }
     
-    // Verificar se há handlers específicos para este tipo de notificação
-    switch (type) {
-      case 'feedback_received':
-        // Em uma implementação real, poderia enviar um email para a equipe
-        console.log(`[Email] Nova feedback recebido do cliente ${data.clientName} para o projeto ${data.projectId}`);
-        break;
-        
-      case 'preview_approved':
-        // Em uma implementação real, poderia atualizar o status do projeto e enviar um email
-        console.log(`[Email] Prévia aprovada pelo cliente ${data.clientName} para o projeto ${data.projectId}`);
-        break;
-        
-      default:
-        break;
+    // Also call global handlers
+    if (this.handlers['*']) {
+      this.handlers['*'].forEach(handler => {
+        try {
+          handler({ type: eventType, payload });
+        } catch (error) {
+          console.error(`Error in global notification handler:`, error);
+        }
+      });
+    }
+  }
+
+  // Get all stored notifications
+  public getStoredNotifications(): Array<{ type: string; payload: any; timestamp: string }> {
+    try {
+      const storedNotifications = localStorage.getItem('harmonIA_notifications');
+      return storedNotifications ? JSON.parse(storedNotifications) : [];
+    } catch (error) {
+      console.error('Error retrieving stored notifications:', error);
+      return [];
     }
   }
   
-  getStoredNotifications() {
-    const stored = localStorage.getItem('harmonIA_notifications');
-    return stored ? JSON.parse(stored) : [];
-  }
-  
-  getRecentNotifications(limit = 5) {
-    const notifications = this.getStoredNotifications();
-    return notifications.slice(-limit).reverse();
-  }
-  
-  getUnreadCount() {
-    const notifications = this.getStoredNotifications();
-    const lastRead = localStorage.getItem('harmonIA_last_notification_read');
-    
-    if (!lastRead) return notifications.length;
-    
-    return notifications.filter(n => n.timestamp > lastRead).length;
-  }
-  
-  markAllAsRead() {
-    localStorage.setItem('harmonIA_last_notification_read', new Date().toISOString());
-    return this.getUnreadCount();
+  // Clear all notifications
+  public clearNotifications(): void {
+    localStorage.removeItem('harmonIA_notifications');
   }
 }
 
+// Export a singleton instance
 export const notificationService = new NotificationService();

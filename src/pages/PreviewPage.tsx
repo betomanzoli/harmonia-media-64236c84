@@ -6,6 +6,8 @@ import ProjectAccessForm from '@/components/previews/ProjectAccessForm';
 import { useToast } from '@/hooks/use-toast';
 import { getProjectIdFromPreviewLink, isValidEncodedPreviewLink } from '@/utils/previewLinkUtils';
 import { supabase } from '@/lib/supabase';
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
+import { AlertCircle } from 'lucide-react';
 
 const PreviewPage: React.FC = () => {
   const { projectId } = useParams<{ projectId: string }>();
@@ -13,9 +15,11 @@ const PreviewPage: React.FC = () => {
   const { toast } = useToast();
   const [isAuthorized, setIsAuthorized] = useState(false);
   const [isError, setIsError] = useState(false);
+  const [errorDetails, setErrorDetails] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [actualProjectId, setActualProjectId] = useState<string | null>(null);
   const [debugInfo, setDebugInfo] = useState<any>(null);
+  const [duplicateWarning, setDuplicateWarning] = useState<string | null>(null);
 
   useEffect(() => {
     // Log access for analytics
@@ -23,6 +27,7 @@ const PreviewPage: React.FC = () => {
       console.log(`🔍 Tentativa de acesso à prévia: ${projectId}, Data: ${new Date().toISOString()}`);
       window.scrollTo(0, 0);
       setIsLoading(true);
+      setErrorDetails(null);
       
       // Validate if this is an encoded preview link
       const isEncodedLink = isValidEncodedPreviewLink(projectId);
@@ -31,6 +36,7 @@ const PreviewPage: React.FC = () => {
       if (!isEncodedLink) {
         console.log("⛔ Formato de link inválido - não é um link de prévia codificado");
         setIsError(true);
+        setErrorDetails("O link fornecido não está no formato correto.");
         setIsLoading(false);
         return;
       }
@@ -42,6 +48,7 @@ const PreviewPage: React.FC = () => {
       if (!decodedId) {
         console.log("❌ Falha ao decodificar ID do projeto");
         setIsError(true);
+        setErrorDetails("Não foi possível decodificar o ID do projeto a partir do link.");
         setIsLoading(false);
         return;
       }
@@ -66,11 +73,13 @@ const PreviewPage: React.FC = () => {
       // First check in Supabase
       console.log("🔍 Verificando projeto no Supabase...");
       let projectExists = false;
+      let duplicateFound = false;
       
       try {
+        // First check if the project exists
         const { data, error } = await supabase
           .from('projects')
-          .select('id')
+          .select('id, preview_code')
           .eq('id', decodedId)
           .maybeSingle();
           
@@ -80,13 +89,39 @@ const PreviewPage: React.FC = () => {
             ...prev, 
             supabaseError: error 
           }));
-        } else {
-          projectExists = !!data;
+        } else if (data) {
+          projectExists = true;
+          
+          // Check if there are duplicate project IDs with the same preview code
+          if (data.preview_code) {
+            const { data: duplicates, error: dupError } = await supabase
+              .from('projects')
+              .select('id')
+              .eq('preview_code', data.preview_code)
+              .neq('id', decodedId);
+              
+            if (dupError) {
+              console.error('❌ Erro ao verificar duplicatas:', dupError);
+            } else if (duplicates && duplicates.length > 0) {
+              console.warn(`⚠️ Encontrado(s) ${duplicates.length} projeto(s) com o mesmo código de prévia`);
+              duplicateFound = true;
+              setDuplicateWarning(`Aviso: Existem ${duplicates.length} outros projetos com o mesmo código de prévia.`);
+            }
+          }
+          
           setDebugInfo(prev => ({ 
             ...prev, 
             supabaseCheck: { 
-              found: projectExists, 
-              data 
+              found: true, 
+              data,
+              duplicateFound
+            } 
+          }));
+        } else {
+          setDebugInfo(prev => ({ 
+            ...prev, 
+            supabaseCheck: { 
+              found: false
             } 
           }));
         }
@@ -106,11 +141,33 @@ const PreviewPage: React.FC = () => {
         if (storedProjects) {
           const projects = JSON.parse(storedProjects);
           projectExists = projects.some((p: any) => p.id === decodedId);
+          
+          // Check for duplicates
+          const duplicates = projects.filter((p: any) => 
+            p.preview_code && p.preview_code === projects.find((project: any) => 
+              project.id === decodedId)?.preview_code && p.id !== decodedId
+          );
+          
+          if (duplicates.length > 0) {
+            console.warn(`⚠️ Encontrado(s) ${duplicates.length} projeto(s) no localStorage com o mesmo código de prévia`);
+            duplicateFound = true;
+            setDuplicateWarning(`Aviso: Existem ${duplicates.length} outros projetos com o mesmo código de prévia.`);
+          }
+          
           setDebugInfo(prev => ({ 
             ...prev, 
             localStorageCheck: { 
               found: projectExists, 
-              projectsCount: projects.length 
+              projectsCount: projects.length,
+              duplicateFound
+            } 
+          }));
+        } else {
+          setDebugInfo(prev => ({ 
+            ...prev, 
+            localStorageCheck: { 
+              found: false,
+              projectsCount: 0
             } 
           }));
         }
@@ -125,6 +182,7 @@ const PreviewPage: React.FC = () => {
       // No valid project found
       console.log("❌ Nenhum projeto válido encontrado para:", decodedId);
       setIsError(true);
+      setErrorDetails("Não foi possível encontrar o projeto correspondente ao link fornecido.");
       setIsLoading(false);
     } catch (error) {
       console.error("❌ Erro ao verificar projeto:", error);
@@ -133,6 +191,7 @@ const PreviewPage: React.FC = () => {
         verifyError: error 
       }));
       setIsError(true);
+      setErrorDetails("Ocorreu um erro ao verificar o acesso ao projeto.");
       setIsLoading(false);
     }
   };
@@ -218,7 +277,8 @@ const PreviewPage: React.FC = () => {
       // For demo purposes, also allow test/demo emails or specific code
       const isTestEmail = email.includes('@') && (
         email.toLowerCase().includes('test') || 
-        email.toLowerCase().includes('demo')
+        email.toLowerCase().includes('demo') || 
+        email.toLowerCase().includes('admin')
       );
       
       const isDemoCode = code === '123456';
@@ -305,7 +365,15 @@ const PreviewPage: React.FC = () => {
       <div className="min-h-screen flex items-center justify-center bg-gray-100">
         <div className="bg-white p-6 rounded-lg shadow-sm text-center">
           <h2 className="text-2xl font-bold text-gray-800 mb-4">Link de prévia inválido</h2>
-          <p className="text-gray-700">O link que você acessou não existe ou expirou.</p>
+          <p className="text-gray-700">
+            {errorDetails || "O link que você acessou não existe ou expirou."}
+          </p>
+          <button
+            onClick={() => navigate('/')}
+            className="mt-4 px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600"
+          >
+            Voltar para Home
+          </button>
         </div>
       </div>
     );
@@ -375,6 +443,15 @@ const PreviewPage: React.FC = () => {
 
   return (
     <div className="min-h-screen bg-gray-100 pt-8 pb-16">
+      {duplicateWarning && (
+        <div className="max-w-4xl mx-auto px-4 mb-4">
+          <Alert variant="warning">
+            <AlertCircle className="h-4 w-4" />
+            <AlertTitle>Aviso</AlertTitle>
+            <AlertDescription>{duplicateWarning}</AlertDescription>
+          </Alert>
+        </div>
+      )}
       <MusicPreviewSystem projectId={actualProjectId || projectId} />
     </div>
   );

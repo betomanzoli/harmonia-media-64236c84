@@ -11,7 +11,7 @@ export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
     persistSession: true,
     autoRefreshToken: true,
     detectSessionInUrl: false,
-    storageKey: 'harmonia-preview-auth', // Dedicated key for preview session
+    storageKey: 'harmonia-preview-auth',
   },
   global: {
     fetch: (...args: Parameters<typeof fetch>) => {
@@ -32,6 +32,21 @@ export { emailService } from './supabase/emailService';
 // Test connection when the module loads
 try {
   console.log('🔌 Cliente Supabase inicializado com nova conexão.');
+  
+  // Execute a simple query to validate the connection
+  supabase
+    .from('projects')
+    .select('count(*)', { count: 'exact', head: true })
+    .then(({ count, error }) => {
+      if (error) {
+        console.error('❌ Erro na conexão Supabase:', error);
+      } else {
+        console.log(`✅ Conexão Supabase validada: ${count} projetos encontrados.`);
+      }
+    })
+    .catch(err => {
+      console.error('❌ Erro ao testar conexão Supabase:', err);
+    });
 } catch (err) {
   console.error('❌ Erro ao inicializar cliente Supabase:', err);
 }
