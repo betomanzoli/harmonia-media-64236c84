@@ -3,11 +3,11 @@
 export interface BaseVersionItem {
   id: string;
   name: string;
-  description: string; // Changed from optional to required
+  description: string;
   audioUrl: string;
   recommended?: boolean;
   final?: boolean;
-  createdAt: string; // Required to satisfy all interfaces
+  createdAt: string;
 }
 
 // Version type used in project.versionsList
@@ -16,6 +16,8 @@ export interface ProjectVersion extends BaseVersionItem {
   fileId?: string;
   finalVersionUrl?: string;
   stemsUrl?: string;
+  file_url?: string; // Added for compatibility with Supabase naming convention
+  created_at?: string; // Added for compatibility with Supabase naming convention
 }
 
 // Music preview type that includes title (mapped from name)
@@ -36,6 +38,7 @@ export interface BaseProjectItem {
   expirationDate: string;
   versions: number;
   feedback?: string;
+  preview_code?: string; // Added for compatibility with Supabase naming convention
 }
 
 // Complete project item with version list
@@ -52,6 +55,7 @@ export interface ProjectData extends BaseProjectItem {
   feedbackHistory?: any[];
   history?: any[];
   previews?: MusicPreview[];
+  project_files?: ProjectFile[]; // Added for compatibility with Supabase project_files join
 }
 
 // Preview project data for client-facing views
@@ -62,4 +66,16 @@ export interface PreviewProjectData {
   previews: MusicPreview[];
   packageType?: string;
   creationDate?: string;
+}
+
+// Project file interface matching Supabase database schema
+export interface ProjectFile {
+  id: string;
+  project_id: string;
+  file_name: string;
+  file_url: string;
+  file_type: string;
+  created_at: string;
+  version?: number;
+  notes?: string;
 }

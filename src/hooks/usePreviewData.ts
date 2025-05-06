@@ -1,7 +1,10 @@
+
 import { useState, useEffect } from 'react';
 import { usePreviewProjects } from '@/hooks/admin/usePreviewProjects';
-import { ProjectData, MusicPreview, ProjectVersion } from '@/types/project.types';
+import { ProjectData, MusicPreview, ProjectVersion, ProjectFile } from '@/types/project.types';
 import { supabase } from '@/lib/supabase'; // Import supabase client
+
+export const dynamic = 'force-dynamic'; // Force dynamic rendering to prevent caching issues
 
 export const usePreviewData = (projectId: string | undefined) => {
   const [projectData, setProjectData] = useState<ProjectData | null>(null);
@@ -28,38 +31,55 @@ export const usePreviewData = (projectId: string | undefined) => {
       try {
         setActualProjectId(projectId);
         
-        // Step 1: Try to fetch from Supabase first
+        // Step 1: Try to fetch from Supabase first using preview_code if available
         console.log('🔍 Attempting to fetch project from Supabase, id:', projectId);
         let supabaseProject = null;
         
         try {
-          const { data, error } = await supabase
+          // First try using preview_code
+          const { data: previewCodeData, error: previewCodeError } = await supabase
             .from('projects')
-            .select('*, versionsList:project_files(*)')
-            .eq('id', projectId)
+            .select('*, project_files(*)')
+            .eq('preview_code', projectId)
             .maybeSingle();
           
-          if (error) {
-            console.error('❌ Supabase query error:', error);
-          } else if (data) {
-            console.log('✅ Project found in Supabase:', data);
-            supabaseProject = data;
-            
-            // Check for duplicate project IDs (for more complex projects)
-            if (data.id === projectId) {
-              const { data: duplicates, error: dupError } = await supabase
-                .from('projects')
-                .select('count')
-                .eq('preview_code', data.preview_code)
-                .neq('id', projectId);
-                
-              if (duplicates && duplicates.length > 0) {
-                console.warn(`⚠️ Warning: Found other projects with the same preview code`);
-                // We'll continue with this project since the ID matches exactly
-              }
-            }
+          if (previewCodeError) {
+            console.error('❌ Supabase preview_code query error:', previewCodeError);
+          } else if (previewCodeData) {
+            console.log('[Supabase] Projeto encontrado por preview_code:', previewCodeData);
+            console.log('[Supabase] Arquivos associados:', previewCodeData.project_files);
+            supabaseProject = previewCodeData;
           } else {
-            console.log('❌ Project not found in Supabase');
+            // If not found by preview_code, try by ID
+            const { data, error } = await supabase
+              .from('projects')
+              .select('*, project_files(*)')
+              .eq('id', projectId)
+              .maybeSingle();
+            
+            if (error) {
+              console.error('❌ Supabase ID query error:', error);
+            } else if (data) {
+              console.log('[Supabase] Projeto encontrado por ID:', data);
+              console.log('[Supabase] Arquivos associados:', data.project_files);
+              supabaseProject = data;
+              
+              // Check for duplicate preview codes
+              if (data.preview_code) {
+                const { data: duplicates, error: dupError } = await supabase
+                  .from('projects')
+                  .select('id, title')
+                  .eq('preview_code', data.preview_code)
+                  .neq('id', projectId);
+                  
+                if (duplicates && duplicates.length > 0) {
+                  console.warn(`⚠️ Warning: Found ${duplicates.length} other projects with the same preview code`);
+                  console.log('Duplicate projects:', duplicates);
+                }
+              }
+            } else {
+              console.log('❌ Project not found in Supabase');
+            }
           }
         } catch (supabaseError) {
           console.error('❌ Error fetching from Supabase:', supabaseError);
@@ -95,7 +115,21 @@ export const usePreviewData = (projectId: string | undefined) => {
           // Ensure all versions have createdAt date and description
           let previews: MusicPreview[] = [];
           
-          if (Array.isArray(foundProject.versionsList) && foundProject.versionsList.length > 0) {
+          if (Array.isArray(foundProject.project_files) && foundProject.project_files.length > 0) {
+            console.log('🔍 Processing project_files from Supabase:', foundProject.project_files);
+            previews = foundProject.project_files
+              .filter(file => file.file_type === 'preview' && file.file_url)
+              .map((file: ProjectFile) => ({
+                id: file.id || `v${Math.random().toString(36).substring(2, 9)}`,
+                title: file.file_name || `Versão ${file.id}`,
+                description: file.notes || 'Sem descrição', // Ensure description is never empty
+                audioUrl: file.file_url || '',
+                recommended: false,
+                name: file.file_name || `Versão ${file.id}`,
+                createdAt: file.created_at || new Date().toISOString()
+              }));
+            console.log('✅ Processed project_files:', previews);
+          } else if (Array.isArray(foundProject.versionsList) && foundProject.versionsList.length > 0) {
             console.log('🔍 Processing versions list:', foundProject.versionsList);
             previews = foundProject.versionsList.map(v => ({
               id: v.id || `v${Math.random().toString(36).substring(2, 9)}`,
@@ -133,7 +167,7 @@ export const usePreviewData = (projectId: string | undefined) => {
           const processedProjectData: ProjectData = {
             id: foundProject.id || projectId, // Ensure ID is always set
             clientName: foundProject.clientName || foundProject.client_name || 'Cliente',
-            projectTitle: foundProject.packageType || foundProject.package_type || 'Música Personalizada',
+            projectTitle: foundProject.projectTitle || foundProject.package_type || 'Música Personalizada',
             status: (foundProject.status as 'waiting' | 'feedback' | 'approved') || 'waiting',
             previews: previews.length > 0 ? previews : [
               {
@@ -169,7 +203,8 @@ export const usePreviewData = (projectId: string | undefined) => {
             versionsList: versionsList,
             feedbackHistory: foundProject.feedbackHistory || foundProject.feedback_history || [],
             history: foundProject.history || [],
-            clientEmail: foundProject.clientEmail || foundProject.client_email
+            clientEmail: foundProject.clientEmail || foundProject.client_email,
+            preview_code: foundProject.preview_code
           };
 
           console.log('✅ Final processed project data:', processedProjectData);
@@ -239,39 +274,38 @@ export const usePreviewData = (projectId: string | undefined) => {
     fetchProjectData();
   }, [projectId, getProjectById]);
 
-  const updateProjectStatus = (newStatus: 'waiting' | 'feedback' | 'approved', feedback?: string) => {
+  const updateProjectStatus = async (newStatus: 'waiting' | 'feedback' | 'approved', feedback?: string) => {
     if (!actualProjectId) return false;
     console.log('🔄 Updating project status:', { projectId: actualProjectId, newStatus, feedback });
 
-    // Create compatible updates object
-    const updates: Record<string, any> = { 
-      status: newStatus 
-    };
-    
-    if (feedback) {
-      updates.feedback = feedback;
-    }
-    
     // Try to update in Supabase first
     let supabaseUpdated = false;
     try {
-      supabase
+      const { error } = await supabase
         .from('projects')
-        .update({ status: newStatus, feedback: feedback || null })
-        .eq('id', actualProjectId)
-        .then(({ error }) => {
-          if (error) {
-            console.error('❌ Supabase update error:', error);
-          } else {
-            console.log('✅ Project status updated in Supabase');
-            supabaseUpdated = true;
-          }
-        });
+        .update({ 
+          status: newStatus, 
+          feedback: feedback || null 
+        })
+        .eq('id', actualProjectId);
+        
+      if (error) {
+        console.error('❌ Supabase update error:', error);
+      } else {
+        console.log('✅ Project status updated in Supabase');
+        supabaseUpdated = true;
+      }
     } catch (error) {
       console.error('❌ Error updating Supabase:', error);
     }
     
     // Also update local storage as backup
+    const updates: Record<string, any> = { status: newStatus };
+    
+    if (feedback) {
+      updates.feedback = feedback;
+    }
+    
     const updatedProject = updateProject(actualProjectId, updates);
     
     if ((updatedProject || supabaseUpdated) && projectData) {
@@ -279,7 +313,7 @@ export const usePreviewData = (projectId: string | undefined) => {
         ...projectData,
         status: newStatus
       });
-      console.log('✅ Project status updated locally');
+      console.log('✅ Project status updated');
       return true;
     }
     

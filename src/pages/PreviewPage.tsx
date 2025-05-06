@@ -1,4 +1,3 @@
-
 import React, { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import MusicPreviewSystem from '@/components/previews/MusicPreviewSystem';
@@ -22,180 +21,118 @@ const PreviewPage: React.FC = () => {
   const [duplicateWarning, setDuplicateWarning] = useState<string | null>(null);
 
   useEffect(() => {
-    // Log access for analytics
+    // Log preview access for analytics and monitoring
     if (projectId) {
-      console.log(`🔍 Tentativa de acesso à prévia: ${projectId}, Data: ${new Date().toISOString()}`);
-      window.scrollTo(0, 0);
+      console.log(`Cliente acessando prévia: ${projectId}, data: ${new Date().toISOString()}`);
       setIsLoading(true);
-      setErrorDetails(null);
       
-      // Validate if this is an encoded preview link
+      // Check if this is a direct or encoded link
       const isEncodedLink = isValidEncodedPreviewLink(projectId);
-      console.log("🔑 É um link codificado?", isEncodedLink ? "Sim" : "Não");
+      console.log("Is encoded preview link:", isEncodedLink);
       
-      if (!isEncodedLink) {
-        console.log("⛔ Formato de link inválido - não é um link de prévia codificado");
+      // For backwards compatibility, we still support direct project IDs
+      // but only when accessed by admin users
+      const isAdmin = localStorage.getItem('admin_preview_access') === 'true';
+      
+      if (!isEncodedLink && !isAdmin) {
+        console.log("Direct link access denied - only encoded links are allowed for clients");
         setIsError(true);
-        setErrorDetails("O link fornecido não está no formato correto.");
         setIsLoading(false);
         return;
       }
       
-      // Decode the project ID
-      const decodedId = getProjectIdFromPreviewLink(projectId);
-      console.log("🔓 ID do projeto decodificado:", decodedId);
+      // Process encoded link or direct link (admin only)
+      let decodedId: string | null = null;
       
-      if (!decodedId) {
-        console.log("❌ Falha ao decodificar ID do projeto");
-        setIsError(true);
-        setErrorDetails("Não foi possível decodificar o ID do projeto a partir do link.");
-        setIsLoading(false);
-        return;
+      if (isEncodedLink) {
+        decodedId = getProjectIdFromPreviewLink(projectId);
+        console.log("Decoded project ID:", decodedId);
+        
+        if (!decodedId) {
+          console.log("Failed to decode project ID");
+          setIsError(true);
+          setIsLoading(false);
+          return;
+        }
+      } else if (isAdmin) {
+        // Direct access for admins
+        decodedId = projectId;
       }
       
-      // Set the actual project ID and attempt to find the project
       setActualProjectId(decodedId);
       
-      verifyProjectAccess(decodedId, projectId);
+      // Verify project exists
+      verifyProjectExists(decodedId);
+      
+      window.scrollTo(0, 0);
     }
   }, [projectId]);
 
-  // Function to verify project access first in Supabase then in localStorage
-  const verifyProjectAccess = async (decodedId: string, encodedId: string) => {
+  // Function to verify project exists in localStorage or Supabase
+  const verifyProjectExists = async (projectId: string | null) => {
+    if (!projectId) {
+      setIsError(true);
+      setIsLoading(false);
+      return;
+    }
+    
     try {
-      setDebugInfo({
-        method: 'verifyProjectAccess',
-        decodedId,
-        encodedId,
-        timestamp: new Date().toISOString()
-      });
+      // First check if there's a preview code match in Supabase
+      console.log("Checking for project in Supabase by preview_code:", projectId);
+      const { data: previewData, error: previewError } = await supabase
+        .from('projects')
+        .select('id, preview_code')
+        .eq('preview_code', projectId)
+        .maybeSingle();
       
-      // First check in Supabase
-      console.log("🔍 Verificando projeto no Supabase...");
-      let projectExists = false;
-      let duplicateFound = false;
-      
-      try {
-        // First check if the project exists
-        const { data, error } = await supabase
-          .from('projects')
-          .select('id, preview_code')
-          .eq('id', decodedId)
-          .maybeSingle();
-          
-        if (error) {
-          console.error('❌ Erro ao verificar projeto no Supabase:', error);
-          setDebugInfo(prev => ({ 
-            ...prev, 
-            supabaseError: error 
-          }));
-        } else if (data) {
-          projectExists = true;
-          
-          // Check if there are duplicate project IDs with the same preview code
-          if (data.preview_code) {
-            const { data: duplicates, error: dupError } = await supabase
-              .from('projects')
-              .select('id')
-              .eq('preview_code', data.preview_code)
-              .neq('id', decodedId);
-              
-            if (dupError) {
-              console.error('❌ Erro ao verificar duplicatas:', dupError);
-            } else if (duplicates && duplicates.length > 0) {
-              console.warn(`⚠️ Encontrado(s) ${duplicates.length} projeto(s) com o mesmo código de prévia`);
-              duplicateFound = true;
-              setDuplicateWarning(`Aviso: Existem ${duplicates.length} outros projetos com o mesmo código de prévia.`);
-            }
-          }
-          
-          setDebugInfo(prev => ({ 
-            ...prev, 
-            supabaseCheck: { 
-              found: true, 
-              data,
-              duplicateFound
-            } 
-          }));
-        } else {
-          setDebugInfo(prev => ({ 
-            ...prev, 
-            supabaseCheck: { 
-              found: false
-            } 
-          }));
-        }
-      } catch (supabaseError) {
-        console.error('❌ Erro na consulta ao Supabase:', supabaseError);
-        setDebugInfo(prev => ({ 
-          ...prev, 
-          supabaseCheckError: supabaseError 
-        }));
-      }
-      
-      // If not found in Supabase, fallback to localStorage
-      if (!projectExists) {
-        console.log("🔍 Verificando projeto no localStorage...");
-        const storedProjects = localStorage.getItem('harmonIA_preview_projects');
-        
-        if (storedProjects) {
-          const projects = JSON.parse(storedProjects);
-          projectExists = projects.some((p: any) => p.id === decodedId);
-          
-          // Check for duplicates
-          const duplicates = projects.filter((p: any) => 
-            p.preview_code && p.preview_code === projects.find((project: any) => 
-              project.id === decodedId)?.preview_code && p.id !== decodedId
-          );
-          
-          if (duplicates.length > 0) {
-            console.warn(`⚠️ Encontrado(s) ${duplicates.length} projeto(s) no localStorage com o mesmo código de prévia`);
-            duplicateFound = true;
-            setDuplicateWarning(`Aviso: Existem ${duplicates.length} outros projetos com o mesmo código de prévia.`);
-          }
-          
-          setDebugInfo(prev => ({ 
-            ...prev, 
-            localStorageCheck: { 
-              found: projectExists, 
-              projectsCount: projects.length,
-              duplicateFound
-            } 
-          }));
-        } else {
-          setDebugInfo(prev => ({ 
-            ...prev, 
-            localStorageCheck: { 
-              found: false,
-              projectsCount: 0
-            } 
-          }));
-        }
-      }
-      
-      if (projectExists) {
-        console.log("✅ Projeto encontrado:", decodedId);
-        handleAuthorizationCheck(encodedId);
+      if (previewData) {
+        console.log("[Supabase] Project found by preview_code:", previewData);
+        setIsError(false);
+        setIsLoading(false);
         return;
       }
       
-      // No valid project found
-      console.log("❌ Nenhum projeto válido encontrado para:", decodedId);
+      // Next check by ID in Supabase
+      const { data, error } = await supabase
+        .from('projects')
+        .select('id')
+        .eq('id', projectId)
+        .maybeSingle();
+        
+      if (error) {
+        console.error("Error checking project in Supabase:", error);
+      } else if (data) {
+        console.log("[Supabase] Project found by ID:", data);
+        setIsError(false);
+        setIsLoading(false);
+        return;
+      }
+      
+      // If not found in Supabase, check localStorage
+      const storedProjects = localStorage.getItem('harmonIA_preview_projects');
+      
+      if (storedProjects) {
+        const projects = JSON.parse(storedProjects);
+        const projectExists = projects.some((p: any) => p.id === projectId);
+        
+        if (projectExists) {
+          console.log("Project found in localStorage:", projectId);
+          setIsError(false);
+          setIsLoading(false);
+          return;
+        }
+      }
+      
+      console.log("Project not found anywhere");
       setIsError(true);
-      setErrorDetails("Não foi possível encontrar o projeto correspondente ao link fornecido.");
-      setIsLoading(false);
     } catch (error) {
-      console.error("❌ Erro ao verificar projeto:", error);
-      setDebugInfo(prev => ({ 
-        ...prev, 
-        verifyError: error 
-      }));
+      console.error("Error verifying project:", error);
       setIsError(true);
-      setErrorDetails("Ocorreu um erro ao verificar o acesso ao projeto.");
+    } finally {
       setIsLoading(false);
     }
   };
-  
+
   // Check authorization based on admin status or previous authorization
   const handleAuthorizationCheck = (encodedId: string) => {
     // Check if admin access or previously authorized

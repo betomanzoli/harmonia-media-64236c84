@@ -34,17 +34,16 @@ try {
   console.log('🔌 Cliente Supabase inicializado com nova conexão.');
   
   // Execute a simple query to validate the connection
-  // Using Promise.then() to properly handle the response
+  // Using async/await with proper error handling
   const checkConnection = async () => {
     try {
       const { data, error } = await supabase
         .from('projects')
-        .select('*', { count: 'exact', head: true });
+        .select('*', { head: true });
         
       if (error) {
         console.error('❌ Erro na conexão Supabase:', error);
       } else {
-        // Safely access count property with proper type checking
         console.log(`✅ Conexão Supabase validada: ${data ? 'conectado' : 'sem dados'}`);
       }
     } catch (err) {

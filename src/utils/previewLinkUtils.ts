@@ -1,92 +1,92 @@
-
-import { v4 as uuidv4 } from 'uuid';
+/**
+ * Functions for managing and validating preview links
+ */
 
 /**
- * Simple string hashing function that produces a deterministic hash
- * @param str - String to hash
- * @returns A deterministic hash string
+ * Generates a preview link from a project ID
+ * @param projectId The project ID
+ * @returns The encoded preview link
  */
-const simpleHash = (str: string): string => {
-  let hash = 0;
-  const salt = 'harmonIA-preview-salt';
-  const input = str + salt;
-  
-  for (let i = 0; i < input.length; i++) {
-    const char = input.charCodeAt(i);
-    hash = ((hash << 5) - hash) + char;
-    hash = hash & hash; // Convert to 32bit integer
+export const generatePreviewLink = (projectId: string, previewCode?: string): string => {
+  // If a preview code is provided, use it directly
+  if (previewCode) {
+    return previewCode;
   }
   
-  // Convert to hex string with fixed length of 8 characters
-  const hexHash = (hash >>> 0).toString(16).padStart(8, '0').slice(0, 8);
-  return hexHash;
+  // Otherwise, encode the project ID
+  try {
+    const payload = {
+      id: projectId,
+      ts: Date.now()
+    };
+    const encoded = btoa(JSON.stringify(payload));
+    return encoded.replace(/=/g, '').replace(/\+/g, '-').replace(/\//g, '_');
+  } catch (err) {
+    console.error('Error generating preview link:', err);
+    return projectId; // Fallback to using the ID directly
+  }
 };
 
 /**
- * Generates an encoded preview link with a deterministic hash prefix for a project
- * @param projectId - The project ID to encode
- * @returns The encoded preview ID string
+ * Validates if a string is an encoded preview link
+ * @param link The link to validate
+ * @returns True if it's a valid encoded link
  */
-export const generatePreviewLink = (projectId: string): string => {
-  // Generate a deterministic hash based on the project ID
-  // This ensures the same project always gets the same encoded link
-  const hash = simpleHash(projectId);
+export const isValidEncodedPreviewLink = (link: string): boolean => {
+  // If it's a UUID format, it's not an encoded link
+  if (/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(link)) {
+    return false;
+  }
   
-  return `${hash}-${projectId}`;
+  // Simple preview code format check (e.g., P1234, PREV-1234)
+  if (/^P\d{4,}$/i.test(link) || /^PREV-\d{4,}$/i.test(link)) {
+    return true;
+  }
+  
+  // Try to decode it as a base64 string
+  try {
+    const normalized = link.replace(/-/g, '+').replace(/_/g, '/');
+    const decoded = atob(normalized);
+    const data = JSON.parse(decoded);
+    return !!data.id; // Return true if it has an id property
+  } catch (err) {
+    return false; // Not a valid encoded link
+  }
 };
 
 /**
- * Decodes a preview link to extract the original project ID
- * @param encodedId - The encoded preview ID from the URL
- * @returns The original project ID or null if invalid
+ * Gets the project ID from a preview link
+ * @param link The encoded preview link
+ * @returns The project ID
  */
-export const getProjectIdFromPreviewLink = (encodedId: string): string | null => {
-  // Basic validation
-  if (!encodedId || !encodedId.includes('-')) {
-    console.log('PreviewLinkUtils: Invalid encoded ID format (no hyphen found):', encodedId);
+export const getProjectIdFromPreviewLink = (link: string): string | null => {
+  // If it's a preview code format (e.g., P1234), use it directly to look up the project
+  if (/^P\d{4,}$/i.test(link) || /^PREV-\d{4,}$/i.test(link)) {
+    console.log('[previewLinkUtils] Using preview code directly:', link);
+    return link;
+  }
+  
+  // If it's a UUID, assume it's a direct project ID
+  if (/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(link)) {
+    console.log('[previewLinkUtils] Using UUID directly:', link);
+    return link;
+  }
+  
+  // Otherwise try to decode it
+  try {
+    const normalized = link.replace(/-/g, '+').replace(/_/g, '/');
+    const decoded = atob(normalized);
+    const data = JSON.parse(decoded);
+    
+    // Check if the link has expired (optional)
+    if (data.exp && Date.now() > data.exp) {
+      console.error('Preview link has expired');
+      return null;
+    }
+    
+    return data.id;
+  } catch (err) {
+    console.error('Error decoding preview link:', err);
     return null;
   }
-  
-  // Extract the project ID part (after the UUID/hash)
-  const parts = encodedId.split('-');
-  if (parts.length < 2) {
-    console.log('PreviewLinkUtils: Invalid encoded ID format (not enough parts):', encodedId);
-    return null;
-  }
-  
-  // The project ID is everything after the first dash
-  // This handles project IDs that might contain dashes themselves
-  const projectId = parts.slice(1).join('-');
-  console.log('PreviewLinkUtils: Decoded project ID:', projectId);
-  
-  return projectId;
-};
-
-/**
- * Validates if a given preview link is properly encoded
- * @param previewId - The preview ID to validate
- * @returns Boolean indicating if the preview ID is properly encoded
- */
-export const isValidEncodedPreviewLink = (previewId: string): boolean => {
-  if (!previewId || !previewId.includes('-')) {
-    return false;
-  }
-  
-  const parts = previewId.split('-');
-  if (parts.length < 2) {
-    return false;
-  }
-  
-  // Check if the first part looks like a hash (8 characters, hex)
-  const hashPart = parts[0];
-  if (hashPart.length !== 8 || !/^[0-9a-f]+$/i.test(hashPart)) {
-    return false;
-  }
-  
-  // Extract project ID and verify the hash matches what we'd generate
-  const projectId = parts.slice(1).join('-');
-  const expectedHash = simpleHash(projectId);
-  
-  // Return true if the hash matches what we expect for this project ID
-  return hashPart === expectedHash;
 };

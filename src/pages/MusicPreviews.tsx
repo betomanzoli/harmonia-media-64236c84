@@ -159,10 +159,10 @@ const MusicPreviews: React.FC = () => {
             id: v.id,
             title: v.name || `Versão ${v.id}`,
             description: v.description || 'Sem descrição',
-            audioUrl: v.audioUrl || (v as any).file_url || '',
+            audioUrl: v.audioUrl || v.file_url || '',
             recommended: v.recommended || false,
             name: v.name || `Versão ${v.id}`,
-            createdAt: v.createdAt || new Date().toISOString()
+            createdAt: v.createdAt || v.created_at || new Date().toISOString()
           }))
         : []);
   
@@ -182,6 +182,7 @@ const MusicPreviews: React.FC = () => {
     versionsList: projectData.versionsList || [],
     feedbackHistory: projectData.feedbackHistory || [],
     history: projectData.history || [],
+    preview_code: projectData.preview_code // Use preview_code instead of ID
   };
   
   return (
