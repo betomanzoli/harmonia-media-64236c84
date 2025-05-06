@@ -25,7 +25,7 @@ export const usePreviewData = (projectId: string | undefined) => {
     if (adminProject) {
       console.log('Project found:', adminProject);
       
-      // Ensure all versions have createdAt date
+      // Ensure all versions have createdAt date and description
       const previews = adminProject.versionsList?.map(v => ({
         id: v.id,
         title: v.name || `Versão ${v.id}`,
@@ -49,6 +49,13 @@ export const usePreviewData = (projectId: string | undefined) => {
           });
         }
       }
+
+      // Make sure versionsList items have description
+      const versionsList = adminProject.versionsList?.map(v => ({
+        ...v,
+        description: v.description || 'Sem descrição', // Ensure description is never empty
+        createdAt: v.createdAt || new Date().toISOString()
+      })) as ProjectVersion[];
 
       setProjectData({
         id: adminProject.id, // Ensure ID is always set
@@ -86,10 +93,7 @@ export const usePreviewData = (projectId: string | undefined) => {
         lastActivityDate: adminProject.lastActivityDate,
         expirationDate: adminProject.expirationDate,
         versions: adminProject.versions,
-        versionsList: adminProject.versionsList?.map(v => ({
-          ...v,
-          createdAt: v.createdAt || new Date().toISOString()
-        })),
+        versionsList: versionsList,
         feedbackHistory: adminProject.feedbackHistory,
         history: adminProject.history,
         clientEmail: adminProject.clientEmail
@@ -116,7 +120,7 @@ export const usePreviewData = (projectId: string | undefined) => {
             description: 'Arranjo completo com cordas e metais',
             audioUrl: 'https://drive.google.com/file/d/11c6JahRd5Lx0iKCL_gHZ0zrZ3LFBJ47a/preview',
             name: 'Versão Orquestral',
-            createdAt: new Date().toISOString()
+            createdAt: new Date().toISOString() 
           },
           {
             id: 'v3',
