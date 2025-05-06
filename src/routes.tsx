@@ -39,7 +39,7 @@ const AppRoutes: React.FC = () => {
   return (
     <Routes>
       {/* Rotas públicas */}
-      <Route path="/" element={<PublicLayout />}>
+      <Route element={<PublicLayout />}>
         <Route index element={<HomePage />} />
         <Route path="sobre" element={<AboutPage />} />
         <Route path="servicos" element={<ServicesPage />} />

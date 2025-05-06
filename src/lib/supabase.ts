@@ -26,6 +26,9 @@ export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
 // Utility function to safely get the Supabase URL
 export const getSupabaseUrl = () => supabaseUrl;
 
+// Export the email service
+export { emailService } from './supabase/emailService';
+
 // Test connection when the module loads
 try {
   console.log('🔌 Cliente Supabase inicializado com nova conexão.');

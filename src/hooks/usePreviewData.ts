@@ -25,6 +25,7 @@ interface ProjectData {
   lastActivityDate: string;
   expirationDate?: string;
   versionsList: ProjectVersion[];
+  previews?: ProjectVersion[]; // Add this line to fix the type error
   versions: number;
   feedback?: string;
   feedbackHistory: any[];
