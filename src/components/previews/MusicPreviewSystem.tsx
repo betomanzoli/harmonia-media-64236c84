@@ -147,16 +147,19 @@ const MusicPreviewSystem: React.FC<MusicPreviewSystemProps> = ({ projectId }) =>
   const packageType = formatPackageType(projectData.packageType);
   const createdAt = projectData.createdAt || new Date().toISOString();
   
-  // Convert versionsList to MusicPreview format ensuring title field exists
+  // Convert versionsList to MusicPreview format ensuring title and description fields exist
   let versionsForPlayer: MusicPreview[] = [];
   
   if (Array.isArray(projectData.previews)) {
-    versionsForPlayer = projectData.previews;
+    versionsForPlayer = projectData.previews.map(preview => ({
+      ...preview,
+      description: preview.description || 'Sem descrição' // Ensure description is never undefined
+    }));
   } else if (Array.isArray(projectData.versionsList)) {
     versionsForPlayer = projectData.versionsList.map(v => ({
       id: v.id,
       title: v.name || `Versão ${v.id}`, 
-      description: v.description || '',
+      description: v.description || 'Sem descrição',
       audioUrl: v.audioUrl || '',
       recommended: v.recommended || false,
       name: v.name || `Versão ${v.id}`,

@@ -1,7 +1,7 @@
 
 import { useState, useEffect } from 'react';
 import { usePreviewProjects } from '@/hooks/admin/usePreviewProjects';
-import { ProjectData, ProjectItem, MusicPreview, ProjectVersion } from '@/types/project.types';
+import { ProjectData, MusicPreview, ProjectVersion } from '@/types/project.types';
 
 export const usePreviewData = (projectId: string | undefined) => {
   const [projectData, setProjectData] = useState<ProjectData | null>(null);
@@ -29,7 +29,7 @@ export const usePreviewData = (projectId: string | undefined) => {
       const previews = adminProject.versionsList?.map(v => ({
         id: v.id,
         title: v.name || `Versão ${v.id}`,
-        description: v.description || '',
+        description: v.description || 'Sem descrição', // Ensure description is never empty
         audioUrl: v.audioUrl || '',
         recommended: v.recommended,
         name: v.name || `Versão ${v.id}`,
@@ -51,6 +51,7 @@ export const usePreviewData = (projectId: string | undefined) => {
       }
 
       setProjectData({
+        id: adminProject.id, // Ensure ID is always set
         clientName: adminProject.clientName,
         projectTitle: adminProject.packageType || 'Música Personalizada',
         status: adminProject.status as 'waiting' | 'feedback' | 'approved',
@@ -80,7 +81,6 @@ export const usePreviewData = (projectId: string | undefined) => {
             createdAt: new Date().toISOString()
           }
         ],
-        id: adminProject.id,
         packageType: adminProject.packageType,
         createdAt: adminProject.createdAt,
         lastActivityDate: adminProject.lastActivityDate,
@@ -97,6 +97,7 @@ export const usePreviewData = (projectId: string | undefined) => {
     } else {
       console.log('Project not found, using fallback data');
       setProjectData({
+        id: 'fallback-project', // Add ID to fallback data
         clientName: 'Cliente Exemplo',
         projectTitle: 'Projeto de Música Personalizada',
         status: 'waiting',

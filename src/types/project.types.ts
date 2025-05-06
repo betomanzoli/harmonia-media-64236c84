@@ -3,7 +3,7 @@
 export interface BaseVersionItem {
   id: string;
   name: string;
-  description?: string;
+  description: string; // Changed from optional to required
   audioUrl: string;
   recommended?: boolean;
   final?: boolean;
