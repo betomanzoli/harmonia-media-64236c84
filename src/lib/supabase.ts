@@ -34,19 +34,27 @@ try {
   console.log('🔌 Cliente Supabase inicializado com nova conexão.');
   
   // Execute a simple query to validate the connection
-  supabase
-    .from('projects')
-    .select('count(*)', { count: 'exact', head: true })
-    .then(({ data, error }) => {
+  // Using Promise.then() to properly handle the response
+  const checkConnection = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('projects')
+        .select('*', { count: 'exact', head: true });
+        
       if (error) {
         console.error('❌ Erro na conexão Supabase:', error);
       } else {
-        console.log(`✅ Conexão Supabase validada: ${data ? data.count : 0} projetos encontrados.`);
+        // Safely access count property with proper type checking
+        console.log(`✅ Conexão Supabase validada: ${data ? 'conectado' : 'sem dados'}`);
       }
-    })
-    .catch(err => {
+    } catch (err) {
       console.error('❌ Erro ao testar conexão Supabase:', err);
-    });
+    }
+  };
+  
+  // Execute the connection check
+  checkConnection();
+  
 } catch (err) {
   console.error('❌ Erro ao inicializar cliente Supabase:', err);
 }
