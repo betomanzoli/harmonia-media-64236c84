@@ -1,21 +1,7 @@
+
 import { useState, useEffect } from 'react';
 import { usePreviewProjects } from '@/hooks/admin/usePreviewProjects';
-import { ProjectData, ProjectItem as ComponentProjectItem } from '@/components/previews/types';
-
-export interface PreviewProjectData {
-  clientName: string;
-  projectTitle: string;
-  status: 'waiting' | 'feedback' | 'approved';
-  previews: {
-    id: string;
-    title: string;
-    description: string;
-    audioUrl: string;
-    recommended?: boolean;
-  }[];
-  packageType?: string;
-  creationDate?: string;
-}
+import { ProjectData, ProjectItem, MusicPreview, ProjectVersion } from '@/types/project.types';
 
 export const usePreviewData = (projectId: string | undefined) => {
   const [projectData, setProjectData] = useState<ProjectData | null>(null);
@@ -39,13 +25,16 @@ export const usePreviewData = (projectId: string | undefined) => {
     if (adminProject) {
       console.log('Project found:', adminProject);
       
+      // Ensure all versions have createdAt date
       const previews = adminProject.versionsList?.map(v => ({
         id: v.id,
         title: v.name || `Versão ${v.id}`,
         description: v.description || '',
         audioUrl: v.audioUrl || '',
-        recommended: v.recommended
-      })) || [];
+        recommended: v.recommended,
+        name: v.name || `Versão ${v.id}`,
+        createdAt: v.createdAt || new Date().toISOString()
+      } as MusicPreview)) || [];
       
       if (previews.length === 0 && adminProject.versions > 0) {
         for (let i = 0; i < adminProject.versions; i++) {
@@ -54,7 +43,9 @@ export const usePreviewData = (projectId: string | undefined) => {
             title: `Versão ${i+1}`,
             description: 'Versão para aprovação',
             audioUrl: 'https://drive.google.com/file/d/1H62ylCwQYJ23BLpygtvNmCgwTDcHX6Cl/preview',
-            recommended: i === 0
+            recommended: i === 0,
+            name: `Versão ${i+1}`,
+            createdAt: new Date().toISOString()
           });
         }
       }
@@ -69,18 +60,24 @@ export const usePreviewData = (projectId: string | undefined) => {
             title: 'Versão Acústica',
             description: 'Versão suave com violão e piano',
             audioUrl: 'https://drive.google.com/file/d/1H62ylCwQYJ23BLpygtvNmCgwTDcHX6Cl/preview',
+            name: 'Versão Acústica',
+            createdAt: new Date().toISOString()
           },
           {
             id: 'v2',
             title: 'Versão Orquestral',
             description: 'Arranjo completo com cordas e metais',
             audioUrl: 'https://drive.google.com/file/d/11c6JahRd5Lx0iKCL_gHZ0zrZ3LFBJ47a/preview',
+            name: 'Versão Orquestral',
+            createdAt: new Date().toISOString()
           },
           {
             id: 'v3',
             title: 'Versão Minimalista',
             description: 'Abordagem simplificada com foco na melodia',
             audioUrl: 'https://drive.google.com/file/d/1fCsWubN8pXwM-mRlDtnQFTCkBbIkuUyW/preview',
+            name: 'Versão Minimalista',
+            createdAt: new Date().toISOString()
           }
         ],
         id: adminProject.id,
@@ -89,7 +86,10 @@ export const usePreviewData = (projectId: string | undefined) => {
         lastActivityDate: adminProject.lastActivityDate,
         expirationDate: adminProject.expirationDate,
         versions: adminProject.versions,
-        versionsList: adminProject.versionsList,
+        versionsList: adminProject.versionsList?.map(v => ({
+          ...v,
+          createdAt: v.createdAt || new Date().toISOString()
+        })),
         feedbackHistory: adminProject.feedbackHistory,
         history: adminProject.history,
         clientEmail: adminProject.clientEmail
@@ -106,23 +106,31 @@ export const usePreviewData = (projectId: string | undefined) => {
             title: 'Versão Acústica',
             description: 'Versão suave com violão e piano',
             audioUrl: 'https://drive.google.com/file/d/1H62ylCwQYJ23BLpygtvNmCgwTDcHX6Cl/preview',
+            name: 'Versão Acústica',
+            createdAt: new Date().toISOString()
           },
           {
             id: 'v2',
             title: 'Versão Orquestral',
             description: 'Arranjo completo com cordas e metais',
             audioUrl: 'https://drive.google.com/file/d/11c6JahRd5Lx0iKCL_gHZ0zrZ3LFBJ47a/preview',
+            name: 'Versão Orquestral',
+            createdAt: new Date().toISOString()
           },
           {
             id: 'v3',
             title: 'Versão Minimalista',
             description: 'Abordagem simplificada com foco na melodia',
             audioUrl: 'https://drive.google.com/file/d/1fCsWubN8pXwM-mRlDtnQFTCkBbIkuUyW/preview',
+            name: 'Versão Minimalista',
+            createdAt: new Date().toISOString()
           }
         ],
         createdAt: new Date().toISOString(),
         lastActivityDate: new Date().toISOString(),
-        packageType: 'Música Personalizada'
+        packageType: 'Música Personalizada',
+        versions: 3,
+        expirationDate: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString(), // 7 days from now
       });
     }
     
@@ -132,7 +140,10 @@ export const usePreviewData = (projectId: string | undefined) => {
   const updateProjectStatus = (newStatus: 'waiting' | 'feedback' | 'approved', feedback?: string) => {
     if (!actualProjectId) return false;
 
-    const updates: Partial<ComponentProjectItem> = { status: newStatus };
+    // Create compatible updates object
+    const updates: Record<string, any> = { 
+      status: newStatus 
+    };
     
     if (feedback) {
       updates.feedback = feedback;

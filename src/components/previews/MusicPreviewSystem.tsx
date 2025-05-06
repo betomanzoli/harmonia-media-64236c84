@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import PreviewHeader from './PreviewHeader';
 import PreviewPlayerList from './player/PreviewPlayerList';
@@ -12,7 +11,7 @@ import PreviewLoadingState from './PreviewLoadingState';
 import { usePreviewData } from '@/hooks/usePreviewData';
 import PreviewProjectDetails from './PreviewProjectDetails';
 import { useToast } from '@/hooks/use-toast';
-import { MusicPreview, ProjectVersion } from './types';
+import { MusicPreview } from '@/types/project.types';
 
 interface MusicPreviewSystemProps {
   projectId: string;
@@ -148,19 +147,21 @@ const MusicPreviewSystem: React.FC<MusicPreviewSystemProps> = ({ projectId }) =>
   const packageType = formatPackageType(projectData.packageType);
   const createdAt = projectData.createdAt || new Date().toISOString();
   
-  // Convert versionsList to MusicPreview format with explicit type conversion
+  // Convert versionsList to MusicPreview format ensuring title field exists
   let versionsForPlayer: MusicPreview[] = [];
   
-  if (Array.isArray(projectData.versionsList)) {
-    versionsForPlayer = projectData.versionsList.map((v: ProjectVersion): MusicPreview => ({
+  if (Array.isArray(projectData.previews)) {
+    versionsForPlayer = projectData.previews;
+  } else if (Array.isArray(projectData.versionsList)) {
+    versionsForPlayer = projectData.versionsList.map(v => ({
       id: v.id,
-      title: v.name || `Versão ${v.id}`, // Ensure title is set from name
+      title: v.name || `Versão ${v.id}`, 
       description: v.description || '',
       audioUrl: v.audioUrl || '',
-      recommended: v.recommended || false
+      recommended: v.recommended || false,
+      name: v.name || `Versão ${v.id}`,
+      createdAt: v.createdAt || new Date().toISOString()
     }));
-  } else if (Array.isArray(projectData.previews)) {
-    versionsForPlayer = projectData.previews;
   }
   
   // If no versions available, add sample data for demonstration
@@ -171,18 +172,24 @@ const MusicPreviewSystem: React.FC<MusicPreviewSystemProps> = ({ projectId }) =>
         title: 'Versão Acústica',
         description: 'Versão suave com violão e piano',
         audioUrl: 'https://drive.google.com/file/d/1H62ylCwQYJ23BLpygtvNmCgwTDcHX6Cl/preview',
+        name: 'Versão Acústica',
+        createdAt: new Date().toISOString()
       },
       {
         id: 'v2',
         title: 'Versão Orquestral',
         description: 'Arranjo completo com cordas e metais',
         audioUrl: 'https://drive.google.com/file/d/11c6JahRd5Lx0iKCL_gHZ0zrZ3LFBJ47a/preview',
+        name: 'Versão Orquestral',
+        createdAt: new Date().toISOString()
       },
       {
         id: 'v3',
         title: 'Versão Minimalista',
         description: 'Abordagem simplificada com foco na melodia',
         audioUrl: 'https://drive.google.com/file/d/1fCsWubN8pXwM-mRlDtnQFTCkBbIkuUyW/preview',
+        name: 'Versão Minimalista',
+        createdAt: new Date().toISOString()
       }
     ];
   }

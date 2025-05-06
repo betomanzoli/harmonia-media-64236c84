@@ -8,7 +8,7 @@ import PreviewError from '@/components/previews/PreviewError';
 import PreviewContent from '@/components/previews/PreviewContent';
 import { usePreviewData } from '@/hooks/usePreviewData';
 import { notificationService } from '@/services/notificationService';
-import { ProjectData, ProjectItem } from '@/components/previews/types';
+import { ProjectItem, MusicPreview } from '@/types/project.types';
 
 const MusicPreviews: React.FC = () => {
   const { previewId } = useParams<{ previewId: string }>();
@@ -145,14 +145,24 @@ const MusicPreviews: React.FC = () => {
   console.log("Rendering with project data:", projectData);
   console.log("Available version lists:", projectData?.versionsList, projectData?.previews);
   
-  // Make sure versionsForPlayer is always an array
-  const versionsForPlayer = Array.isArray(projectData?.versionsList) 
-    ? projectData.versionsList 
-    : (Array.isArray(projectData?.previews) ? projectData.previews : []);
+  // Make sure versionsForPlayer is always an array of MusicPreview
+  const versionsForPlayer: MusicPreview[] = Array.isArray(projectData?.previews) 
+    ? projectData.previews
+    : (Array.isArray(projectData?.versionsList) 
+        ? projectData.versionsList.map(v => ({
+            id: v.id,
+            title: v.name || `Versão ${v.id}`,
+            description: v.description || '',
+            audioUrl: v.audioUrl,
+            recommended: v.recommended,
+            name: v.name || `Versão ${v.id}`,
+            createdAt: v.createdAt || new Date().toISOString()
+          }))
+        : []);
   
   console.log("Versions for player:", versionsForPlayer);
 
-  // Create a ProjectItem with required expirationDate and all other required properties
+  // Create a complete ProjectItem with required fields
   const projectItemData: ProjectItem = {
     id: projectData.id || actualProjectId || 'unknown',
     clientName: projectData.clientName || 'Cliente',
@@ -161,13 +171,11 @@ const MusicPreviews: React.FC = () => {
     status: projectData.status || 'waiting',
     createdAt: projectData.createdAt || new Date().toISOString(),
     lastActivityDate: projectData.lastActivityDate || new Date().toISOString(),
-    expirationDate: projectData.expirationDate || new Date().toISOString(),
+    expirationDate: projectData.expirationDate || new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString(),
     versions: projectData.versions || 0,
     versionsList: projectData.versionsList || [],
     feedbackHistory: projectData.feedbackHistory || [],
     history: projectData.history || [],
-    // Include any other required properties from the ProjectItem type
-    // Use defaults for any properties that might be missing
   };
   
   return (

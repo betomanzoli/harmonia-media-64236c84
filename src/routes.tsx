@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { Route, Routes } from 'react-router-dom';
+import { Route, Routes, Outlet } from 'react-router-dom';
 import HomePage from '@/pages/HomePage';
 import AboutPage from '@/pages/AboutPage';
 import ServicesPage from '@/pages/ServicesPage';
@@ -34,15 +34,17 @@ import AdminIntegrations from '@/pages/admin/AdminIntegrations';
 import AdminInvoices from '@/pages/admin/AdminInvoices';
 import PublicLayout from '@/layouts/PublicLayout';
 import { ProtectedRoute } from '@/components/admin/auth/ProtectedRoute';
+import MusicPreviews from '@/pages/MusicPreviews';
 
 const AppRoutes: React.FC = () => {
   return (
     <Routes>
       {/* Rotas públicas */}
-      <Route element={<PublicLayout>
-        {/* Public layout children container */}
-        <Outlet />
-      </PublicLayout>}>
+      <Route element={
+        <PublicLayout>
+          <Outlet />
+        </PublicLayout>
+      }>
         <Route index element={<HomePage />} />
         <Route path="sobre" element={<AboutPage />} />
         <Route path="servicos" element={<ServicesPage />} />
@@ -65,16 +67,18 @@ const AppRoutes: React.FC = () => {
       <Route path="/preview/:projectId" element={<PreviewPage />} />
       <Route path="/preview-debug/:projectId" element={<PreviewDebugPage />} />
       <Route path="/preview-project/:previewId" element={<MusicPreviewPage />} />
+      <Route path="/preview-music/:previewId" element={<MusicPreviews />} />
       
       {/* Rotas administrativas */}
       <Route path="/admin-j28s7d1k">
         <Route path="login" element={<AdminLogin />} />
         <Route path="reset-password" element={<ResetPassword />} />
         <Route path="audio-database" element={<AudioDatabase />} />
-        <Route element={<ProtectedRoute>
-          {/* Protected route children container */}
-          <Outlet />
-        </ProtectedRoute>}>
+        <Route element={
+          <ProtectedRoute>
+            <Outlet />
+          </ProtectedRoute>
+        }>
           <Route path="dashboard" element={<AdminDashboard />} />
           <Route path="portfolio" element={<AdminPortfolio />} />
           <Route path="settings" element={<AdminSettings />} />
@@ -92,8 +96,5 @@ const AppRoutes: React.FC = () => {
     </Routes>
   );
 };
-
-// Import Outlet component for nested routes
-import { Outlet } from 'react-router-dom';
 
 export default AppRoutes;

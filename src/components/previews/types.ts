@@ -1,72 +1,17 @@
 
-export interface ProjectVersion {
-  id: string;
-  name: string;
-  description?: string;
-  audioUrl: string;
-  recommended?: boolean;
-  final?: boolean;
-  createdAt?: string;
-}
+import { 
+  ProjectVersion,
+  MusicPreview,
+  ProjectData,
+  ProjectItem,
+  PreviewProjectData
+} from '@/types/project.types';
 
-export interface MusicPreview {
-  id: string;
-  title: string;
-  description: string;
-  audioUrl?: string;
-  recommended?: boolean;
-  url?: string;
-  fileId?: string;
-  finalVersionUrl?: string;
-  stemsUrl?: string;
-}
-
-export interface ProjectData {
-  id?: string;
-  clientName: string;
-  clientEmail?: string;
-  projectTitle: string;
-  packageType: string;
-  status: 'waiting' | 'feedback' | 'approved';
-  createdAt: string;
-  lastActivityDate: string;
-  expirationDate?: string;
-  versionsList?: ProjectVersion[];
-  previews?: MusicPreview[];
-  versions?: number;
-  feedback?: string;
-  feedbackHistory?: any[];
-  history?: any[];
-}
-
-export interface ProjectItem {
-  id: string;
-  clientName: string;
-  projectTitle: string;
-  packageType: string;
-  status: 'waiting' | 'feedback' | 'approved';
-  createdAt: string;
-  lastActivityDate: string;
-  expirationDate: string;
-  versions: number;
-  versionsList: ProjectVersion[];
-  feedbackHistory: any[];
-  history: any[];
-  previews?: MusicPreview[];
-  feedback?: string;
-}
-
-export interface PreviewProjectData {
-  clientName: string;
-  projectTitle: string;
-  status: 'waiting' | 'feedback' | 'approved';
-  previews: {
-    id: string;
-    title: string;
-    description: string;
-    audioUrl: string;
-    recommended?: boolean;
-  }[];
-  packageType?: string;
-  creationDate?: string;
-}
+// Re-export all types from the centralized file
+export {
+  ProjectVersion,
+  MusicPreview,
+  ProjectData,
+  ProjectItem,
+  PreviewProjectData
+};
