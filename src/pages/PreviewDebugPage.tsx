@@ -1,3 +1,4 @@
+
 import React, { useEffect, useState } from 'react';
 import { useParams } from 'react-router-dom';
 import { useToast } from "@/hooks/use-toast";
@@ -23,8 +24,8 @@ const PreviewDebugPage: React.FC = () => {
 
       toast({
         title: "Debug mode",
-        description: `Modo de depuração ativado para projeto: ${actualProjectId || projectId}`,
-        variant: "default"  // Change from "success" to "default"
+        description: `Modo de depuração ativado para projeto: ${decodedId || projectId}`,
+        variant: "default"
       });
     }
   }, [projectId, toast]);

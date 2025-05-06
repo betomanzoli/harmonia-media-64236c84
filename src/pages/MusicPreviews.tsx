@@ -8,6 +8,7 @@ import PreviewError from '@/components/previews/PreviewError';
 import PreviewContent from '@/components/previews/PreviewContent';
 import { usePreviewData } from '@/hooks/usePreviewData';
 import { notificationService } from '@/services/notificationService';
+import { ProjectData } from '@/components/previews/types';
 
 const MusicPreviews: React.FC = () => {
   const { previewId } = useParams<{ previewId: string }>();
@@ -154,7 +155,7 @@ const MusicPreviews: React.FC = () => {
   return (
     <MusicPreviewContainer>
       <PreviewContent
-        projectData={projectData}
+        projectData={projectData as ProjectData}
         selectedPreview={selectedPreview}
         setSelectedPreview={setSelectedPreview}
         feedback={feedback}

@@ -12,33 +12,10 @@ import PreviewLoadingState from './PreviewLoadingState';
 import { usePreviewData } from '@/hooks/usePreviewData';
 import PreviewProjectDetails from './PreviewProjectDetails';
 import { useToast } from '@/hooks/use-toast';
+import { MusicPreview, ProjectVersion } from './types';
 
 interface MusicPreviewSystemProps {
   projectId: string;
-}
-
-// Define the MusicPreview interface to match what PreviewPlayerList expects
-interface MusicPreview {
-  id: string;
-  title: string;
-  description: string;
-  audioUrl?: string;
-  recommended?: boolean;
-  url?: string;
-  fileId?: string;
-  finalVersionUrl?: string;
-  stemsUrl?: string;
-}
-
-// Define our own VersionItem interface to avoid conflicts
-interface PreviewVersionItem {
-  id: string;
-  name: string;
-  description?: string;
-  audioUrl: string;
-  recommended?: boolean;
-  final?: boolean;
-  createdAt?: string;
 }
 
 const MusicPreviewSystem: React.FC<MusicPreviewSystemProps> = ({ projectId }) => {
@@ -171,11 +148,11 @@ const MusicPreviewSystem: React.FC<MusicPreviewSystemProps> = ({ projectId }) =>
   const packageType = formatPackageType(projectData.packageType);
   const createdAt = projectData.createdAt || new Date().toISOString();
   
-  // Convert versionsList to MusicPreview format (properly typed now)
+  // Convert versionsList to MusicPreview format
   let versionsForPlayer: MusicPreview[] = [];
   
   if (Array.isArray(projectData.versionsList)) {
-    versionsForPlayer = projectData.versionsList.map((v: PreviewVersionItem) => ({
+    versionsForPlayer = projectData.versionsList.map((v: ProjectVersion) => ({
       id: v.id,
       title: v.name || `Versão ${v.id}`,
       description: v.description || '',
