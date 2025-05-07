@@ -99,17 +99,19 @@ export const useProjectAccess = ({ projectId, onVerify }: UseProjectAccessProps)
       
       const isDemoCode = code === '123456' || code.startsWith('P');
       
-      // Fix: TypeScript error by properly handling clients data
-      // Check if clients exists and if it's an array or object, then access email accordingly
-      let clientEmail = null;
+      // Fix: Properly handle the clients data with proper TypeScript types
+      let clientEmail: string | null = null;
+      
       if (data?.clients) {
-        // If clients is an array, get the first item's email
+        // Check if clients is an array and handle accordingly
         if (Array.isArray(data.clients)) {
-          clientEmail = data.clients.length > 0 ? data.clients[0].email : null;
+          clientEmail = data.clients.length > 0 && data.clients[0]?.email ? 
+            data.clients[0].email : null;
           console.log('[ProjectAccessForm] Clients is array, email:', clientEmail);
-        } else {
-          // Otherwise treat it as an object with email property
-          clientEmail = data.clients.email;
+        } 
+        // If it's an object with an email property
+        else if (typeof data.clients === 'object' && data.clients !== null && 'email' in data.clients) {
+          clientEmail = (data.clients as { email?: string }).email || null;
           console.log('[ProjectAccessForm] Clients is object, email:', clientEmail);
         }
       }
