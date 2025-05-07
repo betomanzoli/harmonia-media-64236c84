@@ -1,3 +1,4 @@
+
 /**
  * Functions for managing and validating preview links
  */
@@ -5,22 +6,27 @@
 /**
  * Generates a preview link from a project ID
  * @param projectId The project ID
+ * @param clientId Optional client ID for additional uniqueness
  * @returns The encoded preview link
  */
-export const generatePreviewLink = (projectId: string, previewCode?: string): string => {
-  // If a preview code is provided, use it directly
-  if (previewCode) {
-    return previewCode;
+export const generatePreviewLink = (projectId: string, clientId?: string): string => {
+  // If a preview code is provided, prioritize it
+  if (projectId && projectId.startsWith('P')) {
+    return projectId;
   }
   
-  // Otherwise, encode the project ID with static identifier
+  // Generate a token unique to this project
   try {
     const payload = {
       id: projectId,
-      // Remove timestamp that causes link changes
-      // ts: Date.now() 
-      client: "client-fixed" // Static identifier
+      // Use clientId if provided, otherwise use projectId as fallback
+      clientId: clientId || projectId,
+      // Use only date part for stability (not time)
+      date: new Date().toISOString().split('T')[0]
     };
+    
+    console.log("[previewLinkUtils] Generating token with payload:", payload);
+    
     const encoded = btoa(JSON.stringify(payload));
     return encoded.replace(/=/g, '').replace(/\+/g, '-').replace(/\//g, '_');
   } catch (err) {
@@ -50,8 +56,13 @@ export const isValidEncodedPreviewLink = (link: string): boolean => {
     const normalized = link.replace(/-/g, '+').replace(/_/g, '/');
     const decoded = atob(normalized);
     const data = JSON.parse(decoded);
-    return !!data.id; // Return true if it has an id property
+    
+    console.log("[previewLinkUtils] Decoded token:", data);
+    
+    // Valid if it has necessary properties
+    return !!data.id; 
   } catch (err) {
+    console.error('[previewLinkUtils] Error decoding link:', err);
     return false; // Not a valid encoded link
   }
 };
@@ -80,11 +91,11 @@ export const getProjectIdFromPreviewLink = (link: string): string | null => {
     const decoded = atob(normalized);
     const data = JSON.parse(decoded);
     
-    // No timestamp check since we've removed it from generation
+    console.log('[previewLinkUtils] Token decoded successfully:', data);
     
     return data.id;
   } catch (err) {
-    console.error('Error decoding preview link:', err);
+    console.error('[previewLinkUtils] Error decoding preview link:', err);
     return null;
   }
 };

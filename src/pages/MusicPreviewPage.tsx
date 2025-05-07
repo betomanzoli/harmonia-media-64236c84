@@ -1,9 +1,10 @@
+
 import React, { useEffect, useState } from 'react';
 import { useParams } from 'react-router-dom';
 import MusicPreviewSystem from '@/components/previews/MusicPreviewSystem';
 import { useToast } from '@/hooks/use-toast';
 import { getProjectIdFromPreviewLink, isValidEncodedPreviewLink } from '@/utils/previewLinkUtils';
-import { supabase } from '@/integrations/supabase/client';
+import { supabase } from '@/lib/supabase';
 
 // Force dynamic content to prevent caching
 export const dynamic = 'force-dynamic';
@@ -23,14 +24,15 @@ const MusicPreviewPage: React.FC = () => {
       
       // Check if this is a direct or encoded link
       const isEncodedLink = isValidEncodedPreviewLink(projectId);
-      console.log("Is encoded preview link:", isEncodedLink);
+      console.log("[MusicPreviewPage] Is encoded preview link:", isEncodedLink);
+      console.log("[MusicPreviewPage] Token recebido:", projectId);
       
       // For backwards compatibility, we still support direct project IDs
       // but only when accessed by admin users
       const isAdmin = localStorage.getItem('admin_preview_access') === 'true';
       
       if (!isEncodedLink && !isAdmin) {
-        console.log("Direct link access denied - only encoded links are allowed for clients");
+        console.log("[MusicPreviewPage] Direct link access denied - only encoded links are allowed for clients");
         setIsError(true);
         setIsLoading(false);
         return;
@@ -41,10 +43,10 @@ const MusicPreviewPage: React.FC = () => {
       
       if (isEncodedLink) {
         decodedId = getProjectIdFromPreviewLink(projectId);
-        console.log("Decoded project ID:", decodedId);
+        console.log("[MusicPreviewPage] Decoded project ID:", decodedId);
         
         if (!decodedId) {
-          console.log("Failed to decode project ID");
+          console.log("[MusicPreviewPage] Failed to decode project ID");
           setIsError(true);
           setIsLoading(false);
           return;
@@ -77,18 +79,33 @@ const MusicPreviewPage: React.FC = () => {
       
       if (storedProjects) {
         const projects = JSON.parse(storedProjects);
-        const projectExists = projects.some((p: any) => p.id === projectId);
+        const projectExists = projects.some((p: any) => p.id === projectId || p.preview_code === projectId);
         
         if (projectExists) {
-          console.log("Project found in localStorage:", projectId);
+          console.log("[MusicPreviewPage] Project found in localStorage:", projectId);
           setIsError(false);
           setIsLoading(false);
           return;
         }
       }
       
-      // If not found in localStorage, check Supabase
-      console.log("Project not found in localStorage, checking Supabase");
+      // If not found in localStorage, check Supabase by preview_code first
+      console.log("[MusicPreviewPage] Project not found in localStorage, checking Supabase by preview_code");
+      const { data: previewData, error: previewError } = await supabase
+        .from('projects')
+        .select('id')
+        .eq('preview_code', projectId)
+        .maybeSingle();
+        
+      if (previewData) {
+        console.log("[MusicPreviewPage] Project found in Supabase by preview_code:", previewData);
+        setIsError(false);
+        setIsLoading(false);
+        return;
+      }
+      
+      // Then check by ID
+      console.log("[MusicPreviewPage] Project not found by preview_code, checking by ID");
       const { data, error } = await supabase
         .from('projects')
         .select('id')
@@ -96,21 +113,21 @@ const MusicPreviewPage: React.FC = () => {
         .maybeSingle();
         
       if (error) {
-        console.error("Error checking project in Supabase:", error);
+        console.error("[MusicPreviewPage] Error checking project in Supabase:", error);
         setIsError(true);
         setIsLoading(false);
         return;
       }
       
       if (data) {
-        console.log("Project found in Supabase:", data);
+        console.log("[MusicPreviewPage] Project found in Supabase by ID:", data);
         setIsError(false);
       } else {
-        console.log("Project not found in Supabase");
+        console.log("[MusicPreviewPage] Project not found in Supabase");
         setIsError(true);
       }
     } catch (error) {
-      console.error("Error verifying project:", error);
+      console.error("[MusicPreviewPage] Error verifying project:", error);
       setIsError(true);
     } finally {
       setIsLoading(false);

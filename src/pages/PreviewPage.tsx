@@ -32,15 +32,17 @@ const PreviewPage: React.FC = () => {
       
       // Check if this is a direct or encoded link
       const isEncodedLink = isValidEncodedPreviewLink(projectId);
-      console.log("Is encoded preview link:", isEncodedLink);
+      console.log("[PreviewPage] Is encoded preview link:", isEncodedLink);
+      console.log("[PreviewPage] Token recebido:", projectId);
       
       // For backwards compatibility, we still support direct project IDs
       // but only when accessed by admin users
       const isAdmin = localStorage.getItem('admin_preview_access') === 'true';
       
       if (!isEncodedLink && !isAdmin) {
-        console.log("Direct link access denied - only encoded links are allowed for clients");
+        console.log("[PreviewPage] Direct link access denied - only encoded links are allowed for clients");
         setIsError(true);
+        setErrorDetails("Link de prévia inválido ou expirado.");
         setIsLoading(false);
         return;
       }
@@ -50,11 +52,12 @@ const PreviewPage: React.FC = () => {
       
       if (isEncodedLink) {
         decodedId = getProjectIdFromPreviewLink(projectId);
-        console.log("Decoded project ID:", decodedId);
+        console.log("[PreviewPage] Decoded project ID:", decodedId);
         
         if (!decodedId) {
-          console.log("Failed to decode project ID");
+          console.log("[PreviewPage] Failed to decode project ID");
           setIsError(true);
+          setErrorDetails("Não foi possível decodificar o link de prévia.");
           setIsLoading(false);
           return;
         }
@@ -65,7 +68,7 @@ const PreviewPage: React.FC = () => {
       
       setActualProjectId(decodedId);
       
-      // Verify project exists
+      // Verify project exists and check authorization
       verifyProjectExists(decodedId);
       
       window.scrollTo(0, 0);
@@ -77,40 +80,46 @@ const PreviewPage: React.FC = () => {
     if (!projectId) {
       setIsError(true);
       setIsLoading(false);
+      setErrorDetails("ID do projeto não fornecido.");
       return;
     }
     
     try {
       // First check if there's a preview code match in Supabase
-      console.log("Checking for project in Supabase by preview_code:", projectId);
+      console.log("[PreviewPage] Checking for project in Supabase by preview_code:", projectId);
       const { data: previewData, error: previewError } = await supabase
         .from('projects')
-        .select('id, preview_code, project_files(*)')
+        .select('id, client_id, preview_code, project_files(*)')
         .eq('preview_code', projectId)
         .maybeSingle();
       
       if (previewData) {
-        console.log("[Supabase] Project found by preview_code:", previewData);
-        console.log("[Supabase] Project files:", previewData.project_files);
-        setIsError(false);
-        setIsLoading(false);
+        console.log("[PreviewPage] Project found by preview_code:", previewData);
+        console.log("[PreviewPage] Project files:", previewData.project_files);
+        setDebugInfo(prev => ({ ...prev, projectData: previewData }));
+        
+        // Check if user is authorized or needs to enter credentials
+        handleAuthorizationCheck(projectId);
         return;
       }
       
       // Next check by ID in Supabase
       const { data, error } = await supabase
         .from('projects')
-        .select('id, project_files(*)')
+        .select('id, client_id, preview_code, project_files(*)')
         .eq('id', projectId)
         .maybeSingle();
         
       if (error) {
-        console.error("Error checking project in Supabase:", error);
+        console.error("[PreviewPage] Error checking project in Supabase:", error);
+        setDebugInfo(prev => ({ ...prev, supabaseError: error }));
       } else if (data) {
-        console.log("[Supabase] Project found by ID:", data);
-        console.log("[Supabase] Project files:", data.project_files);
-        setIsError(false);
-        setIsLoading(false);
+        console.log("[PreviewPage] Project found by ID:", data);
+        console.log("[PreviewPage] Project files:", data.project_files);
+        setDebugInfo(prev => ({ ...prev, projectData: data }));
+        
+        // Check if user is authorized or needs to enter credentials
+        handleAuthorizationCheck(projectId);
         return;
       }
       
@@ -119,21 +128,25 @@ const PreviewPage: React.FC = () => {
       
       if (storedProjects) {
         const projects = JSON.parse(storedProjects);
-        const projectExists = projects.some((p: any) => p.id === projectId);
+        const project = projects.find((p: any) => p.id === projectId || p.preview_code === projectId);
         
-        if (projectExists) {
-          console.log("Project found in localStorage:", projectId);
-          setIsError(false);
-          setIsLoading(false);
+        if (project) {
+          console.log("[PreviewPage] Project found in localStorage:", project);
+          setDebugInfo(prev => ({ ...prev, localProject: project }));
+          
+          // Check if user is authorized or needs to enter credentials
+          handleAuthorizationCheck(projectId);
           return;
         }
       }
       
-      console.log("Project not found anywhere");
+      console.log("[PreviewPage] Project not found anywhere");
       setIsError(true);
+      setErrorDetails("Projeto não encontrado. O link pode ter expirado ou sido removido.");
     } catch (error) {
-      console.error("Error verifying project:", error);
+      console.error("[PreviewPage] Error verifying project:", error);
       setIsError(true);
+      setErrorDetails("Erro ao verificar o projeto. Por favor, tente novamente mais tarde.");
     } finally {
       setIsLoading(false);
     }
@@ -168,7 +181,7 @@ const PreviewPage: React.FC = () => {
   };
 
   const handleAccessVerification = async (code: string, email: string) => {
-    console.log('🔐 Verificando acesso com código:', code, 'e email:', email);
+    console.log('[PreviewPage] 🔐 Verificando acesso com código:', code, 'e email:', email);
     
     setDebugInfo(prev => ({ 
       ...prev, 
@@ -198,7 +211,7 @@ const PreviewPage: React.FC = () => {
         .maybeSingle();
         
       if (projectError) {
-        console.error('❌ Erro ao buscar dados do projeto para verificação:', projectError);
+        console.error('[PreviewPage] ❌ Erro ao buscar dados do projeto para verificação:', projectError);
         setDebugInfo(prev => ({ 
           ...prev, 
           verificationError: projectError 
@@ -254,7 +267,7 @@ const PreviewPage: React.FC = () => {
         });
       }
     } catch (error) {
-      console.error('❌ Erro na verificação de acesso:', error);
+      console.error('[PreviewPage] ❌ Erro na verificação de acesso:', error);
       setDebugInfo(prev => ({ 
         ...prev, 
         verificationFatalError: error 
@@ -310,6 +323,9 @@ const PreviewPage: React.FC = () => {
           <h2 className="text-2xl font-bold text-gray-800 mb-4">Link de prévia inválido</h2>
           <p className="text-gray-700">
             {errorDetails || "O link que você acessou não existe ou expirou."}
+          </p>
+          <p className="mt-3 text-gray-600 text-sm">
+            Dúvidas? Entre em contato pelo WhatsApp (11) 92058-5072
           </p>
           <button
             onClick={() => navigate('/')}

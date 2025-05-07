@@ -2,6 +2,7 @@
 import { useState, useEffect } from 'react';
 import { useToast } from '@/hooks/use-toast';
 import { getProjectIdFromPreviewLink, isValidEncodedPreviewLink } from '@/utils/previewLinkUtils';
+import { supabase } from '@/lib/supabase';
 
 interface MusicPreview {
   id: string;
@@ -41,7 +42,8 @@ export const usePreviewProject = (projectId: string | undefined) => {
       try {
         // Check if this is an encoded link or direct ID
         const isEncodedLink = isValidEncodedPreviewLink(projectId);
-        console.log("Is encoded preview link:", isEncodedLink);
+        console.log("[usePreviewProject] Is encoded preview link:", isEncodedLink);
+        console.log("[usePreviewProject] Token recebido:", projectId);
         
         // Only allow encoded links or admin access for direct links
         const isAdmin = localStorage.getItem('admin_preview_access') === 'true';
@@ -50,19 +52,19 @@ export const usePreviewProject = (projectId: string | undefined) => {
         if (isEncodedLink) {
           // Process encoded link
           decodedId = getProjectIdFromPreviewLink(projectId);
-          console.log(`usePreviewProject: Decoded ID=${decodedId}`);
+          console.log(`[usePreviewProject] Decoded ID=${decodedId}`);
         } else if (isAdmin) {
           // Allow direct access for admins
           decodedId = projectId;
-          console.log(`usePreviewProject: Admin direct access for ID=${projectId}`);
+          console.log(`[usePreviewProject] Admin direct access for ID=${projectId}`);
         } else {
           // Invalid link for non-admin users
-          console.log("usePreviewProject: Invalid direct link access for non-admin user");
+          console.log("[usePreviewProject] Invalid direct link access for non-admin user");
           decodedId = null;
         }
         
         if (!decodedId) {
-          console.log("usePreviewProject: No valid project ID, skipping data load");
+          console.log("[usePreviewProject] No valid project ID, skipping data load");
           setProjectData(null);
           setIsLoading(false);
           return;
@@ -70,20 +72,95 @@ export const usePreviewProject = (projectId: string | undefined) => {
         
         setActualProjectId(decodedId);
 
-        // Load project from localStorage
+        // First try to load from Supabase
+        try {
+          // Check by preview_code first (if the decoded ID looks like a preview code)
+          if (/^P\d{4,}$/i.test(decodedId)) {
+            console.log("[usePreviewProject] Trying to fetch by preview_code:", decodedId);
+            const { data: previewData, error: previewError } = await supabase
+              .from('projects')
+              .select('*, project_files(*)')
+              .eq('preview_code', decodedId)
+              .maybeSingle();
+              
+            if (!previewError && previewData) {
+              console.log('[usePreviewProject] Project found by preview_code:', previewData);
+              
+              // Process project data...
+              // This could be expanded based on your actual data structure
+              setProjectData({
+                clientName: previewData.client_name || 'Cliente',
+                projectTitle: previewData.title || previewData.package_type || 'Música Personalizada',
+                status: previewData.status || 'waiting',
+                createdAt: previewData.created_at || new Date().toISOString(),
+                expirationDate: previewData.deadline,
+                packageType: previewData.package_type,
+                versions: previewData.project_files?.map((file: any) => ({
+                  id: file.id,
+                  title: file.file_name || 'Prévia',
+                  description: file.notes || 'Versão para aprovação',
+                  audioUrl: file.file_url || ''
+                })) || []
+              });
+              
+              setIsLoading(false);
+              return;
+            }
+          }
+          
+          // If not found by preview_code or not a preview code format, try by ID
+          console.log("[usePreviewProject] Trying to fetch by ID:", decodedId);
+          const { data, error } = await supabase
+            .from('projects')
+            .select('*, project_files(*)')
+            .eq('id', decodedId)
+            .maybeSingle();
+            
+          if (!error && data) {
+            console.log('[usePreviewProject] Project found by ID:', data);
+            
+            // Process project data...
+            setProjectData({
+              clientName: data.client_name || 'Cliente',
+              projectTitle: data.title || data.package_type || 'Música Personalizada',
+              status: data.status || 'waiting',
+              createdAt: data.created_at || new Date().toISOString(),
+              expirationDate: data.deadline,
+              packageType: data.package_type,
+              versions: data.project_files?.map((file: any) => ({
+                id: file.id,
+                title: file.file_name || 'Prévia',
+                description: file.notes || 'Versão para aprovação',
+                audioUrl: file.file_url || ''
+              })) || []
+            });
+            
+            setIsLoading(false);
+            return;
+          }
+        } catch (supabaseError) {
+          console.error("[usePreviewProject] Supabase error:", supabaseError);
+          // Continue to localStorage fallback
+        }
+
+        // If not found in Supabase, try localStorage
         const storedProjects = localStorage.getItem('harmonIA_preview_projects');
         if (!storedProjects) {
-          console.log('usePreviewProject: No projects found in localStorage');
+          console.log('[usePreviewProject] No projects found in localStorage');
           setProjectData(null);
           setIsLoading(false);
           return;
         }
 
         const projects = JSON.parse(storedProjects);
-        const project = projects.find((p: any) => p.id === decodedId);
+        const project = projects.find((p: any) => 
+          p.id === decodedId || 
+          p.preview_code === decodedId ||
+          p.preview_code === projectId  // Also check against original token
+        );
         
         if (project) {
-          console.log('usePreviewProject: Project found:', project);
+          console.log('[usePreviewProject] Project found in localStorage:', project);
           
           const versions = project.versionsList?.map((v: any) => ({
             id: v.id,
@@ -130,11 +207,11 @@ export const usePreviewProject = (projectId: string | undefined) => {
             ]
           });
         } else {
-          console.log(`usePreviewProject: Project not found for id=${decodedId}`);
+          console.log(`[usePreviewProject] Project not found for id=${decodedId}`);
           setProjectData(null);
         }
       } catch (error) {
-        console.error('usePreviewProject: Error loading project data:', error);
+        console.error('[usePreviewProject] Error loading project data:', error);
         setProjectData(null);
       } finally {
         setIsLoading(false);
@@ -146,16 +223,16 @@ export const usePreviewProject = (projectId: string | undefined) => {
 
   const updateProjectStatus = (newStatus: 'waiting' | 'feedback' | 'approved', comments: string = '') => {
     if (!actualProjectId) {
-      console.error('usePreviewProject: Cannot update status without a valid project ID');
+      console.error('[usePreviewProject] Cannot update status without a valid project ID');
       return false;
     }
 
     try {
-      console.log(`usePreviewProject: Updating status to ${newStatus}`);
+      console.log(`[usePreviewProject] Updating status to ${newStatus}`);
       
       const storedProjects = localStorage.getItem('harmonIA_preview_projects');
       if (!storedProjects) {
-        console.error('usePreviewProject: No projects found in localStorage');
+        console.error('[usePreviewProject] No projects found in localStorage');
         return false;
       }
 
@@ -163,7 +240,7 @@ export const usePreviewProject = (projectId: string | undefined) => {
       const projectIndex = projects.findIndex((p: any) => p.id === actualProjectId);
       
       if (projectIndex === -1) {
-        console.error(`usePreviewProject: Project not found for id=${actualProjectId}`);
+        console.error(`[usePreviewProject] Project not found for id=${actualProjectId}`);
         return false;
       }
       
@@ -214,10 +291,10 @@ export const usePreviewProject = (projectId: string | undefined) => {
         });
       }
       
-      console.log('usePreviewProject: Status successfully updated');
+      console.log('[usePreviewProject] Status successfully updated');
       return true;
     } catch (error) {
-      console.error('usePreviewProject: Error updating status:', error);
+      console.error('[usePreviewProject] Error updating status:', error);
       return false;
     }
   };

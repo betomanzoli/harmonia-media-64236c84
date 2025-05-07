@@ -30,17 +30,29 @@ const PreviewProjectPage: React.FC = () => {
   const [encodedLinkUrl, setEncodedLinkUrl] = useState<string>('');
   
   useEffect(() => {
-    if (projectId) {
-      // Generate the encoded link from preview_code if available
-      const encodedLink = project?.preview_code 
-        ? generatePreviewLink(projectId, project.preview_code)
-        : generatePreviewLink(projectId);
-      console.log(`Admin: Generated encoded link for ${projectId}:`, encodedLink);
+    if (projectId && project) {
+      // Generate the encoded link using project details for uniqueness
+      let encodedLink;
+      
+      if (project.preview_code) {
+        // If project already has a preview code, use it directly
+        encodedLink = project.preview_code;
+      } else {
+        // Otherwise generate a new stable encoded link
+        encodedLink = generatePreviewLink(projectId, project.clientEmail || project.clientName);
+        
+        // Save this preview_code for future use
+        updateProject(projectId, { 
+          preview_code: encodedLink 
+        });
+      }
+      
+      console.log(`[AdminPreviewProjectPage] Generated encoded link for ${projectId}:`, encodedLink);
       
       const fullUrl = `${window.location.origin}/preview/${encodedLink}`;
       setEncodedLinkUrl(fullUrl);
     }
-  }, [projectId, project]);
+  }, [projectId, project, updateProject]);
   
   // Verifica se o projeto existe
   if (!project) {
@@ -178,14 +190,21 @@ const PreviewProjectPage: React.FC = () => {
     // Sinaliza que o acesso é do administrador
     localStorage.setItem('admin_preview_access', 'true');
     
-    // Always use the encoded preview link or preview_code instead of direct project ID
-    const encodedLink = project?.preview_code
-      ? project.preview_code
-      : generatePreviewLink(projectId as string);
-    console.log(`Admin viewing as client with encoded link: ${encodedLink}`);
-    
-    // Navigate to preview page with encoded link
-    navigate(`/preview/${encodedLink}`);
+    // Use the generated encoded preview link 
+    if (encodedLinkUrl) {
+      const previewPath = encodedLinkUrl.replace(window.location.origin, '');
+      console.log(`[AdminPreviewProjectPage] Viewing as client with path: ${previewPath}`);
+      
+      // Navigate to preview page with encoded link
+      navigate(previewPath);
+    } else {
+      console.error("[AdminPreviewProjectPage] No encoded link URL available");
+      toast({
+        title: "Erro",
+        description: "Não foi possível gerar o link de prévia",
+        variant: "destructive"
+      });
+    }
   };
   
   return <AdminLayout>

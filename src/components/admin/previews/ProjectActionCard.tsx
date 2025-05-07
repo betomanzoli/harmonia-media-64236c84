@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -37,12 +36,24 @@ const ProjectActionCard: React.FC<ProjectActionCardProps> = ({
   const [showDeadlineDialog, setShowDeadlineDialog] = useState(false);
   const { toast } = useToast();
 
-  // Generate encoded preview link on component mount
-  const encodedPreviewLink = generatePreviewLink(projectId);
-  const fullEncodedUrl = `${window.location.origin}/preview/${encodedPreviewLink}`;
-  
+  // Generate encoded preview link that is stable but unique to this project
   const handleCopyLink = () => {
-    // Use the encoded link
+    // Use existing URL if it's already properly encoded
+    if (previewUrl && previewUrl.includes('/preview/')) {
+      navigator.clipboard.writeText(previewUrl);
+      toast({
+        title: "Link copiado",
+        description: "O link de prévia foi copiado para a área de transferência."
+      });
+      return;
+    }
+    
+    // Otherwise generate a fresh link
+    const encodedPreviewLink = generatePreviewLink(projectId, clientEmail); // Use client email as additional uniqueness factor
+    const fullEncodedUrl = `${window.location.origin}/preview/${encodedPreviewLink}`;
+    
+    console.log("[ProjectActionCard] Generated preview link:", fullEncodedUrl);
+    
     navigator.clipboard.writeText(fullEncodedUrl);
     toast({
       title: "Link copiado",
