@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import PreviewHeader from './PreviewHeader';
 import PreviewPlayerList from './player/PreviewPlayerList';
@@ -30,13 +29,16 @@ const MusicPreviewSystem: React.FC<MusicPreviewSystemProps> = ({ projectId }) =>
 
   // Logging project details for debugging
   useEffect(() => {
+    console.log("🔍 MusicPreviewSystem - Project ID:", projectId);
     console.log("🔍 MusicPreviewSystem - Project data loaded:", projectData);
     console.log("🔍 MusicPreviewSystem - Loading state:", isLoading);
-    console.log("🔍 MusicPreviewSystem - Error state:", isError);
+    console.log("🔍 MusicPreviewSystem - Error state:", isError, errorMessage);
 
-    // When project data loads, check if feedback was already submitted based on status
     if (projectData) {
       console.log("🔍 Project status:", projectData.status);
+      console.log("🔍 Project versions:", projectData.versionsList || []);
+      console.log("🔍 Project previews:", projectData.previews || []);
+      
       // If project status is feedback or approved, mark feedback as submitted
       if (projectData.status === 'feedback' || projectData.status === 'approved') {
         setFeedbackSubmitted(true);
@@ -45,7 +47,7 @@ const MusicPreviewSystem: React.FC<MusicPreviewSystemProps> = ({ projectId }) =>
         setFeedbackSubmitted(false);
       }
     }
-  }, [projectData, isLoading, isError]);
+  }, [projectData, isLoading, isError, projectId, errorMessage]);
 
   if (isLoading) {
     return <PreviewLoadingState />;
@@ -58,6 +60,12 @@ const MusicPreviewSystem: React.FC<MusicPreviewSystemProps> = ({ projectId }) =>
           <h2 className="text-2xl font-bold text-gray-800 mb-4">Prévia não encontrada</h2>
           <p className="text-gray-700">
             {errorMessage || "A prévia que você está tentando acessar não existe ou expirou."}
+          </p>
+          <p className="text-sm text-gray-500 mt-4">
+            Código do projeto: {projectId || 'não informado'}
+          </p>
+          <p className="text-sm text-gray-500 mt-2">
+            Dúvidas? Entre em contato pelo WhatsApp (11) 92058-5072
           </p>
         </div>
       </div>
@@ -158,51 +166,62 @@ const MusicPreviewSystem: React.FC<MusicPreviewSystemProps> = ({ projectId }) =>
   // Convert versionsList to MusicPreview format ensuring title and description fields exist
   let versionsForPlayer: MusicPreview[] = [];
   
-  if (Array.isArray(projectData.previews)) {
+  console.log("🎵 Processando versões para o player:", {
+    previews: projectData.previews,
+    versionsList: projectData.versionsList
+  });
+  
+  if (Array.isArray(projectData.previews) && projectData.previews.length > 0) {
     versionsForPlayer = projectData.previews.map(preview => ({
       ...preview,
       description: preview.description || 'Sem descrição' // Ensure description is never undefined
     }));
-  } else if (Array.isArray(projectData.versionsList)) {
+    console.log("🎵 Versões obtidas de 'previews':", versionsForPlayer);
+  } else if (Array.isArray(projectData.versionsList) && projectData.versionsList.length > 0) {
     versionsForPlayer = projectData.versionsList.map(v => ({
       id: v.id,
       title: v.name || `Versão ${v.id}`, 
       description: v.description || 'Sem descrição',
-      audioUrl: v.audioUrl || '',
+      audioUrl: v.audioUrl || v.file_url || '',
       recommended: v.recommended || false,
       name: v.name || `Versão ${v.id}`,
-      createdAt: v.createdAt || new Date().toISOString()
+      createdAt: v.createdAt || v.created_at || new Date().toISOString()
     }));
+    console.log("🎵 Versões obtidas de 'versionsList':", versionsForPlayer);
+  } else {
+    console.log("🎵 Nenhuma versão encontrada no objeto projectData");
   }
   
-  // If no versions available, add sample data for demonstration
+  // If no versions available, add sample data for demonstration - only in development mode
   if (versionsForPlayer.length === 0) {
-    versionsForPlayer = [
-      {
-        id: 'v1',
-        title: 'Versão Acústica',
-        description: 'Versão suave com violão e piano',
-        audioUrl: 'https://drive.google.com/file/d/1H62ylCwQYJ23BLpygtvNmCgwTDcHX6Cl/preview',
-        name: 'Versão Acústica',
-        createdAt: new Date().toISOString()
-      },
-      {
-        id: 'v2',
-        title: 'Versão Orquestral',
-        description: 'Arranjo completo com cordas e metais',
-        audioUrl: 'https://drive.google.com/file/d/11c6JahRd5Lx0iKCL_gHZ0zrZ3LFBJ47a/preview',
-        name: 'Versão Orquestral',
-        createdAt: new Date().toISOString()
-      },
-      {
-        id: 'v3',
-        title: 'Versão Minimalista',
-        description: 'Abordagem simplificada com foco na melodia',
-        audioUrl: 'https://drive.google.com/file/d/1fCsWubN8pXwM-mRlDtnQFTCkBbIkuUyW/preview',
-        name: 'Versão Minimalista',
-        createdAt: new Date().toISOString()
-      }
-    ];
+    console.log("⚠️ Nenhuma versão encontrada para o projeto, usando dados de exemplo");
+    
+    // Add message for admin/debug view
+    const isDevelopment = window.location.hostname === 'localhost' || 
+                          window.location.hostname === '127.0.0.1' ||
+                          window.location.search.includes('debug=true');
+                          
+    if (isDevelopment) {
+      console.log("🔧 Ambiente de desenvolvimento detectado, adicionando versões de exemplo");
+      versionsForPlayer = [
+        {
+          id: 'v1',
+          title: 'Versão Acústica (EXEMPLO)',
+          description: 'Versão suave com violão e piano',
+          audioUrl: 'https://drive.google.com/file/d/1H62ylCwQYJ23BLpygtvNmCgwTDcHX6Cl/preview',
+          name: 'Versão Acústica (EXEMPLO)',
+          createdAt: new Date().toISOString()
+        },
+        {
+          id: 'v2',
+          title: 'Versão Orquestral (EXEMPLO)',
+          description: 'Arranjo completo com cordas e metais',
+          audioUrl: 'https://drive.google.com/file/d/11c6JahRd5Lx0iKCL_gHZ0zrZ3LFBJ47a/preview',
+          name: 'Versão Orquestral (EXEMPLO)',
+          createdAt: new Date().toISOString()
+        }
+      ];
+    }
   }
 
   return (
@@ -213,6 +232,16 @@ const MusicPreviewSystem: React.FC<MusicPreviewSystemProps> = ({ projectId }) =>
           <AlertTitle>Aviso</AlertTitle>
           <AlertDescription>
             Esta é uma visualização de demonstração. Não foi possível encontrar este projeto no sistema.
+          </AlertDescription>
+        </Alert>
+      )}
+      
+      {!versionsForPlayer.length && (
+        <Alert variant="warning" className="mb-4">
+          <AlertCircle className="h-4 w-4" />
+          <AlertTitle>Aviso</AlertTitle>
+          <AlertDescription>
+            Este projeto não possui versões disponíveis ainda. Estamos trabalhando nisso!
           </AlertDescription>
         </Alert>
       )}
@@ -239,7 +268,8 @@ const MusicPreviewSystem: React.FC<MusicPreviewSystemProps> = ({ projectId }) =>
         <div className="mt-8 bg-white p-6 rounded-lg shadow-sm text-center">
           <h3 className="text-xl font-medium text-gray-800 mb-2">Nenhuma versão disponível</h3>
           <p className="text-gray-600">
-            No momento não há versões disponíveis para este projeto. Por favor, volte mais tarde.
+            No momento não há versões disponíveis para este projeto. Nossa equipe está trabalhando na 
+            composição e em breve as primeiras versões serão disponibilizadas. Por favor, volte mais tarde.
           </p>
         </div>
       )}

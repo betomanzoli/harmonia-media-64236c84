@@ -20,6 +20,21 @@ export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
     fetch: (...args: Parameters<typeof fetch>) => {
       // Add custom fetch handler with enhanced error logging
       return fetch(...args)
+        .then(response => {
+          if (!response.ok) {
+            console.error('Supabase fetch error - non-ok response:', {
+              status: response.status,
+              statusText: response.statusText,
+              url: response.url,
+            });
+          } else {
+            console.log('Supabase fetch success:', {
+              url: response.url,
+              status: response.status,
+            });
+          }
+          return response;
+        })
         .catch(error => {
           console.error('Supabase fetch error:', error);
           throw error;
@@ -37,11 +52,14 @@ export { emailService } from './supabase/emailService';
 // Test connection when the module loads
 try {
   console.log('🔌 Cliente Supabase inicializado com nova conexão.');
+  console.log('🔌 URL:', supabaseUrl);
+  console.log('🔌 Navegador em modo privado/incógnito:', !window.localStorage);
   
   // Execute a simple query to validate the connection
   // Using async/await with proper error handling
   const checkConnection = async () => {
     try {
+      console.log('🔌 Testando conexão Supabase...');
       const { data, error } = await supabase
         .from('projects')
         .select('*', { head: true })

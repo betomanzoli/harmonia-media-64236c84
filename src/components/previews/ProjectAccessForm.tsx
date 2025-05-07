@@ -37,10 +37,11 @@ const ProjectAccessForm: React.FC<ProjectAccessFormProps> = ({ projectId, onVeri
       return;
     }
     
-    console.log('Verificando acesso com código:', code, 'e email:', email);
+    console.log('[ProjectAccessForm] Verificando acesso com código:', code, 'e email:', email);
     
     try {
       // First try to verify if the preview code exists
+      console.log('[ProjectAccessForm] Consultando preview_code na tabela projects:', code);
       const { data, error } = await supabase
         .from('projects')
         .select('id, client_id, preview_code, clients!inner(email)')
@@ -53,13 +54,17 @@ const ProjectAccessForm: React.FC<ProjectAccessFormProps> = ({ projectId, onVeri
         console.error('[ProjectAccessForm] Erro ao verificar preview_code:', error);
         
         // Try again with direct ID as fallback
+        console.log('[ProjectAccessForm] Tentando buscar por ID direto:', code);
         const { data: directData, error: directError } = await supabase
           .from('projects')
           .select('id, preview_code')
           .eq('id', code)
           .single();
         
+        console.log('[ProjectAccessForm] Resultado da busca por ID direto:', { directData, directError });
+        
         if (directError || !directData) {
+          console.log('[ProjectAccessForm] Código não encontrado por nenhum método');
           setError('Código de prévia não encontrado ou inválido.');
           setIsLoading(false);
           return;
@@ -77,11 +82,20 @@ const ProjectAccessForm: React.FC<ProjectAccessFormProps> = ({ projectId, onVeri
       
       const isDemoCode = code === '123456' || code.startsWith('P');
       
+      console.log('[ProjectAccessForm] Verificações especiais:', { 
+        isTestEmail, 
+        isDemoCode,
+        clientEmail: data?.clients?.email,
+        providedEmail: email 
+      });
+      
       // Client verification logic - simplified for now
       // In a production system, you should verify that this email is actually associated with the client
       const isAuthorized = data || isTestEmail || isDemoCode;
       
       if (isAuthorized) {
+        console.log('[ProjectAccessForm] Acesso autorizado');
+        
         // Save access in localStorage
         localStorage.setItem('preview_access', JSON.stringify({
           code: code,
@@ -95,10 +109,11 @@ const ProjectAccessForm: React.FC<ProjectAccessFormProps> = ({ projectId, onVeri
         // Call the onVerify callback to notify parent component
         onVerify(code, email);
       } else {
+        console.log('[ProjectAccessForm] Acesso negado: email não autorizado');
         setError('Email não autorizado para este código de prévia.');
       }
     } catch (err) {
-      console.error('Erro ao verificar acesso:', err);
+      console.error('[ProjectAccessForm] Erro ao verificar acesso:', err);
       setError('Ocorreu um erro ao verificar o acesso. Tente novamente.');
     } finally {
       setIsLoading(false);

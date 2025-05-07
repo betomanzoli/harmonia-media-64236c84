@@ -8,4 +8,16 @@ if (!AbortSignal.timeout) {
   };
 }
 
+// Mock localStorage for tests running in environments without it
+if (typeof localStorage === 'undefined') {
+  (global as any).localStorage = {
+    getItem: () => null,
+    setItem: () => {},
+    removeItem: () => {},
+    clear: () => {},
+    key: () => null,
+    length: 0
+  };
+}
+
 export {};
