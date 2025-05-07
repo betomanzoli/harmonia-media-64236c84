@@ -12,9 +12,46 @@ interface FormErrors {
   email?: string;
 }
 
+// Cookie utility functions
+export const setCookie = (name: string, value: string, options: Record<string, string> = {}) => {
+  const defaultOptions = {
+    path: '/',
+    maxAge: '86400', // 1 day
+    sameSite: 'None',
+    secure: window.location.protocol === 'https:',
+  };
+  
+  const cookieOptions = { ...defaultOptions, ...options };
+  
+  let cookieString = `${encodeURIComponent(name)}=${encodeURIComponent(value)}`;
+  
+  Object.entries(cookieOptions).forEach(([key, val]) => {
+    const formattedKey = key.replace(/([A-Z])/g, '-$1').toLowerCase();
+    cookieString += `; ${formattedKey}=${val}`;
+  });
+  
+  document.cookie = cookieString;
+  console.log(`[Cookie] Set: ${name} (options: ${JSON.stringify(cookieOptions)})`);
+};
+
+export const getCookie = (name: string): string | null => {
+  const nameEQ = `${encodeURIComponent(name)}=`;
+  const cookieArray = document.cookie.split(';');
+  
+  for (let i = 0; i < cookieArray.length; i++) {
+    let c = cookieArray[i].trim();
+    if (c.indexOf(nameEQ) === 0) {
+      console.log(`[Cookie] Found: ${name}`);
+      return decodeURIComponent(c.substring(nameEQ.length, c.length));
+    }
+  }
+  console.log(`[Cookie] Not found: ${name}`);
+  return null;
+};
+
 export const useProjectAccess = ({ projectId, onVerify }: UseProjectAccessProps) => {
   // Always use decoded project ID
-  const decodedProjectId = decodeURIComponent(projectId);
+  const decodedProjectId = decodeURIComponent(projectId || '');
   const [code, setCode] = useState(decodedProjectId || '');
   const [email, setEmail] = useState('');
   const [isLoading, setIsLoading] = useState(false);
@@ -59,6 +96,20 @@ export const useProjectAccess = ({ projectId, onVerify }: UseProjectAccessProps)
     console.log('[ProjectAccessForm] Verificando acesso com código:', code, 'e email:', email);
     
     try {
+      // Try anonymous authentication first to ensure RLS access
+      try {
+        const { error: authError } = await supabase.auth.signInAnonymously();
+        if (authError) {
+          console.warn('[ProjectAccessForm] Anonymous auth warning:', authError);
+          // Continue anyway - not critical for operation
+        } else {
+          console.log('[ProjectAccessForm] Anonymous auth successful');
+        }
+      } catch (authErr) {
+        // Just log, don't block the flow
+        console.warn('[ProjectAccessForm] Anonymous auth error:', authErr);
+      }
+      
       // Diagnostic logs for troubleshooting
       console.log('[ProjectAccessForm] Informações detalhadas:');
       console.log('- Código recebido na URL:', projectId);
@@ -150,18 +201,34 @@ export const useProjectAccess = ({ projectId, onVerify }: UseProjectAccessProps)
       if (isAuthorized) {
         console.log('[ProjectAccessForm] Acesso autorizado');
         
-        // Save access in localStorage
-        localStorage.setItem('preview_access', JSON.stringify({
+        // Save access in cookie instead of localStorage
+        const accessData = JSON.stringify({
           code: code,
           email: email,
           timestamp: Date.now()
-        }));
+        });
+        
+        // Set cookie with appropriate attributes
+        setCookie('preview_access', accessData, {
+          maxAge: '86400', // 1 day
+          path: '/',
+          sameSite: 'None',
+          secure: 'true'
+        });
         
         // Also save a specific access token for this preview
-        localStorage.setItem(`preview_auth_${code}`, 'authorized');
+        setCookie(`preview_auth_${code}`, 'authorized', {
+          maxAge: '86400', // 1 day
+          path: '/',
+          sameSite: 'None',
+          secure: 'true'
+        });
         
         // Call the onVerify callback to notify parent component
         onVerify(code, email);
+        
+        // Force page reload to ensure all permissions are applied
+        window.location.href = `/preview/${encodeURIComponent(code)}`;
       } else {
         console.log('[ProjectAccessForm] Acesso negado: email não autorizado');
         setError('Email não autorizado para este código de prévia.');

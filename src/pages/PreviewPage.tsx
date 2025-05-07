@@ -1,12 +1,14 @@
+
 import React, { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import MusicPreviewSystem from '@/components/previews/MusicPreviewSystem';
 import ProjectAccessForm from '@/components/previews/ProjectAccessForm';
 import { useToast } from '@/hooks/use-toast';
-import { getProjectIdFromPreviewLink, isValidEncodedPreviewLink } from '@/utils/previewLinkUtils';
+import { getProjectIdFromPreviewLink, isValidEncodedPreviewLink, decodePreviewCode } from '@/utils/previewLinkUtils';
 import { supabase } from '@/lib/supabase';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { AlertCircle } from 'lucide-react';
+import { getCookie } from '@/components/previews/access/useProjectAccess';
 
 // Force dynamic content to prevent caching
 export const dynamic = 'force-dynamic';
@@ -24,6 +26,21 @@ const PreviewPage: React.FC = () => {
   const [duplicateWarning, setDuplicateWarning] = useState<string | null>(null);
 
   useEffect(() => {
+    const initializeAuth = async () => {
+      try {
+        // Try to sign in anonymously for better RLS support
+        await supabase.auth.signInAnonymously();
+        console.log('[PreviewPage] Anonymous auth successful');
+      } catch (error) {
+        console.warn('[PreviewPage] Anonymous auth failed - continuing without it:', error);
+        // Continue anyway - this is just to improve RLS behavior
+      }
+    };
+
+    initializeAuth();
+  }, []);
+
+  useEffect(() => {
     // Log preview access for analytics and monitoring
     if (projectId) {
       console.log(`Cliente acessando prévia: ${projectId}, data: ${new Date().toISOString()}`);
@@ -33,6 +50,10 @@ const PreviewPage: React.FC = () => {
       const isPrivate = !window.localStorage;
       console.log("[PreviewPage] Browser context:", isPrivate ? "private/incognito" : "normal");
       
+      // Try to decode the preview code from the URL
+      const decodedCode = decodePreviewCode(`/preview/${projectId}`);
+      console.log("[PreviewPage] Decoded preview code:", decodedCode);
+      
       // Check if this is a direct or encoded link
       const isEncodedLink = isValidEncodedPreviewLink(projectId);
       console.log("[PreviewPage] Is encoded preview link:", isEncodedLink);
@@ -40,7 +61,7 @@ const PreviewPage: React.FC = () => {
       
       // For backwards compatibility, we still support direct project IDs
       // but only when accessed by admin users
-      const isAdmin = localStorage.getItem('admin_preview_access') === 'true';
+      const isAdmin = getCookie('admin_preview_access') === 'true';
       
       if (!isEncodedLink && !isAdmin) {
         console.log("[PreviewPage] Direct link access denied - only encoded links are allowed for clients");
@@ -78,7 +99,7 @@ const PreviewPage: React.FC = () => {
     }
   }, [projectId]);
 
-  // Function to verify project exists in localStorage or Supabase
+  // Function to verify project exists in Supabase
   const verifyProjectExists = async (projectId: string | null) => {
     if (!projectId) {
       setIsError(true);
@@ -97,6 +118,8 @@ const PreviewPage: React.FC = () => {
         .eq('preview_code', projectId)
         .maybeSingle();
       
+      console.log("[PreviewPage] Consulta por preview_code:", { previewData, previewError });
+      
       if (previewData) {
         console.log("[PreviewPage] Project found by preview_code:", previewData);
         console.log("[PreviewPage] Project files:", previewData.project_files);
@@ -114,6 +137,8 @@ const PreviewPage: React.FC = () => {
         .eq('id', projectId)
         .maybeSingle();
         
+      console.log("[PreviewPage] Consulta por ID direto:", { data, error });
+      
       if (error) {
         console.error("[PreviewPage] Error checking project in Supabase:", error);
         setDebugInfo(prev => ({ ...prev, supabaseError: error }));
@@ -127,23 +152,7 @@ const PreviewPage: React.FC = () => {
         return;
       }
       
-      // If not found in Supabase, check localStorage
-      const storedProjects = localStorage.getItem('harmonIA_preview_projects');
-      
-      if (storedProjects) {
-        const projects = JSON.parse(storedProjects);
-        const project = projects.find((p: any) => p.id === projectId || p.preview_code === projectId);
-        
-        if (project) {
-          console.log("[PreviewPage] Project found in localStorage:", project);
-          setDebugInfo(prev => ({ ...prev, localProject: project }));
-          
-          // Check if user is authorized or needs to enter credentials
-          handleAuthorizationCheck(projectId);
-          return;
-        }
-      }
-      
+      // If not found, show error
       console.log("[PreviewPage] Project not found anywhere");
       setIsError(true);
       setErrorDetails("Projeto não encontrado. O link pode ter expirado ou sido removido.");
@@ -159,12 +168,12 @@ const PreviewPage: React.FC = () => {
   // Check authorization based on admin status or previous authorization
   const handleAuthorizationCheck = (encodedId: string) => {
     // Check if admin access or previously authorized
-    const isAdmin = localStorage.getItem('admin_preview_access') === 'true';
+    const isAdmin = getCookie('admin_preview_access') === 'true';
     
-    // Try both specific and general authorization tokens
+    // Try both specific and general authorization cookies
     const isPreviouslyAuthorized = 
-      localStorage.getItem(`preview_auth_${encodedId}`) === 'authorized' ||
-      localStorage.getItem('preview_access') !== null;
+      getCookie(`preview_auth_${encodedId}`) === 'authorized' ||
+      getCookie('preview_access') !== null;
     
     setDebugInfo(prev => ({ 
       ...prev, 
@@ -216,13 +225,13 @@ const PreviewPage: React.FC = () => {
       setIsAuthorized(true);
       setIsError(false);
       
-      // Store authorization in localStorage
-      localStorage.setItem(`preview_auth_${projectId}`, 'authorized');
-      
       toast({
         title: "Acesso autorizado",
         description: "Bem-vindo à página de prévia do seu projeto.",
       });
+      
+      // Force page reload to ensure permissions are applied
+      window.location.href = `/preview/${encodeURIComponent(code)}`;
     } catch (error) {
       console.error('[PreviewPage] ❌ Erro na verificação de acesso:', error);
       toast({
@@ -245,6 +254,7 @@ const PreviewPage: React.FC = () => {
     }
   }, [debugInfo]);
 
+  // Not found or no projectId
   if (!projectId) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gray-100">
@@ -256,6 +266,7 @@ const PreviewPage: React.FC = () => {
     );
   }
 
+  // Loading state
   if (isLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gray-100">
@@ -269,6 +280,7 @@ const PreviewPage: React.FC = () => {
     );
   }
 
+  // Error state
   if (isError) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gray-100">
@@ -339,7 +351,7 @@ const PreviewPage: React.FC = () => {
               
               <button 
                 onClick={() => {
-                  localStorage.removeItem(`preview_auth_${projectId}`);
+                  document.cookie = `preview_auth_${projectId}=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT`;
                   window.location.reload();
                 }} 
                 className="bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded"

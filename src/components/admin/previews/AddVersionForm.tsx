@@ -1,201 +1,148 @@
 
-import React from 'react';
-import { zodResolver } from '@hookform/resolvers/zod';
-import { useForm } from 'react-hook-form';
-import { z } from 'zod';
+import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
-import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
-import { Checkbox } from '@/components/ui/checkbox';
-import { v4 as uuidv4 } from 'uuid';
+import { Card } from '@/components/ui/card';
+import { CheckCircle } from 'lucide-react';
+import { generatePreviewLink } from '@/utils/previewLinkUtils';
 import { VersionItem } from '@/hooks/admin/usePreviewProjects';
+import { v4 as uuidv4 } from 'uuid';
 
-// Define the form schema
-const formSchema = z.object({
-  name: z.string().min(1, { message: 'O nome da versão é obrigatório' }),
-  description: z.string().optional(),
-  audioUrl: z.string().optional(),
-  recommended: z.boolean().default(false),
-  final: z.boolean().default(false),
-  finalVersionUrl: z.string().optional(),
-  stemsUrl: z.string().optional(),
-});
-
-// Update the interface to include projectId
 export interface AddVersionFormProps {
+  projectId: string; // Added this required prop
   onSubmit: (version: VersionItem) => void;
   projectStatus?: 'waiting' | 'feedback' | 'approved';
-  projectId: string; // Added projectId prop as required
+  onClose?: () => void;
 }
 
 const AddVersionForm: React.FC<AddVersionFormProps> = ({ 
-  onSubmit,
+  projectId,
+  onSubmit, 
   projectStatus = 'waiting',
-  projectId // Added to component props
+  onClose 
 }) => {
-  const isApproved = projectStatus === 'approved';
+  const [name, setName] = useState('');
+  const [audioUrl, setAudioUrl] = useState('');
+  const [description, setDescription] = useState('');
+  const [isRecommended, setIsRecommended] = useState(true);
+  const [isFinal, setIsFinal] = useState(projectStatus === 'approved');
   
-  // Create form
-  const form = useForm<z.infer<typeof formSchema>>({
-    resolver: zodResolver(formSchema),
-    defaultValues: {
-      name: '',
-      description: '',
-      audioUrl: '',
-      recommended: false,
-      final: isApproved, // Default to true for approved projects
-      finalVersionUrl: '',
-      stemsUrl: '',
-    },
-  });
-
-  const handleSubmit = (values: z.infer<typeof formSchema>) => {
-    const version: VersionItem = {
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    const newVersion: VersionItem = {
       id: uuidv4(),
-      name: values.name,
-      description: values.description || '',
-      audioUrl: values.audioUrl || '',
-      createdAt: new Date().toISOString(),
-      dateAdded: new Date().toLocaleDateString('pt-BR'),
-      recommended: values.recommended,
-      final: values.final,
-      finalVersionUrl: values.finalVersionUrl,
-      stemsUrl: values.stemsUrl,
+      name: name || 'Nova Versão',
+      description: description || 'Sem descrição adicional',
+      audioUrl: audioUrl,
+      file_url: audioUrl, // For compatibility with both naming conventions
+      recommended: isRecommended,
+      final: isFinal,
+      createdAt: new Date().toISOString()
     };
     
-    onSubmit(version);
+    console.log(`[AddVersionForm] Adding new version:`, newVersion);
+    
+    onSubmit(newVersion);
+    onClose?.();
+  };
+
+  // Help function to convert Google Drive view URLs to embed URLs
+  const handleDriveUrlChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    let url = e.target.value;
+    
+    // Check if it's a Google Drive URL that needs converting
+    if (url.includes('drive.google.com/file/d/')) {
+      // Extract the file ID
+      const matches = url.match(/\/d\/([^\/]+)/);
+      if (matches && matches[1]) {
+        const fileId = matches[1];
+        url = `https://drive.google.com/file/d/${fileId}/preview`;
+        console.log(`[AddVersionForm] Converted Drive URL to embed URL: ${url}`);
+      }
+    }
+    
+    setAudioUrl(url);
   };
 
   return (
-    <Form {...form}>
-      <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-4">
-        <FormField
-          control={form.control}
-          name="name"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Nome da Versão</FormLabel>
-              <FormControl>
-                <Input placeholder="Ex: Versão Acústica" {...field} />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
+    <form onSubmit={handleSubmit} className="space-y-4">
+      <div>
+        <Label htmlFor="name">Nome da Versão</Label>
+        <Input
+          id="name"
+          value={name}
+          onChange={(e) => setName(e.target.value)}
+          placeholder="Ex: Versão Acústica"
+          required
         />
-        
-        <FormField
-          control={form.control}
-          name="description"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Descrição</FormLabel>
-              <FormControl>
-                <Textarea 
-                  placeholder="Descreva esta versão para o cliente..." 
-                  rows={3}
-                  {...field} 
-                />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
+      </div>
+      
+      <div>
+        <Label htmlFor="audioUrl">URL do Áudio</Label>
+        <Input
+          id="audioUrl"
+          value={audioUrl}
+          onChange={handleDriveUrlChange}
+          placeholder="https://drive.google.com/file/d/..."
+          required
         />
-        
-        <FormField
-          control={form.control}
-          name="audioUrl"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>URL de Áudio</FormLabel>
-              <FormControl>
-                <Input 
-                  placeholder="https://drive.google.com/file/d/..." 
-                  {...field} 
-                />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
+        <p className="text-xs text-gray-500 mt-1">
+          Cole o link do Google Drive, YouTube, SoundCloud ou qualquer serviço de áudio
+        </p>
+      </div>
+      
+      <div>
+        <Label htmlFor="description">Descrição</Label>
+        <Textarea
+          id="description"
+          value={description}
+          onChange={(e) => setDescription(e.target.value)}
+          placeholder="Descreva detalhes sobre esta versão..."
+          rows={4}
         />
-        
-        {isApproved && (
-          <>
-            <FormField
-              control={form.control}
-              name="finalVersionUrl"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>URL da Versão Final</FormLabel>
-                  <FormControl>
-                    <Input 
-                      placeholder="https://drive.google.com/file/d/..." 
-                      {...field} 
-                    />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-            
-            <FormField
-              control={form.control}
-              name="stemsUrl"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>URL das Stems (Opcional)</FormLabel>
-                  <FormControl>
-                    <Input 
-                      placeholder="https://drive.google.com/file/d/..." 
-                      {...field} 
-                    />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-          </>
-        )}
-        
-        <div className="flex flex-col space-y-2">
-          <FormField
-            control={form.control}
-            name="recommended"
-            render={({ field }) => (
-              <FormItem className="flex flex-row items-center space-x-3 space-y-0">
-                <FormControl>
-                  <Checkbox 
-                    checked={field.value} 
-                    onCheckedChange={field.onChange}
-                  />
-                </FormControl>
-                <FormLabel className="font-normal">Marcar como Recomendada</FormLabel>
-              </FormItem>
-            )}
+      </div>
+      
+      <div className="flex space-x-4">
+        <div className="flex items-center">
+          <input 
+            type="checkbox" 
+            id="recommended" 
+            checked={isRecommended} 
+            onChange={(e) => setIsRecommended(e.target.checked)}
+            className="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500" 
           />
-          
-          <FormField
-            control={form.control}
-            name="final"
-            render={({ field }) => (
-              <FormItem className="flex flex-row items-center space-x-3 space-y-0">
-                <FormControl>
-                  <Checkbox 
-                    checked={field.value} 
-                    onCheckedChange={field.onChange}
-                  />
-                </FormControl>
-                <FormLabel className="font-normal">Versão Final</FormLabel>
-              </FormItem>
-            )}
-          />
+          <Label htmlFor="recommended" className="ml-2 text-sm">Recomendada</Label>
         </div>
         
-        <Button type="submit" className="w-full">
-          {isApproved ? 'Adicionar Versão Final' : 'Adicionar Versão'}
+        {projectStatus === 'approved' && (
+          <div className="flex items-center">
+            <input 
+              type="checkbox" 
+              id="final" 
+              checked={isFinal} 
+              onChange={(e) => setIsFinal(e.target.checked)}
+              className="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500" 
+            />
+            <Label htmlFor="final" className="ml-2 text-sm">Versão Final</Label>
+          </div>
+        )}
+      </div>
+      
+      <div className="pt-2 flex justify-end space-x-3">
+        {onClose && (
+          <Button type="button" variant="outline" onClick={onClose}>
+            Cancelar
+          </Button>
+        )}
+        <Button type="submit">
+          <CheckCircle className="mr-2 h-4 w-4" />
+          {projectStatus === 'approved' ? 'Adicionar Versão Final' : 'Adicionar Versão'}
         </Button>
-      </form>
-    </Form>
+      </div>
+    </form>
   );
 };
 

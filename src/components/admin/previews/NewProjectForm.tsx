@@ -1,167 +1,246 @@
 
 import React from 'react';
-import { Button } from "@/components/ui/button";
-import { Plus } from 'lucide-react';
-import PreviewVersionInput from './PreviewVersionInput';
-import { useToast } from "@/hooks/use-toast";
-import { useNewProjectForm } from '@/hooks/admin/useNewProjectForm';
-import ClientInfoForm from './ClientInfoForm';
+import { useNavigate } from 'react-router-dom';
+import { useNewProjectForm, PACKAGE_OPTIONS } from '@/hooks/useNewProjectForm';
+import { Input } from '@/components/ui/input';
+import { Button } from '@/components/ui/button';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Label } from '@/components/ui/label';
+import { Textarea } from '@/components/ui/textarea';
+import { Plus, Trash2 } from 'lucide-react';
+import { useToast } from '@/hooks/use-toast';
+import { supabase } from '@/lib/supabase';
 
-interface NewProjectFormProps {
-  onAddProject: (project: any) => string | null;
-}
+const NewProjectForm: React.FC = () => {
+  const navigate = useNavigate();
+  const { toast } = useToast();
+  const { formState, setters, actions } = useNewProjectForm();
 
-const NewProjectForm: React.FC<NewProjectFormProps> = ({
-  onAddProject
-}) => {
-  const {
-    formState: {
-      clientName,
-      clientEmail,
-      clientPhone,
-      packageType,
-      versions,
-      isSubmitting
-    },
-    setters: {
-      setClientName,
-      setClientEmail,
-      setClientPhone,
-      setPackageType,
-      setIsSubmitting
-    },
-    actions: {
-      addVersion,
-      removeVersion,
-      updateVersion,
-      resetForm
-    }
-  } = useNewProjectForm();
-
-  const {
-    toast
-  } = useToast();
-
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!clientName.trim() || !clientEmail.trim() || !packageType) {
-      toast({
-        title: "Informações incompletas",
-        description: "Por favor, preencha todos os campos obrigatórios.",
-        variant: "destructive"
-      });
-      return;
-    }
-
-    const hasEmptyVersions = versions.some(v => !v.title.trim() || !v.description.trim() || !v.audioUrl.trim());
-    if (hasEmptyVersions) {
-      toast({
-        title: "Versões incompletas",
-        description: "Por favor, preencha todas as informações das versões.",
-        variant: "destructive"
-      });
-      return;
-    }
-
-    setIsSubmitting(true);
+    setters.setIsSubmitting(true);
+    
     try {
-      const project = {
-        clientName: clientName.trim(),
-        clientEmail: clientEmail.trim(),
-        clientPhone: clientPhone.trim(),
-        packageType: packageType,
-        createdAt: new Date().toLocaleDateString('pt-BR'),
-        status: 'waiting' as const,
-        versions: versions.length,
-        previewUrl: '',
-        expirationDate: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toLocaleDateString('pt-BR'),
-        lastActivityDate: new Date().toLocaleDateString('pt-BR'),
-        versionsList: versions.map((v, index) => ({
-          id: `v${index + 1}`,
-          name: v.title,
-          description: v.description,
-          audioUrl: v.audioUrl,
-          dateAdded: new Date().toLocaleDateString('pt-BR'),
-          // Extract fileId from Google Drive URL
-          fileId: v.audioUrl.match(/[-\w]{25,}/) ? v.audioUrl.match(/[-\w]{25,}/)![0] : ''
-        }))
-      };
-
-      const newProjectId = onAddProject(project);
-      if (newProjectId) {
-        resetForm();
-        toast({
-          title: "Projeto criado com sucesso",
-          description: `O projeto ${newProjectId} foi criado com ${versions.length} versão(ões).`
-        });
+      // First create the client
+      const { data: clientData, error: clientError } = await supabase
+        .from('clients')
+        .upsert({
+          name: formState.clientName,
+          email: formState.clientEmail,
+          phone: formState.clientPhone
+        }, {
+          onConflict: 'email'  // If the email already exists, update the existing client
+        })
+        .select()
+        .single();
+      
+      if (clientError) {
+        console.error('Error creating client:', clientError);
+        throw clientError;
       }
+      
+      // Generate a unique preview code
+      const previewCode = `P${Math.floor(1000 + Math.random() * 9000)}`;
+      
+      // Then create the project
+      const { data: projectData, error: projectError } = await supabase
+        .from('projects')
+        .insert({
+          client_id: clientData.id,
+          client_name: formState.clientName,
+          title: `Música Personalizada - ${formState.clientName}`,
+          package_id: null,  // You might want to look up the package ID based on packageType
+          status: 'draft',
+          preview_code: previewCode,
+          tags: JSON.stringify(['new', formState.packageType]),
+          description: `Projeto de música personalizada para ${formState.clientName} - Pacote ${formState.packageType}`
+        })
+        .select()
+        .single();
+      
+      if (projectError) {
+        console.error('Error creating project:', projectError);
+        throw projectError;
+      }
+      
+      // Create history entry for project creation
+      const { error: historyError } = await supabase
+        .from('project_history')
+        .insert({
+          project_id: projectData.id,
+          event_type: 'creation',
+          description: 'Projeto criado',
+          new_value: JSON.stringify({
+            client_name: formState.clientName,
+            package_type: formState.packageType
+          })
+        });
+      
+      if (historyError) {
+        console.error('Error creating project history:', historyError);
+        // Non-critical, continue
+      }
+      
+      toast({
+        title: "Projeto criado com sucesso",
+        description: `O projeto para ${formState.clientName} foi criado.`
+      });
+      
+      // Redirect to project details page
+      navigate(`/admin-j28s7d1k/previews/${projectData.id}`);
     } catch (error) {
+      console.error('Error submitting form:', error);
       toast({
         title: "Erro ao criar projeto",
         description: "Ocorreu um erro ao criar o projeto. Tente novamente.",
         variant: "destructive"
       });
     } finally {
-      setIsSubmitting(false);
+      setters.setIsSubmitting(false);
     }
   };
 
   return (
-    <form onSubmit={handleSubmit} className="relative">
-      <div className="h-[calc(100vh-200px)] overflow-y-auto pr-2 pb-20">
-        <div className="space-y-4">
-          <h3 className="text-lg font-semibold">Informações do Cliente</h3>
-          
-          <ClientInfoForm 
-            clientName={clientName} 
-            clientEmail={clientEmail} 
-            clientPhone={clientPhone}
-            packageType={packageType} 
-            onClientNameChange={setClientName} 
-            onClientEmailChange={setClientEmail}
-            onClientPhoneChange={setClientPhone}
-            onPackageTypeChange={setPackageType} 
-          />
-        </div>
-
-        <div className="space-y-4 mt-6">
-          <div className="flex items-center justify-between">
-            <h3 className="text-lg font-semibold">Versões Musicais</h3>
-            <Button type="button" onClick={addVersion} variant="outline">
-              <Plus className="w-4 h-4 mr-2" />
-              Adicionar Versão
-            </Button>
-          </div>
-
-          <div className="space-y-4 max-h-[50vh] overflow-y-auto pr-2 pb-4">
-            {versions.map((version, index) => (
-              <div key={index} className="version-container">
-                <PreviewVersionInput 
-                  index={index} 
-                  title={version.title} 
-                  description={version.description} 
-                  audioUrl={version.audioUrl} 
-                  recommended={false}
-                  onTitleChange={(i, value) => updateVersion(i, 'title', value)} 
-                  onDescriptionChange={(i, value) => updateVersion(i, 'description', value)}
-                  onAudioUrlChange={(i, value) => updateVersion(i, 'audioUrl', value)}
-                  onRecommendedChange={(i, value) => {}}
-                  onRemove={removeVersion}
-                  canRemove={versions.length > 1}
+    <div className="relative">
+      <div className="h-[85vh] overflow-y-auto pb-16">
+        <form onSubmit={handleSubmit} className="space-y-6">
+          <div className="space-y-4">
+            <h2 className="text-lg font-semibold">Dados do Cliente</h2>
+            
+            <div className="grid gap-4">
+              <div>
+                <Label htmlFor="clientName">Nome do Cliente</Label>
+                <Input
+                  id="clientName"
+                  placeholder="Nome completo do cliente"
+                  value={formState.clientName}
+                  onChange={e => setters.setClientName(e.target.value)}
+                  required
                 />
               </div>
-            ))}
+              
+              <div>
+                <Label htmlFor="clientEmail">Email</Label>
+                <Input
+                  id="clientEmail"
+                  type="email"
+                  placeholder="email@exemplo.com"
+                  value={formState.clientEmail}
+                  onChange={e => setters.setClientEmail(e.target.value)}
+                  required
+                />
+              </div>
+              
+              <div>
+                <Label htmlFor="clientPhone">Telefone</Label>
+                <Input
+                  id="clientPhone"
+                  placeholder="(00) 00000-0000"
+                  value={formState.clientPhone}
+                  onChange={e => setters.setClientPhone(e.target.value)}
+                />
+              </div>
+            </div>
           </div>
-        </div>
+          
+          <div className="space-y-4">
+            <h2 className="text-lg font-semibold">Detalhes do Projeto</h2>
+            
+            <div>
+              <Label htmlFor="packageType">Tipo de Pacote</Label>
+              <Select 
+                value={formState.packageType} 
+                onValueChange={setters.setPackageType}
+              >
+                <SelectTrigger className="w-full">
+                  <SelectValue placeholder="Selecione o tipo de pacote" />
+                </SelectTrigger>
+                <SelectContent>
+                  {PACKAGE_OPTIONS.map(option => (
+                    <SelectItem key={option.value} value={option.value}>
+                      {option.label}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            
+            <div className="space-y-6">
+              <div className="flex items-center justify-between">
+                <h2 className="text-lg font-semibold">Versões</h2>
+                <Button 
+                  type="button" 
+                  variant="outline" 
+                  size="sm"
+                  onClick={actions.addVersion}
+                >
+                  <Plus className="h-4 w-4 mr-1" /> Adicionar Versão
+                </Button>
+              </div>
+              
+              {formState.versions.map((version, index) => (
+                <div key={index} className="space-y-3 p-4 border rounded-lg">
+                  <div className="flex items-center justify-between">
+                    <h3 className="font-medium">Versão {index + 1}</h3>
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => actions.removeVersion(index)}
+                    >
+                      <Trash2 className="h-4 w-4 text-red-500" />
+                    </Button>
+                  </div>
+                  
+                  <div>
+                    <Label htmlFor={`version-${index}-title`}>Título</Label>
+                    <Input
+                      id={`version-${index}-title`}
+                      placeholder="Título da versão"
+                      value={version.title}
+                      onChange={e => actions.updateVersion(index, 'title', e.target.value)}
+                    />
+                  </div>
+                  
+                  <div>
+                    <Label htmlFor={`version-${index}-description`}>Descrição</Label>
+                    <Textarea
+                      id={`version-${index}-description`}
+                      placeholder="Descrição da versão"
+                      value={version.description}
+                      onChange={e => actions.updateVersion(index, 'description', e.target.value)}
+                      rows={3}
+                    />
+                  </div>
+                  
+                  <div>
+                    <Label htmlFor={`version-${index}-audio`}>URL do Áudio</Label>
+                    <Input
+                      id={`version-${index}-audio`}
+                      placeholder="https://drive.google.com/file/d/..."
+                      value={version.audioUrl}
+                      onChange={e => actions.updateVersion(index, 'audioUrl', e.target.value)}
+                    />
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </form>
       </div>
       
-      {/* Fixed positioning for submit button to avoid overlap issues */}
-      <div className="sticky bottom-0 bg-white border-t pt-4 pb-4 mt-4 flex justify-end">
-        <Button type="submit" disabled={isSubmitting} className="px-6">
-          {isSubmitting ? 'Criando...' : 'Criar Projeto'}
-        </Button>
+      <div className="fixed bottom-0 left-0 right-0 bg-white p-4 border-t">
+        <div className="max-w-7xl mx-auto px-4">
+          <Button 
+            type="submit" 
+            onClick={handleSubmit}
+            disabled={formState.isSubmitting}
+          >
+            {formState.isSubmitting ? 'Criando...' : 'Criar Projeto'}
+          </Button>
+        </div>
       </div>
-    </form>
+    </div>
   );
 };
 
