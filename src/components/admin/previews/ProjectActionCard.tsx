@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { Card, CardHeader, CardTitle, CardContent, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -145,10 +146,9 @@ const ProjectActionCard: React.FC<ProjectActionCardProps> = ({
               </DialogDescription>
             </DialogHeader>
             <AddVersionForm 
-              projectId={projectId} 
-              onAddVersion={handleAddVersion}
-              onClose={() => setShowVersionDialog(false)}
-              packageType={packageType}
+              onSubmit={handleAddVersion}
+              projectStatus={projectStatus as 'waiting' | 'feedback' | 'approved'}
+              projectId={projectId}
             />
           </DialogContent>
         </Dialog>

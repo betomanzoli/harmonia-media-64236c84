@@ -153,9 +153,9 @@ const NewProjectForm: React.FC<NewProjectFormProps> = ({
         </div>
       </div>
       
-      {/* Fix button position with padding and sticky positioning */}
-      <div className="flex justify-end pt-8 pb-4 border-t mt-8">
-        <Button type="submit" disabled={isSubmitting}>
+      {/* Fixed positioning for submit button to avoid overlap issues */}
+      <div className="flex justify-end pt-8 pb-10 border-t mt-8 sticky bottom-0 bg-white">
+        <Button type="submit" disabled={isSubmitting} className="px-6">
           {isSubmitting ? 'Criando...' : 'Criar Projeto'}
         </Button>
       </div>

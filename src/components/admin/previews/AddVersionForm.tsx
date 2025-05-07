@@ -22,14 +22,17 @@ const formSchema = z.object({
   stemsUrl: z.string().optional(),
 });
 
-interface AddVersionFormProps {
+// Update the interface to include projectId
+export interface AddVersionFormProps {
   onSubmit: (version: VersionItem) => void;
   projectStatus?: 'waiting' | 'feedback' | 'approved';
+  projectId?: string; // Added projectId prop
 }
 
 const AddVersionForm: React.FC<AddVersionFormProps> = ({ 
   onSubmit,
-  projectStatus = 'waiting'
+  projectStatus = 'waiting',
+  projectId // Added to component props
 }) => {
   const isApproved = projectStatus === 'approved';
   
