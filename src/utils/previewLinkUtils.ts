@@ -1,3 +1,4 @@
+
 /**
  * Functions for managing and validating preview links
  */
@@ -44,16 +45,20 @@ export const generatePreviewLink = (projectId: string, clientId?: string): strin
  * @returns True if it's a valid encoded link
  */
 export const isValidEncodedPreviewLink = (link: string): boolean => {
-  console.log(`[previewLinkUtils] Validating link: ${link}`);
+  if (!link) return false;
+  
+  // Ensure we're working with a decoded URL
+  const decodedLink = decodeURIComponent(link);
+  console.log(`[previewLinkUtils] Validating link. Original: ${link}, Decoded: ${decodedLink}`);
   
   // If it's a UUID format, it's not an encoded link
-  if (/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(link)) {
+  if (/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(decodedLink)) {
     console.log('[previewLinkUtils] Link is a UUID, not encoded');
     return false;
   }
   
   // Simple preview code format check (e.g., P1234, PREV-1234)
-  if (/^P\d{4,}$/i.test(link) || /^PREV-\d{4,}$/i.test(link)) {
+  if (/^P\d{4,}$/i.test(decodedLink) || /^PREV-\d{4,}$/i.test(decodedLink)) {
     console.log('[previewLinkUtils] Link is a direct preview code format');
     return true;
   }
@@ -61,7 +66,7 @@ export const isValidEncodedPreviewLink = (link: string): boolean => {
   // Try to decode it as a base64 string
   try {
     // Ensure proper padding for base64 decoding
-    let normalized = link.replace(/-/g, '+').replace(/_/g, '/');
+    let normalized = decodedLink.replace(/-/g, '+').replace(/_/g, '/');
     // Add padding if needed (important for compatibility)
     const padLength = 4 - (normalized.length % 4);
     if (padLength < 4) {
@@ -88,6 +93,8 @@ export const isValidEncodedPreviewLink = (link: string): boolean => {
  * @returns The project ID
  */
 export const getProjectIdFromPreviewLink = (link: string): string | null => {
+  if (!link) return null;
+  
   // Ensure we're working with a decoded URL
   const decodedLink = decodeURIComponent(link);
   console.log(`[previewLinkUtils] Getting project ID from link. Original: ${link}, Decoded: ${decodedLink}`);
@@ -125,4 +132,21 @@ export const getProjectIdFromPreviewLink = (link: string): string | null => {
     console.error('[previewLinkUtils] Error decoding preview link:', err);
     return null;
   }
+};
+
+/**
+ * Decodes a preview code from a URL segment
+ * @param url The URL segment containing the preview code
+ * @returns The decoded preview code
+ */
+export const decodePreviewCode = (url: string): string | null => {
+  if (!url) return null;
+  
+  // Extract code from URL pattern
+  const parts = url.split('/preview/');
+  if (parts.length < 2) return null;
+  
+  const code = decodeURIComponent(parts[1]);
+  console.log(`[previewLinkUtils] Decoded preview code from URL: ${code}`);
+  return code;
 };
