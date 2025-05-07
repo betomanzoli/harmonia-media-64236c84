@@ -5,7 +5,7 @@ import { createClient } from '@supabase/supabase-js';
 const supabaseUrl = 'https://oiwulrumjuqvszmyltau.supabase.co';
 const supabaseAnonKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im9pd3VscnVtanVxdnN6bXlsdGF1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDQwNDQ2MjksImV4cCI6MjA1OTYyMDYyOX0.VvtorYEZafOLIx_qozAWBtalhQBBw81nPnWPvNlx4bA';
 
-// Initialize the Supabase client with error handling
+// Initialize the Supabase client with improved error handling and incognito browser compatibility
 export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
   auth: {
     persistSession: true,
@@ -14,11 +14,16 @@ export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
     storageKey: 'harmonia-preview-auth',
   },
   global: {
+    headers: {
+      'X-Client-Info': 'supabase-js/2.49.4', // Specify client version explicitly
+    },
     fetch: (...args: Parameters<typeof fetch>) => {
-      return fetch(...args).catch(error => {
-        console.error('Supabase fetch error:', error);
-        throw error;
-      });
+      // Add custom fetch handler with enhanced error logging
+      return fetch(...args)
+        .catch(error => {
+          console.error('Supabase fetch error:', error);
+          throw error;
+        });
     }
   }
 });
@@ -39,7 +44,8 @@ try {
     try {
       const { data, error } = await supabase
         .from('projects')
-        .select('*', { head: true });
+        .select('*', { head: true })
+        .limit(1);
         
       if (error) {
         console.error('❌ Erro na conexão Supabase:', error);

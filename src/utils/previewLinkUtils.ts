@@ -15,7 +15,7 @@ export const generatePreviewLink = (projectId: string, clientId?: string): strin
     return projectId;
   }
   
-  // Generate a token unique to this project
+  // Generate a token unique to this project but stable across sessions
   try {
     const payload = {
       id: projectId,
