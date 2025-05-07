@@ -8,6 +8,14 @@ export interface Version {
   audioUrl: string;
 }
 
+// Package options constant
+export const PACKAGE_OPTIONS = [
+  { value: 'essential', label: 'Essencial' },
+  { value: 'professional', label: 'Profissional' },
+  { value: 'premium', label: 'Premium' },
+  { value: 'custom', label: 'Personalizado' }
+];
+
 export const useNewProjectForm = () => {
   const [clientName, setClientName] = useState('');
   const [clientEmail, setClientEmail] = useState('');
@@ -18,6 +26,32 @@ export const useNewProjectForm = () => {
   ]);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const { toast } = useToast();
+
+  // Format phone number as user types
+  const formatPhoneNumber = (phone: string): string => {
+    // Remove non-numeric characters
+    const numericValue = phone.replace(/\D/g, '');
+    
+    if (numericValue.length <= 2) {
+      return numericValue;
+    } 
+    
+    if (numericValue.length <= 7) {
+      return `(${numericValue.slice(0, 2)}) ${numericValue.slice(2)}`;
+    }
+    
+    if (numericValue.length <= 11) {
+      return `(${numericValue.slice(0, 2)}) ${numericValue.slice(2, 7)}-${numericValue.slice(7)}`;
+    }
+    
+    // Limit to standard Brazilian phone number format
+    return `(${numericValue.slice(0, 2)}) ${numericValue.slice(2, 7)}-${numericValue.slice(7, 11)}`;
+  };
+
+  // Handler for phone number changes with formatting
+  const handlePhoneChange = (value: string) => {
+    setClientPhone(formatPhoneNumber(value));
+  };
 
   const addVersion = () => {
     setVersions([...versions, { title: '', description: '', audioUrl: '' }]);
@@ -61,7 +95,7 @@ export const useNewProjectForm = () => {
     setters: {
       setClientName,
       setClientEmail,
-      setClientPhone,
+      setClientPhone: handlePhoneChange,
       setPackageType,
       setIsSubmitting
     },

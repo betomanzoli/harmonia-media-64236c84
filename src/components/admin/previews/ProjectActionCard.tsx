@@ -1,14 +1,15 @@
 
 import React, { useState } from 'react';
-import { Card, CardHeader, CardTitle, CardContent, CardDescription } from "@/components/ui/card";
+import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Copy, Plus, CalendarPlus, Mail, Phone } from 'lucide-react';
 import { useToast } from "@/hooks/use-toast";
 import { Separator } from "@/components/ui/separator";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogClose } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import AddVersionForm from './AddVersionForm';
+import { VersionItem } from '@/hooks/admin/usePreviewProjects';
 
 interface ProjectActionCardProps {
   projectId: string;
@@ -34,7 +35,7 @@ const ProjectActionCard: React.FC<ProjectActionCardProps> = ({
   const [showVersionDialog, setShowVersionDialog] = useState(false);
   const { toast } = useToast();
 
-  const handleAddVersion = (newVersion: any) => {
+  const handleAddVersion = (newVersion: VersionItem) => {
     onAddVersion(newVersion);
     setShowVersionDialog(false);
   };

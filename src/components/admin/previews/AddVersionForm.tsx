@@ -26,7 +26,7 @@ const formSchema = z.object({
 export interface AddVersionFormProps {
   onSubmit: (version: VersionItem) => void;
   projectStatus?: 'waiting' | 'feedback' | 'approved';
-  projectId?: string; // Added projectId prop
+  projectId: string; // Added projectId prop as required
 }
 
 const AddVersionForm: React.FC<AddVersionFormProps> = ({ 

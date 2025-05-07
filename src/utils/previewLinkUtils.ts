@@ -60,7 +60,15 @@ export const isValidEncodedPreviewLink = (link: string): boolean => {
   
   // Try to decode it as a base64 string
   try {
-    const normalized = link.replace(/-/g, '+').replace(/_/g, '/');
+    // Ensure proper padding for base64 decoding
+    let normalized = link.replace(/-/g, '+').replace(/_/g, '/');
+    // Add padding if needed (important for compatibility)
+    const padLength = 4 - (normalized.length % 4);
+    if (padLength < 4) {
+      normalized += '='.repeat(padLength);
+    }
+    
+    console.log('[previewLinkUtils] Normalized token for decoding:', normalized);
     const decoded = atob(normalized);
     const data = JSON.parse(decoded);
     
@@ -80,23 +88,33 @@ export const isValidEncodedPreviewLink = (link: string): boolean => {
  * @returns The project ID
  */
 export const getProjectIdFromPreviewLink = (link: string): string | null => {
-  console.log(`[previewLinkUtils] Getting project ID from link: ${link}`);
+  // Ensure we're working with a decoded URL
+  const decodedLink = decodeURIComponent(link);
+  console.log(`[previewLinkUtils] Getting project ID from link. Original: ${link}, Decoded: ${decodedLink}`);
   
   // If it's a preview code format (e.g., P1234), use it directly to look up the project
-  if (/^P\d{4,}$/i.test(link) || /^PREV-\d{4,}$/i.test(link)) {
-    console.log(`[previewLinkUtils] Using preview code directly: ${link}`);
-    return link;
+  if (/^P\d{4,}$/i.test(decodedLink) || /^PREV-\d{4,}$/i.test(decodedLink)) {
+    console.log(`[previewLinkUtils] Using preview code directly: ${decodedLink}`);
+    return decodedLink;
   }
   
   // If it's a UUID, assume it's a direct project ID
-  if (/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(link)) {
-    console.log(`[previewLinkUtils] Using UUID directly: ${link}`);
-    return link;
+  if (/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(decodedLink)) {
+    console.log(`[previewLinkUtils] Using UUID directly: ${decodedLink}`);
+    return decodedLink;
   }
   
   // Otherwise try to decode it
   try {
-    const normalized = link.replace(/-/g, '+').replace(/_/g, '/');
+    // Ensure proper padding for base64 decoding
+    let normalized = decodedLink.replace(/-/g, '+').replace(/_/g, '/');
+    // Add padding if needed (important for compatibility)
+    const padLength = 4 - (normalized.length % 4);
+    if (padLength < 4) {
+      normalized += '='.repeat(padLength);
+    }
+    
+    console.log('[previewLinkUtils] Normalized token for decoding:', normalized);
     const decoded = atob(normalized);
     const data = JSON.parse(decoded);
     

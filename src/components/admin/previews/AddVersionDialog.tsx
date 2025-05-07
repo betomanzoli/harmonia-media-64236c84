@@ -39,7 +39,7 @@ const AddVersionDialog: React.FC<AddVersionDialogProps> = ({
         <AddVersionForm 
           onSubmit={handleVersionSubmit} 
           projectStatus={projectStatus}
-          projectId={projectId} // Pass projectId to AddVersionForm
+          projectId={projectId}
         />
       </DialogContent>
     </Dialog>

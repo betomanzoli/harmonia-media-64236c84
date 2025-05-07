@@ -107,54 +107,56 @@ const NewProjectForm: React.FC<NewProjectFormProps> = ({
   };
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-6">
-      <div className="space-y-4">
-        <h3 className="text-lg font-semibold">Informações do Cliente</h3>
-        
-        <ClientInfoForm 
-          clientName={clientName} 
-          clientEmail={clientEmail} 
-          clientPhone={clientPhone}
-          packageType={packageType} 
-          onClientNameChange={setClientName} 
-          onClientEmailChange={setClientEmail}
-          onClientPhoneChange={setClientPhone}
-          onPackageTypeChange={setPackageType} 
-        />
-      </div>
-
-      <div className="space-y-4">
-        <div className="flex items-center justify-between">
-          <h3 className="text-lg font-semibold">Versões Musicais</h3>
-          <Button type="button" onClick={addVersion} variant="outline">
-            <Plus className="w-4 h-4 mr-2" />
-            Adicionar Versão
-          </Button>
+    <form onSubmit={handleSubmit} className="relative">
+      <div className="h-[calc(100vh-200px)] overflow-y-auto pr-2 pb-20">
+        <div className="space-y-4">
+          <h3 className="text-lg font-semibold">Informações do Cliente</h3>
+          
+          <ClientInfoForm 
+            clientName={clientName} 
+            clientEmail={clientEmail} 
+            clientPhone={clientPhone}
+            packageType={packageType} 
+            onClientNameChange={setClientName} 
+            onClientEmailChange={setClientEmail}
+            onClientPhoneChange={setClientPhone}
+            onPackageTypeChange={setPackageType} 
+          />
         </div>
 
-        <div className="space-y-4 max-h-[50vh] overflow-y-auto pr-2 pb-4">
-          {versions.map((version, index) => (
-            <div key={index} className="version-container">
-              <PreviewVersionInput 
-                index={index} 
-                title={version.title} 
-                description={version.description} 
-                audioUrl={version.audioUrl} 
-                recommended={false}
-                onTitleChange={(i, value) => updateVersion(i, 'title', value)} 
-                onDescriptionChange={(i, value) => updateVersion(i, 'description', value)}
-                onAudioUrlChange={(i, value) => updateVersion(i, 'audioUrl', value)}
-                onRecommendedChange={(i, value) => {}}
-                onRemove={removeVersion}
-                canRemove={versions.length > 1}
-              />
-            </div>
-          ))}
+        <div className="space-y-4 mt-6">
+          <div className="flex items-center justify-between">
+            <h3 className="text-lg font-semibold">Versões Musicais</h3>
+            <Button type="button" onClick={addVersion} variant="outline">
+              <Plus className="w-4 h-4 mr-2" />
+              Adicionar Versão
+            </Button>
+          </div>
+
+          <div className="space-y-4 max-h-[50vh] overflow-y-auto pr-2 pb-4">
+            {versions.map((version, index) => (
+              <div key={index} className="version-container">
+                <PreviewVersionInput 
+                  index={index} 
+                  title={version.title} 
+                  description={version.description} 
+                  audioUrl={version.audioUrl} 
+                  recommended={false}
+                  onTitleChange={(i, value) => updateVersion(i, 'title', value)} 
+                  onDescriptionChange={(i, value) => updateVersion(i, 'description', value)}
+                  onAudioUrlChange={(i, value) => updateVersion(i, 'audioUrl', value)}
+                  onRecommendedChange={(i, value) => {}}
+                  onRemove={removeVersion}
+                  canRemove={versions.length > 1}
+                />
+              </div>
+            ))}
+          </div>
         </div>
       </div>
       
       {/* Fixed positioning for submit button to avoid overlap issues */}
-      <div className="flex justify-end pt-8 pb-10 border-t mt-8 sticky bottom-0 bg-white">
+      <div className="sticky bottom-0 bg-white border-t pt-4 pb-4 mt-4 flex justify-end">
         <Button type="submit" disabled={isSubmitting} className="px-6">
           {isSubmitting ? 'Criando...' : 'Criar Projeto'}
         </Button>

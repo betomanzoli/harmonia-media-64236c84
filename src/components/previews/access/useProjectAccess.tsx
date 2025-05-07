@@ -13,7 +13,9 @@ interface FormErrors {
 }
 
 export const useProjectAccess = ({ projectId, onVerify }: UseProjectAccessProps) => {
-  const [code, setCode] = useState(projectId || '');
+  // Always use decoded project ID
+  const decodedProjectId = decodeURIComponent(projectId);
+  const [code, setCode] = useState(decodedProjectId || '');
   const [email, setEmail] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -57,6 +59,13 @@ export const useProjectAccess = ({ projectId, onVerify }: UseProjectAccessProps)
     console.log('[ProjectAccessForm] Verificando acesso com código:', code, 'e email:', email);
     
     try {
+      // Diagnostic logs for troubleshooting
+      console.log('[ProjectAccessForm] Informações detalhadas:');
+      console.log('- Código recebido na URL:', projectId);
+      console.log('- Código decodificado:', decodedProjectId);
+      console.log('- Código usado para verificação:', code);
+      console.log('- Email fornecido:', email);
+      
       // First try to verify if the preview code exists
       console.log('[ProjectAccessForm] Consultando preview_code na tabela projects:', code);
       const { data, error } = await supabase
@@ -66,6 +75,12 @@ export const useProjectAccess = ({ projectId, onVerify }: UseProjectAccessProps)
         .single();
       
       console.log('[ProjectAccessForm] Verificação de preview_code:', { data, error });
+      
+      // Log detailed SQL query for debugging
+      console.log('[ProjectAccessForm] SQL equivalente:', 
+        `SELECT projects.id, projects.client_id, projects.preview_code, clients.* 
+         FROM projects JOIN clients ON projects.client_id = clients.id 
+         WHERE projects.preview_code = '${code}'`);
       
       if (error) {
         console.error('[ProjectAccessForm] Erro ao verificar preview_code:', error);
