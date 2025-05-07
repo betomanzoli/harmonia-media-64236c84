@@ -10,16 +10,13 @@ export interface AdditionalLink {
 export interface VersionItem {
   id: string;
   name: string;
-  description?: string;
+  description: string;
   audioUrl: string;
-  fileId?: string;
-  createdAt: string;
-  dateAdded?: string;
+  file_url?: string; // Add this field as optional since some components expect it
   recommended?: boolean;
   final?: boolean;
-  finalVersionUrl?: string;
-  stemsUrl?: string;
-  additionalLinks?: AdditionalLink[];
+  createdAt?: string;
+  created_at?: string; // For compatibility with different naming conventions
 }
 
 export interface FeedbackItem {

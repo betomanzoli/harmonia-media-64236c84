@@ -11,7 +11,7 @@ import { VersionItem } from '@/hooks/admin/usePreviewProjects';
 import { v4 as uuidv4 } from 'uuid';
 
 export interface AddVersionFormProps {
-  projectId: string; // Added this required prop
+  projectId: string; // This prop is required
   onSubmit: (version: VersionItem) => void;
   projectStatus?: 'waiting' | 'feedback' | 'approved';
   onClose?: () => void;
@@ -37,7 +37,8 @@ const AddVersionForm: React.FC<AddVersionFormProps> = ({
       name: name || 'Nova Versão',
       description: description || 'Sem descrição adicional',
       audioUrl: audioUrl,
-      file_url: audioUrl, // For compatibility with both naming conventions
+      // Set both naming conventions to ensure compatibility
+      file_url: audioUrl, 
       recommended: isRecommended,
       final: isFinal,
       createdAt: new Date().toISOString()
