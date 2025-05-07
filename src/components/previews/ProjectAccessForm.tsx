@@ -21,6 +21,7 @@ const ProjectAccessForm: React.FC<ProjectAccessFormProps> = ({ projectId, onVeri
     setEmail,
     isLoading,
     error,
+    errors,
     handleSubmit
   } = useProjectAccess({ projectId, onVerify });
 
@@ -38,6 +39,7 @@ const ProjectAccessForm: React.FC<ProjectAccessFormProps> = ({ projectId, onVeri
               setCode={setCode}
               email={email}
               setEmail={setEmail}
+              errors={errors}
             />
           </form>
         </CardContent>

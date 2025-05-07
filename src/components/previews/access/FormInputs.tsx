@@ -9,9 +9,19 @@ interface FormInputsProps {
   setCode: (value: string) => void;
   email: string;
   setEmail: (value: string) => void;
+  errors: {
+    code?: string;
+    email?: string;
+  };
 }
 
-const FormInputs: React.FC<FormInputsProps> = ({ code, setCode, email, setEmail }) => {
+const FormInputs: React.FC<FormInputsProps> = ({ 
+  code, 
+  setCode, 
+  email, 
+  setEmail,
+  errors 
+}) => {
   return (
     <>
       <div className="space-y-2">
@@ -22,11 +32,16 @@ const FormInputs: React.FC<FormInputsProps> = ({ code, setCode, email, setEmail 
             id="projectCode"
             value={code}
             onChange={(e) => setCode(e.target.value)}
-            className="pl-10"
+            className={`pl-10 ${errors.code ? 'border-red-500 focus-visible:ring-red-500' : ''}`}
             placeholder="Informe o código do projeto"
             required
+            aria-invalid={!!errors.code}
+            aria-describedby={errors.code ? "code-error" : undefined}
           />
         </div>
+        {errors.code && (
+          <p id="code-error" className="text-sm text-red-500 mt-1">{errors.code}</p>
+        )}
       </div>
       
       <div className="space-y-2">
@@ -38,11 +53,16 @@ const FormInputs: React.FC<FormInputsProps> = ({ code, setCode, email, setEmail 
             type="email"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
-            className="pl-10"
+            className={`pl-10 ${errors.email ? 'border-red-500 focus-visible:ring-red-500' : ''}`}
             placeholder="Informe seu email"
             required
+            aria-invalid={!!errors.email}
+            aria-describedby={errors.email ? "email-error" : undefined}
           />
         </div>
+        {errors.email && (
+          <p id="email-error" className="text-sm text-red-500 mt-1">{errors.email}</p>
+        )}
         <p className="text-xs text-gray-500 mt-1">
           O mesmo email usado no momento da contratação
         </p>

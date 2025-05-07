@@ -1,3 +1,4 @@
+
 import { useState } from 'react';
 import { supabase } from '@/lib/supabase';
 
@@ -6,30 +7,46 @@ interface UseProjectAccessProps {
   onVerify: (code: string, email: string) => void;
 }
 
+interface FormErrors {
+  code?: string;
+  email?: string;
+}
+
 export const useProjectAccess = ({ projectId, onVerify }: UseProjectAccessProps) => {
   const [code, setCode] = useState(projectId || '');
   const [email, setEmail] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [errors, setErrors] = useState<FormErrors>({});
 
   const validateInputs = (): boolean => {
+    const newErrors: FormErrors = {};
+    let isValid = true;
+    
+    // Validate code
     if (!code.trim()) {
-      setError('Por favor, informe o código do projeto.');
-      return false;
+      newErrors.code = 'Por favor, informe o código do projeto.';
+      isValid = false;
     }
     
-    if (!email.trim() || !email.includes('@')) {
-      setError('Por favor, informe um email válido.');
-      return false;
+    // Validate email
+    if (!email.trim()) {
+      newErrors.email = 'Por favor, informe um email.';
+      isValid = false;
+    } else if (!email.includes('@')) {
+      newErrors.email = 'Por favor, informe um email válido.';
+      isValid = false;
     }
     
-    return true;
+    setErrors(newErrors);
+    return isValid;
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
     setError(null);
+    setErrors({});
     
     // Perform validation
     if (!validateInputs()) {
@@ -104,9 +121,9 @@ export const useProjectAccess = ({ projectId, onVerify }: UseProjectAccessProps)
         providedEmail: email 
       });
       
-      // Client verification logic - simplified for now
-      // In a production system, you should verify that this email is actually associated with the client
-      const isAuthorized = data || isTestEmail || isDemoCode;
+      // Client verification logic - compare emails if available
+      const emailMatches = clientEmail && email.toLowerCase() === clientEmail.toLowerCase();
+      const isAuthorized = emailMatches || isTestEmail || isDemoCode || data;
       
       if (isAuthorized) {
         console.log('[ProjectAccessForm] Acesso autorizado');
@@ -142,6 +159,7 @@ export const useProjectAccess = ({ projectId, onVerify }: UseProjectAccessProps)
     setEmail,
     isLoading,
     error,
+    errors,
     handleSubmit
   };
 };
