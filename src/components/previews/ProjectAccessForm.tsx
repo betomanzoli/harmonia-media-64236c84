@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -82,9 +81,20 @@ const ProjectAccessForm: React.FC<ProjectAccessFormProps> = ({ projectId, onVeri
       
       const isDemoCode = code === '123456' || code.startsWith('P');
       
-      // Fix: TypeScript recognizes data.clients as any[] but it's actually an object
-      // First ensure clients exists and then access its email property safely
-      const clientEmail = data?.clients ? data.clients.email : null;
+      // Fix: TypeScript error by properly handling clients data
+      // Check if clients exists and if it's an array or object, then access email accordingly
+      let clientEmail = null;
+      if (data?.clients) {
+        // If clients is an array, get the first item's email
+        if (Array.isArray(data.clients)) {
+          clientEmail = data.clients.length > 0 ? data.clients[0].email : null;
+          console.log('[ProjectAccessForm] Clients is array, email:', clientEmail);
+        } else {
+          // Otherwise treat it as an object
+          clientEmail = data.clients.email;
+          console.log('[ProjectAccessForm] Clients is object, email:', clientEmail);
+        }
+      }
       
       console.log('[ProjectAccessForm] Verificações especiais:', { 
         isTestEmail, 
