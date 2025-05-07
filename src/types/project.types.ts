@@ -38,7 +38,7 @@ export interface BaseProjectItem {
   expirationDate: string;
   versions: number;
   feedback?: string;
-  preview_code?: string; // Added for compatibility with Supabase naming convention
+  preview_code?: string; // Added preview_code property
 }
 
 // Complete project item with version list

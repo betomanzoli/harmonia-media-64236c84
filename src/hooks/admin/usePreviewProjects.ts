@@ -57,6 +57,7 @@ export interface ProjectItem {
   feedback?: string;
   history?: HistoryEntry[];
   lastActivityDate?: string;
+  preview_code?: string; // Added preview_code property
 }
 
 // Mock data storage (in a real app, this would be an API call)
@@ -130,7 +131,8 @@ export const usePreviewProjects = () => {
       versionsList: project.versionsList || [],
       feedbackHistory: [],
       history: [],
-      lastActivityDate: new Date().toISOString()
+      lastActivityDate: new Date().toISOString(),
+      preview_code: project.preview_code || ''
     };
     
     mockProjects = [newProject, ...mockProjects];
