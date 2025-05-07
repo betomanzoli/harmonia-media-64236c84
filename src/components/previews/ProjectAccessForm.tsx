@@ -44,7 +44,7 @@ const ProjectAccessForm: React.FC<ProjectAccessFormProps> = ({ projectId, onVeri
       console.log('[ProjectAccessForm] Consultando preview_code na tabela projects:', code);
       const { data, error } = await supabase
         .from('projects')
-        .select('id, client_id, preview_code, clients!inner(email)')
+        .select('id, client_id, preview_code, clients!inner(*)')
         .eq('preview_code', code)
         .single();
       
@@ -82,11 +82,14 @@ const ProjectAccessForm: React.FC<ProjectAccessFormProps> = ({ projectId, onVeri
       
       const isDemoCode = code === '123456' || code.startsWith('P');
       
-      // Fix: Access the email correctly from clients data which is a nested object, not an array
+      // Fix: Access the email correctly from clients data which is returned as a single object from the join
+      // The data structure from Supabase when using !inner join is: { id:..., clients: { email:... } }
+      const clientEmail = data?.clients?.email;
+      
       console.log('[ProjectAccessForm] Verificações especiais:', { 
         isTestEmail, 
         isDemoCode,
-        clientEmail: data?.clients?.email, // Fix here: accessing email from clients object
+        clientEmail,
         providedEmail: email 
       });
       
