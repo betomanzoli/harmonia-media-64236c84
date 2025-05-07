@@ -43,7 +43,7 @@ export interface ProjectItem {
   id: string;
   clientName: string;
   clientEmail?: string;
-  clientPhone?: string;
+  clientPhone?: string; // Add phone property
   status: string;
   createdAt: string;
   expirationDate: string;
@@ -120,7 +120,7 @@ export const usePreviewProjects = () => {
       id: newId,
       clientName: project.clientName || 'Cliente',
       clientEmail: project.clientEmail,
-      clientPhone: project.clientPhone,
+      clientPhone: project.clientPhone, // Include phone in the project
       status: 'waiting',
       createdAt: new Date().toISOString(),
       expirationDate: expirationDate.toISOString(),

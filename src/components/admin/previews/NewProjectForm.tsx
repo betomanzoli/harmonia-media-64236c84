@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { Button } from "@/components/ui/button";
 import { Plus } from 'lucide-react';
@@ -5,9 +6,11 @@ import PreviewVersionInput from './PreviewVersionInput';
 import { useToast } from "@/hooks/use-toast";
 import { useNewProjectForm } from '@/hooks/admin/useNewProjectForm';
 import ClientInfoForm from './ClientInfoForm';
+
 interface NewProjectFormProps {
   onAddProject: (project: any) => string | null;
 }
+
 const NewProjectForm: React.FC<NewProjectFormProps> = ({
   onAddProject
 }) => {
@@ -15,6 +18,7 @@ const NewProjectForm: React.FC<NewProjectFormProps> = ({
     formState: {
       clientName,
       clientEmail,
+      clientPhone,
       packageType,
       versions,
       isSubmitting
@@ -22,6 +26,7 @@ const NewProjectForm: React.FC<NewProjectFormProps> = ({
     setters: {
       setClientName,
       setClientEmail,
+      setClientPhone,
       setPackageType,
       setIsSubmitting
     },
@@ -32,9 +37,11 @@ const NewProjectForm: React.FC<NewProjectFormProps> = ({
       resetForm
     }
   } = useNewProjectForm();
+
   const {
     toast
   } = useToast();
+
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (!clientName.trim() || !clientEmail.trim() || !packageType) {
@@ -45,6 +52,7 @@ const NewProjectForm: React.FC<NewProjectFormProps> = ({
       });
       return;
     }
+
     const hasEmptyVersions = versions.some(v => !v.title.trim() || !v.description.trim() || !v.audioUrl.trim());
     if (hasEmptyVersions) {
       toast({
@@ -54,11 +62,13 @@ const NewProjectForm: React.FC<NewProjectFormProps> = ({
       });
       return;
     }
+
     setIsSubmitting(true);
     try {
       const project = {
         clientName: clientName.trim(),
         clientEmail: clientEmail.trim(),
+        clientPhone: clientPhone.trim(), // Add phone to project data
         packageType: packageType,
         createdAt: new Date().toLocaleDateString('pt-BR'),
         status: 'waiting' as const,
@@ -76,6 +86,7 @@ const NewProjectForm: React.FC<NewProjectFormProps> = ({
           fileId: v.audioUrl.match(/[-\w]{25,}/) ? v.audioUrl.match(/[-\w]{25,}/)![0] : ''
         }))
       };
+
       const newProjectId = onAddProject(project);
       if (newProjectId) {
         resetForm();
@@ -94,11 +105,22 @@ const NewProjectForm: React.FC<NewProjectFormProps> = ({
       setIsSubmitting(false);
     }
   };
-  return <form onSubmit={handleSubmit} className="space-y-6">
+
+  return (
+    <form onSubmit={handleSubmit} className="space-y-6">
       <div className="space-y-4">
         <h3 className="text-lg font-semibold">Informações do Cliente</h3>
         
-        <ClientInfoForm clientName={clientName} clientEmail={clientEmail} packageType={packageType} onClientNameChange={setClientName} onClientEmailChange={setClientEmail} onPackageTypeChange={setPackageType} />
+        <ClientInfoForm 
+          clientName={clientName} 
+          clientEmail={clientEmail} 
+          clientPhone={clientPhone}
+          packageType={packageType} 
+          onClientNameChange={setClientName} 
+          onClientEmailChange={setClientEmail}
+          onClientPhoneChange={setClientPhone}
+          onPackageTypeChange={setPackageType} 
+        />
       </div>
 
       <div className="space-y-4">
@@ -111,17 +133,34 @@ const NewProjectForm: React.FC<NewProjectFormProps> = ({
         </div>
 
         <div className="space-y-4 max-h-[50vh] overflow-y-auto pr-2 pb-4">
-          {versions.map((version, index) => <div key={index} className="version-container">
-              <PreviewVersionInput index={index} title={version.title} description={version.description} audioUrl={version.audioUrl} recommended={false} onTitleChange={(i, value) => updateVersion(i, 'title', value)} onDescriptionChange={(i, value) => updateVersion(i, 'description', value)} onAudioUrlChange={(i, value) => updateVersion(i, 'audioUrl', value)} onRecommendedChange={(i, value) => {}} onRemove={removeVersion} canRemove={versions.length > 1} />
-            </div>)}
+          {versions.map((version, index) => (
+            <div key={index} className="version-container">
+              <PreviewVersionInput 
+                index={index} 
+                title={version.title} 
+                description={version.description} 
+                audioUrl={version.audioUrl} 
+                recommended={false}
+                onTitleChange={(i, value) => updateVersion(i, 'title', value)} 
+                onDescriptionChange={(i, value) => updateVersion(i, 'description', value)}
+                onAudioUrlChange={(i, value) => updateVersion(i, 'audioUrl', value)}
+                onRecommendedChange={(i, value) => {}}
+                onRemove={removeVersion}
+                canRemove={versions.length > 1}
+              />
+            </div>
+          ))}
         </div>
       </div>
       
-      <div className="flex justify-end sticky bottom-0 pt-4 mx-[240px] px-[60px] py-0 rounded-sm my-0 bg-neutral-900">
+      {/* Fix button position with padding and sticky positioning */}
+      <div className="flex justify-end pt-8 pb-4 border-t mt-8">
         <Button type="submit" disabled={isSubmitting}>
           {isSubmitting ? 'Criando...' : 'Criar Projeto'}
         </Button>
       </div>
-    </form>;
+    </form>
+  );
 };
+
 export default NewProjectForm;

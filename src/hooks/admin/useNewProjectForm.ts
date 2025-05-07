@@ -11,6 +11,7 @@ export interface Version {
 export const useNewProjectForm = () => {
   const [clientName, setClientName] = useState('');
   const [clientEmail, setClientEmail] = useState('');
+  const [clientPhone, setClientPhone] = useState(''); // Add phone state
   const [packageType, setPackageType] = useState('');
   const [versions, setVersions] = useState<Version[]>([
     { title: '', description: '', audioUrl: '' }
@@ -43,6 +44,7 @@ export const useNewProjectForm = () => {
   const resetForm = () => {
     setClientName('');
     setClientEmail('');
+    setClientPhone('');
     setPackageType('');
     setVersions([{ title: '', description: '', audioUrl: '' }]);
   };
@@ -51,6 +53,7 @@ export const useNewProjectForm = () => {
     formState: {
       clientName,
       clientEmail,
+      clientPhone,
       packageType,
       versions,
       isSubmitting
@@ -58,6 +61,7 @@ export const useNewProjectForm = () => {
     setters: {
       setClientName,
       setClientEmail,
+      setClientPhone,
       setPackageType,
       setIsSubmitting
     },
