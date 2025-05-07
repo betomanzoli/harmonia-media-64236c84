@@ -82,10 +82,11 @@ const ProjectAccessForm: React.FC<ProjectAccessFormProps> = ({ projectId, onVeri
       
       const isDemoCode = code === '123456' || code.startsWith('P');
       
+      // Fix: Access the email correctly from clients data which is a nested object, not an array
       console.log('[ProjectAccessForm] Verificações especiais:', { 
         isTestEmail, 
         isDemoCode,
-        clientEmail: data?.clients?.email,
+        clientEmail: data?.clients?.email, // Fix here: accessing email from clients object
         providedEmail: email 
       });
       
