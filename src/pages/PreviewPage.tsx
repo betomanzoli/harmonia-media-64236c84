@@ -1,3 +1,4 @@
+
 import React, { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import MusicPreviewSystem from '@/components/previews/MusicPreviewSystem';
@@ -7,6 +8,9 @@ import { getProjectIdFromPreviewLink, isValidEncodedPreviewLink } from '@/utils/
 import { supabase } from '@/lib/supabase';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { AlertCircle } from 'lucide-react';
+
+// Force dynamic content to prevent caching
+export const dynamic = 'force-dynamic';
 
 const PreviewPage: React.FC = () => {
   const { projectId } = useParams<{ projectId: string }>();
@@ -81,12 +85,13 @@ const PreviewPage: React.FC = () => {
       console.log("Checking for project in Supabase by preview_code:", projectId);
       const { data: previewData, error: previewError } = await supabase
         .from('projects')
-        .select('id, preview_code')
+        .select('id, preview_code, project_files(*)')
         .eq('preview_code', projectId)
         .maybeSingle();
       
       if (previewData) {
         console.log("[Supabase] Project found by preview_code:", previewData);
+        console.log("[Supabase] Project files:", previewData.project_files);
         setIsError(false);
         setIsLoading(false);
         return;
@@ -95,7 +100,7 @@ const PreviewPage: React.FC = () => {
       // Next check by ID in Supabase
       const { data, error } = await supabase
         .from('projects')
-        .select('id')
+        .select('id, project_files(*)')
         .eq('id', projectId)
         .maybeSingle();
         
@@ -103,6 +108,7 @@ const PreviewPage: React.FC = () => {
         console.error("Error checking project in Supabase:", error);
       } else if (data) {
         console.log("[Supabase] Project found by ID:", data);
+        console.log("[Supabase] Project files:", data.project_files);
         setIsError(false);
         setIsLoading(false);
         return;

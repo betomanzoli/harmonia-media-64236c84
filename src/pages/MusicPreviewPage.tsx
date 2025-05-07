@@ -1,10 +1,12 @@
-
 import React, { useEffect, useState } from 'react';
 import { useParams } from 'react-router-dom';
 import MusicPreviewSystem from '@/components/previews/MusicPreviewSystem';
 import { useToast } from '@/hooks/use-toast';
 import { getProjectIdFromPreviewLink, isValidEncodedPreviewLink } from '@/utils/previewLinkUtils';
 import { supabase } from '@/integrations/supabase/client';
+
+// Force dynamic content to prevent caching
+export const dynamic = 'force-dynamic';
 
 const MusicPreviewPage: React.FC = () => {
   const { projectId } = useParams<{ projectId: string }>();
@@ -121,6 +123,9 @@ const MusicPreviewPage: React.FC = () => {
         <div className="bg-white p-6 rounded-lg shadow-sm text-center">
           <h2 className="text-2xl font-bold text-gray-800 mb-4">Link de prévia inválido</h2>
           <p className="text-gray-700">O código de prévia fornecido não é válido ou expirou.</p>
+          <p className="text-sm text-gray-500 mt-4">
+            Dúvidas? Entre em contato pelo WhatsApp (11) 92058-5072
+          </p>
         </div>
       </div>
     );

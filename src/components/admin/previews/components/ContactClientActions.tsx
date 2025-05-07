@@ -21,19 +21,14 @@ const ContactClientActions: React.FC<ContactClientActionsProps> = ({
   onOpenChange
 }) => {
   const { toast } = useToast();
+  const defaultPhone = "(11) 92058-5072"; // Updated WhatsApp number
 
   const handleWhatsApp = () => {
-    if (!clientPhone) {
-      toast({
-        title: "Telefone não disponível",
-        description: "Nenhum número de telefone registrado para este cliente.",
-        variant: "destructive"
-      });
-      return;
-    }
+    // Use client phone if available, otherwise use default
+    const phoneToUse = clientPhone || defaultPhone;
     
     // Format phone number (remove non-digits)
-    const formattedPhone = clientPhone.replace(/\D/g, '');
+    const formattedPhone = phoneToUse.replace(/\D/g, '');
     
     // Prepare message text
     const message = encodeURIComponent(

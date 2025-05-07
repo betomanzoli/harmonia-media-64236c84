@@ -13,11 +13,13 @@ export const generatePreviewLink = (projectId: string, previewCode?: string): st
     return previewCode;
   }
   
-  // Otherwise, encode the project ID
+  // Otherwise, encode the project ID with static identifier
   try {
     const payload = {
       id: projectId,
-      ts: Date.now()
+      // Remove timestamp that causes link changes
+      // ts: Date.now() 
+      client: "client-fixed" // Static identifier
     };
     const encoded = btoa(JSON.stringify(payload));
     return encoded.replace(/=/g, '').replace(/\+/g, '-').replace(/\//g, '_');
@@ -78,11 +80,7 @@ export const getProjectIdFromPreviewLink = (link: string): string | null => {
     const decoded = atob(normalized);
     const data = JSON.parse(decoded);
     
-    // Check if the link has expired (optional)
-    if (data.exp && Date.now() > data.exp) {
-      console.error('Preview link has expired');
-      return null;
-    }
+    // No timestamp check since we've removed it from generation
     
     return data.id;
   } catch (err) {

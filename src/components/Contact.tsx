@@ -7,7 +7,7 @@ import { siteConfig } from '@/config/site';
 const Contact: React.FC = () => {
   // Get contact data from site config
   const email = siteConfig.contact.email;
-  const whatsapp = siteConfig.contact.whatsapp;
+  const whatsapp = "(11) 92058-5072";
 
   return (
     <section id="contato" className="py-20 px-6 bg-background">

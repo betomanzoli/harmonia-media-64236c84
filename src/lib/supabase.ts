@@ -44,7 +44,7 @@ try {
       if (error) {
         console.error('❌ Erro na conexão Supabase:', error);
       } else {
-        console.log(`✅ Conexão Supabase validada: ${data ? 'conectado' : 'sem dados'}`);
+        console.log(`✅ Conexão Supabase validada: ${data !== null ? 'conectado' : 'sem dados'}`);
       }
     } catch (err) {
       console.error('❌ Erro ao testar conexão Supabase:', err);

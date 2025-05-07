@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Music, Mail, Key, AlertCircle } from 'lucide-react';
 import { Alert, AlertDescription } from "@/components/ui/alert";
+import { supabase } from '@/lib/supabase';
 
 interface ProjectAccessFormProps {
   projectId: string;
@@ -18,7 +19,7 @@ const ProjectAccessForm: React.FC<ProjectAccessFormProps> = ({ projectId, onVeri
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
     setError(null);
@@ -36,13 +37,37 @@ const ProjectAccessForm: React.FC<ProjectAccessFormProps> = ({ projectId, onVeri
       return;
     }
     
-    // Simulate verification against a database
-    setTimeout(() => {
-      // In a real app, you would verify this against your database
-      // For now, we'll just call the onVerify function which decides if access is allowed
-      onVerify(code, email);
+    console.log('Verificando email:', email);
+    
+    try {
+      // Verify if the preview code exists in Supabase
+      const { data, error } = await supabase
+        .from('projects')
+        .select('id, preview_code')
+        .eq('preview_code', code)
+        .single();
+      
+      console.log('[Supabase] Verificação de preview_code:', { data, error });
+      
+      if (data) {
+        // Save access in localStorage
+        localStorage.setItem('preview_access', JSON.stringify({
+          code: code,
+          email: email,
+          timestamp: Date.now()
+        }));
+        
+        // Call the onVerify callback to notify parent component
+        onVerify(code, email);
+      } else {
+        setError('Código de prévia não encontrado ou inválido.');
+      }
+    } catch (err) {
+      console.error('Erro ao verificar acesso:', err);
+      setError('Ocorreu um erro ao verificar o acesso. Tente novamente.');
+    } finally {
       setIsLoading(false);
-    }, 1000);
+    }
   };
 
   return (
@@ -120,7 +145,7 @@ const ProjectAccessForm: React.FC<ProjectAccessFormProps> = ({ projectId, onVeri
       </Card>
       
       <p className="text-center text-sm text-gray-500 mt-4">
-        Dúvidas? Entre em contato pelo WhatsApp (11) 96590-6009
+        Dúvidas? Entre em contato pelo WhatsApp (11) 92058-5072
       </p>
     </div>
   );

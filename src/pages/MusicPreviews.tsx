@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { useParams } from 'react-router-dom';
 import { useToast } from "@/hooks/use-toast";
@@ -10,6 +11,9 @@ import { notificationService } from '@/services/notificationService';
 import { ProjectItem, MusicPreview } from '@/types/project.types';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { AlertCircle } from 'lucide-react';
+
+// Force dynamic content to prevent caching
+export const dynamic = 'force-dynamic';
 
 const MusicPreviews: React.FC = () => {
   const { previewId } = useParams<{ previewId: string }>();
@@ -159,10 +163,10 @@ const MusicPreviews: React.FC = () => {
             id: v.id,
             title: v.name || `Versão ${v.id}`,
             description: v.description || 'Sem descrição',
-            audioUrl: v.audioUrl || v.file_url || '',
+            audioUrl: v.audioUrl || v.file_url || '', // Handle both naming conventions
             recommended: v.recommended || false,
             name: v.name || `Versão ${v.id}`,
-            createdAt: v.createdAt || v.created_at || new Date().toISOString()
+            createdAt: v.createdAt || v.created_at || new Date().toISOString() // Handle both naming conventions
           }))
         : []);
   
