@@ -82,9 +82,9 @@ const ProjectAccessForm: React.FC<ProjectAccessFormProps> = ({ projectId, onVeri
       
       const isDemoCode = code === '123456' || code.startsWith('P');
       
-      // Fix: Access the email correctly from clients data which is returned as a single object from the join
-      // The data structure from Supabase when using !inner join is: { id:..., clients: { email:... } }
-      const clientEmail = data?.clients?.email;
+      // Fix: TypeScript recognizes data.clients as any[] but it's actually an object
+      // First ensure clients exists and then access its email property safely
+      const clientEmail = data?.clients ? data.clients.email : null;
       
       console.log('[ProjectAccessForm] Verificações especiais:', { 
         isTestEmail, 
