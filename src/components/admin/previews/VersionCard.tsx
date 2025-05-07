@@ -1,3 +1,4 @@
+
 import React, { useState } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { VersionItem } from '@/hooks/admin/usePreviewProjects';
@@ -19,7 +20,9 @@ const VersionCard: React.FC<VersionCardProps> = ({
   onDeleteVersion
 }) => {
   const [isPlaying, setIsPlaying] = useState(false);
-  const [audio] = useState(new Audio(version.audioUrl));
+  // Use audioUrl or file_url for backward compatibility
+  const audioSource = version.audioUrl || version.file_url || '';
+  const [audio] = useState(new Audio(audioSource));
   const { toast } = useToast();
 
   const handleTogglePlay = () => {
@@ -47,8 +50,8 @@ const VersionCard: React.FC<VersionCardProps> = ({
         });
         
         // If we have an audioUrl but playing failed, try to open in a new tab
-        if (version.audioUrl) {
-          window.open(version.audioUrl, '_blank');
+        if (audioSource) {
+          window.open(audioSource, '_blank');
         }
       });
     }
@@ -79,6 +82,9 @@ const VersionCard: React.FC<VersionCardProps> = ({
     });
   };
 
+  // Get displayed date, ensuring we have a valid format
+  const displayDate = version.dateAdded || version.createdAt || version.created_at || new Date().toISOString();
+
   return (
     <Card className={`bg-white ${version.final ? 'border-green-500 border-2' : ''}`}>
       <CardContent className="p-4">
@@ -104,7 +110,9 @@ const VersionCard: React.FC<VersionCardProps> = ({
               {version.description || "Sem descrição"}
             </p>
             
-            <div className="text-xs text-gray-500 mb-4">Adicionado em: {version.dateAdded}</div>
+            <div className="text-xs text-gray-500 mb-4">
+              Adicionado em: {displayDate}
+            </div>
             
             {/* Additional links for final versions */}
             {version.additionalLinks && version.additionalLinks.length > 0 && (
@@ -113,12 +121,12 @@ const VersionCard: React.FC<VersionCardProps> = ({
                 <div className="space-y-1">
                   {version.additionalLinks.map((link, index) => (
                     <div key={index} className="flex items-center justify-between bg-gray-50 p-2 rounded text-sm">
-                      <span className="font-medium">{link.label}</span>
+                      <span className="font-medium">{typeof link === 'string' ? `Link ${index + 1}` : link.label}</span>
                       <div className="flex gap-1">
-                        <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => handleCopyLink(link.url)} title="Copiar link">
+                        <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => handleCopyLink(typeof link === 'string' ? link : link.url)} title="Copiar link">
                           <Copy className="h-3.5 w-3.5" />
                         </Button>
-                        <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => window.open(link.url, '_blank')} title="Abrir link">
+                        <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => window.open(typeof link === 'string' ? link : link.url, '_blank')} title="Abrir link">
                           <ExternalLink className="h-3.5 w-3.5" />
                         </Button>
                       </div>

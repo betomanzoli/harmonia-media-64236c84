@@ -17,6 +17,9 @@ export interface VersionItem {
   final?: boolean;
   createdAt?: string;
   created_at?: string; // For compatibility with different naming conventions
+  fileId?: string; // Add missing property
+  dateAdded?: string; // Add missing property
+  additionalLinks?: AdditionalLink[]; // Add missing property
 }
 
 export interface FeedbackItem {
