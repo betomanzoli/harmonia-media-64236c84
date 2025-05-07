@@ -102,20 +102,25 @@ export const useProjectAccess = ({ projectId, onVerify }: UseProjectAccessProps)
       // Fix: Properly handle the clients data with proper TypeScript types
       let clientEmail: string | null = null;
       
+      // Log the entire data structure for debugging
+      console.log('[ProjectAccessForm] Estrutura completa dos dados:', JSON.stringify(data));
+      
       if (data?.clients) {
         // Check if clients is an array and handle accordingly
         if (Array.isArray(data.clients)) {
+          console.log('[ProjectAccessForm] clients é um array:', data.clients);
           clientEmail = data.clients.length > 0 && data.clients[0]?.email ? 
             data.clients[0].email : null;
-          console.log('[ProjectAccessForm] Clients is array, email:', clientEmail);
         } 
         // If it's an object with an email property
-        else if (typeof data.clients === 'object' && data.clients !== null && 'email' in data.clients) {
+        else if (typeof data.clients === 'object' && data.clients !== null) {
+          console.log('[ProjectAccessForm] clients é um objeto:', data.clients);
+          // Use optional chaining and type assertion
           clientEmail = (data.clients as { email?: string }).email || null;
-          console.log('[ProjectAccessForm] Clients is object, email:', clientEmail);
         }
       }
       
+      console.log('[ProjectAccessForm] Email do cliente extraído:', clientEmail);
       console.log('[ProjectAccessForm] Verificações especiais:', { 
         isTestEmail, 
         isDemoCode,

@@ -11,7 +11,7 @@ export interface Version {
 export const useNewProjectForm = () => {
   const [clientName, setClientName] = useState('');
   const [clientEmail, setClientEmail] = useState('');
-  const [clientPhone, setClientPhone] = useState(''); // Add phone state
+  const [clientPhone, setClientPhone] = useState('');
   const [packageType, setPackageType] = useState('');
   const [versions, setVersions] = useState<Version[]>([
     { title: '', description: '', audioUrl: '' }

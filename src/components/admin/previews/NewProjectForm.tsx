@@ -68,7 +68,7 @@ const NewProjectForm: React.FC<NewProjectFormProps> = ({
       const project = {
         clientName: clientName.trim(),
         clientEmail: clientEmail.trim(),
-        clientPhone: clientPhone.trim(), // Add phone to project data
+        clientPhone: clientPhone.trim(),
         packageType: packageType,
         createdAt: new Date().toLocaleDateString('pt-BR'),
         status: 'waiting' as const,

@@ -7,11 +7,11 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 interface ClientInfoFormProps {
   clientName: string;
   clientEmail: string;
-  clientPhone: string; // Adding phone field
+  clientPhone: string;
   packageType: string;
   onClientNameChange: (value: string) => void;
   onClientEmailChange: (value: string) => void;
-  onClientPhoneChange: (value: string) => void; // Adding phone handler
+  onClientPhoneChange: (value: string) => void;
   onPackageTypeChange: (value: string) => void;
 }
 

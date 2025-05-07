@@ -1,130 +1,158 @@
 import React, { useState } from 'react';
-import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
+import { Card, CardHeader, CardTitle, CardContent, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Clipboard, Send, PhoneCall, Calendar, Plus } from 'lucide-react';
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Copy, Plus, CalendarPlus, Mail, Phone } from 'lucide-react';
 import { useToast } from "@/hooks/use-toast";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Separator } from "@/components/ui/separator";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogClose } from "@/components/ui/dialog";
 import AddVersionForm from './AddVersionForm';
-import ContactClientActions from './components/ContactClientActions';
-import DeadlineExtensionDialog from './components/DeadlineExtensionDialog';
-import { VersionItem } from '@/hooks/admin/usePreviewProjects';
-import { generatePreviewLink } from '@/utils/previewLinkUtils';
 
 interface ProjectActionCardProps {
   projectId: string;
-  onAddVersion: (version: VersionItem) => void;
+  onAddVersion: (version: any) => void;
   onExtendDeadline: () => void;
   previewUrl: string;
-  clientPhone?: string;
-  clientEmail?: string;
-  projectStatus?: string;
-  packageType?: string;
+  clientPhone: string;
+  clientEmail: string;
+  projectStatus: string;
+  packageType: string;
 }
 
-const ProjectActionCard: React.FC<ProjectActionCardProps> = ({
-  projectId,
-  onAddVersion,
-  onExtendDeadline,
+const ProjectActionCard: React.FC<ProjectActionCardProps> = ({ 
+  projectId, 
+  onAddVersion, 
+  onExtendDeadline, 
   previewUrl,
   clientPhone,
   clientEmail,
   projectStatus,
-  packageType
+  packageType 
 }) => {
-  const [showAddVersion, setShowAddVersion] = useState(false);
-  const [showContactActions, setShowContactActions] = useState(false);
-  const [showDeadlineDialog, setShowDeadlineDialog] = useState(false);
+  const [showVersionDialog, setShowVersionDialog] = useState(false);
   const { toast } = useToast();
 
-  // Generate encoded preview link that is stable but unique to this project
-  const handleCopyLink = () => {
-    // Use existing URL if it's already properly encoded
-    if (previewUrl && previewUrl.includes('/preview/')) {
-      navigator.clipboard.writeText(previewUrl);
-      toast({
-        title: "Link copiado",
-        description: "O link de prévia foi copiado para a área de transferência."
-      });
-      return;
-    }
-    
-    // Otherwise generate a fresh link
-    const encodedPreviewLink = generatePreviewLink(projectId, clientEmail); // Use client email as additional uniqueness factor
-    const fullEncodedUrl = `${window.location.origin}/preview/${encodedPreviewLink}`;
-    
-    console.log("[ProjectActionCard] Generated preview link:", fullEncodedUrl);
-    
-    navigator.clipboard.writeText(fullEncodedUrl);
-    toast({
-      title: "Link copiado",
-      description: "O link de prévia foi copiado para a área de transferência."
-    });
+  const handleAddVersion = (newVersion: any) => {
+    onAddVersion(newVersion);
+    setShowVersionDialog(false);
   };
 
-  const handleAddVersion = (version: VersionItem) => {
-    onAddVersion(version);
-    setShowAddVersion(false);
+  // Função para criar link de WhatsApp
+  const generateWhatsAppLink = (phone: string, message: string): string => {
+    const cleanPhone = phone.replace(/\D/g, '');
+    return `https://wa.me/${cleanPhone}?text=${encodeURIComponent(message)}`;
+  };
+
+  // Função para enviar email
+  const sendEmailToClient = (email: string, subject: string): string => {
+    return `mailto:${email}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent('Olá,\n\nVisualize sua prévia musical aqui: ' + previewUrl + '\n\nAguardamos seu feedback!\nEquipe Harmonia')}`;
   };
 
   return (
     <Card>
-      <CardHeader>
+      <CardHeader className="pb-2">
         <CardTitle className="text-lg">Ações do Projeto</CardTitle>
       </CardHeader>
       <CardContent className="space-y-4">
-        <div className="grid grid-cols-1 gap-3">
-          <Button onClick={handleCopyLink} className="w-full">
-            <Clipboard className="h-4 w-4 mr-2" />
-            Copiar link de prévia
-          </Button>
-          
-          <Button onClick={() => setShowContactActions(true)} variant="outline" className="w-full">
-            <Send className="h-4 w-4 mr-2" />
-            Enviar link ao cliente
-          </Button>
-          
-          <Button onClick={() => window.open(`tel:${clientPhone || ''}`)} variant="outline" className="w-full" disabled={!clientPhone}>
-            <PhoneCall className="h-4 w-4 mr-2" />
-            Ligar para cliente
-          </Button>
-          
-          <Button onClick={() => setShowDeadlineDialog(true)} variant="outline" className="w-full">
-            <Calendar className="h-4 w-4 mr-2" />
-            Estender prazo
-          </Button>
-          
-          <Button onClick={() => setShowAddVersion(true)} variant="secondary" className="w-full">
-            <Plus className="h-4 w-4 mr-2" />
-            Adicionar versão
-          </Button>
+        <div>
+          <Label htmlFor="previewUrl">Link de Prévia</Label>
+          <div className="flex mt-1">
+            <Input 
+              id="previewUrl" 
+              value={previewUrl} 
+              readOnly 
+              className="rounded-r-none" 
+            />
+            <Button 
+              className="rounded-l-none" 
+              variant="outline" 
+              onClick={() => {
+                navigator.clipboard.writeText(previewUrl);
+                toast({
+                  title: "Link copiado",
+                  description: "O link de prévia foi copiado para a área de transferência"
+                });
+              }}
+            >
+              <Copy className="w-4 h-4" />
+            </Button>
+          </div>
         </div>
+        
+        {clientEmail && (
+          <div className="mt-4">
+            <p className="text-sm font-medium mb-2">Contato por Email</p>
+            <Button 
+              variant="outline" 
+              className="w-full"
+              onClick={() => window.open(sendEmailToClient(clientEmail, "Sua prévia musical está disponível!"))}
+            >
+              <Mail className="mr-2 w-4 h-4" />
+              Enviar Email
+            </Button>
+          </div>
+        )}
 
-        <Dialog open={showAddVersion} onOpenChange={setShowAddVersion}>
-          <DialogContent className="max-w-md">
+        {clientPhone && (
+          <div className="mt-4">
+            <p className="text-sm font-medium mb-2">Contato por WhatsApp</p>
+            <Button 
+              variant="outline" 
+              className="w-full bg-green-50 hover:bg-green-100 border-green-200 text-green-700"
+              onClick={() => window.open(generateWhatsAppLink(clientPhone, `Olá! Sua prévia musical está disponível em: ${previewUrl}`))}
+            >
+              <Phone className="mr-2 w-4 h-4" />
+              Enviar WhatsApp
+            </Button>
+          </div>
+        )}
+
+        <Separator className="my-3" />
+        
+        <div className="space-y-2">
+          <Button 
+            variant="outline" 
+            className="w-full" 
+            onClick={() => {
+              setShowVersionDialog(true);
+            }}
+          >
+            <Plus className="mr-2 w-4 h-4" />
+            Adicionar Versão
+          </Button>
+          
+          <Button 
+            variant="outline" 
+            className="w-full"
+            onClick={onExtendDeadline}
+          >
+            <CalendarPlus className="mr-2 w-4 h-4" />
+            Estender Prazo
+          </Button>
+          
+          {/* Placeholder for future actions */}
+        </div>
+      </CardContent>
+      
+      {showVersionDialog && (
+        <Dialog open={showVersionDialog} onOpenChange={setShowVersionDialog}>
+          <DialogContent className="sm:max-w-lg">
             <DialogHeader>
               <DialogTitle>Adicionar Nova Versão</DialogTitle>
+              <DialogDescription>
+                Adicione uma nova versão ao projeto.
+              </DialogDescription>
             </DialogHeader>
             <AddVersionForm 
-              onSubmit={handleAddVersion}
-              projectStatus={projectStatus as 'waiting' | 'feedback' | 'approved'}
+              projectId={projectId} 
+              onAddVersion={handleAddVersion}
+              onClose={() => setShowVersionDialog(false)}
+              packageType={packageType}
             />
           </DialogContent>
         </Dialog>
-
-        <ContactClientActions 
-          isOpen={showContactActions} 
-          onOpenChange={setShowContactActions}
-          clientEmail={clientEmail || ''} 
-          projectId={projectId}
-          clientPhone={clientPhone}
-        />
-
-        <DeadlineExtensionDialog
-          isOpen={showDeadlineDialog}
-          onOpenChange={setShowDeadlineDialog}
-          onConfirm={onExtendDeadline}
-        />
-      </CardContent>
+      )}
     </Card>
   );
 };
