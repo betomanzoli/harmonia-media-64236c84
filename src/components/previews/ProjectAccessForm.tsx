@@ -1,12 +1,9 @@
 
 import React from 'react';
-import { Card, CardContent, CardFooter } from "@/components/ui/card";
-import FormHeader from './access/FormHeader';
-import FormInputs from './access/FormInputs';
-import ErrorAlert from './access/ErrorAlert';
-import SubmitButton from './access/SubmitButton';
-import ContactInfo from './access/ContactInfo';
-import { useProjectAccess } from './access/useProjectAccess';
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { useProjectAccessForm } from '@/components/previews/access/useProjectAccess';
 
 interface ProjectAccessFormProps {
   projectId: string;
@@ -23,34 +20,51 @@ const ProjectAccessForm: React.FC<ProjectAccessFormProps> = ({ projectId, onVeri
     error,
     errors,
     handleSubmit
-  } = useProjectAccess({ projectId, onVerify });
+  } = useProjectAccessForm({ projectId, onVerify });
 
   return (
-    <div className="w-full max-w-md mx-auto px-4">
-      <Card className="bg-white shadow-lg border-0">
-        <FormHeader />
-        
-        <CardContent>
-          <form onSubmit={handleSubmit} className="space-y-4">
-            <ErrorAlert error={error} />
-            
-            <FormInputs 
-              code={code}
-              setCode={setCode}
-              email={email}
-              setEmail={setEmail}
-              errors={errors}
-            />
-          </form>
-        </CardContent>
-        
-        <CardFooter>
-          <SubmitButton isLoading={isLoading} onClick={handleSubmit} />
-        </CardFooter>
-      </Card>
-      
-      <ContactInfo />
-    </div>
+    <form onSubmit={handleSubmit} className="space-y-6">
+      <div className="space-y-4">
+        <div>
+          <Label htmlFor="preview-code">Código de Acesso</Label>
+          <Input
+            id="preview-code"
+            placeholder="Digite o código de prévia"
+            disabled={true}
+            value={code}
+            onChange={(e) => setCode(e.target.value)}
+            className={errors.code ? "border-red-500" : ""}
+          />
+          {errors.code && <p className="text-sm text-red-500 mt-1">{errors.code}</p>}
+        </div>
+
+        <div>
+          <Label htmlFor="email">Seu Email</Label>
+          <Input
+            id="email"
+            type="email"
+            placeholder="Digite seu email"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            className={errors.email ? "border-red-500" : ""}
+          />
+          {errors.email && <p className="text-sm text-red-500 mt-1">{errors.email}</p>}
+          <p className="text-xs text-gray-500 mt-1">
+            Use o mesmo email pelo qual recebeu o link de prévia
+          </p>
+        </div>
+      </div>
+
+      {error && (
+        <div className="p-3 bg-red-50 text-red-700 rounded-md text-sm">
+          {error}
+        </div>
+      )}
+
+      <Button type="submit" className="w-full" disabled={isLoading}>
+        {isLoading ? "Verificando..." : "Acessar Prévia"}
+      </Button>
+    </form>
   );
 };
 

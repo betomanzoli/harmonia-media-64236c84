@@ -1,82 +1,94 @@
 
 /**
- * Utility functions for handling cookies for preview access
- * This replaces localStorage usage for better compatibility with private/incognito modes
+ * Sets a cookie with the given name, value and options
+ * 
+ * @param name - Cookie name
+ * @param value - Cookie value
+ * @param options - Cookie options (path, max-age, etc.)
  */
-
-/**
- * Set a cookie with the specified parameters
- */
-export const setCookie = (name: string, value: string, options: Record<string, any> = {}): void => {
+export const setCookie = (name: string, value: string, options: Record<string, string> = {}): void => {
   const defaultOptions = {
     path: '/',
-    secure: true,
-    sameSite: 'None',
-    maxAge: 86400 // 24 hours
+    maxAge: '86400', // 1 day
+    sameSite: 'Lax',
+    secure: window.location.protocol === 'https:',
   };
   
   const cookieOptions = { ...defaultOptions, ...options };
+  
   let cookieString = `${encodeURIComponent(name)}=${encodeURIComponent(value)}`;
   
-  Object.entries(cookieOptions).forEach(([key, value]) => {
-    if (key === 'maxAge') {
-      cookieString += `; max-age=${value}`;
-    } else if (value === true) {
-      cookieString += `; ${key}`;
-    } else if (value !== false && value != null) {
-      cookieString += `; ${key}=${value}`;
-    }
+  Object.entries(cookieOptions).forEach(([key, val]) => {
+    const formattedKey = key.replace(/([A-Z])/g, '-$1').toLowerCase();
+    cookieString += `; ${formattedKey}=${val}`;
   });
   
   document.cookie = cookieString;
-  console.log(`Cookie set: ${name} (expires in ${cookieOptions.maxAge} seconds)`);
+  console.log(`[Cookie] Set: ${name}`);
 };
 
 /**
- * Get a cookie value by name
+ * Gets a cookie by name
+ * 
+ * @param name - Cookie name
+ * @returns Cookie value or null if not found
  */
 export const getCookie = (name: string): string | null => {
-  const value = `; ${document.cookie}`;
-  const parts = value.split(`; ${encodeURIComponent(name)}=`);
+  const nameEQ = `${encodeURIComponent(name)}=`;
+  const cookieArray = document.cookie.split(';');
   
-  if (parts.length === 2) {
-    const cookieValue = parts.pop()?.split(';').shift();
-    return cookieValue ? decodeURIComponent(cookieValue) : null;
+  for (let i = 0; i < cookieArray.length; i++) {
+    let c = cookieArray[i].trim();
+    if (c.indexOf(nameEQ) === 0) {
+      return decodeURIComponent(c.substring(nameEQ.length, c.length));
+    }
   }
   
   return null;
 };
 
 /**
- * Remove a cookie by name
+ * Deletes a cookie by name
+ * 
+ * @param name - Cookie name
+ * @param path - Cookie path (defaults to '/')
  */
-export const removeCookie = (name: string): void => {
-  document.cookie = `${encodeURIComponent(name)}=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT; SameSite=None; Secure`;
-  console.log(`Cookie removed: ${name}`);
+export const deleteCookie = (name: string, path = '/'): void => {
+  document.cookie = `${encodeURIComponent(name)}=; path=${path}; expires=Thu, 01 Jan 1970 00:00:01 GMT;`;
+  console.log(`[Cookie] Deleted: ${name}`);
 };
 
 /**
- * Set a JSON object as cookie value
+ * Sets a JSON object as a cookie
+ * 
+ * @param name - Cookie name
+ * @param value - Object to stringify and store
+ * @param options - Cookie options
  */
-export const setJsonCookie = (name: string, value: any, options: Record<string, any> = {}): void => {
+export const setJsonCookie = (name: string, value: any, options: Record<string, string> = {}): void => {
   try {
     const jsonValue = JSON.stringify(value);
     setCookie(name, jsonValue, options);
   } catch (error) {
-    console.error(`Error setting JSON cookie ${name}:`, error);
+    console.error('[Cookie] Error setting JSON cookie:', error);
   }
 };
 
 /**
- * Get a JSON object from cookie value
+ * Gets a JSON cookie by name
+ * 
+ * @param name - Cookie name
+ * @returns Parsed object or null if not found or invalid JSON
  */
 export const getJsonCookie = <T = any>(name: string): T | null => {
+  const cookieValue = getCookie(name);
+  
+  if (!cookieValue) return null;
+  
   try {
-    const cookieValue = getCookie(name);
-    if (!cookieValue) return null;
     return JSON.parse(cookieValue) as T;
   } catch (error) {
-    console.error(`Error parsing JSON cookie ${name}:`, error);
+    console.error('[Cookie] Error parsing JSON cookie:', error);
     return null;
   }
 };

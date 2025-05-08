@@ -1,101 +1,82 @@
 
-import { logger } from '@/utils/logger';
+import { v5 as uuidv5 } from 'uuid';
+
+// Define a consistent namespace UUID for generating preview codes
+// Using a UUID v5 namespace to ensure deterministic results
+const PREVIEW_NAMESPACE = '9f9b2a8c-5c6d-4e7f-8f9a-1c2d3e4f5a6b';
 
 /**
- * Generates a preview link for a given project and client
- * @param projectId The project ID
- * @param clientIdentifier The client name or email for added uniqueness
- * @returns Encoded preview link
+ * Generates a deterministic preview link code based on project ID and optional identifier
+ * 
+ * @param projectId - The project ID to encode
+ * @param uniqueIdentifier - Optional additional identifier (like email) to make the link unique
+ * @returns The encoded preview link code (can be used in URLs)
  */
-export const generatePreviewLink = (projectId: string, clientIdentifier: string): string => {
-  if (!projectId) return '';
-  
-  // Basic encoding for the preview link
+export const generatePreviewLink = (
+  projectId: string,
+  uniqueIdentifier?: string
+): string => {
+  // Combine project ID with unique identifier if provided
+  const input = uniqueIdentifier 
+    ? `${projectId}:${uniqueIdentifier}`
+    : projectId;
+
   try {
-    // Create a string to encode
-    const toEncode = `p:${projectId}:c:${clientIdentifier}:t:${Date.now()}`;
+    // Generate a deterministic UUID v5 based on input and namespace
+    const uuid = uuidv5(input, PREVIEW_NAMESPACE);
     
-    // Use btoa for basic encoding
-    const encoded = btoa(toEncode).replace(/=/g, '').replace(/\+/g, '-').replace(/\//g, '_');
+    // Create a shorter, URL-friendly version by taking part of the UUID
+    // and encoding it to base64, then removing unwanted chars
+    const base64Encoded = Buffer.from(uuid.replace(/-/g, '').substring(0, 16), 'hex')
+      .toString('base64')
+      .replace(/\+/g, '-')
+      .replace(/\//g, '_')
+      .replace(/=/g, '');
+      
+    // Add a prefix for a more user-friendly format
+    const encodedPreview = `P${base64Encoded}`;
     
-    logger.debug('PREVIEW', 'Generated preview link', { projectId, encoded });
-    return encoded;
+    return encodedPreview;
   } catch (error) {
-    logger.error('PREVIEW', 'Error generating preview link', error);
-    // Fallback to a simple encoded version
-    return `prev-${projectId.substring(0, 8)}`;
+    console.error('Error generating preview link:', error);
+    
+    // Fallback to a simpler encoding if UUID v5 fails
+    const fallbackEncoding = Buffer.from(projectId).toString('base64')
+      .replace(/\+/g, '-')
+      .replace(/\//g, '_')
+      .replace(/=/g, '');
+      
+    return `P${fallbackEncoding.substring(0, 10)}`;
   }
 };
 
 /**
- * Extracts project ID from an encoded preview link
- * @param encodedLink The encoded preview link
- * @returns The project ID or null if invalid
+ * Checks if a given string is a valid encoded preview link
+ * 
+ * @param code - The code to validate
+ * @returns boolean indicating if this is an encoded preview link
  */
-export const getProjectIdFromPreviewLink = (encodedLink: string): string | null => {
-  if (!encodedLink) return null;
-  
-  // For backward compatibility with preview_code stored in the database
-  if (encodedLink.startsWith('P') && encodedLink.length <= 5) {
-    logger.debug('PREVIEW', 'Legacy preview code detected', { code: encodedLink });
-    return encodedLink;
-  }
-  
+export const isValidEncodedPreviewLink = (code: string): boolean => {
+  // Preview links should start with P and be followed by base64 characters
+  const previewLinkRegex = /^P[A-Za-z0-9\-_]+$/;
+  return previewLinkRegex.test(code);
+};
+
+/**
+ * Attempts to decode a preview link back to a project ID
+ * 
+ * @param encodedPreviewLink - The encoded preview link
+ * @returns The project ID if successful, null otherwise
+ */
+export const getProjectIdFromPreviewLink = (
+  encodedPreviewLink: string
+): string | null => {
   try {
-    // Convert from URL-safe base64
-    const safeEncodedLink = encodedLink.replace(/-/g, '+').replace(/_/g, '/');
-    
-    // Try to decode the link
-    const decoded = atob(safeEncodedLink);
-    
-    // Extract the project ID
-    const matches = decoded.match(/p:([^:]+):/);
-    if (matches && matches[1]) {
-      logger.debug('PREVIEW', 'Extracted project ID from link', { 
-        encoded: encodedLink, 
-        projectId: matches[1] 
-      });
-      return matches[1];
-    }
-    
-    logger.warn('PREVIEW', 'Failed to extract project ID from decoded link', { decoded });
+    // For new format links, we'll actually query the database 
+    // using the preview_code field
+    return encodedPreviewLink;
+  } catch (error) {
+    console.error('Error decoding preview link:', error);
     return null;
-  } catch (error) {
-    logger.error('PREVIEW', 'Error decoding preview link', { encodedLink, error });
-    
-    // If decoding fails, the link might be a direct project ID
-    return encodedLink;
   }
-};
-
-/**
- * Checks if a string looks like a valid encoded preview link
- */
-export const isValidEncodedPreviewLink = (link: string): boolean => {
-  if (!link) return false;
-  
-  // Check if it's a legacy preview code
-  if (link.startsWith('P') && link.length <= 5) {
-    return true;
-  }
-  
-  // Check if it looks like a base64 encoded string
-  const base64Regex = /^[A-Za-z0-9\-_]+$/;
-  return base64Regex.test(link) && link.length > 8;
-};
-
-/**
- * Attempts to decode a preview code from a URL path
- */
-export const decodePreviewCode = (path: string): string | null => {
-  if (!path) return null;
-  
-  // Extract the last segment of the path
-  const segments = path.split('/').filter(Boolean);
-  if (segments.length === 0) return null;
-  
-  const code = segments[segments.length - 1];
-  logger.debug('PREVIEW', 'Decoded preview code from path', { path, code });
-  
-  return code;
 };

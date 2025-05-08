@@ -2,16 +2,6 @@
 import { useState } from 'react';
 import { supabase } from '@/lib/supabase';
 
-interface UseProjectAccessProps {
-  projectId: string;
-  onVerify: (code: string, email: string) => void;
-}
-
-interface FormErrors {
-  code?: string;
-  email?: string;
-}
-
 // Cookie utility functions
 export const setCookie = (name: string, value: string, options: Record<string, string> = {}) => {
   const defaultOptions = {
@@ -49,17 +39,121 @@ export const getCookie = (name: string): string | null => {
   return null;
 };
 
-export const useProjectAccess = ({ projectId, onVerify }: UseProjectAccessProps) => {
+// The base project access hook with authorization state
+export const useProjectAccess = (projectId: string | null) => {
+  const [isAuthorized, setIsAuthorized] = useState(false);
+  const [loading, setLoading] = useState(true);
+
+  // Initialize and check authorization on mount
+  useState(() => {
+    if (!projectId) {
+      setLoading(false);
+      return;
+    }
+    
+    // Check for admin access
+    const hasAdminAccess = localStorage.getItem('admin_preview_access') === 'true';
+    if (hasAdminAccess) {
+      console.log('[useProjectAccess] Admin access detected, granting access');
+      setIsAuthorized(true);
+      setLoading(false);
+      return;
+    }
+    
+    // Check for project specific cookie authorization
+    const projectAuthCookie = getCookie(`preview_auth_${projectId}`);
+    if (projectAuthCookie === 'authorized') {
+      console.log('[useProjectAccess] Project authorization cookie found');
+      setIsAuthorized(true);
+      setLoading(false);
+      return;
+    }
+    
+    // Check for general preview access
+    const previewAccessCookie = getCookie('preview_access');
+    if (previewAccessCookie) {
+      try {
+        const accessData = JSON.parse(previewAccessCookie);
+        const isValid = 
+          accessData.code === projectId && 
+          accessData.timestamp && 
+          (Date.now() - accessData.timestamp < 24 * 60 * 60 * 1000); // 24 hours
+          
+        if (isValid) {
+          console.log('[useProjectAccess] Valid preview access cookie found');
+          setIsAuthorized(true);
+        } else {
+          console.log('[useProjectAccess] Preview access cookie invalid or expired');
+          setIsAuthorized(false);
+        }
+      } catch (err) {
+        console.error('[useProjectAccess] Error parsing access cookie:', err);
+        setIsAuthorized(false);
+      }
+    } else {
+      console.log('[useProjectAccess] No access cookie found');
+      setIsAuthorized(false);
+    }
+    
+    setLoading(false);
+  });
+  
+  // Function to grant access to a project
+  const grantAccess = (projectId: string, expirationHours = 24) => {
+    if (!projectId) return false;
+    
+    try {
+      // Set cookie with appropriate attributes
+      setCookie(`preview_auth_${projectId}`, 'authorized', {
+        maxAge: String(expirationHours * 60 * 60), // Convert hours to seconds
+        path: '/',
+        sameSite: 'Lax'
+      });
+      
+      setIsAuthorized(true);
+      return true;
+    } catch (err) {
+      console.error('[useProjectAccess] Error granting access:', err);
+      return false;
+    }
+  };
+  
+  // Function to revoke access
+  const revokeAccess = () => {
+    try {
+      // Remove all preview auth cookies
+      document.cookie = 'preview_access=; Path=/; Expires=Thu, 01 Jan 1970 00:00:01 GMT;';
+      
+      if (projectId) {
+        document.cookie = `preview_auth_${projectId}=; Path=/; Expires=Thu, 01 Jan 1970 00:00:01 GMT;`;
+      }
+      
+      setIsAuthorized(false);
+      return true;
+    } catch (err) {
+      console.error('[useProjectAccess] Error revoking access:', err);
+      return false;
+    }
+  };
+  
+  return { isAuthorized, loading, grantAccess, revokeAccess };
+};
+
+// The form-specific hook for handling project access verification
+export const useProjectAccessForm = ({ projectId, onVerify }: { 
+  projectId: string; 
+  onVerify: (code: string, email: string) => void; 
+}) => {
   // Always use decoded project ID
   const decodedProjectId = decodeURIComponent(projectId || '');
   const [code, setCode] = useState(decodedProjectId || '');
   const [email, setEmail] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [errors, setErrors] = useState<FormErrors>({});
+  const [errors, setErrors] = useState<{ code?: string; email?: string }>({});
 
   const validateInputs = (): boolean => {
-    const newErrors: FormErrors = {};
+    const newErrors: { code?: string; email?: string } = {};
     let isValid = true;
     
     // Validate code
@@ -101,12 +195,10 @@ export const useProjectAccess = ({ projectId, onVerify }: UseProjectAccessProps)
         const { error: authError } = await supabase.auth.signInAnonymously();
         if (authError) {
           console.warn('[ProjectAccessForm] Anonymous auth warning:', authError);
-          // Continue anyway - not critical for operation
         } else {
           console.log('[ProjectAccessForm] Anonymous auth successful');
         }
       } catch (authErr) {
-        // Just log, don't block the flow
         console.warn('[ProjectAccessForm] Anonymous auth error:', authErr);
       }
       

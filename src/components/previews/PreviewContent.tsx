@@ -6,7 +6,7 @@ import PreviewInstructions from '@/components/previews/PreviewInstructions';
 import PreviewPlayerList from '@/components/previews/player/PreviewPlayerList';
 import PreviewFeedbackForm from '@/components/previews/PreviewFeedbackForm';
 import PreviewNextSteps from '@/components/previews/PreviewNextSteps';
-import { ProjectItem } from '@/hooks/admin/usePreviewProjects';
+import { ProjectItem } from '@/types/project.types';
 
 interface PreviewContentProps {
   projectData: ProjectItem;

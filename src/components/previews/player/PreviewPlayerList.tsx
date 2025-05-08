@@ -1,7 +1,6 @@
-import React from 'react';
-import { Card } from "@/components/ui/card";
+
+import React, { useState } from 'react';
 import PreviewVersionCard from './PreviewVersionCard';
-import { useToast } from '@/hooks/use-toast';
 import { MusicPreview } from '@/types/project.types';
 
 interface PreviewPlayerListProps {
@@ -9,74 +8,51 @@ interface PreviewPlayerListProps {
   selectedVersion: string | null;
   setSelectedVersion: (id: string) => void;
   isApproved: boolean;
-  onPlay?: (version: MusicPreview) => void;
 }
 
-const PreviewPlayerList: React.FC<PreviewPlayerListProps> = ({
+const PreviewPlayerList: React.FC<PreviewPlayerListProps> = ({ 
   versions,
   selectedVersion,
   setSelectedVersion,
-  isApproved,
-  onPlay = () => {}
+  isApproved
 }) => {
-  const { toast } = useToast();
-  
-  console.log("PreviewPlayerList - isApproved:", isApproved);
-  console.log("PreviewPlayerList - versions:", versions);
-
-  if (!versions || versions.length === 0) {
-    return (
-      <div className="mb-10">
-        <h2 className="text-xl font-bold text-black mb-6 pb-2 border-b">Versões Disponíveis</h2>
-        <Card className="p-6 text-center">
-          <p className="text-gray-500">Nenhuma versão disponível no momento.</p>
-        </Card>
-      </div>
-    );
-  }
-
-  // Handle playing the version audio
-  const handlePlay = (version: MusicPreview) => {
-    // If version has fileId, create a Google Drive URL
-    if (version.fileId) {
-      const driveUrl = `https://drive.google.com/file/d/${version.fileId}/view`;
-      window.open(driveUrl, '_blank');
-      toast({
-        title: "Reproduzindo prévia",
-        description: "A prévia está sendo reproduzida no Google Drive."
-      });
-      return;
+  // Set first version as selected by default if none provided
+  React.useEffect(() => {
+    if (!selectedVersion && versions.length > 0) {
+      const recommendedVersion = versions.find(v => v.recommended);
+      setSelectedVersion(recommendedVersion?.id || versions[0].id);
     }
-    
-    // Otherwise use the provided audioUrl or url
-    if (version.audioUrl || version.url) {
-      window.open(version.audioUrl || version.url, '_blank');
-      toast({
-        title: "Reproduzindo prévia",
-        description: "A prévia está sendo reproduzida em uma nova aba."
-      });
-      return;
-    }
-    
-    // Fall back to onPlay handler
-    onPlay(version);
-  };
-  
+  }, [versions, selectedVersion, setSelectedVersion]);
+
   return (
-    <div className="mb-10">
-      <h2 className="text-xl font-bold text-black mb-6 pb-2 border-b">Versões Disponíveis</h2>
-      <div className="space-y-6">
-        {versions.map(version => (
-          <PreviewVersionCard 
-            key={version.id}
-            version={version}
-            isSelected={selectedVersion === version.id}
-            isApproved={isApproved}
-            onSelect={setSelectedVersion}
-            onPlay={handlePlay}
-          />
-        ))}
-      </div>
+    <div className="space-y-6">
+      {versions.length === 0 ? (
+        <div className="p-8 text-center">
+          <p className="text-gray-500">Nenhuma versão disponível ainda.</p>
+          <p className="text-sm text-gray-400 mt-2">Volte mais tarde para ver as versões propostas.</p>
+        </div>
+      ) : (
+        versions.map((version) => {
+          // Check if version has required fields
+          const hasValidFileId = Boolean(version.file_id);
+          const hasValidAudioUrl = Boolean(version.audio_url);
+          
+          if (!hasValidAudioUrl && !hasValidFileId) {
+            console.warn(`Version ${version.id} missing both audio_url and file_id`, version);
+            return null;
+          }
+          
+          return (
+            <PreviewVersionCard
+              key={version.id}
+              version={version}
+              isSelected={selectedVersion === version.id}
+              onSelect={() => setSelectedVersion(version.id)}
+              isApproved={isApproved}
+            />
+          );
+        }).filter(Boolean)
+      )}
     </div>
   );
 };

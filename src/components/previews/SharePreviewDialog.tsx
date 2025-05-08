@@ -1,138 +1,126 @@
 
 import React, { useState } from 'react';
-import { 
-  Dialog, 
-  DialogContent, 
-  DialogHeader, 
-  DialogTitle,
-  DialogFooter,
-  DialogDescription
-} from "@/components/ui/dialog";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Copy, Share } from 'lucide-react';
-import { useToast } from '@/hooks/use-toast';
-import { generatePreviewLink } from '@/utils/previewLinkUtils';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
+import { Input } from '@/components/ui/input';
+import { Button } from '@/components/ui/button';
+import { Label } from '@/components/ui/label';
+import { Copy, Mail, Share2, X } from 'lucide-react';
+import { toast } from '@/hooks/use-toast';
 
 interface SharePreviewDialogProps {
-  isOpen: boolean;
+  open: boolean;
   onOpenChange: (open: boolean) => void;
-  projectId: string;
-  projectTitle: string;
+  previewUrl: string;
+  clientEmail?: string;
 }
 
 const SharePreviewDialog: React.FC<SharePreviewDialogProps> = ({
-  isOpen,
+  open,
   onOpenChange,
-  projectId,
-  projectTitle
+  previewUrl,
+  clientEmail = ''
 }) => {
-  const { toast } = useToast();
-  const [recipientEmail, setRecipientEmail] = useState('');
+  const [recipientEmail, setRecipientEmail] = useState(clientEmail || '');
+  const [isLoading, setIsLoading] = useState(false);
   
-  // Gerar o link codificado para o preview
-  const encodedId = generatePreviewLink(projectId);
-  const encodedLink = `${window.location.origin}/preview/${encodedId}`;
-  
-  const handleCopy = (text: string) => {
-    navigator.clipboard.writeText(text).then(() => {
-      toast({
-        title: "Link copiado",
-        description: "O link foi copiado para a área de transferência."
-      });
+  const handleCopyLink = () => {
+    navigator.clipboard.writeText(previewUrl);
+    toast({
+      title: "Link copiado!",
+      description: "O link foi copiado para a área de transferência."
     });
   };
   
-  const handleShareViaEmail = () => {
-    // In a real implementation, this would send an email with the link
-    // For now, just show a toast notification
-    if (!recipientEmail) {
+  const handleSendEmail = async () => {
+    try {
+      setIsLoading(true);
+      
+      // In a real implementation, this would call an API to send the email
+      setTimeout(() => {
+        toast({
+          title: "Email enviado!",
+          description: `Preview enviada para ${recipientEmail}`
+        });
+        setIsLoading(false);
+      }, 1000);
+      
+    } catch (error) {
+      console.error('Error sending email:', error);
       toast({
-        title: "Email necessário",
-        description: "Por favor, informe um email para compartilhar.",
+        title: "Erro ao enviar email",
+        description: "Não foi possível enviar o email. Tente copiar o link manualmente.",
         variant: "destructive"
       });
-      return;
+      setIsLoading(false);
     }
-    
-    // Validate email
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    if (!emailRegex.test(recipientEmail)) {
-      toast({
-        title: "Email inválido",
-        description: "Por favor, informe um email válido.",
-        variant: "destructive"
-      });
-      return;
-    }
-    
-    toast({
-      title: "Link compartilhado",
-      description: `O link de prévia foi enviado para ${recipientEmail}.`
-    });
-    
-    // Close dialog
-    onOpenChange(false);
   };
   
   return (
-    <Dialog open={isOpen} onOpenChange={onOpenChange}>
+    <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent>
         <DialogHeader>
-          <DialogTitle>Compartilhar Prévia</DialogTitle>
+          <DialogTitle className="text-xl">Compartilhar Prévia</DialogTitle>
           <DialogDescription>
-            Compartilhe esta prévia com outras pessoas que precisam revisá-la.
+            Compartilhe o link de prévia diretamente ou envie por email.
           </DialogDescription>
         </DialogHeader>
         
         <div className="space-y-4 py-4">
           <div>
-            <div className="text-sm font-medium mb-2">Link de prévia seguro</div>
-            <div className="flex">
+            <Label htmlFor="preview-link">Link da Prévia</Label>
+            <div className="flex mt-1.5">
               <Input 
-                value={encodedLink} 
+                id="preview-link" 
+                value={previewUrl} 
                 readOnly 
-                className="flex-1 mr-2"
+                className="flex-1"
               />
               <Button 
                 variant="outline" 
-                size="icon"
-                onClick={() => handleCopy(encodedLink)}
+                size="icon" 
+                className="ml-2" 
+                onClick={handleCopyLink}
               >
                 <Copy className="h-4 w-4" />
               </Button>
             </div>
-            <p className="text-xs text-gray-500 mt-1">
-              Este é um link codificado seguro para compartilhar com os clientes.
-            </p>
           </div>
           
-          <div>
-            <div className="text-sm font-medium mb-2">Compartilhar por email</div>
-            <div className="flex">
-              <Input
-                placeholder="email@exemplo.com"
-                type="email"
-                value={recipientEmail}
-                onChange={(e) => setRecipientEmail(e.target.value)}
-                className="flex-1 mr-2"
-              />
+          <div className="bg-gray-50 p-4 rounded-md">
+            <h3 className="font-medium text-sm text-gray-700 mb-2 flex items-center">
+              <Mail className="h-4 w-4 mr-1.5" />
+              Enviar por Email
+            </h3>
+            
+            <div className="space-y-3">
+              <div>
+                <Label htmlFor="recipient">Email do Destinatário</Label>
+                <Input 
+                  id="recipient"
+                  type="email"
+                  value={recipientEmail}
+                  onChange={(e) => setRecipientEmail(e.target.value)}
+                  placeholder="cliente@exemplo.com"
+                />
+              </div>
+              
               <Button 
-                variant="outline"
-                onClick={handleShareViaEmail}
+                onClick={handleSendEmail} 
+                disabled={isLoading || !recipientEmail}
+                className="w-full"
               >
-                <Share className="h-4 w-4 mr-2" />
-                Enviar
+                {isLoading ? "Enviando..." : "Enviar Email"}
               </Button>
             </div>
           </div>
         </div>
         
-        <DialogFooter>
-          <Button variant="ghost" onClick={() => onOpenChange(false)}>
+        <div className="flex justify-end">
+          <Button variant="outline" onClick={() => onOpenChange(false)}>
+            <X className="h-4 w-4 mr-2" />
             Fechar
           </Button>
-        </DialogFooter>
+        </div>
       </DialogContent>
     </Dialog>
   );

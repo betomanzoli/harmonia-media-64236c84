@@ -18,7 +18,7 @@ export interface BaseVersionItem {
   url?: string;
 }
 
-// Version type used in project.versionsList
+// Version type used in project.versions_list
 export interface ProjectVersion extends BaseVersionItem {
   // Additional properties specific to ProjectVersion
   file_id?: string;

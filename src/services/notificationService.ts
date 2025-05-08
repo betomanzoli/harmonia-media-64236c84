@@ -1,85 +1,74 @@
-interface NotificationPayload {
-  [key: string]: any;
+
+import { supabase } from '@/integrations/supabase/client';
+import { logger } from '@/utils/logger';
+
+type NotificationType = 'feedback_received' | 'preview_approved' | 'preview_created';
+
+interface NotificationOptions {
+  projectId: string;
+  clientName?: string;
+  message?: string;
+  versionId?: string;
 }
 
-class NotificationService {
-  private handlers: Record<string, Array<(data: any) => void>> = {};
-
-  // Register a handler for a specific event type
-  public subscribe(eventType: string, handler: (data: any) => void): () => void {
-    if (!this.handlers[eventType]) {
-      this.handlers[eventType] = [];
-    }
-    this.handlers[eventType].push(handler);
-    
-    // Return unsubscribe function
-    return () => {
-      this.handlers[eventType] = this.handlers[eventType].filter(h => h !== handler);
-    };
-  }
-
-  // Trigger notification for an event type
-  public notify(eventType: string, payload: NotificationPayload): void {
-    console.log(`📢 Notification service: ${eventType}`, payload);
-    
-    // Save to localStorage for persistence
+/**
+ * Service for sending notifications to administrators and clients
+ */
+export const notificationService = {
+  /**
+   * Sends a notification based on type and options
+   */
+  notify: async (type: NotificationType, options: NotificationOptions): Promise<boolean> => {
     try {
-      const notifications = this.getStoredNotifications();
-      notifications.push({ 
-        type: eventType, 
-        payload, 
-        timestamp: new Date().toISOString() 
-      });
+      logger.info('NOTIFICATION', `Sending ${type} notification`, options);
       
-      // Keep only the most recent 100 notifications
-      if (notifications.length > 100) {
-        notifications.shift();
+      // Record notification in the database for tracking
+      const { error } = await supabase
+        .from('project_history')
+        .insert({
+          project_id: options.projectId,
+          action: type,
+          details: {
+            ...options,
+            timestamp: new Date().toISOString()
+          }
+        });
+
+      if (error) {
+        logger.error('NOTIFICATION', 'Failed to record notification', error);
+        return false;
       }
       
-      localStorage.setItem('harmonIA_notifications', JSON.stringify(notifications));
-    } catch (error) {
-      console.error('Error storing notification:', error);
+      // For production, we would also implement email/SMS notifications here
+      // using edge functions, but for now we'll just log them
+      
+      logger.info('NOTIFICATION', 'Notification recorded successfully');
+      return true;
+    } catch (err) {
+      logger.error('NOTIFICATION', 'Failed to send notification', err);
+      return false;
     }
-    
-    // Call registered handlers
-    if (this.handlers[eventType]) {
-      this.handlers[eventType].forEach(handler => {
-        try {
-          handler(payload);
-        } catch (error) {
-          console.error(`Error in notification handler for ${eventType}:`, error);
-        }
-      });
-    }
-    
-    // Also call global handlers
-    if (this.handlers['*']) {
-      this.handlers['*'].forEach(handler => {
-        try {
-          handler({ type: eventType, payload });
-        } catch (error) {
-          console.error(`Error in global notification handler:`, error);
-        }
-      });
-    }
-  }
-
-  // Get all stored notifications
-  public getStoredNotifications(): Array<{ type: string; payload: any; timestamp: string }> {
-    try {
-      const storedNotifications = localStorage.getItem('harmonIA_notifications');
-      return storedNotifications ? JSON.parse(storedNotifications) : [];
-    } catch (error) {
-      console.error('Error retrieving stored notifications:', error);
-      return [];
-    }
-  }
+  },
   
-  // Clear all notifications
-  public clearNotifications(): void {
-    localStorage.removeItem('harmonIA_notifications');
+  /**
+   * Special case for sending feedback notifications
+   */
+  notifyFeedback: async (projectId: string, clientName: string, feedback: string): Promise<boolean> => {
+    return notificationService.notify('feedback_received', {
+      projectId,
+      clientName,
+      message: feedback
+    });
+  },
+  
+  /**
+   * Special case for sending approval notifications
+   */
+  notifyApproval: async (projectId: string, clientName: string, versionId: string): Promise<boolean> => {
+    return notificationService.notify('preview_approved', {
+      projectId,
+      clientName,
+      versionId
+    });
   }
-}
-
-// Export a singleton instance
-export const notificationService = new NotificationService();
+};
