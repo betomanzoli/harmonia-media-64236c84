@@ -8,6 +8,7 @@ export interface BaseVersionItem {
   recommended?: boolean;
   final?: boolean;
   createdAt?: string;
+  title?: string; // Add title property to base interface
 }
 
 // Version type used in project.versionsList
@@ -19,6 +20,7 @@ export interface ProjectVersion extends BaseVersionItem {
   file_url?: string; // Added for compatibility with Supabase naming convention
   created_at?: string; // Added for compatibility with Supabase naming convention
   audioUrl: string; // Required in this interface
+  title?: string; // Ensure title is available for ProjectVersion too
 }
 
 // Music preview type that includes title (mapped from name)
@@ -80,4 +82,15 @@ export interface ProjectFile {
   created_at: string;
   version?: number;
   notes?: string;
+}
+
+// Add a VersionItem type to ensure compatibility with existing code
+export interface VersionItem extends BaseVersionItem {
+  file_url?: string;
+  fileId?: string;
+  dateAdded?: string;
+  created_at?: string;
+  additionalLinks?: any[];
+  title: string; // Add this to fix the TypeScript errors
+  audioUrl?: string; // Make it optional here
 }

@@ -163,7 +163,7 @@ const MusicPreviews: React.FC = () => {
     : (Array.isArray(projectData?.versionsList) 
         ? projectData.versionsList.map(v => ({
             id: v.id,
-            title: v.name || `Versão ${v.id}`,
+            title: v.title || v.name || `Versão ${v.id}`,
             description: v.description || 'Sem descrição',
             audioUrl: v.audioUrl || v.file_url || '', // Handle both naming conventions
             recommended: v.recommended || false,

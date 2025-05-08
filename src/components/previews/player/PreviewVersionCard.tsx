@@ -3,17 +3,7 @@ import React from 'react';
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Check, Play, Download } from 'lucide-react';
-
-interface MusicPreview {
-  id: string;
-  title: string;
-  description: string;
-  audioUrl?: string;
-  url?: string;
-  recommended?: boolean;
-  finalVersionUrl?: string;
-  stemsUrl?: string;
-}
+import { MusicPreview } from '@/types/project.types';
 
 interface PreviewVersionCardProps {
   version: MusicPreview;

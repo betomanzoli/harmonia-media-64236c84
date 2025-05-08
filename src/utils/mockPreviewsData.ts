@@ -1,5 +1,5 @@
 
-import { ProjectItem } from '@/hooks/admin/usePreviewProjects';
+import { ProjectItem } from '@/types/project.types';
 
 export const generateMockPreviews = (): ProjectItem[] => {
   const today = new Date();
@@ -28,6 +28,7 @@ export const generateMockPreviews = (): ProjectItem[] => {
         {
           id: "v1",
           name: "Versão Acústica",
+          title: "Versão Acústica", // Added title property
           description: "Versão com violão e voz, arranjo minimalista",
           audioUrl: "https://samplelib.com/lib/preview/mp3/sample-3s.mp3", // Ensure this field exists
           createdAt: new Date("2025-04-10").toISOString(),
@@ -39,6 +40,7 @@ export const generateMockPreviews = (): ProjectItem[] => {
         {
           id: "v2",
           name: "Versão Completa",
+          title: "Versão Completa", // Added title property
           description: "Versão com banda completa, arranjo final sugerido",
           audioUrl: "https://samplelib.com/lib/preview/mp3/sample-6s.mp3", // Ensure this field exists
           createdAt: new Date("2025-04-12").toISOString(),
@@ -66,6 +68,7 @@ export const generateMockPreviews = (): ProjectItem[] => {
         {
           id: "v1",
           name: "Versão Demo",
+          title: "Versão Demo", // Added title property
           description: "Primeira versão para avaliação",
           audioUrl: "https://samplelib.com/lib/preview/mp3/sample-9s.mp3", // Ensure this field exists
           createdAt: new Date("2025-04-05").toISOString(),
@@ -94,6 +97,7 @@ export const generateMockPreviews = (): ProjectItem[] => {
         {
           id: "v1",
           name: "Versão Inicial",
+          title: "Versão Inicial", // Added title property
           description: "Primeiro conceito da música",
           audioUrl: "https://samplelib.com/lib/preview/mp3/sample-12s.mp3", // Ensure this field exists
           createdAt: new Date("2025-04-01").toISOString(),
@@ -105,6 +109,7 @@ export const generateMockPreviews = (): ProjectItem[] => {
         {
           id: "v2",
           name: "Versão Revisada",
+          title: "Versão Revisada", // Added title property
           description: "Ajustes após primeiro feedback",
           audioUrl: "https://samplelib.com/lib/preview/mp3/sample-15s.mp3", // Ensure this field exists
           createdAt: new Date("2025-04-02").toISOString(),
@@ -116,6 +121,7 @@ export const generateMockPreviews = (): ProjectItem[] => {
         {
           id: "v3",
           name: "Versão Final",
+          title: "Versão Final", // Added title property
           description: "Versão aprovada pelo cliente",
           audioUrl: "https://samplelib.com/lib/preview/mp3/sample-9s.mp3", // Ensure this field exists
           createdAt: new Date("2025-04-03").toISOString(),
