@@ -1,3 +1,4 @@
+
 // Base version interface that all version-related types can extend from
 export interface BaseVersionItem {
   id: string;
