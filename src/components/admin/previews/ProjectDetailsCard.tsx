@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Card, CardHeader, CardTitle, CardContent, CardFooter } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -17,10 +16,10 @@ interface ProjectDetailsCardProps {
 const ProjectDetailsCard: React.FC<ProjectDetailsCardProps> = ({ project, onUpdate }) => {
   const [isEditing, setIsEditing] = useState(false);
   const [editedProject, setEditedProject] = useState({
-    clientName: project.clientName,
-    clientEmail: project.clientEmail || '',
-    clientPhone: project.clientPhone || '',
-    packageType: project.packageType
+    client_name: project.client_name,
+    client_email: project.client_email || '',
+    client_phone: project.client_phone || '',
+    package_type: project.package_type
   });
   const { toast } = useToast();
 
@@ -67,7 +66,12 @@ const ProjectDetailsCard: React.FC<ProjectDetailsCardProps> = ({ project, onUpda
   };
   
   const handleEditSubmit = () => {
-    onUpdate(editedProject);
+    onUpdate({
+      client_name: editedProject.client_name,
+      client_email: editedProject.client_email,
+      client_phone: editedProject.client_phone,
+      package_type: editedProject.package_type
+    });
     setIsEditing(false);
     toast({
       title: 'Projeto atualizado',
@@ -109,8 +113,8 @@ const ProjectDetailsCard: React.FC<ProjectDetailsCardProps> = ({ project, onUpda
               <Label htmlFor="clientName">Nome do Cliente</Label>
               <Input
                 id="clientName"
-                value={editedProject.clientName}
-                onChange={(e) => setEditedProject({...editedProject, clientName: e.target.value})}
+                value={editedProject.client_name}
+                onChange={(e) => setEditedProject({...editedProject, client_name: e.target.value})}
               />
             </div>
             
@@ -119,8 +123,8 @@ const ProjectDetailsCard: React.FC<ProjectDetailsCardProps> = ({ project, onUpda
               <Input
                 id="clientEmail"
                 type="email"
-                value={editedProject.clientEmail}
-                onChange={(e) => setEditedProject({...editedProject, clientEmail: e.target.value})}
+                value={editedProject.client_email}
+                onChange={(e) => setEditedProject({...editedProject, client_email: e.target.value})}
               />
             </div>
             
@@ -128,8 +132,8 @@ const ProjectDetailsCard: React.FC<ProjectDetailsCardProps> = ({ project, onUpda
               <Label htmlFor="clientPhone">Telefone do Cliente</Label>
               <Input
                 id="clientPhone"
-                value={editedProject.clientPhone}
-                onChange={(e) => setEditedProject({...editedProject, clientPhone: e.target.value})}
+                value={editedProject.client_phone}
+                onChange={(e) => setEditedProject({...editedProject, client_phone: e.target.value})}
               />
             </div>
             
@@ -137,8 +141,8 @@ const ProjectDetailsCard: React.FC<ProjectDetailsCardProps> = ({ project, onUpda
               <Label htmlFor="packageType">Tipo de Pacote</Label>
               <Input
                 id="packageType"
-                value={editedProject.packageType}
-                onChange={(e) => setEditedProject({...editedProject, packageType: e.target.value})}
+                value={editedProject.package_type}
+                onChange={(e) => setEditedProject({...editedProject, package_type: e.target.value})}
               />
             </div>
           </div>
@@ -151,22 +155,22 @@ const ProjectDetailsCard: React.FC<ProjectDetailsCardProps> = ({ project, onUpda
             
             <div className="flex items-center justify-between">
               <span className="text-sm text-gray-500">Cliente:</span>
-              <span className="font-medium">{project.clientName}</span>
+              <span className="font-medium">{project.client_name}</span>
             </div>
             
             <div className="flex items-center justify-between">
               <span className="text-sm text-gray-500">Email:</span>
-              <span>{project.clientEmail || 'Não informado'}</span>
+              <span>{project.client_email || 'Não informado'}</span>
             </div>
             
             <div className="flex items-center justify-between">
               <span className="text-sm text-gray-500">Telefone:</span>
-              <span>{project.clientPhone || 'Não informado'}</span>
+              <span>{project.client_phone || 'Não informado'}</span>
             </div>
             
             <div className="flex items-center justify-between">
               <span className="text-sm text-gray-500">Pacote:</span>
-              <span>{project.packageType}</span>
+              <span>{project.package_type}</span>
             </div>
             
             <div className="flex items-center justify-between">
@@ -178,7 +182,7 @@ const ProjectDetailsCard: React.FC<ProjectDetailsCardProps> = ({ project, onUpda
               <span className="text-sm text-gray-500">Criado em:</span>
               <div className="flex items-center">
                 <Calendar className="h-4 w-4 mr-1 text-gray-500" />
-                <span>{formatDate(project.createdAt)}</span>
+                <span>{formatDate(project.created_at)}</span>
               </div>
             </div>
             
@@ -186,9 +190,9 @@ const ProjectDetailsCard: React.FC<ProjectDetailsCardProps> = ({ project, onUpda
               <span className="text-sm text-gray-500">Expira em:</span>
               <div className="flex items-center">
                 <Clock className="h-4 w-4 mr-1 text-gray-500" />
-                <span>{formatDate(project.expirationDate)}</span>
+                <span>{formatDate(project.expiration_date)}</span>
                 <span className="ml-2 text-xs text-gray-500">
-                  ({calculateDaysRemaining(project.expirationDate)})
+                  ({calculateDaysRemaining(project.expiration_date)})
                 </span>
               </div>
             </div>

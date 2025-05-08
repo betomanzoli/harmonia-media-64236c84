@@ -1,3 +1,4 @@
+
 import React, { useState } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { VersionItem } from '@/types/project.types';
@@ -19,8 +20,8 @@ const VersionCard: React.FC<VersionCardProps> = ({
   onDeleteVersion
 }) => {
   const [isPlaying, setIsPlaying] = useState(false);
-  // Use audioUrl or file_url for backward compatibility
-  const audioSource = version.audioUrl || version.file_url || '';
+  // Use audio_url or file_url for backward compatibility
+  const audioSource = version.audio_url || version.file_url || '';
   const [audio] = useState(new Audio(audioSource));
   const { toast } = useToast();
 
@@ -31,9 +32,9 @@ const VersionCard: React.FC<VersionCardProps> = ({
       return;
     }
     
-    // If we have a fileId, open in Google Drive instead of playing locally
-    if (version.fileId) {
-      const driveUrl = `https://drive.google.com/file/d/${version.fileId}/view`;
+    // If we have a file_id, open in Google Drive instead of playing locally
+    if (version.file_id) {
+      const driveUrl = `https://drive.google.com/file/d/${version.file_id}/view`;
       window.open(driveUrl, '_blank');
       toast({
         title: "Abrindo no Google Drive",
@@ -93,7 +94,7 @@ const VersionCard: React.FC<VersionCardProps> = ({
   };
 
   // Get displayed date, ensuring we have a valid format
-  const displayDate = version.dateAdded || version.createdAt || version.created_at || new Date().toISOString();
+  const displayDate = version.date_added || version.created_at || new Date().toISOString();
 
   // Add logging to debug the version object
   console.log('[VersionCard] Rendering with version data:', version);
@@ -129,11 +130,11 @@ const VersionCard: React.FC<VersionCardProps> = ({
             </div>
             
             {/* Additional links for final versions */}
-            {version.additionalLinks && version.additionalLinks.length > 0 && (
+            {version.additional_links && version.additional_links.length > 0 && (
               <div className="mt-2 space-y-2">
                 <h4 className="text-sm font-medium">Arquivos adicionais:</h4>
                 <div className="space-y-1">
-                  {version.additionalLinks.map((link, index) => (
+                  {version.additional_links.map((link, index) => (
                     <div key={index} className="flex items-center justify-between bg-gray-50 p-2 rounded text-sm">
                       <span className="font-medium">{typeof link === 'string' ? `Link ${index + 1}` : link.label}</span>
                       <div className="flex gap-1">
@@ -157,7 +158,7 @@ const VersionCard: React.FC<VersionCardProps> = ({
               size="sm" 
               className={`${isPlaying ? 'bg-gray-100' : ''}`} 
               onClick={handleTogglePlay} 
-              disabled={!audioSource && !version.fileId}
+              disabled={!audioSource && !version.file_id}
             >
               {isPlaying ? <Pause className="h-4 w-4 mr-2" /> : <Play className="h-4 w-4 mr-2" />}
               {isPlaying ? 'Pausar' : 'Ouvir'}

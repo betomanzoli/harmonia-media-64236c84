@@ -44,8 +44,8 @@ const PreviewContent: React.FC<PreviewContentProps> = ({
         status="waiting"
         createdAt={new Date().toISOString()}
         projectData={{
-          projectTitle: projectData?.projectTitle || projectData?.packageType || '',
-          clientName: projectData?.clientName || '',
+          projectTitle: projectData?.project_title || projectData?.package_type || '',
+          clientName: projectData?.client_name || '',
           status: status
         }}
       />
@@ -66,7 +66,7 @@ const PreviewContent: React.FC<PreviewContentProps> = ({
           <PreviewPlayerList 
             versions={versionsForPlayer.map(preview => ({
               ...preview,
-              description: preview.description || `Versão musical para ${projectData?.clientName || 'Cliente'}`
+              description: preview.description || `Versão musical para ${projectData?.client_name || 'Cliente'}`
             }))}
             selectedVersion={selectedPreview}
             setSelectedVersion={setSelectedPreview}

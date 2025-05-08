@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -21,7 +20,7 @@ const PreviewsHeader: React.FC<PreviewsHeaderProps> = ({ scrollToNewForm }) => {
     
   // Get unique client IDs to count unique clients
   // Using email as a unique identifier since clientId might not be available
-  const uniqueClients = [...new Set(projects.map(p => p.clientEmail))].length;
+  const uniqueClients = [...new Set(projects.map(p => p.client_email))].length;
   
   // Total projects count
   const totalProjects = projects.length;

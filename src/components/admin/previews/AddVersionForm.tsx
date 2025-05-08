@@ -37,14 +37,14 @@ const AddVersionForm: React.FC<AddVersionFormProps> = ({
       name: name || 'Nova Versão',
       title: name || 'Nova Versão', // Add title field to match VersionItem interface
       description: description || 'Sem descrição adicional',
-      audioUrl: audioUrl,
+      audio_url: audioUrl,
       // Set both naming conventions to ensure compatibility
       file_url: audioUrl, 
       recommended: isRecommended,
       final: isFinal,
-      createdAt: new Date().toISOString(),
-      finalVersionUrl: '',
-      stemsUrl: ''
+      created_at: new Date().toISOString(),
+      final_version_url: '',
+      stems_url: ''
     };
     
     console.log(`[AddVersionForm] Adding new version:`, newVersion);

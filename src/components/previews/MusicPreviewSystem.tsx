@@ -54,7 +54,7 @@ const MusicPreviewSystem: React.FC<MusicPreviewSystemProps> = ({ projectId }) =>
 
     if (projectData) {
       console.log("🔍 Project status:", projectData.status);
-      console.log("🔍 Project versions:", projectData.versionsList || []);
+      console.log("🔍 Project versions:", projectData.versions_list || []);
       console.log("🔍 Project previews:", projectData.previews || []);
       
       // If project status is feedback or approved, mark feedback as submitted
@@ -175,18 +175,18 @@ const MusicPreviewSystem: React.FC<MusicPreviewSystemProps> = ({ projectId }) =>
   };
 
   // Ensures we have the necessary properties
-  const projectTitle = projectData?.projectTitle || "Projeto de Música Personalizada";
-  const clientName = projectData?.clientName || "Cliente";
+  const projectTitle = projectData?.project_title || "Projeto de Música Personalizada";
+  const clientName = projectData?.client_name || "Cliente";
   const status = projectData?.status || "waiting";
-  const packageType = formatPackageType(projectData?.packageType);
-  const createdAt = projectData?.createdAt || new Date().toISOString();
+  const packageType = formatPackageType(projectData?.package_type);
+  const createdAt = projectData?.created_at || new Date().toISOString();
   
-  // Convert versionsList to MusicPreview format ensuring title and description fields exist
+  // Convert versions_list to MusicPreview format ensuring title and description fields exist
   let versionsForPlayer: MusicPreview[] = [];
   
   console.log("🎵 Processando versões para o player:", {
     previews: projectData?.previews,
-    versionsList: projectData?.versionsList
+    versionsList: projectData?.versions_list
   });
   
   if (Array.isArray(projectData?.previews) && projectData.previews.length > 0) {
@@ -197,27 +197,27 @@ const MusicPreviewSystem: React.FC<MusicPreviewSystemProps> = ({ projectId }) =>
       title: preview.title || preview.name || `Versão ${preview.id}`,
       name: preview.name || preview.title || `Versão ${preview.id}`,
       description: preview.description || 'Sem descrição',
-      audioUrl: preview.audioUrl || preview.audio_url || preview.file_url || '',
-      fileId: preview.fileId || undefined,
-      finalVersionUrl: preview.finalVersionUrl || undefined,
-      stemsUrl: preview.stemsUrl || undefined
+      audio_url: preview.audio_url || preview.file_url || '',
+      file_id: preview.file_id || undefined,
+      final_version_url: preview.final_version_url || undefined,
+      stems_url: preview.stems_url || undefined
     })) as MusicPreview[];
     console.log("🎵 Versões obtidas de 'previews':", versionsForPlayer);
-  } else if (Array.isArray(projectData?.versionsList) && projectData.versionsList.length > 0) {
-    // Convert versionsList to MusicPreview format
-    versionsForPlayer = projectData.versionsList.map((v) => ({
+  } else if (Array.isArray(projectData?.versions_list) && projectData.versions_list.length > 0) {
+    // Convert versions_list to MusicPreview format
+    versionsForPlayer = projectData.versions_list.map((v) => ({
       id: v.id,
       title: v.title || v.name || `Versão ${v.id}`, 
       name: v.name || v.title || `Versão ${v.id}`,
       description: v.description || 'Sem descrição',
-      audioUrl: v.audioUrl || v.audio_url || v.file_url || '',
-      fileId: v.fileId || undefined,
+      audio_url: v.audio_url || v.file_url || '',
+      file_id: v.file_id || undefined,
       recommended: v.recommended || false,
-      finalVersionUrl: v.finalVersionUrl || '',
-      stemsUrl: v.stemsUrl || '',
-      createdAt: v.createdAt || v.created_at || new Date().toISOString()
+      final_version_url: v.final_version_url || '',
+      stems_url: v.stems_url || '',
+      created_at: v.created_at || new Date().toISOString()
     })) as MusicPreview[];
-    console.log("🎵 Versões obtidas de 'versionsList':", versionsForPlayer);
+    console.log("🎵 Versões obtidas de 'versions_list':", versionsForPlayer);
   } else {
     console.log("🎵 Nenhuma versão encontrada no objeto projectData");
   }
@@ -238,17 +238,17 @@ const MusicPreviewSystem: React.FC<MusicPreviewSystemProps> = ({ projectId }) =>
           id: 'v1',
           title: 'Versão Acústica (EXEMPLO)',
           description: 'Versão suave com violão e piano',
-          audioUrl: 'https://drive.google.com/file/d/1H62ylCwQYJ23BLpygtvNmCgwTDcHX6Cl/preview',
+          audio_url: 'https://drive.google.com/file/d/1H62ylCwQYJ23BLpygtvNmCgwTDcHX6Cl/preview',
           name: 'Versão Acústica (EXEMPLO)',
-          createdAt: new Date().toISOString()
+          created_at: new Date().toISOString()
         },
         {
           id: 'v2',
           title: 'Versão Orquestral (EXEMPLO)',
           description: 'Arranjo completo com cordas e metais',
-          audioUrl: 'https://drive.google.com/file/d/11c6JahRd5Lx0iKCL_gHZ0zrZ3LFBJ47a/preview',
+          audio_url: 'https://drive.google.com/file/d/11c6JahRd5Lx0iKCL_gHZ0zrZ3LFBJ47a/preview',
           name: 'Versão Orquestral (EXEMPLO)',
-          createdAt: new Date().toISOString()
+          created_at: new Date().toISOString()
         }
       ] as MusicPreview[];
     }
@@ -331,7 +331,7 @@ const MusicPreviewSystem: React.FC<MusicPreviewSystemProps> = ({ projectId }) =>
           projectTitle: projectTitle,
           clientName: clientName,
           status: status as 'waiting' | 'feedback' | 'approved',
-          packageType: projectData.packageType,
+          packageType: projectData.package_type,
           creationDate: createdAt
         }} />
       </div>
