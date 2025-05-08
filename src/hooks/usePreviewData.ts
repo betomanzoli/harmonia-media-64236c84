@@ -1,346 +1,221 @@
 
 import { useState, useEffect } from 'react';
+import { supabase, signInAnonymously, createAnonymousClient } from '@/integrations/supabase/client';
 import { getProjectIdFromPreviewLink, isValidEncodedPreviewLink } from '@/utils/previewLinkUtils';
-import { supabase } from '@/lib/supabase';
-import { getCookie } from '@/components/previews/access/useProjectAccess';
+import { ProjectItem } from '@/types/project.types';
+import { logger } from '@/utils/logger';
+import { useProjectAccess } from '@/components/previews/access/useProjectAccess';
 
-// Define the types we'll use
-interface VersionItem {
-  id: string;
-  name: string;
-  description: string;
-  audioUrl?: string;
-  file_url?: string;
-  recommended?: boolean;
-  final?: boolean;
-  createdAt?: string;
-  created_at?: string;
-  fileId?: string;
-}
-
-interface ProjectData {
-  id: string;
-  clientName: string;
-  projectTitle?: string;
-  status: 'waiting' | 'feedback' | 'approved';
-  createdAt: string;
-  expirationDate?: string;
-  packageType?: string;
-  versions?: number;
-  versionsList?: VersionItem[];
-  previews?: VersionItem[];
-  feedbackHistory?: any[];
-  history?: any[];
-  lastActivityDate?: string;
-  preview_code?: string;
-}
+// Default data for fallback cases
+const fallbackProject: ProjectItem = {
+  id: 'fallback-project',
+  client_name: 'Demo Client',
+  project_title: 'Música Personalizada (Demo)',
+  package_type: 'standard',
+  status: 'waiting',
+  created_at: new Date().toISOString(),
+  last_activity_date: new Date().toISOString(),
+  expiration_date: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString(),
+  versions: 2,
+  versions_list: [],
+  feedback_history: [],
+  history: []
+};
 
 export const usePreviewData = (previewId: string | undefined) => {
-  const [projectData, setProjectData] = useState<ProjectData | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
-  const [isError, setIsError] = useState(false);
+  const [projectData, setProjectData] = useState<ProjectItem | null>(null);
+  const [isLoading, setIsLoading] = useState<boolean>(true);
+  const [isError, setIsError] = useState<boolean>(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [actualProjectId, setActualProjectId] = useState<string | null>(null);
-
+  
+  // Initialize the project access hook
+  const { isAuthorized, loading: accessLoading, grantAccess } = useProjectAccess(actualProjectId);
+  
+  // Effect to handle preview ID decoding and project loading
   useEffect(() => {
-    if (!previewId) {
-      console.log('[usePreviewData] No previewId provided');
-      setIsLoading(false);
-      setIsError(true);
-      setErrorMessage('Código de prévia não fornecido');
-      return;
-    }
-
-    const fetchData = async () => {
-      setIsLoading(true);
-      setIsError(false);
-      setErrorMessage(null);
-
-      console.log(`[usePreviewData] 🔍 Fetching data for previewId=${previewId}`);
+    const loadPreviewData = async () => {
+      if (!previewId) {
+        setIsError(true);
+        setErrorMessage('ID da prévia não fornecido.');
+        setIsLoading(false);
+        return;
+      }
 
       try {
-        // Try anonymous authentication for better RLS support
-        try {
-          const { error: authError } = await supabase.auth.signInAnonymously();
-          if (authError) {
-            // Log but continue - don't block preview access on auth failure
-            console.warn('[usePreviewData] Anonymous auth warning:', authError);
-          } else {
-            console.log('[usePreviewData] Anonymous auth successful');
-          }
-        } catch (authErr) {
-          console.warn('[usePreviewData] Anonymous auth error:', authErr);
-        }
-
-        // Check if this is an encoded preview link or direct ID
-        const isEncodedLink = isValidEncodedPreviewLink(previewId);
-        let decodedId: string | null = null;
+        logger.info('PREVIEW', `Loading preview data for: ${previewId}`);
         
-        if (isEncodedLink) {
-          decodedId = getProjectIdFromPreviewLink(previewId);
-          console.log(`[usePreviewData] 🔑 Decoded ID=${decodedId}`);
-        } else {
-          // For direct IDs, check if the user has admin access
-          const isAdmin = getCookie('admin_preview_access') === 'true';
-          if (isAdmin) {
-            decodedId = previewId;
-            console.log(`[usePreviewData] 👨‍💼 Admin access with direct ID=${previewId}`);
-          } else {
-            console.log('[usePreviewData] ⚠️ Direct ID access attempt without admin rights');
-            decodedId = previewId; // Still try with the provided ID as a fallback
-          }
-        }
+        // Determine if this is an encoded preview link or direct ID
+        const isEncoded = isValidEncodedPreviewLink(previewId);
+        logger.debug('PREVIEW', `Preview ID format: ${isEncoded ? 'encoded' : 'direct'}`);
+        
+        // Get the actual project ID either from the encoded link or use directly
+        const decodedId = isEncoded ? getProjectIdFromPreviewLink(previewId) : previewId;
         
         if (!decodedId) {
-          console.log('[usePreviewData] ❌ Failed to decode preview ID');
           setIsError(true);
-          setErrorMessage('ID de prévia inválido');
+          setErrorMessage('Link de prévia inválido.');
+          setIsLoading(false);
           return;
         }
-
-        setActualProjectId(decodedId);
-
-        // First try to find project by preview_code
-        console.log('[usePreviewData] 🔍 Looking up by preview_code:', previewId);
-        let { data: previewCodeData, error: previewCodeError } = await supabase
-          .from('projects')
-          .select('*, project_files(*)')
-          .eq('preview_code', previewId);
-
-        console.log('[usePreviewData] Preview code query result:', { 
-          data: previewCodeData, 
-          error: previewCodeError 
-        });
-
-        // If no results by preview_code or error occurred, try by ID
-        if (previewCodeError || !previewCodeData || previewCodeData.length === 0) {
-          console.log('[usePreviewData] 🔍 Looking up by ID:', decodedId);
-          const { data, error } = await supabase
-            .from('projects')
-            .select('*, project_files(*)')
-            .eq('id', decodedId);
-
-          console.log('[usePreviewData] ID query result:', { 
-            data, 
-            error
-          });
-
-          if (error) {
-            console.error('[usePreviewData] ❌ Error fetching from Supabase:', error);
-            
-            // If there's an error with Supabase, try localStorage as fallback
-            const localData = tryLoadFromLocalStorage(previewId, decodedId);
-            if (localData) {
-              setProjectData(localData);
-              setIsLoading(false);
-              return;
-            }
-
-            setIsError(true);
-            setErrorMessage(`Erro ao buscar projeto: ${error.message}`);
-            return;
-          }
-
-          if (data && data.length > 0) {
-            // Successfully found by ID
-            const projectData = mapSupabaseDataToProjectData(data[0]);
-            setProjectData(projectData);
-          } else {
-            // Try localStorage as a last resort
-            const localData = tryLoadFromLocalStorage(previewId, decodedId);
-            if (localData) {
-              setProjectData(localData);
-            } else {
-              console.log('[usePreviewData] ❌ Project not found by any method');
-              setIsError(true);
-              setErrorMessage('Projeto não encontrado');
-            }
-          }
-        } else {
-          // Successfully found by preview_code
-          const projectData = mapSupabaseDataToProjectData(previewCodeData[0]);
-          setProjectData(projectData);
-        }
-      } catch (error) {
-        console.error('[usePreviewData] ❌ Error in data fetch:', error);
-        setIsError(true);
-        setErrorMessage('Erro ao carregar dados do projeto');
         
-        // Try localStorage as a last resort
-        const localData = tryLoadFromLocalStorage(previewId, previewId);
-        if (localData) {
-          setProjectData(localData);
-          setIsError(false);
-          setErrorMessage(null);
+        setActualProjectId(decodedId);
+        logger.debug('PREVIEW', `Decoded project ID: ${decodedId}`);
+        
+        // Try anonymous authentication for better security
+        await signInAnonymously();
+        
+        // Create an anonymous client for fetching data
+        const anonClient = createAnonymousClient();
+        
+        // Fetch project data from Supabase
+        const { data: projectData, error: projectError } = await anonClient
+          .from('projects')
+          .select(`
+            id, title as project_title, status, created_at, updated_at, preview_code, deadline as expiration_date,
+            clients(id, name as client_name, email as client_email, phone as client_phone),
+            project_files(id, project_id, file_name, file_url, file_type, created_at),
+            packages(id, name as package_type, price, description, inclusions)
+          `)
+          .eq('id', decodedId)
+          .single();
+        
+        if (projectError) {
+          logger.error('PREVIEW', 'Error fetching project data', projectError);
+          setIsError(true);
+          setErrorMessage('Erro ao carregar dados do projeto.');
+          setIsLoading(false);
+          return;
         }
+        
+        if (!projectData) {
+          logger.warn('PREVIEW', 'Project not found', { projectId: decodedId });
+          setIsError(true);
+          setErrorMessage('Projeto não encontrado.');
+          setIsLoading(false);
+          return;
+        }
+        
+        // Grant access since we successfully loaded the project
+        grantAccess(decodedId);
+        
+        // Transform project data into the expected format
+        const transformedData: ProjectItem = {
+          id: projectData.id,
+          client_name: projectData.clients?.client_name || 'Cliente',
+          client_email: projectData.clients?.client_email,
+          client_phone: projectData.clients?.client_phone,
+          project_title: projectData.project_title || 'Música Personalizada',
+          package_type: projectData.packages?.package_type || 'standard',
+          status: projectData.status || 'waiting',
+          created_at: projectData.created_at,
+          last_activity_date: projectData.updated_at || projectData.created_at,
+          expiration_date: projectData.expiration_date || new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString(),
+          versions: projectData.project_files?.length || 0,
+          versions_list: [],
+          feedback_history: [],
+          history: [],
+          preview_code: projectData.preview_code,
+          
+          // Convert project files to version list items
+          previews: projectData.project_files?.map(file => ({
+            id: file.id,
+            name: file.file_name,
+            title: file.file_name,
+            description: '',
+            audio_url: file.file_url,
+            file_url: file.file_url,
+            created_at: file.created_at
+          })) || []
+        };
+        
+        logger.info('PREVIEW', 'Project data loaded successfully', { 
+          id: transformedData.id,
+          name: transformedData.client_name,
+          files: transformedData.previews?.length
+        });
+        
+        setProjectData(transformedData);
+      } catch (error) {
+        logger.error('PREVIEW', 'Unexpected error loading preview data', error);
+        setIsError(true);
+        setErrorMessage('Ocorreu um erro ao carregar a prévia.');
       } finally {
         setIsLoading(false);
       }
     };
-
-    fetchData();
+    
+    loadPreviewData();
   }, [previewId]);
-
-  // Function to try loading from localStorage
-  const tryLoadFromLocalStorage = (previewId: string, decodedId: string | null): ProjectData | null => {
-    console.log('[usePreviewData] 📁 Trying localStorage fallback');
-    try {
-      const storedProjects = localStorage.getItem('harmonIA_preview_projects');
-      if (!storedProjects) return null;
-
-      const projects = JSON.parse(storedProjects);
-      // Try to find by preview_code first, then by ID
-      const project = projects.find((p: any) => 
-        p.preview_code === previewId || 
-        p.id === previewId || 
-        (decodedId && p.id === decodedId)
-      );
-
-      if (project) {
-        console.log('[usePreviewData] 📁 Project found in localStorage:', project);
-        return project;
-      }
-      
-      return null;
-    } catch (error) {
-      console.error('[usePreviewData] Error loading from localStorage:', error);
-      return null;
-    }
-  };
-
-  // Helper function to map Supabase data to our ProjectData format
-  const mapSupabaseDataToProjectData = (data: any): ProjectData => {
-    const versionsList = data.project_files?.map((file: any) => ({
-      id: file.id,
-      name: file.file_name || 'Versão',
-      description: file.notes || '',
-      audioUrl: file.file_url || '',
-      file_url: file.file_url || '',
-      createdAt: file.created_at,
-      created_at: file.created_at,
-      recommended: file.is_recommended || false,
-      final: file.is_final || false
-    })) || [];
-
-    return {
-      id: data.id,
-      clientName: data.client_name || 'Cliente',
-      projectTitle: data.title || data.package_type || 'Música Personalizada',
-      status: data.status || 'waiting',
-      createdAt: data.created_at || new Date().toISOString(),
-      expirationDate: data.deadline,
-      packageType: data.package_type,
-      versions: versionsList.length,
-      versionsList: versionsList,
-      previews: versionsList, // For backwards compatibility
-      preview_code: data.preview_code
-    };
-  };
-
-  const updateProjectStatus = (
-    newStatus: 'waiting' | 'feedback' | 'approved',
-    comments: string = ''
-  ) => {
+  
+  // Function to update project status
+  const updateProjectStatus = async (
+    newStatus: 'waiting' | 'feedback' | 'approved', 
+    feedbackComment?: string
+  ): Promise<boolean> => {
     if (!actualProjectId) {
-      console.error('[usePreviewData] Cannot update status without a valid project ID');
+      logger.error('PREVIEW', 'Cannot update status: no project ID');
       return false;
     }
-
-    console.log(`[usePreviewData] Updating status to ${newStatus} with comments: ${comments}`);
-
+    
     try {
-      // Try to update in Supabase first
-      const updateSupabase = async () => {
-        try {
-          const { error } = await supabase
-            .from('projects')
-            .update({ status: newStatus })
-            .eq('id', actualProjectId);
-
-          if (error) {
-            console.error('[usePreviewData] Error updating status in Supabase:', error);
-            return false;
-          }
-          return true;
-        } catch (error) {
-          console.error('[usePreviewData] Exception updating Supabase:', error);
-          return false;
-        }
-      };
-
-      // Also update in localStorage for offline support
-      const updateLocalStorage = () => {
-        try {
-          const storedProjects = localStorage.getItem('harmonIA_preview_projects');
-          if (!storedProjects) return false;
-
-          const projects = JSON.parse(storedProjects);
-          const projectIndex = projects.findIndex((p: any) => 
-            p.id === actualProjectId || 
-            p.preview_code === actualProjectId
-          );
-
-          if (projectIndex === -1) return false;
-
-          // Update status
-          projects[projectIndex].status = newStatus;
-
-          // Add feedback if provided
-          if (comments) {
-            projects[projectIndex].feedback = comments;
-
-            // Add to feedback history
-            if (!projects[projectIndex].feedbackHistory) {
-              projects[projectIndex].feedbackHistory = [];
+      logger.info('PREVIEW', `Updating project status to: ${newStatus}`, { projectId: actualProjectId });
+      
+      // Create an anonymous client for the update
+      const anonClient = createAnonymousClient();
+      
+      // Update the project status
+      const { error: updateError } = await anonClient
+        .from('projects')
+        .update({ status: newStatus })
+        .eq('id', actualProjectId);
+      
+      if (updateError) {
+        logger.error('PREVIEW', 'Error updating project status', updateError);
+        return false;
+      }
+      
+      // If feedback was provided, save it
+      if (feedbackComment) {
+        const { error: feedbackError } = await anonClient
+          .from('project_history')
+          .insert({
+            project_id: actualProjectId,
+            action: newStatus === 'approved' ? 'approval' : 'feedback',
+            details: {
+              message: feedbackComment,
+              status: newStatus
             }
-
-            projects[projectIndex].feedbackHistory.push({
-              id: `feedback_${Date.now()}`,
-              content: comments,
-              createdAt: new Date().toISOString(),
-              status: 'pending'
-            });
-          }
-
-          // Update last activity date
-          projects[projectIndex].lastActivityDate = new Date().toISOString();
-
-          // Save back to localStorage
-          localStorage.setItem('harmonIA_preview_projects', JSON.stringify(projects));
-
-          return true;
-        } catch (error) {
-          console.error('[usePreviewData] Error updating localStorage:', error);
-          return false;
+          });
+        
+        if (feedbackError) {
+          logger.error('PREVIEW', 'Error saving feedback', feedbackError);
+          // Continue anyway since the status was updated
         }
-      };
-
-      // Try both update methods - Supabase is primary but localStorage is important backup
-      updateSupabase();
-      const localUpdateSuccess = updateLocalStorage();
-
-      // Update local state if either method worked
-      if (localUpdateSuccess && projectData) {
+      }
+      
+      // Update local data
+      if (projectData) {
         setProjectData({
           ...projectData,
           status: newStatus
         });
-        return true;
       }
-
-      return false;
+      
+      logger.info('PREVIEW', `Project status updated successfully to: ${newStatus}`);
+      return true;
     } catch (error) {
-      console.error('[usePreviewData] Error updating status:', error);
+      logger.error('PREVIEW', 'Unexpected error updating project status', error);
       return false;
     }
   };
-
-  return { 
-    projectData, 
-    isLoading, 
+  
+  return {
+    projectData: isAuthorized && projectData ? projectData : (isError ? fallbackProject : null),
+    isLoading: isLoading || accessLoading,
     isError,
-    errorMessage, 
-    actualProjectId, 
-    updateProjectStatus 
+    errorMessage,
+    actualProjectId,
+    updateProjectStatus
   };
 };

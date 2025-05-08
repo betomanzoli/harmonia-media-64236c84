@@ -1,194 +1,101 @@
 
-/**
- * Functions for managing and validating preview links
- */
+import { logger } from '@/utils/logger';
 
 /**
- * Generates a preview link from a project ID
+ * Generates a preview link for a given project and client
  * @param projectId The project ID
- * @param clientId Optional client ID for additional uniqueness
- * @returns The encoded preview link
+ * @param clientIdentifier The client name or email for added uniqueness
+ * @returns Encoded preview link
  */
-export const generatePreviewLink = (projectId: string, clientId?: string): string => {
-  // If a preview code is provided in format P#### (e.g., P0001), prioritize it
-  if (projectId && /^P\d{4,}$/.test(projectId)) {
-    console.log(`[previewLinkUtils] Using direct preview code: ${projectId}`);
-    return projectId;
-  }
+export const generatePreviewLink = (projectId: string, clientIdentifier: string): string => {
+  if (!projectId) return '';
   
-  // If not in the right format, generate a new preview code
+  // Basic encoding for the preview link
   try {
-    // Create a simple format P#### where #### is between 1000-9999
-    const randomNum = 1000 + Math.floor(Math.random() * 9000);
-    const previewCode = `P${randomNum}`;
+    // Create a string to encode
+    const toEncode = `p:${projectId}:c:${clientIdentifier}:t:${Date.now()}`;
     
-    console.log(`[previewLinkUtils] Generated preview code: ${previewCode}`);
-    return previewCode;
-  } catch (err) {
-    console.error('[previewLinkUtils] Error generating preview link:', err);
-    // Fallback: Use a simple P prefix + project ID
-    return `P${projectId.replace(/[^a-zA-Z0-9]/g, '')}`;
+    // Use btoa for basic encoding
+    const encoded = btoa(toEncode).replace(/=/g, '').replace(/\+/g, '-').replace(/\//g, '_');
+    
+    logger.debug('PREVIEW', 'Generated preview link', { projectId, encoded });
+    return encoded;
+  } catch (error) {
+    logger.error('PREVIEW', 'Error generating preview link', error);
+    // Fallback to a simple encoded version
+    return `prev-${projectId.substring(0, 8)}`;
   }
 };
 
 /**
- * Validates if a string is an encoded preview link
- * @param link The link to validate
- * @returns True if it's a valid encoded link
+ * Extracts project ID from an encoded preview link
+ * @param encodedLink The encoded preview link
+ * @returns The project ID or null if invalid
+ */
+export const getProjectIdFromPreviewLink = (encodedLink: string): string | null => {
+  if (!encodedLink) return null;
+  
+  // For backward compatibility with preview_code stored in the database
+  if (encodedLink.startsWith('P') && encodedLink.length <= 5) {
+    logger.debug('PREVIEW', 'Legacy preview code detected', { code: encodedLink });
+    return encodedLink;
+  }
+  
+  try {
+    // Convert from URL-safe base64
+    const safeEncodedLink = encodedLink.replace(/-/g, '+').replace(/_/g, '/');
+    
+    // Try to decode the link
+    const decoded = atob(safeEncodedLink);
+    
+    // Extract the project ID
+    const matches = decoded.match(/p:([^:]+):/);
+    if (matches && matches[1]) {
+      logger.debug('PREVIEW', 'Extracted project ID from link', { 
+        encoded: encodedLink, 
+        projectId: matches[1] 
+      });
+      return matches[1];
+    }
+    
+    logger.warn('PREVIEW', 'Failed to extract project ID from decoded link', { decoded });
+    return null;
+  } catch (error) {
+    logger.error('PREVIEW', 'Error decoding preview link', { encodedLink, error });
+    
+    // If decoding fails, the link might be a direct project ID
+    return encodedLink;
+  }
+};
+
+/**
+ * Checks if a string looks like a valid encoded preview link
  */
 export const isValidEncodedPreviewLink = (link: string): boolean => {
   if (!link) return false;
   
-  // Ensure we're working with a decoded URL
-  const decodedLink = decodeURIComponent(link);
-  console.log(`[previewLinkUtils] Validating link. Original: ${link}, Decoded: ${decodedLink}`);
-  
-  // If it's a UUID format, it's not an encoded link
-  if (/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(decodedLink)) {
-    console.log('[previewLinkUtils] Link is a UUID, not an encoded link');
-    return false;
-  }
-  
-  // Simple preview code format (e.g., P1234, PREV-1234)
-  if (/^P\d{4,}$/i.test(decodedLink) || /^PREV-\d{4,}$/i.test(decodedLink)) {
-    console.log('[previewLinkUtils] Link is a direct preview code format');
+  // Check if it's a legacy preview code
+  if (link.startsWith('P') && link.length <= 5) {
     return true;
   }
   
-  // Try to decode it as base64
-  try {
-    // For backwards compatibility, check if it's a base64 encoded JSON
-    if (decodedLink.length > 20) { // Arbitrary length to check if it's a longer encoded string
-      // Ensure proper base64 padding
-      let normalized = decodedLink.replace(/-/g, '+').replace(/_/g, '/');
-      const padLength = 4 - (normalized.length % 4);
-      if (padLength < 4) {
-        normalized += '='.repeat(padLength);
-      }
-      
-      const decoded = atob(normalized);
-      try {
-        // Check if it's valid JSON with an id property
-        const data = JSON.parse(decoded);
-        if (data && data.id) {
-          console.log("[previewLinkUtils] Legacy encoded link valid:", data);
-          return true;
-        }
-      } catch (jsonErr) {
-        // Not valid JSON, could be another format
-      }
-    }
-    
-    // If it doesn't match any known format but has the right pattern
-    // for a preview code, consider it valid
-    return /^P\d+$/i.test(decodedLink) || /^PREV-\d+$/i.test(decodedLink);
-  } catch (err) {
-    console.error('[previewLinkUtils] Error validating link:', err);
-    return false;
-  }
+  // Check if it looks like a base64 encoded string
+  const base64Regex = /^[A-Za-z0-9\-_]+$/;
+  return base64Regex.test(link) && link.length > 8;
 };
 
 /**
- * Gets the project ID from a preview link
- * @param link The encoded preview link
- * @returns The project ID
+ * Attempts to decode a preview code from a URL path
  */
-export const getProjectIdFromPreviewLink = (link: string): string | null => {
-  if (!link) return null;
+export const decodePreviewCode = (path: string): string | null => {
+  if (!path) return null;
   
-  // Ensure we're working with a decoded URL
-  const decodedLink = decodeURIComponent(link);
-  console.log(`[previewLinkUtils] Getting project ID from link. Original: ${link}, Decoded: ${decodedLink}`);
+  // Extract the last segment of the path
+  const segments = path.split('/').filter(Boolean);
+  if (segments.length === 0) return null;
   
-  // For simple preview codes (P1234), we return the same code to look up in the database
-  if (/^P\d{4,}$/i.test(decodedLink) || /^PREV-\d{4,}$/i.test(decodedLink)) {
-    console.log(`[previewLinkUtils] Using preview code directly: ${decodedLink}`);
-    return decodedLink;
-  }
+  const code = segments[segments.length - 1];
+  logger.debug('PREVIEW', 'Decoded preview code from path', { path, code });
   
-  // If it's a UUID, assume it's a direct project ID
-  if (/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(decodedLink)) {
-    console.log(`[previewLinkUtils] Using UUID directly: ${decodedLink}`);
-    return decodedLink;
-  }
-  
-  // Try to decode it as a base64 encoded JSON from legacy format
-  try {
-    if (decodedLink.length > 20) {
-      // Ensure proper base64 padding
-      let normalized = decodedLink.replace(/-/g, '+').replace(/_/g, '/');
-      // Add padding if needed
-      const padLength = 4 - (normalized.length % 4);
-      if (padLength < 4) {
-        normalized += '='.repeat(padLength);
-      }
-      
-      const decoded = atob(normalized);
-      try {
-        const data = JSON.parse(decoded);
-        console.log('[previewLinkUtils] Legacy token decoded:', data);
-        if (data && data.id) {
-          return data.id;
-        }
-      } catch (jsonErr) {
-        // Not valid JSON
-        console.warn('[previewLinkUtils] Not valid JSON in decoded token');
-      }
-    }
-  } catch (err) {
-    console.error('[previewLinkUtils] Error decoding preview link:', err);
-  }
-  
-  // If all else fails, return the original link as the ID
-  // This is a fallback that might work if the link is actually the ID
-  return decodedLink;
-};
-
-/**
- * Decodes a preview code from a URL segment
- * @param url The URL segment containing the preview code
- * @returns The decoded preview code
- */
-export const decodePreviewCode = (url: string): string | null => {
-  if (!url) return null;
-  
-  // Extract code from URL pattern
-  const parts = url.split('/preview/');
-  if (parts.length < 2) return null;
-  
-  const code = decodeURIComponent(parts[1]);
-  console.log(`[previewLinkUtils] Decoded preview code from URL: ${code}`);
   return code;
-};
-
-/**
- * Test Supabase preview code query in browser console
- * @param previewCode The preview code to test
- * @param supabaseUrl The Supabase URL
- * @param supabaseKey The Supabase anon key
- */
-export const testPreviewCodeQuery = (previewCode: string, supabaseUrl: string, supabaseKey: string): void => {
-  console.log(`[previewLinkUtils] Testing query for preview_code=${previewCode}`);
-  
-  const url = `${supabaseUrl}/rest/v1/projects?preview_code=eq.${encodeURIComponent(previewCode)}`;
-  console.log(`[previewLinkUtils] Query URL: ${url}`);
-  
-  fetch(url, {
-    method: 'GET',
-    headers: {
-      'apikey': supabaseKey,
-      'Authorization': `Bearer ${supabaseKey}`
-    }
-  })
-  .then(response => {
-    console.log(`[previewLinkUtils] Response status: ${response.status}`);
-    console.log(`[previewLinkUtils] Response headers:`, response.headers);
-    return response.json();
-  })
-  .then(data => {
-    console.log(`[previewLinkUtils] Query result:`, data);
-  })
-  .catch(error => {
-    console.error(`[previewLinkUtils] Query error:`, error);
-  });
 };
