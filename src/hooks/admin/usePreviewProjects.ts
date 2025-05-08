@@ -1,6 +1,8 @@
+
 import { useState, useEffect, useCallback } from 'react';
 import { useToast } from '@/hooks/use-toast';
 import { generatePreviewLink } from '@/utils/previewLinkUtils';
+import { supabase } from '@/lib/supabase';
 
 export interface AdditionalLink {
   label: string;
@@ -11,15 +13,15 @@ export interface VersionItem {
   id: string;
   name: string;
   description: string;
-  audioUrl: string;
+  audioUrl?: string;
   file_url?: string; // Add this field as optional since some components expect it
   recommended?: boolean;
   final?: boolean;
   createdAt?: string;
   created_at?: string; // For compatibility with different naming conventions
-  fileId?: string; // Add missing property
-  dateAdded?: string; // Add missing property
-  additionalLinks?: AdditionalLink[]; // Add missing property
+  fileId?: string;
+  dateAdded?: string;
+  additionalLinks?: (AdditionalLink | string)[];
 }
 
 export interface FeedbackItem {
@@ -43,7 +45,7 @@ export interface ProjectItem {
   id: string;
   clientName: string;
   clientEmail?: string;
-  clientPhone?: string; // Add phone property
+  clientPhone?: string;
   status: string;
   createdAt: string;
   expirationDate: string;
@@ -52,7 +54,7 @@ export interface ProjectItem {
   previewUrl?: string; 
   versionsList?: VersionItem[];
   previews?: VersionItem[]; // Adding this for backwards compatibility
-  projectTitle?: string; // Adding this property to fix the error
+  projectTitle?: string;
   feedbackHistory?: FeedbackItem[];
   feedback?: string;
   history?: HistoryEntry[];
@@ -83,6 +85,18 @@ export const usePreviewProjects = () => {
         mockProjects = [];
         localStorage.setItem('harmonIA_preview_projects', JSON.stringify(mockProjects));
       }
+      
+      // Ensure all projects have a preview_code set
+      mockProjects = mockProjects.map(project => {
+        if (!project.preview_code) {
+          // Generate a unique preview code for this project
+          project.preview_code = generatePreviewLink(project.id, project.clientEmail || project.clientName);
+        }
+        return project;
+      });
+      
+      // Save back the updated projects
+      localStorage.setItem('harmonIA_preview_projects', JSON.stringify(mockProjects));
       
       setProjects(mockProjects);
     } catch (error) {
@@ -132,7 +146,7 @@ export const usePreviewProjects = () => {
       feedbackHistory: [],
       history: [],
       lastActivityDate: new Date().toISOString(),
-      preview_code: project.preview_code || ''
+      preview_code: encodedPreviewId // Store the preview code
     };
     
     mockProjects = [newProject, ...mockProjects];
@@ -155,7 +169,15 @@ export const usePreviewProjects = () => {
 
   // Get a single project by ID
   const getProjectById = (projectId: string) => {
-    return mockProjects.find(p => p.id === projectId);
+    // First, try to find by ID
+    let project = mockProjects.find(p => p.id === projectId);
+    
+    // If not found by ID, try to find by preview_code
+    if (!project) {
+      project = mockProjects.find(p => p.preview_code === projectId);
+    }
+    
+    return project;
   };
   
   // Update a project
@@ -193,7 +215,7 @@ export const usePreviewProjects = () => {
     }
     
     // Set creation timestamp if not provided
-    if (!version.createdAt) {
+    if (!version.createdAt && !version.created_at) {
       version.createdAt = new Date().toISOString();
     }
     
@@ -279,7 +301,14 @@ export const usePreviewProject = (projectId?: string) => {
       setIsLoading(true);
       
       try {
-        const foundProject = getProjectById(projectId);
+        // First look for the project by ID directly
+        let foundProject = getProjectById(projectId);
+        
+        // If not found, try to look for it by preview_code
+        if (!foundProject) {
+          foundProject = getProjectById(projectId);
+          console.log(`[usePreviewProject] Looking up by preview_code ${projectId} returned:`, foundProject);
+        }
         
         if (foundProject) {
           setProject(foundProject);

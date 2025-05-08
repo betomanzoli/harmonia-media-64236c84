@@ -17,7 +17,7 @@ export const setCookie = (name: string, value: string, options: Record<string, s
   const defaultOptions = {
     path: '/',
     maxAge: '86400', // 1 day
-    sameSite: 'None',
+    sameSite: 'Lax',
     secure: window.location.protocol === 'https:',
   };
   
@@ -127,12 +127,6 @@ export const useProjectAccess = ({ projectId, onVerify }: UseProjectAccessProps)
       
       console.log('[ProjectAccessForm] Verificação de preview_code:', { data, error });
       
-      // Log detailed SQL query for debugging
-      console.log('[ProjectAccessForm] SQL equivalente:', 
-        `SELECT projects.id, projects.client_id, projects.preview_code, clients.* 
-         FROM projects JOIN clients ON projects.client_id = clients.id 
-         WHERE projects.preview_code = '${code}'`);
-      
       if (error) {
         console.error('[ProjectAccessForm] Erro ao verificar preview_code:', error);
         
@@ -212,16 +206,14 @@ export const useProjectAccess = ({ projectId, onVerify }: UseProjectAccessProps)
         setCookie('preview_access', accessData, {
           maxAge: '86400', // 1 day
           path: '/',
-          sameSite: 'None',
-          secure: 'true'
+          sameSite: 'Lax'
         });
         
         // Also save a specific access token for this preview
         setCookie(`preview_auth_${code}`, 'authorized', {
           maxAge: '86400', // 1 day
           path: '/',
-          sameSite: 'None',
-          secure: 'true'
+          sameSite: 'Lax'
         });
         
         // Call the onVerify callback to notify parent component

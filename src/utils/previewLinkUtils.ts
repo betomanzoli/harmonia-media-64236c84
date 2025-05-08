@@ -10,32 +10,24 @@
  * @returns The encoded preview link
  */
 export const generatePreviewLink = (projectId: string, clientId?: string): string => {
-  // If a preview code is provided, prioritize it
-  if (projectId && projectId.startsWith('P')) {
+  // If a preview code is provided in format P#### (e.g., P0001), prioritize it
+  if (projectId && /^P\d{4,}$/.test(projectId)) {
     console.log(`[previewLinkUtils] Using direct preview code: ${projectId}`);
     return projectId;
   }
   
-  // Generate a token unique to this project but stable across sessions
+  // If not in the right format, generate a new preview code
   try {
-    const payload = {
-      id: projectId,
-      // Use clientId if provided, otherwise use projectId as fallback
-      clientId: clientId || projectId,
-      // Use only date part for stability (not time)
-      date: new Date().toISOString().split('T')[0]
-    };
+    // Create a simple format P#### where #### is between 1000-9999
+    const randomNum = 1000 + Math.floor(Math.random() * 9000);
+    const previewCode = `P${randomNum}`;
     
-    console.log("[previewLinkUtils] Generating token with payload:", JSON.stringify(payload));
-    
-    const encoded = btoa(JSON.stringify(payload));
-    const finalToken = encoded.replace(/=/g, '').replace(/\+/g, '-').replace(/\//g, '_');
-    
-    console.log(`[previewLinkUtils] Generated token: ${finalToken}`);
-    return finalToken;
+    console.log(`[previewLinkUtils] Generated preview code: ${previewCode}`);
+    return previewCode;
   } catch (err) {
     console.error('[previewLinkUtils] Error generating preview link:', err);
-    return projectId; // Fallback to using the ID directly
+    // Fallback: Use a simple P prefix + project ID
+    return `P${projectId.replace(/[^a-zA-Z0-9]/g, '')}`;
   }
 };
 
@@ -53,37 +45,46 @@ export const isValidEncodedPreviewLink = (link: string): boolean => {
   
   // If it's a UUID format, it's not an encoded link
   if (/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(decodedLink)) {
-    console.log('[previewLinkUtils] Link is a UUID, not encoded');
+    console.log('[previewLinkUtils] Link is a UUID, not an encoded link');
     return false;
   }
   
-  // Simple preview code format check (e.g., P1234, PREV-1234)
+  // Simple preview code format (e.g., P1234, PREV-1234)
   if (/^P\d{4,}$/i.test(decodedLink) || /^PREV-\d{4,}$/i.test(decodedLink)) {
     console.log('[previewLinkUtils] Link is a direct preview code format');
     return true;
   }
   
-  // Try to decode it as a base64 string
+  // Try to decode it as base64
   try {
-    // Ensure proper padding for base64 decoding
-    let normalized = decodedLink.replace(/-/g, '+').replace(/_/g, '/');
-    // Add padding if needed (important for compatibility)
-    const padLength = 4 - (normalized.length % 4);
-    if (padLength < 4) {
-      normalized += '='.repeat(padLength);
+    // For backwards compatibility, check if it's a base64 encoded JSON
+    if (decodedLink.length > 20) { // Arbitrary length to check if it's a longer encoded string
+      // Ensure proper base64 padding
+      let normalized = decodedLink.replace(/-/g, '+').replace(/_/g, '/');
+      const padLength = 4 - (normalized.length % 4);
+      if (padLength < 4) {
+        normalized += '='.repeat(padLength);
+      }
+      
+      const decoded = atob(normalized);
+      try {
+        // Check if it's valid JSON with an id property
+        const data = JSON.parse(decoded);
+        if (data && data.id) {
+          console.log("[previewLinkUtils] Legacy encoded link valid:", data);
+          return true;
+        }
+      } catch (jsonErr) {
+        // Not valid JSON, could be another format
+      }
     }
     
-    console.log('[previewLinkUtils] Normalized token for decoding:', normalized);
-    const decoded = atob(normalized);
-    const data = JSON.parse(decoded);
-    
-    console.log("[previewLinkUtils] Successfully decoded token:", data);
-    
-    // Valid if it has necessary properties
-    return !!data.id; 
+    // If it doesn't match any known format but has the right pattern
+    // for a preview code, consider it valid
+    return /^P\d+$/i.test(decodedLink) || /^PREV-\d+$/i.test(decodedLink);
   } catch (err) {
-    console.error('[previewLinkUtils] Error decoding link:', err);
-    return false; // Not a valid encoded link
+    console.error('[previewLinkUtils] Error validating link:', err);
+    return false;
   }
 };
 
@@ -99,7 +100,7 @@ export const getProjectIdFromPreviewLink = (link: string): string | null => {
   const decodedLink = decodeURIComponent(link);
   console.log(`[previewLinkUtils] Getting project ID from link. Original: ${link}, Decoded: ${decodedLink}`);
   
-  // If it's a preview code format (e.g., P1234), use it directly to look up the project
+  // For simple preview codes (P1234), we return the same code to look up in the database
   if (/^P\d{4,}$/i.test(decodedLink) || /^PREV-\d{4,}$/i.test(decodedLink)) {
     console.log(`[previewLinkUtils] Using preview code directly: ${decodedLink}`);
     return decodedLink;
@@ -111,27 +112,36 @@ export const getProjectIdFromPreviewLink = (link: string): string | null => {
     return decodedLink;
   }
   
-  // Otherwise try to decode it
+  // Try to decode it as a base64 encoded JSON from legacy format
   try {
-    // Ensure proper padding for base64 decoding
-    let normalized = decodedLink.replace(/-/g, '+').replace(/_/g, '/');
-    // Add padding if needed (important for compatibility)
-    const padLength = 4 - (normalized.length % 4);
-    if (padLength < 4) {
-      normalized += '='.repeat(padLength);
+    if (decodedLink.length > 20) {
+      // Ensure proper base64 padding
+      let normalized = decodedLink.replace(/-/g, '+').replace(/_/g, '/');
+      // Add padding if needed
+      const padLength = 4 - (normalized.length % 4);
+      if (padLength < 4) {
+        normalized += '='.repeat(padLength);
+      }
+      
+      const decoded = atob(normalized);
+      try {
+        const data = JSON.parse(decoded);
+        console.log('[previewLinkUtils] Legacy token decoded:', data);
+        if (data && data.id) {
+          return data.id;
+        }
+      } catch (jsonErr) {
+        // Not valid JSON
+        console.warn('[previewLinkUtils] Not valid JSON in decoded token');
+      }
     }
-    
-    console.log('[previewLinkUtils] Normalized token for decoding:', normalized);
-    const decoded = atob(normalized);
-    const data = JSON.parse(decoded);
-    
-    console.log('[previewLinkUtils] Token decoded successfully:', data);
-    
-    return data.id;
   } catch (err) {
     console.error('[previewLinkUtils] Error decoding preview link:', err);
-    return null;
   }
+  
+  // If all else fails, return the original link as the ID
+  // This is a fallback that might work if the link is actually the ID
+  return decodedLink;
 };
 
 /**

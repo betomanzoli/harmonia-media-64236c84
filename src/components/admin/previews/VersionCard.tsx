@@ -1,4 +1,3 @@
-
 import React, { useState } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { VersionItem } from '@/hooks/admin/usePreviewProjects';
@@ -28,19 +27,23 @@ const VersionCard: React.FC<VersionCardProps> = ({
   const handleTogglePlay = () => {
     if (isPlaying) {
       audio.pause();
-    } else {
-      // If we have a fileId, open in Google Drive instead of playing locally
-      if (version.fileId) {
-        const driveUrl = `https://drive.google.com/file/d/${version.fileId}/view`;
-        window.open(driveUrl, '_blank');
-        toast({
-          title: "Abrindo no Google Drive",
-          description: "O áudio está sendo aberto no Google Drive em uma nova aba."
-        });
-        return;
-      }
-      
-      // Otherwise try to play the audio directly
+      setIsPlaying(false);
+      return;
+    }
+    
+    // If we have a fileId, open in Google Drive instead of playing locally
+    if (version.fileId) {
+      const driveUrl = `https://drive.google.com/file/d/${version.fileId}/view`;
+      window.open(driveUrl, '_blank');
+      toast({
+        title: "Abrindo no Google Drive",
+        description: "O áudio está sendo aberto no Google Drive em uma nova aba."
+      });
+      return;
+    }
+    
+    // Otherwise try to play the audio directly
+    if (audioSource) {
       audio.play().catch(error => {
         console.error('Erro ao reproduzir áudio:', error);
         toast({
@@ -49,19 +52,26 @@ const VersionCard: React.FC<VersionCardProps> = ({
           variant: "destructive"
         });
         
-        // If we have an audioUrl but playing failed, try to open in a new tab
+        // If playing failed, try to open in a new tab
         if (audioSource) {
           window.open(audioSource, '_blank');
         }
       });
+      setIsPlaying(true);
+    } else {
+      toast({
+        title: "Erro ao reproduzir",
+        description: "Não há URL de áudio disponível para esta versão.",
+        variant: "destructive"
+      });
     }
-    setIsPlaying(!isPlaying);
   };
 
   React.useEffect(() => {
-    audio.addEventListener('ended', () => setIsPlaying(false));
+    const handleEnded = () => setIsPlaying(false);
+    audio.addEventListener('ended', handleEnded);
     return () => {
-      audio.removeEventListener('ended', () => setIsPlaying(false));
+      audio.removeEventListener('ended', handleEnded);
       audio.pause();
     };
   }, [audio]);
@@ -111,7 +121,7 @@ const VersionCard: React.FC<VersionCardProps> = ({
             </p>
             
             <div className="text-xs text-gray-500 mb-4">
-              Adicionado em: {displayDate}
+              Adicionado em: {displayDate ? new Date(displayDate).toLocaleDateString() : "Data desconhecida"}
             </div>
             
             {/* Additional links for final versions */}
@@ -138,7 +148,7 @@ const VersionCard: React.FC<VersionCardProps> = ({
           </div>
           
           <div className="flex sm:flex-col gap-2 mt-4 sm:mt-0 sm:ml-4">
-            <Button variant="outline" size="sm" className={`${isPlaying ? 'bg-gray-100' : ''}`} onClick={handleTogglePlay}>
+            <Button variant="outline" size="sm" className={`${isPlaying ? 'bg-gray-100' : ''}`} onClick={handleTogglePlay} disabled={!audioSource && !version.fileId}>
               {isPlaying ? <Pause className="h-4 w-4 mr-2" /> : <Play className="h-4 w-4 mr-2" />}
               {isPlaying ? 'Pausar' : 'Ouvir'}
             </Button>
