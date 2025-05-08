@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { useParams } from 'react-router-dom';
 import { useToast } from "@/hooks/use-toast";
@@ -10,6 +11,24 @@ import { notificationService } from '@/services/notificationService';
 import { ProjectItem, MusicPreview, ProjectVersion } from '@/types/project.types';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { AlertCircle } from 'lucide-react';
+
+// Local version of VersionItem with all needed properties
+interface LocalVersionItem {
+  id: string;
+  title: string; 
+  name?: string;
+  description?: string;
+  audioUrl?: string;
+  audio_url?: string;
+  file_url?: string;
+  recommended?: boolean;
+  finalVersionUrl?: string;
+  stemsUrl?: string;
+  fileId?: string;
+  createdAt?: string;
+  created_at?: string;
+  url?: string;
+}
 
 // Force dynamic content to prevent caching
 export const dynamic = 'force-dynamic';
@@ -153,7 +172,7 @@ const MusicPreviews: React.FC = () => {
   
   // Make sure versionsForPlayer is always an array of MusicPreview
   const versionsForPlayer: MusicPreview[] = Array.isArray(projectData?.previews) 
-    ? projectData.previews.map(p => ({
+    ? projectData.previews.map((p: LocalVersionItem) => ({
         ...p,
         title: p.title || p.name || `Versão ${p.id}`, // Ensure title exists
         name: p.name || p.title || `Versão ${p.id}`, // Ensure name exists
@@ -164,7 +183,7 @@ const MusicPreviews: React.FC = () => {
         stemsUrl: p.stemsUrl || ''
       }))
     : (Array.isArray(projectData?.versionsList) 
-        ? projectData.versionsList.map(v => ({
+        ? projectData.versionsList.map((v: LocalVersionItem) => ({
             id: v.id,
             title: v.title || v.name || `Versão ${v.id}`,
             name: v.name || v.title || `Versão ${v.id}`,

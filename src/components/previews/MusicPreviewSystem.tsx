@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import PreviewHeader from './PreviewHeader';
 import PreviewPlayerList from './player/PreviewPlayerList';
@@ -14,6 +15,24 @@ import { useToast } from '@/hooks/use-toast';
 import { MusicPreview } from '@/types/project.types';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { AlertCircle } from 'lucide-react';
+
+// Local version of VersionItem with all needed properties
+interface LocalVersionItem {
+  id: string;
+  title: string; 
+  name?: string;
+  description?: string;
+  audioUrl?: string;
+  audio_url?: string;
+  file_url?: string;
+  recommended?: boolean;
+  finalVersionUrl?: string;
+  stemsUrl?: string;
+  fileId?: string;
+  createdAt?: string;
+  created_at?: string;
+  url?: string;
+}
 
 interface MusicPreviewSystemProps {
   projectId: string;
@@ -173,32 +192,32 @@ const MusicPreviewSystem: React.FC<MusicPreviewSystemProps> = ({ projectId }) =>
   
   if (Array.isArray(projectData.previews) && projectData.previews.length > 0) {
     // If previews are already in MusicPreview format, use them directly
-    versionsForPlayer = projectData.previews.map(preview => ({
+    versionsForPlayer = projectData.previews.map((preview: LocalVersionItem) => ({
       ...preview,
       // Ensure all required fields exist
       title: preview.title || preview.name || `Versão ${preview.id}`,
       name: preview.name || preview.title || `Versão ${preview.id}`,
       description: preview.description || 'Sem descrição',
-      audioUrl: preview.audioUrl || preview.file_url || '',
+      audioUrl: preview.audioUrl || preview.audio_url || preview.file_url || '',
       fileId: preview.fileId || undefined,
       finalVersionUrl: preview.finalVersionUrl || undefined,
       stemsUrl: preview.stemsUrl || undefined
-    }));
+    })) as MusicPreview[];
     console.log("🎵 Versões obtidas de 'previews':", versionsForPlayer);
   } else if (Array.isArray(projectData.versionsList) && projectData.versionsList.length > 0) {
     // Convert versionsList to MusicPreview format
-    versionsForPlayer = projectData.versionsList.map(v => ({
+    versionsForPlayer = projectData.versionsList.map((v: LocalVersionItem) => ({
       id: v.id,
       title: v.title || v.name || `Versão ${v.id}`, 
       name: v.name || v.title || `Versão ${v.id}`,
       description: v.description || 'Sem descrição',
-      audioUrl: v.audioUrl || v.file_url || '',
+      audioUrl: v.audioUrl || v.audio_url || v.file_url || '',
       fileId: v.fileId || undefined,
       recommended: v.recommended || false,
       finalVersionUrl: v.finalVersionUrl || '',
       stemsUrl: v.stemsUrl || '',
       createdAt: v.createdAt || v.created_at || new Date().toISOString()
-    }));
+    })) as MusicPreview[];
     console.log("🎵 Versões obtidas de 'versionsList':", versionsForPlayer);
   } else {
     console.log("🎵 Nenhuma versão encontrada no objeto projectData");
@@ -232,7 +251,7 @@ const MusicPreviewSystem: React.FC<MusicPreviewSystemProps> = ({ projectId }) =>
           name: 'Versão Orquestral (EXEMPLO)',
           createdAt: new Date().toISOString()
         }
-      ];
+      ] as MusicPreview[];
     }
   }
 
