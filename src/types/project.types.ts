@@ -96,7 +96,6 @@ export interface ProjectFile {
 }
 
 // Add a VersionItem type to ensure compatibility with existing code
-// IMPORTANT: This was causing the error - make sure it's properly exported
 export interface VersionItem extends BaseVersionItem {
   title: string; // Make title required for VersionItem
   audioUrl: string; // Make audioUrl required for VersionItem

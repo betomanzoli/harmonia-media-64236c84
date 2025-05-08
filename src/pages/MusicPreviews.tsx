@@ -182,19 +182,19 @@ const MusicPreviews: React.FC = () => {
 
   // Create a complete ProjectItem with required fields
   const projectItemData: ProjectItem = {
-    id: projectData.id || actualProjectId || 'unknown',
-    clientName: projectData.clientName || 'Cliente',
-    projectTitle: projectData.projectTitle || 'Música Personalizada',
-    packageType: projectData.packageType || 'standard',
-    status: projectData.status || 'waiting',
-    createdAt: projectData.createdAt || new Date().toISOString(),
-    lastActivityDate: projectData.lastActivityDate || new Date().toISOString(),
-    expirationDate: projectData.expirationDate || new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString(),
-    versions: projectData.versions || versionsForPlayer.length || 0,
-    versionsList: (projectData.versionsList || []) as ProjectVersion[],
-    feedbackHistory: projectData.feedbackHistory || [],
-    history: projectData.history || [],
-    preview_code: projectData.preview_code // Use preview_code instead of ID
+    id: projectData?.id || actualProjectId || 'unknown',
+    clientName: projectData?.clientName || 'Cliente',
+    projectTitle: projectData?.projectTitle || 'Música Personalizada',
+    packageType: projectData?.packageType || 'standard',
+    status: projectData?.status || 'waiting',
+    createdAt: projectData?.createdAt || new Date().toISOString(),
+    lastActivityDate: projectData?.lastActivityDate || new Date().toISOString(),
+    expirationDate: projectData?.expirationDate || new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString(),
+    versions: projectData?.versions || versionsForPlayer.length || 0,
+    versionsList: (projectData?.versionsList || []) as ProjectVersion[],
+    feedbackHistory: projectData?.feedbackHistory || [],
+    history: projectData?.history || [],
+    preview_code: projectData?.preview_code // Use preview_code instead of ID
   };
   
   return (
