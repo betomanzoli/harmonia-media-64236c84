@@ -175,21 +175,21 @@ const MusicPreviewSystem: React.FC<MusicPreviewSystemProps> = ({ projectId }) =>
   };
 
   // Ensures we have the necessary properties
-  const projectTitle = projectData.projectTitle || "Projeto de Música Personalizada";
-  const clientName = projectData.clientName || "Cliente";
-  const status = projectData.status || "waiting";
-  const packageType = formatPackageType(projectData.packageType);
-  const createdAt = projectData.createdAt || new Date().toISOString();
+  const projectTitle = projectData?.projectTitle || "Projeto de Música Personalizada";
+  const clientName = projectData?.clientName || "Cliente";
+  const status = projectData?.status || "waiting";
+  const packageType = formatPackageType(projectData?.packageType);
+  const createdAt = projectData?.createdAt || new Date().toISOString();
   
   // Convert versionsList to MusicPreview format ensuring title and description fields exist
   let versionsForPlayer: MusicPreview[] = [];
   
   console.log("🎵 Processando versões para o player:", {
-    previews: projectData.previews,
-    versionsList: projectData.versionsList
+    previews: projectData?.previews,
+    versionsList: projectData?.versionsList
   });
   
-  if (Array.isArray(projectData.previews) && projectData.previews.length > 0) {
+  if (Array.isArray(projectData?.previews) && projectData.previews.length > 0) {
     // If previews are already in MusicPreview format, use them directly
     versionsForPlayer = projectData.previews.map((preview) => ({
       ...preview,
@@ -203,7 +203,7 @@ const MusicPreviewSystem: React.FC<MusicPreviewSystemProps> = ({ projectId }) =>
       stemsUrl: preview.stemsUrl || undefined
     })) as MusicPreview[];
     console.log("🎵 Versões obtidas de 'previews':", versionsForPlayer);
-  } else if (Array.isArray(projectData.versionsList) && projectData.versionsList.length > 0) {
+  } else if (Array.isArray(projectData?.versionsList) && projectData.versionsList.length > 0) {
     // Convert versionsList to MusicPreview format
     versionsForPlayer = projectData.versionsList.map((v) => ({
       id: v.id,

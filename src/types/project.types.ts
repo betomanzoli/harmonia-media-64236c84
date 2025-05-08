@@ -103,6 +103,7 @@ export interface VersionItem extends BaseVersionItem {
   audioUrl: string; // Make audioUrl required for VersionItem
   finalVersionUrl?: string; // Add for download functionality
   stemsUrl?: string; // Add for stems download functionality
+  audio_url?: string; // Add audio_url for compatibility
   file_url?: string;
   fileId?: string;
   dateAdded?: string;
