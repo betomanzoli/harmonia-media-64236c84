@@ -16,6 +16,8 @@ export interface BaseVersionItem {
   fileId?: string; // Add file ID for Google Drive links
   file_url?: string; // Add file URL for compatibility
   dateAdded?: string; // Add date added property
+  audio_url?: string; // Add audio_url for compatibility with different naming conventions
+  url?: string; // Add url for compatibility
 }
 
 // Version type used in project.versionsList

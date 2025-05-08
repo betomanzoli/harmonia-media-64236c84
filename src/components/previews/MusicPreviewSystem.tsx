@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import PreviewHeader from './PreviewHeader';
 import PreviewPlayerList from './player/PreviewPlayerList';
@@ -12,7 +11,7 @@ import PreviewLoadingState from './PreviewLoadingState';
 import { usePreviewData } from '@/hooks/usePreviewData';
 import PreviewProjectDetails from './PreviewProjectDetails';
 import { useToast } from '@/hooks/use-toast';
-import { MusicPreview } from '@/types/project.types';
+import { MusicPreview, VersionItem } from '@/types/project.types';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { AlertCircle } from 'lucide-react';
 

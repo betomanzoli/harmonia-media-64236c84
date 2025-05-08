@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useParams } from 'react-router-dom';
 import { useToast } from "@/hooks/use-toast";
@@ -8,27 +7,9 @@ import PreviewError from '@/components/previews/PreviewError';
 import PreviewContent from '@/components/previews/PreviewContent';
 import { usePreviewData } from '@/hooks/usePreviewData';
 import { notificationService } from '@/services/notificationService';
-import { ProjectItem, MusicPreview, ProjectVersion } from '@/types/project.types';
+import { ProjectItem, MusicPreview, ProjectVersion, VersionItem } from '@/types/project.types';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { AlertCircle } from 'lucide-react';
-
-// Local version of VersionItem with all needed properties
-interface LocalVersionItem {
-  id: string;
-  title?: string; 
-  name?: string;
-  description?: string;
-  audioUrl?: string;
-  audio_url?: string;
-  file_url?: string;
-  recommended?: boolean;
-  finalVersionUrl?: string;
-  stemsUrl?: string;
-  fileId?: string;
-  createdAt?: string;
-  created_at?: string;
-  url?: string;
-}
 
 // Force dynamic content to prevent caching
 export const dynamic = 'force-dynamic';
@@ -174,10 +155,10 @@ const MusicPreviews: React.FC = () => {
   const versionsForPlayer: MusicPreview[] = Array.isArray(projectData?.previews) 
     ? projectData.previews.map((p) => ({
         ...p,
-        title: p.title || p.name || `Versão ${p.id}`, // Ensure title exists
-        name: p.name || p.title || `Versão ${p.id}`, // Ensure name exists
-        description: p.description || 'Sem descrição', // Ensure description exists
-        audioUrl: p.audioUrl || p.file_url || '', // Ensure audioUrl exists
+        title: p.title || p.name || `Versão ${p.id}`,
+        name: p.name || p.title || `Versão ${p.id}`,
+        description: p.description || 'Sem descrição',
+        audioUrl: p.audioUrl || p.audio_url || p.file_url || '',
         fileId: p.fileId || undefined,
         finalVersionUrl: p.finalVersionUrl || '',
         stemsUrl: p.stemsUrl || ''
@@ -188,10 +169,10 @@ const MusicPreviews: React.FC = () => {
             title: v.title || v.name || `Versão ${v.id}`,
             name: v.name || v.title || `Versão ${v.id}`,
             description: v.description || 'Sem descrição',
-            audioUrl: v.audioUrl || v.file_url || '', // Handle both naming conventions
+            audioUrl: v.audioUrl || v.audio_url || v.file_url || '',
             fileId: v.fileId || undefined,
             recommended: v.recommended || false,
-            createdAt: v.createdAt || v.created_at || new Date().toISOString(), // Handle both naming conventions
+            createdAt: v.createdAt || v.created_at || new Date().toISOString(),
             finalVersionUrl: v.finalVersionUrl || '',
             stemsUrl: v.stemsUrl || ''
           })) as MusicPreview[]
