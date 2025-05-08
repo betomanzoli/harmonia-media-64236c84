@@ -43,6 +43,7 @@ export interface BaseProjectItem {
   id: string;
   clientName: string;
   clientEmail?: string;
+  clientPhone?: string; // Add clientPhone property
   projectTitle: string;
   packageType: string;
   status: 'waiting' | 'feedback' | 'approved';
@@ -58,7 +59,7 @@ export interface BaseProjectItem {
 // Complete project item with version list
 export interface ProjectItem extends BaseProjectItem {
   versionsList: ProjectVersion[];
-  feedbackHistory: any[];
+  feedbackHistory: FeedbackItem[];
   history: any[];
   previews?: MusicPreview[];
 }
@@ -97,14 +98,14 @@ export interface ProjectFile {
 // Add a VersionItem type to ensure compatibility with existing code
 // IMPORTANT: This was causing the error - make sure it's properly exported
 export interface VersionItem extends BaseVersionItem {
-  file_url?: string;
-  fileId?: string;
-  dateAdded?: string;
-  additionalLinks?: any[];
   title: string; // Make title required for VersionItem
   audioUrl: string; // Make audioUrl required for VersionItem
   finalVersionUrl?: string; // Add for download functionality
   stemsUrl?: string; // Add for stems download functionality
+  file_url?: string;
+  fileId?: string;
+  dateAdded?: string;
+  additionalLinks?: any[];
 }
 
 // Export type for feedback items
@@ -113,4 +114,5 @@ export interface FeedbackItem {
   content: string;
   createdAt: string;
   status: string;
+  versionId?: string; // Add versionId property
 }

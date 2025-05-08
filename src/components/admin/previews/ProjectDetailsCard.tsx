@@ -3,7 +3,7 @@ import React, { useState } from 'react';
 import { Card, CardHeader, CardTitle, CardContent, CardFooter } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { ProjectItem } from '@/hooks/admin/usePreviewProjects';
+import { ProjectItem } from '@/types/project.types';
 import { Edit, Save, Clock, Calendar } from 'lucide-react';
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
