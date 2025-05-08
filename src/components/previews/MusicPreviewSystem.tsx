@@ -357,7 +357,7 @@ const MusicPreviewSystem: React.FC<MusicPreviewSystemProps> = ({ projectId }) =>
       </div>
       
       <SharePreviewDialog 
-        isOpen={isShareDialogOpen}
+        open={isShareDialogOpen}
         onOpenChange={setIsShareDialogOpen}
         projectId={projectId}
         projectTitle={projectTitle}

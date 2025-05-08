@@ -68,7 +68,7 @@ export const useProjectAccess = (projectId: string | null | undefined) => {
         expires_at: expiresAt
       };
       
-      setJsonCookie('preview_access', accessData, { maxAge: expirationHours * 60 * 60 });
+      setJsonCookie('preview_access', accessData, { maxAge: String(expirationHours * 60 * 60) });
       logger.info('ACCESS', 'Access granted', { projectId, expiresAt: new Date(expiresAt).toISOString() });
       
       setIsAuthorized(true);
@@ -96,5 +96,65 @@ export const useProjectAccess = (projectId: string | null | undefined) => {
     loading,
     grantAccess,
     revokeAccess
+  };
+};
+
+// Adding this form hook to fix import in ProjectAccessForm
+export const useProjectAccessForm = ({ projectId, onVerify }: { projectId: string, onVerify: (code: string, email: string) => void }) => {
+  const [code, setCode] = useState(projectId || '');
+  const [email, setEmail] = useState('');
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [errors, setErrors] = useState<{
+    code?: string;
+    email?: string;
+  }>({});
+
+  const validate = () => {
+    const newErrors: {
+      code?: string;
+      email?: string;
+    } = {};
+    
+    if (!code.trim()) {
+      newErrors.code = 'Código de prévia é obrigatório';
+    }
+    
+    if (!email.trim()) {
+      newErrors.email = 'Email é obrigatório';
+    } else if (!/^\S+@\S+\.\S+$/.test(email)) {
+      newErrors.email = 'Email inválido';
+    }
+    
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
+  };
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    if (!validate()) return;
+    
+    setIsLoading(true);
+    setError(null);
+    
+    try {
+      // Simple client-side validation before calling the verify function
+      onVerify(code, email);
+    } catch (err) {
+      setError('Erro ao verificar acesso. Por favor, tente novamente.');
+      setIsLoading(false);
+    }
+  };
+
+  return {
+    code,
+    setCode,
+    email,
+    setEmail,
+    isLoading,
+    error,
+    errors,
+    handleSubmit
   };
 };

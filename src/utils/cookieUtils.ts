@@ -59,6 +59,11 @@ export const deleteCookie = (name: string, path = '/'): void => {
 };
 
 /**
+ * Alias for deleteCookie to maintain compatibility with existing code
+ */
+export const removeCookie = deleteCookie;
+
+/**
  * Sets a JSON object as a cookie
  * 
  * @param name - Cookie name
