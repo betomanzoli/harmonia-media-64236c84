@@ -1,10 +1,12 @@
 
-import { 
+import type { 
   ProjectVersion,
   MusicPreview,
   ProjectData,
   ProjectItem,
-  PreviewProjectData
+  PreviewProjectData,
+  VersionItem,
+  FeedbackItem
 } from '@/types/project.types';
 
 // Re-export all types from the centralized file using proper export type syntax
@@ -13,3 +15,5 @@ export type { MusicPreview };
 export type { ProjectData };
 export type { ProjectItem };
 export type { PreviewProjectData };
+export type { VersionItem };
+export type { FeedbackItem };

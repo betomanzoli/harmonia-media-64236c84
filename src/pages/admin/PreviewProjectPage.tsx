@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import AdminLayout from '@/components/admin/layout/AdminLayout';
@@ -8,7 +9,7 @@ import ProjectClientInfo from '@/components/admin/previews/ProjectClientInfo';
 import ProjectActionCard from '@/components/admin/previews/ProjectActionCard';
 import ProjectHistoryList from '@/components/admin/previews/ProjectHistoryList';
 import ProjectFeedbackHistory from '@/components/admin/previews/ProjectFeedbackHistory';
-import { usePreviewProjects, VersionItem } from '@/hooks/admin/usePreviewProjects';
+import { VersionItem, usePreviewProjects, ProjectItem } from '@/hooks/admin/usePreviewProjects';
 import { useToast } from '@/hooks/use-toast';
 import { generatePreviewLink } from '@/utils/previewLinkUtils';
 
@@ -18,15 +19,17 @@ const PreviewProjectPage: React.FC = () => {
   } = useParams<{
     projectId: string;
   }>();
-  const {
-    getProjectById,
-    updateProject
-  } = usePreviewProjects();
+  
+  // Get projects data
+  const previewProjects = usePreviewProjects();
   const {
     toast
   } = useToast();
   const navigate = useNavigate();
-  const project = projectId ? getProjectById(projectId) : null;
+  
+  // Find the project in the list
+  const project = projectId ? previewProjects.getProjectById(projectId) : null;
+  
   const [encodedLinkUrl, setEncodedLinkUrl] = useState<string>('');
   
   useEffect(() => {
@@ -42,7 +45,7 @@ const PreviewProjectPage: React.FC = () => {
         encodedLink = generatePreviewLink(projectId, project.clientEmail || project.clientName);
         
         // Save this preview_code for future use
-        updateProject(projectId, { 
+        previewProjects.updateProject(projectId, { 
           preview_code: encodedLink 
         });
       }
@@ -52,9 +55,9 @@ const PreviewProjectPage: React.FC = () => {
       const fullUrl = `${window.location.origin}/preview/${encodedLink}`;
       setEncodedLinkUrl(fullUrl);
     }
-  }, [projectId, project, updateProject]);
+  }, [projectId, project, previewProjects]);
   
-  // Verifica se o projeto existe
+  // Check if project exists
   if (!project) {
     return <AdminLayout>
         <Card className="p-6">
@@ -67,12 +70,13 @@ const PreviewProjectPage: React.FC = () => {
     if (!projectId) return;
     const currentVersions = project.versionsList || [];
 
-    // Se a nova versão for marcada como final, adiciona um indicador
+    // If the new version is marked as final, add an indicator
     const isFinalVersion = newVersion.final === true;
     const versionTitle = isFinalVersion ? `FINAL - ${newVersion.name}` : newVersion.name;
     const versionToAdd = {
       ...newVersion,
-      name: versionTitle
+      name: versionTitle,
+      title: versionTitle // Also set title for consistent display
     };
 
     // If the new version is marked as recommended, remove recommended from others
@@ -99,7 +103,7 @@ const PreviewProjectPage: React.FC = () => {
     const history = [...(project.history || []), historyEntry];
 
     // Update project
-    updateProject(projectId, {
+    previewProjects.updateProject(projectId, {
       versionsList: updatedVersions,
       versions: updatedVersions.length,
       history,
@@ -130,7 +134,7 @@ const PreviewProjectPage: React.FC = () => {
     const history = [...(project.history || []), historyEntry];
 
     // Update project
-    updateProject(projectId, {
+    previewProjects.updateProject(projectId, {
       expirationDate: newExpirationDate,
       history,
       lastActivityDate: new Date().toLocaleDateString('pt-BR')
@@ -160,7 +164,7 @@ const PreviewProjectPage: React.FC = () => {
     const history = [...(project.history || []), historyEntry];
 
     // Update project
-    updateProject(projectId, {
+    previewProjects.updateProject(projectId, {
       versionsList: updatedVersions,
       versions: updatedVersions.length,
       history,

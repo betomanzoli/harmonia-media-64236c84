@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import AdminLayout from '@/components/admin/layout/AdminLayout';
@@ -48,6 +49,7 @@ const PreviewProjectPage: React.FC = () => {
 
   const handleAddVersion = (version: VersionItem) => {
     if (!projectId) return;
+    // Call addVersion with projectId and version
     addVersion(projectId, version);
     toast({
       title: "Versão adicionada",
@@ -57,6 +59,7 @@ const PreviewProjectPage: React.FC = () => {
   
   const handleDeleteVersion = (versionId: string) => {
     if (!projectId) return;
+    // Call deleteVersion with projectId and versionId
     deleteVersion(projectId, versionId);
     toast({
       title: "Versão removida",
@@ -66,6 +69,7 @@ const PreviewProjectPage: React.FC = () => {
   
   const handleExtendDeadline = () => {
     if (!projectId) return;
+    // Call extendDeadline with projectId
     extendDeadline(projectId);
     toast({
       title: "Prazo estendido",

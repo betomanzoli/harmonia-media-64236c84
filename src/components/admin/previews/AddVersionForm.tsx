@@ -7,7 +7,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Card } from '@/components/ui/card';
 import { CheckCircle } from 'lucide-react';
 import { generatePreviewLink } from '@/utils/previewLinkUtils';
-import { VersionItem } from '@/hooks/admin/usePreviewProjects';
+import { VersionItem } from '@/types/project.types';
 import { v4 as uuidv4 } from 'uuid';
 
 export interface AddVersionFormProps {
@@ -35,13 +35,16 @@ const AddVersionForm: React.FC<AddVersionFormProps> = ({
     const newVersion: VersionItem = {
       id: uuidv4(),
       name: name || 'Nova Versão',
+      title: name || 'Nova Versão', // Add title field to match VersionItem interface
       description: description || 'Sem descrição adicional',
       audioUrl: audioUrl,
       // Set both naming conventions to ensure compatibility
       file_url: audioUrl, 
       recommended: isRecommended,
       final: isFinal,
-      createdAt: new Date().toISOString()
+      createdAt: new Date().toISOString(),
+      finalVersionUrl: '',
+      stemsUrl: ''
     };
     
     console.log(`[AddVersionForm] Adding new version:`, newVersion);

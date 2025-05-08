@@ -17,6 +17,7 @@ export const generateMockPreviews = (): ProjectItem[] => {
       id: "P0001",
       clientName: "João Silva",
       clientEmail: "joao.silva@email.com",
+      projectTitle: "Música Personalizada - João Silva", // Add required projectTitle field
       packageType: "Premium",
       createdAt: "10/04/2025",
       status: "waiting",
@@ -59,6 +60,7 @@ export const generateMockPreviews = (): ProjectItem[] => {
       id: "P0002",
       clientName: "Maria Oliveira",
       clientEmail: "maria.oliveira@email.com",
+      projectTitle: "Música Personalizada - Maria Oliveira", // Add required projectTitle field
       packageType: "Essencial",
       createdAt: "05/04/2025",
       status: "feedback",
@@ -89,6 +91,7 @@ export const generateMockPreviews = (): ProjectItem[] => {
       id: "P0003",
       clientName: "Carlos Santos",
       clientEmail: "carlos.santos@email.com",
+      projectTitle: "Música Personalizada - Carlos Santos", // Add required projectTitle field
       packageType: "Profissional",
       createdAt: "01/04/2025",
       status: "approved",

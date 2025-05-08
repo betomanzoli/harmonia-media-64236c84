@@ -95,6 +95,7 @@ export interface ProjectFile {
 }
 
 // Add a VersionItem type to ensure compatibility with existing code
+// IMPORTANT: This was causing the error - make sure it's properly exported
 export interface VersionItem extends BaseVersionItem {
   file_url?: string;
   fileId?: string;
@@ -104,4 +105,12 @@ export interface VersionItem extends BaseVersionItem {
   audioUrl: string; // Make audioUrl required for VersionItem
   finalVersionUrl?: string; // Add for download functionality
   stemsUrl?: string; // Add for stems download functionality
+}
+
+// Export type for feedback items
+export interface FeedbackItem {
+  id: string;
+  content: string;
+  createdAt: string;
+  status: string;
 }
