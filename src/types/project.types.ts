@@ -2,31 +2,36 @@
 // Base version interface that all version-related types can extend from
 export interface BaseVersionItem {
   id: string;
-  name: string;
+  name: string; // Keep for backward compatibility
   description: string;
-  audioUrl?: string; // Made optional here
+  audioUrl?: string; // Optional here, but required in specific interfaces
   recommended?: boolean;
   final?: boolean;
   createdAt?: string;
-  title?: string; // Add title property to base interface
+  created_at?: string; // Added for compatibility with Supabase naming convention
+  title?: string; // Add title property for UI display
+  finalVersionUrl?: string; // Add final version URL for downloads
+  stemsUrl?: string; // Add stems URL for downloads
+  additionalLinks?: any[]; // Add support for additional links
 }
 
 // Version type used in project.versionsList
 export interface ProjectVersion extends BaseVersionItem {
   // Additional properties specific to ProjectVersion
   fileId?: string;
-  finalVersionUrl?: string;
-  stemsUrl?: string;
   file_url?: string; // Added for compatibility with Supabase naming convention
-  created_at?: string; // Added for compatibility with Supabase naming convention
   audioUrl: string; // Required in this interface
-  title?: string; // Ensure title is available for ProjectVersion too
+  title: string; // Make title required in this interface
 }
 
 // Music preview type that includes title (mapped from name)
 export interface MusicPreview extends BaseVersionItem {
   title: string; // Required for UI components
   audioUrl: string; // Required in this interface
+  name: string; // Required for compatibility with existing code
+  finalVersionUrl?: string; // Add for download functionality
+  stemsUrl?: string; // Add for stems download functionality
+  url?: string; // Alternative URL field for compatibility
 }
 
 // Base project interface with common properties
@@ -89,8 +94,9 @@ export interface VersionItem extends BaseVersionItem {
   file_url?: string;
   fileId?: string;
   dateAdded?: string;
-  created_at?: string;
   additionalLinks?: any[];
-  title: string; // Add this to fix the TypeScript errors
-  audioUrl?: string; // Make it optional here
+  title: string; // Make title required for VersionItem
+  audioUrl: string; // Make audioUrl required for VersionItem
+  finalVersionUrl?: string; // Add for download functionality
+  stemsUrl?: string; // Add for stems download functionality
 }

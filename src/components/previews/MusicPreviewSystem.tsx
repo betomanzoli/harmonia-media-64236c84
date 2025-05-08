@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import PreviewHeader from './PreviewHeader';
 import PreviewPlayerList from './player/PreviewPlayerList';
@@ -178,6 +177,7 @@ const MusicPreviewSystem: React.FC<MusicPreviewSystemProps> = ({ projectId }) =>
       ...preview,
       // Ensure all required fields exist
       title: preview.title || preview.name || `Versão ${preview.id}`,
+      name: preview.name || preview.title || `Versão ${preview.id}`,
       description: preview.description || 'Sem descrição',
       audioUrl: preview.audioUrl || preview.file_url || '',
     }));
@@ -187,10 +187,12 @@ const MusicPreviewSystem: React.FC<MusicPreviewSystemProps> = ({ projectId }) =>
     versionsForPlayer = projectData.versionsList.map(v => ({
       id: v.id,
       title: v.title || v.name || `Versão ${v.id}`, 
+      name: v.name || v.title || `Versão ${v.id}`,
       description: v.description || 'Sem descrição',
       audioUrl: v.audioUrl || v.file_url || '',
       recommended: v.recommended || false,
-      name: v.name || `Versão ${v.id}`,
+      finalVersionUrl: v.finalVersionUrl || '',
+      stemsUrl: v.stemsUrl || '',
       createdAt: v.createdAt || v.created_at || new Date().toISOString()
     }));
     console.log("🎵 Versões obtidas de 'versionsList':", versionsForPlayer);

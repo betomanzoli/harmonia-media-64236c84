@@ -1,20 +1,8 @@
-
 import React from 'react';
 import { Card } from "@/components/ui/card";
 import PreviewVersionCard from './PreviewVersionCard';
 import { useToast } from '@/hooks/use-toast';
-
-interface MusicPreview {
-  id: string;
-  title: string;
-  description: string;
-  audioUrl?: string;
-  url?: string;
-  fileId?: string;
-  recommended?: boolean;
-  finalVersionUrl?: string;
-  stemsUrl?: string;
-}
+import { MusicPreview } from '@/types/project.types';
 
 interface PreviewPlayerListProps {
   versions: MusicPreview[];
@@ -61,8 +49,8 @@ const PreviewPlayerList: React.FC<PreviewPlayerListProps> = ({
     }
     
     // Otherwise use the provided audioUrl or url
-    if (version.audioUrl) {
-      window.open(version.audioUrl, '_blank');
+    if (version.audioUrl || version.url) {
+      window.open(version.audioUrl || version.url, '_blank');
       toast({
         title: "Reproduzindo prévia",
         description: "A prévia está sendo reproduzida em uma nova aba."

@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useParams } from 'react-router-dom';
 import { useToast } from "@/hooks/use-toast";
@@ -157,6 +156,7 @@ const MusicPreviews: React.FC = () => {
     ? projectData.previews.map(p => ({
         ...p,
         title: p.title || p.name || `Versão ${p.id}`, // Ensure title exists
+        name: p.name || p.title || `Versão ${p.id}`, // Ensure name exists
         description: p.description || 'Sem descrição', // Ensure description exists
         audioUrl: p.audioUrl || p.file_url || '' // Ensure audioUrl exists
       }))
@@ -164,11 +164,13 @@ const MusicPreviews: React.FC = () => {
         ? projectData.versionsList.map(v => ({
             id: v.id,
             title: v.title || v.name || `Versão ${v.id}`,
+            name: v.name || v.title || `Versão ${v.id}`,
             description: v.description || 'Sem descrição',
             audioUrl: v.audioUrl || v.file_url || '', // Handle both naming conventions
             recommended: v.recommended || false,
-            name: v.name || `Versão ${v.id}`,
-            createdAt: v.createdAt || v.created_at || new Date().toISOString() // Handle both naming conventions
+            createdAt: v.createdAt || v.created_at || new Date().toISOString(), // Handle both naming conventions
+            finalVersionUrl: v.finalVersionUrl || '',
+            stemsUrl: v.stemsUrl || ''
           }))
         : []);
   

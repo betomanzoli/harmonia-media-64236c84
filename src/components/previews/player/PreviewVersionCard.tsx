@@ -46,7 +46,7 @@ const PreviewVersionCard: React.FC<PreviewVersionCardProps> = ({
     >
       <div className="flex justify-between items-start mb-4 flex-wrap">
         <div>
-          <h3 className="font-bold text-lg">{version.title}</h3>
+          <h3 className="font-bold text-lg">{version.title || version.name}</h3>
           {version.recommended && (
             <span className="inline-block px-2 py-1 bg-green-100 text-green-700 text-xs rounded-full mt-1">
               Recomendada

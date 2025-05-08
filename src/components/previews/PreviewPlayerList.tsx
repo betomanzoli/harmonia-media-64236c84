@@ -3,14 +3,7 @@ import React, { useState } from 'react';
 import { useToast } from '@/hooks/use-toast';
 import PreviewVersionCard from './player/PreviewVersionCard';
 import NoVersionsCard from './player/NoVersionsCard';
-
-interface MusicPreview {
-  id: string;
-  title: string;
-  description: string;
-  audioUrl?: string;
-  url?: string;
-}
+import { MusicPreview } from '@/types/project.types';
 
 interface PreviewVersionsListProps {
   versions: MusicPreview[];

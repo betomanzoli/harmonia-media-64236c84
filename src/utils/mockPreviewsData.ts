@@ -28,26 +28,28 @@ export const generateMockPreviews = (): ProjectItem[] => {
         {
           id: "v1",
           name: "Versão Acústica",
-          title: "Versão Acústica", // Added title property
+          title: "Versão Acústica",
           description: "Versão com violão e voz, arranjo minimalista",
-          audioUrl: "https://samplelib.com/lib/preview/mp3/sample-3s.mp3", // Ensure this field exists
+          audioUrl: "https://samplelib.com/lib/preview/mp3/sample-3s.mp3",
           createdAt: new Date("2025-04-10").toISOString(),
+          created_at: new Date("2025-04-10").toISOString(),
           recommended: false,
           fileId: "audio1",
-          created_at: new Date("2025-04-10").toISOString(),
-          additionalLinks: []
+          finalVersionUrl: "",
+          stemsUrl: ""
         },
         {
           id: "v2",
           name: "Versão Completa",
-          title: "Versão Completa", // Added title property
+          title: "Versão Completa",
           description: "Versão com banda completa, arranjo final sugerido",
-          audioUrl: "https://samplelib.com/lib/preview/mp3/sample-6s.mp3", // Ensure this field exists
+          audioUrl: "https://samplelib.com/lib/preview/mp3/sample-6s.mp3",
           createdAt: new Date("2025-04-12").toISOString(),
+          created_at: new Date("2025-04-12").toISOString(),
           recommended: true,
           fileId: "audio2",
-          created_at: new Date("2025-04-12").toISOString(),
-          additionalLinks: []
+          finalVersionUrl: "",
+          stemsUrl: ""
         }
       ],
       feedbackHistory: [],
@@ -68,14 +70,15 @@ export const generateMockPreviews = (): ProjectItem[] => {
         {
           id: "v1",
           name: "Versão Demo",
-          title: "Versão Demo", // Added title property
+          title: "Versão Demo",
           description: "Primeira versão para avaliação",
-          audioUrl: "https://samplelib.com/lib/preview/mp3/sample-9s.mp3", // Ensure this field exists
+          audioUrl: "https://samplelib.com/lib/preview/mp3/sample-9s.mp3",
           createdAt: new Date("2025-04-05").toISOString(),
+          created_at: new Date("2025-04-05").toISOString(),
           recommended: true,
           fileId: "audio3",
-          created_at: new Date("2025-04-05").toISOString(),
-          additionalLinks: []
+          finalVersionUrl: "",
+          stemsUrl: ""
         }
       ],
       feedbackHistory: [],
@@ -97,38 +100,41 @@ export const generateMockPreviews = (): ProjectItem[] => {
         {
           id: "v1",
           name: "Versão Inicial",
-          title: "Versão Inicial", // Added title property
+          title: "Versão Inicial",
           description: "Primeiro conceito da música",
-          audioUrl: "https://samplelib.com/lib/preview/mp3/sample-12s.mp3", // Ensure this field exists
+          audioUrl: "https://samplelib.com/lib/preview/mp3/sample-12s.mp3",
           createdAt: new Date("2025-04-01").toISOString(),
+          created_at: new Date("2025-04-01").toISOString(),
           recommended: false,
           fileId: "audio4",
-          created_at: new Date("2025-04-01").toISOString(),
-          additionalLinks: []
+          finalVersionUrl: "",
+          stemsUrl: ""
         },
         {
           id: "v2",
           name: "Versão Revisada",
-          title: "Versão Revisada", // Added title property
+          title: "Versão Revisada",
           description: "Ajustes após primeiro feedback",
-          audioUrl: "https://samplelib.com/lib/preview/mp3/sample-15s.mp3", // Ensure this field exists
+          audioUrl: "https://samplelib.com/lib/preview/mp3/sample-15s.mp3",
           createdAt: new Date("2025-04-02").toISOString(),
+          created_at: new Date("2025-04-02").toISOString(),
           recommended: false,
           fileId: "audio5",
-          created_at: new Date("2025-04-02").toISOString(),
-          additionalLinks: []
+          finalVersionUrl: "",
+          stemsUrl: ""
         },
         {
           id: "v3",
           name: "Versão Final",
-          title: "Versão Final", // Added title property
+          title: "Versão Final",
           description: "Versão aprovada pelo cliente",
-          audioUrl: "https://samplelib.com/lib/preview/mp3/sample-9s.mp3", // Ensure this field exists
+          audioUrl: "https://samplelib.com/lib/preview/mp3/sample-9s.mp3",
           createdAt: new Date("2025-04-03").toISOString(),
+          created_at: new Date("2025-04-03").toISOString(),
           recommended: true,
           fileId: "audio6",
-          created_at: new Date("2025-04-03").toISOString(),
-          additionalLinks: []
+          finalVersionUrl: "https://example.com/final/P0003-final.mp3",
+          stemsUrl: "https://example.com/stems/P0003-stems.zip"
         }
       ],
       feedbackHistory: [],

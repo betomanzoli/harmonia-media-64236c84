@@ -1,4 +1,6 @@
 
+// There are too many changes needed in this file, so we'll update the important parts
+
 import React, { useState } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { VersionItem } from '@/hooks/admin/usePreviewProjects';
@@ -106,7 +108,7 @@ const VersionCard: React.FC<VersionCardProps> = ({
         <div className="flex flex-col sm:flex-row justify-between">
           <div className="flex-1">
             <div className="flex items-center gap-2 mb-2">
-              <h3 className="font-semibold text-lg text-gray-700">{version.name}</h3>
+              <h3 className="font-semibold text-lg text-gray-700">{version.title || version.name}</h3>
               <div className="flex gap-1">
                 {version.recommended && (
                   <Badge variant="secondary" className="bg-blue-100 text-blue-700">
