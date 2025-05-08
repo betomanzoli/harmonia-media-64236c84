@@ -1,70 +1,50 @@
 
 import React, { useState } from 'react';
-import { useToast } from '@/hooks/use-toast';
+import { Card } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
 import PreviewVersionCard from './player/PreviewVersionCard';
-import NoVersionsCard from './player/NoVersionsCard';
 import { MusicPreview } from '@/types/project.types';
 
-interface PreviewVersionsListProps {
+interface PreviewPlayerListProps {
   versions: MusicPreview[];
   selectedVersion: string | null;
-  setSelectedVersion: (id: string) => void;
-  isApproved: boolean;
+  onSelectVersion: (id: string) => void;
+  isApproved?: boolean;
 }
 
-const PreviewPlayerList: React.FC<PreviewVersionsListProps> = ({
+const PreviewPlayerList: React.FC<PreviewPlayerListProps> = ({
   versions,
   selectedVersion,
-  setSelectedVersion,
-  isApproved
+  onSelectVersion,
+  isApproved = false
 }) => {
-  const [feedbacks, setFeedbacks] = useState<Record<string, string>>({});
-  const { toast } = useToast();
-
-  const handlePlay = (version: MusicPreview) => {
-    const audioUrl = version.audioUrl || version.url;
-    if (audioUrl) {
-      window.open(audioUrl, '_blank');
-      toast({
-        title: "Reproduzindo versão",
-        description: "A versão está sendo reproduzida em uma nova aba."
-      });
-    }
-  };
-
-  const handleFeedbackChange = (versionId: string, feedback: string) => {
-    setFeedbacks(prev => ({
-      ...prev,
-      [versionId]: feedback
-    }));
-  };
-
-  if (!versions || versions.length === 0) {
+  // Check if we have any versions with audio URLs
+  const hasPlayableVersions = versions.some(v => v.audio_url || v.file_url);
+  
+  if (!hasPlayableVersions) {
     return (
-      <div className="mb-10">
-        <h2 className="text-xl font-bold mb-6 pb-2 border-b">Versões Disponíveis</h2>
-        <NoVersionsCard />
-      </div>
+      <Card className="p-6 text-center bg-gray-50">
+        <h3 className="text-lg font-medium text-gray-900 mb-2">Nenhuma prévia disponível</h3>
+        <p className="text-gray-600">
+          Você será notificado assim que houver prévias disponíveis para ouvir.
+        </p>
+      </Card>
     );
   }
-  
+
   return (
-    <div className="mb-10">
-      <h2 className="text-xl font-bold mb-6 pb-2 border-b">Versões Disponíveis</h2>
-      <div className="space-y-6">
-        {versions.map(version => (
+    <div className="space-y-4">
+      {versions
+        .filter(version => version.audio_url || version.file_url)
+        .map(version => (
           <PreviewVersionCard
             key={version.id}
             version={version}
             isSelected={selectedVersion === version.id}
+            onSelect={() => onSelectVersion(version.id)}
             isApproved={isApproved}
-            feedback={feedbacks[version.id]}
-            onPlay={handlePlay}
-            onSelect={setSelectedVersion}
-            onFeedbackChange={handleFeedbackChange}
           />
         ))}
-      </div>
     </div>
   );
 };

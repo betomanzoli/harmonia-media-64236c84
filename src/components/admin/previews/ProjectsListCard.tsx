@@ -85,17 +85,17 @@ export const ProjectsListCard: React.FC<ProjectsListCardProps> = ({
                       </div>
                     </td>
                     <td className="px-4 py-3 whitespace-nowrap">
-                      <div>{project.client_name || project.clientName}</div>
-                      <div className="text-xs text-muted-foreground">{project.client_email || project.clientEmail}</div>
+                      <div>{project.client_name}</div>
+                      <div className="text-xs text-muted-foreground">{project.client_email}</div>
                     </td>
                     <td className="px-4 py-3 whitespace-nowrap">
                       {getStatusLabel(project.status)}
                     </td>
                     <td className="px-4 py-3 whitespace-nowrap text-sm">
-                      {project.created_at || project.createdAt}
+                      {project.created_at}
                     </td>
                     <td className="px-4 py-3 whitespace-nowrap text-sm">
-                      {project.expiration_date || project.expirationDate}
+                      {project.expiration_date}
                     </td>
                     <td className="px-4 py-3 whitespace-nowrap text-right text-sm">
                       <div className="flex justify-end gap-2">

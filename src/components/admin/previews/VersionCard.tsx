@@ -1,3 +1,4 @@
+
 import React, { useState } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { VersionItem } from '@/types/project.types';
@@ -91,8 +92,8 @@ const VersionCard: React.FC<VersionCardProps> = ({
   // Get displayed date, ensuring we have a valid format
   const displayDate = version.date_added || version.created_at || new Date().toISOString();
 
-  console.log('[VersionCard] Rendering with version data:', version);
-  console.log('[VersionCard] Audio source:', audioSource);
+  // Updated to check for additionalLinks property (camelCase) instead of additional_links (snake_case)
+  const hasAdditionalLinks = version.additionalLinks && version.additionalLinks.length > 0;
 
   return (
     <Card className={`bg-white ${version.final ? 'border-green-500 border-2' : ''}`}>
@@ -123,12 +124,12 @@ const VersionCard: React.FC<VersionCardProps> = ({
               Adicionado em: {displayDate ? new Date(displayDate).toLocaleDateString() : "Data desconhecida"}
             </div>
             
-            {/* Additional links for final versions - check if the property exists first */}
-            {version.additional_links && version.additional_links.length > 0 && (
+            {/* Additional links - using camelCase property name */}
+            {hasAdditionalLinks && (
               <div className="mt-2 space-y-2">
                 <h4 className="text-sm font-medium">Arquivos adicionais:</h4>
                 <div className="space-y-1">
-                  {version.additional_links.map((link, index) => (
+                  {version.additionalLinks?.map((link, index) => (
                     <div key={index} className="flex items-center justify-between bg-gray-50 p-2 rounded text-sm">
                       <span className="font-medium">{typeof link === 'string' ? `Link ${index + 1}` : link.label}</span>
                       <div className="flex gap-1">

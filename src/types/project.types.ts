@@ -1,6 +1,7 @@
 
 /**
  * Project Item interface with snake_case properties to match Supabase database schema
+ * and camelCase aliases for front-end components
  */
 export interface ProjectItem {
   id: string;
@@ -30,7 +31,7 @@ export interface ProjectItem {
 }
 
 /**
- * Music Preview interface with snake_case properties
+ * Music Preview interface with both snake_case properties and camelCase aliases
  */
 export interface MusicPreview {
   id: string;
@@ -46,9 +47,16 @@ export interface MusicPreview {
   stems_url?: string;
   created_at?: string;
   date_added?: string;
-  // Alias for compatibility
+  
+  // Camel case aliases for front-end components
   audioUrl?: string;
   url?: string;
+  fileUrl?: string;
+  fileId?: string;
+  finalVersionUrl?: string;
+  stemsUrl?: string;
+  createdAt?: string;
+  dateAdded?: string;
 }
 
 /**
@@ -87,7 +95,7 @@ export interface VersionItem {
   date_added?: string;
   final_version_url?: string;
   stems_url?: string;
-  additional_links?: Array<string | { url: string; label: string }>;
+  additionalLinks?: Array<string | { url: string; label: string }>;
 }
 
 /**

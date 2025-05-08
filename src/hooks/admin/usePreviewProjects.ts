@@ -1,6 +1,6 @@
 
 // Import types from the central types file
-import { ProjectItem, VersionItem, FeedbackItem } from '@/types/project.types';
+import { ProjectItem, VersionItem, FeedbackItem, HistoryItem } from '@/types/project.types';
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { logger } from '@/utils/logger';
@@ -24,30 +24,50 @@ export const usePreviewProject = (projectId: string | undefined) => {
       try {
         logger.debug('ADMIN', `Fetching project details for ID: ${projectId}`);
         
-        const { data, error } = await supabase
+        // Use simple query structure to avoid parsing errors with complex queries
+        const { data: projectData, error: projectError } = await supabase
           .from('projects')
-          .select(`
-            id, title as project_title, status, created_at, updated_at as last_activity_date, preview_code, 
-            deadline as expiration_date,
-            clients(id, name as client_name, email as client_email, phone as client_phone),
-            project_files(id, project_id, file_name as title, file_url as audio_url, file_type, created_at),
-            packages(id, name as package_type, price, description, inclusions)
-          `)
+          .select('*')
           .eq('id', projectId)
           .single();
         
-        if (error) {
-          logger.error('ADMIN', 'Error fetching project details', error);
+        if (projectError) {
+          logger.error('ADMIN', 'Error fetching project details', projectError);
           setProject(null);
           setIsLoading(false);
           return;
         }
-        
-        if (!data) {
-          logger.warn('ADMIN', `Project not found: ${projectId}`);
-          setProject(null);
-          setIsLoading(false);
-          return;
+
+        // Get client data in separate query
+        const { data: clientData, error: clientError } = await supabase
+          .from('clients')
+          .select('*')
+          .eq('id', projectData.client_id)
+          .single();
+
+        if (clientError) {
+          logger.error('ADMIN', 'Error fetching client data', clientError);
+        }
+
+        // Get package data in separate query
+        const { data: packageData, error: packageError } = await supabase
+          .from('packages')
+          .select('*')
+          .eq('id', projectData.package_id)
+          .single();
+
+        if (packageError) {
+          logger.error('ADMIN', 'Error fetching package data', packageError);
+        }
+
+        // Get project files in separate query
+        const { data: projectFilesData, error: projectFilesError } = await supabase
+          .from('project_files')
+          .select('*')
+          .eq('project_id', projectId);
+
+        if (projectFilesError) {
+          logger.error('ADMIN', 'Error fetching project files', projectFilesError);
         }
         
         // Get project history
@@ -62,40 +82,50 @@ export const usePreviewProject = (projectId: string | undefined) => {
         }
         
         // Transform data to match the expected format
-        const projectData: ProjectItem = {
-          id: data.id,
-          client_name: data.clients?.client_name || 'Cliente',
-          client_email: data.clients?.client_email,
-          client_phone: data.clients?.client_phone,
-          project_title: data.project_title || 'Música Personalizada',
-          package_type: data.packages?.package_type || 'standard',
-          status: data.status || 'waiting',
-          created_at: data.created_at,
-          last_activity_date: data.last_activity_date || data.created_at,
-          expiration_date: data.expiration_date || new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString(),
-          versions: data.project_files?.length || 0,
-          versions_list: data.project_files?.map(file => ({
+        const transformedProject: ProjectItem = {
+          id: projectData.id,
+          client_name: clientData?.name || 'Cliente',
+          client_email: clientData?.email,
+          client_phone: clientData?.phone,
+          project_title: projectData.title || 'Música Personalizada',
+          package_type: packageData?.name || 'standard',
+          status: projectData.status || 'waiting',
+          created_at: projectData.created_at,
+          last_activity_date: projectData.updated_at || projectData.created_at,
+          expiration_date: projectData.deadline || new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString(),
+          versions: projectFilesData?.length || 0,
+          versionsList: projectFilesData?.map(file => ({
             id: file.id,
-            title: file.title,
-            name: file.title,
+            title: file.title || '',
+            name: file.title || '',
             description: '',
-            audio_url: file.audio_url,
+            audio_url: file.drive_url || '',
             created_at: file.created_at
           })) || [],
           feedback_history: historyData?.filter(h => h.action === 'feedback').map(h => ({
             id: h.id,
+            project_id: h.project_id,
+            comment: h.details?.message || '',
             content: h.details?.message || '',
             created_at: h.created_at,
             status: h.details?.status || 'pending',
+            version_id: h.details?.version_id
           })) || [],
-          history: historyData || [],
-          preview_code: data.preview_code
+          history: historyData?.map(h => ({
+            id: h.id,
+            project_id: h.project_id,
+            action: h.action,
+            description: typeof h.details === 'object' ? JSON.stringify(h.details) : h.details || '',
+            created_at: h.created_at,
+            user_id: h.details?.user_id
+          })) || [],
+          preview_code: projectData.preview_code
         };
         
-        setProject(projectData);
+        setProject(transformedProject);
         logger.info('ADMIN', 'Project loaded successfully', { 
           id: projectId, 
-          name: projectData.client_name
+          name: transformedProject.client_name
         });
       } catch (error) {
         logger.error('ADMIN', 'Unexpected error loading project', error);
@@ -116,8 +146,8 @@ export const usePreviewProject = (projectId: string | undefined) => {
         .from('project_files')
         .insert({
           project_id: projectId,
-          file_name: version.title,
-          file_url: version.audio_url,
+          title: version.title,
+          drive_url: version.audio_url,
           file_type: 'audio',
         })
         .select()
@@ -149,15 +179,16 @@ export const usePreviewProject = (projectId: string | undefined) => {
           id: data.id,
           title: version.title,
           name: version.title,
-          description: version.description,
+          description: version.description || '',
           audio_url: version.audio_url,
           created_at: data.created_at
         };
         
+        // Update using the correct property name (versionsList, not versions_list)
         setProject({
           ...project,
           versions: (project.versions || 0) + 1,
-          versions_list: [...(project.versions_list || []), newVersion]
+          versionsList: [...(project.versionsList || []), newVersion]
         });
       }
       
@@ -201,7 +232,7 @@ export const usePreviewProject = (projectId: string | undefined) => {
         setProject({
           ...project,
           versions: Math.max(0, (project.versions || 0) - 1),
-          versions_list: (project.versions_list || []).filter(v => v.id !== versionId)
+          versionsList: (project.versionsList || []).filter(v => v.id !== versionId)
         });
       }
       
@@ -335,52 +366,90 @@ export const usePreviewProjects = () => {
     try {
       logger.info('ADMIN', 'Loading all projects');
       
-      const { data, error } = await supabase
+      // Simplified query structure to avoid parser errors
+      const { data: projectsData, error: projectsError } = await supabase
         .from('projects')
-        .select(`
-          id, title as project_title, status, created_at, updated_at as last_activity_date, 
-          preview_code, deadline as expiration_date,
-          clients(id, name as client_name, email as client_email, phone as client_phone),
-          packages(id, name as package_type, price, description)
-        `)
+        .select('*')
         .order('updated_at', { ascending: false });
       
-      if (error) {
-        logger.error('ADMIN', 'Error loading projects', error);
-        setError(`Erro ao carregar projetos: ${error.message}`);
+      if (projectsError) {
+        logger.error('ADMIN', 'Error loading projects', projectsError);
+        setError(`Erro ao carregar projetos: ${projectsError.message}`);
         setProjects([]);
         setIsLoading(false);
         return;
       }
       
-      if (!data || data.length === 0) {
+      if (!projectsData || projectsData.length === 0) {
         logger.info('ADMIN', 'No projects found');
         setProjects([]);
         setIsLoading(false);
         return;
       }
       
-      // Transform data to match the expected format
-      const projectsData: ProjectItem[] = data.map(item => ({
-        id: item.id,
-        client_name: item.clients?.client_name || 'Cliente',
-        client_email: item.clients?.client_email,
-        client_phone: item.clients?.client_phone,
-        project_title: item.project_title || 'Música Personalizada',
-        package_type: item.packages?.package_type || 'standard',
-        status: item.status || 'waiting',
-        created_at: item.created_at,
-        last_activity_date: item.last_activity_date || item.created_at,
-        expiration_date: item.expiration_date || new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString(),
-        versions: 0, // Will load in separate query if needed
-        versions_list: [],
-        feedback_history: [],
-        history: [],
-        preview_code: item.preview_code
-      }));
+      // Load client data
+      const clientIds = projectsData
+        .filter(project => project.client_id)
+        .map(project => project.client_id);
+        
+      const { data: clientsData, error: clientsError } = await supabase
+        .from('clients')
+        .select('*')
+        .in('id', clientIds);
+        
+      if (clientsError) {
+        logger.error('ADMIN', 'Error loading clients', clientsError);
+      }
       
-      setProjects(projectsData);
-      logger.info('ADMIN', `Loaded ${projectsData.length} projects`);
+      // Load package data
+      const packageIds = projectsData
+        .filter(project => project.package_id)
+        .map(project => project.package_id);
+        
+      const { data: packagesData, error: packagesError } = await supabase
+        .from('packages')
+        .select('*')
+        .in('id', packageIds);
+        
+      if (packagesError) {
+        logger.error('ADMIN', 'Error loading packages', packagesError);
+      }
+      
+      // Transform data to match the expected format
+      const transformedProjects: ProjectItem[] = projectsData.map(project => {
+        const client = clientsData?.find(c => c.id === project.client_id);
+        const packageInfo = packagesData?.find(p => p.id === project.package_id);
+        
+        return {
+          id: project.id,
+          client_name: client?.name || 'Cliente',
+          client_email: client?.email,
+          client_phone: client?.phone,
+          project_title: project.title || 'Música Personalizada',
+          package_type: packageInfo?.name || 'standard',
+          status: project.status || 'waiting',
+          created_at: project.created_at,
+          last_activity_date: project.updated_at || project.created_at,
+          expiration_date: project.deadline || new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString(),
+          versions: 0, // Will load in separate query if needed
+          versionsList: [],
+          feedback_history: [],
+          history: [],
+          preview_code: project.preview_code,
+          // Add camelCase aliases for front-end
+          clientName: client?.name || 'Cliente',
+          clientEmail: client?.email,
+          clientPhone: client?.phone,
+          projectTitle: project.title || 'Música Personalizada',
+          packageType: packageInfo?.name || 'standard',
+          createdAt: project.created_at,
+          lastActivityDate: project.updated_at || project.created_at,
+          expirationDate: project.deadline || new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString(),
+        };
+      });
+      
+      setProjects(transformedProjects);
+      logger.info('ADMIN', `Loaded ${transformedProjects.length} projects`);
     } catch (err) {
       logger.error('ADMIN', 'Unexpected error loading projects', err);
       setError('Erro inesperado ao carregar projetos.');
