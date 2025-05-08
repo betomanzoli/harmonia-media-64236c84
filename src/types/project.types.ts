@@ -1,4 +1,3 @@
-
 // Base version interface that all version-related types can extend from
 export interface BaseVersionItem {
   id: string;
@@ -9,7 +8,7 @@ export interface BaseVersionItem {
   final?: boolean;
   createdAt?: string;
   created_at?: string; // Added for compatibility with Supabase naming convention
-  title?: string; // Add title property for UI display
+  title: string; // Add title property for UI display
   finalVersionUrl?: string; // Add final version URL for downloads
   stemsUrl?: string; // Add stems URL for downloads
   additionalLinks?: any[]; // Add support for additional links
