@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from 'react';
 import { getProjectIdFromPreviewLink, isValidEncodedPreviewLink } from '@/utils/previewLinkUtils';
 import { supabase } from '@/lib/supabase';
@@ -15,6 +16,9 @@ interface VersionItem {
   createdAt?: string;
   created_at?: string;
   fileId?: string;
+  title: string;
+  finalVersionUrl?: string;
+  stemsUrl?: string;
 }
 
 interface ProjectData {
@@ -212,13 +216,16 @@ export const usePreviewData = (previewId: string | undefined) => {
     const versionsList = data.project_files?.map((file: any) => ({
       id: file.id,
       name: file.file_name || 'Versão',
+      title: file.file_name || 'Versão',
       description: file.notes || '',
       audioUrl: file.file_url || '',
       file_url: file.file_url || '',
       createdAt: file.created_at,
       created_at: file.created_at,
       recommended: file.is_recommended || false,
-      final: file.is_final || false
+      final: file.is_final || false,
+      finalVersionUrl: file.final_version_url || '',
+      stemsUrl: file.stems_url || ''
     })) || [];
 
     return {

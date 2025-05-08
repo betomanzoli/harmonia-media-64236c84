@@ -4,14 +4,7 @@ import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Check } from 'lucide-react';
 import LimitedAudioPlayer from '@/components/LimitedAudioPlayer';
-
-interface MusicPreview {
-  id: string;
-  title: string;
-  description: string;
-  audioUrl: string;
-  recommended?: boolean;
-}
+import { MusicPreview } from '@/types/project.types';
 
 interface PreviewVersionsListProps {
   versions: MusicPreview[];
