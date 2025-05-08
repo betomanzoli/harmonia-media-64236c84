@@ -9,386 +9,165 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
-      admin_users: {
-        Row: {
-          active: boolean | null
-          created_at: string | null
-          created_by: string | null
-          email: string | null
-          id: number
-          name: string | null
-          role: string | null
-          updated_at: string | null
-          user_id: string
-        }
-        Insert: {
-          active?: boolean | null
-          created_at?: string | null
-          created_by?: string | null
-          email?: string | null
-          id?: number
-          name?: string | null
-          role?: string | null
-          updated_at?: string | null
-          user_id: string
-        }
-        Update: {
-          active?: boolean | null
-          created_at?: string | null
-          created_by?: string | null
-          email?: string | null
-          id?: number
-          name?: string | null
-          role?: string | null
-          updated_at?: string | null
-          user_id?: string
-        }
-        Relationships: []
-      }
-      audio_samples: {
-        Row: {
-          audio_url: string | null
-          created_at: string | null
-          description: string | null
-          duration: number | null
-          featured: boolean | null
-          id: number
-          project_id: string | null
-          status: string | null
-          tags: Json | null
-          title: string
-          updated_at: string | null
-          user_id: string | null
-        }
-        Insert: {
-          audio_url?: string | null
-          created_at?: string | null
-          description?: string | null
-          duration?: number | null
-          featured?: boolean | null
-          id?: number
-          project_id?: string | null
-          status?: string | null
-          tags?: Json | null
-          title: string
-          updated_at?: string | null
-          user_id?: string | null
-        }
-        Update: {
-          audio_url?: string | null
-          created_at?: string | null
-          description?: string | null
-          duration?: number | null
-          featured?: boolean | null
-          id?: number
-          project_id?: string | null
-          status?: string | null
-          tags?: Json | null
-          title?: string
-          updated_at?: string | null
-          user_id?: string | null
-        }
-        Relationships: []
-      }
       briefing_questions: {
         Row: {
-          briefing_template_id: string
-          created_at: string | null
-          help_text: string | null
           id: string
-          options: Json | null
-          order: number | null
-          question_text: string | null
-          question_type: string | null
+          order_num: number
+          package_id: string | null
+          question: string
           required: boolean | null
-          updated_at: string | null
         }
         Insert: {
-          briefing_template_id: string
-          created_at?: string | null
-          help_text?: string | null
           id?: string
-          options?: Json | null
-          order?: number | null
-          question_text?: string | null
-          question_type?: string | null
+          order_num: number
+          package_id?: string | null
+          question: string
           required?: boolean | null
-          updated_at?: string | null
         }
         Update: {
-          briefing_template_id?: string
-          created_at?: string | null
-          help_text?: string | null
           id?: string
-          options?: Json | null
-          order?: number | null
-          question_text?: string | null
-          question_type?: string | null
+          order_num?: number
+          package_id?: string | null
+          question?: string
           required?: boolean | null
-          updated_at?: string | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "briefing_questions_package_id_fkey"
+            columns: ["package_id"]
+            isOneToOne: false
+            referencedRelation: "packages"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       briefing_responses: {
         Row: {
-          client_briefing_id: string
           created_at: string | null
-          file_urls: Json | null
           id: string
-          question_id: string | null
-          response_data: Json | null
-          response_text: string | null
-          updated_at: string | null
-        }
-        Insert: {
-          client_briefing_id: string
-          created_at?: string | null
-          file_urls?: Json | null
-          id?: string
-          question_id?: string | null
-          response_data?: Json | null
-          response_text?: string | null
-          updated_at?: string | null
-        }
-        Update: {
-          client_briefing_id?: string
-          created_at?: string | null
-          file_urls?: Json | null
-          id?: string
-          question_id?: string | null
-          response_data?: Json | null
-          response_text?: string | null
-          updated_at?: string | null
-        }
-        Relationships: []
-      }
-      briefing_templates: {
-        Row: {
-          active: boolean | null
-          created_at: string | null
-          description: string | null
-          id: string
-          order_sequence: number | null
-          package_id: string
-          title: string | null
-          updated_at: string | null
-        }
-        Insert: {
-          active?: boolean | null
-          created_at?: string | null
-          description?: string | null
-          id?: string
-          order_sequence?: number | null
-          package_id: string
-          title?: string | null
-          updated_at?: string | null
-        }
-        Update: {
-          active?: boolean | null
-          created_at?: string | null
-          description?: string | null
-          id?: string
-          order_sequence?: number | null
-          package_id?: string
-          title?: string | null
-          updated_at?: string | null
-        }
-        Relationships: []
-      }
-      categories: {
-        Row: {
-          created_at: string | null
-          description: string | null
-          id: string
-          name: string
-          updated_at: string | null
+          project_id: string
+          question_id: string
+          response: string | null
         }
         Insert: {
           created_at?: string | null
-          description?: string | null
           id?: string
-          name: string
-          updated_at?: string | null
+          project_id: string
+          question_id: string
+          response?: string | null
         }
         Update: {
           created_at?: string | null
-          description?: string | null
           id?: string
-          name?: string
-          updated_at?: string | null
+          project_id?: string
+          question_id?: string
+          response?: string | null
         }
-        Relationships: []
-      }
-      client_briefings: {
-        Row: {
-          client_id: string
-          completion_rate: number | null
-          created_at: string | null
-          id: string
-          notes: string | null
-          package_id: string | null
-          project_id: string | null
-          status: string | null
-          submitted_at: string | null
-          updated_at: string | null
-        }
-        Insert: {
-          client_id: string
-          completion_rate?: number | null
-          created_at?: string | null
-          id?: string
-          notes?: string | null
-          package_id?: string | null
-          project_id?: string | null
-          status?: string | null
-          submitted_at?: string | null
-          updated_at?: string | null
-        }
-        Update: {
-          client_id?: string
-          completion_rate?: number | null
-          created_at?: string | null
-          id?: string
-          notes?: string | null
-          package_id?: string | null
-          project_id?: string | null
-          status?: string | null
-          submitted_at?: string | null
-          updated_at?: string | null
-        }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "briefing_responses_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "projects"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "briefing_responses_question_id_fkey"
+            columns: ["question_id"]
+            isOneToOne: false
+            referencedRelation: "briefing_questions"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       clients: {
         Row: {
+          company: string | null
           created_at: string | null
-          email: string | null
+          email: string
           id: string
           name: string
           phone: string | null
-          updated_at: string | null
         }
         Insert: {
+          company?: string | null
           created_at?: string | null
-          email?: string | null
+          email: string
           id?: string
           name: string
           phone?: string | null
-          updated_at?: string | null
         }
         Update: {
+          company?: string | null
           created_at?: string | null
-          email?: string | null
+          email?: string
           id?: string
           name?: string
           phone?: string | null
-          updated_at?: string | null
         }
         Relationships: []
       }
       packages: {
         Row: {
-          active: boolean | null
-          created_at: string
-          description: string
-          features: Json
+          description: string | null
           id: string
+          inclusions: Json | null
+          is_active: boolean | null
           name: string
-          price: number | null
-          updated_at: string
+          price: number
         }
         Insert: {
-          active?: boolean | null
-          created_at?: string
-          description: string
-          features: Json
+          description?: string | null
           id?: string
+          inclusions?: Json | null
+          is_active?: boolean | null
           name: string
-          price?: number | null
-          updated_at?: string
+          price: number
         }
         Update: {
-          active?: boolean | null
-          created_at?: string
-          description?: string
-          features?: Json
+          description?: string | null
           id?: string
+          inclusions?: Json | null
+          is_active?: boolean | null
           name?: string
-          price?: number | null
-          updated_at?: string
+          price?: number
         }
         Relationships: []
       }
       portfolio_items: {
         Row: {
-          category: string | null
-          client_id: string | null
-          created_at: string | null
+          audio_url: string | null
           description: string | null
-          featured: boolean | null
-          id: number
-          image_url: string | null
+          id: string
+          is_public: boolean | null
           project_id: string | null
-          status: string | null
-          tags: Json | null
+          thumbnail_url: string | null
           title: string
-          updated_at: string | null
-          user_id: string | null
+          type: string
         }
         Insert: {
-          category?: string | null
-          client_id?: string | null
-          created_at?: string | null
+          audio_url?: string | null
           description?: string | null
-          featured?: boolean | null
-          id?: number
-          image_url?: string | null
+          id?: string
+          is_public?: boolean | null
           project_id?: string | null
-          status?: string | null
-          tags?: Json | null
+          thumbnail_url?: string | null
           title: string
-          updated_at?: string | null
-          user_id?: string | null
+          type: string
         }
         Update: {
-          category?: string | null
-          client_id?: string | null
-          created_at?: string | null
+          audio_url?: string | null
           description?: string | null
-          featured?: boolean | null
-          id?: number
-          image_url?: string | null
+          id?: string
+          is_public?: boolean | null
           project_id?: string | null
-          status?: string | null
-          tags?: Json | null
+          thumbnail_url?: string | null
           title?: string
-          updated_at?: string | null
-          user_id?: string | null
-        }
-        Relationships: []
-      }
-      project_categories: {
-        Row: {
-          category_id: string
-          project_id: string
-        }
-        Insert: {
-          category_id: string
-          project_id: string
-        }
-        Update: {
-          category_id?: string
-          project_id?: string
+          type?: string
         }
         Relationships: [
           {
-            foreignKeyName: "project_categories_category_id_fkey"
-            columns: ["category_id"]
-            isOneToOne: false
-            referencedRelation: "categories"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "project_categories_project_id_fkey"
+            foreignKeyName: "portfolio_items_project_id_fkey"
             columns: ["project_id"]
             isOneToOne: false
             referencedRelation: "projects"
@@ -399,79 +178,73 @@ export type Database = {
       project_files: {
         Row: {
           created_at: string | null
-          file_name: string | null
-          file_size: number | null
-          file_type: string | null
-          file_url: string | null
+          drive_url: string
+          file_type: string
           id: string
-          notes: string | null
           project_id: string
-          uploaded_by: string | null
-          version: number | null
+          title: string | null
         }
         Insert: {
           created_at?: string | null
-          file_name?: string | null
-          file_size?: number | null
-          file_type?: string | null
-          file_url?: string | null
+          drive_url: string
+          file_type: string
           id?: string
-          notes?: string | null
           project_id: string
-          uploaded_by?: string | null
-          version?: number | null
+          title?: string | null
         }
         Update: {
           created_at?: string | null
-          file_name?: string | null
-          file_size?: number | null
-          file_type?: string | null
-          file_url?: string | null
+          drive_url?: string
+          file_type?: string
           id?: string
-          notes?: string | null
           project_id?: string
-          uploaded_by?: string | null
-          version?: number | null
+          title?: string | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "project_files_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "projects"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       project_history: {
         Row: {
+          action: string
           created_at: string | null
-          description: string | null
-          event_type: string | null
+          details: Json | null
           id: string
-          new_value: Json | null
-          performed_by: string | null
-          previous_value: Json | null
           project_id: string
         }
         Insert: {
+          action: string
           created_at?: string | null
-          description?: string | null
-          event_type?: string | null
+          details?: Json | null
           id?: string
-          new_value?: Json | null
-          performed_by?: string | null
-          previous_value?: Json | null
           project_id: string
         }
         Update: {
+          action?: string
           created_at?: string | null
-          description?: string | null
-          event_type?: string | null
+          details?: Json | null
           id?: string
-          new_value?: Json | null
-          performed_by?: string | null
-          previous_value?: Json | null
           project_id?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "project_history_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "projects"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       projects: {
         Row: {
-          client_id: string
-          client_name: string | null
+          client_id: string | null
           created_at: string | null
           deadline: string | null
           description: string | null
@@ -479,13 +252,11 @@ export type Database = {
           package_id: string | null
           preview_code: string | null
           status: string | null
-          tags: Json | null
-          title: string | null
+          title: string
           updated_at: string | null
         }
         Insert: {
-          client_id: string
-          client_name?: string | null
+          client_id?: string | null
           created_at?: string | null
           deadline?: string | null
           description?: string | null
@@ -493,13 +264,11 @@ export type Database = {
           package_id?: string | null
           preview_code?: string | null
           status?: string | null
-          tags?: Json | null
-          title?: string | null
+          title: string
           updated_at?: string | null
         }
         Update: {
-          client_id?: string
-          client_name?: string | null
+          client_id?: string | null
           created_at?: string | null
           deadline?: string | null
           description?: string | null
@@ -507,86 +276,44 @@ export type Database = {
           package_id?: string | null
           preview_code?: string | null
           status?: string | null
-          tags?: Json | null
-          title?: string | null
+          title?: string
           updated_at?: string | null
         }
         Relationships: [
           {
-            foreignKeyName: "fk_client_id"
+            foreignKeyName: "projects_client_id_fkey"
             columns: ["client_id"]
             isOneToOne: false
             referencedRelation: "clients"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "projects_package_id_fkey"
+            columns: ["package_id"]
+            isOneToOne: false
+            referencedRelation: "packages"
+            referencedColumns: ["id"]
+          },
         ]
-      }
-      qualification_submissions: {
-        Row: {
-          attachments: Json | null
-          created_at: string
-          description: string | null
-          feedback: string | null
-          id: number
-          status: string | null
-          type: string | null
-          updated_at: string | null
-          user_id: string | null
-        }
-        Insert: {
-          attachments?: Json | null
-          created_at?: string
-          description?: string | null
-          feedback?: string | null
-          id?: number
-          status?: string | null
-          type?: string | null
-          updated_at?: string | null
-          user_id?: string | null
-        }
-        Update: {
-          attachments?: Json | null
-          created_at?: string
-          description?: string | null
-          feedback?: string | null
-          id?: number
-          status?: string | null
-          type?: string | null
-          updated_at?: string | null
-          user_id?: string | null
-        }
-        Relationships: []
       }
       system_settings: {
         Row: {
-          created_at: string
-          description: string | null
-          id: number
-          key: string | null
-          type: string | null
+          id: string
+          key: string
           updated_at: string | null
-          updated_by: string | null
-          value: string | null
+          value: Json
         }
         Insert: {
-          created_at?: string
-          description?: string | null
-          id?: number
-          key?: string | null
-          type?: string | null
+          id?: string
+          key: string
           updated_at?: string | null
-          updated_by?: string | null
-          value?: string | null
+          value: Json
         }
         Update: {
-          created_at?: string
-          description?: string | null
-          id?: number
-          key?: string | null
-          type?: string | null
+          id?: string
+          key?: string
           updated_at?: string | null
-          updated_by?: string | null
-          value?: string | null
+          value?: Json
         }
         Relationships: []
       }
