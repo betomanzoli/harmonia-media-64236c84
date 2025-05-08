@@ -160,3 +160,35 @@ export const decodePreviewCode = (url: string): string | null => {
   console.log(`[previewLinkUtils] Decoded preview code from URL: ${code}`);
   return code;
 };
+
+/**
+ * Test Supabase preview code query in browser console
+ * @param previewCode The preview code to test
+ * @param supabaseUrl The Supabase URL
+ * @param supabaseKey The Supabase anon key
+ */
+export const testPreviewCodeQuery = (previewCode: string, supabaseUrl: string, supabaseKey: string): void => {
+  console.log(`[previewLinkUtils] Testing query for preview_code=${previewCode}`);
+  
+  const url = `${supabaseUrl}/rest/v1/projects?preview_code=eq.${encodeURIComponent(previewCode)}`;
+  console.log(`[previewLinkUtils] Query URL: ${url}`);
+  
+  fetch(url, {
+    method: 'GET',
+    headers: {
+      'apikey': supabaseKey,
+      'Authorization': `Bearer ${supabaseKey}`
+    }
+  })
+  .then(response => {
+    console.log(`[previewLinkUtils] Response status: ${response.status}`);
+    console.log(`[previewLinkUtils] Response headers:`, response.headers);
+    return response.json();
+  })
+  .then(data => {
+    console.log(`[previewLinkUtils] Query result:`, data);
+  })
+  .catch(error => {
+    console.error(`[previewLinkUtils] Query error:`, error);
+  });
+};

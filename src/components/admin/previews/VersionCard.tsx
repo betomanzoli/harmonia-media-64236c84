@@ -1,3 +1,4 @@
+
 import React, { useState } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { VersionItem } from '@/hooks/admin/usePreviewProjects';
@@ -95,6 +96,10 @@ const VersionCard: React.FC<VersionCardProps> = ({
   // Get displayed date, ensuring we have a valid format
   const displayDate = version.dateAdded || version.createdAt || version.created_at || new Date().toISOString();
 
+  // Add logging to debug the version object
+  console.log('[VersionCard] Rendering with version data:', version);
+  console.log('[VersionCard] Audio source:', audioSource);
+
   return (
     <Card className={`bg-white ${version.final ? 'border-green-500 border-2' : ''}`}>
       <CardContent className="p-4">
@@ -148,7 +153,13 @@ const VersionCard: React.FC<VersionCardProps> = ({
           </div>
           
           <div className="flex sm:flex-col gap-2 mt-4 sm:mt-0 sm:ml-4">
-            <Button variant="outline" size="sm" className={`${isPlaying ? 'bg-gray-100' : ''}`} onClick={handleTogglePlay} disabled={!audioSource && !version.fileId}>
+            <Button 
+              variant="outline" 
+              size="sm" 
+              className={`${isPlaying ? 'bg-gray-100' : ''}`} 
+              onClick={handleTogglePlay} 
+              disabled={!audioSource && !version.fileId}
+            >
               {isPlaying ? <Pause className="h-4 w-4 mr-2" /> : <Play className="h-4 w-4 mr-2" />}
               {isPlaying ? 'Pausar' : 'Ouvir'}
             </Button>

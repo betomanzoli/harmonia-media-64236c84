@@ -8,8 +8,9 @@ interface MusicPreview {
   id: string;
   title: string;
   description: string;
-  audioUrl: string;
+  audioUrl: string; // Required
   recommended?: boolean;
+  name?: string; // Optional, for compatibility
 }
 
 interface ProjectData {
@@ -20,6 +21,8 @@ interface ProjectData {
   expirationDate?: string;
   packageType?: string;
   versions: MusicPreview[];
+  id?: string;
+  preview_code?: string;
 }
 
 export const usePreviewProject = (projectId: string | undefined) => {
@@ -78,6 +81,19 @@ export const usePreviewProject = (projectId: string | undefined) => {
           // Check by preview_code first (if the decoded ID looks like a preview code)
           if (/^P\d{4,}$/i.test(decodedId) || /^PREV-\d{4,}$/i.test(decodedId)) {
             console.log("[usePreviewProject] 🔍 Trying to fetch by preview_code:", decodedId);
+            
+            // Test query in browser console
+            const supabaseUrl = 'https://oiwulrumjuqvszmyltau.supabase.co';
+            const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im9pd3VscnVtanVxdnN6bXlsdGF1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDQwNDQ2MjksImV4cCI6MjA1OTYyMDYyOX0.VvtorYEZafOLIx_qozAWBtalhQBBw81nPnWPvNlx4bA';
+            console.log('[usePreviewProject] Testing direct query in console:');
+            console.log(`fetch('${supabaseUrl}/rest/v1/projects?preview_code=eq.${encodeURIComponent(decodedId)}', {
+              headers: {
+                'apikey': '${supabaseKey}',
+                'Authorization': 'Bearer ${supabaseKey}'
+              }
+            }).then(r => r.json()).then(console.log).catch(console.error);`);
+            
+            // Make the real query
             const { data: previewData, error: previewError } = await supabase
               .from('projects')
               .select('*, project_files(*), clients(*)')
@@ -89,6 +105,16 @@ export const usePreviewProject = (projectId: string | undefined) => {
               previewError,
               hasFiles: previewData?.project_files?.length > 0
             });
+            
+            // Log detailed error information if present
+            if (previewError) {
+              console.error('[usePreviewProject] 🔥 Error details:', {
+                message: previewError.message,
+                code: previewError.code,
+                details: previewError.details,
+                hint: previewError.hint
+              });
+            }
               
             if (!previewError && previewData) {
               console.log('[usePreviewProject] ✅ Project found by preview_code:', previewData);
@@ -102,9 +128,12 @@ export const usePreviewProject = (projectId: string | undefined) => {
                 createdAt: previewData.created_at || new Date().toISOString(),
                 expirationDate: previewData.deadline,
                 packageType: previewData.package_type,
+                id: previewData.id,
+                preview_code: previewData.preview_code,
                 versions: previewData.project_files?.map((file: any) => ({
                   id: file.id,
                   title: file.file_name || 'Prévia',
+                  name: file.file_name || 'Prévia',
                   description: file.notes || 'Versão para aprovação',
                   audioUrl: file.file_url || ''
                 })) || []
@@ -140,9 +169,12 @@ export const usePreviewProject = (projectId: string | undefined) => {
               createdAt: data.created_at || new Date().toISOString(),
               expirationDate: data.deadline,
               packageType: data.package_type,
+              id: data.id,
+              preview_code: data.preview_code,
               versions: data.project_files?.map((file: any) => ({
                 id: file.id,
                 title: file.file_name || 'Prévia',
+                name: file.file_name || 'Prévia',
                 description: file.notes || 'Versão para aprovação',
                 audioUrl: file.file_url || ''
               })) || []
@@ -179,8 +211,9 @@ export const usePreviewProject = (projectId: string | undefined) => {
           const versions = project.versionsList?.map((v: any) => ({
             id: v.id,
             title: v.name || `Versão ${v.id}`,
+            name: v.name || `Versão ${v.id}`,
             description: v.description || '',
-            audioUrl: v.audioUrl || '',
+            audioUrl: v.audioUrl || v.file_url || '',
             recommended: v.recommended
           })) || [];
           
@@ -191,6 +224,7 @@ export const usePreviewProject = (projectId: string | undefined) => {
               versions.push({
                 id: `v${i+1}`,
                 title: `Versão ${i+1}`,
+                name: `Versão ${i+1}`,
                 description: 'Versão para aprovação',
                 audioUrl: 'https://drive.google.com/file/d/1H62ylCwQYJ23BLpygtvNmCgwTDcHX6Cl/preview',
                 recommended: i === 0
@@ -205,10 +239,13 @@ export const usePreviewProject = (projectId: string | undefined) => {
             createdAt: project.createdAt || new Date().toISOString(),
             expirationDate: project.expirationDate,
             packageType: project.packageType,
+            id: project.id,
+            preview_code: project.preview_code,
             versions: versions.length > 0 ? versions : [
               {
                 id: 'v1',
                 title: 'Versão Acústica',
+                name: 'Versão Acústica',
                 description: 'Versão suave com violão e piano',
                 audioUrl: 'https://drive.google.com/file/d/1H62ylCwQYJ23BLpygtvNmCgwTDcHX6Cl/preview',
                 recommended: true
@@ -216,6 +253,7 @@ export const usePreviewProject = (projectId: string | undefined) => {
               {
                 id: 'v2',
                 title: 'Versão Orquestral',
+                name: 'Versão Orquestral',
                 description: 'Arranjo completo com cordas e metais',
                 audioUrl: 'https://drive.google.com/file/d/11c6JahRd5Lx0iKCL_gHZ0zrZ3LFBJ47a/preview'
               }

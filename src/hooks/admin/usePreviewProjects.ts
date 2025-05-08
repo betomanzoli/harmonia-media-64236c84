@@ -1,4 +1,3 @@
-
 import { useState, useEffect, useCallback } from 'react';
 import { useToast } from '@/hooks/use-toast';
 import { generatePreviewLink } from '@/utils/previewLinkUtils';
@@ -13,8 +12,8 @@ export interface VersionItem {
   id: string;
   name: string;
   description: string;
-  audioUrl?: string;
-  file_url?: string; // Add this field as optional since some components expect it
+  audioUrl: string; // Changed from optional to required
+  file_url?: string; // Added this field for compatibility
   recommended?: boolean;
   final?: boolean;
   createdAt?: string;
@@ -92,6 +91,19 @@ export const usePreviewProjects = () => {
           // Generate a unique preview code for this project
           project.preview_code = generatePreviewLink(project.id, project.clientEmail || project.clientName);
         }
+        
+        // Ensure all versions have required fields
+        if (project.versionsList) {
+          project.versionsList = project.versionsList.map(version => {
+            return {
+              ...version,
+              audioUrl: version.audioUrl || version.file_url || '', // Ensure audioUrl always exists
+              name: version.name || `Versão ${version.id}`, // Ensure name always exists
+              description: version.description || 'Sem descrição' // Ensure description always exists
+            };
+          });
+        }
+        
         return project;
       });
       
@@ -200,7 +212,7 @@ export const usePreviewProjects = () => {
     return mockProjects[index];
   };
   
-  // Add a version to a project
+  // Add a version to a project - update to ensure required fields
   const addVersion = (projectId: string, version: VersionItem) => {
     const project = mockProjects.find(p => p.id === projectId);
     if (!project) return null;
@@ -218,6 +230,11 @@ export const usePreviewProjects = () => {
     if (!version.createdAt && !version.created_at) {
       version.createdAt = new Date().toISOString();
     }
+    
+    // Ensure required fields are set
+    version.audioUrl = version.audioUrl || version.file_url || '';
+    version.name = version.name || `Versão ${version.id}`;
+    version.description = version.description || 'Sem descrição';
     
     project.versionsList.push(version);
     project.versions = project.versionsList.length;

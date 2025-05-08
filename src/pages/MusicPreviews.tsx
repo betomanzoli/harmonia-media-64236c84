@@ -8,7 +8,7 @@ import PreviewError from '@/components/previews/PreviewError';
 import PreviewContent from '@/components/previews/PreviewContent';
 import { usePreviewData } from '@/hooks/usePreviewData';
 import { notificationService } from '@/services/notificationService';
-import { ProjectItem, MusicPreview } from '@/types/project.types';
+import { ProjectItem, MusicPreview, ProjectVersion } from '@/types/project.types';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { AlertCircle } from 'lucide-react';
 
@@ -156,7 +156,9 @@ const MusicPreviews: React.FC = () => {
   const versionsForPlayer: MusicPreview[] = Array.isArray(projectData?.previews) 
     ? projectData.previews.map(p => ({
         ...p,
-        description: p.description || 'Sem descrição' // Ensure description exists
+        title: p.title || p.name || `Versão ${p.id}`, // Ensure title exists
+        description: p.description || 'Sem descrição', // Ensure description exists
+        audioUrl: p.audioUrl || p.file_url || '' // Ensure audioUrl exists
       }))
     : (Array.isArray(projectData?.versionsList) 
         ? projectData.versionsList.map(v => ({
@@ -183,7 +185,7 @@ const MusicPreviews: React.FC = () => {
     lastActivityDate: projectData.lastActivityDate || new Date().toISOString(),
     expirationDate: projectData.expirationDate || new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString(),
     versions: projectData.versions || versionsForPlayer.length || 0,
-    versionsList: projectData.versionsList || [],
+    versionsList: (projectData.versionsList || []) as ProjectVersion[],
     feedbackHistory: projectData.feedbackHistory || [],
     history: projectData.history || [],
     preview_code: projectData.preview_code // Use preview_code instead of ID

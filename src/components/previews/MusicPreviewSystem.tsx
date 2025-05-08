@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import PreviewHeader from './PreviewHeader';
 import PreviewPlayerList from './player/PreviewPlayerList';
@@ -172,12 +173,17 @@ const MusicPreviewSystem: React.FC<MusicPreviewSystemProps> = ({ projectId }) =>
   });
   
   if (Array.isArray(projectData.previews) && projectData.previews.length > 0) {
+    // If previews are already in MusicPreview format, use them directly
     versionsForPlayer = projectData.previews.map(preview => ({
       ...preview,
-      description: preview.description || 'Sem descrição' // Ensure description is never undefined
+      // Ensure all required fields exist
+      title: preview.title || preview.name || `Versão ${preview.id}`,
+      description: preview.description || 'Sem descrição',
+      audioUrl: preview.audioUrl || preview.file_url || '',
     }));
     console.log("🎵 Versões obtidas de 'previews':", versionsForPlayer);
   } else if (Array.isArray(projectData.versionsList) && projectData.versionsList.length > 0) {
+    // Convert versionsList to MusicPreview format
     versionsForPlayer = projectData.versionsList.map(v => ({
       id: v.id,
       title: v.name || `Versão ${v.id}`, 

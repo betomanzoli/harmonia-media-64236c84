@@ -4,10 +4,10 @@ export interface BaseVersionItem {
   id: string;
   name: string;
   description: string;
-  audioUrl: string;
+  audioUrl?: string; // Made optional here
   recommended?: boolean;
   final?: boolean;
-  createdAt: string;
+  createdAt?: string;
 }
 
 // Version type used in project.versionsList
@@ -18,11 +18,13 @@ export interface ProjectVersion extends BaseVersionItem {
   stemsUrl?: string;
   file_url?: string; // Added for compatibility with Supabase naming convention
   created_at?: string; // Added for compatibility with Supabase naming convention
+  audioUrl: string; // Required in this interface
 }
 
 // Music preview type that includes title (mapped from name)
 export interface MusicPreview extends BaseVersionItem {
   title: string; // Required for UI components
+  audioUrl: string; // Required in this interface
 }
 
 // Base project interface with common properties

@@ -29,10 +29,9 @@ export const generateMockPreviews = (): ProjectItem[] => {
           id: "v1",
           name: "Versão Acústica",
           description: "Versão com violão e voz, arranjo minimalista",
-          audioUrl: "https://samplelib.com/lib/preview/mp3/sample-3s.mp3",
+          audioUrl: "https://samplelib.com/lib/preview/mp3/sample-3s.mp3", // Ensure this field exists
           createdAt: new Date("2025-04-10").toISOString(),
           recommended: false,
-          // Adding missing properties
           fileId: "audio1",
           created_at: new Date("2025-04-10").toISOString(),
           additionalLinks: []
@@ -41,15 +40,16 @@ export const generateMockPreviews = (): ProjectItem[] => {
           id: "v2",
           name: "Versão Completa",
           description: "Versão com banda completa, arranjo final sugerido",
-          audioUrl: "https://samplelib.com/lib/preview/mp3/sample-6s.mp3",
+          audioUrl: "https://samplelib.com/lib/preview/mp3/sample-6s.mp3", // Ensure this field exists
           createdAt: new Date("2025-04-12").toISOString(),
           recommended: true,
-          // Adding missing properties
           fileId: "audio2",
           created_at: new Date("2025-04-12").toISOString(),
           additionalLinks: []
         }
-      ]
+      ],
+      feedbackHistory: [],
+      history: []
     },
     {
       id: "P0002",
@@ -67,15 +67,16 @@ export const generateMockPreviews = (): ProjectItem[] => {
           id: "v1",
           name: "Versão Demo",
           description: "Primeira versão para avaliação",
-          audioUrl: "https://samplelib.com/lib/preview/mp3/sample-9s.mp3",
+          audioUrl: "https://samplelib.com/lib/preview/mp3/sample-9s.mp3", // Ensure this field exists
           createdAt: new Date("2025-04-05").toISOString(),
           recommended: true,
-          // Adding missing properties
           fileId: "audio3",
           created_at: new Date("2025-04-05").toISOString(),
           additionalLinks: []
         }
       ],
+      feedbackHistory: [],
+      history: [],
       feedback: "Gostei muito da melodia, mas gostaria que o ritmo fosse um pouco mais rápido e que os vocais estivessem mais presentes na mixagem."
     },
     {
@@ -94,10 +95,9 @@ export const generateMockPreviews = (): ProjectItem[] => {
           id: "v1",
           name: "Versão Inicial",
           description: "Primeiro conceito da música",
-          audioUrl: "https://samplelib.com/lib/preview/mp3/sample-12s.mp3",
+          audioUrl: "https://samplelib.com/lib/preview/mp3/sample-12s.mp3", // Ensure this field exists
           createdAt: new Date("2025-04-01").toISOString(),
           recommended: false,
-          // Adding missing properties
           fileId: "audio4",
           created_at: new Date("2025-04-01").toISOString(),
           additionalLinks: []
@@ -106,10 +106,9 @@ export const generateMockPreviews = (): ProjectItem[] => {
           id: "v2",
           name: "Versão Revisada",
           description: "Ajustes após primeiro feedback",
-          audioUrl: "https://samplelib.com/lib/preview/mp3/sample-15s.mp3",
+          audioUrl: "https://samplelib.com/lib/preview/mp3/sample-15s.mp3", // Ensure this field exists
           createdAt: new Date("2025-04-02").toISOString(),
           recommended: false,
-          // Adding missing properties
           fileId: "audio5",
           created_at: new Date("2025-04-02").toISOString(),
           additionalLinks: []
@@ -118,15 +117,16 @@ export const generateMockPreviews = (): ProjectItem[] => {
           id: "v3",
           name: "Versão Final",
           description: "Versão aprovada pelo cliente",
-          audioUrl: "https://samplelib.com/lib/preview/mp3/sample-9s.mp3",
+          audioUrl: "https://samplelib.com/lib/preview/mp3/sample-9s.mp3", // Ensure this field exists
           createdAt: new Date("2025-04-03").toISOString(),
           recommended: true,
-          // Adding missing properties
           fileId: "audio6",
           created_at: new Date("2025-04-03").toISOString(),
           additionalLinks: []
         }
-      ]
+      ],
+      feedbackHistory: [],
+      history: []
     }
   ];
 };
