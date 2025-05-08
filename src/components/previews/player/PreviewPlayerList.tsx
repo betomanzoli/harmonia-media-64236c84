@@ -1,7 +1,8 @@
 
-import React, { useState } from 'react';
+import React from 'react';
 import PreviewVersionCard from './PreviewVersionCard';
 import { MusicPreview } from '@/types/project.types';
+import { logger } from '@/utils/logger';
 
 interface PreviewPlayerListProps {
   versions: MusicPreview[];
@@ -38,7 +39,7 @@ const PreviewPlayerList: React.FC<PreviewPlayerListProps> = ({
           const hasValidAudioUrl = Boolean(version.audio_url);
           
           if (!hasValidAudioUrl && !hasValidFileId) {
-            console.warn(`Version ${version.id} missing both audio_url and file_id`, version);
+            logger.warn('PreviewPlayerList', `Version ${version.id} missing both audio_url and file_id`, version);
             return null;
           }
           

@@ -2,12 +2,23 @@
 import React, { useState, useEffect } from 'react';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Play, Download, CheckCircle, Music, Disc } from 'lucide-react';
-import AudioPlayer from '../player/AudioPlayer';
-import { MusicPreview } from '@/types/project.types';
+import { Play, Download, Music } from 'lucide-react';
+import AudioPlayer from './AudioPlayer';
 
 interface PreviewVersionCardProps {
-  version: MusicPreview;
+  version: {
+    id: string;
+    title?: string;
+    name?: string;
+    description?: string;
+    audio_url: string;
+    recommended?: boolean;
+    final?: boolean;
+    date_added?: string;
+    created_at?: string;
+    final_version_url?: string;
+    stems_url?: string;
+  };
   isSelected: boolean;
   onSelect: () => void;
   isApproved: boolean;
