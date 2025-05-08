@@ -13,11 +13,20 @@ export interface ProjectItem {
   expiration_date: string;
   versions: number;
   versionsList?: ProjectVersion[];
+  previews?: MusicPreview[];
   feedback_history?: FeedbackItem[];
   history?: HistoryItem[];
   preview_code?: string;
   client_email?: string;
   client_phone?: string;
+  
+  // Camel case aliases for front-end components
+  clientName?: string;
+  projectTitle?: string;
+  packageType?: string;
+  createdAt?: string;
+  lastActivityDate?: string;
+  expirationDate?: string;
 }
 
 /**
@@ -37,6 +46,9 @@ export interface MusicPreview {
   stems_url?: string;
   created_at?: string;
   date_added?: string;
+  // Alias for compatibility
+  audioUrl?: string;
+  url?: string;
 }
 
 /**
@@ -75,6 +87,7 @@ export interface VersionItem {
   date_added?: string;
   final_version_url?: string;
   stems_url?: string;
+  additional_links?: Array<string | { url: string; label: string }>;
 }
 
 /**
@@ -85,8 +98,12 @@ export interface FeedbackItem {
   project_id: string;
   version_id?: string;
   comment: string;
+  content?: string; // Alias for comment
   sentiment?: 'positive' | 'neutral' | 'negative';
   created_at: string;
+  createdAt?: string; // Alias for created_at
+  status?: 'pending' | 'processed'; // Added status field
+  versionId?: string; // Alias for version_id
 }
 
 /**
@@ -122,4 +139,31 @@ export interface ProjectUpdate {
   expiration_date?: string;
   client_email?: string;
   client_phone?: string;
+}
+
+/**
+ * Project Data interface (for front-end use)
+ */
+export interface ProjectData {
+  id: string;
+  clientName: string;
+  projectTitle: string;
+  packageType: string;
+  status: string;
+  createdAt: string;
+  lastActivityDate: string;
+  expirationDate: string;
+  versions: number;
+  versionsList?: ProjectVersion[];
+}
+
+/**
+ * Preview Project Data interface (for front-end use)
+ */
+export interface PreviewProjectData {
+  projectTitle: string;
+  clientName: string;
+  status: 'waiting' | 'feedback' | 'approved';
+  packageType?: string;
+  creationDate?: string;
 }

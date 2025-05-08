@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -84,17 +85,17 @@ export const ProjectsListCard: React.FC<ProjectsListCardProps> = ({
                       </div>
                     </td>
                     <td className="px-4 py-3 whitespace-nowrap">
-                      <div>{project.clientName}</div>
-                      <div className="text-xs text-muted-foreground">{project.clientEmail}</div>
+                      <div>{project.client_name || project.clientName}</div>
+                      <div className="text-xs text-muted-foreground">{project.client_email || project.clientEmail}</div>
                     </td>
                     <td className="px-4 py-3 whitespace-nowrap">
                       {getStatusLabel(project.status)}
                     </td>
                     <td className="px-4 py-3 whitespace-nowrap text-sm">
-                      {project.createdAt}
+                      {project.created_at || project.createdAt}
                     </td>
                     <td className="px-4 py-3 whitespace-nowrap text-sm">
-                      {project.expirationDate}
+                      {project.expiration_date || project.expirationDate}
                     </td>
                     <td className="px-4 py-3 whitespace-nowrap text-right text-sm">
                       <div className="flex justify-end gap-2">

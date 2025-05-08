@@ -69,7 +69,7 @@ const PreviewContent: React.FC<PreviewContentProps> = ({
               description: preview.description || `Versão musical para ${projectData?.client_name || 'Cliente'}`
             }))}
             selectedVersion={selectedPreview}
-            setSelectedVersion={setSelectedPreview}
+            onSelectVersion={setSelectedPreview}
             isApproved={projectData?.status === 'approved'}
           />
         </TabsContent>

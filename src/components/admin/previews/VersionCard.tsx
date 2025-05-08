@@ -1,4 +1,3 @@
-
 import React, { useState } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { VersionItem } from '@/types/project.types';
@@ -20,7 +19,6 @@ const VersionCard: React.FC<VersionCardProps> = ({
   onDeleteVersion
 }) => {
   const [isPlaying, setIsPlaying] = useState(false);
-  // Use audio_url or file_url for backward compatibility
   const audioSource = version.audio_url || version.file_url || '';
   const [audio] = useState(new Audio(audioSource));
   const { toast } = useToast();
@@ -32,7 +30,6 @@ const VersionCard: React.FC<VersionCardProps> = ({
       return;
     }
     
-    // If we have a file_id, open in Google Drive instead of playing locally
     if (version.file_id) {
       const driveUrl = `https://drive.google.com/file/d/${version.file_id}/view`;
       window.open(driveUrl, '_blank');
@@ -43,7 +40,6 @@ const VersionCard: React.FC<VersionCardProps> = ({
       return;
     }
     
-    // Otherwise try to play the audio directly
     if (audioSource) {
       audio.play().catch(error => {
         console.error('Erro ao reproduzir áudio:', error);
@@ -53,7 +49,6 @@ const VersionCard: React.FC<VersionCardProps> = ({
           variant: "destructive"
         });
         
-        // If playing failed, try to open in a new tab
         if (audioSource) {
           window.open(audioSource, '_blank');
         }
@@ -96,7 +91,6 @@ const VersionCard: React.FC<VersionCardProps> = ({
   // Get displayed date, ensuring we have a valid format
   const displayDate = version.date_added || version.created_at || new Date().toISOString();
 
-  // Add logging to debug the version object
   console.log('[VersionCard] Rendering with version data:', version);
   console.log('[VersionCard] Audio source:', audioSource);
 
@@ -129,7 +123,7 @@ const VersionCard: React.FC<VersionCardProps> = ({
               Adicionado em: {displayDate ? new Date(displayDate).toLocaleDateString() : "Data desconhecida"}
             </div>
             
-            {/* Additional links for final versions */}
+            {/* Additional links for final versions - check if the property exists first */}
             {version.additional_links && version.additional_links.length > 0 && (
               <div className="mt-2 space-y-2">
                 <h4 className="text-sm font-medium">Arquivos adicionais:</h4>

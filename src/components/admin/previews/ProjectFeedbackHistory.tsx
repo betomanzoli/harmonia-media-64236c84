@@ -79,17 +79,17 @@ const ProjectFeedbackHistory: React.FC<ProjectFeedbackHistoryProps> = ({
                           </>
                         )}
                       </Badge>
-                      <span className="text-xs text-gray-500">{formatDate(feedback.createdAt)}</span>
+                      <span className="text-xs text-gray-500">{formatDate(feedback.created_at)}</span>
                     </div>
                     
-                    {feedback.versionId && (
+                    {feedback.version_id && (
                       <div className="text-xs text-gray-500 mb-1">
-                        Sobre a versão: {feedback.versionId}
+                        Sobre a versão: {feedback.version_id}
                       </div>
                     )}
                     
                     <div className="p-3 bg-gray-50 rounded-md border text-gray-700">
-                      {feedback.content}
+                      {feedback.comment || feedback.content}
                     </div>
                   </div>
                 </div>

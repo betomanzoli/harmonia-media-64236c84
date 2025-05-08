@@ -3,21 +3,7 @@ import React, { useState } from 'react';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import PreviewVersionCard from './PreviewVersionCard';
-
-interface MusicPreview {
-  id: string;
-  title?: string;
-  name?: string;
-  description?: string;
-  audio_url?: string;
-  recommended?: boolean;
-  final?: boolean;
-  file_url?: string;
-  final_version_url?: string;
-  stems_url?: string;
-  created_at?: string;
-  date_added?: string;
-}
+import { MusicPreview } from '@/types/project.types';
 
 interface PreviewPlayerListProps {
   versions: MusicPreview[];

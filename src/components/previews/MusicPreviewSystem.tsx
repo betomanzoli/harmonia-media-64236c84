@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import PreviewHeader from './PreviewHeader';
 import PreviewPlayerList from './player/PreviewPlayerList';
@@ -11,7 +12,7 @@ import PreviewLoadingState from './PreviewLoadingState';
 import { usePreviewData } from '@/hooks/usePreviewData';
 import PreviewProjectDetails from './PreviewProjectDetails';
 import { useToast } from '@/hooks/use-toast';
-import { MusicPreview, VersionItem } from '@/types/project.types';
+import { MusicPreview, ProjectItem } from '@/types/project.types';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { AlertCircle } from 'lucide-react';
 
@@ -54,7 +55,7 @@ const MusicPreviewSystem: React.FC<MusicPreviewSystemProps> = ({ projectId }) =>
 
     if (projectData) {
       console.log("🔍 Project status:", projectData.status);
-      console.log("🔍 Project versions:", projectData.versions_list || []);
+      console.log("🔍 Project versions:", projectData.versionsList || []);
       console.log("🔍 Project previews:", projectData.previews || []);
       
       // If project status is feedback or approved, mark feedback as submitted
@@ -186,7 +187,7 @@ const MusicPreviewSystem: React.FC<MusicPreviewSystemProps> = ({ projectId }) =>
   
   console.log("🎵 Processando versões para o player:", {
     previews: projectData?.previews,
-    versionsList: projectData?.versions_list
+    versionsList: projectData?.versionsList
   });
   
   if (Array.isArray(projectData?.previews) && projectData.previews.length > 0) {
@@ -198,26 +199,28 @@ const MusicPreviewSystem: React.FC<MusicPreviewSystemProps> = ({ projectId }) =>
       name: preview.name || preview.title || `Versão ${preview.id}`,
       description: preview.description || 'Sem descrição',
       audio_url: preview.audio_url || preview.file_url || '',
+      audioUrl: preview.audio_url || preview.file_url || '',
       file_id: preview.file_id || undefined,
       final_version_url: preview.final_version_url || undefined,
       stems_url: preview.stems_url || undefined
     })) as MusicPreview[];
     console.log("🎵 Versões obtidas de 'previews':", versionsForPlayer);
-  } else if (Array.isArray(projectData?.versions_list) && projectData.versions_list.length > 0) {
-    // Convert versions_list to MusicPreview format
-    versionsForPlayer = projectData.versions_list.map((v) => ({
+  } else if (Array.isArray(projectData?.versionsList) && projectData.versionsList.length > 0) {
+    // Convert versionsList to MusicPreview format
+    versionsForPlayer = projectData.versionsList.map((v) => ({
       id: v.id,
       title: v.title || v.name || `Versão ${v.id}`, 
       name: v.name || v.title || `Versão ${v.id}`,
       description: v.description || 'Sem descrição',
       audio_url: v.audio_url || v.file_url || '',
+      audioUrl: v.audio_url || v.file_url || '',
       file_id: v.file_id || undefined,
       recommended: v.recommended || false,
       final_version_url: v.final_version_url || '',
       stems_url: v.stems_url || '',
       created_at: v.created_at || new Date().toISOString()
     })) as MusicPreview[];
-    console.log("🎵 Versões obtidas de 'versions_list':", versionsForPlayer);
+    console.log("🎵 Versões obtidas de 'versionsList':", versionsForPlayer);
   } else {
     console.log("🎵 Nenhuma versão encontrada no objeto projectData");
   }
@@ -239,6 +242,7 @@ const MusicPreviewSystem: React.FC<MusicPreviewSystemProps> = ({ projectId }) =>
           title: 'Versão Acústica (EXEMPLO)',
           description: 'Versão suave com violão e piano',
           audio_url: 'https://drive.google.com/file/d/1H62ylCwQYJ23BLpygtvNmCgwTDcHX6Cl/preview',
+          audioUrl: 'https://drive.google.com/file/d/1H62ylCwQYJ23BLpygtvNmCgwTDcHX6Cl/preview',
           name: 'Versão Acústica (EXEMPLO)',
           created_at: new Date().toISOString()
         },
@@ -247,6 +251,7 @@ const MusicPreviewSystem: React.FC<MusicPreviewSystemProps> = ({ projectId }) =>
           title: 'Versão Orquestral (EXEMPLO)',
           description: 'Arranjo completo com cordas e metais',
           audio_url: 'https://drive.google.com/file/d/11c6JahRd5Lx0iKCL_gHZ0zrZ3LFBJ47a/preview',
+          audioUrl: 'https://drive.google.com/file/d/11c6JahRd5Lx0iKCL_gHZ0zrZ3LFBJ47a/preview',
           name: 'Versão Orquestral (EXEMPLO)',
           created_at: new Date().toISOString()
         }
@@ -290,7 +295,7 @@ const MusicPreviewSystem: React.FC<MusicPreviewSystemProps> = ({ projectId }) =>
           <PreviewPlayerList 
             versions={versionsForPlayer}
             selectedVersion={selectedVersion}
-            setSelectedVersion={setSelectedVersion}
+            onSelectVersion={setSelectedVersion}
             isApproved={status === 'approved'}
           />
         </div>
@@ -336,9 +341,9 @@ const MusicPreviewSystem: React.FC<MusicPreviewSystemProps> = ({ projectId }) =>
         }} />
       </div>
       
-      {projectData.expirationDate && (
+      {projectData.expiration_date && (
         <div className="mt-8">
-          <PreviewCountdown expirationDate={projectData.expirationDate} />
+          <PreviewCountdown expirationDate={projectData.expiration_date} />
         </div>
       )}
       

@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { 
   Table, 
@@ -93,12 +94,12 @@ const ProjectsTable: React.FC<ProjectsTableProps> = ({
         {projects.map(project => (
           <TableRow key={project.id}>
             <TableCell className="font-medium text-black">{project.id}</TableCell>
-            <TableCell className="text-black">{project.clientName}</TableCell>
-            <TableCell className="text-black">{project.packageType}</TableCell>
+            <TableCell className="text-black">{project.client_name || project.clientName}</TableCell>
+            <TableCell className="text-black">{project.package_type || project.packageType}</TableCell>
             <TableCell className="text-center text-black">{project.versions}</TableCell>
             <TableCell>{getStatusBadge(project.status)}</TableCell>
-            <TableCell className="text-black">{formatDate(project.createdAt)}</TableCell>
-            <TableCell className="text-black">{formatDate(project.expirationDate)}</TableCell>
+            <TableCell className="text-black">{formatDate(project.created_at || project.createdAt)}</TableCell>
+            <TableCell className="text-black">{formatDate(project.expiration_date || project.expirationDate)}</TableCell>
             <TableCell className="text-right">
               <div className="flex justify-end space-x-2">
                 <Button 
