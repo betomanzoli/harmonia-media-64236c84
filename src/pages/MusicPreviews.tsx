@@ -15,7 +15,7 @@ import { AlertCircle } from 'lucide-react';
 // Local version of VersionItem with all needed properties
 interface LocalVersionItem {
   id: string;
-  title: string; 
+  title?: string; 
   name?: string;
   description?: string;
   audioUrl?: string;
@@ -172,7 +172,7 @@ const MusicPreviews: React.FC = () => {
   
   // Make sure versionsForPlayer is always an array of MusicPreview
   const versionsForPlayer: MusicPreview[] = Array.isArray(projectData?.previews) 
-    ? projectData.previews.map((p: LocalVersionItem) => ({
+    ? projectData.previews.map((p) => ({
         ...p,
         title: p.title || p.name || `Versão ${p.id}`, // Ensure title exists
         name: p.name || p.title || `Versão ${p.id}`, // Ensure name exists
@@ -181,9 +181,9 @@ const MusicPreviews: React.FC = () => {
         fileId: p.fileId || undefined,
         finalVersionUrl: p.finalVersionUrl || '',
         stemsUrl: p.stemsUrl || ''
-      }))
+      })) as MusicPreview[]
     : (Array.isArray(projectData?.versionsList) 
-        ? projectData.versionsList.map((v: LocalVersionItem) => ({
+        ? projectData.versionsList.map((v) => ({
             id: v.id,
             title: v.title || v.name || `Versão ${v.id}`,
             name: v.name || v.title || `Versão ${v.id}`,
@@ -194,7 +194,7 @@ const MusicPreviews: React.FC = () => {
             createdAt: v.createdAt || v.created_at || new Date().toISOString(), // Handle both naming conventions
             finalVersionUrl: v.finalVersionUrl || '',
             stemsUrl: v.stemsUrl || ''
-          }))
+          })) as MusicPreview[]
         : []);
   
   console.log("🔍 Versions for player:", versionsForPlayer);

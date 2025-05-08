@@ -19,7 +19,7 @@ import { AlertCircle } from 'lucide-react';
 // Local version of VersionItem with all needed properties
 interface LocalVersionItem {
   id: string;
-  title: string; 
+  title?: string; 
   name?: string;
   description?: string;
   audioUrl?: string;
@@ -192,7 +192,7 @@ const MusicPreviewSystem: React.FC<MusicPreviewSystemProps> = ({ projectId }) =>
   
   if (Array.isArray(projectData.previews) && projectData.previews.length > 0) {
     // If previews are already in MusicPreview format, use them directly
-    versionsForPlayer = projectData.previews.map((preview: LocalVersionItem) => ({
+    versionsForPlayer = projectData.previews.map((preview) => ({
       ...preview,
       // Ensure all required fields exist
       title: preview.title || preview.name || `Versão ${preview.id}`,
@@ -206,7 +206,7 @@ const MusicPreviewSystem: React.FC<MusicPreviewSystemProps> = ({ projectId }) =>
     console.log("🎵 Versões obtidas de 'previews':", versionsForPlayer);
   } else if (Array.isArray(projectData.versionsList) && projectData.versionsList.length > 0) {
     // Convert versionsList to MusicPreview format
-    versionsForPlayer = projectData.versionsList.map((v: LocalVersionItem) => ({
+    versionsForPlayer = projectData.versionsList.map((v) => ({
       id: v.id,
       title: v.title || v.name || `Versão ${v.id}`, 
       name: v.name || v.title || `Versão ${v.id}`,
