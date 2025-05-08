@@ -13,6 +13,9 @@ export interface BaseVersionItem {
   finalVersionUrl?: string; // Add final version URL for downloads
   stemsUrl?: string; // Add stems URL for downloads
   additionalLinks?: any[]; // Add support for additional links
+  fileId?: string; // Add file ID for Google Drive links
+  file_url?: string; // Add file URL for compatibility
+  dateAdded?: string; // Add date added property
 }
 
 // Version type used in project.versionsList
@@ -32,6 +35,7 @@ export interface MusicPreview extends BaseVersionItem {
   finalVersionUrl?: string; // Add for download functionality
   stemsUrl?: string; // Add for stems download functionality
   url?: string; // Alternative URL field for compatibility
+  fileId?: string; // Add file ID for Google Drive links
 }
 
 // Base project interface with common properties
@@ -48,6 +52,7 @@ export interface BaseProjectItem {
   versions: number;
   feedback?: string;
   preview_code?: string; // Added preview_code property
+  previews?: MusicPreview[]; // Added previews property
 }
 
 // Complete project item with version list

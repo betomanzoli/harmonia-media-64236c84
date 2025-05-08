@@ -180,6 +180,9 @@ const MusicPreviewSystem: React.FC<MusicPreviewSystemProps> = ({ projectId }) =>
       name: preview.name || preview.title || `Versão ${preview.id}`,
       description: preview.description || 'Sem descrição',
       audioUrl: preview.audioUrl || preview.file_url || '',
+      fileId: preview.fileId || undefined,
+      finalVersionUrl: preview.finalVersionUrl || undefined,
+      stemsUrl: preview.stemsUrl || undefined
     }));
     console.log("🎵 Versões obtidas de 'previews':", versionsForPlayer);
   } else if (Array.isArray(projectData.versionsList) && projectData.versionsList.length > 0) {
@@ -190,6 +193,7 @@ const MusicPreviewSystem: React.FC<MusicPreviewSystemProps> = ({ projectId }) =>
       name: v.name || v.title || `Versão ${v.id}`,
       description: v.description || 'Sem descrição',
       audioUrl: v.audioUrl || v.file_url || '',
+      fileId: v.fileId || undefined,
       recommended: v.recommended || false,
       finalVersionUrl: v.finalVersionUrl || '',
       stemsUrl: v.stemsUrl || '',

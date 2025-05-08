@@ -21,7 +21,7 @@ export const generateMockPreviews = (): ProjectItem[] => {
       createdAt: "10/04/2025",
       status: "waiting",
       versions: 2,
-      previewUrl: "/preview/P0001",
+      previews: [], // Use previews instead of previewUrl
       expirationDate: expirationDate.toLocaleDateString('pt-BR'),
       lastActivityDate: today.toLocaleDateString('pt-BR'),
       versionsList: [
@@ -63,7 +63,7 @@ export const generateMockPreviews = (): ProjectItem[] => {
       createdAt: "05/04/2025",
       status: "feedback",
       versions: 1,
-      previewUrl: "/preview/P0002",
+      previews: [], // Use previews instead of previewUrl
       expirationDate: expirationDate.toLocaleDateString('pt-BR'),
       lastActivityDate: lastWeek.toLocaleDateString('pt-BR'),
       versionsList: [
@@ -93,7 +93,7 @@ export const generateMockPreviews = (): ProjectItem[] => {
       createdAt: "01/04/2025",
       status: "approved",
       versions: 3,
-      previewUrl: "/preview/P0003",
+      previews: [], // Use previews instead of previewUrl
       expirationDate: expirationDate.toLocaleDateString('pt-BR'),
       lastActivityDate: "03/04/2025",
       versionsList: [

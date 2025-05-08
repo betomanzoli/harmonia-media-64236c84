@@ -158,7 +158,10 @@ const MusicPreviews: React.FC = () => {
         title: p.title || p.name || `Versão ${p.id}`, // Ensure title exists
         name: p.name || p.title || `Versão ${p.id}`, // Ensure name exists
         description: p.description || 'Sem descrição', // Ensure description exists
-        audioUrl: p.audioUrl || p.file_url || '' // Ensure audioUrl exists
+        audioUrl: p.audioUrl || p.file_url || '', // Ensure audioUrl exists
+        fileId: p.fileId || undefined,
+        finalVersionUrl: p.finalVersionUrl || '',
+        stemsUrl: p.stemsUrl || ''
       }))
     : (Array.isArray(projectData?.versionsList) 
         ? projectData.versionsList.map(v => ({
@@ -167,6 +170,7 @@ const MusicPreviews: React.FC = () => {
             name: v.name || v.title || `Versão ${v.id}`,
             description: v.description || 'Sem descrição',
             audioUrl: v.audioUrl || v.file_url || '', // Handle both naming conventions
+            fileId: v.fileId || undefined,
             recommended: v.recommended || false,
             createdAt: v.createdAt || v.created_at || new Date().toISOString(), // Handle both naming conventions
             finalVersionUrl: v.finalVersionUrl || '',
