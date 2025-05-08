@@ -11,21 +11,22 @@ interface PreviewVersionCardProps {
     title?: string;
     name?: string;
     description?: string;
-    audio_url: string;
-    recommended?: boolean;
+    audio_url?: string;
+    file_url?: string;
     final?: boolean;
+    recommended?: boolean;
+    stems_url?: string;
+    final_version_url?: string;
     date_added?: string;
     created_at?: string;
-    final_version_url?: string;
-    stems_url?: string;
   };
   isSelected: boolean;
   onSelect: () => void;
-  isApproved: boolean;
+  isApproved?: boolean;
 }
 
-const PreviewVersionCard: React.FC<PreviewVersionCardProps> = ({ 
-  version, 
+const PreviewVersionCard: React.FC<PreviewVersionCardProps> = ({
+  version,
   isSelected,
   onSelect,
   isApproved
@@ -34,38 +35,34 @@ const PreviewVersionCard: React.FC<PreviewVersionCardProps> = ({
   
   // When a version is approved and has final version URL
   const hasFinalVersion = isApproved && version.final_version_url;
-  const finalVersionUrl = hasFinalVersion 
-    ? version.final_version_url 
-    : '';
-    
+  const finalVersionUrl = hasFinalVersion ? version.final_version_url : '';
+
   // When a version is approved and has stems URL 
   const hasStems = isApproved && version.stems_url;
-  const stemsUrl = hasStems
-    ? version.stems_url
-    : '';
-  
+  const stemsUrl = hasStems ? version.stems_url : '';
+
   // Reset playing state when selected version changes
   useEffect(() => {
     if (!isSelected) {
       setIsPlaying(false);
     }
   }, [isSelected]);
-  
+
   // Decide which audio URL to use
-  const audioSrc = version.audio_url;
+  const audioSrc = version.audio_url || version.file_url || '';
   
   if (!audioSrc) {
     return null;
   }
-  
+
   const handlePlayPause = () => {
     if (!isSelected) {
       onSelect();
     }
     setIsPlaying(!isPlaying);
   };
-  
-  const formatDate = (dateString: string | undefined): string => {
+
+  const formatDate = (dateString?: string) => {
     if (!dateString) return 'Data desconhecida';
     
     try {
@@ -73,20 +70,20 @@ const PreviewVersionCard: React.FC<PreviewVersionCardProps> = ({
       return date.toLocaleDateString('pt-BR', {
         day: '2-digit',
         month: '2-digit',
-        year: 'numeric',
+        year: 'numeric'
       });
     } catch (e) {
       console.error('Error formatting date:', e);
       return 'Data inválida';
     }
   };
-  
+
   return (
-    <Card className={`overflow-hidden transition-all ${
-      isSelected 
-        ? 'border-harmonia-green border-2'
-        : 'hover:border-gray-300'
-    }`}>
+    <Card
+      className={`overflow-hidden transition-all ${
+        isSelected ? 'border-harmonia-green border-2' : 'hover:border-gray-300'
+      }`}
+    >
       <div className="p-4 sm:p-6">
         <div className="flex items-start justify-between">
           <div className="flex-1">
@@ -94,11 +91,13 @@ const PreviewVersionCard: React.FC<PreviewVersionCardProps> = ({
               <h3 className="text-lg font-semibold text-gray-900">
                 {version.title || version.name}
               </h3>
+              
               {version.recommended && (
                 <span className="bg-green-100 text-green-800 text-xs px-2 py-0.5 rounded-full">
                   Recomendada
                 </span>
               )}
+              
               {version.final && isApproved && (
                 <span className="bg-blue-100 text-blue-800 text-xs px-2 py-0.5 rounded-full">
                   Final
@@ -108,9 +107,7 @@ const PreviewVersionCard: React.FC<PreviewVersionCardProps> = ({
             <p className="text-sm text-gray-500 mt-1">
               Adicionada em {formatDate(version.date_added || version.created_at)}
             </p>
-            <p className="mt-2 text-gray-700">
-              {version.description}
-            </p>
+            <p className="mt-2 text-gray-700">{version.description}</p>
           </div>
           
           <Button
@@ -122,23 +119,25 @@ const PreviewVersionCard: React.FC<PreviewVersionCardProps> = ({
             }`}
           >
             <Play className="h-4 w-4" />
-            <span>
-              {isPlaying && isSelected ? 'Pausar' : 'Play'}
-            </span>
+            <span>{isPlaying && isSelected ? 'Pausar' : 'Play'}</span>
           </Button>
         </div>
         
-        {/* Download buttons for final version and stems when approved */}
         {isApproved && (
           <div className="flex flex-wrap gap-2 mt-4">
             {hasFinalVersion && (
-              <Button 
-                variant="outline" 
+              <Button
+                variant="outline"
                 size="sm"
                 asChild
                 className="text-xs"
               >
-                <a href={finalVersionUrl} target="_blank" rel="noopener noreferrer" download>
+                <a
+                  href={finalVersionUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  download
+                >
                   <Download className="h-3 w-3 mr-1" />
                   Versão Final
                 </a>
@@ -146,13 +145,18 @@ const PreviewVersionCard: React.FC<PreviewVersionCardProps> = ({
             )}
             
             {hasStems && (
-              <Button 
-                variant="outline" 
+              <Button
+                variant="outline"
                 size="sm"
                 asChild
                 className="text-xs"
               >
-                <a href={stemsUrl} target="_blank" rel="noopener noreferrer" download>
+                <a
+                  href={stemsUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  download
+                >
                   <Music className="h-3 w-3 mr-1" />
                   Stems
                 </a>
@@ -164,9 +168,9 @@ const PreviewVersionCard: React.FC<PreviewVersionCardProps> = ({
       
       {isSelected && (
         <div className="border-t">
-          <AudioPlayer 
-            src={audioSrc} 
-            isPlaying={isPlaying} 
+          <AudioPlayer
+            src={audioSrc}
+            isPlaying={isPlaying}
             onPlayPause={setIsPlaying}
           />
         </div>

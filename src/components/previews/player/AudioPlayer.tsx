@@ -1,139 +1,187 @@
 
-import React, { useState, useRef, useEffect } from 'react';
-import { Play, Pause } from 'lucide-react';
-import { Slider } from "@/components/ui/slider";
-import { Button } from "@/components/ui/button";
+import React, { useState, useEffect, useRef } from 'react';
+import { Play, Pause, Volume2, VolumeX } from 'lucide-react';
+import { Slider } from '@/components/ui/slider';
 
 interface AudioPlayerProps {
   src: string;
   isPlaying: boolean;
-  onPlayPause: (isPlaying: boolean) => void;
+  onPlayPause: (playing: boolean) => void;
 }
 
-const AudioPlayer: React.FC<AudioPlayerProps> = ({ 
-  src, 
-  isPlaying,
-  onPlayPause
-}) => {
-  const [currentTime, setCurrentTime] = useState(0);
+const AudioPlayer: React.FC<AudioPlayerProps> = ({ src, isPlaying, onPlayPause }) => {
   const [duration, setDuration] = useState(0);
-  const audioRef = useRef<HTMLAudioElement | null>(null);
+  const [currentTime, setCurrentTime] = useState(0);
+  const [volume, setVolume] = useState(80);
+  const [isMuted, setIsMuted] = useState(false);
+  
+  const audioRef = useRef<HTMLAudioElement>(null);
+  const progressRef = useRef<HTMLDivElement>(null);
 
-  // Create audio element if it doesn't exist
+  // Initialize audio on mount
   useEffect(() => {
-    if (!audioRef.current) {
-      const audio = new Audio(src);
-      audioRef.current = audio;
-      
-      // Set up event listeners
-      audio.addEventListener('timeupdate', handleTimeUpdate);
-      audio.addEventListener('loadedmetadata', handleLoadedMetadata);
-      audio.addEventListener('ended', handleEnded);
-    }
+    const audio = audioRef.current;
+    if (!audio) return;
 
-    return () => {
-      // Clean up audio element and listeners when component unmounts
-      if (audioRef.current) {
-        audioRef.current.pause();
-        audioRef.current.removeEventListener('timeupdate', handleTimeUpdate);
-        audioRef.current.removeEventListener('loadedmetadata', handleLoadedMetadata);
-        audioRef.current.removeEventListener('ended', handleEnded);
-      }
+    const setAudioData = () => {
+      setDuration(audio.duration);
     };
-  }, [src]);
 
-  // Handle play/pause changes
-  useEffect(() => {
-    if (audioRef.current) {
-      if (isPlaying) {
-        // Try to play and catch any errors (browsers may block autoplay)
-        audioRef.current.play()
-          .catch(error => {
-            console.error('Error playing audio:', error);
-            onPlayPause(false);
-          });
-      } else {
-        audioRef.current.pause();
-      }
-    }
-  }, [isPlaying, onPlayPause]);
+    const setAudioTime = () => {
+      setCurrentTime(audio.currentTime);
+    };
 
-  // Update audio src when it changes
-  useEffect(() => {
-    if (audioRef.current && audioRef.current.src !== src) {
-      audioRef.current.src = src;
+    const handleEnded = () => {
+      onPlayPause(false);
       setCurrentTime(0);
-      
-      // If it was playing, try to play the new source
-      if (isPlaying) {
-        audioRef.current.play().catch(err => {
-          console.error('Error playing new audio source:', err);
-          onPlayPause(false);
-        });
-      }
-    }
-  }, [src, isPlaying, onPlayPause]);
+    };
 
-  const handleTimeUpdate = () => {
-    if (audioRef.current) {
-      setCurrentTime(audioRef.current.currentTime);
-    }
-  };
+    // Add event listeners
+    audio.addEventListener('loadeddata', setAudioData);
+    audio.addEventListener('timeupdate', setAudioTime);
+    audio.addEventListener('ended', handleEnded);
 
-  const handleLoadedMetadata = () => {
-    if (audioRef.current) {
-      setDuration(audioRef.current.duration);
-    }
-  };
+    // Set initial volume
+    audio.volume = volume / 100;
 
-  const handleEnded = () => {
+    // Cleanup
+    return () => {
+      audio.removeEventListener('loadeddata', setAudioData);
+      audio.removeEventListener('timeupdate', setAudioTime);
+      audio.removeEventListener('ended', handleEnded);
+    };
+  }, [volume, onPlayPause]);
+
+  // Control play/pause
+  useEffect(() => {
+    const audio = audioRef.current;
+    if (!audio) return;
+
+    if (isPlaying) {
+      audio.play().catch(err => {
+        console.error('Error playing audio:', err);
+        onPlayPause(false);
+      });
+    } else {
+      audio.pause();
+    }
+  }, [isPlaying, onPlayPause, src]);
+
+  // Update volume
+  useEffect(() => {
+    const audio = audioRef.current;
+    if (!audio) return;
+    
+    audio.volume = isMuted ? 0 : volume / 100;
+  }, [volume, isMuted]);
+
+  // Handle source changes
+  useEffect(() => {
+    const audio = audioRef.current;
+    if (!audio) return;
+    
+    audio.load();
     setCurrentTime(0);
-    onPlayPause(false);
+    
+    if (isPlaying) {
+      audio.play().catch(err => {
+        console.error('Error playing audio after source change:', err);
+        onPlayPause(false);
+      });
+    }
+  }, [src, onPlayPause]);
+
+  const formatTime = (seconds: number): string => {
+    if (isNaN(seconds)) return '0:00';
+    const min = Math.floor(seconds / 60);
+    const sec = Math.floor(seconds % 60);
+    return `${min}:${sec < 10 ? '0' + sec : sec}`;
   };
 
-  const handleSliderChange = (value: number[]) => {
-    if (audioRef.current && value.length > 0) {
-      audioRef.current.currentTime = value[0];
-      setCurrentTime(value[0]);
+  const handleProgressChange = (values: number[]) => {
+    const newTime = values[0];
+    setCurrentTime(newTime);
+    
+    if (audioRef.current) {
+      audioRef.current.currentTime = newTime;
     }
   };
 
-  const togglePlayPause = () => {
-    onPlayPause(!isPlaying);
+  const handleVolumeChange = (values: number[]) => {
+    const newVolume = values[0];
+    setVolume(newVolume);
+    
+    if (audioRef.current) {
+      audioRef.current.volume = newVolume / 100;
+    }
+    
+    if (newVolume === 0) {
+      setIsMuted(true);
+    } else if (isMuted) {
+      setIsMuted(false);
+    }
   };
 
-  const formatTime = (time: number) => {
-    const minutes = Math.floor(time / 60);
-    const seconds = Math.floor(time % 60);
-    return `${minutes}:${seconds < 10 ? '0' : ''}${seconds}`;
+  const toggleMute = () => {
+    if (audioRef.current) {
+      const newMuted = !isMuted;
+      setIsMuted(newMuted);
+      audioRef.current.volume = newMuted ? 0 : volume / 100;
+    }
   };
 
   return (
-    <div className="p-4 space-y-2">
-      <div className="flex items-center gap-4">
-        <Button 
-          onClick={togglePlayPause} 
-          variant="outline" 
-          size="icon" 
-          className="h-8 w-8 rounded-full"
-        >
-          {isPlaying ? (
-            <Pause className="h-4 w-4" />
-          ) : (
-            <Play className="h-4 w-4" />
-          )}
-        </Button>
-        
-        <div className="flex-1">
-          <Slider 
-            value={[currentTime]} 
-            max={duration || 100} 
-            step={0.1} 
-            onValueChange={handleSliderChange} 
-          />
-          <div className="flex justify-between text-xs text-gray-400 mt-1">
-            <span>{formatTime(currentTime)}</span>
-            <span>{formatTime(duration)}</span>
+    <div className="p-4 bg-gray-50">
+      <audio ref={audioRef} src={src} preload="metadata" />
+      
+      <div className="flex flex-col space-y-2">
+        <div className="flex items-center space-x-2">
+          <button 
+            className="w-8 h-8 flex items-center justify-center rounded-full bg-harmonia-green text-white"
+            onClick={() => onPlayPause(!isPlaying)}
+            aria-label={isPlaying ? 'Pausar' : 'Reproduzir'}
+          >
+            {isPlaying ? <Pause size={16} /> : <Play size={16} />}
+          </button>
+          
+          <div className="text-xs text-gray-500 w-12">
+            {formatTime(currentTime)}
+          </div>
+          
+          <div className="flex-1">
+            <Slider
+              value={[currentTime]}
+              min={0}
+              max={duration || 100}
+              step={0.1}
+              onValueChange={handleProgressChange}
+              className="cursor-pointer"
+            />
+          </div>
+          
+          <div className="text-xs text-gray-500 w-12 text-right">
+            {formatTime(duration)}
+          </div>
+          
+          <div className="flex items-center space-x-2">
+            <button
+              onClick={toggleMute}
+              className="text-gray-500 hover:text-gray-700"
+              aria-label={isMuted ? 'Ativar som' : 'Mutar'}
+            >
+              {isMuted || volume === 0 ? <VolumeX size={16} /> : <Volume2 size={16} />}
+            </button>
+            
+            <div className="w-20">
+              <Slider
+                value={[volume]}
+                min={0}
+                max={100}
+                step={1}
+                onValueChange={handleVolumeChange}
+                className="cursor-pointer"
+              />
+            </div>
           </div>
         </div>
       </div>

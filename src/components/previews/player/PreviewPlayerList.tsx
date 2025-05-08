@@ -1,59 +1,64 @@
 
-import React from 'react';
+import React, { useState } from 'react';
+import { Card } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
 import PreviewVersionCard from './PreviewVersionCard';
-import { MusicPreview } from '@/types/project.types';
-import { logger } from '@/utils/logger';
+
+interface MusicPreview {
+  id: string;
+  title?: string;
+  name?: string;
+  description?: string;
+  audio_url?: string;
+  recommended?: boolean;
+  final?: boolean;
+  file_url?: string;
+  final_version_url?: string;
+  stems_url?: string;
+  created_at?: string;
+  date_added?: string;
+}
 
 interface PreviewPlayerListProps {
   versions: MusicPreview[];
   selectedVersion: string | null;
-  setSelectedVersion: (id: string) => void;
-  isApproved: boolean;
+  onSelectVersion: (id: string) => void;
+  isApproved?: boolean;
 }
 
-const PreviewPlayerList: React.FC<PreviewPlayerListProps> = ({ 
+const PreviewPlayerList: React.FC<PreviewPlayerListProps> = ({
   versions,
   selectedVersion,
-  setSelectedVersion,
-  isApproved
+  onSelectVersion,
+  isApproved = false
 }) => {
-  // Set first version as selected by default if none provided
-  React.useEffect(() => {
-    if (!selectedVersion && versions.length > 0) {
-      const recommendedVersion = versions.find(v => v.recommended);
-      setSelectedVersion(recommendedVersion?.id || versions[0].id);
-    }
-  }, [versions, selectedVersion, setSelectedVersion]);
+  // Check if we have any versions with audio URLs
+  const hasPlayableVersions = versions.some(v => v.audio_url || v.file_url);
+  
+  if (!hasPlayableVersions) {
+    return (
+      <Card className="p-6 text-center bg-gray-50">
+        <h3 className="text-lg font-medium text-gray-900 mb-2">Nenhuma prévia disponível</h3>
+        <p className="text-gray-600">
+          Você será notificado assim que houver prévias disponíveis para ouvir.
+        </p>
+      </Card>
+    );
+  }
 
   return (
-    <div className="space-y-6">
-      {versions.length === 0 ? (
-        <div className="p-8 text-center">
-          <p className="text-gray-500">Nenhuma versão disponível ainda.</p>
-          <p className="text-sm text-gray-400 mt-2">Volte mais tarde para ver as versões propostas.</p>
-        </div>
-      ) : (
-        versions.map((version) => {
-          // Check if version has required fields
-          const hasValidFileId = Boolean(version.file_id);
-          const hasValidAudioUrl = Boolean(version.audio_url);
-          
-          if (!hasValidAudioUrl && !hasValidFileId) {
-            logger.warn('PreviewPlayerList', `Version ${version.id} missing both audio_url and file_id`, version);
-            return null;
-          }
-          
-          return (
-            <PreviewVersionCard
-              key={version.id}
-              version={version}
-              isSelected={selectedVersion === version.id}
-              onSelect={() => setSelectedVersion(version.id)}
-              isApproved={isApproved}
-            />
-          );
-        }).filter(Boolean)
-      )}
+    <div className="space-y-4">
+      {versions
+        .filter(version => version.audio_url || version.file_url)
+        .map(version => (
+          <PreviewVersionCard
+            key={version.id}
+            version={version}
+            isSelected={selectedVersion === version.id}
+            onSelect={() => onSelectVersion(version.id)}
+            isApproved={isApproved}
+          />
+        ))}
     </div>
   );
 };

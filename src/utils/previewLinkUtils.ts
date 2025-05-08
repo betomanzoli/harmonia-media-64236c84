@@ -80,3 +80,31 @@ export const getProjectIdFromPreviewLink = (
     return null;
   }
 };
+
+/**
+ * Decodes a preview code from a URL or string
+ * 
+ * @param input - URL or code to decode
+ * @returns The decoded preview code
+ */
+export const decodePreviewCode = (input: string): string | null => {
+  try {
+    // If it's a URL, extract the code part
+    if (input.includes('/preview/')) {
+      const match = input.match(/\/preview\/([^\/\?#]+)/);
+      if (match && match[1]) {
+        return match[1];
+      }
+    }
+    
+    // If already a code, just return it
+    if (isValidEncodedPreviewLink(input)) {
+      return input;
+    }
+    
+    return null;
+  } catch (error) {
+    console.error('Error decoding preview code:', error);
+    return null;
+  }
+};

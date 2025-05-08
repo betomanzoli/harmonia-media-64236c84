@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { useParams } from 'react-router-dom';
 import { useToast } from "@/hooks/use-toast";
@@ -70,7 +71,7 @@ const MusicPreviews: React.FC = () => {
       // Notify about feedback
       notificationService.notify('feedback_received', {
         projectId: actualProjectId || previewId,
-        clientName: projectData?.clientName || 'Cliente',
+        clientName: projectData?.client_name || 'Cliente',
         message: feedback
       });
     } else {
@@ -113,7 +114,7 @@ const MusicPreviews: React.FC = () => {
       // Notify about approval
       notificationService.notify('preview_approved', {
         projectId: actualProjectId || previewId,
-        clientName: projectData?.clientName || 'Cliente',
+        clientName: projectData?.client_name || 'Cliente',
         versionId: selectedPreview
       });
     } else {
@@ -158,10 +159,10 @@ const MusicPreviews: React.FC = () => {
         title: p.title || p.name || `Versão ${p.id}`,
         name: p.name || p.title || `Versão ${p.id}`,
         description: p.description || 'Sem descrição',
-        audioUrl: p.audioUrl || p.audio_url || p.file_url || '',
-        fileId: p.fileId || undefined,
-        finalVersionUrl: p.finalVersionUrl || '',
-        stemsUrl: p.stemsUrl || ''
+        audio_url: p.audio_url || p.file_url || '',
+        file_id: p.file_id || undefined,
+        final_version_url: p.final_version_url || '',
+        stems_url: p.stems_url || ''
       })) as MusicPreview[]
     : (Array.isArray(projectData?.versionsList) 
         ? projectData.versionsList.map((v) => ({
@@ -169,12 +170,12 @@ const MusicPreviews: React.FC = () => {
             title: v.title || v.name || `Versão ${v.id}`,
             name: v.name || v.title || `Versão ${v.id}`,
             description: v.description || 'Sem descrição',
-            audioUrl: v.audioUrl || v.audio_url || v.file_url || '',
-            fileId: v.fileId || undefined,
+            audio_url: v.audio_url || v.file_url || '',
+            file_id: v.file_id || undefined,
             recommended: v.recommended || false,
-            createdAt: v.createdAt || v.created_at || new Date().toISOString(),
-            finalVersionUrl: v.finalVersionUrl || '',
-            stemsUrl: v.stemsUrl || ''
+            created_at: v.created_at || new Date().toISOString(),
+            final_version_url: v.final_version_url || '',
+            stems_url: v.stems_url || ''
           })) as MusicPreview[]
         : []);
   
@@ -183,16 +184,16 @@ const MusicPreviews: React.FC = () => {
   // Create a complete ProjectItem with required fields
   const projectItemData: ProjectItem = {
     id: projectData?.id || actualProjectId || 'unknown',
-    clientName: projectData?.clientName || 'Cliente',
-    projectTitle: projectData?.projectTitle || 'Música Personalizada',
-    packageType: projectData?.packageType || 'standard',
+    client_name: projectData?.client_name || 'Cliente',
+    project_title: projectData?.project_title || 'Música Personalizada',
+    package_type: projectData?.package_type || 'standard',
     status: projectData?.status || 'waiting',
-    createdAt: projectData?.createdAt || new Date().toISOString(),
-    lastActivityDate: projectData?.lastActivityDate || new Date().toISOString(),
-    expirationDate: projectData?.expirationDate || new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString(),
+    created_at: projectData?.created_at || new Date().toISOString(),
+    last_activity_date: projectData?.last_activity_date || new Date().toISOString(),
+    expiration_date: projectData?.expiration_date || new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString(),
     versions: projectData?.versions || versionsForPlayer.length || 0,
     versionsList: (projectData?.versionsList || []) as ProjectVersion[],
-    feedbackHistory: projectData?.feedbackHistory || [],
+    feedback_history: projectData?.feedback_history || [],
     history: projectData?.history || [],
     preview_code: projectData?.preview_code // Use preview_code instead of ID
   };
