@@ -18,30 +18,23 @@ const PreviewPage: React.FC = () => {
       window.scrollTo(0, 0);
       
       // Check if already authenticated for this project
-      const authStatus = localStorage.getItem(`preview_auth_${projectId}`);
-      if (authStatus === 'authorized') {
+      const authCookie = document.cookie
+        .split('; ')
+        .find(row => row.startsWith(`preview_access_${projectId}=`));
+        
+      if (authCookie) {
         setIsAuthorized(true);
       }
     }
   }, [projectId]);
 
   const handleAccessVerification = (code: string, email: string) => {
-    // This would normally verify against a database
-    // For now, just grant access if fields are filled
-    if (code && email) {
-      localStorage.setItem(`preview_auth_${projectId}`, 'authorized');
-      setIsAuthorized(true);
-      toast({
-        title: "Acesso autorizado",
-        description: "Bem-vindo à página de prévia do seu projeto.",
-      });
-    } else {
-      toast({
-        title: "Falha na autenticação",
-        description: "Por favor, verifique o código do projeto e email.",
-        variant: "destructive"
-      });
-    }
+    // Access is now validated in the ProjectAccessForm component
+    setIsAuthorized(true);
+    toast({
+      title: "Acesso autorizado",
+      description: "Bem-vindo à página de prévia do seu projeto.",
+    });
   };
 
   if (!projectId) {

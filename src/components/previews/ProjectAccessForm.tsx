@@ -5,6 +5,8 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Music, Mail, Key } from 'lucide-react';
+import { supabase } from '@/integrations/supabase/client';
+import { useToast } from '@/hooks/use-toast';
 
 interface ProjectAccessFormProps {
   projectId: string;
@@ -15,16 +17,85 @@ const ProjectAccessForm: React.FC<ProjectAccessFormProps> = ({ projectId, onVeri
   const [code, setCode] = useState(projectId || '');
   const [email, setEmail] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+  const { toast } = useToast();
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const validateAccess = async (previewCode: string, email: string) => {
+    try {
+      // Try to find a project with matching preview code
+      const { data, error } = await supabase
+        .from('projects')
+        .select('client_id')
+        .eq('preview_code', previewCode)
+        .single();
+      
+      if (error || !data) {
+        console.error('Invalid preview code:', error);
+        toast({
+          title: "Código inválido",
+          description: "O código de prévia fornecido não é válido.",
+          variant: "destructive"
+        });
+        return false;
+      }
+      
+      // If we find a project, check if it belongs to a client with this email
+      if (data.client_id) {
+        const { data: clientData, error: clientError } = await supabase
+          .from('clients')
+          .select('email')
+          .eq('id', data.client_id)
+          .single();
+          
+        if (clientError || !clientData) {
+          console.error('Client not found:', clientError);
+          toast({
+            title: "Cliente não encontrado",
+            description: "Não foi possível verificar os dados do cliente.",
+            variant: "destructive"
+          });
+          return false;
+        }
+        
+        if (clientData.email.toLowerCase() !== email.toLowerCase()) {
+          console.error('Email mismatch');
+          toast({
+            title: "Email não correspondente",
+            description: "O email informado não corresponde ao cliente deste projeto.",
+            variant: "destructive"
+          });
+          return false;
+        }
+      }
+      
+      // Email is valid for this preview code
+      document.cookie = `preview_access_${previewCode}=authorized; path=/; Secure; SameSite=None; max-age=86400`;
+      return true;
+    } catch (error) {
+      console.error('Error validating access:', error);
+      return false;
+    }
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
     
-    // Simulate loading
-    setTimeout(() => {
-      onVerify(code, email);
+    try {
+      const isValid = await validateAccess(code, email);
+      if (isValid) {
+        onVerify(code, email);
+      } else {
+        setIsLoading(false);
+      }
+    } catch (error) {
+      console.error('Access verification error:', error);
+      toast({
+        title: "Erro de verificação",
+        description: "Ocorreu um erro ao verificar seu acesso. Tente novamente.",
+        variant: "destructive"
+      });
       setIsLoading(false);
-    }, 1000);
+    }
   };
 
   return (
@@ -95,7 +166,7 @@ const ProjectAccessForm: React.FC<ProjectAccessFormProps> = ({ projectId, onVeri
       </Card>
       
       <p className="text-center text-sm text-gray-500 mt-4">
-        Dúvidas? Entre em contato pelo WhatsApp (11) 96590-6009
+        Dúvidas? Entre em contato pelo WhatsApp +55 11 92058-5072
       </p>
     </div>
   );

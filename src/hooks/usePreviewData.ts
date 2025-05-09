@@ -14,15 +14,20 @@ export const usePreviewData = (previewId: string | undefined) => {
       // Verificar se o ID é direto ou precisa ser decodificado
       try {
         const fetchProjectId = async () => {
-          const decodedId = await getProjectIdFromPreviewLink(previewId);
-          setActualProjectId(decodedId || previewId);
-          
-          console.log(`Carregando dados da prévia: ${decodedId || previewId}`);
+          try {
+            const decodedId = await getProjectIdFromPreviewLink(previewId);
+            setActualProjectId(decodedId || previewId);
+            
+            console.log(`Carregando dados da prévia: ${decodedId || previewId}`);
+          } catch (error) {
+            console.error("Error decoding preview ID:", error);
+            setActualProjectId(previewId);
+          }
         };
         
         fetchProjectId();
       } catch (error) {
-        console.error("Error decoding preview ID:", error);
+        console.error("Error in preview ID handling:", error);
         setActualProjectId(previewId);
       }
     }

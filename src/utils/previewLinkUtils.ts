@@ -6,6 +6,24 @@ import { supabase } from '@/integrations/supabase/client';
 // Create a more secure mapping between encoded IDs and project IDs
 const previewLinksMap = new Map<string, string>();
 
+// Helper functions to work with cookies
+const setCookie = (name: string, value: string, days = 1) => {
+  const date = new Date();
+  date.setTime(date.getTime() + (days * 24 * 60 * 60 * 1000));
+  const expires = `; expires=${date.toUTCString()}`;
+  document.cookie = `${name}=${value}${expires}; path=/; Secure; SameSite=None`;
+};
+
+const getCookie = (name: string): string | null => {
+  const value = `; ${document.cookie}`;
+  const parts = value.split(`; ${name}=`);
+  if (parts.length === 2) {
+    const cookieValue = parts.pop()?.split(';').shift();
+    return cookieValue || null;
+  }
+  return null;
+};
+
 // Generate a preview link with a unique encoded ID
 export const generatePreviewLink = async (projectId: string): Promise<string> => {
   try {
@@ -29,11 +47,10 @@ export const generatePreviewLink = async (projectId: string): Promise<string> =>
     // Store the mapping locally as a fallback
     previewLinksMap.set(encodedId, projectId);
     
-    // Store this in localStorage for persistence
-    // This will be used as a fallback if the database query fails
-    const storedMappings = JSON.parse(localStorage.getItem('previewLinksMappings') || '{}');
-    storedMappings[encodedId] = projectId;
-    localStorage.setItem('previewLinksMappings', JSON.stringify(storedMappings));
+    // Store in cookie instead of localStorage
+    const mappings = JSON.parse(getCookie('previewLinksMappings') || '{}');
+    mappings[encodedId] = projectId;
+    setCookie('previewLinksMappings', JSON.stringify(mappings));
     
     return encodedId;
   } catch (error) {
@@ -63,9 +80,9 @@ export const getProjectIdFromPreviewLink = async (encodedId: string): Promise<st
     // Fall back to in-memory map
     let projectId = previewLinksMap.get(encodedId);
     
-    // If not found in memory, check in localStorage
+    // If not found in memory, check in cookies
     if (!projectId) {
-      const storedMappings = JSON.parse(localStorage.getItem('previewLinksMappings') || '{}');
+      const storedMappings = JSON.parse(getCookie('previewLinksMappings') || '{}');
       projectId = storedMappings[encodedId] || null;
       
       // Add to in-memory map if found
@@ -87,15 +104,8 @@ export const authorizeEmailForProject = (email: string, projectId: string): void
     // Store authorization in cookie
     setPreviewAccessCookie(projectId);
     
-    // Also store in localStorage as a fallback
-    const storedAuthorizations = JSON.parse(localStorage.getItem('previewAuthorizedEmails') || '{}');
-    if (!storedAuthorizations[projectId]) {
-      storedAuthorizations[projectId] = [];
-    }
-    if (!storedAuthorizations[projectId].includes(email)) {
-      storedAuthorizations[projectId].push(email);
-    }
-    localStorage.setItem('previewAuthorizedEmails', JSON.stringify(storedAuthorizations));
+    // Also store email in cookie for validation
+    setCookie(`preview_email_${projectId}`, email, 7); // Store for 7 days
   } catch (error) {
     console.error('Error authorizing email for project:', error);
   }
@@ -104,26 +114,24 @@ export const authorizeEmailForProject = (email: string, projectId: string): void
 // Check if an email is authorized for a project
 export const isEmailAuthorizedForProject = (email: string, projectId: string): boolean => {
   try {
-    // First check in cookie
+    // First check if project is authorized
     if (checkPreviewAccessCookie(projectId)) {
-      return true;
+      // Then validate if the email matches
+      const storedEmail = getCookie(`preview_email_${projectId}`);
+      return storedEmail === email;
     }
     
-    // If not found in cookie, check in localStorage
-    const storedAuthorizations = JSON.parse(localStorage.getItem('previewAuthorizedEmails') || '{}');
-    const storedEmails = storedAuthorizations[projectId] || [];
-    
-    return storedEmails.includes(email);
+    return false;
   } catch (error) {
     console.error('Error checking email authorization for project:', error);
     return false;
   }
 };
 
-// Load stored mappings when the module loads
+// Load stored mappings from cookies when the module loads
 const loadStoredData = () => {
   try {
-    const storedMappings = JSON.parse(localStorage.getItem('previewLinksMappings') || '{}');
+    const storedMappings = JSON.parse(getCookie('previewLinksMappings') || '{}');
     Object.entries(storedMappings).forEach(([encodedId, projectId]) => {
       previewLinksMap.set(encodedId, projectId as string);
     });

@@ -9,7 +9,7 @@ export const setAuthCookie = (name: string, value: string, days: number = 7) => 
   const date = new Date();
   date.setTime(date.getTime() + (days * 24 * 60 * 60 * 1000));
   const expires = `; expires=${date.toUTCString()}`;
-  document.cookie = `${name}=${value}${expires}; path=/; SameSite=Lax; Secure`;
+  document.cookie = `${name}=${value}${expires}; path=/; SameSite=None; Secure`;
 };
 
 /**
@@ -34,7 +34,7 @@ export const getAuthCookie = (name: string): string | null => {
  * Remove authentication cookie
  */
 export const removeAuthCookie = (name: string) => {
-  document.cookie = `${name}=; Path=/; Expires=Thu, 01 Jan 1970 00:00:01 GMT; SameSite=Lax; Secure`;
+  document.cookie = `${name}=; Path=/; Expires=Thu, 01 Jan 1970 00:00:01 GMT; SameSite=None; Secure`;
 };
 
 /**
@@ -69,14 +69,14 @@ export const getRefreshTokenCookie = () => {
  * Store preview access status in cookie
  */
 export const setPreviewAccessCookie = (projectId: string) => {
-  setAuthCookie(`preview_auth_${projectId}`, 'authorized');
+  setAuthCookie(`preview_access_${projectId}`, 'authorized');
 };
 
 /**
  * Check preview access status from cookie
  */
 export const checkPreviewAccessCookie = (projectId: string): boolean => {
-  return getAuthCookie(`preview_auth_${projectId}`) === 'authorized';
+  return getAuthCookie(`preview_access_${projectId}`) === 'authorized';
 };
 
 /**
@@ -88,14 +88,11 @@ export const cleanAllAuthCookies = () => {
   removeAuthCookie('sb-refresh-token');
   removeAuthCookie('supabase-auth-token');
   
-  // Also clean localStorage for compatibility
-  localStorage.removeItem('supabase.auth.token');
-  
   // Clean all preview auth cookies (we don't know all the project IDs, so this is a best effort)
   const cookies = document.cookie.split(';');
   for (let i = 0; i < cookies.length; i++) {
     const cookie = cookies[i].trim();
-    if (cookie.indexOf('preview_auth_') === 0) {
+    if (cookie.indexOf('preview_access_') === 0) {
       const cookieName = cookie.split('=')[0];
       removeAuthCookie(cookieName);
     }
