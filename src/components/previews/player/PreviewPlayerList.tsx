@@ -1,50 +1,71 @@
-
-import React, { useState } from 'react';
-import { Card } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
+import React from 'react';
+import { Card } from "@/components/ui/card";
 import PreviewVersionCard from './PreviewVersionCard';
-import { MusicPreview } from '@/types/project.types';
+
+interface MusicPreview {
+  id: string;
+  title: string;
+  description: string;
+  audioUrl?: string;
+  url?: string;
+  fileId?: string;
+  recommended?: boolean;
+}
 
 interface PreviewPlayerListProps {
   versions: MusicPreview[];
   selectedVersion: string | null;
-  onSelectVersion: (id: string) => void;
-  isApproved?: boolean;
+  setSelectedVersion: (id: string) => void;
+  isApproved: boolean;
+  onPlay?: (version: MusicPreview) => void;
 }
 
 const PreviewPlayerList: React.FC<PreviewPlayerListProps> = ({
   versions,
   selectedVersion,
-  onSelectVersion,
-  isApproved = false
+  setSelectedVersion,
+  isApproved,
+  onPlay = () => {}
 }) => {
-  // Check if we have any versions with audio URLs
-  const hasPlayableVersions = versions.some(v => v.audio_url || v.file_url);
-  
-  if (!hasPlayableVersions) {
+  if (!versions || versions.length === 0) {
     return (
-      <Card className="p-6 text-center bg-gray-50">
-        <h3 className="text-lg font-medium text-gray-900 mb-2">Nenhuma prévia disponível</h3>
-        <p className="text-gray-600">
-          Você será notificado assim que houver prévias disponíveis para ouvir.
-        </p>
-      </Card>
+      <div className="mb-10">
+        <h2 className="text-xl font-bold text-black mb-6 pb-2 border-b">Versões Disponíveis</h2>
+        <Card className="p-6 text-center">
+          <p className="text-gray-500">Nenhuma versão disponível no momento.</p>
+        </Card>
+      </div>
     );
   }
 
+  // Handle playing the version audio
+  const handlePlay = (version: MusicPreview) => {
+    // If version has fileId, create a Google Drive URL
+    if (version.fileId) {
+      const driveUrl = `https://drive.google.com/file/d/${version.fileId}/view`;
+      window.open(driveUrl, '_blank');
+      return;
+    }
+    
+    // Otherwise use the provided audioUrl or url
+    onPlay(version);
+  };
+  
   return (
-    <div className="space-y-4">
-      {versions
-        .filter(version => version.audio_url || version.file_url)
-        .map(version => (
-          <PreviewVersionCard
+    <div className="mb-10">
+      <h2 className="text-xl font-bold text-black mb-6 pb-2 border-b">Versões Disponíveis</h2>
+      <div className="space-y-6">
+        {versions.map(version => (
+          <PreviewVersionCard 
             key={version.id}
             version={version}
             isSelected={selectedVersion === version.id}
-            onSelect={() => onSelectVersion(version.id)}
             isApproved={isApproved}
+            onSelect={setSelectedVersion}
+            onPlay={handlePlay}
           />
         ))}
+      </div>
     </div>
   );
 };

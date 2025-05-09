@@ -11,7 +11,7 @@ interface Project {
   id: string;
   clientName: string;
   title: string;
-  status: 'pending' | 'in_progress' | 'completed' | 'feedback' | 'waiting' | 'approved';
+  status: 'pending' | 'in_progress' | 'completed' | 'feedback';
   date: string;
 }
 
@@ -24,14 +24,10 @@ const RecentProjectsList: React.FC<RecentProjectsListProps> = ({ projects }) => 
     switch(status) {
       case 'pending':
         return <Badge className="bg-yellow-500">Pendente</Badge>;
-      case 'waiting':
-        return <Badge className="bg-yellow-500">Aguardando</Badge>;
       case 'in_progress':
         return <Badge className="bg-blue-500">Em Progresso</Badge>;
       case 'completed':
         return <Badge className="bg-green-500">Concluído</Badge>;
-      case 'approved':
-        return <Badge className="bg-green-500">Aprovado</Badge>;
       case 'feedback':
         return <Badge className="bg-purple-500">Feedback</Badge>;
       default:

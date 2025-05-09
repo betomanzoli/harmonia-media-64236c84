@@ -1,356 +1,122 @@
 
 import { useState, useEffect } from 'react';
 import { useToast } from '@/hooks/use-toast';
-import { getProjectIdFromPreviewLink, isValidEncodedPreviewLink } from '@/utils/previewLinkUtils';
-import { supabase } from '@/lib/supabase';
+import { useGoogleDriveAudio } from '@/hooks/audio/useGoogleDriveAudio';
+import { usePreviewProjects } from '@/hooks/admin/usePreviewProjects';
 
 interface MusicPreview {
   id: string;
   title: string;
   description: string;
-  audioUrl: string; // Required
+  audioUrl: string;
   recommended?: boolean;
-  name?: string; // Optional, for compatibility
 }
 
-interface ProjectData {
+interface PreviewProject {
   clientName: string;
   projectTitle: string;
   status: 'waiting' | 'feedback' | 'approved';
-  createdAt: string;
-  expirationDate?: string;
-  packageType?: string;
-  versions: MusicPreview[];
-  id?: string;
-  preview_code?: string;
+  previews: MusicPreview[];
 }
 
 export const usePreviewProject = (projectId: string | undefined) => {
-  const [projectData, setProjectData] = useState<ProjectData | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
-  const [actualProjectId, setActualProjectId] = useState<string | null>(null);
   const { toast } = useToast();
-
+  const [projectData, setProjectData] = useState<PreviewProject | null>(null);
+  const { audioFiles, isLoading } = useGoogleDriveAudio();
+  const { getProjectById, updateProject } = usePreviewProjects();
+  
   useEffect(() => {
-    const loadProjectData = async () => {
-      if (!projectId) {
-        console.log('[usePreviewProject] No projectId provided, skipping data load');
-        setIsLoading(false);
-        setProjectData(null);
-        return;
-      }
+    if (!projectId) return;
+
+    // Get project from admin projects
+    const adminProject = getProjectById(projectId);
+    
+    if (adminProject) {
+      console.log('Project found in admin system:', adminProject);
       
-      console.log(`[usePreviewProject] 🔎 Loading data for projectId=${projectId}`);
-      setIsLoading(true);
-
-      try {
-        // Check if this is an encoded link or direct ID
-        const isEncodedLink = isValidEncodedPreviewLink(projectId);
-        console.log("[usePreviewProject] Is encoded preview link:", isEncodedLink);
-        console.log("[usePreviewProject] Token recebido:", projectId);
-        
-        // Only allow encoded links or admin access for direct links
-        const isAdmin = localStorage.getItem('admin_preview_access') === 'true';
-        let decodedId: string | null = null;
-        
-        if (isEncodedLink) {
-          // Process encoded link
-          decodedId = getProjectIdFromPreviewLink(projectId);
-          console.log(`[usePreviewProject] 🔑 Decoded ID=${decodedId}`);
-        } else if (isAdmin) {
-          // Allow direct access for admins
-          decodedId = projectId;
-          console.log(`[usePreviewProject] 👨‍💼 Admin direct access for ID=${projectId}`);
-        } else {
-          // Invalid link for non-admin users
-          console.log("[usePreviewProject] ❌ Invalid direct link access for non-admin user");
-          decodedId = null;
-        }
-        
-        if (!decodedId) {
-          console.log("[usePreviewProject] ❌ No valid project ID, skipping data load");
-          setProjectData(null);
-          setIsLoading(false);
-          return;
-        }
-        
-        setActualProjectId(decodedId);
-
-        // First try to load from Supabase
-        try {
-          // Check by preview_code first (if the decoded ID looks like a preview code)
-          if (/^P\d{4,}$/i.test(decodedId) || /^PREV-\d{4,}$/i.test(decodedId)) {
-            console.log("[usePreviewProject] 🔍 Trying to fetch by preview_code:", decodedId);
-            
-            // Test query in browser console
-            const supabaseUrl = 'https://oiwulrumjuqvszmyltau.supabase.co';
-            const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im9pd3VscnVtanVxdnN6bXlsdGF1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDQwNDQ2MjksImV4cCI6MjA1OTYyMDYyOX0.VvtorYEZafOLIx_qozAWBtalhQBBw81nPnWPvNlx4bA';
-            console.log('[usePreviewProject] Testing direct query in console:');
-            console.log(`fetch('${supabaseUrl}/rest/v1/projects?preview_code=eq.${encodeURIComponent(decodedId)}', {
-              headers: {
-                'apikey': '${supabaseKey}',
-                'Authorization': 'Bearer ${supabaseKey}'
-              }
-            }).then(r => r.json()).then(console.log).catch(console.error);`);
-            
-            // Make the real query
-            const { data: previewData, error: previewError } = await supabase
-              .from('projects')
-              .select('*, project_files(*), clients(*)')
-              .eq('preview_code', decodedId)
-              .maybeSingle();
-              
-            console.log('[usePreviewProject] 📊 Preview code query result:', { 
-              previewData, 
-              previewError,
-              hasFiles: previewData?.project_files?.length > 0
-            });
-            
-            // Log detailed error information if present
-            if (previewError) {
-              console.error('[usePreviewProject] 🔥 Error details:', {
-                message: previewError.message,
-                code: previewError.code,
-                details: previewError.details,
-                hint: previewError.hint
-              });
-            }
-              
-            if (!previewError && previewData) {
-              console.log('[usePreviewProject] ✅ Project found by preview_code:', previewData);
-              
-              // Process project data...
-              // This could be expanded based on your actual data structure
-              setProjectData({
-                clientName: previewData.client_name || previewData.clients?.name || 'Cliente',
-                projectTitle: previewData.title || previewData.package_type || 'Música Personalizada',
-                status: previewData.status || 'waiting',
-                createdAt: previewData.created_at || new Date().toISOString(),
-                expirationDate: previewData.deadline,
-                packageType: previewData.package_type,
-                id: previewData.id,
-                preview_code: previewData.preview_code,
-                versions: previewData.project_files?.map((file: any) => ({
-                  id: file.id,
-                  title: file.file_name || 'Prévia',
-                  name: file.file_name || 'Prévia',
-                  description: file.notes || 'Versão para aprovação',
-                  audioUrl: file.file_url || ''
-                })) || []
-              });
-              
-              setIsLoading(false);
-              return;
-            }
-          }
-          
-          // If not found by preview_code or not a preview code format, try by ID
-          console.log("[usePreviewProject] 🔍 Trying to fetch by ID:", decodedId);
-          const { data, error } = await supabase
-            .from('projects')
-            .select('*, project_files(*), clients(*)')
-            .eq('id', decodedId)
-            .maybeSingle();
-            
-          console.log('[usePreviewProject] 📊 ID query result:', { 
-            data, 
-            error,
-            hasFiles: data?.project_files?.length > 0
+      // Create previews from project versions list
+      const previews: MusicPreview[] = adminProject.versionsList?.map(v => ({
+        id: v.id,
+        title: v.name || `Versão ${v.id}`,
+        description: v.description || '',
+        audioUrl: `https://drive.google.com/uc?export=download&id=${v.fileId || audioFiles[0]?.id || '1H62ylCwQYJ23BLpygtvNmCgwTDcHX6Cl'}`,
+        recommended: v.recommended
+      })) || [];
+      
+      // If no previews but versions exist, create a fallback
+      if (previews.length === 0 && adminProject.versions > 0) {
+        for (let i = 0; i < adminProject.versions; i++) {
+          const fallbackFileId = audioFiles[i % audioFiles.length]?.id || '1H62ylCwQYJ23BLpygtvNmCgwTDcHX6Cl';
+          previews.push({
+            id: `v${i+1}`,
+            title: `Versão ${i+1}`,
+            description: 'Versão para aprovação',
+            audioUrl: `https://drive.google.com/uc?export=download&id=${fallbackFileId}`,
+            recommended: i === 0 // Mark first version as recommended
           });
-            
-          if (!error && data) {
-            console.log('[usePreviewProject] ✅ Project found by ID:', data);
-            
-            // Process project data...
-            setProjectData({
-              clientName: data.client_name || data.clients?.name || 'Cliente',
-              projectTitle: data.title || data.package_type || 'Música Personalizada',
-              status: data.status || 'waiting',
-              createdAt: data.created_at || new Date().toISOString(),
-              expirationDate: data.deadline,
-              packageType: data.package_type,
-              id: data.id,
-              preview_code: data.preview_code,
-              versions: data.project_files?.map((file: any) => ({
-                id: file.id,
-                title: file.file_name || 'Prévia',
-                name: file.file_name || 'Prévia',
-                description: file.notes || 'Versão para aprovação',
-                audioUrl: file.file_url || ''
-              })) || []
-            });
-            
-            setIsLoading(false);
-            return;
+        }
+      }
+
+      // Create project data
+      setProjectData({
+        clientName: adminProject.clientName,
+        projectTitle: adminProject.packageType || 'Música Personalizada',
+        status: adminProject.status as 'waiting' | 'feedback' | 'approved',
+        previews: previews.length > 0 ? previews : [
+          {
+            id: 'v1',
+            title: 'Versão Acústica',
+            description: 'Versão suave com violão e piano',
+            audioUrl: 'https://drive.google.com/uc?export=download&id=1H62ylCwQYJ23BLpygtvNmCgwTDcHX6Cl',
+          },
+          {
+            id: 'v2',
+            title: 'Versão Orquestral',
+            description: 'Arranjo completo com cordas e metais',
+            audioUrl: 'https://drive.google.com/uc?export=download&id=11c6JahRd5Lx0iKCL_gHZ0zrZ3LFBJ47a',
+          },
+          {
+            id: 'v3',
+            title: 'Versão Minimalista',
+            description: 'Abordagem simplificada com foco na melodia',
+            audioUrl: 'https://drive.google.com/uc?export=download&id=1fCsWubN8pXwM-mRlDtnQFTCkBbIkuUyW',
           }
-        } catch (supabaseError) {
-          console.error("[usePreviewProject] 🔥 Supabase error:", supabaseError);
-          // Continue to localStorage fallback
-        }
-
-        // If not found in Supabase, try localStorage
-        console.log("[usePreviewProject] 📁 Trying localStorage fallback");
-        const storedProjects = localStorage.getItem('harmonIA_preview_projects');
-        if (!storedProjects) {
-          console.log('[usePreviewProject] 📁 No projects found in localStorage');
-          setProjectData(null);
-          setIsLoading(false);
-          return;
-        }
-
-        const projects = JSON.parse(storedProjects);
-        const project = projects.find((p: any) => 
-          p.id === decodedId || 
-          p.preview_code === decodedId ||
-          p.preview_code === projectId  // Also check against original token
-        );
-        
-        if (project) {
-          console.log('[usePreviewProject] 📁 Project found in localStorage:', project);
-          
-          const versions = project.versionsList?.map((v: any) => ({
-            id: v.id,
-            title: v.name || `Versão ${v.id}`,
-            name: v.name || `Versão ${v.id}`,
-            description: v.description || '',
-            audioUrl: v.audioUrl || v.file_url || '',
-            recommended: v.recommended
-          })) || [];
-          
-          if (versions.length === 0 && project.versions > 0) {
-            // Fallback if no versionsList but versions count > 0
-            console.log('[usePreviewProject] ⚠️ No versionsList but versions count > 0, creating fallback versions');
-            for (let i = 0; i < project.versions; i++) {
-              versions.push({
-                id: `v${i+1}`,
-                title: `Versão ${i+1}`,
-                name: `Versão ${i+1}`,
-                description: 'Versão para aprovação',
-                audioUrl: 'https://drive.google.com/file/d/1H62ylCwQYJ23BLpygtvNmCgwTDcHX6Cl/preview',
-                recommended: i === 0
-              });
-            }
-          }
-          
-          setProjectData({
-            clientName: project.clientName || 'Cliente',
-            projectTitle: project.projectTitle || project.packageType || 'Música Personalizada',
-            status: project.status || 'waiting',
-            createdAt: project.createdAt || new Date().toISOString(),
-            expirationDate: project.expirationDate,
-            packageType: project.packageType,
-            id: project.id,
-            preview_code: project.preview_code,
-            versions: versions.length > 0 ? versions : [
-              {
-                id: 'v1',
-                title: 'Versão Acústica',
-                name: 'Versão Acústica',
-                description: 'Versão suave com violão e piano',
-                audioUrl: 'https://drive.google.com/file/d/1H62ylCwQYJ23BLpygtvNmCgwTDcHX6Cl/preview',
-                recommended: true
-              },
-              {
-                id: 'v2',
-                title: 'Versão Orquestral',
-                name: 'Versão Orquestral',
-                description: 'Arranjo completo com cordas e metais',
-                audioUrl: 'https://drive.google.com/file/d/11c6JahRd5Lx0iKCL_gHZ0zrZ3LFBJ47a/preview'
-              }
-            ]
-          });
-        } else {
-          console.log(`[usePreviewProject] ❌ Project not found for id=${decodedId}`);
-          setProjectData(null);
-        }
-      } catch (error) {
-        console.error('[usePreviewProject] 🔥 Error loading project data:', error);
-        setProjectData(null);
-      } finally {
-        setIsLoading(false);
-      }
-    };
-
-    loadProjectData();
-  }, [projectId]);
-
-  const updateProjectStatus = (newStatus: 'waiting' | 'feedback' | 'approved', comments: string = '') => {
-    if (!actualProjectId) {
-      console.error('[usePreviewProject] Cannot update status without a valid project ID');
-      return false;
-    }
-
-    try {
-      console.log(`[usePreviewProject] Updating status to ${newStatus}`);
-      
-      const storedProjects = localStorage.getItem('harmonIA_preview_projects');
-      if (!storedProjects) {
-        console.error('[usePreviewProject] No projects found in localStorage');
-        return false;
-      }
-
-      const projects = JSON.parse(storedProjects);
-      const projectIndex = projects.findIndex((p: any) => p.id === actualProjectId);
-      
-      if (projectIndex === -1) {
-        console.error(`[usePreviewProject] Project not found for id=${actualProjectId}`);
-        return false;
-      }
-      
-      // Update status
-      projects[projectIndex].status = newStatus;
-      
-      // Add feedback if provided
-      if (comments) {
-        projects[projectIndex].feedback = comments;
-        
-        // Add to feedback history
-        if (!projects[projectIndex].feedbackHistory) {
-          projects[projectIndex].feedbackHistory = [];
-        }
-        
-        projects[projectIndex].feedbackHistory.push({
-          id: `feedback_${Date.now()}`,
-          content: comments,
-          createdAt: new Date().toISOString(),
-          status: 'pending'
-        });
-      }
-      
-      // Add to general history
-      if (!projects[projectIndex].history) {
-        projects[projectIndex].history = [];
-      }
-      
-      projects[projectIndex].history.push({
-        action: `Status alterado para ${newStatus}`,
-        timestamp: new Date().toLocaleString('pt-BR'),
-        data: {
-          message: comments || `Cliente alterou o status do projeto para ${newStatus}`
-        }
+        ]
       });
       
-      // Update last activity date
-      projects[projectIndex].lastActivityDate = new Date().toISOString();
+      // Log preview access
+      console.log(`Cliente acessando prévia: ${projectId}, data: ${new Date().toISOString()}`);
+    } else {
+      console.error(`Project with ID ${projectId} not found in admin system`);
       
-      // Save back to localStorage
-      localStorage.setItem('harmonIA_preview_projects', JSON.stringify(projects));
-      
-      // Update local state
-      if (projectData) {
-        setProjectData({
-          ...projectData,
-          status: newStatus
-        });
-      }
-      
-      console.log('[usePreviewProject] Status successfully updated');
-      return true;
-    } catch (error) {
-      console.error('[usePreviewProject] Error updating status:', error);
-      return false;
+      // Fallback to mock data if project not found
+      setProjectData({
+        clientName: 'Cliente Exemplo',
+        projectTitle: 'Projeto de Música Personalizada',
+        status: 'waiting',
+        previews: [
+          {
+            id: 'v1',
+            title: 'Versão Acústica',
+            description: 'Versão suave com violão e piano',
+            audioUrl: 'https://drive.google.com/uc?export=download&id=1H62ylCwQYJ23BLpygtvNmCgwTDcHX6Cl',
+          },
+          {
+            id: 'v2',
+            title: 'Versão Orquestral',
+            description: 'Arranjo completo com cordas e metais',
+            audioUrl: 'https://drive.google.com/uc?export=download&id=11c6JahRd5Lx0iKCL_gHZ0zrZ3LFBJ47a',
+          },
+          {
+            id: 'v3',
+            title: 'Versão Minimalista',
+            description: 'Abordagem simplificada com foco na melodia',
+            audioUrl: 'https://drive.google.com/uc?export=download&id=1fCsWubN8pXwM-mRlDtnQFTCkBbIkuUyW',
+          }
+        ]
+      });
     }
-  };
-
-  return { projectData, isLoading, actualProjectId, updateProjectStatus };
+  }, [projectId, getProjectById, audioFiles]);
+  
+  return { projectData, setProjectData, isLoading };
 };

@@ -5,10 +5,6 @@ export interface AudioExample {
   description: string;
   audioUrl: string;
   type: 'example' | 'comparison' | 'stem';
-  categories: string[];
-  imageUrl?: string;
-  tags?: string[];
-  beforeUrl?: string;
   featured?: boolean;
 }
 

@@ -1,132 +1,87 @@
 
 import React from 'react';
+import { X } from 'lucide-react';
 import { Card } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
-import { Play, Trash2, CheckCircle, Download } from "lucide-react";
-import { formatDistanceToNow } from 'date-fns';
-import { ptBR } from 'date-fns/locale';
+import { Textarea } from "@/components/ui/textarea";
+import { Link } from 'lucide-react';
 
-interface VersionItemProps {
-  id: string;
-  name: string;
-  description?: string;
+interface VersionItem {
+  title: string;
+  description: string;
   audioUrl: string;
-  createdAt: string;
-  recommended?: boolean;
-  final?: boolean;
-  finalVersionUrl?: string;
-  stemsUrl?: string;
-  onDelete?: (id: string) => void;
 }
 
-const ProjectVersionItem: React.FC<VersionItemProps> = ({
-  id,
-  name,
-  description,
-  audioUrl,
-  createdAt,
-  recommended,
-  final,
-  finalVersionUrl,
-  stemsUrl,
-  onDelete
-}) => {
-  const handlePlay = () => {
-    window.open(audioUrl, '_blank');
-  };
-  
-  const handleDownloadFinal = () => {
-    if (finalVersionUrl) {
-      window.open(finalVersionUrl, '_blank');
-    }
-  };
-  
-  const handleDownloadStems = () => {
-    if (stemsUrl) {
-      window.open(stemsUrl, '_blank');
-    }
-  };
-  
-  const getRelativeTime = (date: string) => {
-    try {
-      // Parse the date string and get relative time
-      return formatDistanceToNow(new Date(date), { addSuffix: true, locale: ptBR });
-    } catch (e) {
-      return 'Data desconhecida';
-    }
-  };
+interface ProjectVersionItemProps {
+  version: VersionItem;
+  index: number;
+  onRemove: (index: number) => void;
+  onTitleChange: (index: number, value: string) => void;
+  onDescriptionChange: (index: number, value: string) => void;
+  onAudioUrlChange: (index: number, value: string) => void;
+}
 
+const ProjectVersionItem: React.FC<ProjectVersionItemProps> = ({
+  version,
+  index,
+  onRemove,
+  onTitleChange,
+  onDescriptionChange,
+  onAudioUrlChange
+}) => {
   return (
-    <Card className="p-4">
-      <div className="flex flex-col md:flex-row md:items-center justify-between">
-        <div className="flex-1">
-          <div className="flex items-center space-x-2 mb-2">
-            <h3 className="font-semibold text-base">{name}</h3>
-            {recommended && (
-              <Badge variant="outline" className="bg-green-50 text-green-800 border-green-300">
-                Recomendada
-              </Badge>
-            )}
-            {final && (
-              <Badge variant="outline" className="bg-blue-50 text-blue-800 border-blue-300">
-                Final
-              </Badge>
-            )}
-          </div>
-          
-          {description && (
-            <p className="text-sm text-gray-600 mb-2">{description}</p>
-          )}
-          
-          <div className="text-xs text-gray-500 flex items-center">
-            <span>{getRelativeTime(createdAt)}</span>
-          </div>
+    <Card key={index} className="p-4 border-l-4 border-l-harmonia-green/60">
+      <div className="flex items-center justify-between mb-4">
+        <h4 className="font-medium">Versão {index + 1}</h4>
+        <Button 
+          type="button" 
+          variant="ghost" 
+          size="sm"
+          onClick={() => onRemove(index)}
+          className="h-8 w-8 p-0 text-red-500 hover:text-red-600 hover:bg-red-100/20"
+        >
+          <X className="w-4 h-4" />
+        </Button>
+      </div>
+      
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+        <div className="space-y-2">
+          <label className="text-sm font-medium">Título da Versão</label>
+          <Input
+            value={version.title}
+            onChange={e => onTitleChange(index, e.target.value)}
+            placeholder="Ex: Versão Acústica"
+            required
+          />
         </div>
         
-        <div className="flex items-center space-x-2 mt-4 md:mt-0">
-          <Button 
-            variant="outline" 
-            size="sm" 
-            className="flex items-center"
-            onClick={handlePlay}
-          >
-            <Play className="w-4 h-4 mr-1" /> Ouvir
-          </Button>
-          
-          {finalVersionUrl && (
-            <Button 
-              variant="outline" 
-              size="sm"
-              className="flex items-center bg-blue-50 text-blue-700 border-blue-300 hover:bg-blue-100"
-              onClick={handleDownloadFinal}
-            >
-              <Download className="w-4 h-4 mr-1" /> Final
-            </Button>
-          )}
-          
-          {stemsUrl && (
-            <Button 
-              variant="outline" 
-              size="sm"
-              className="flex items-center bg-purple-50 text-purple-700 border-purple-300 hover:bg-purple-100"
-              onClick={handleDownloadStems}
-            >
-              <Download className="w-4 h-4 mr-1" /> Stems
-            </Button>
-          )}
-          
-          {onDelete && (
-            <Button 
-              variant="outline" 
-              size="sm" 
-              className="text-red-500 hover:text-red-700 hover:bg-red-50"
-              onClick={() => onDelete(id)}
-            >
-              <Trash2 className="w-4 h-4" />
-            </Button>
-          )}
+        <div className="space-y-2">
+          <label className="text-sm font-medium">Link do Google Drive</label>
+          <div className="flex items-center">
+            <Input
+              value={version.audioUrl}
+              onChange={e => onAudioUrlChange(index, e.target.value)}
+              placeholder="https://drive.google.com/file/d/..."
+              className="flex-1"
+              required
+            />
+          </div>
+          <p className="text-xs text-gray-500">
+            Compartilhe como "Qualquer pessoa com o link pode visualizar"
+          </p>
         </div>
+      </div>
+      
+      <div className="space-y-2">
+        <label className="text-sm font-medium">Descrição da Versão</label>
+        <Textarea
+          value={version.description}
+          onChange={e => onDescriptionChange(index, e.target.value)}
+          placeholder="Descreva as características desta versão musical..."
+          required
+          className="min-h-[120px]"
+        />
       </div>
     </Card>
   );

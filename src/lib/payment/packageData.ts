@@ -1,4 +1,5 @@
 
+
 export type PackageId = 'essencial' | 'premium' | 'profissional';
 
 export interface PackageDetails {
@@ -27,7 +28,7 @@ export const getPackageDetails = (packageId: PackageId): PackageDetails => {
       return {
         id: 'essencial',
         name: 'Pacote Essencial',
-        price: 219,
+        price: 499,
         description: 'Ideal para ocasiões especiais',
         features: [
           'Composição personalizada',
@@ -41,7 +42,7 @@ export const getPackageDetails = (packageId: PackageId): PackageDetails => {
       return {
         id: 'premium',
         name: 'Pacote Premium',
-        price: 969,
+        price: 799,
         description: 'Perfeito para momentos especiais',
         popular: true,
         features: [
@@ -56,10 +57,10 @@ export const getPackageDetails = (packageId: PackageId): PackageDetails => {
       return {
         id: 'profissional',
         name: 'Pacote Profissional',
-        price: 479,
+        price: 1299,
         description: 'Para projetos exclusivos',
         features: [
-          'Tudo do pacote Essencial',
+          'Tudo do pacote Premium',
           'Arranjo com músicos profissionais',
           'Acompanhamento prioritário',
           'Direitos comerciais da música'
@@ -73,7 +74,7 @@ export const packageData: Record<PackageId, PackageInfo> = {
   essencial: {
     id: 'essencial',
     name: 'Pacote Essencial',
-    price: 'R$ 219,00',
+    price: 'R$ 499,00',
     description: 'Ideal para ocasiões especiais',
     features: [
       'Composição personalizada',
@@ -85,7 +86,7 @@ export const packageData: Record<PackageId, PackageInfo> = {
   premium: {
     id: 'premium',
     name: 'Pacote Premium',
-    price: 'R$ 969,00',
+    price: 'R$ 799,00',
     description: 'Perfeito para momentos especiais',
     popular: true,
     features: [
@@ -98,10 +99,10 @@ export const packageData: Record<PackageId, PackageInfo> = {
   profissional: {
     id: 'profissional',
     name: 'Pacote Profissional',
-    price: 'R$ 479,00',
+    price: 'R$ 1.299,00',
     description: 'Para projetos exclusivos',
     features: [
-      'Tudo do pacote Essencial',
+      'Tudo do pacote Premium',
       'Arranjo com músicos profissionais',
       'Acompanhamento prioritário',
       'Direitos comerciais da música'

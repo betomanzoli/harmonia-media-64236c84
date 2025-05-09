@@ -1,180 +1,113 @@
 
-import React, { useState, useEffect } from 'react';
-import { Card } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Play, Download, Music } from 'lucide-react';
-import AudioPlayer from './AudioPlayer';
+import React, { useState } from 'react';
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Play, VolumeX, Volume2, Star } from 'lucide-react';
 
 interface PreviewVersionCardProps {
   version: {
     id: string;
-    title?: string;
-    name?: string;
-    description?: string;
-    audio_url?: string;
-    file_url?: string;
-    final?: boolean;
+    title: string;
+    description: string;
+    audioUrl?: string;
+    url?: string;
+    fileId?: string;
     recommended?: boolean;
-    stems_url?: string;
-    final_version_url?: string;
-    date_added?: string;
-    created_at?: string;
   };
   isSelected: boolean;
-  onSelect: () => void;
-  isApproved?: boolean;
+  isApproved: boolean;
+  feedback?: string;
+  onSelect: (id: string) => void;
+  onPlay: (version: any) => void;
+  onFeedbackChange?: (id: string, feedback: string) => void;
 }
 
 const PreviewVersionCard: React.FC<PreviewVersionCardProps> = ({
   version,
   isSelected,
+  isApproved,
+  feedback,
   onSelect,
-  isApproved
+  onPlay,
+  onFeedbackChange
 }) => {
   const [isPlaying, setIsPlaying] = useState(false);
-  
-  // When a version is approved and has final version URL
-  const hasFinalVersion = isApproved && version.final_version_url;
-  const finalVersionUrl = hasFinalVersion ? version.final_version_url : '';
+  const [isMuted, setIsMuted] = useState(false);
 
-  // When a version is approved and has stems URL 
-  const hasStems = isApproved && version.stems_url;
-  const stemsUrl = hasStems ? version.stems_url : '';
-
-  // Reset playing state when selected version changes
-  useEffect(() => {
-    if (!isSelected) {
-      setIsPlaying(false);
-    }
-  }, [isSelected]);
-
-  // Decide which audio URL to use
-  const audioSrc = version.audio_url || version.file_url || '';
-  
-  if (!audioSrc) {
-    return null;
-  }
-
-  const handlePlayPause = () => {
-    if (!isSelected) {
-      onSelect();
-    }
-    setIsPlaying(!isPlaying);
+  const handlePlay = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    setIsPlaying(true);
+    onPlay(version);
+    setTimeout(() => setIsPlaying(false), 1000);
   };
 
-  const formatDate = (dateString?: string) => {
-    if (!dateString) return 'Data desconhecida';
-    
-    try {
-      const date = new Date(dateString);
-      return date.toLocaleDateString('pt-BR', {
-        day: '2-digit',
-        month: '2-digit',
-        year: 'numeric'
-      });
-    } catch (e) {
-      console.error('Error formatting date:', e);
-      return 'Data inválida';
+  const toggleMute = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    setIsMuted(!isMuted);
+  };
+
+  const handleSelect = () => {
+    if (!isApproved) {
+      onSelect(version.id);
     }
   };
 
   return (
-    <Card
-      className={`overflow-hidden transition-all ${
-        isSelected ? 'border-harmonia-green border-2' : 'hover:border-gray-300'
-      }`}
+    <Card 
+      className={`
+        cursor-pointer transition-all hover:border-harmonia-green/50
+        ${isSelected ? 'border-2 border-harmonia-green shadow-md' : ''}
+        ${isApproved && isSelected ? 'border-green-500' : ''}
+      `}
+      onClick={handleSelect}
     >
-      <div className="p-4 sm:p-6">
-        <div className="flex items-start justify-between">
-          <div className="flex-1">
-            <div className="flex items-center space-x-2">
-              <h3 className="text-lg font-semibold text-gray-900">
-                {version.title || version.name}
-              </h3>
-              
-              {version.recommended && (
-                <span className="bg-green-100 text-green-800 text-xs px-2 py-0.5 rounded-full">
-                  Recomendada
-                </span>
+      <CardHeader className="flex flex-row items-start justify-between pb-2">
+        <div className="flex items-center">
+          <CardTitle className="text-lg text-black">{version.title}</CardTitle>
+          {version.recommended && (
+            <span className="ml-2 text-yellow-500 flex items-center text-sm font-medium">
+              <Star className="h-4 w-4 fill-yellow-500" />
+              <span className="ml-1">Recomendada</span>
+            </span>
+          )}
+        </div>
+      </CardHeader>
+      <CardContent>
+        <p className="text-sm text-black mb-4">{version.description}</p>
+        
+        <div className="flex justify-between items-center">
+          <div className="flex space-x-2">
+            <Button 
+              variant="outline" 
+              size="sm"
+              onClick={handlePlay}
+              className="flex items-center"
+            >
+              <Play className="h-4 w-4 mr-1" />
+              Ouvir
+            </Button>
+            
+            <Button 
+              variant="ghost" 
+              size="icon"
+              onClick={toggleMute}
+              className="h-8 w-8"
+            >
+              {isMuted ? (
+                <VolumeX className="h-4 w-4" />
+              ) : (
+                <Volume2 className="h-4 w-4" />
               )}
-              
-              {version.final && isApproved && (
-                <span className="bg-blue-100 text-blue-800 text-xs px-2 py-0.5 rounded-full">
-                  Final
-                </span>
-              )}
-            </div>
-            <p className="text-sm text-gray-500 mt-1">
-              Adicionada em {formatDate(version.date_added || version.created_at)}
-            </p>
-            <p className="mt-2 text-gray-700">{version.description}</p>
+            </Button>
           </div>
           
-          <Button
-            variant={isPlaying && isSelected ? "default" : "outline"}
-            size="sm"
-            onClick={handlePlayPause}
-            className={`flex items-center space-x-1 ${
-              isPlaying && isSelected ? 'bg-harmonia-green hover:bg-harmonia-green/90' : ''
-            }`}
-          >
-            <Play className="h-4 w-4" />
-            <span>{isPlaying && isSelected ? 'Pausar' : 'Play'}</span>
-          </Button>
+          {isSelected && (
+            <span className="text-sm font-medium text-harmonia-green">
+              Selecionada
+            </span>
+          )}
         </div>
-        
-        {isApproved && (
-          <div className="flex flex-wrap gap-2 mt-4">
-            {hasFinalVersion && (
-              <Button
-                variant="outline"
-                size="sm"
-                asChild
-                className="text-xs"
-              >
-                <a
-                  href={finalVersionUrl}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  download
-                >
-                  <Download className="h-3 w-3 mr-1" />
-                  Versão Final
-                </a>
-              </Button>
-            )}
-            
-            {hasStems && (
-              <Button
-                variant="outline"
-                size="sm"
-                asChild
-                className="text-xs"
-              >
-                <a
-                  href={stemsUrl}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  download
-                >
-                  <Music className="h-3 w-3 mr-1" />
-                  Stems
-                </a>
-              </Button>
-            )}
-          </div>
-        )}
-      </div>
-      
-      {isSelected && (
-        <div className="border-t">
-          <AudioPlayer
-            src={audioSrc}
-            isPlaying={isPlaying}
-            onPlayPause={setIsPlaying}
-          />
-        </div>
-      )}
+      </CardContent>
     </Card>
   );
 };

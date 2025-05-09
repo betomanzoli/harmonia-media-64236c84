@@ -6,17 +6,17 @@ import { Clock } from 'lucide-react';
 
 interface DeadlineExtensionDialogProps {
   isOpen: boolean;
-  onOpenChange: (open: boolean) => void;
+  onClose: () => void;
   onConfirm: () => void;
 }
 
 const DeadlineExtensionDialog: React.FC<DeadlineExtensionDialogProps> = ({
   isOpen,
-  onOpenChange,
+  onClose,
   onConfirm
 }) => {
   return (
-    <Dialog open={isOpen} onOpenChange={onOpenChange}>
+    <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent>
         <DialogHeader>
           <DialogTitle>Estender Prazo</DialogTitle>
@@ -32,14 +32,14 @@ const DeadlineExtensionDialog: React.FC<DeadlineExtensionDialogProps> = ({
         <DialogFooter>
           <Button 
             variant="outline" 
-            onClick={() => onOpenChange(false)}
+            onClick={onClose}
           >
             Cancelar
           </Button>
           <Button 
             onClick={() => {
               onConfirm();
-              onOpenChange(false);
+              onClose();
             }}
           >
             Confirmar Extensão

@@ -1,7 +1,6 @@
 
 // Re-export all supabase-related modules from a central file
-export { supabase, getSupabaseUrl } from '../supabase';
-export { emailService } from './emailService';
+export { supabase, getSupabaseUrl, emailService } from '../supabase';
 export { testSupabaseConnection } from './connectionTest';
 export { testAuthSettings } from './authTest';
 export { securityService } from './securityConfig';

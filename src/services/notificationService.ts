@@ -1,74 +1,78 @@
 
-import { supabase } from '@/integrations/supabase/client';
-import { logger } from '@/utils/logger';
+type NotificationType = 
+  | 'new_preview' 
+  | 'feedback_received' 
+  | 'preview_approved' 
+  | 'payment_received'
+  | 'project_created';
 
-type NotificationType = 'feedback_received' | 'preview_approved' | 'preview_created';
-
-interface NotificationOptions {
-  projectId: string;
+interface NotificationData {
+  projectId?: string;
   clientName?: string;
+  clientEmail?: string;
   message?: string;
   versionId?: string;
+  [key: string]: any;
 }
 
-/**
- * Service for sending notifications to administrators and clients
- */
-export const notificationService = {
-  /**
-   * Sends a notification based on type and options
-   */
-  notify: async (type: NotificationType, options: NotificationOptions): Promise<boolean> => {
-    try {
-      logger.info('NOTIFICATION', `Sending ${type} notification`, options);
-      
-      // Record notification in the database for tracking
-      const { error } = await supabase
-        .from('project_history')
-        .insert({
-          project_id: options.projectId,
-          action: type,
-          details: {
-            ...options,
-            timestamp: new Date().toISOString()
-          }
-        });
-
-      if (error) {
-        logger.error('NOTIFICATION', 'Failed to record notification', error);
-        return false;
-      }
-      
-      // For production, we would also implement email/SMS notifications here
-      // using edge functions, but for now we'll just log them
-      
-      logger.info('NOTIFICATION', 'Notification recorded successfully');
-      return true;
-    } catch (err) {
-      logger.error('NOTIFICATION', 'Failed to send notification', err);
-      return false;
+class NotificationService {
+  notify(type: NotificationType, data: NotificationData) {
+    // Em uma implementação real, isso enviaria notificações para os canais adequados
+    // como webhook, email, SMS, etc.
+    console.log(`[Notificação ${type}]:`, data);
+    
+    // Armazenar notificação no localStorage para persistência
+    const notifications = this.getStoredNotifications();
+    
+    notifications.push({
+      id: `notification-${Date.now()}`,
+      type,
+      data,
+      timestamp: new Date().toISOString()
+    });
+    
+    localStorage.setItem('harmonIA_notifications', JSON.stringify(notifications));
+    
+    // Verificar se há handlers específicos para este tipo de notificação
+    switch (type) {
+      case 'feedback_received':
+        // Em uma implementação real, poderia enviar um email para a equipe
+        console.log(`[Email] Nova feedback recebido do cliente ${data.clientName} para o projeto ${data.projectId}`);
+        break;
+        
+      case 'preview_approved':
+        // Em uma implementação real, poderia atualizar o status do projeto e enviar um email
+        console.log(`[Email] Prévia aprovada pelo cliente ${data.clientName} para o projeto ${data.projectId}`);
+        break;
+        
+      default:
+        break;
     }
-  },
-  
-  /**
-   * Special case for sending feedback notifications
-   */
-  notifyFeedback: async (projectId: string, clientName: string, feedback: string): Promise<boolean> => {
-    return notificationService.notify('feedback_received', {
-      projectId,
-      clientName,
-      message: feedback
-    });
-  },
-  
-  /**
-   * Special case for sending approval notifications
-   */
-  notifyApproval: async (projectId: string, clientName: string, versionId: string): Promise<boolean> => {
-    return notificationService.notify('preview_approved', {
-      projectId,
-      clientName,
-      versionId
-    });
   }
-};
+  
+  getStoredNotifications() {
+    const stored = localStorage.getItem('harmonIA_notifications');
+    return stored ? JSON.parse(stored) : [];
+  }
+  
+  getRecentNotifications(limit = 5) {
+    const notifications = this.getStoredNotifications();
+    return notifications.slice(-limit).reverse();
+  }
+  
+  getUnreadCount() {
+    const notifications = this.getStoredNotifications();
+    const lastRead = localStorage.getItem('harmonIA_last_notification_read');
+    
+    if (!lastRead) return notifications.length;
+    
+    return notifications.filter(n => n.timestamp > lastRead).length;
+  }
+  
+  markAllAsRead() {
+    localStorage.setItem('harmonIA_last_notification_read', new Date().toISOString());
+    return this.getUnreadCount();
+  }
+}
+
+export const notificationService = new NotificationService();

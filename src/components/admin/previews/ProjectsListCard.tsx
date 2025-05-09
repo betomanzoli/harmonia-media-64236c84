@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Link } from 'react-router-dom';
 import { Eye, Send, Clock, FileCheck, MessageSquare, Loader2 } from 'lucide-react';
-import { ProjectItem } from '@/types/project.types';
+import { ProjectItem } from '@/hooks/admin/usePreviewProjects';
 
 interface ProjectsListCardProps {
   projects: ProjectItem[];
@@ -85,17 +85,17 @@ export const ProjectsListCard: React.FC<ProjectsListCardProps> = ({
                       </div>
                     </td>
                     <td className="px-4 py-3 whitespace-nowrap">
-                      <div>{project.client_name}</div>
-                      <div className="text-xs text-muted-foreground">{project.client_email}</div>
+                      <div>{project.clientName}</div>
+                      <div className="text-xs text-muted-foreground">{project.clientEmail}</div>
                     </td>
                     <td className="px-4 py-3 whitespace-nowrap">
                       {getStatusLabel(project.status)}
                     </td>
                     <td className="px-4 py-3 whitespace-nowrap text-sm">
-                      {project.created_at}
+                      {project.createdAt}
                     </td>
                     <td className="px-4 py-3 whitespace-nowrap text-sm">
-                      {project.expiration_date}
+                      {project.expirationDate}
                     </td>
                     <td className="px-4 py-3 whitespace-nowrap text-right text-sm">
                       <div className="flex justify-end gap-2">

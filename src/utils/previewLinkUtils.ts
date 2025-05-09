@@ -1,110 +1,100 @@
+import { v4 as uuidv4 } from 'uuid';
 
-import { v5 as uuidv5 } from 'uuid';
+// Create a more secure mapping between encoded IDs and project IDs
+const previewLinksMap = new Map<string, string>();
 
-// Define a consistent namespace UUID for generating preview codes
-// Using a UUID v5 namespace to ensure deterministic results
-const PREVIEW_NAMESPACE = '9f9b2a8c-5c6d-4e7f-8f9a-1c2d3e4f5a6b';
+// Keep a record of which emails are authorized to access which project IDs
+const authorizedEmails = new Map<string, string[]>();
 
-/**
- * Generates a deterministic preview link code based on project ID and optional identifier
- * 
- * @param projectId - The project ID to encode
- * @param uniqueIdentifier - Optional additional identifier (like email) to make the link unique
- * @returns The encoded preview link code (can be used in URLs)
- */
-export const generatePreviewLink = (
-  projectId: string,
-  uniqueIdentifier?: string
-): string => {
-  // Combine project ID with unique identifier if provided
-  const input = uniqueIdentifier 
-    ? `${projectId}:${uniqueIdentifier}`
-    : projectId;
-
-  try {
-    // Generate a deterministic UUID v5 based on input and namespace
-    const uuid = uuidv5(input, PREVIEW_NAMESPACE);
-    
-    // Create a shorter, URL-friendly version by taking part of the UUID
-    // and encoding it to base64, then removing unwanted chars
-    const base64Encoded = Buffer.from(uuid.replace(/-/g, '').substring(0, 16), 'hex')
-      .toString('base64')
-      .replace(/\+/g, '-')
-      .replace(/\//g, '_')
-      .replace(/=/g, '');
-      
-    // Add a prefix for a more user-friendly format
-    const encodedPreview = `P${base64Encoded}`;
-    
-    return encodedPreview;
-  } catch (error) {
-    console.error('Error generating preview link:', error);
-    
-    // Fallback to a simpler encoding if UUID v5 fails
-    const fallbackEncoding = Buffer.from(projectId).toString('base64')
-      .replace(/\+/g, '-')
-      .replace(/\//g, '_')
-      .replace(/=/g, '');
-      
-    return `P${fallbackEncoding.substring(0, 10)}`;
-  }
+export const generatePreviewLink = (projectId: string): string => {
+  // Generate a unique encoded ID that's harder to guess
+  const encodedId = uuidv4().replace(/-/g, ''); 
+  
+  // Store the mapping
+  previewLinksMap.set(encodedId, projectId);
+  
+  // Store this in localStorage for persistence
+  const storedMappings = JSON.parse(localStorage.getItem('previewLinksMappings') || '{}');
+  storedMappings[encodedId] = projectId;
+  localStorage.setItem('previewLinksMappings', JSON.stringify(storedMappings));
+  
+  return encodedId;
 };
 
-/**
- * Checks if a given string is a valid encoded preview link
- * 
- * @param code - The code to validate
- * @returns boolean indicating if this is an encoded preview link
- */
-export const isValidEncodedPreviewLink = (code: string): boolean => {
-  // Preview links should start with P and be followed by base64 characters
-  const previewLinkRegex = /^P[A-Za-z0-9\-_]+$/;
-  return previewLinkRegex.test(code);
-};
-
-/**
- * Attempts to decode a preview link back to a project ID
- * 
- * @param encodedPreviewLink - The encoded preview link
- * @returns The project ID if successful, null otherwise
- */
-export const getProjectIdFromPreviewLink = (
-  encodedPreviewLink: string
-): string | null => {
-  try {
-    // For new format links, we'll actually query the database 
-    // using the preview_code field
-    return encodedPreviewLink;
-  } catch (error) {
-    console.error('Error decoding preview link:', error);
-    return null;
-  }
-};
-
-/**
- * Decodes a preview code from a URL or string
- * 
- * @param input - URL or code to decode
- * @returns The decoded preview code
- */
-export const decodePreviewCode = (input: string): string | null => {
-  try {
-    // If it's a URL, extract the code part
-    if (input.includes('/preview/')) {
-      const match = input.match(/\/preview\/([^\/\?#]+)/);
-      if (match && match[1]) {
-        return match[1];
-      }
+export const getProjectIdFromPreviewLink = (encodedId: string): string | null => {
+  // First check in-memory map
+  let projectId = previewLinksMap.get(encodedId);
+  
+  // If not found in memory, check in localStorage
+  if (!projectId) {
+    const storedMappings = JSON.parse(localStorage.getItem('previewLinksMappings') || '{}');
+    projectId = storedMappings[encodedId] || null;
+    
+    // Add to in-memory map if found
+    if (projectId) {
+      previewLinksMap.set(encodedId, projectId);
     }
+  }
+  
+  return projectId;
+};
+
+export const authorizeEmailForProject = (email: string, projectId: string): void => {
+  const projectEmails = authorizedEmails.get(projectId) || [];
+  if (!projectEmails.includes(email)) {
+    projectEmails.push(email);
+    authorizedEmails.set(projectId, projectEmails);
     
-    // If already a code, just return it
-    if (isValidEncodedPreviewLink(input)) {
-      return input;
+    // Save to localStorage for persistence
+    const storedAuthorizations = JSON.parse(localStorage.getItem('previewAuthorizedEmails') || '{}');
+    if (!storedAuthorizations[projectId]) {
+      storedAuthorizations[projectId] = [];
     }
-    
-    return null;
-  } catch (error) {
-    console.error('Error decoding preview code:', error);
-    return null;
+    if (!storedAuthorizations[projectId].includes(email)) {
+      storedAuthorizations[projectId].push(email);
+    }
+    localStorage.setItem('previewAuthorizedEmails', JSON.stringify(storedAuthorizations));
   }
 };
+
+export const isEmailAuthorizedForProject = (email: string, projectId: string): boolean => {
+  // First check in-memory map
+  const projectEmails = authorizedEmails.get(projectId);
+  if (projectEmails && projectEmails.includes(email)) {
+    return true;
+  }
+  
+  // If not found in memory, check in localStorage
+  const storedAuthorizations = JSON.parse(localStorage.getItem('previewAuthorizedEmails') || '{}');
+  const storedEmails = storedAuthorizations[projectId] || [];
+  
+  // Add to in-memory map if found
+  if (storedEmails.includes(email)) {
+    if (!authorizedEmails.has(projectId)) {
+      authorizedEmails.set(projectId, []);
+    }
+    authorizedEmails.get(projectId)?.push(email);
+    return true;
+  }
+  
+  return false;
+};
+
+// Load stored mappings and authorizations when the module loads
+const loadStoredData = () => {
+  try {
+    const storedMappings = JSON.parse(localStorage.getItem('previewLinksMappings') || '{}');
+    Object.entries(storedMappings).forEach(([encodedId, projectId]) => {
+      previewLinksMap.set(encodedId, projectId as string);
+    });
+    
+    const storedAuthorizations = JSON.parse(localStorage.getItem('previewAuthorizedEmails') || '{}');
+    Object.entries(storedAuthorizations).forEach(([projectId, emails]) => {
+      authorizedEmails.set(projectId, emails as string[]);
+    });
+  } catch (error) {
+    console.error('Error loading stored preview data:', error);
+  }
+};
+
+loadStoredData();

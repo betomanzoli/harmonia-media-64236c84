@@ -1,109 +1,60 @@
 
 import React from 'react';
-import { Share } from 'lucide-react';
-import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
 
 interface PreviewHeaderProps {
-  projectTitle: string;
-  clientName: string;
-  packageType: string;
-  status: string;
-  createdAt: string;
-  onShareClick?: () => void;
-  projectData?: {
+  projectData: {
     projectTitle: string;
     clientName: string;
-    status: 'approved' | 'feedback' | 'waiting';
+    status: 'waiting' | 'feedback' | 'approved';
   };
 }
 
-const PreviewHeader: React.FC<PreviewHeaderProps> = ({
-  projectTitle,
-  clientName,
-  packageType,
-  status,
-  createdAt,
-  onShareClick,
-  projectData
-}) => {
-  // If projectData is provided, use its values (used in MusicPreviews.tsx)
-  const title = projectData?.projectTitle || projectTitle;
-  const client = projectData?.clientName || clientName;
-  const currentStatus = projectData?.status || status;
-
-  const formatDate = (dateString: string) => {
-    try {
-      const date = new Date(dateString);
-      return new Intl.DateTimeFormat('pt-BR', {
-        day: '2-digit',
-        month: '2-digit',
-        year: 'numeric'
-      }).format(date);
-    } catch (error) {
-      return dateString;
+const PreviewHeader: React.FC<PreviewHeaderProps> = ({ projectData }) => {
+  const getStatusLabel = (status: string) => {
+    switch (status) {
+      case 'waiting':
+        return 'Aguardando avaliação';
+      case 'feedback':
+        return 'Feedback enviado';
+      case 'approved':
+        return 'Prévia aprovada';
+      default:
+        return 'Em andamento';
     }
   };
-  
-  const getStatusBadge = (status: string) => {
+
+  const getStatusColor = (status: string) => {
     switch (status) {
-      case 'approved':
-        return (
-          <Badge className="bg-green-500 hover:bg-green-600 uppercase text-xs font-semibold">
-            Aprovada
-          </Badge>
-        );
+      case 'waiting':
+        return 'bg-yellow-100 text-yellow-700';
       case 'feedback':
-        return (
-          <Badge className="bg-amber-500 hover:bg-amber-600 uppercase text-xs font-semibold">
-            Em Revisão
-          </Badge>
-        );
+        return 'bg-blue-100 text-blue-700';
+      case 'approved':
+        return 'bg-green-100 text-green-700';
       default:
-        return (
-          <Badge className="bg-blue-500 hover:bg-blue-600 uppercase text-xs font-semibold">
-            Aguardando Feedback
-          </Badge>
-        );
+        return 'bg-gray-100 text-gray-700';
     }
   };
 
   return (
-    <div className="bg-white p-6 rounded-lg shadow-sm">
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-4">
+    <div className="mb-8">
+      <div className="flex flex-col md:flex-row justify-between items-start md:items-center">
         <div>
-          <h1 className="text-2xl font-bold text-black">{title}</h1>
-          <p className="text-gray-500">{packageType}</p>
+          <h1 className="text-2xl md:text-3xl font-bold text-black mb-2">{projectData.projectTitle}</h1>
+          <p className="text-black">Cliente: {projectData.clientName}</p>
         </div>
         
-        {onShareClick && (
-          <Button 
-            variant="outline" 
-            size="sm" 
-            className="mt-2 sm:mt-0"
-            onClick={onShareClick}
-          >
-            <Share className="h-4 w-4 mr-2" />
-            Compartilhar
-          </Button>
-        )}
+        <div className={`mt-4 md:mt-0 px-3 py-1 rounded-full text-sm font-medium ${getStatusColor(projectData.status)}`}>
+          {getStatusLabel(projectData.status)}
+        </div>
       </div>
       
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center">
-        <div className="flex flex-col space-y-1">
-          <div className="flex items-center">
-            <span className="text-sm text-gray-500 mr-2">Cliente:</span>
-            <span className="text-sm font-medium">{client}</span>
-          </div>
-          <div className="flex items-center">
-            <span className="text-sm text-gray-500 mr-2">Data de criação:</span>
-            <span className="text-sm">{formatDate(createdAt)}</span>
-          </div>
-        </div>
-        
-        <div className="mt-2 sm:mt-0">
-          {getStatusBadge(currentStatus)}
-        </div>
+      <div className="mt-6 pt-6 border-t">
+        <h2 className="text-xl font-semibold text-black mb-2">Avaliação de Prévias Musicais</h2>
+        <p className="text-black">
+          Abaixo você encontrará as versões musicais para avaliação. 
+          Ouça cada uma delas e escolha sua favorita ou envie um feedback para ajustes.
+        </p>
       </div>
     </div>
   );

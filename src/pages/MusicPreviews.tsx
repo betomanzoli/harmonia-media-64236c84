@@ -1,46 +1,40 @@
 
 import React, { useState, useEffect } from 'react';
-import { useParams } from 'react-router-dom';
+import { useParams, useNavigate } from 'react-router-dom';
+import Header from '@/components/Header';
+import Footer from '@/components/Footer';
 import { useToast } from "@/hooks/use-toast";
-import MusicPreviewContainer from '@/components/previews/MusicPreviewContainer';
-import PreviewLoader from '@/components/previews/PreviewLoader';
-import PreviewError from '@/components/previews/PreviewError';
-import PreviewContent from '@/components/previews/PreviewContent';
+import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
+import PreviewFeedbackForm from '@/components/previews/PreviewFeedbackForm';
+import PreviewHeader from '@/components/previews/PreviewHeader';
+import PreviewInstructions from '@/components/previews/PreviewInstructions';
+import PreviewPlayerList from '@/components/previews/PreviewPlayerList';
+import PreviewNextSteps from '@/components/previews/PreviewNextSteps';
 import { usePreviewData } from '@/hooks/usePreviewData';
 import { notificationService } from '@/services/notificationService';
-import { ProjectItem, MusicPreview, ProjectVersion, VersionItem } from '@/types/project.types';
-import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
-import { AlertCircle } from 'lucide-react';
-
-// Force dynamic content to prevent caching
-export const dynamic = 'force-dynamic';
 
 const MusicPreviews: React.FC = () => {
   const { previewId } = useParams<{ previewId: string }>();
+  const navigate = useNavigate();
   const { toast } = useToast();
   
   const [selectedPreview, setSelectedPreview] = useState<string | null>(null);
   const [feedback, setFeedback] = useState('');
-  
-  // Direct use of previewId in usePreviewData - it will handle both encoded and direct IDs
-  const { projectData, isLoading, isError, errorMessage, actualProjectId, updateProjectStatus } = usePreviewData(previewId);
+  const { projectData, setProjectData, isLoading, actualProjectId } = usePreviewData(previewId);
   
   useEffect(() => {
-    console.log("🔍 Preview ID received:", previewId);
-    console.log("🔍 Actual project ID (after decoding):", actualProjectId);
-    console.log("🔍 Project data loaded:", projectData);
-    console.log("🔍 Loading state:", isLoading);
-    console.log("🔍 Error state:", isError, errorMessage);
+    console.log("Preview ID:", previewId);
+    console.log("Actual Project ID:", actualProjectId);
     
     if (!isLoading && !projectData && actualProjectId) {
-      console.log("❌ Preview data not found");
+      console.log("Preview data não encontrado");
       toast({
-        title: "Prévia não encontrada",
-        description: "O código de prévia fornecido não é válido ou expirou.",
+        title: "Preview não encontrado",
+        description: "O código de preview fornecido não é válido ou expirou.",
         variant: "destructive"
       });
     }
-  }, [previewId, projectData, isLoading, toast, actualProjectId, isError, errorMessage]);
+  }, [previewId, projectData, isLoading, toast, actualProjectId]);
   
   const handleSubmitFeedback = () => {
     if (!selectedPreview) {
@@ -52,37 +46,19 @@ const MusicPreviews: React.FC = () => {
       return;
     }
     
-    // Make sure to log what we're doing
-    console.log("🔍 Submitting feedback for project:", actualProjectId);
-    console.log("🔍 Selected preview:", selectedPreview);
-    console.log("🔍 Feedback content:", feedback);
+    toast({
+      title: "Feedback enviado!",
+      description: "Obrigado pelo seu feedback. Nossa equipe já está trabalhando nas modificações.",
+    });
     
-    // Update project status - ensure this saves to Supabase/localStorage
-    const success = updateProjectStatus('feedback', feedback);
+    // Notify about feedback
+    notificationService.notify('feedback_received', {
+      projectId: actualProjectId || previewId,
+      clientName: projectData?.clientName || 'Cliente',
+      message: feedback
+    });
     
-    if (success) {
-      console.log("✅ Successfully updated project status to 'feedback'");
-      
-      toast({
-        title: "Feedback enviado!",
-        description: "Obrigado pelo seu feedback. Nossa equipe está trabalhando nas modificações.",
-      });
-      
-      // Notify about feedback
-      notificationService.notify('feedback_received', {
-        projectId: actualProjectId || previewId,
-        clientName: projectData?.client_name || 'Cliente',
-        message: feedback
-      });
-    } else {
-      console.error("❌ Failed to update project status");
-      
-      toast({
-        title: "Erro ao enviar feedback",
-        description: "Houve um problema ao salvar seu feedback. Por favor, tente novamente.",
-        variant: "destructive"
-      });
-    }
+    setProjectData(prev => prev ? {...prev, status: 'feedback' as const} : null);
   };
   
   const handleApprove = () => {
@@ -95,131 +71,112 @@ const MusicPreviews: React.FC = () => {
       return;
     }
     
-    // Make sure to log what we're doing
-    console.log("🔍 Approving project:", actualProjectId);
-    console.log("🔍 Selected preview:", selectedPreview);
-    console.log("🔍 Approval comments:", feedback);
+    toast({
+      title: "Música aprovada!",
+      description: "Estamos felizes que você gostou! Vamos finalizar sua música e entregar em breve.",
+    });
     
-    // Update project status - ensure this saves to Supabase/localStorage
-    const success = updateProjectStatus('approved', feedback);
+    // Notify about approval
+    notificationService.notify('preview_approved', {
+      projectId: actualProjectId || previewId,
+      clientName: projectData?.clientName || 'Cliente',
+      versionId: selectedPreview
+    });
     
-    if (success) {
-      console.log("✅ Successfully updated project status to 'approved'");
-      
-      toast({
-        title: "Música aprovada!",
-        description: "Ficamos felizes que você gostou! Finalizaremos sua música e entregaremos em breve.",
-      });
-      
-      // Notify about approval
-      notificationService.notify('preview_approved', {
-        projectId: actualProjectId || previewId,
-        clientName: projectData?.client_name || 'Cliente',
-        versionId: selectedPreview
-      });
-    } else {
-      console.error("❌ Failed to update project status");
-      
-      toast({
-        title: "Erro ao aprovar prévia",
-        description: "Houve um problema ao processar sua aprovação. Por favor, tente novamente.",
-        variant: "destructive"
-      });
-    }
+    setProjectData(prev => prev ? {...prev, status: 'approved' as const} : null);
   };
   
-  // Loading state
   if (isLoading) {
     return (
-      <MusicPreviewContainer>
-        <PreviewLoader />
-      </MusicPreviewContainer>
+      <div className="min-h-screen bg-background text-foreground">
+        <Header />
+        <div className="pt-24 pb-20 px-6 md:px-10 flex items-center justify-center">
+          <div className="text-center">
+            <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-harmonia-green"></div>
+            <p className="mt-4 text-gray-500">Carregando prévias...</p>
+          </div>
+        </div>
+        <Footer />
+      </div>
     );
   }
   
-  // Project not found state
-  if (isError || !projectData) {
+  if (!projectData) {
     return (
-      <MusicPreviewContainer>
-        <PreviewError 
-          title="Prévia não encontrada"
-          description={errorMessage || "O código de prévia fornecido não é válido ou expirou."} 
-        />
-      </MusicPreviewContainer>
+      <div className="min-h-screen bg-background text-foreground">
+        <Header />
+        <div className="pt-24 pb-20 px-6 md:px-10 flex items-center justify-center">
+          <div className="text-center max-w-md">
+            <h1 className="text-2xl font-bold mb-4">Preview não encontrado</h1>
+            <p className="text-gray-400 mb-6">O código de preview fornecido não é válido ou expirou.</p>
+            <button 
+              onClick={() => navigate('/')}
+              className="bg-harmonia-green hover:bg-harmonia-green/90 text-white px-4 py-2 rounded"
+            >
+              Voltar à página inicial
+            </button>
+          </div>
+        </div>
+        <Footer />
+      </div>
     );
   }
-  
-  console.log("🔍 Rendering with project data:", projectData);
-  console.log("🔍 Available version lists:", projectData?.versionsList, projectData?.previews);
-  
-  // Make sure versionsForPlayer is always an array of MusicPreview
-  const versionsForPlayer: MusicPreview[] = Array.isArray(projectData?.previews) 
-    ? projectData.previews.map((p) => ({
-        ...p,
-        title: p.title || p.name || `Versão ${p.id}`,
-        name: p.name || p.title || `Versão ${p.id}`,
-        description: p.description || 'Sem descrição',
-        audio_url: p.audio_url || p.file_url || '',
-        file_id: p.file_id || undefined,
-        final_version_url: p.final_version_url || '',
-        stems_url: p.stems_url || ''
-      })) as MusicPreview[]
-    : (Array.isArray(projectData?.versionsList) 
-        ? projectData.versionsList.map((v) => ({
-            id: v.id,
-            title: v.title || v.name || `Versão ${v.id}`,
-            name: v.name || v.title || `Versão ${v.id}`,
-            description: v.description || 'Sem descrição',
-            audio_url: v.audio_url || v.file_url || '',
-            file_id: v.file_id || undefined,
-            recommended: v.recommended || false,
-            created_at: v.created_at || new Date().toISOString(),
-            final_version_url: v.final_version_url || '',
-            stems_url: v.stems_url || ''
-          })) as MusicPreview[]
-        : []);
-  
-  console.log("🔍 Versions for player:", versionsForPlayer);
-
-  // Create a complete ProjectItem with required fields
-  const projectItemData: ProjectItem = {
-    id: projectData?.id || actualProjectId || 'unknown',
-    client_name: projectData?.client_name || 'Cliente',
-    project_title: projectData?.project_title || 'Música Personalizada',
-    package_type: projectData?.package_type || 'standard',
-    status: projectData?.status || 'waiting',
-    created_at: projectData?.created_at || new Date().toISOString(),
-    last_activity_date: projectData?.last_activity_date || new Date().toISOString(),
-    expiration_date: projectData?.expiration_date || new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString(),
-    versions: projectData?.versions || versionsForPlayer.length || 0,
-    versionsList: (projectData?.versionsList || []) as ProjectVersion[],
-    feedback_history: projectData?.feedback_history || [],
-    history: projectData?.history || [],
-    preview_code: projectData?.preview_code // Use preview_code instead of ID
-  };
   
   return (
-    <MusicPreviewContainer>
-      {projectData.id === 'fallback-project' && (
-        <Alert variant="warning" className="mb-4">
-          <AlertCircle className="h-4 w-4" />
-          <AlertTitle>Aviso</AlertTitle>
-          <AlertDescription>
-            Esta é uma visualização de demonstração. Não foi possível encontrar este projeto no sistema.
-          </AlertDescription>
-        </Alert>
-      )}
-      <PreviewContent
-        projectData={projectItemData}
-        selectedPreview={selectedPreview}
-        setSelectedPreview={setSelectedPreview}
-        feedback={feedback}
-        setFeedback={setFeedback}
-        handleSubmitFeedback={handleSubmitFeedback}
-        handleApprove={handleApprove}
-        versionsForPlayer={versionsForPlayer}
-      />
-    </MusicPreviewContainer>
+    <div className="min-h-screen bg-background text-foreground">
+      <Header />
+      <main className="pt-24 pb-20 px-6 md:px-10">
+        <div className="max-w-4xl mx-auto">
+          <PreviewHeader 
+            projectData={{
+              projectTitle: projectData.projectTitle,
+              clientName: projectData.clientName,
+              status: projectData.status
+            }}
+          />
+          
+          <PreviewInstructions status={projectData.status} />
+          
+          <Tabs defaultValue="versions" className="mb-10">
+            <TabsList className="w-full mb-6">
+              <TabsTrigger value="versions" className="flex-1 data-[state=active]:bg-harmonia-green">
+                Versões Propostas
+              </TabsTrigger>
+              <TabsTrigger value="feedback" className="flex-1 data-[state=active]:bg-harmonia-green">
+                Enviar Feedback
+              </TabsTrigger>
+            </TabsList>
+            
+            <TabsContent value="versions">
+              <PreviewPlayerList 
+                versions={projectData.previews.map(preview => ({
+                  ...preview,
+                  description: preview.description || `Versão musical para ${projectData.clientName}`
+                }))}
+                selectedVersion={selectedPreview}
+                setSelectedVersion={setSelectedPreview}
+                isApproved={projectData.status === 'approved'}
+              />
+            </TabsContent>
+            
+            <TabsContent value="feedback">
+              <PreviewFeedbackForm 
+                selectedPreview={selectedPreview}
+                feedback={feedback}
+                setFeedback={setFeedback}
+                handleSubmit={handleSubmitFeedback}
+                handleApprove={handleApprove}
+                status={projectData.status}
+                versionTitle={projectData.previews.find(p => p.id === selectedPreview)?.title}
+              />
+            </TabsContent>
+          </Tabs>
+          
+          <PreviewNextSteps status={projectData.status} />
+        </div>
+      </main>
+      <Footer />
+    </div>
   );
 };
 

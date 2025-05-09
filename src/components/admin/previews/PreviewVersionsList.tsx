@@ -1,7 +1,7 @@
 
 import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { VersionItem } from '@/types/project.types';
+import { VersionItem } from '@/hooks/admin/usePreviewProjects';
 import VersionCard from './VersionCard';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";

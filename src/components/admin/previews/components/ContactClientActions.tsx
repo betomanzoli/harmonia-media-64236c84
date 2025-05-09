@@ -3,32 +3,32 @@ import React from 'react';
 import { MessageSquare, Mail } from 'lucide-react';
 import ProjectActionButton from './ProjectActionButton';
 import { useToast } from '@/hooks/use-toast';
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 
 interface ContactClientActionsProps {
   clientPhone?: string;
   clientEmail?: string;
   projectId: string;
-  isOpen: boolean;
-  onOpenChange: (open: boolean) => void;
 }
 
 const ContactClientActions: React.FC<ContactClientActionsProps> = ({
   clientPhone,
   clientEmail,
-  projectId,
-  isOpen,
-  onOpenChange
+  projectId
 }) => {
   const { toast } = useToast();
-  const defaultPhone = "(11) 92058-5072"; // Updated WhatsApp number
 
   const handleWhatsApp = () => {
-    // Use client phone if available, otherwise use default
-    const phoneToUse = clientPhone || defaultPhone;
+    if (!clientPhone) {
+      toast({
+        title: "Telefone não disponível",
+        description: "Nenhum número de telefone registrado para este cliente.",
+        variant: "destructive"
+      });
+      return;
+    }
     
     // Format phone number (remove non-digits)
-    const formattedPhone = phoneToUse.replace(/\D/g, '');
+    const formattedPhone = clientPhone.replace(/\D/g, '');
     
     // Prepare message text
     const message = encodeURIComponent(
@@ -66,33 +66,26 @@ const ContactClientActions: React.FC<ContactClientActionsProps> = ({
   };
 
   return (
-    <Dialog open={isOpen} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-md">
-        <DialogHeader>
-          <DialogTitle>Contatar Cliente</DialogTitle>
-        </DialogHeader>
-        <div className="pt-2 mt-4">
-          <h3 className="text-sm font-medium mb-2">Contatar Cliente</h3>
-          <div className="grid grid-cols-2 gap-2">
-            <ProjectActionButton
-              icon={MessageSquare}
-              onClick={handleWhatsApp}
-              variant="outline"
-            >
-              WhatsApp
-            </ProjectActionButton>
-            
-            <ProjectActionButton
-              icon={Mail}
-              onClick={handleEmail}
-              variant="outline"
-            >
-              Email
-            </ProjectActionButton>
-          </div>
-        </div>
-      </DialogContent>
-    </Dialog>
+    <div className="pt-2 border-t border-gray-100 mt-4">
+      <h3 className="text-sm font-medium mb-2">Contatar Cliente</h3>
+      <div className="grid grid-cols-2 gap-2">
+        <ProjectActionButton
+          icon={MessageSquare}
+          onClick={handleWhatsApp}
+          variant="outline"
+        >
+          WhatsApp
+        </ProjectActionButton>
+        
+        <ProjectActionButton
+          icon={Mail}
+          onClick={handleEmail}
+          variant="outline"
+        >
+          Email
+        </ProjectActionButton>
+      </div>
+    </div>
   );
 };
 

@@ -1,313 +1,145 @@
 
-import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { useNewProjectForm, PACKAGE_OPTIONS, DEFAULT_EXTRA_SERVICES } from '@/hooks/useNewProjectForm';
-import { Input } from '@/components/ui/input';
-import { Button } from '@/components/ui/button';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Label } from '@/components/ui/label';
-import { Textarea } from '@/components/ui/textarea';
-import { Plus, Trash2 } from 'lucide-react';
-import { useToast } from '@/hooks/use-toast';
-import { supabase } from '@/lib/supabase';
-import PhoneInput from '@/components/PhoneInput';
-import ExtraServices from '@/components/admin/extras/ExtraServices';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import React from 'react';
+import { Button } from "@/components/ui/button";
+import { Plus } from 'lucide-react';
+import PreviewVersionInput from './PreviewVersionInput';
+import { useToast } from "@/hooks/use-toast";
+import { useNewProjectForm } from '@/hooks/admin/useNewProjectForm';
+import ClientInfoForm from './ClientInfoForm';
 
-const NewProjectForm: React.FC = () => {
-  const navigate = useNavigate();
+interface NewProjectFormProps {
+  onAddProject: (project: any) => string | null;
+}
+
+const NewProjectForm: React.FC<NewProjectFormProps> = ({ onAddProject }) => {
+  const { 
+    formState: { clientName, clientEmail, packageType, versions, isSubmitting },
+    setters: { setClientName, setClientEmail, setPackageType, setIsSubmitting },
+    actions: { addVersion, removeVersion, updateVersion, resetForm }
+  } = useNewProjectForm();
+  
   const { toast } = useToast();
-  const { formState, setters, actions } = useNewProjectForm();
-  const [activeTab, setActiveTab] = useState('client-info');
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    setters.setIsSubmitting(true);
+    
+    if (!clientName.trim() || !clientEmail.trim() || !packageType) {
+      toast({
+        title: "Informações incompletas",
+        description: "Por favor, preencha todos os campos obrigatórios.",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    const hasEmptyVersions = versions.some(v => 
+      !v.title.trim() || !v.description.trim() || !v.audioUrl.trim()
+    );
+    
+    if (hasEmptyVersions) {
+      toast({
+        title: "Versões incompletas",
+        description: "Por favor, preencha todas as informações das versões.",
+        variant: "destructive"
+      });
+      return;
+    }
+    
+    setIsSubmitting(true);
     
     try {
-      // First create the client
-      const { data: clientData, error: clientError } = await supabase
-        .from('clients')
-        .upsert({
-          name: formState.clientName,
-          email: formState.clientEmail,
-          phone: formState.clientPhone.fullNumber
-        }, {
-          onConflict: 'email'  // If the email already exists, update the existing client
-        })
-        .select()
-        .single();
+      const project = {
+        clientName: clientName.trim(),
+        clientEmail: clientEmail.trim(),
+        packageType: packageType,
+        createdAt: new Date().toLocaleDateString('pt-BR'),
+        status: 'waiting' as const,
+        versions: versions.length,
+        previewUrl: '',
+        expirationDate: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toLocaleDateString('pt-BR'),
+        lastActivityDate: new Date().toLocaleDateString('pt-BR'),
+        versionsList: versions.map((v, index) => ({
+          id: `v${index + 1}`,
+          name: v.title,
+          description: v.description,
+          audioUrl: v.audioUrl,
+          dateAdded: new Date().toLocaleDateString('pt-BR'),
+          // Extract fileId from Google Drive URL
+          fileId: v.audioUrl.match(/[-\w]{25,}/) ? v.audioUrl.match(/[-\w]{25,}/)![0] : ''
+        }))
+      };
       
-      if (clientError) {
-        console.error('Error creating client:', clientError);
-        throw clientError;
-      }
+      const newProjectId = onAddProject(project);
       
-      // Generate a unique preview code
-      const previewCode = `P${Math.floor(1000 + Math.random() * 9000)}`;
-      
-      // Get selected extra services
-      const selectedExtras = formState.extras
-        .filter(extra => extra.selected)
-        .map(extra => ({ id: extra.id, name: extra.name, price: extra.price }));
-      
-      // Then create the project
-      const { data: projectData, error: projectError } = await supabase
-        .from('projects')
-        .insert({
-          client_id: clientData.id,
-          title: `Música Personalizada - ${formState.clientName}`,
-          status: 'draft',
-          preview_code: previewCode,
-          description: `Projeto de música personalizada para ${formState.clientName} - Pacote ${formState.packageType}${selectedExtras.length > 0 ? ' com extras' : ''}`,
-          // Store extra services in description JSON
-          extras: JSON.stringify(selectedExtras)
-        })
-        .select()
-        .single();
-      
-      if (projectError) {
-        console.error('Error creating project:', projectError);
-        throw projectError;
-      }
-      
-      // Create history entry for project creation
-      const { error: historyError } = await supabase
-        .from('project_history')
-        .insert({
-          project_id: projectData.id,
-          action: 'creation',
-          description: 'Projeto criado',
-          details: JSON.stringify({
-            client_name: formState.clientName,
-            package_type: formState.packageType,
-            extras: selectedExtras
-          })
-        });
-      
-      if (historyError) {
-        console.error('Error creating project history:', historyError);
-        // Non-critical, continue
-      }
-      
-      // Add versions if provided
-      if (formState.versions.length > 0 && formState.versions[0].title) {
-        const versionPromises = formState.versions.map(version => {
-          return supabase
-            .from('project_files')
-            .insert({
-              project_id: projectData.id,
-              title: version.title,
-              file_type: 'audio',
-              drive_url: version.audioUrl
-            });
-        });
-        
-        await Promise.all(versionPromises).catch(error => {
-          console.error('Error adding versions:', error);
-          // Non-critical, continue
+      if (newProjectId) {
+        resetForm();
+        toast({
+          title: "Projeto criado com sucesso",
+          description: `O projeto ${newProjectId} foi criado com ${versions.length} versão(ões).`,
         });
       }
-      
-      toast({
-        title: "Projeto criado com sucesso",
-        description: `O projeto para ${formState.clientName} foi criado.`
-      });
-      
-      // Redirect to project details page
-      navigate(`/admin-j28s7d1k/previews/${projectData.id}`);
     } catch (error) {
-      console.error('Error submitting form:', error);
       toast({
         title: "Erro ao criar projeto",
         description: "Ocorreu um erro ao criar o projeto. Tente novamente.",
         variant: "destructive"
       });
     } finally {
-      setters.setIsSubmitting(false);
+      setIsSubmitting(false);
     }
   };
 
   return (
-    <div className="relative">
-      <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-        <TabsList className="grid grid-cols-3 mb-4">
-          <TabsTrigger value="client-info">Dados do Cliente</TabsTrigger>
-          <TabsTrigger value="project-details">Detalhes do Projeto</TabsTrigger>
-          <TabsTrigger value="extras">Serviços Extras</TabsTrigger>
-        </TabsList>
+    <form onSubmit={handleSubmit} className="space-y-6">
+      <div className="space-y-4">
+        <h3 className="text-lg font-semibold">Informações do Cliente</h3>
         
-        <form onSubmit={handleSubmit} className="space-y-6">
-          <TabsContent value="client-info" className="space-y-4">
-            <h2 className="text-lg font-semibold">Dados do Cliente</h2>
-            
-            <div className="grid gap-4">
-              <div>
-                <Label htmlFor="clientName">Nome do Cliente</Label>
-                <Input
-                  id="clientName"
-                  placeholder="Nome completo do cliente"
-                  value={formState.clientName}
-                  onChange={e => setters.setClientName(e.target.value)}
-                  required
-                />
-              </div>
-              
-              <div>
-                <Label htmlFor="clientEmail">Email</Label>
-                <Input
-                  id="clientEmail"
-                  type="email"
-                  placeholder="email@exemplo.com"
-                  value={formState.clientEmail}
-                  onChange={e => setters.setClientEmail(e.target.value)}
-                  required
-                />
-              </div>
-              
-              <PhoneInput
-                label="Telefone"
-                value={formState.clientPhone.fullNumber}
-                onChange={phone => setters.setClientPhone(phone)}
+        <ClientInfoForm 
+          clientName={clientName}
+          clientEmail={clientEmail}
+          packageType={packageType}
+          onClientNameChange={setClientName}
+          onClientEmailChange={setClientEmail}
+          onPackageTypeChange={setPackageType}
+        />
+      </div>
+
+      <div className="space-y-4">
+        <div className="flex items-center justify-between">
+          <h3 className="text-lg font-semibold">Versões Musicais</h3>
+          <Button type="button" onClick={addVersion} variant="outline">
+            <Plus className="w-4 h-4 mr-2" />
+            Adicionar Versão
+          </Button>
+        </div>
+
+        <div className="space-y-4 max-h-[50vh] overflow-y-auto pr-2 pb-4">
+          {versions.map((version, index) => (
+            <div key={index} className="version-container">
+              <PreviewVersionInput
+                index={index}
+                title={version.title}
+                description={version.description}
+                audioUrl={version.audioUrl}
+                recommended={false}
+                onTitleChange={(i, value) => updateVersion(i, 'title', value)}
+                onDescriptionChange={(i, value) => updateVersion(i, 'description', value)}
+                onAudioUrlChange={(i, value) => updateVersion(i, 'audioUrl', value)}
+                onRecommendedChange={(i, value) => {}}
+                onRemove={removeVersion}
+                canRemove={versions.length > 1}
               />
-              
-              <div className="flex justify-end mt-4">
-                <Button 
-                  type="button" 
-                  onClick={() => setActiveTab('project-details')}
-                >
-                  Próximo
-                </Button>
-              </div>
             </div>
-          </TabsContent>
-          
-          <TabsContent value="project-details" className="space-y-4">
-            <h2 className="text-lg font-semibold">Detalhes do Projeto</h2>
-            
-            <div>
-              <Label htmlFor="packageType">Tipo de Pacote</Label>
-              <Select 
-                value={formState.packageType} 
-                onValueChange={setters.setPackageType}
-              >
-                <SelectTrigger className="w-full">
-                  <SelectValue placeholder="Selecione o tipo de pacote" />
-                </SelectTrigger>
-                <SelectContent>
-                  {PACKAGE_OPTIONS.map(option => (
-                    <SelectItem key={option.value} value={option.value}>
-                      {option.label}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-            
-            <div className="space-y-6">
-              <div className="flex items-center justify-between">
-                <h2 className="text-lg font-semibold">Versões</h2>
-                <Button 
-                  type="button" 
-                  variant="outline" 
-                  size="sm"
-                  onClick={actions.addVersion}
-                >
-                  <Plus className="h-4 w-4 mr-1" /> Adicionar Versão
-                </Button>
-              </div>
-              
-              {formState.versions.map((version, index) => (
-                <div key={index} className="space-y-3 p-4 border rounded-lg">
-                  <div className="flex items-center justify-between">
-                    <h3 className="font-medium">Versão {index + 1}</h3>
-                    <Button
-                      type="button"
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => actions.removeVersion(index)}
-                    >
-                      <Trash2 className="h-4 w-4 text-red-500" />
-                    </Button>
-                  </div>
-                  
-                  <div>
-                    <Label htmlFor={`version-${index}-title`}>Título</Label>
-                    <Input
-                      id={`version-${index}-title`}
-                      placeholder="Título da versão"
-                      value={version.title}
-                      onChange={e => actions.updateVersion(index, 'title', e.target.value)}
-                    />
-                  </div>
-                  
-                  <div>
-                    <Label htmlFor={`version-${index}-description`}>Descrição</Label>
-                    <Textarea
-                      id={`version-${index}-description`}
-                      placeholder="Descrição da versão"
-                      value={version.description}
-                      onChange={e => actions.updateVersion(index, 'description', e.target.value)}
-                      rows={3}
-                    />
-                  </div>
-                  
-                  <div>
-                    <Label htmlFor={`version-${index}-audio`}>URL do Áudio</Label>
-                    <Input
-                      id={`version-${index}-audio`}
-                      placeholder="https://drive.google.com/file/d/..."
-                      value={version.audioUrl}
-                      onChange={e => actions.updateVersion(index, 'audioUrl', e.target.value)}
-                    />
-                  </div>
-                </div>
-              ))}
-              
-              <div className="flex justify-between mt-4">
-                <Button 
-                  type="button" 
-                  variant="outline" 
-                  onClick={() => setActiveTab('client-info')}
-                >
-                  Voltar
-                </Button>
-                <Button 
-                  type="button" 
-                  onClick={() => setActiveTab('extras')}
-                >
-                  Próximo
-                </Button>
-              </div>
-            </div>
-          </TabsContent>
-          
-          <TabsContent value="extras" className="space-y-4">
-            <ExtraServices 
-              services={formState.extras} 
-              onServicesChange={setters.setExtras}
-              editable={true}
-            />
-            
-            <div className="flex justify-between mt-4">
-              <Button 
-                type="button" 
-                variant="outline" 
-                onClick={() => setActiveTab('project-details')}
-              >
-                Voltar
-              </Button>
-              <Button 
-                type="submit"
-                disabled={formState.isSubmitting}
-              >
-                {formState.isSubmitting ? 'Criando...' : 'Criar Projeto'}
-              </Button>
-            </div>
-          </TabsContent>
-        </form>
-      </Tabs>
-    </div>
+          ))}
+        </div>
+      </div>
+      
+      <div className="flex justify-end sticky bottom-0 pt-4 bg-white">
+        <Button type="submit" disabled={isSubmitting}>
+          {isSubmitting ? 'Criando...' : 'Criar Projeto'}
+        </Button>
+      </div>
+    </form>
   );
 };
 
