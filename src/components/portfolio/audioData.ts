@@ -4,8 +4,12 @@ export interface AudioExample {
   title: string;
   description: string;
   audioUrl: string;
-  type: 'example' | 'comparison' | 'stem';
+  imageUrl?: string;
+  tags?: string[];
+  categories?: string[];
+  type?: 'example' | 'comparison' | 'stem';
   featured?: boolean;
+  beforeUrl?: string; // Added to support comparison examples
 }
 
 // Cleared initial examples - will be populated by admin
