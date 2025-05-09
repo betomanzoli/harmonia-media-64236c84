@@ -1,102 +1,75 @@
 
 import React from 'react';
-import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
-import { ScrollArea } from "@/components/ui/scroll-area";
-import { FeedbackItem } from '@/types/project.types';
-import { MessageSquare, CheckCircle, Clock } from 'lucide-react';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
+import { FeedbackItem } from '@/types/project.types';
+import { formatRelativeDate } from '@/utils/dateUtils';
+import { Loader2 } from 'lucide-react';
 
 interface ProjectFeedbackHistoryProps {
   projectId: string;
   feedbackHistory: FeedbackItem[];
+  isLoading?: boolean;
 }
 
-const ProjectFeedbackHistory: React.FC<ProjectFeedbackHistoryProps> = ({ 
+const ProjectFeedbackHistory: React.FC<ProjectFeedbackHistoryProps> = ({
   projectId,
-  feedbackHistory
+  feedbackHistory = [],
+  isLoading = false
 }) => {
-  // Format date to pt-BR
-  const formatDate = (dateStr: string) => {
-    try {
-      const date = new Date(dateStr);
-      return date.toLocaleString('pt-BR', {
-        day: '2-digit',
-        month: '2-digit',
-        year: 'numeric',
-        hour: '2-digit',
-        minute: '2-digit'
-      });
-    } catch (e) {
-      return dateStr;
+  // Helper function to determine badge style based on status
+  const getStatusBadge = (status: string = 'pending') => {
+    switch (status) {
+      case 'processed':
+        return <Badge variant="outline" className="bg-green-50 border-green-300 text-green-700">Processado</Badge>;
+      case 'pending':
+      default:
+        return <Badge variant="outline" className="bg-yellow-50 border-yellow-300 text-yellow-700">Pendente</Badge>;
     }
   };
-  
-  if (!feedbackHistory || feedbackHistory.length === 0) {
-    return (
-      <Card>
-        <CardHeader>
-          <CardTitle className="text-lg">Histórico de Feedback</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="p-4 text-center text-gray-500 border border-dashed rounded-md">
-            <MessageSquare className="mx-auto h-8 w-8 mb-2 text-gray-400" />
-            <p>Nenhum feedback recebido ainda.</p>
-          </div>
-        </CardContent>
-      </Card>
-    );
-  }
-  
+
   return (
     <Card>
-      <CardHeader>
-        <CardTitle className="text-lg">Histórico de Feedback</CardTitle>
+      <CardHeader className="pb-3">
+        <CardTitle className="text-lg font-medium">Histórico de Feedback</CardTitle>
       </CardHeader>
       <CardContent>
-        <ScrollArea className="h-[300px] pr-4">
-          <div className="space-y-6">
-            {feedbackHistory.map((feedback, index) => (
-              <div key={feedback.id || index} className="relative">
-                {index !== feedbackHistory.length - 1 && (
-                  <div className="absolute left-6 top-12 w-px h-full bg-gray-200" />
-                )}
+        {isLoading ? (
+          <div className="flex justify-center py-8">
+            <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+          </div>
+        ) : feedbackHistory.length === 0 ? (
+          <div className="text-center p-6 border border-dashed rounded-md">
+            <p className="text-muted-foreground">Nenhum feedback recebido ainda.</p>
+          </div>
+        ) : (
+          <div className="space-y-4">
+            {feedbackHistory.map(feedback => (
+              <div 
+                key={feedback.id} 
+                className="p-4 border rounded-md bg-muted/20 space-y-2"
+              >
+                <div className="flex justify-between items-start">
+                  <h4 className="font-medium text-sm">
+                    Feedback {feedback.version_id && `para versão ${feedback.version_id}`}
+                  </h4>
+                  {getStatusBadge(feedback.status)}
+                </div>
                 
-                <div className="flex space-x-4">
-                  <div className="bg-gray-100 rounded-full p-2 h-12 w-12 flex items-center justify-center">
-                    <MessageSquare className="h-5 w-5 text-gray-600" />
-                  </div>
-                  
-                  <div className="flex-1">
-                    <div className="flex items-center space-x-2 mb-1">
-                      <Badge variant={feedback.status === 'processed' ? 'secondary' : 'outline'}>
-                        {feedback.status === 'processed' ? (
-                          <>
-                            <CheckCircle className="h-3 w-3 mr-1" /> Processado
-                          </>
-                        ) : (
-                          <>
-                            <Clock className="h-3 w-3 mr-1" /> Pendente
-                          </>
-                        )}
-                      </Badge>
-                      <span className="text-xs text-gray-500">{formatDate(feedback.created_at)}</span>
-                    </div>
-                    
-                    {feedback.version_id && (
-                      <div className="text-xs text-gray-500 mb-1">
-                        Sobre a versão: {feedback.version_id}
-                      </div>
-                    )}
-                    
-                    <div className="p-3 bg-gray-50 rounded-md border text-gray-700">
-                      {feedback.comment || feedback.content}
-                    </div>
-                  </div>
+                <p className="text-sm whitespace-pre-wrap">{feedback.comment || feedback.content}</p>
+                
+                <div className="text-xs text-muted-foreground">
+                  Recebido {formatRelativeDate(feedback.created_at || feedback.createdAt || '')}
+                  {feedback.version_id && (
+                    <span className="ml-2">
+                      • Versão: {feedback.version_id || feedback.versionId}
+                    </span>
+                  )}
                 </div>
               </div>
             ))}
           </div>
-        </ScrollArea>
+        )}
       </CardContent>
     </Card>
   );

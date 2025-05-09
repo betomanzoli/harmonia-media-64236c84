@@ -28,6 +28,9 @@ export interface ProjectItem {
   createdAt?: string;
   lastActivityDate?: string;
   expirationDate?: string;
+  clientEmail?: string;
+  clientPhone?: string;
+  feedbackHistory?: FeedbackItem[];
 }
 
 /**
@@ -76,6 +79,8 @@ export interface ProjectVersion {
   date_added?: string;
   final_version_url?: string;
   stems_url?: string;
+  // Camel case aliases
+  audioUrl?: string;
 }
 
 /**
@@ -96,6 +101,8 @@ export interface VersionItem {
   final_version_url?: string;
   stems_url?: string;
   additionalLinks?: Array<string | { url: string; label: string }>;
+  // Camel case aliases
+  audioUrl?: string;
 }
 
 /**
@@ -124,6 +131,22 @@ export interface HistoryItem {
   description: string;
   created_at: string;
   user_id?: string;
+  // Optional fields for local history items
+  timestamp?: string;
+  data?: { message: string };
+}
+
+/**
+ * History Entry interface (for admin panel)
+ */
+export interface HistoryEntry {
+  id?: string;
+  action: string;
+  timestamp: string;
+  data: { message: string };
+  project_id?: string;
+  description?: string;
+  created_at?: string;
 }
 
 /**

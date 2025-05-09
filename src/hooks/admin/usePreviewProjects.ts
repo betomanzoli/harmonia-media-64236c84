@@ -1,8 +1,7 @@
-
 // Import types from the central types file
-import { ProjectItem, VersionItem, FeedbackItem, HistoryItem } from '@/types/project.types';
+import { ProjectItem, VersionItem, FeedbackItem, HistoryItem, HistoryEntry } from '@/types/project.types';
 import { useState, useEffect } from 'react';
-import { supabase } from '@/integrations/supabase/client';
+import { supabase } from '@/lib/supabase';
 import { logger } from '@/utils/logger';
 
 // Re-export interfaces so they can be imported from this module
@@ -102,24 +101,83 @@ export const usePreviewProject = (projectId: string | undefined) => {
             audio_url: file.drive_url || '',
             created_at: file.created_at
           })) || [],
-          feedback_history: historyData?.filter(h => h.action === 'feedback').map(h => ({
-            id: h.id,
-            project_id: h.project_id,
-            comment: h.details?.message || '',
-            content: h.details?.message || '',
-            created_at: h.created_at,
-            status: h.details?.status || 'pending',
-            version_id: h.details?.version_id
-          })) || [],
-          history: historyData?.map(h => ({
-            id: h.id,
-            project_id: h.project_id,
-            action: h.action,
-            description: typeof h.details === 'object' ? JSON.stringify(h.details) : h.details || '',
-            created_at: h.created_at,
-            user_id: h.details?.user_id
-          })) || [],
-          preview_code: projectData.preview_code
+          // Process feedback items
+          feedback_history: historyData?.filter(h => h.action === 'feedback').map(h => {
+            // Safely handle details, which could be string, object, or null
+            let details = typeof h.details === 'object' ? h.details : {};
+            if (typeof h.details === 'string') {
+              try {
+                details = JSON.parse(h.details);
+              } catch (e) {
+                details = { message: h.details };
+              }
+            }
+            
+            return {
+              id: h.id,
+              project_id: h.project_id,
+              comment: typeof details === 'object' && details ? String(details.message || '') : '',
+              content: typeof details === 'object' && details ? String(details.message || '') : '',
+              created_at: h.created_at,
+              status: typeof details === 'object' && details ? String(details.status || 'pending') : 'pending',
+              version_id: typeof details === 'object' && details ? String(details.version_id || '') : ''
+            };
+          }) || [],
+          // Process history items
+          history: historyData?.map(h => {
+            // Safely convert details to string for description
+            let description = '';
+            if (typeof h.details === 'object' && h.details) {
+              description = JSON.stringify(h.details);
+            } else if (h.details) {
+              description = String(h.details);
+            }
+            
+            // Get user_id if available in details
+            let user_id = '';
+            if (typeof h.details === 'object' && h.details && h.details.user_id) {
+              user_id = String(h.details.user_id);
+            }
+            
+            return {
+              id: h.id,
+              project_id: h.project_id,
+              action: h.action,
+              description,
+              created_at: h.created_at,
+              user_id
+            };
+          }) || [],
+          preview_code: projectData.preview_code,
+          
+          // Add camelCase aliases
+          clientName: clientData?.name || 'Cliente',
+          projectTitle: projectData.title || 'Música Personalizada',
+          packageType: packageData?.name || 'standard',
+          createdAt: projectData.created_at,
+          lastActivityDate: projectData.updated_at || projectData.created_at,
+          expirationDate: projectData.deadline || new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString(),
+          clientEmail: clientData?.email,
+          clientPhone: clientData?.phone,
+          feedbackHistory: historyData?.filter(h => h.action === 'feedback').map(h => {
+            let details = typeof h.details === 'object' ? h.details : {};
+            if (typeof h.details === 'string') {
+              try {
+                details = JSON.parse(h.details);
+              } catch (e) {
+                details = { message: h.details };
+              }
+            }
+            return {
+              id: h.id,
+              project_id: h.project_id,
+              comment: typeof details === 'object' && details ? String(details.message || '') : '',
+              content: typeof details === 'object' && details ? String(details.message || '') : '',
+              created_at: h.created_at,
+              status: typeof details === 'object' && details ? String(details.status || 'pending') : 'pending',
+              version_id: typeof details === 'object' && details ? String(details.version_id || '') : ''
+            };
+          }) || [],
         };
         
         setProject(transformedProject);
@@ -147,7 +205,7 @@ export const usePreviewProject = (projectId: string | undefined) => {
         .insert({
           project_id: projectId,
           title: version.title,
-          drive_url: version.audio_url,
+          drive_url: version.audio_url || version.audioUrl,
           file_type: 'audio',
         })
         .select()
@@ -158,17 +216,17 @@ export const usePreviewProject = (projectId: string | undefined) => {
         return null;
       }
       
-      // Add history entry
+      // Add history entry with properly formatted details
       await supabase
         .from('project_history')
         .insert({
           project_id: projectId,
           action: 'new_version',
-          details: {
+          details: JSON.stringify({
             file_id: data.id,
             title: version.title,
             description: version.description
-          }
+          })
         });
         
       logger.info('ADMIN', 'Version added successfully', { id: data.id });
@@ -180,7 +238,7 @@ export const usePreviewProject = (projectId: string | undefined) => {
           title: version.title,
           name: version.title,
           description: version.description || '',
-          audio_url: version.audio_url,
+          audio_url: version.audio_url || version.audioUrl,
           created_at: data.created_at
         };
         
@@ -220,9 +278,9 @@ export const usePreviewProject = (projectId: string | undefined) => {
         .insert({
           project_id: projectId,
           action: 'delete_version',
-          details: {
+          details: JSON.stringify({
             version_id: versionId
-          }
+          })
         });
         
       logger.info('ADMIN', 'Version deleted successfully', { versionId });
@@ -264,13 +322,21 @@ export const usePreviewProject = (projectId: string | undefined) => {
         return false;
       }
       
-      // Add history entry
+      // Add history entry - convert updates to a simple object for storage
+      const historyDetails: Record<string, string> = {};
+      Object.entries(updates).forEach(([key, value]) => {
+        // Only include primitive values in history details
+        if (typeof value !== 'object') {
+          historyDetails[key] = String(value);
+        }
+      });
+      
       await supabase
         .from('project_history')
         .insert({
           project_id: projectId,
           action: 'update',
-          details: updates
+          details: JSON.stringify(historyDetails)
         });
         
       logger.info('ADMIN', 'Project updated successfully', { projectId });
@@ -318,10 +384,10 @@ export const usePreviewProject = (projectId: string | undefined) => {
         .insert({
           project_id: projectId,
           action: 'extend_deadline',
-          details: {
+          details: JSON.stringify({
             previous_deadline: project?.expiration_date,
             new_deadline: newExpirationDate
-          }
+          })
         });
         
       logger.info('ADMIN', 'Deadline extended successfully', { 
@@ -333,7 +399,8 @@ export const usePreviewProject = (projectId: string | undefined) => {
       if (project) {
         setProject({
           ...project,
-          expiration_date: newExpirationDate
+          expiration_date: newExpirationDate,
+          expirationDate: newExpirationDate
         });
       }
       
@@ -438,8 +505,6 @@ export const usePreviewProjects = () => {
           preview_code: project.preview_code,
           // Add camelCase aliases for front-end
           clientName: client?.name || 'Cliente',
-          clientEmail: client?.email,
-          clientPhone: client?.phone,
           projectTitle: project.title || 'Música Personalizada',
           packageType: packageInfo?.name || 'standard',
           createdAt: project.created_at,

@@ -1,7 +1,4 @@
 
-// Fix the issue at line 84 where 'id' doesn't exist in NotificationOptions
-// We'll modify this to use a valid option in NotificationOptions
-
 import { useState, useEffect } from 'react';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/lib/supabase';
@@ -59,7 +56,7 @@ export const useBriefingStorage = () => {
         
         setQuestions(data || []);
       } catch (error) {
-        logger.error('Unexpected error loading briefing questions', error);
+        logger.error('Unexpected error loading briefing questions', error instanceof Error ? error.message : String(error));
       } finally {
         setIsLoading(false);
       }
@@ -87,7 +84,7 @@ export const useBriefingStorage = () => {
         });
         
       if (error) {
-        logger.error('Error saving briefing responses', error);
+        logger.error('Error saving briefing responses', error instanceof Error ? error.message : String(error));
         toast({
           title: "Erro ao salvar respostas",
           description: "Não foi possível salvar as respostas do briefing.",
@@ -96,8 +93,7 @@ export const useBriefingStorage = () => {
         return false;
       }
       
-      // Show notification - fixed by removing the invalid 'id' property
-      // and using a valid tag property instead
+      // Show notification - fixed by using valid properties of NotificationOptions
       if ("Notification" in window && Notification.permission === "granted") {
         new Notification("Briefing Salvo", {
           body: `As respostas do projeto ${projectId} foram salvas com sucesso.`,
@@ -112,7 +108,7 @@ export const useBriefingStorage = () => {
       
       return true;
     } catch (error) {
-      logger.error('Unexpected error saving briefing responses', error);
+      logger.error('Unexpected error saving briefing responses', error instanceof Error ? error.message : String(error));
       return false;
     }
   };
@@ -126,7 +122,7 @@ export const useBriefingStorage = () => {
         .eq('project_id', projectId);
         
       if (error) {
-        logger.error('Error loading briefing responses', error);
+        logger.error('Error loading briefing responses', error instanceof Error ? error.message : String(error));
         return {};
       }
       
@@ -138,7 +134,7 @@ export const useBriefingStorage = () => {
       
       return responses;
     } catch (error) {
-      logger.error('Unexpected error loading briefing responses', error);
+      logger.error('Unexpected error loading briefing responses', error instanceof Error ? error.message : String(error));
       return {};
     }
   };

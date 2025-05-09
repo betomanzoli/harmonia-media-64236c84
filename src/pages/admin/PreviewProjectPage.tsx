@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import AdminLayout from '@/components/admin/layout/AdminLayout';
@@ -12,6 +11,7 @@ import ProjectFeedbackHistory from '@/components/admin/previews/ProjectFeedbackH
 import { VersionItem, usePreviewProjects, ProjectItem } from '@/hooks/admin/usePreviewProjects';
 import { useToast } from '@/hooks/use-toast';
 import { generatePreviewLink } from '@/utils/previewLinkUtils';
+import { HistoryItem, HistoryEntry } from '@/types/project.types';
 
 const PreviewProjectPage: React.FC = () => {
   const {
@@ -42,7 +42,7 @@ const PreviewProjectPage: React.FC = () => {
         encodedLink = project.preview_code;
       } else {
         // Otherwise generate a new stable encoded link
-        encodedLink = generatePreviewLink(projectId, project.clientEmail || project.clientName);
+        encodedLink = generatePreviewLink(projectId, project.client_email || project.client_name);
         
         // Save this preview_code for future use
         previewProjects.updateProject(projectId, { 
@@ -65,6 +65,16 @@ const PreviewProjectPage: React.FC = () => {
         </Card>
       </AdminLayout>;
   }
+  
+  // Convert history entries to the correct format expected by ProjectHistoryList
+  const processHistoryItems = (items: HistoryItem[]): HistoryEntry[] => {
+    return items.map(item => ({
+      id: item.id,
+      action: item.action,
+      timestamp: item.timestamp || item.created_at,
+      data: item.data || { message: item.description }
+    }));
+  };
   
   const handleAddVersion = (newVersion: VersionItem) => {
     if (!projectId) return;
@@ -90,25 +100,26 @@ const PreviewProjectPage: React.FC = () => {
 
     // Add the new version
     updatedVersions = [...updatedVersions, versionToAdd];
-
-    // Update history
-    const historyAction = isFinalVersion ? `Versão final adicionada: ${versionTitle}` : `Nova versão adicionada: ${versionTitle}`;
-    const historyEntry = {
-      action: historyAction,
-      timestamp: new Date().toLocaleString('pt-BR'),
-      data: {
-        message: newVersion.description || 'Sem descrição'
-      }
+    
+    // Create a history item in the correct format
+    const historyItem: HistoryItem = {
+      id: `hist_${Date.now()}`,
+      project_id: projectId,
+      action: isFinalVersion ? `Versão final adicionada: ${versionTitle}` : `Nova versão adicionada: ${versionTitle}`,
+      description: newVersion.description || 'Sem descrição',
+      created_at: new Date().toISOString()
     };
-    const history = [...(project.history || []), historyEntry];
+    
+    const history = [...(project.history || []), historyItem];
 
     // Update project
     previewProjects.updateProject(projectId, {
       versionsList: updatedVersions,
       versions: updatedVersions.length,
       history,
-      lastActivityDate: new Date().toLocaleDateString('pt-BR')
+      last_activity_date: new Date().toLocaleDateString('pt-BR')
     });
+    
     toast({
       title: isFinalVersion ? "Versão final adicionada" : "Versão adicionada",
       description: `${versionTitle} foi adicionada ao projeto com sucesso.`
@@ -119,26 +130,29 @@ const PreviewProjectPage: React.FC = () => {
     if (!projectId) return;
 
     // Calculate new expiration date (current + 7 days)
-    const currentDate = project.expirationDate ? new Date(project.expirationDate.split('/').reverse().join('-')) : new Date();
+    const currentDate = project.expiration_date ? new Date(project.expiration_date.split('/').reverse().join('-')) : new Date();
     currentDate.setDate(currentDate.getDate() + 7);
     const newExpirationDate = currentDate.toLocaleDateString('pt-BR');
-
-    // Add history entry
-    const historyEntry = {
+    
+    // Create a history item in the correct format
+    const historyItem: HistoryItem = {
+      id: `hist_${Date.now()}`,
+      project_id: projectId,
       action: "Prazo estendido",
-      timestamp: new Date().toLocaleString('pt-BR'),
-      data: {
-        message: `Prazo estendido por +7 dias. Nova data de expiração: ${newExpirationDate}`
-      }
+      description: `Prazo estendido por +7 dias. Nova data de expiração: ${newExpirationDate}`,
+      created_at: new Date().toISOString()
     };
-    const history = [...(project.history || []), historyEntry];
+
+    const history = [...(project.history || []), historyItem];
 
     // Update project
     previewProjects.updateProject(projectId, {
+      expiration_date: newExpirationDate,
       expirationDate: newExpirationDate,
       history,
-      lastActivityDate: new Date().toLocaleDateString('pt-BR')
+      last_activity_date: new Date().toLocaleDateString('pt-BR')
     });
+    
     toast({
       title: "Prazo estendido",
       description: `O prazo foi estendido por +7 dias. Nova data: ${newExpirationDate}`
@@ -153,23 +167,25 @@ const PreviewProjectPage: React.FC = () => {
     if (!versionToDelete) return;
     const updatedVersions = currentVersions.filter(v => v.id !== versionId);
 
-    // Add history entry
-    const historyEntry = {
+    // Create a history item in the correct format
+    const historyItem: HistoryItem = {
+      id: `hist_${Date.now()}`,
+      project_id: projectId,
       action: `Versão removida: ${versionToDelete.name}`,
-      timestamp: new Date().toLocaleString('pt-BR'),
-      data: {
-        message: `A versão "${versionToDelete.name}" foi removida do projeto.`
-      }
+      description: `A versão "${versionToDelete.name}" foi removida do projeto.`,
+      created_at: new Date().toISOString()
     };
-    const history = [...(project.history || []), historyEntry];
+
+    const history = [...(project.history || []), historyItem];
 
     // Update project
     previewProjects.updateProject(projectId, {
       versionsList: updatedVersions,
       versions: updatedVersions.length,
       history,
-      lastActivityDate: new Date().toLocaleDateString('pt-BR')
+      last_activity_date: new Date().toLocaleDateString('pt-BR')
     });
+    
     toast({
       title: "Versão removida",
       description: `${versionToDelete.name} foi removida com sucesso.`
@@ -215,9 +231,9 @@ const PreviewProjectPage: React.FC = () => {
       <div className="space-y-6 p-6 min-h-screen bg-slate-50">
         <div className="flex justify-between items-center">
           <ProjectHeader 
-            projectTitle={formatPackageType(project.packageType || "Projeto de Música Personalizada")} 
-            clientName={project.clientName} 
-            packageType={formatPackageType(project.packageType)} 
+            projectTitle={formatPackageType(project.package_type || "Projeto de Música Personalizada")} 
+            clientName={project.client_name} 
+            packageType={formatPackageType(project.package_type)} 
           />
           <button
             onClick={handleViewAsClient}
@@ -230,21 +246,21 @@ const PreviewProjectPage: React.FC = () => {
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
           <div className="md:col-span-2 space-y-6">
             <PreviewVersionsList versions={project.versionsList || []} projectId={projectId} onDeleteVersion={handleDeleteVersion} />
-            <ProjectFeedbackHistory projectId={projectId} feedbackHistory={project.feedbackHistory || []} />
-            <ProjectHistoryList history={project.history || []} />
+            <ProjectFeedbackHistory projectId={projectId} feedbackHistory={project.feedback_history || []} />
+            <ProjectHistoryList history={processHistoryItems(project.history || [])} />
           </div>
           
           <div className="space-y-6">
-            <ProjectClientInfo clientName={project.clientName} clientEmail={project.clientEmail || "email@exemplo.com"} packageType={formatPackageType(project.packageType || "Pacote Básico")} createdAt={project.createdAt || new Date().toLocaleDateString('pt-BR')} expirationDate={project.expirationDate || "N/A"} lastActivityDate={project.lastActivityDate || new Date().toLocaleDateString('pt-BR')} />
+            <ProjectClientInfo clientName={project.client_name} clientEmail={project.client_email || "email@exemplo.com"} packageType={formatPackageType(project.package_type || "Pacote Básico")} createdAt={project.created_at || new Date().toLocaleDateString('pt-BR')} expirationDate={project.expiration_date || "N/A"} lastActivityDate={project.last_activity_date || new Date().toLocaleDateString('pt-BR')} />
             <ProjectActionCard 
               projectId={projectId} 
               onAddVersion={handleAddVersion} 
               onExtendDeadline={handleExtendDeadline} 
               previewUrl={encodedLinkUrl} 
-              clientPhone={project.clientPhone || ''} 
-              clientEmail={project.clientEmail || ''} 
+              clientPhone={project.client_phone || ''} 
+              clientEmail={project.client_email || ''} 
               projectStatus={project.status} 
-              packageType={project.packageType} 
+              packageType={project.package_type} 
             />
           </div>
         </div>

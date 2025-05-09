@@ -119,7 +119,7 @@ const PreviewProjectPage: React.FC = () => {
               Voltar
             </Link>
           </Button>
-          <h1 className="text-2xl font-bold">Gerenciar Prévia: {project.clientName}</h1>
+          <h1 className="text-2xl font-bold">Gerenciar Prévia: {project.client_name}</h1>
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
@@ -137,7 +137,7 @@ const PreviewProjectPage: React.FC = () => {
             
             <ProjectFeedbackHistory 
               projectId={projectId as string}
-              feedbackHistory={project.feedbackHistory || []}
+              feedbackHistory={project.feedback_history || []}
             />
           </div>
           
@@ -147,10 +147,10 @@ const PreviewProjectPage: React.FC = () => {
               onAddVersion={handleAddVersion}
               onExtendDeadline={handleExtendDeadline}
               previewUrl={previewUrl}
-              clientPhone={project.clientPhone}
-              clientEmail={project.clientEmail}
+              clientPhone={project.client_phone}
+              clientEmail={project.client_email}
               projectStatus={project.status}
-              packageType={project.packageType}
+              packageType={project.package_type}
             />
           </div>
         </div>
