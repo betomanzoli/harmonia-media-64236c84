@@ -20,7 +20,7 @@ const PortfolioTabs: React.FC<PortfolioTabsProps> = ({
 }) => {
   const filteredExamples = selectedCategory === 'all' 
     ? examples 
-    : examples.filter(example => example.categories.includes(selectedCategory));
+    : examples.filter(example => example.category.includes(selectedCategory));
 
   return (
     <Tabs defaultValue="examples" className="w-full">
@@ -81,7 +81,7 @@ const PortfolioTabs: React.FC<PortfolioTabsProps> = ({
               description={example.description}
               audioUrl={example.audioUrl}
               imageUrl={example.imageUrl}
-              tags={example.tags}
+              tags={example.tags || example.category} // Use tags or fallback to category
             />
           ))}
         </div>

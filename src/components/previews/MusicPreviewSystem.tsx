@@ -17,6 +17,23 @@ interface MusicPreviewSystemProps {
   projectId: string;
 }
 
+interface PreviewProject {
+  clientName: string;
+  projectTitle: string;
+  status: 'waiting' | 'feedback' | 'approved';
+  previews: {
+    id: string;
+    title: string;
+    description: string;
+    audioUrl: string;
+    fileId?: string;
+    recommended?: boolean;
+  }[];
+  packageType?: string;
+  createdAt?: string;
+  expiresAt?: string;
+}
+
 const MusicPreviewSystem: React.FC<MusicPreviewSystemProps> = ({ projectId }) => {
   const { projectData, isLoading, updateProjectStatus } = usePreviewProject(projectId);
   const { toast } = useToast();
@@ -101,11 +118,13 @@ const MusicPreviewSystem: React.FC<MusicPreviewSystemProps> = ({ projectId }) =>
   return (
     <div className="max-w-4xl mx-auto px-4">
       <PreviewHeader 
-        projectTitle={projectData.projectTitle || 'Projeto sem nome'} 
-        clientName={projectData.clientName || 'Cliente'} 
-        packageType={packageType}
-        status={projectData.status || 'pending'}
-        createdAt={projectData.createdAt || new Date().toISOString()}
+        projectData={{
+          projectTitle: projectData.projectTitle || 'Projeto sem nome',
+          clientName: projectData.clientName || 'Cliente',
+          status: projectData.status || 'pending',
+          packageType: packageType,
+          createdAt: projectData.createdAt || new Date().toISOString()
+        }}
         onShareClick={() => setIsShareDialogOpen(true)}
       />
       
@@ -157,7 +176,7 @@ const MusicPreviewSystem: React.FC<MusicPreviewSystemProps> = ({ projectId }) =>
       <SharePreviewDialog 
         isOpen={isShareDialogOpen}
         onOpenChange={setIsShareDialogOpen}
-        projectId={projectId} 
+        projectId={projectId}
         projectTitle={projectData.projectTitle || 'Projeto sem nome'}
       />
     </div>

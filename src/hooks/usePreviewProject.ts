@@ -19,9 +19,14 @@ interface PreviewProject {
   status: 'waiting' | 'feedback' | 'approved';
   previews: MusicPreview[];
   packageType?: string;
-  projectName?: string;
   createdAt?: string;
   expiresAt?: string;
+}
+
+// Extend ProjectItem interface with the title property that we need
+interface ExtendedProjectItem {
+  title?: string;
+  [key: string]: any;
 }
 
 export const usePreviewProject = (projectId: string | undefined) => {
@@ -40,7 +45,7 @@ export const usePreviewProject = (projectId: string | undefined) => {
     setIsLoading(true);
     
     // Get project from admin projects
-    const adminProject = getProjectById(projectId);
+    const adminProject = getProjectById(projectId) as ExtendedProjectItem;
     
     if (adminProject) {
       console.log('Project found in admin system:', adminProject);
@@ -195,3 +200,5 @@ export const usePreviewProject = (projectId: string | undefined) => {
   
   return { projectData, setProjectData, isLoading, updateProjectStatus };
 };
+
+export type { PreviewProject, MusicPreview };

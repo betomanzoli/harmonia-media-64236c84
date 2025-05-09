@@ -33,8 +33,8 @@ const ExamplesList: React.FC<ExamplesListProps> = ({
             title={example.title}
             subtitle={example.description}
             audioSrc={example.audioUrl}
-            genre={example.type}
-            type={example.type}
+            genre={example.type || example.category?.[0] || ''} // Use type or fallback to first category
+            type={example.type || example.category?.[0] || ''}
             onDelete={onDelete}
             isAdmin={isAdmin}
           />

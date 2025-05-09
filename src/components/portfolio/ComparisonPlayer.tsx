@@ -1,202 +1,85 @@
 
-import React, { useState, useRef, useEffect } from 'react';
-import { Card, CardContent } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Slider } from "@/components/ui/slider";
-import { PlayCircle, PauseCircle, SkipForward, SkipBack } from 'lucide-react';
-import { formatTime } from '@/lib/utils';
+import React, { useState } from 'react';
+import { Card, CardHeader, CardContent, CardTitle, CardDescription } from "@/components/ui/card";
+import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
+import LimitedAudioPlayer from '@/components/LimitedAudioPlayer';
+import { ArrowRight } from 'lucide-react';
 
 interface ComparisonPlayerProps {
   title: string;
-  description?: string;
+  description: string;
   beforeUrl: string;
   afterUrl: string;
-  beforeLabel?: string;
-  afterLabel?: string;
 }
 
-const ComparisonPlayer: React.FC<ComparisonPlayerProps> = ({
-  title,
-  description,
-  beforeUrl,
-  afterUrl,
-  beforeLabel = "Antes",
-  afterLabel = "Depois"
+const ComparisonPlayer: React.FC<ComparisonPlayerProps> = ({ 
+  title, 
+  description, 
+  beforeUrl, 
+  afterUrl 
 }) => {
-  const [isPlaying, setIsPlaying] = useState(false);
-  const [currentTime, setCurrentTime] = useState(0);
-  const [duration, setDuration] = useState(0);
-  const [playingBefore, setPlayingBefore] = useState(true);
-  const beforeAudioRef = useRef<HTMLAudioElement | null>(null);
-  const afterAudioRef = useRef<HTMLAudioElement | null>(null);
-
-  useEffect(() => {
-    // Initialize audio elements
-    beforeAudioRef.current = new Audio(beforeUrl);
-    afterAudioRef.current = new Audio(afterUrl);
-    
-    // Set event listeners
-    const beforeAudio = beforeAudioRef.current;
-    const afterAudio = afterAudioRef.current;
-    
-    const setAudioData = () => {
-      const currentAudio = playingBefore ? beforeAudio : afterAudio;
-      setDuration(currentAudio.duration || 0);
-    };
-    
-    const updateTime = () => {
-      const currentAudio = playingBefore ? beforeAudio : afterAudio;
-      setCurrentTime(currentAudio.currentTime || 0);
-    };
-    
-    const handleEnded = () => {
-      setIsPlaying(false);
-      setCurrentTime(0);
-      if (playingBefore) {
-        // Auto-switch to "after" when "before" finishes
-        switchToAfter();
-      }
-    };
-    
-    beforeAudio.addEventListener('loadedmetadata', setAudioData);
-    beforeAudio.addEventListener('timeupdate', updateTime);
-    beforeAudio.addEventListener('ended', handleEnded);
-    
-    afterAudio.addEventListener('loadedmetadata', setAudioData);
-    afterAudio.addEventListener('timeupdate', updateTime);
-    afterAudio.addEventListener('ended', handleEnded);
-    
-    return () => {
-      beforeAudio.pause();
-      afterAudio.pause();
-      
-      beforeAudio.removeEventListener('loadedmetadata', setAudioData);
-      beforeAudio.removeEventListener('timeupdate', updateTime);
-      beforeAudio.removeEventListener('ended', handleEnded);
-      
-      afterAudio.removeEventListener('loadedmetadata', setAudioData);
-      afterAudio.removeEventListener('timeupdate', updateTime);
-      afterAudio.removeEventListener('ended', handleEnded);
-    };
-  }, [beforeUrl, afterUrl, playingBefore]);
-
-  const togglePlay = () => {
-    const currentAudio = playingBefore ? beforeAudioRef.current : afterAudioRef.current;
-    if (!currentAudio) return;
-    
-    if (isPlaying) {
-      currentAudio.pause();
-      setIsPlaying(false);
-    } else {
-      currentAudio.play().catch(error => {
-        console.error("Error playing audio:", error);
-      });
-      setIsPlaying(true);
-    }
-  };
-  
-  const switchToBefore = () => {
-    if (afterAudioRef.current) {
-      afterAudioRef.current.pause();
-      afterAudioRef.current.currentTime = 0;
-    }
-    
-    setPlayingBefore(true);
-    setCurrentTime(0);
-    setIsPlaying(false);
-    
-    if (beforeAudioRef.current) {
-      beforeAudioRef.current.currentTime = 0;
-      if (isPlaying) {
-        beforeAudioRef.current.play().catch(console.error);
-      }
-    }
-  };
-  
-  const switchToAfter = () => {
-    if (beforeAudioRef.current) {
-      beforeAudioRef.current.pause();
-      beforeAudioRef.current.currentTime = 0;
-    }
-    
-    setPlayingBefore(false);
-    setCurrentTime(0);
-    setIsPlaying(false);
-    
-    if (afterAudioRef.current) {
-      afterAudioRef.current.currentTime = 0;
-      if (isPlaying) {
-        afterAudioRef.current.play().catch(console.error);
-      }
-    }
-  };
-  
-  const handleSliderChange = (values: number[]) => {
-    const currentAudio = playingBefore ? beforeAudioRef.current : afterAudioRef.current;
-    if (!currentAudio) return;
-    
-    const newTime = values[0];
-    currentAudio.currentTime = newTime;
-    setCurrentTime(newTime);
-  };
+  const [activeTab, setActiveTab] = useState<string>("before");
 
   return (
-    <Card className="overflow-hidden">
-      <CardContent className="p-4">
-        <div className="mb-4">
-          <h3 className="font-bold text-lg">{title}</h3>
-          {description && <p className="text-sm text-gray-400">{description}</p>}
-        </div>
-        
-        <div className="mb-4 flex space-x-2">
-          <Button 
-            variant={playingBefore ? "default" : "outline"} 
-            onClick={switchToBefore}
-            className={playingBefore ? "bg-blue-500 hover:bg-blue-600" : ""}
-          >
-            <SkipBack className="w-4 h-4 mr-2" />
-            {beforeLabel}
-          </Button>
-          
-          <Button 
-            variant={!playingBefore ? "default" : "outline"} 
-            onClick={switchToAfter}
-            className={!playingBefore ? "bg-green-500 hover:bg-green-600" : ""}
-          >
-            {afterLabel}
-            <SkipForward className="w-4 h-4 ml-2" />
-          </Button>
-        </div>
-        
-        <div className="flex items-center space-x-4 mb-2">
-          <button 
-            onClick={togglePlay} 
-            className="focus:outline-none text-harmonia-green hover:text-harmonia-green/80"
-          >
-            {isPlaying ? (
-              <PauseCircle className="w-12 h-12" />
-            ) : (
-              <PlayCircle className="w-12 h-12" />
-            )}
-          </button>
-          
-          <div className="w-full">
-            <Slider 
-              value={[currentTime]}
-              min={0}
-              max={duration || 100}
-              step={0.1}
-              onValueChange={handleSliderChange}
-            />
-            <div className="flex justify-between text-xs text-gray-400 mt-1">
-              <span>{formatTime(currentTime)}</span>
-              <span className="font-semibold">
-                {playingBefore ? beforeLabel : afterLabel}
-              </span>
-              <span>{formatTime(duration)}</span>
-            </div>
+    <Card>
+      <CardHeader>
+        <CardTitle>{title}</CardTitle>
+        <CardDescription>{description}</CardDescription>
+      </CardHeader>
+      <CardContent>
+        <Tabs 
+          defaultValue="before" 
+          value={activeTab} 
+          onValueChange={setActiveTab}
+          className="w-full"
+        >
+          <div className="flex items-center justify-center mb-4">
+            <TabsList className="grid w-full max-w-md grid-cols-2">
+              <TabsTrigger value="before">Antes de Masterização</TabsTrigger>
+              <TabsTrigger value="after">Após Masterização</TabsTrigger>
+            </TabsList>
           </div>
-        </div>
+          
+          <div className="relative mb-8">
+            <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 z-10">
+              <div className="bg-white dark:bg-gray-800 rounded-full p-2 shadow-lg">
+                <ArrowRight className="h-6 w-6 text-harmonia-green" />
+              </div>
+            </div>
+            
+            <TabsContent value="before" className="mt-0">
+              <div className="p-4 bg-gray-100 rounded-md">
+                <h3 className="text-sm font-medium mb-2 text-gray-700">Áudio Original</h3>
+                <LimitedAudioPlayer 
+                  title="Antes da Masterização" 
+                  subtitle="Áudio original sem tratamento profissional" 
+                  audioSrc={beforeUrl} 
+                  previewDuration={30}
+                />
+              </div>
+            </TabsContent>
+            
+            <TabsContent value="after" className="mt-0">
+              <div className="p-4 bg-green-50 rounded-md">
+                <h3 className="text-sm font-medium mb-2 text-green-700">Resultado Final</h3>
+                <LimitedAudioPlayer 
+                  title="Depois da Masterização" 
+                  subtitle="Áudio final com tratamento profissional" 
+                  audioSrc={afterUrl} 
+                  previewDuration={30}
+                />
+              </div>
+            </TabsContent>
+          </div>
+          
+          <div className="text-sm text-gray-500 text-center">
+            <p>
+              {activeTab === "before" 
+                ? "Ouça o áudio original antes do tratamento professional. Note a diferença na qualidade sonora." 
+                : "Ouça o resultado final após o tratamento e masterização profissional. Perceba a melhoria na clareza e volume."}
+            </p>
+          </div>
+        </Tabs>
       </CardContent>
     </Card>
   );

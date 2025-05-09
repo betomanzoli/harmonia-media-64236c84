@@ -8,7 +8,7 @@ import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import PreviewFeedbackForm from '@/components/previews/PreviewFeedbackForm';
 import PreviewHeader from '@/components/previews/PreviewHeader';
 import PreviewInstructions from '@/components/previews/PreviewInstructions';
-import PreviewPlayerList from '@/components/previews/PreviewPlayerList';
+import PreviewPlayerList from '@/components/previews/player/PreviewPlayerList';
 import PreviewNextSteps from '@/components/previews/PreviewNextSteps';
 import { usePreviewData } from '@/hooks/usePreviewData';
 import { notificationService } from '@/services/notificationService';
@@ -161,12 +161,12 @@ const MusicPreviews: React.FC = () => {
             
             <TabsContent value="feedback">
               <PreviewFeedbackForm 
-                selectedPreview={selectedPreview}
                 feedback={feedback}
-                setFeedback={setFeedback}
-                handleSubmit={handleSubmitFeedback}
-                handleApprove={handleApprove}
+                onFeedbackChange={setFeedback}
+                onSubmit={handleSubmitFeedback}
+                onApprove={handleApprove}
                 status={projectData.status}
+                selectedVersion={selectedPreview}
                 versionTitle={projectData.previews.find(p => p.id === selectedPreview)?.title}
               />
             </TabsContent>

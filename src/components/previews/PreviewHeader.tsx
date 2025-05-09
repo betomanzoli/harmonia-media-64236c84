@@ -7,28 +7,22 @@ interface PreviewHeaderProps {
   projectData?: {
     projectTitle: string;
     clientName: string;
-    status: 'waiting' | 'feedback' | 'approved';
+    status: 'waiting' | 'feedback' | 'approved' | 'pending';
+    packageType?: string;
+    createdAt?: string;
   };
-  projectName?: string;
-  clientName?: string;
-  packageType?: string;
-  status?: string;
-  createdAt?: string;
   onShareClick?: () => void;
 }
 
 const PreviewHeader: React.FC<PreviewHeaderProps> = ({ 
   projectData,
-  projectName,
-  clientName,
-  packageType,
-  status,
-  createdAt,
   onShareClick
 }) => {
-  const title = projectName || projectData?.projectTitle || packageType || 'Prévia Musical';
-  const client = clientName || projectData?.clientName || 'Cliente';
-  const currentStatus = status || projectData?.status || 'waiting';
+  const title = projectData?.projectTitle || 'Prévia Musical';
+  const client = projectData?.clientName || 'Cliente';
+  const currentStatus = projectData?.status || 'waiting';
+  const packageType = projectData?.packageType;
+  const createdAt = projectData?.createdAt;
 
   const getStatusLabel = (status: string) => {
     switch (status) {
