@@ -1,8 +1,7 @@
-
 import { useState, useEffect } from 'react';
 import { getProjectIdFromPreviewLink, isValidEncodedPreviewLink } from '@/utils/previewLinkUtils';
 import { supabase } from '@/lib/supabase';
-import { getCookie } from '@/components/previews/access/useProjectAccess';
+import { getCookieValue } from '@/components/previews/access/useProjectAccess';
 
 // Define the types we'll use
 interface VersionItem {
@@ -84,7 +83,7 @@ export const usePreviewData = (previewId: string | undefined) => {
           console.log(`[usePreviewData] 🔑 Decoded ID=${decodedId}`);
         } else {
           // For direct IDs, check if the user has admin access
-          const isAdmin = getCookie('admin_preview_access') === 'true';
+          const isAdmin = getCookieValue('admin_preview_access') === 'true';
           if (isAdmin) {
             decodedId = previewId;
             console.log(`[usePreviewData] 👨‍💼 Admin access with direct ID=${previewId}`);
