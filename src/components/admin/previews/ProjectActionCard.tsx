@@ -2,7 +2,7 @@
 import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Copy, PlusCircle, Clock, Link, CalendarPlus } from 'lucide-react';
+import { Copy, PlusCircle, Link, CalendarPlus } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import AddVersionDialog from './AddVersionDialog';
 import { VersionItem } from '@/hooks/admin/usePreviewProjects';

@@ -7,6 +7,7 @@ import { Label } from "@/components/ui/label";
 import { Music, Mail, Key } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
+import { setPreviewAccessCookie, setPreviewEmailCookie } from '@/utils/authCookies';
 
 interface ProjectAccessFormProps {
   projectId: string;
@@ -21,58 +22,90 @@ const ProjectAccessForm: React.FC<ProjectAccessFormProps> = ({ projectId, onVeri
 
   const validateAccess = async (previewCode: string, email: string) => {
     try {
-      // Try to find a project with matching preview code
-      const { data, error } = await supabase
-        .from('projects')
-        .select('client_id')
-        .eq('preview_code', previewCode)
-        .single();
-      
-      if (error || !data) {
-        console.error('Invalid preview code:', error);
-        toast({
-          title: "Código inválido",
-          description: "O código de prévia fornecido não é válido.",
-          variant: "destructive"
-        });
-        return false;
+      // Verificar no sistema local de projetos de prévia
+      const storedProjects = localStorage.getItem('harmonIA_preview_projects');
+      if (storedProjects) {
+        const projects = JSON.parse(storedProjects);
+        const project = projects.find(p => p.id === previewCode);
+        
+        if (project) {
+          // Verificar se o email corresponde ao cliente do projeto
+          if (project.clientEmail && project.clientEmail.toLowerCase() === email.toLowerCase()) {
+            // Email válido para este projeto
+            setPreviewAccessCookie(previewCode);
+            setPreviewEmailCookie(previewCode, email);
+            return true;
+          } else {
+            // Email não corresponde
+            toast({
+              title: "Email incorreto",
+              description: "O email informado não corresponde ao cliente deste projeto.",
+              variant: "destructive"
+            });
+            return false;
+          }
+        }
       }
       
-      // If we find a project, check if it belongs to a client with this email
-      if (data.client_id) {
-        const { data: clientData, error: clientError } = await supabase
-          .from('clients')
-          .select('email')
-          .eq('id', data.client_id)
+      // Se não encontrar localmente, tente no Supabase (apenas um fallback)
+      try {
+        const { data, error } = await supabase
+          .from('projects')
+          .select('client_id')
+          .eq('preview_code', previewCode)
           .single();
-          
-        if (clientError || !clientData) {
-          console.error('Client not found:', clientError);
+        
+        if (error || !data) {
+          console.error('Código de prévia inválido:', error);
           toast({
-            title: "Cliente não encontrado",
-            description: "Não foi possível verificar os dados do cliente.",
+            title: "Código inválido",
+            description: "O código de prévia fornecido não é válido.",
             variant: "destructive"
           });
           return false;
         }
         
-        if (clientData.email.toLowerCase() !== email.toLowerCase()) {
-          console.error('Email mismatch');
-          toast({
-            title: "Email não correspondente",
-            description: "O email informado não corresponde ao cliente deste projeto.",
-            variant: "destructive"
-          });
-          return false;
+        // Se encontrar o projeto, verificar o email do cliente
+        if (data.client_id) {
+          const { data: clientData, error: clientError } = await supabase
+            .from('clients')
+            .select('email')
+            .eq('id', data.client_id)
+            .single();
+            
+          if (clientError || !clientData) {
+            console.error('Cliente não encontrado:', clientError);
+            toast({
+              title: "Cliente não encontrado",
+              description: "Não foi possível verificar os dados do cliente.",
+              variant: "destructive"
+            });
+            return false;
+          }
+          
+          if (clientData.email.toLowerCase() !== email.toLowerCase()) {
+            console.error('Email não corresponde');
+            toast({
+              title: "Email incorreto",
+              description: "O email informado não corresponde ao cliente deste projeto.",
+              variant: "destructive"
+            });
+            return false;
+          }
         }
+      } catch (e) {
+        console.error("Erro ao verificar no Supabase:", e);
       }
       
-      // Email is valid for this preview code
-      document.cookie = `preview_access_${previewCode}=authorized; path=/; Secure; SameSite=None; max-age=86400`;
-      document.cookie = `preview_email_${previewCode}=${email}; path=/; Secure; SameSite=None; max-age=86400`;
-      return true;
+      // Se chegou até aqui sem retornar, significa que o email é inválido
+      toast({
+        title: "Email incorreto",
+        description: "Por favor, utilize o email cadastrado no projeto.",
+        variant: "destructive"
+      });
+      return false;
     } catch (error) {
-      console.error('Error validating access:', error);
+      console.error('Erro validando acesso:', error);
       return false;
     }
   };
@@ -89,7 +122,7 @@ const ProjectAccessForm: React.FC<ProjectAccessFormProps> = ({ projectId, onVeri
         setIsLoading(false);
       }
     } catch (error) {
-      console.error('Access verification error:', error);
+      console.error('Erro de verificação de acesso:', error);
       toast({
         title: "Erro de verificação",
         description: "Ocorreu um erro ao verificar seu acesso. Tente novamente.",

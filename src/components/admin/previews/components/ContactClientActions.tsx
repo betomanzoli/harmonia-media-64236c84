@@ -58,8 +58,8 @@ const ContactClientActions: React.FC<ContactClientActionsProps> = ({
       `Olá!\n\nSua prévia musical já está disponível para avaliação.\n\nAcesse: ${window.location.origin}/preview/${projectId}\n\nAguardamos seu feedback!\n\nAtenciosamente,\nEquipe harmonIA`
     );
     
-    // Create mailto link
-    const mailtoUrl = `mailto:${clientEmail}?subject=${subject}&body=${body}`;
+    // Create mailto link with predefined "from" email
+    const mailtoUrl = `mailto:${clientEmail}?subject=${subject}&body=${body}&from=contato@harmonia.media`;
     
     // Open in new tab/email client
     window.location.href = mailtoUrl;
