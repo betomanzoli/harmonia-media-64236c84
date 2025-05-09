@@ -81,6 +81,7 @@ export interface ProjectVersion {
   stems_url?: string;
   // Camel case aliases
   audioUrl?: string;
+  additionalLinks?: Array<string | { url: string; label: string }>;
 }
 
 /**
@@ -117,7 +118,7 @@ export interface FeedbackItem {
   sentiment?: 'positive' | 'neutral' | 'negative';
   created_at: string;
   createdAt?: string; // Alias for created_at
-  status?: 'pending' | 'processed'; // Added status field
+  status?: string; // Status can be any string (more flexible than a union)
   versionId?: string; // Alias for version_id
 }
 

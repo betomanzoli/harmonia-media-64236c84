@@ -1,3 +1,4 @@
+
 // Import types from the central types file
 import { ProjectItem, VersionItem, FeedbackItem, HistoryItem, HistoryEntry } from '@/types/project.types';
 import { useState, useEffect } from 'react';
@@ -104,8 +105,11 @@ export const usePreviewProject = (projectId: string | undefined) => {
           // Process feedback items
           feedback_history: historyData?.filter(h => h.action === 'feedback').map(h => {
             // Safely handle details, which could be string, object, or null
-            let details = typeof h.details === 'object' ? h.details : {};
-            if (typeof h.details === 'string') {
+            let details: any = {};
+            
+            if (typeof h.details === 'object' && h.details) {
+              details = h.details;
+            } else if (typeof h.details === 'string') {
               try {
                 details = JSON.parse(h.details);
               } catch (e) {
@@ -113,22 +117,28 @@ export const usePreviewProject = (projectId: string | undefined) => {
               }
             }
             
-            return {
+            const feedbackItem: FeedbackItem = {
               id: h.id,
               project_id: h.project_id,
-              comment: typeof details === 'object' && details ? String(details.message || '') : '',
-              content: typeof details === 'object' && details ? String(details.message || '') : '',
+              comment: typeof details.message === 'string' ? details.message : '',
+              content: typeof details.message === 'string' ? details.message : '',
               created_at: h.created_at,
-              status: typeof details === 'object' && details ? String(details.status || 'pending') : 'pending',
-              version_id: typeof details === 'object' && details ? String(details.version_id || '') : ''
+              status: typeof details.status === 'string' ? details.status : 'pending',
+              version_id: typeof details.version_id === 'string' ? details.version_id : ''
             };
+            
+            return feedbackItem;
           }) || [],
           // Process history items
           history: historyData?.map(h => {
             // Safely convert details to string for description
             let description = '';
             if (typeof h.details === 'object' && h.details) {
-              description = JSON.stringify(h.details);
+              try {
+                description = JSON.stringify(h.details);
+              } catch (e) {
+                description = String(h.details || '');
+              }
             } else if (h.details) {
               description = String(h.details);
             }
@@ -160,23 +170,29 @@ export const usePreviewProject = (projectId: string | undefined) => {
           clientEmail: clientData?.email,
           clientPhone: clientData?.phone,
           feedbackHistory: historyData?.filter(h => h.action === 'feedback').map(h => {
-            let details = typeof h.details === 'object' ? h.details : {};
-            if (typeof h.details === 'string') {
+            let details: any = {};
+            
+            if (typeof h.details === 'object' && h.details) {
+              details = h.details;
+            } else if (typeof h.details === 'string') {
               try {
                 details = JSON.parse(h.details);
               } catch (e) {
                 details = { message: h.details };
               }
             }
-            return {
+            
+            const feedbackItem: FeedbackItem = {
               id: h.id,
               project_id: h.project_id,
-              comment: typeof details === 'object' && details ? String(details.message || '') : '',
-              content: typeof details === 'object' && details ? String(details.message || '') : '',
+              comment: typeof details.message === 'string' ? details.message : '',
+              content: typeof details.message === 'string' ? details.message : '',
               created_at: h.created_at,
-              status: typeof details === 'object' && details ? String(details.status || 'pending') : 'pending',
-              version_id: typeof details === 'object' && details ? String(details.version_id || '') : ''
+              status: typeof details.status === 'string' ? details.status : 'pending',
+              version_id: typeof details.version_id === 'string' ? details.version_id : ''
             };
+            
+            return feedbackItem;
           }) || [],
         };
         

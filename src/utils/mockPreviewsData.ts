@@ -92,9 +92,17 @@ export const generateMockPreviews = (): ProjectItem[] => {
           stems_url: ""
         }
       ],
-      feedback_history: [],
+      feedback_history: [
+        {
+          id: "fb1",
+          project_id: "P0002",
+          comment: "Gostei muito da melodia, mas gostaria que o ritmo fosse um pouco mais rápido e que os vocais estivessem mais presentes na mixagem.",
+          content: "Gostei muito da melodia, mas gostaria que o ritmo fosse um pouco mais rápido e que os vocais estivessem mais presentes na mixagem.",
+          created_at: new Date().toISOString(),
+          status: "pending"
+        }
+      ],
       history: [],
-      feedback: "Gostei muito da melodia, mas gostaria que o ritmo fosse um pouco mais rápido e que os vocais estivessem mais presentes na mixagem.",
       
       // Add camelCase aliases
       clientName: "Maria Oliveira",
@@ -104,7 +112,17 @@ export const generateMockPreviews = (): ProjectItem[] => {
       packageType: "Essencial",
       createdAt: "05/04/2025",
       expirationDate: expirationDate.toLocaleDateString('pt-BR'),
-      lastActivityDate: lastWeek.toLocaleDateString('pt-BR')
+      lastActivityDate: lastWeek.toLocaleDateString('pt-BR'),
+      feedbackHistory: [
+        {
+          id: "fb1",
+          project_id: "P0002",
+          comment: "Gostei muito da melodia, mas gostaria que o ritmo fosse um pouco mais rápido e que os vocais estivessem mais presentes na mixagem.",
+          content: "Gostei muito da melodia, mas gostaria que o ritmo fosse um pouco mais rápido e que os vocais estivessem mais presentes na mixagem.",
+          created_at: new Date().toISOString(),
+          status: "pending"
+        }
+      ]
     },
     {
       id: "P0003",
