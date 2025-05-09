@@ -1,6 +1,6 @@
 
 import { v4 as uuidv4 } from 'uuid';
-import { setPreviewAccessCookie, checkPreviewAccessCookie } from './authCookies';
+import { setPreviewAccessCookie, checkPreviewAccessCookie, setPreviewEmailCookie, getAuthCookie } from './authCookies';
 import { supabase } from '@/integrations/supabase/client';
 
 // Create a more secure mapping between encoded IDs and project IDs
@@ -105,7 +105,7 @@ export const authorizeEmailForProject = (email: string, projectId: string): void
     setPreviewAccessCookie(projectId);
     
     // Also store email in cookie for validation
-    setCookie(`preview_email_${projectId}`, email, 7); // Store for 7 days
+    setPreviewEmailCookie(projectId, email);
   } catch (error) {
     console.error('Error authorizing email for project:', error);
   }

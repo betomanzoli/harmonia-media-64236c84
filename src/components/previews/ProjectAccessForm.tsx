@@ -69,6 +69,7 @@ const ProjectAccessForm: React.FC<ProjectAccessFormProps> = ({ projectId, onVeri
       
       // Email is valid for this preview code
       document.cookie = `preview_access_${previewCode}=authorized; path=/; Secure; SameSite=None; max-age=86400`;
+      document.cookie = `preview_email_${previewCode}=${email}; path=/; Secure; SameSite=None; max-age=86400`;
       return true;
     } catch (error) {
       console.error('Error validating access:', error);

@@ -4,6 +4,7 @@ import { useParams, useNavigate } from 'react-router-dom';
 import MusicPreviewSystem from '@/components/previews/MusicPreviewSystem';
 import ProjectAccessForm from '@/components/previews/ProjectAccessForm';
 import { useToast } from '@/hooks/use-toast';
+import { checkPreviewAccessCookie } from '@/utils/authCookies';
 
 const PreviewPage: React.FC = () => {
   const { projectId } = useParams<{ projectId: string }>();
@@ -17,12 +18,9 @@ const PreviewPage: React.FC = () => {
       console.log(`Acesso à prévia: ${projectId}, Data: ${new Date().toISOString()}`);
       window.scrollTo(0, 0);
       
-      // Check if already authenticated for this project
-      const authCookie = document.cookie
-        .split('; ')
-        .find(row => row.startsWith(`preview_access_${projectId}=`));
-        
-      if (authCookie) {
+      // Check if already authenticated for this project using cookie
+      const isAuthenticated = checkPreviewAccessCookie(projectId);
+      if (isAuthenticated) {
         setIsAuthorized(true);
       }
     }

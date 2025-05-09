@@ -80,6 +80,31 @@ export const checkPreviewAccessCookie = (projectId: string): boolean => {
 };
 
 /**
+ * Store project preview email in cookie
+ */
+export const setPreviewEmailCookie = (projectId: string, email: string) => {
+  setAuthCookie(`preview_email_${projectId}`, email);
+};
+
+/**
+ * Get project preview email from cookie
+ */
+export const getPreviewEmailCookie = (projectId: string): string | null => {
+  return getAuthCookie(`preview_email_${projectId}`);
+};
+
+/**
+ * Check if an email is authorized for a specific project
+ */
+export const isEmailAuthorizedForProject = (email: string, projectId: string): boolean => {
+  const isAuthorized = checkPreviewAccessCookie(projectId);
+  if (!isAuthorized) return false;
+  
+  const storedEmail = getPreviewEmailCookie(projectId);
+  return storedEmail === email;
+};
+
+/**
  * Clean all authentication cookies
  */
 export const cleanAllAuthCookies = () => {
@@ -93,6 +118,10 @@ export const cleanAllAuthCookies = () => {
   for (let i = 0; i < cookies.length; i++) {
     const cookie = cookies[i].trim();
     if (cookie.indexOf('preview_access_') === 0) {
+      const cookieName = cookie.split('=')[0];
+      removeAuthCookie(cookieName);
+    }
+    if (cookie.indexOf('preview_email_') === 0) {
       const cookieName = cookie.split('=')[0];
       removeAuthCookie(cookieName);
     }
