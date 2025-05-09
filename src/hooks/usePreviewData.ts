@@ -69,6 +69,3 @@ export const usePreviewData = (previewId: string | undefined) => {
   
   return { projectData, setProjectData, isLoading, actualProjectId, updateProjectStatus };
 };
-
-// Add missing import
-import { useToast } from '@/hooks/use-toast';
