@@ -4,10 +4,7 @@ import { Routes, Route, useLocation } from "react-router-dom";
 import HomePage from "./pages/HomePage";
 import AboutPage from "./pages/AboutPage";
 import ServicesPage from "./pages/ServicesPage";
-import BriefingPage from "./pages/BriefingPage";
 import ContactPage from "./pages/ContactPage";
-import LogoCreationPage from "./pages/LogoCreationPage";
-import BrandingServicePage from "./pages/BrandingServicePage";
 import PreviewPage from "./pages/PreviewPage";
 import PreviewProjectPage from "./pages/PreviewProjectPage";
 import AdminDashboard from "./pages/admin/AdminDashboard";
@@ -44,10 +41,7 @@ function App() {
       <Route path="/" element={<HomePage />} />
       <Route path="/about" element={<AboutPage />} />
       <Route path="/services" element={<ServicesPage />} />
-      <Route path="/services/logo-creation" element={<LogoCreationPage />} />
-      <Route path="/services/branding" element={<BrandingServicePage />} />
       <Route path="/contact" element={<ContactPage />} />
-      <Route path="/briefing" element={<BriefingPage />} />
       <Route path="/preview/:projectId" element={<PreviewPage />} />
       <Route path="/preview-project/:projectId" element={<PreviewProjectPage />} />
 
@@ -55,27 +49,51 @@ function App() {
       <Route path="/admin-j28s7d1k" element={<AdminLogin />} />
       <Route
         path="/admin-j28s7d1k/dashboard"
-        element={<AdminProtectedRoute component={AdminDashboard} />}
+        element={
+          <AdminProtectedRoute>
+            <AdminDashboard />
+          </AdminProtectedRoute>
+        }
       />
       <Route
         path="/admin-j28s7d1k/projects"
-        element={<AdminProtectedRoute component={AdminProjects} />}
+        element={
+          <AdminProtectedRoute>
+            <AdminProjects />
+          </AdminProtectedRoute>
+        }
       />
       <Route
         path="/admin-j28s7d1k/projects/:projectId"
-        element={<AdminProtectedRoute component={AdminProjectManagement} />}
+        element={
+          <AdminProtectedRoute>
+            <AdminProjectManagement />
+          </AdminProtectedRoute>
+        }
       />
       <Route
         path="/admin-j28s7d1k/previews"
-        element={<AdminProtectedRoute component={AdminPreviews} />}
+        element={
+          <AdminProtectedRoute>
+            <AdminPreviews />
+          </AdminProtectedRoute>
+        }
       />
       <Route
         path="/admin-j28s7d1k/previews/:projectId"
-        element={<AdminProtectedRoute component={PreviewProjectPage} />}
+        element={
+          <AdminProtectedRoute>
+            <PreviewProjectPage />
+          </AdminProtectedRoute>
+        }
       />
       <Route
         path="/admin-j28s7d1k/previews/edit/:projectId"
-        element={<AdminProtectedRoute component={ProjectEditPage} />}
+        element={
+          <AdminProtectedRoute>
+            <ProjectEditPage />
+          </AdminProtectedRoute>
+        }
       />
     </Routes>
   );
