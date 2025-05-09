@@ -1,18 +1,8 @@
 
 import React from 'react';
-import { MessageSquare, Mail, Copy, Edit, Trash2 } from 'lucide-react';
+import { MessageSquare, Mail, Copy } from 'lucide-react';
 import ProjectActionButton from './ProjectActionButton';
 import { useToast } from '@/hooks/use-toast';
-import { 
-  Dialog, 
-  DialogContent, 
-  DialogHeader, 
-  DialogTitle,
-  DialogDescription,
-  DialogFooter
-} from "@/components/ui/dialog";
-import { Button } from '@/components/ui/button';
-import { useState } from 'react';
 
 interface ContactClientActionsProps {
   clientPhone?: string;
@@ -25,13 +15,9 @@ interface ContactClientActionsProps {
 const ContactClientActions: React.FC<ContactClientActionsProps> = ({
   clientPhone,
   clientEmail,
-  projectId,
-  onDeleteVersion,
-  canEdit = true
+  projectId
 }) => {
   const { toast } = useToast();
-  const [deleteVersionDialogOpen, setDeleteVersionDialogOpen] = useState(false);
-  const [versionToDelete, setVersionToDelete] = useState<string | null>(null);
 
   const handleWhatsApp = () => {
     if (!clientPhone) {
@@ -100,25 +86,10 @@ const ContactClientActions: React.FC<ContactClientActionsProps> = ({
         });
       });
   };
-  
-  const confirmDeleteVersion = (versionId: string) => {
-    if (onDeleteVersion) {
-      setVersionToDelete(versionId);
-      setDeleteVersionDialogOpen(true);
-    }
-  };
-  
-  const handleDeleteConfirm = () => {
-    if (versionToDelete && onDeleteVersion) {
-      onDeleteVersion(versionToDelete);
-      setDeleteVersionDialogOpen(false);
-      setVersionToDelete(null);
-    }
-  };
 
   return (
     <div className="pt-2 border-t border-gray-100 mt-4">
-      <h3 className="text-sm font-medium mb-2">Ações do Projeto</h3>
+      <h3 className="text-sm font-medium mb-2">Comunicação com Cliente</h3>
       <div className="grid grid-cols-2 gap-2 mb-2">
         <ProjectActionButton
           icon={MessageSquare}
@@ -146,45 +117,6 @@ const ContactClientActions: React.FC<ContactClientActionsProps> = ({
           Copiar Link de Prévia
         </ProjectActionButton>
       </div>
-      
-      {canEdit && (
-        <div className="mt-2 pt-2 border-t border-gray-100">
-          <h3 className="text-sm font-medium mb-2">Gerenciamento</h3>
-          <div className="grid grid-cols-1 gap-2">
-            <Button 
-              variant="outline"
-              size="sm"
-              className="w-full flex items-center justify-center"
-              asChild
-            >
-              <a href={`/admin-j28s7d1k/previews/${projectId}`}>
-                <Edit className="mr-2 h-4 w-4" />
-                Editar Projeto
-              </a>
-            </Button>
-          </div>
-        </div>
-      )}
-      
-      {/* Dialog for delete confirmation */}
-      <Dialog open={deleteVersionDialogOpen} onOpenChange={setDeleteVersionDialogOpen}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Confirmar exclusão</DialogTitle>
-            <DialogDescription>
-              Tem certeza que deseja excluir esta versão? Esta ação não pode ser desfeita.
-            </DialogDescription>
-          </DialogHeader>
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setDeleteVersionDialogOpen(false)}>
-              Cancelar
-            </Button>
-            <Button variant="destructive" onClick={handleDeleteConfirm}>
-              Excluir
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
     </div>
   );
 };

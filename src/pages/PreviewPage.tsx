@@ -4,7 +4,7 @@ import { useParams, useNavigate } from 'react-router-dom';
 import MusicPreviewSystem from '@/components/previews/MusicPreviewSystem';
 import ProjectAccessForm from '@/components/previews/ProjectAccessForm';
 import { useToast } from '@/hooks/use-toast';
-import { checkPreviewAccessCookie } from '@/utils/authCookies';
+import { checkPreviewAccessCookie, getPreviewEmailCookie } from '@/utils/authCookies';
 
 const PreviewPage: React.FC = () => {
   const { projectId } = useParams<{ projectId: string }>();
@@ -18,10 +18,55 @@ const PreviewPage: React.FC = () => {
       console.log(`Acesso à prévia: ${projectId}, Data: ${new Date().toISOString()}`);
       window.scrollTo(0, 0);
       
-      // Check if already authenticated for this project using cookie
+      // Try all possible methods to check if already authenticated
       const isAuthenticated = checkPreviewAccessCookie(projectId);
-      if (isAuthenticated) {
+      
+      // Try alternate methods for cross-browser compatibility
+      let authorized = isAuthenticated;
+      
+      if (!authorized) {
+        try {
+          // Try to check localStorage directly
+          const hasAccess = localStorage.getItem(`preview_access_${projectId}`) === 'authorized';
+          if (hasAccess) authorized = true;
+        } catch (e) {
+          console.error("Failed to check localStorage:", e);
+        }
+      }
+      
+      if (!authorized) {
+        try {
+          // Try to check sessionStorage as a fallback
+          const hasAccess = sessionStorage.getItem(`preview_access_${projectId}`) === 'authorized';
+          if (hasAccess) authorized = true;
+        } catch (e) {
+          console.error("Failed to check sessionStorage:", e);
+        }
+      }
+      
+      // Check for non-httpOnly cookies
+      if (!authorized) {
+        const cookies = document.cookie.split(';');
+        for (const cookie of cookies) {
+          const [key, value] = cookie.trim().split('=');
+          if (key === `preview_access_${projectId}` && value === 'authorized') {
+            authorized = true;
+            break;
+          }
+        }
+      }
+      
+      if (authorized) {
+        console.log("User is already authorized for this project");
         setIsAuthorized(true);
+        
+        // Get email for analytics
+        const email = getPreviewEmailCookie(projectId);
+        if (email) {
+          console.log(`Usuário autorizado: ${email}`);
+        }
+      } else {
+        console.log("User needs to authenticate");
       }
     }
   }, [projectId]);

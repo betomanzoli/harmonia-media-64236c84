@@ -108,7 +108,7 @@ const ProjectsTable: React.FC<ProjectsTableProps> = ({
                   asChild
                   title="Editar projeto"
                 >
-                  <Link to={`/admin-j28s7d1k/previews/${project.id}`}>
+                  <Link to={`/admin-j28s7d1k/previews/edit/${project.id}`}>
                     <Edit className="h-4 w-4" />
                     <span className="sr-only">Editar</span>
                   </Link>

@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -21,85 +21,62 @@ const ProjectAccessForm: React.FC<ProjectAccessFormProps> = ({ projectId, onVeri
   const [errorMessage, setErrorMessage] = useState('');
   const { toast } = useToast();
 
-  const validateAccess = async (previewCode: string, email: string) => {
+  // Try to restore email from storage if available
+  useEffect(() => {
     try {
-      setErrorMessage('');
-      
-      // Verificar no sistema local de projetos de prévia
+      const storedEmail = localStorage.getItem(`preview_email_${projectId}`);
+      if (storedEmail) {
+        setEmail(storedEmail);
+      }
+    } catch (e) {
+      console.error("Failed to get stored email:", e);
+    }
+  }, [projectId]);
+
+  const validateAccess = async (previewCode: string, email: string) => {
+    setErrorMessage('');
+    
+    try {
+      // First check local storage for projects
       const storedProjects = localStorage.getItem('harmonIA_preview_projects');
       if (storedProjects) {
         const projects = JSON.parse(storedProjects);
         const project = projects.find(p => p.id === previewCode);
         
         if (project) {
-          // Verificar se o email corresponde ao cliente do projeto
+          // Check if email matches the client's email
           if (project.clientEmail && project.clientEmail.toLowerCase() === email.toLowerCase()) {
-            // Email válido para este projeto
-            console.log("Email válido encontrado para o projeto:", previewCode);
+            console.log("Valid email found for project:", previewCode);
             
-            // Configurar cookies com SameSite=Lax para compatibilidade com navegadores anônimos
+            // Store auth in multiple locations for better cross-browser compatibility
             setPreviewAccessCookie(previewCode);
             setPreviewEmailCookie(previewCode, email);
             
-            // Armazenar também em localStorage como fallback
-            localStorage.setItem(`preview_access_${previewCode}`, 'authorized');
-            localStorage.setItem(`preview_email_${previewCode}`, email);
+            try {
+              // Ensure we save in all possible storage locations
+              localStorage.setItem(`preview_access_${previewCode}`, 'authorized');
+              localStorage.setItem(`preview_email_${previewCode}`, email);
+              
+              sessionStorage.setItem(`preview_access_${previewCode}`, 'authorized');
+              sessionStorage.setItem(`preview_email_${previewCode}`, email);
+              
+              // Also use non-httpOnly cookies
+              document.cookie = `preview_access_${previewCode}=authorized; path=/; SameSite=Lax; max-age=${60*60*24*30}`; // 30 days
+              document.cookie = `preview_email_${previewCode}=${email}; path=/; SameSite=Lax; max-age=${60*60*24*30}`; // 30 days
+            } catch (e) {
+              console.error("Storage error:", e);
+            }
             
             return true;
           } else {
-            // Email não corresponde
             setErrorMessage(`O email informado não corresponde ao cliente deste projeto.`);
             return false;
           }
         }
       }
       
-      // Se não encontrar localmente, tente no Supabase (apenas um fallback)
-      try {
-        const { data, error } = await supabase
-          .from('projects')
-          .select('client_id')
-          .eq('preview_code', previewCode)
-          .single();
-        
-        if (error || !data) {
-          console.error('Código de prévia inválido:', error);
-          setErrorMessage('O código de prévia fornecido não é válido.');
-          return false;
-        }
-        
-        // Se encontrar o projeto, verificar o email do cliente
-        if (data.client_id) {
-          const { data: clientData, error: clientError } = await supabase
-            .from('clients')
-            .select('email')
-            .eq('id', data.client_id)
-            .single();
-            
-          if (clientError || !clientData) {
-            console.error('Cliente não encontrado:', clientError);
-            setErrorMessage('Não foi possível verificar os dados do cliente.');
-            return false;
-          }
-          
-          if (clientData.email.toLowerCase() !== email.toLowerCase()) {
-            console.error('Email não corresponde');
-            setErrorMessage('O email informado não corresponde ao cliente deste projeto.');
-            return false;
-          } else {
-            // Email válido no Supabase
-            setPreviewAccessCookie(previewCode);
-            setPreviewEmailCookie(previewCode, email);
-            return true;
-          }
-        }
-      } catch (e) {
-        console.error("Erro ao verificar no Supabase:", e);
-        setErrorMessage('Ocorreu um erro ao tentar validar o acesso.');
-      }
-      
-      // Se chegou até aqui sem retornar, significa que o email é inválido
-      setErrorMessage('Por favor, utilize o email cadastrado no projeto.');
+      // Fallback to Supabase check (if needed in the future)
+      setErrorMessage('Projeto não encontrado. Por favor, verifique o código de prévia.');
       return false;
     } catch (error) {
       console.error('Erro validando acesso:', error);

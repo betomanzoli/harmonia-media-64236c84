@@ -10,13 +10,15 @@ export const setAuthCookie = (name: string, value: string, days: number = 7) => 
   const expires = `; expires=${date.toUTCString()}`;
   
   // Using SameSite=Lax instead of None for better compatibility with all browsers
+  // NOT using Secure flag to ensure it works on HTTP and HTTPS
   document.cookie = `${name}=${value}${expires}; path=/; SameSite=Lax`;
   
-  // Also store in localStorage as fallback for browsers with strict cookie policies
+  // Also store in sessionStorage and localStorage as fallback for browsers with strict cookie policies
   try {
     localStorage.setItem(name, value);
+    sessionStorage.setItem(name, value);
   } catch (e) {
-    console.error("Failed to store in localStorage:", e);
+    console.error("Failed to store in storage:", e);
   }
 };
 
@@ -37,7 +39,15 @@ export const getAuthCookie = (name: string): string | null => {
     }
   }
   
-  // Try localStorage as fallback
+  // Try sessionStorage as fallback
+  try {
+    const sessionValue = sessionStorage.getItem(name);
+    if (sessionValue) return sessionValue;
+  } catch (e) {
+    console.error("Failed to get from sessionStorage:", e);
+  }
+  
+  // Try localStorage as final fallback
   try {
     return localStorage.getItem(name);
   } catch (e) {
@@ -53,11 +63,12 @@ export const getAuthCookie = (name: string): string | null => {
 export const removeAuthCookie = (name: string) => {
   document.cookie = `${name}=; Path=/; Expires=Thu, 01 Jan 1970 00:00:01 GMT;`;
   
-  // Also remove from localStorage
+  // Also remove from storage
   try {
     localStorage.removeItem(name);
+    sessionStorage.removeItem(name);
   } catch (e) {
-    console.error("Failed to remove from localStorage:", e);
+    console.error("Failed to remove from storage:", e);
   }
 };
 
