@@ -1,152 +1,143 @@
 
-import { useState, useEffect } from 'react';
-import { getJsonCookie, setJsonCookie, removeCookie } from '@/utils/cookieUtils';
-import { logger } from '@/utils/logger';
+import { useState } from 'react';
+import { supabase } from '@/lib/supabase';
+import { setCookie, getCookie } from '@/utils/cookieUtils';
 
-interface ProjectAccessData {
-  project_id: string;
-  access_time: number;
-  expires_at: number;
+interface UseProjectAccessProps {
+  projectId: string;
+  onVerify: (code: string, email: string) => void;
 }
 
-// Export for use in other files
-export const getCookie = getJsonCookie;
+interface FormErrors {
+  code?: string;
+  email?: string;
+}
 
-export const useProjectAccess = (projectId: string | null | undefined) => {
-  const [isAuthorized, setIsAuthorized] = useState<boolean>(false);
-  const [loading, setLoading] = useState<boolean>(true);
-
-  useEffect(() => {
-    if (!projectId) {
-      setIsAuthorized(false);
-      setLoading(false);
-      return;
+export const getCookie = (name: string): string | null => {
+  const nameEQ = `${encodeURIComponent(name)}=`;
+  const cookieArray = document.cookie.split(';');
+  
+  for (let i = 0; i < cookieArray.length; i++) {
+    let c = cookieArray[i].trim();
+    if (c.indexOf(nameEQ) === 0) {
+      return decodeURIComponent(c.substring(nameEQ.length));
     }
-
-    try {
-      // Check for existing access
-      const accessData = getJsonCookie<ProjectAccessData>('preview_access');
-      logger.debug('ACCESS', 'Checking access cookie', { projectId, accessData });
-
-      if (accessData) {
-        const now = Date.now();
-        
-        // Check if access is valid for this project and not expired
-        if (accessData.project_id === projectId && accessData.expires_at > now) {
-          logger.info('ACCESS', 'Valid access found', { projectId });
-          setIsAuthorized(true);
-        } else {
-          logger.info('ACCESS', 'Access expired or for different project', { 
-            projectId, 
-            accessProjectId: accessData.project_id, 
-            expired: accessData.expires_at <= now 
-          });
-          setIsAuthorized(false);
-        }
-      } else {
-        logger.info('ACCESS', 'No access cookie found');
-        setIsAuthorized(false);
-      }
-    } catch (error) {
-      logger.error('ACCESS', 'Error checking access', error);
-      setIsAuthorized(false);
-    } finally {
-      setLoading(false);
-    }
-  }, [projectId]);
-
-  const grantAccess = (projectId: string, expirationHours = 24) => {
-    if (!projectId) return false;
-
-    try {
-      const now = Date.now();
-      const expiresAt = now + (expirationHours * 60 * 60 * 1000); // Convert hours to milliseconds
-      
-      const accessData: ProjectAccessData = {
-        project_id: projectId,
-        access_time: now,
-        expires_at: expiresAt
-      };
-      
-      setJsonCookie('preview_access', accessData, { maxAge: String(expirationHours * 60 * 60) });
-      logger.info('ACCESS', 'Access granted', { projectId, expiresAt: new Date(expiresAt).toISOString() });
-      
-      setIsAuthorized(true);
-      return true;
-    } catch (error) {
-      logger.error('ACCESS', 'Error granting access', error);
-      return false;
-    }
-  };
-
-  const revokeAccess = () => {
-    try {
-      removeCookie('preview_access');
-      logger.info('ACCESS', 'Access revoked');
-      setIsAuthorized(false);
-      return true;
-    } catch (error) {
-      logger.error('ACCESS', 'Error revoking access', error);
-      return false;
-    }
-  };
-
-  return {
-    isAuthorized,
-    loading,
-    grantAccess,
-    revokeAccess
-  };
+  }
+  return null;
 };
 
-// Adding this form hook to fix import in ProjectAccessForm
-export const useProjectAccessForm = ({ projectId, onVerify }: { projectId: string, onVerify: (code: string, email: string) => void }) => {
+export const useProjectAccessForm = ({ projectId, onVerify }: UseProjectAccessProps) => {
   const [code, setCode] = useState(projectId || '');
   const [email, setEmail] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [errors, setErrors] = useState<{
-    code?: string;
-    email?: string;
-  }>({});
-
-  const validate = () => {
-    const newErrors: {
-      code?: string;
-      email?: string;
-    } = {};
+  const [errors, setErrors] = useState<FormErrors>({});
+  
+  const validateForm = (): boolean => {
+    const newErrors: FormErrors = {};
+    let isValid = true;
     
     if (!code.trim()) {
       newErrors.code = 'Código de prévia é obrigatório';
+      isValid = false;
     }
     
     if (!email.trim()) {
       newErrors.email = 'Email é obrigatório';
-    } else if (!/^\S+@\S+\.\S+$/.test(email)) {
+      isValid = false;
+    } else if (!/\S+@\S+\.\S+/.test(email)) {
       newErrors.email = 'Email inválido';
+      isValid = false;
     }
     
     setErrors(newErrors);
-    return Object.keys(newErrors).length === 0;
+    return isValid;
   };
-
-  const handleSubmit = (e: React.FormEvent) => {
+  
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
-    if (!validate()) return;
-    
-    setIsLoading(true);
     setError(null);
     
+    if (!validateForm()) {
+      return;
+    }
+    
+    setIsLoading(true);
+    
     try {
-      // Simple client-side validation before calling the verify function
-      onVerify(code, email);
+      console.log('[ProjectAccess] Verifying access with code:', code, 'and email:', email);
+      
+      // Try to sign in anonymously for better RLS support
+      try {
+        await supabase.auth.signInAnonymously();
+        console.log('[ProjectAccess] Anonymous auth successful');
+      } catch (authError) {
+        console.warn('[ProjectAccess] Anonymous auth failed:', authError);
+        // Continue anyway - this is a non-blocking operation
+      }
+      
+      // Verify if project exists
+      const { data: projectData, error: projectError } = await supabase
+        .from('projects')
+        .select('id, preview_code')
+        .eq('preview_code', code.trim())
+        .maybeSingle();
+      
+      console.log('[ProjectAccess] Project lookup response:', { data: projectData, error: projectError });
+      
+      if (projectError) {
+        console.error('[ProjectAccess] Error verifying project:', projectError);
+        setError('Erro ao verificar o projeto. Por favor, tente novamente.');
+        setIsLoading(false);
+        return;
+      }
+      
+      if (!projectData) {
+        console.log('[ProjectAccess] Project not found with code:', code);
+        setError('Código de prévia inválido. Por favor, verifique e tente novamente.');
+        setIsLoading(false);
+        return;
+      }
+      
+      // Project exists, set access cookie
+      const now = new Date();
+      const expirationTime = new Date(now.getTime() + 24 * 60 * 60 * 1000); // 24 hours
+      
+      // Set project-specific access cookie
+      setCookie(`preview_auth_${code}`, 'authorized', {
+        path: '/',
+        expires: expirationTime.toUTCString(),
+        sameSite: 'Lax',
+        secure: window.location.protocol === 'https:'
+      });
+      
+      // Also set general access cookie with JSON data
+      const accessData = {
+        project_id: projectData.id,
+        access_time: now.getTime(),
+        expires_at: expirationTime.getTime(),
+        email: email.trim()
+      };
+      
+      setCookie('preview_access', JSON.stringify(accessData), {
+        path: '/',
+        expires: expirationTime.toUTCString(),
+        sameSite: 'Lax',
+        secure: window.location.protocol === 'https:'
+      });
+      
+      console.log('[ProjectAccess] Access granted for project:', projectData.id);
+      
+      // Call the verification callback
+      onVerify(code.trim(), email.trim());
     } catch (err) {
-      setError('Erro ao verificar acesso. Por favor, tente novamente.');
+      console.error('[ProjectAccess] Error during verification:', err);
+      setError('Ocorreu um erro durante a verificação. Por favor, tente novamente.');
+    } finally {
       setIsLoading(false);
     }
   };
-
+  
   return {
     code,
     setCode,

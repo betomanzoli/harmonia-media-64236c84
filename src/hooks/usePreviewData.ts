@@ -73,10 +73,21 @@ export const usePreviewData = (previewId: string | undefined) => {
           return;
         }
         
+        // Try anonymous authentication for better RLS support
+        try {
+          await supabase.auth.signInAnonymously();
+          console.log('🔍 Anonymous authentication successful');
+        } catch (authError) {
+          console.warn('🔍 Anonymous authentication failed:', authError);
+          // Continue anyway - this is a non-blocking operation
+        }
+        
         // Try Supabase first
         try {
           // Check if user has access to this preview before attempting database lookup
           if (hasAccess() || isEncodedLink) {
+            console.log('🔍 Fetching from Supabase with', isEncodedLink ? 'preview_code' : 'id', '=', projectId);
+            
             // First try by preview_code (for encoded links)
             const { data: previewCodeData, error: previewCodeError } = await supabase
               .from('projects')
@@ -86,6 +97,8 @@ export const usePreviewData = (previewId: string | undefined) => {
               `)
               .eq(isEncodedLink ? 'preview_code' : 'id', projectId)
               .single();
+            
+            console.log('🔍 Supabase response:', { data: previewCodeData, error: previewCodeError });
             
             if (!previewCodeError && previewCodeData) {
               console.log('🔍 Project found in Supabase by preview_code:', previewCodeData);
@@ -151,6 +164,8 @@ export const usePreviewData = (previewId: string | undefined) => {
                 .select('*')
                 .eq('project_id', previewCodeData.id)
                 .order('created_at', { ascending: false });
+                
+              console.log('🔍 Project files response:', { data: versionsData, error: versionsError });
                 
               if (!versionsError && versionsData) {
                 const versionsList = versionsData.map(file => ({
@@ -274,20 +289,34 @@ export const usePreviewData = (previewId: string | undefined) => {
       // If using Supabase
       const updateSupabaseProject = async () => {
         try {
+          console.log('🔍 Updating project status in Supabase:', { 
+            projectId: projectData.id,
+            newStatus,
+            feedbackComment: feedbackComment?.substring(0, 20) + '...'
+          });
+          
           // Create a feedback entry if comment provided
           if (feedbackComment) {
-            await supabase.from('project_history').insert({
+            const { error: historyError, data: historyData } = await supabase.from('project_history').insert({
               project_id: projectData.id,
               action: newStatus === 'feedback' ? 'feedback_submitted' : 'project_approved',
               description: feedbackComment
             });
+            
+            console.log('🔍 Project history update response:', { data: historyData, error: historyError });
+            
+            if (historyError) {
+              console.error('Error adding project history in Supabase:', historyError);
+            }
           }
           
           // Update project status
-          const { error } = await supabase
+          const { error, data } = await supabase
             .from('projects')
             .update({ status: newStatus })
             .eq('id', projectData.id);
+            
+          console.log('🔍 Project status update response:', { data, error });
             
           if (error) {
             console.error('Error updating project status in Supabase:', error);
