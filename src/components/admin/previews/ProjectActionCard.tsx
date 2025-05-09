@@ -7,6 +7,7 @@ import { useToast } from '@/hooks/use-toast';
 import AddVersionDialog from './AddVersionDialog';
 import { VersionItem } from '@/hooks/admin/usePreviewProjects';
 import ContactClientActions from './components/ContactClientActions';
+import ProjectActionButton from './components/ProjectActionButton';
 
 interface ProjectActionCardProps {
   projectId: string;
@@ -94,10 +95,10 @@ const ProjectActionCard: React.FC<ProjectActionCardProps> = ({
           projectId={projectId}
         />
         
-        {/* Add version dialog */}
+        {/* Add version dialog - Fixed prop names here */}
         <AddVersionDialog 
-          open={showAddVersion} 
-          onOpenChange={setShowAddVersion}
+          isOpen={showAddVersion} 
+          onClose={() => setShowAddVersion(false)}
           onAddVersion={(versionData) => {
             setShowAddVersion(false);
             onAddVersion({
