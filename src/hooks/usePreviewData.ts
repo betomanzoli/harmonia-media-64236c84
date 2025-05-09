@@ -2,6 +2,7 @@
 import { useState, useEffect } from 'react';
 import { usePreviewProject } from '@/hooks/usePreviewProject';
 import { getProjectIdFromPreviewLink } from '@/utils/previewLinkUtils';
+import { useToast } from '@/hooks/use-toast';
 
 export const usePreviewData = (previewId: string | undefined) => {
   const [actualProjectId, setActualProjectId] = useState<string | null>(null);
@@ -12,10 +13,14 @@ export const usePreviewData = (previewId: string | undefined) => {
     if (previewId) {
       // Verificar se o ID é direto ou precisa ser decodificado
       try {
-        const decodedId = getProjectIdFromPreviewLink(previewId);
-        setActualProjectId(decodedId || previewId);
+        const fetchProjectId = async () => {
+          const decodedId = await getProjectIdFromPreviewLink(previewId);
+          setActualProjectId(decodedId || previewId);
+          
+          console.log(`Carregando dados da prévia: ${decodedId || previewId}`);
+        };
         
-        console.log(`Carregando dados da prévia: ${decodedId || previewId}`);
+        fetchProjectId();
       } catch (error) {
         console.error("Error decoding preview ID:", error);
         setActualProjectId(previewId);
