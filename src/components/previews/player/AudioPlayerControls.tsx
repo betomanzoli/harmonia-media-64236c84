@@ -3,7 +3,7 @@ import React, { useState, useRef, useEffect } from 'react';
 import { Play, Pause, SkipBack, SkipForward, Volume2, ExternalLink } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Slider } from '@/components/ui/slider';
-import { formatTime } from '@/lib/utils';
+import { formatTime } from '@/lib/audio-utils';
 
 interface AudioPlayerControlsProps {
   src: string;

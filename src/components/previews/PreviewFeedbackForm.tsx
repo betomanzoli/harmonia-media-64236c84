@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from "@/components/ui/card";
 import { Textarea } from "@/components/ui/textarea";
@@ -6,21 +7,27 @@ import { MessageSquare, CheckCircle } from 'lucide-react';
 import { Alert, AlertDescription } from "@/components/ui/alert";
 
 interface PreviewFeedbackFormProps {
-  selectedPreview: string | null;
-  feedback: string;
-  setFeedback: (feedback: string) => void;
-  handleSubmit: (feedback?: string) => void;
-  handleApprove: (feedback?: string) => void;
-  status: string;
+  selectedPreview?: string | null;
+  feedback?: string;
+  setFeedback?: (feedback: string) => void;
+  onFeedbackChange?: (feedback: string) => void;
+  handleSubmit?: (feedback?: string) => void;
+  onSubmit?: (feedback?: string) => void;
+  handleApprove?: (feedback?: string) => void;
+  onApprove?: (feedback?: string) => void;
+  status?: string;
   versionTitle?: string;
 }
 
 const PreviewFeedbackForm: React.FC<PreviewFeedbackFormProps> = ({
   selectedPreview,
-  feedback,
+  feedback = '',
   setFeedback,
+  onFeedbackChange,
   handleSubmit,
+  onSubmit,
   handleApprove,
+  onApprove,
   status,
   versionTitle
 }) => {
@@ -33,8 +40,31 @@ const PreviewFeedbackForm: React.FC<PreviewFeedbackFormProps> = ({
   const handleFeedbackChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
     const newValue = e.target.value;
     setLocalFeedback(newValue);
+    
     if (setFeedback) {
       setFeedback(newValue);
+    }
+    
+    if (onFeedbackChange) {
+      onFeedbackChange(newValue);
+    }
+  };
+  
+  const handleSubmitFeedback = () => {
+    if (handleSubmit) {
+      handleSubmit(localFeedback);
+    }
+    if (onSubmit) {
+      onSubmit(localFeedback);
+    }
+  };
+  
+  const handleApproveVersion = () => {
+    if (handleApprove) {
+      handleApprove(localFeedback);
+    }
+    if (onApprove) {
+      onApprove(localFeedback);
     }
   };
 
@@ -96,7 +126,7 @@ const PreviewFeedbackForm: React.FC<PreviewFeedbackFormProps> = ({
       </CardContent>
       <CardFooter className="flex flex-col sm:flex-row gap-3 sm:justify-between">
         <Button
-          onClick={() => handleApprove(localFeedback)}
+          onClick={handleApproveVersion}
           disabled={!selectedPreview}
           className="w-full sm:w-auto bg-green-600 hover:bg-green-700"
         >
@@ -104,7 +134,7 @@ const PreviewFeedbackForm: React.FC<PreviewFeedbackFormProps> = ({
           Aprovar esta Versão
         </Button>
         <Button
-          onClick={() => handleSubmit(localFeedback)}
+          onClick={handleSubmitFeedback}
           disabled={!selectedPreview || !localFeedback}
           className="w-full sm:w-auto"
           variant="outline"

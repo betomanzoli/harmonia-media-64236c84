@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { Card } from "@/components/ui/card";
 import PreviewVersionCard from './PreviewVersionCard';
@@ -16,8 +17,9 @@ interface MusicPreview {
 interface PreviewPlayerListProps {
   versions: MusicPreview[];
   selectedVersion: string | null;
-  setSelectedVersion: (id: string) => void;
-  isApproved: boolean;
+  setSelectedVersion?: (id: string) => void;
+  onSelectVersion?: (id: string) => void;
+  isApproved?: boolean;
   onPlay?: (version: MusicPreview) => void;
 }
 
@@ -25,10 +27,21 @@ const PreviewPlayerList: React.FC<PreviewPlayerListProps> = ({
   versions,
   selectedVersion,
   setSelectedVersion,
-  isApproved,
+  onSelectVersion,
+  isApproved = false,
   onPlay = () => {}
 }) => {
   const { toast } = useToast();
+  
+  // Handle selecting a version
+  const handleSelectVersion = (id: string) => {
+    if (setSelectedVersion) {
+      setSelectedVersion(id);
+    }
+    if (onSelectVersion) {
+      onSelectVersion(id);
+    }
+  };
 
   if (!versions || versions.length === 0) {
     return (
@@ -78,7 +91,7 @@ const PreviewPlayerList: React.FC<PreviewPlayerListProps> = ({
             version={version}
             isSelected={selectedVersion === version.id}
             isApproved={isApproved}
-            onSelect={setSelectedVersion}
+            onSelect={handleSelectVersion}
             onPlay={handlePlay}
           />
         ))}

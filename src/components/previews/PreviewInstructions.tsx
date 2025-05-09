@@ -7,7 +7,7 @@ interface PreviewInstructionsProps {
   status: 'waiting' | 'feedback' | 'approved';
 }
 
-const PreviewInstructions: React.FC<PreviewInstructionsProps> = ({ status }) => {
+const PreviewInstructions: React.FC<PreviewInstructionsProps> = ({ status = 'waiting' }) => {
   switch (status) {
     case 'waiting':
       return (
@@ -43,7 +43,16 @@ const PreviewInstructions: React.FC<PreviewInstructionsProps> = ({ status }) => 
         </Alert>
       );
     default:
-      return null;
+      return (
+        <Alert className="mb-8 bg-yellow-50 border-yellow-200 text-yellow-800">
+          <AlertCircle className="h-4 w-4" />
+          <AlertTitle>Bem-vindo à página de avaliação</AlertTitle>
+          <AlertDescription>
+            Ouça as versões disponíveis abaixo e escolha a que mais gostou. Você pode enviar feedback 
+            específico sobre cada uma delas ou aprovar diretamente a sua preferida.
+          </AlertDescription>
+        </Alert>
+      );
   }
 };
 

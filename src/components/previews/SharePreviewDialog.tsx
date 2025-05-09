@@ -1,99 +1,75 @@
 
 import React, { useState } from 'react';
-import { Copy, Check, Mail, Clock } from 'lucide-react';
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { 
-  Dialog,
-  DialogContent, 
-  DialogDescription, 
-  DialogFooter, 
-  DialogHeader, 
-  DialogTitle 
-} from "@/components/ui/dialog";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { useToast } from "@/hooks/use-toast";
-import emailService from '@/services/emailService';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Copy, Check, Mail, Share2 } from 'lucide-react';
+import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
+import { useToast } from '@/hooks/use-toast';
 
 interface SharePreviewDialogProps {
-  projectId?: string;
-  clientName?: string;
-  isOpen: boolean; // Add this prop
-  onOpenChange: (open: boolean) => void; // Add this prop
+  isOpen: boolean;
+  onOpenChange: (open: boolean) => void;
+  projectId: string;
+  projectName?: string;
 }
 
-const SharePreviewDialog: React.FC<SharePreviewDialogProps> = ({ 
-  projectId = "HAR-2025-0001",
-  clientName = "Cliente",
+const SharePreviewDialog: React.FC<SharePreviewDialogProps> = ({
   isOpen,
-  onOpenChange
+  onOpenChange,
+  projectId,
+  projectName = 'Prévia musical'
 }) => {
-  const { toast } = useToast();
-  const [email, setEmail] = useState('');
   const [copied, setCopied] = useState(false);
-  const [expirationDays, setExpirationDays] = useState('7');
-  const [isLoading, setIsLoading] = useState(false);
+  const [email, setEmail] = useState('');
+  const { toast } = useToast();
   
-  // Get current URL for sharing
-  const shareUrl = window.location.href;
+  const previewLink = `${window.location.origin}/preview/${projectId}`;
   
-  const handleCopyLink = () => {
-    navigator.clipboard.writeText(shareUrl)
-      .then(() => {
-        setCopied(true);
-        toast({
-          title: "Link copiado!",
-          description: "O link da prévia foi copiado para a área de transferência.",
-        });
-        
-        setTimeout(() => setCopied(false), 3000);
-      })
-      .catch(err => {
-        console.error('Erro ao copiar link:', err);
-        toast({
-          title: "Erro ao copiar",
-          description: "Não foi possível copiar o link. Tente selecioná-lo manualmente.",
-          variant: "destructive"
-        });
-      });
+  const handleCopy = () => {
+    navigator.clipboard.writeText(previewLink);
+    setCopied(true);
+    
+    setTimeout(() => {
+      setCopied(false);
+    }, 2000);
+    
+    toast({
+      title: "Link copiado",
+      description: "Link de prévia copiado para a área de transferência."
+    });
   };
   
-  const handleShareByEmail = async () => {
+  const handleEmailShare = (e: React.FormEvent) => {
+    e.preventDefault();
+    
     if (!email) {
       toast({
-        title: "Email necessário",
-        description: "Por favor, insira um email para compartilhar.",
+        title: "Email requerido",
+        description: "Por favor, insira um email para compartilhar a prévia.",
         variant: "destructive"
       });
       return;
     }
     
-    setIsLoading(true);
+    // Ideally this would call an API to send the email
+    const mailtoLink = `mailto:${email}?subject=${encodeURIComponent(`Prévia de música personalizada - ${projectName}`)}&body=${encodeURIComponent(`Olá!\n\nGostaria de compartilhar esta prévia musical com você:\n\n${previewLink}\n\nAtenciosamente,\nHarmonIA`)}`;
+    window.open(mailtoLink, '_blank');
     
-    try {
-      // Simular envio de email
-      await emailService.sendPreviewNotification(
-        email,
-        clientName,
-        `${shareUrl}?expiration=${expirationDays}`
-      );
-      
-      toast({
-        title: "Link compartilhado!",
-        description: `Um email com o link da prévia foi enviado para ${email}. Expira em ${expirationDays} dias.`,
-      });
-      
-      setEmail('');
-    } catch (error) {
-      console.error('Erro ao enviar email:', error);
-      toast({
-        title: "Erro ao enviar email",
-        description: "Ocorreu um erro ao enviar o email. Por favor, tente novamente.",
-        variant: "destructive"
-      });
-    } finally {
-      setIsLoading(false);
-    }
+    toast({
+      title: "Link compartilhado",
+      description: "O cliente de email foi aberto para compartilhar o link."
+    });
+  };
+  
+  const handleWhatsAppShare = () => {
+    const whatsappText = `Olá! Gostaria de compartilhar esta prévia musical "${projectName}" com você: ${previewLink}`;
+    window.open(`https://wa.me/?text=${encodeURIComponent(whatsappText)}`, '_blank');
+    
+    toast({
+      title: "Link compartilhado",
+      description: "O WhatsApp foi aberto para compartilhar o link."
+    });
   };
   
   return (
@@ -102,81 +78,59 @@ const SharePreviewDialog: React.FC<SharePreviewDialogProps> = ({
         <DialogHeader>
           <DialogTitle>Compartilhar Prévia</DialogTitle>
           <DialogDescription>
-            Compartilhe este link para que o cliente possa ouvir as prévias da música.
+            Compartilhe o link desta prévia musical com outras pessoas.
           </DialogDescription>
         </DialogHeader>
         
-        <div className="space-y-6 py-4">
-          <div className="flex items-center space-x-2">
-            <Input
-              value={shareUrl}
-              readOnly
-              className="flex-1"
-            />
-            <Button 
-              size="sm" 
-              onClick={handleCopyLink}
-              className={copied ? "bg-green-600" : ""}
-            >
-              {copied ? <Check className="h-4 w-4" /> : <Copy className="h-4 w-4" />}
-            </Button>
-          </div>
+        <Tabs defaultValue="link" className="w-full">
+          <TabsList className="grid w-full grid-cols-3">
+            <TabsTrigger value="link">Link</TabsTrigger>
+            <TabsTrigger value="email">Email</TabsTrigger>
+            <TabsTrigger value="whatsapp">WhatsApp</TabsTrigger>
+          </TabsList>
           
-          <div className="space-y-4">
-            <h3 className="text-sm font-medium">Configurar e enviar por email</h3>
-            
+          <TabsContent value="link" className="mt-4">
             <div className="flex items-center space-x-2">
-              <Clock className="h-4 w-4 text-gray-500" />
-              <Select 
-                value={expirationDays} 
-                onValueChange={setExpirationDays}
-              >
-                <SelectTrigger className="w-full">
-                  <SelectValue placeholder="Selecione o prazo de expiração" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="7">Essencial - 7 dias</SelectItem>
-                  <SelectItem value="10">Profissional - 10 dias</SelectItem>
-                  <SelectItem value="15">Premium - 15 dias</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-            
-            <div className="flex space-x-2">
-              <Input
-                placeholder="Digite o email do cliente"
-                type="email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                className="flex-1"
-              />
-              <Button 
-                onClick={handleShareByEmail}
-                disabled={isLoading}
-              >
-                <Mail className="h-4 w-4 mr-2" />
-                {isLoading ? "Enviando..." : "Enviar"}
+              <div className="grid flex-1 gap-2">
+                <Input
+                  id="link"
+                  value={previewLink}
+                  readOnly
+                  className="w-full"
+                />
+              </div>
+              <Button type="button" size="sm" onClick={handleCopy} className="px-3">
+                {copied ? <Check className="h-4 w-4" /> : <Copy className="h-4 w-4" />}
               </Button>
             </div>
-            
-            <div className="text-xs text-gray-500 p-2 bg-gray-50 rounded">
-              <p className="font-medium mb-1">Email que será enviado:</p>
-              <p>Assunto: <span className="text-black">Suas prévias musicais estão prontas para avaliação - harmonIA</span></p>
-              <p className="mt-1">Olá {clientName},</p>
-              <p className="mt-1">Temos o prazer de informar que as prévias da sua música personalizada estão prontas para sua avaliação.</p>
-              <p className="mt-1">Acesse: {shareUrl}</p>
-              <p className="mt-1">Importante: Você tem {expirationDays} dias para avaliar e escolher sua versão preferida. Após este período, selecionaremos automaticamente a melhor versão para finalização.</p>
-              <p className="mt-1">Aguardamos seu feedback!</p>
-              <p className="mt-1">Equipe harmonIA</p>
-            </div>
-          </div>
-        </div>
-        
-        <DialogFooter className="sm:justify-start">
-          <p className="text-xs text-gray-500">
-            Observação: O link permite apenas visualizar as prévias. A pessoa não poderá enviar feedback após o prazo de expiração.
-          </p>
-        </DialogFooter>
+          </TabsContent>
+          
+          <TabsContent value="email" className="mt-4">
+            <form onSubmit={handleEmailShare} className="flex flex-col space-y-4">
+              <div className="flex flex-col space-y-2">
+                <label htmlFor="email" className="text-sm">Email</label>
+                <Input
+                  id="email"
+                  type="email"
+                  placeholder="nome@exemplo.com"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                />
+              </div>
+              <Button type="submit" className="w-full">
+                <Mail className="h-4 w-4 mr-2" />
+                Enviar por Email
+              </Button>
+            </form>
+          </TabsContent>
+          
+          <TabsContent value="whatsapp" className="mt-4">
+            <Button onClick={handleWhatsAppShare} className="w-full bg-green-600 hover:bg-green-700">
+              <Share2 className="h-4 w-4 mr-2" />
+              Compartilhar via WhatsApp
+            </Button>
+          </TabsContent>
+        </Tabs>
       </DialogContent>
     </Dialog>
   );
