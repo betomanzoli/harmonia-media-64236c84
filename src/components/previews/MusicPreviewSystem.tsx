@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import PreviewHeader from './PreviewHeader';
 import PreviewPlayerList from './player/PreviewPlayerList';
@@ -22,6 +23,7 @@ const MusicPreviewSystem: React.FC<MusicPreviewSystemProps> = ({ projectId }) =>
   const [feedbackSubmitted, setFeedbackSubmitted] = useState(false);
   const [selectedVersion, setSelectedVersion] = useState<string | null>(null);
   const [feedback, setFeedback] = useState('');
+  const [isShareDialogOpen, setIsShareDialogOpen] = useState(false);
 
   if (isLoading) {
     return <PreviewLoadingState />;
@@ -80,7 +82,7 @@ const MusicPreviewSystem: React.FC<MusicPreviewSystemProps> = ({ projectId }) =>
     if (!selectedVersion) {
       toast({
         title: "Selecione uma versão",
-        description: "Por favor, selecione uma das versões antes de aprovar.",
+        description: "Por favor, selecione uma versão antes de aprovar.",
         variant: "destructive"
       });
       return;
@@ -89,89 +91,75 @@ const MusicPreviewSystem: React.FC<MusicPreviewSystemProps> = ({ projectId }) =>
     updateProjectStatus('approved', comments);
     setFeedbackSubmitted(true);
     toast({
-      title: "Prévia aprovada!",
-      description: "Obrigado por aprovar a prévia! Finalizaremos sua música em breve.",
+      title: "Prévia aprovada",
+      description: "Agradecemos pela aprovação! Nossa equipe irá finalizar seu projeto em breve.",
     });
   };
 
-  const handlePlayVersion = (version: any) => {
-    // Direct to Google Drive if fileId exists
-    if (version.fileId) {
-      const driveUrl = `https://drive.google.com/file/d/${version.fileId}/view`;
-      window.open(driveUrl, '_blank');
-      toast({
-        title: "Reproduzindo prévia",
-        description: `Reproduzindo ${version.title} no Google Drive`,
-      });
-      return;
-    }
-    
-    // Otherwise try the audioUrl or url
-    const audioUrl = version.audioUrl || version.url;
-    if (audioUrl) {
-      window.open(audioUrl, '_blank');
-      toast({
-        title: "Reproduzindo prévia",
-        description: `Reproduzindo ${version.title} em nova aba`,
-      });
-    } else {
-      toast({
-        title: "Erro ao reproduzir",
-        description: "Não foi possível reproduzir esta versão.",
-        variant: "destructive"
-      });
-    }
-  };
+  const packageType = formatPackageType(projectData.packageType || '');
 
   return (
-    <div className="max-w-4xl mx-auto px-4 bg-white rounded-lg shadow-sm my-8 p-6">
+    <div className="max-w-4xl mx-auto px-4">
       <PreviewHeader 
-        projectData={{
-          projectTitle: formatPackageType(projectData.projectTitle),
-          clientName: projectData.clientName,
-          status: projectData.status
-        }}
+        projectName={projectData.projectName || 'Projeto sem nome'} 
+        clientName={projectData.clientName || 'Cliente'} 
+        packageType={packageType}
+        status={projectData.status || 'pending'}
+        createdAt={projectData.createdAt || new Date().toISOString()}
+        onShareClick={() => setIsShareDialogOpen(true)}
       />
       
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 mb-8">
-        <div className="lg:col-span-2 space-y-8">
+      {projectData.versions && projectData.versions.length > 0 && (
+        <div className="mt-8">
           <PreviewPlayerList 
-            versions={projectData.previews}
+            versions={projectData.versions}
             selectedVersion={selectedVersion}
-            setSelectedVersion={setSelectedVersion}
-            isApproved={projectData.status === 'approved'}
-            onPlay={handlePlayVersion}
+            onSelectVersion={setSelectedVersion}
           />
-          
-          {!feedbackSubmitted && projectData.status !== 'approved' && (
-            <PreviewFeedbackForm 
-              selectedPreview={selectedVersion}
-              feedback={feedback}
-              setFeedback={setFeedback}
-              handleSubmit={handleFeedbackSubmit}
-              handleApprove={handleApprove}
-              status={projectData.status}
-            />
-          )}
-
-          {(feedbackSubmitted || projectData.status === 'approved') && (
-            <PreviewNextSteps status={projectData.status} />
-          )}
         </div>
-        
-        <div className="space-y-8">
-          <PreviewProjectDetails 
-            projectData={projectData}
+      )}
+      
+      {!feedbackSubmitted && (
+        <div className="mt-8">
+          <PreviewFeedbackForm 
+            onFeedbackChange={setFeedback} 
+            feedback={feedback}
+            onSubmit={handleFeedbackSubmit}
+            onApprove={handleApprove}
           />
-          <PreviewInstructions status={projectData.status} />
-          <PreviewCountdown 
-            days={14}
-            action="para avaliação"
-          />
-          <SharePreviewDialog />
-          <PreviewCopyright />
         </div>
+      )}
+      
+      <div className="mt-8">
+        <PreviewProjectDetails projectData={projectData} />
       </div>
+      
+      {projectData.expiresAt && (
+        <div className="mt-8">
+          <PreviewCountdown expiresAt={projectData.expiresAt} />
+        </div>
+      )}
+      
+      <div className="mt-8">
+        <PreviewInstructions />
+      </div>
+      
+      {feedbackSubmitted && (
+        <div className="mt-8">
+          <PreviewNextSteps status={projectData.status || 'pending'} />
+        </div>
+      )}
+      
+      <div className="mt-8 mb-12">
+        <PreviewCopyright />
+      </div>
+      
+      <SharePreviewDialog 
+        isOpen={isShareDialogOpen}
+        onOpenChange={setIsShareDialogOpen}
+        projectId={projectId} 
+        projectName={projectData.projectName || 'Projeto sem nome'}
+      />
     </div>
   );
 };

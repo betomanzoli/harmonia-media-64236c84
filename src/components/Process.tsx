@@ -1,9 +1,7 @@
-
 import React, { useEffect } from 'react';
 import ProcessStep from './ProcessStep';
 import { Card } from "@/components/ui/card";
 import { FileText, Package, CreditCard, MessageSquare, Music, Headphones, FileCheck, Settings } from 'lucide-react';
-
 const Process: React.FC = () => {
   // Make sure the element ID is properly set for the scroll target
   useEffect(() => {
@@ -16,9 +14,7 @@ const Process: React.FC = () => {
       }
     }
   }, []);
-
-  return (
-    <section id="processo" className="py-20 px-6 md:px-10">
+  return <section id="processo" className="py-20 px-6 md:px-10">
       <div className="max-w-7xl mx-auto">
         <div className="text-center mb-12">
           <h2 className="text-3xl font-bold mb-4">Como Funciona</h2>
@@ -46,54 +42,9 @@ const Process: React.FC = () => {
         
         {/* Flowchart */}
         <div className="mb-16">
-          <Card className="p-6 bg-gradient-to-br from-gray-900 to-gray-800 border-harmonia-green/20">
-            <h3 className="text-xl font-semibold mb-6 text-center">Fluxo de Trabalho Simplificado</h3>
-            <div className="relative">
-              {/* Flowchart visualization */}
-              <div className="flex flex-col md:flex-row justify-between items-center relative">
-                <div className="bg-card p-4 rounded-lg border border-harmonia-green/30 w-full md:w-64 text-center mb-8 md:mb-0">
-                  <h4 className="font-medium">Sua Ideia</h4>
-                </div>
-                
-                {/* Line connector */}
-                <div className="hidden md:block h-0.5 flex-grow mx-4 bg-gradient-to-r from-harmonia-green/80 to-harmonia-green/80"></div>
-                
-                <div className="bg-card p-4 rounded-lg border border-harmonia-green/30 w-full md:w-64 text-center mb-8 md:mb-0">
-                  <h4 className="font-medium">harmonIA</h4>
-                </div>
-                
-                {/* Line connector */}
-                <div className="hidden md:block h-0.5 flex-grow mx-4 bg-gradient-to-r from-harmonia-green/80 to-harmonia-green/80"></div>
-                
-                <div className="bg-card p-4 rounded-lg border border-harmonia-green/30 w-full md:w-64 text-center">
-                  <h4 className="font-medium">Sua Música</h4>
-                </div>
-              </div>
-              
-              {/* Mobile version arrows */}
-              <div className="flex flex-col items-center md:hidden">
-                <div className="h-8 w-0.5 bg-harmonia-green/80 my-2"></div>
-                <div className="h-8 w-0.5 bg-harmonia-green/80 my-2"></div>
-              </div>
-              
-              {/* Process details */}
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mt-12">
-                <div className="space-y-4">
-                  <p className="text-sm text-gray-400">Você nos conta sua história, objetivo e referências musicais.</p>
-                </div>
-                <div className="space-y-4">
-                  <p className="text-sm text-gray-400">Transformamos seus sentimentos em composição musical usando IA + expertise humana.</p>
-                </div>
-                <div className="space-y-4">
-                  <p className="text-sm text-gray-400">Receba uma obra musical única, com todos os direitos conforme o pacote escolhido.</p>
-                </div>
-              </div>
-            </div>
-          </Card>
+          
         </div>
       </div>
-    </section>
-  );
+    </section>;
 };
-
 export default Process;

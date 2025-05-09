@@ -11,7 +11,7 @@ const Packages: React.FC = () => {
   const navigate = useNavigate();
 
   const handleSelectPackage = (packageId: string) => {
-    navigate(`/pagamento/${packageId}`);
+    navigate(`/pagamento`);
   };
 
   return (

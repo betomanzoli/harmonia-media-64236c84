@@ -6,34 +6,32 @@ interface TestimonialsProps {
   showTestimonials?: boolean;
 }
 
-const Testimonials: React.FC<TestimonialsProps> = ({ showTestimonials = true }) => {
+const Testimonials: React.FC<TestimonialsProps> = ({
+  showTestimonials = true
+}) => {
   if (!showTestimonials) return null;
   
   return (
-    <section id="depoimentos" className="py-20 px-6 md:px-10 bg-secondary">
-      <div className="max-w-7xl mx-auto">
-        <div className="text-center mb-12">
-          <h2 className="text-3xl font-bold mb-4">O que nossos clientes dizem sobre HarmonIA</h2>
-          <p className="text-gray-400 max-w-2xl mx-auto">
-            Centenas de clientes satisfeitos compartilham suas experiências com nossos serviços de composição musical.
-          </p>
-        </div>
-        
+    <section className="py-12 bg-gray-50">
+      <div className="max-w-6xl mx-auto px-4">
+        <h2 className="text-3xl font-bold text-center mb-8">O que nossos clientes dizem</h2>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          <TestimonialCard 
-            quote="A música capturou exatamente a emoção que eu queria transmitir! Foi o presente perfeito para o aniversário da minha mãe." 
-            author="Ana Silva"
+          <TestimonialCard
+            clientName="Maria Silva"
+            position="Noiva"
+            testimonial="A música personalizada criada para o nosso casamento foi simplesmente perfeita. Todos os convidados se emocionaram!"
             rating={5}
           />
-          <TestimonialCard 
-            quote="Nosso jingle ficou incrível! Os clientes adoraram a identidade sonora e já notamos um aumento no reconhecimento da marca." 
-            author="João Santos"
-            role="CEO da Tech Solutions"
+          <TestimonialCard
+            clientName="João Santos"
+            position="Diretor Criativo"
+            testimonial="Utilizamos as composições da harmonIA para nossa campanha publicitária e o resultado superou todas as expectativas."
             rating={5}
           />
-          <TestimonialCard 
-            quote="A equipe foi super atenciosa e entregou tudo antes do prazo! A qualidade da música superou todas as minhas expectativas." 
-            author="Mariana Costa"
+          <TestimonialCard
+            clientName="Ana Oliveira"
+            position="Empreendedora"
+            testimonial="O jingle criado para minha marca trouxe personalidade e reconhecimento imediato. Trabalho excepcional!"
             rating={5}
           />
         </div>

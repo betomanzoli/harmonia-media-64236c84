@@ -3,7 +3,6 @@ import React, { useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import MusicPreviewSystem from '@/components/previews/MusicPreviewSystem';
 import { useToast } from '@/hooks/use-toast';
-import PublicLayout from '@/layouts/PublicLayout';
 
 const MusicPreviewPage: React.FC = () => {
   const { projectId } = useParams<{ projectId: string }>();

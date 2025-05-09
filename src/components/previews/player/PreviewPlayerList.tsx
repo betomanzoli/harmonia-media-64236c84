@@ -1,6 +1,7 @@
 import React from 'react';
 import { Card } from "@/components/ui/card";
 import PreviewVersionCard from './PreviewVersionCard';
+import { useToast } from '@/hooks/use-toast';
 
 interface MusicPreview {
   id: string;
@@ -27,6 +28,8 @@ const PreviewPlayerList: React.FC<PreviewPlayerListProps> = ({
   isApproved,
   onPlay = () => {}
 }) => {
+  const { toast } = useToast();
+
   if (!versions || versions.length === 0) {
     return (
       <div className="mb-10">
@@ -44,10 +47,24 @@ const PreviewPlayerList: React.FC<PreviewPlayerListProps> = ({
     if (version.fileId) {
       const driveUrl = `https://drive.google.com/file/d/${version.fileId}/view`;
       window.open(driveUrl, '_blank');
+      toast({
+        title: "Reproduzindo prévia",
+        description: "A prévia está sendo reproduzida no Google Drive."
+      });
       return;
     }
     
     // Otherwise use the provided audioUrl or url
+    if (version.audioUrl) {
+      window.open(version.audioUrl, '_blank');
+      toast({
+        title: "Reproduzindo prévia",
+        description: "A prévia está sendo reproduzida em uma nova aba."
+      });
+      return;
+    }
+    
+    // Fall back to onPlay handler
     onPlay(version);
   };
   

@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Button } from "@/components/ui/button";
 import { Plus } from 'lucide-react';
@@ -6,23 +5,38 @@ import PreviewVersionInput from './PreviewVersionInput';
 import { useToast } from "@/hooks/use-toast";
 import { useNewProjectForm } from '@/hooks/admin/useNewProjectForm';
 import ClientInfoForm from './ClientInfoForm';
-
 interface NewProjectFormProps {
   onAddProject: (project: any) => string | null;
 }
-
-const NewProjectForm: React.FC<NewProjectFormProps> = ({ onAddProject }) => {
-  const { 
-    formState: { clientName, clientEmail, packageType, versions, isSubmitting },
-    setters: { setClientName, setClientEmail, setPackageType, setIsSubmitting },
-    actions: { addVersion, removeVersion, updateVersion, resetForm }
+const NewProjectForm: React.FC<NewProjectFormProps> = ({
+  onAddProject
+}) => {
+  const {
+    formState: {
+      clientName,
+      clientEmail,
+      packageType,
+      versions,
+      isSubmitting
+    },
+    setters: {
+      setClientName,
+      setClientEmail,
+      setPackageType,
+      setIsSubmitting
+    },
+    actions: {
+      addVersion,
+      removeVersion,
+      updateVersion,
+      resetForm
+    }
   } = useNewProjectForm();
-  
-  const { toast } = useToast();
-
+  const {
+    toast
+  } = useToast();
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    
     if (!clientName.trim() || !clientEmail.trim() || !packageType) {
       toast({
         title: "Informações incompletas",
@@ -31,11 +45,7 @@ const NewProjectForm: React.FC<NewProjectFormProps> = ({ onAddProject }) => {
       });
       return;
     }
-
-    const hasEmptyVersions = versions.some(v => 
-      !v.title.trim() || !v.description.trim() || !v.audioUrl.trim()
-    );
-    
+    const hasEmptyVersions = versions.some(v => !v.title.trim() || !v.description.trim() || !v.audioUrl.trim());
     if (hasEmptyVersions) {
       toast({
         title: "Versões incompletas",
@@ -44,9 +54,7 @@ const NewProjectForm: React.FC<NewProjectFormProps> = ({ onAddProject }) => {
       });
       return;
     }
-    
     setIsSubmitting(true);
-    
     try {
       const project = {
         clientName: clientName.trim(),
@@ -68,14 +76,12 @@ const NewProjectForm: React.FC<NewProjectFormProps> = ({ onAddProject }) => {
           fileId: v.audioUrl.match(/[-\w]{25,}/) ? v.audioUrl.match(/[-\w]{25,}/)![0] : ''
         }))
       };
-      
       const newProjectId = onAddProject(project);
-      
       if (newProjectId) {
         resetForm();
         toast({
           title: "Projeto criado com sucesso",
-          description: `O projeto ${newProjectId} foi criado com ${versions.length} versão(ões).`,
+          description: `O projeto ${newProjectId} foi criado com ${versions.length} versão(ões).`
         });
       }
     } catch (error) {
@@ -88,20 +94,11 @@ const NewProjectForm: React.FC<NewProjectFormProps> = ({ onAddProject }) => {
       setIsSubmitting(false);
     }
   };
-
-  return (
-    <form onSubmit={handleSubmit} className="space-y-6">
+  return <form onSubmit={handleSubmit} className="space-y-6">
       <div className="space-y-4">
         <h3 className="text-lg font-semibold">Informações do Cliente</h3>
         
-        <ClientInfoForm 
-          clientName={clientName}
-          clientEmail={clientEmail}
-          packageType={packageType}
-          onClientNameChange={setClientName}
-          onClientEmailChange={setClientEmail}
-          onPackageTypeChange={setPackageType}
-        />
+        <ClientInfoForm clientName={clientName} clientEmail={clientEmail} packageType={packageType} onClientNameChange={setClientName} onClientEmailChange={setClientEmail} onPackageTypeChange={setPackageType} />
       </div>
 
       <div className="space-y-4">
@@ -114,33 +111,17 @@ const NewProjectForm: React.FC<NewProjectFormProps> = ({ onAddProject }) => {
         </div>
 
         <div className="space-y-4 max-h-[50vh] overflow-y-auto pr-2 pb-4">
-          {versions.map((version, index) => (
-            <div key={index} className="version-container">
-              <PreviewVersionInput
-                index={index}
-                title={version.title}
-                description={version.description}
-                audioUrl={version.audioUrl}
-                recommended={false}
-                onTitleChange={(i, value) => updateVersion(i, 'title', value)}
-                onDescriptionChange={(i, value) => updateVersion(i, 'description', value)}
-                onAudioUrlChange={(i, value) => updateVersion(i, 'audioUrl', value)}
-                onRecommendedChange={(i, value) => {}}
-                onRemove={removeVersion}
-                canRemove={versions.length > 1}
-              />
-            </div>
-          ))}
+          {versions.map((version, index) => <div key={index} className="version-container">
+              <PreviewVersionInput index={index} title={version.title} description={version.description} audioUrl={version.audioUrl} recommended={false} onTitleChange={(i, value) => updateVersion(i, 'title', value)} onDescriptionChange={(i, value) => updateVersion(i, 'description', value)} onAudioUrlChange={(i, value) => updateVersion(i, 'audioUrl', value)} onRecommendedChange={(i, value) => {}} onRemove={removeVersion} canRemove={versions.length > 1} />
+            </div>)}
         </div>
       </div>
       
-      <div className="flex justify-end sticky bottom-0 pt-4 bg-white">
+      <div className="flex justify-end sticky bottom-0 pt-4 mx-[240px] px-[60px] py-0 rounded-sm my-0 bg-neutral-900">
         <Button type="submit" disabled={isSubmitting}>
           {isSubmitting ? 'Criando...' : 'Criar Projeto'}
         </Button>
       </div>
-    </form>
-  );
+    </form>;
 };
-
 export default NewProjectForm;

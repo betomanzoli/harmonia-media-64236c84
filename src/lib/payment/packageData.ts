@@ -1,5 +1,4 @@
 
-
 export type PackageId = 'essencial' | 'premium' | 'profissional';
 
 export interface PackageDetails {
