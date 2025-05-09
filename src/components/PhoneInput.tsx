@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -88,9 +87,11 @@ const PhoneInput: React.FC<PhoneInputProps> = ({
     
     // Notify the parent with the full phone object
     onChange({
-      countryCode,
-      nationalNumber: formatted,
-      fullNumber: `${countryCode} ${formatted}`
+      code: countryCode,
+      number: formatted,
+      fullNumber: `${countryCode} ${formatted}`,
+      countryCode: countryCode,  // Added for compatibility
+      nationalNumber: formatted  // Added for compatibility
     });
   };
   
@@ -100,9 +101,11 @@ const PhoneInput: React.FC<PhoneInputProps> = ({
     
     // Notify the parent with the updated phone object
     onChange({
-      countryCode: newCode,
-      nationalNumber,
-      fullNumber: `${newCode} ${nationalNumber}`
+      code: newCode,
+      number: nationalNumber,
+      fullNumber: `${newCode} ${nationalNumber}`,
+      countryCode: newCode,  // Added for compatibility
+      nationalNumber: nationalNumber  // Added for compatibility
     });
   };
 

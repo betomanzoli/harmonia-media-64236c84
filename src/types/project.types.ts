@@ -13,7 +13,8 @@ export interface ProjectVersion {
   fileUrl?: string; // camelCase for frontend compatibility
   recommended?: boolean;
   final?: boolean;
-  created_at: string; // snake_case to match Supabase
+  created_at?: string; // snake_case to match Supabase
+  createdAt?: string; // camelCase version
   is_recommended?: boolean; // snake_case to match Supabase
   is_final?: boolean; // snake_case to match Supabase
   final_version_url?: string; // snake_case to match Supabase
@@ -21,7 +22,7 @@ export interface ProjectVersion {
   fileId?: string; // Legacy support
   file_id?: string; // Snake case version
   date_added?: string; // For compatibility
-  additionalLinks?: {name: string, url: string}[]; // For VersionCard component
+  additionalLinks?: {name: string, url: string, label?: string}[]; // For VersionCard component
 }
 
 // For backwards compatibility
@@ -53,6 +54,7 @@ export interface HistoryItem {
   data?: any;
   timestamp?: string;
   created_at?: string; // snake_case to match Supabase
+  user_id?: string; // For history tracking
 }
 
 export interface HistoryEntry {
@@ -83,6 +85,7 @@ export interface ProjectItem {
   client_phone?: string; // snake_case to match Supabase
   clientPhone?: string; // camelCase for frontend
   project_title?: string; // snake_case to match Supabase
+  projectTitle?: string; // camelCase for frontend
   title?: string; // For backwards compatibility
   package_type?: string; // snake_case to match Supabase
   packageType?: string; // camelCase for frontend
@@ -120,6 +123,9 @@ export interface PreviewProjectData {
 export interface PhoneWithCountryCode {
   code: string;
   number: string;
+  fullNumber: string;
+  countryCode: string;  // Added for compatibility with existing code
+  nationalNumber: string; // Added for compatibility with existing code
 }
 
 export interface ExtraService {

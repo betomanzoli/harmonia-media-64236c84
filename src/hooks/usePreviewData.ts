@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { supabase } from '@/lib/supabase';
 import { ProjectItem, FeedbackItem } from '@/types/project.types';
@@ -352,11 +351,11 @@ export const usePreviewData = (previewId: string | undefined) => {
       function updateLocalStorage() {
         // Update in localStorage
         const localProjects = JSON.parse(localStorage.getItem('harmonIA_preview_projects') || '[]') as ProjectItem[];
-        const projectIndex = localProjects.findIndex(p => p.id === projectData.id || p.preview_code === projectData.id);
+        const localProjectIndex = localProjects.findIndex(p => p.id === projectData.id || p.preview_code === projectData.id);
       
-        if (projectIndex !== -1) {
+        if (localProjectIndex !== -1) {
           // Update status
-          localProjects[projectIndex].status = newStatus;
+          localProjects[localProjectIndex].status = newStatus as 'waiting' | 'feedback' | 'approved' | 'draft' | 'completed';
           
           // Add feedback if provided
           if (feedbackComment) {
@@ -369,24 +368,24 @@ export const usePreviewData = (previewId: string | undefined) => {
               status: 'pending'
             };
             
-            if (!localProjects[projectIndex].feedback_history) {
-              localProjects[projectIndex].feedback_history = [];
+            if (!localProjects[localProjectIndex].feedback_history) {
+              localProjects[localProjectIndex].feedback_history = [];
             }
             
-            localProjects[projectIndex].feedback_history.push(newFeedback);
+            localProjects[localProjectIndex].feedback_history.push(newFeedback);
             
             // Also update the camelCase alias
-            localProjects[projectIndex].feedbackHistory = localProjects[projectIndex].feedback_history;
+            localProjects[localProjectIndex].feedbackHistory = localProjects[localProjectIndex].feedback_history;
           }
           
           // Update activity date
-          localProjects[projectIndex].last_activity_date = new Date().toLocaleDateString('pt-BR');
-          localProjects[projectIndex].lastActivityDate = new Date().toLocaleDateString('pt-BR');
+          localProjects[localProjectIndex].last_activity_date = new Date().toLocaleDateString('pt-BR');
+          localProjects[localProjectIndex].lastActivityDate = new Date().toLocaleDateString('pt-BR');
           
           localStorage.setItem('harmonIA_preview_projects', JSON.stringify(localProjects));
           
           // Also update the current project data
-          setProjectData({ ...localProjects[projectIndex] });
+          setProjectData({ ...localProjects[localProjectIndex] });
           
           return true;
         }

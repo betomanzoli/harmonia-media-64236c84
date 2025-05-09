@@ -46,9 +46,11 @@ export const useNewProjectForm = () => {
   const [clientName, setClientName] = useState('');
   const [clientEmail, setClientEmail] = useState('');
   const [clientPhone, setClientPhone] = useState<PhoneWithCountryCode>({
+    code: '+55',
+    number: '',
+    fullNumber: '+55 ',
     countryCode: '+55',
-    nationalNumber: '',
-    fullNumber: '+55 '
+    nationalNumber: ''
   });
   const [packageType, setPackageType] = useState('');
   const [versions, setVersions] = useState<Version[]>([
@@ -84,9 +86,11 @@ export const useNewProjectForm = () => {
     setClientName('');
     setClientEmail('');
     setClientPhone({
+      code: '+55',
+      number: '',
+      fullNumber: '+55 ',
       countryCode: '+55',
-      nationalNumber: '',
-      fullNumber: '+55 '
+      nationalNumber: ''
     });
     setPackageType('');
     setVersions([{ title: '', description: '', audioUrl: '' }]);
