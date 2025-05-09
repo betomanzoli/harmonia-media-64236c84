@@ -91,10 +91,9 @@ export const usePreviewData = (previewId: string | undefined) => {
               console.log('🔍 Project found in Supabase by preview_code:', previewCodeData);
               
               // Extract client data safely handling different potential types
-              // The clients property could be an object or array, so we need to handle both
               let clientName = 'Cliente';
-              let clientEmail = null;
-              let clientPhone = null;
+              let clientEmail: string | null = null;
+              let clientPhone: string | null = null;
               
               // Ensure clients exists and properly handle its structure
               const clients = previewCodeData.clients;
@@ -103,6 +102,7 @@ export const usePreviewData = (previewId: string | undefined) => {
                 if (Array.isArray(clients)) {
                   // If it's a non-empty array, use the first item
                   if (clients.length > 0) {
+                    // Explicitly type the client data
                     const firstClient = clients[0] as { name?: string; email?: string; phone?: string };
                     clientName = firstClient.name || 'Cliente';
                     clientEmail = firstClient.email || null;
@@ -110,7 +110,8 @@ export const usePreviewData = (previewId: string | undefined) => {
                   }
                 } 
                 // If it's a direct object (not an array)
-                else if (typeof clients === 'object') {
+                else if (typeof clients === 'object' && clients !== null) {
+                  // Explicitly type the client object
                   const clientObj = clients as { name?: string; email?: string; phone?: string };
                   clientName = clientObj.name || 'Cliente';
                   clientEmail = clientObj.email || null;
