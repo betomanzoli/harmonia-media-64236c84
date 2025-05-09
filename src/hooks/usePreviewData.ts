@@ -90,15 +90,33 @@ export const usePreviewData = (previewId: string | undefined) => {
             if (!previewCodeError && previewCodeData) {
               console.log('🔍 Project found in Supabase by preview_code:', previewCodeData);
               
-              // Fix: Access client data properly - clients is an object, not an array
-              const clientData = previewCodeData.clients || { name: 'Cliente', email: null, phone: null };
+              // Extract client data safely handling different potential types
+              // The clients property could be an object or array, so we need to handle both
+              let clientName = 'Cliente';
+              let clientEmail = null;
+              let clientPhone = null;
+              
+              if (previewCodeData.clients) {
+                // If it's an array with at least one item
+                if (Array.isArray(previewCodeData.clients) && previewCodeData.clients.length > 0) {
+                  clientName = previewCodeData.clients[0].name || 'Cliente';
+                  clientEmail = previewCodeData.clients[0].email;
+                  clientPhone = previewCodeData.clients[0].phone;
+                } 
+                // If it's a direct object
+                else if (typeof previewCodeData.clients === 'object') {
+                  clientName = previewCodeData.clients.name || 'Cliente';
+                  clientEmail = previewCodeData.clients.email;
+                  clientPhone = previewCodeData.clients.phone;
+                }
+              }
               
               // Format project data in the expected format
               const formattedProject: ProjectItem = {
                 id: previewCodeData.id,
-                client_name: clientData.name || 'Cliente',
-                client_email: clientData.email,
-                client_phone: clientData.phone,
+                client_name: clientName,
+                client_email: clientEmail,
+                client_phone: clientPhone,
                 project_title: previewCodeData.title,
                 package_type: 'standard', // Default if not available
                 status: previewCodeData.status,
@@ -109,14 +127,14 @@ export const usePreviewData = (previewId: string | undefined) => {
                 preview_code: previewCodeData.preview_code,
                 
                 // Camel case aliases for front-end components
-                clientName: clientData.name || 'Cliente',
+                clientName: clientName,
                 projectTitle: previewCodeData.title,
                 packageType: 'standard',
                 createdAt: previewCodeData.created_at,
                 lastActivityDate: previewCodeData.updated_at,
                 expirationDate: previewCodeData.deadline || new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString(),
-                clientEmail: clientData.email,
-                clientPhone: clientData.phone
+                clientEmail: clientEmail,
+                clientPhone: clientPhone
               };
               
               // Get versions list from project_files
