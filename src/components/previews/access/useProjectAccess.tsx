@@ -39,6 +39,9 @@ export const getCookie = (name: string): string | null => {
   return null;
 };
 
+// Export getCookie with the alias getCookieValue for compatibility
+export const getCookieValue = getCookie;
+
 // The base project access hook with authorization state
 export const useProjectAccess = (projectId: string | null) => {
   const [isAuthorized, setIsAuthorized] = useState(false);

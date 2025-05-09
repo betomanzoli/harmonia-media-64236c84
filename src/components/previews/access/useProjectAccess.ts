@@ -1,17 +1,45 @@
-
 import { useState } from 'react';
 import { supabase } from '@/lib/supabase';
-import { setCookie, getCookie } from '@/utils/cookieUtils';
 
-interface UseProjectAccessProps {
-  projectId: string;
-  onVerify: (code: string, email: string) => void;
-}
+// Cookie utility functions
+export const setCookie = (name: string, value: string, options: Record<string, string> = {}) => {
+  const defaultOptions = {
+    path: '/',
+    maxAge: '86400', // 1 day
+    sameSite: 'Lax',
+    secure: window.location.protocol === 'https:',
+  };
+  
+  const cookieOptions = { ...defaultOptions, ...options };
+  
+  let cookieString = `${encodeURIComponent(name)}=${encodeURIComponent(value)}`;
+  
+  Object.entries(cookieOptions).forEach(([key, val]) => {
+    const formattedKey = key.replace(/([A-Z])/g, '-$1').toLowerCase();
+    cookieString += `; ${formattedKey}=${val}`;
+  });
+  
+  document.cookie = cookieString;
+  console.log(`[Cookie] Set: ${name} (options: ${JSON.stringify(cookieOptions)})`);
+};
 
-interface FormErrors {
-  code?: string;
-  email?: string;
-}
+export const getCookie = (name: string): string | null => {
+  const nameEQ = `${encodeURIComponent(name)}=`;
+  const cookieArray = document.cookie.split(';');
+  
+  for (let i = 0; i < cookieArray.length; i++) {
+    let c = cookieArray[i].trim();
+    if (c.indexOf(nameEQ) === 0) {
+      console.log(`[Cookie] Found: ${name}`);
+      return decodeURIComponent(c.substring(nameEQ.length, c.length));
+    }
+  }
+  console.log(`[Cookie] Not found: ${name}`);
+  return null;
+};
+
+// Export getCookie with the alias getCookieValue for compatibility
+export const getCookieValue = getCookie;
 
 // The base project access hook with authorization state
 export const useProjectAccess = (projectId: string | null) => {
@@ -96,10 +124,10 @@ export const useProjectAccess = (projectId: string | null) => {
   const revokeAccess = () => {
     try {
       // Remove all preview auth cookies
-      removeCookie('preview_access');
+      document.cookie = 'preview_access=; Path=/; Expires=Thu, 01 Jan 1970 00:00:01 GMT;';
       
       if (projectId) {
-        removeCookie(`preview_auth_${projectId}`);
+        document.cookie = `preview_auth_${projectId}=; Path=/; Expires=Thu, 01 Jan 1970 00:00:01 GMT;`;
       }
       
       setIsAuthorized(false);
@@ -113,23 +141,21 @@ export const useProjectAccess = (projectId: string | null) => {
   return { isAuthorized, loading, grantAccess, revokeAccess };
 };
 
-// Remove a cookie (helper function)
-const removeCookie = (name: string): void => {
-  document.cookie = `${name}=; Path=/; Expires=Thu, 01 Jan 1970 00:00:01 GMT;`;
-};
-
 // The form-specific hook for handling project access verification
-export const useProjectAccessForm = ({ projectId, onVerify }: UseProjectAccessProps) => {
+export const useProjectAccessForm = ({ projectId, onVerify }: { 
+  projectId: string; 
+  onVerify: (code: string, email: string) => void; 
+}) => {
   // Always use decoded project ID
   const decodedProjectId = decodeURIComponent(projectId || '');
   const [code, setCode] = useState(decodedProjectId || '');
   const [email, setEmail] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [errors, setErrors] = useState<FormErrors>({});
+  const [errors, setErrors] = useState<{ code?: string; email?: string }>({});
 
   const validateInputs = (): boolean => {
-    const newErrors: FormErrors = {};
+    const newErrors: { code?: string; email?: string } = {};
     let isValid = true;
     
     // Validate code
@@ -178,13 +204,19 @@ export const useProjectAccessForm = ({ projectId, onVerify }: UseProjectAccessPr
         console.warn('[ProjectAccessForm] Anonymous auth error:', authErr);
       }
       
+      // Diagnostic logs for troubleshooting
+      console.log('[ProjectAccessForm] Informações detalhadas:');
+      console.log('- Código recebido na URL:', projectId);
+      console.log('- Código decodificado:', decodedProjectId);
+      console.log('- Código usado para verificação:', code);
+      console.log('- Email fornecido:', email);
+      
       // First try to verify if the preview code exists
       console.log('[ProjectAccessForm] Consultando preview_code na tabela projects:', code);
-      
       const { data, error } = await supabase
         .from('projects')
         .select('id, client_id, preview_code, clients!inner(*)')
-        .eq('preview_code', code) // Use snake_case for column names
+        .eq('preview_code', code)
         .single();
       
       console.log('[ProjectAccessForm] Verificação de preview_code:', { data, error });
@@ -224,6 +256,9 @@ export const useProjectAccessForm = ({ projectId, onVerify }: UseProjectAccessPr
       // Fix: Properly handle the clients data with proper TypeScript types
       let clientEmail: string | null = null;
       
+      // Log the entire data structure for debugging
+      console.log('[ProjectAccessForm] Estrutura completa dos dados:', JSON.stringify(data));
+      
       if (data?.clients) {
         // Check if clients is an array and handle accordingly
         if (Array.isArray(data.clients)) {
@@ -240,6 +275,12 @@ export const useProjectAccessForm = ({ projectId, onVerify }: UseProjectAccessPr
       }
       
       console.log('[ProjectAccessForm] Email do cliente extraído:', clientEmail);
+      console.log('[ProjectAccessForm] Verificações especiais:', { 
+        isTestEmail, 
+        isDemoCode,
+        clientEmail,
+        providedEmail: email 
+      });
       
       // Client verification logic - compare emails if available
       const emailMatches = clientEmail && email.toLowerCase() === clientEmail.toLowerCase();
@@ -259,16 +300,14 @@ export const useProjectAccessForm = ({ projectId, onVerify }: UseProjectAccessPr
         setCookie('preview_access', accessData, {
           maxAge: '86400', // 1 day
           path: '/',
-          sameSite: 'Lax',
-          secure: window.location.protocol === 'https:'
+          sameSite: 'Lax'
         });
         
         // Also save a specific access token for this preview
         setCookie(`preview_auth_${code}`, 'authorized', {
           maxAge: '86400', // 1 day
           path: '/',
-          sameSite: 'Lax',
-          secure: window.location.protocol === 'https:'
+          sameSite: 'Lax'
         });
         
         // Call the onVerify callback to notify parent component
