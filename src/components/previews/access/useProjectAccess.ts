@@ -1,7 +1,7 @@
 
 import { useState } from 'react';
 import { supabase } from '@/lib/supabase';
-import { setCookie } from '@/utils/cookieUtils';
+import { setCookie, getCookie } from '@/utils/cookieUtils';
 
 interface UseProjectAccessProps {
   projectId: string;
@@ -12,22 +12,6 @@ interface FormErrors {
   code?: string;
   email?: string;
 }
-
-// Local cookie utility functions to avoid conflicts with imported functions
-export const getCookieValue = (name: string): string | null => {
-  const nameEQ = `${encodeURIComponent(name)}=`;
-  const cookieArray = document.cookie.split(';');
-  
-  for (let i = 0; i < cookieArray.length; i++) {
-    let c = cookieArray[i].trim();
-    if (c.indexOf(nameEQ) === 0) {
-      console.log(`[Cookie] Found: ${name}`);
-      return decodeURIComponent(c.substring(nameEQ.length, c.length));
-    }
-  }
-  console.log(`[Cookie] Not found: ${name}`);
-  return null;
-};
 
 // The base project access hook with authorization state
 export const useProjectAccess = (projectId: string | null) => {
@@ -42,7 +26,7 @@ export const useProjectAccess = (projectId: string | null) => {
     }
     
     // Check for admin access
-    const hasAdminAccess = localStorage.getItem('admin_preview_access') === 'true';
+    const hasAdminAccess = getCookie('admin_preview_access') === 'true';
     if (hasAdminAccess) {
       console.log('[useProjectAccess] Admin access detected, granting access');
       setIsAuthorized(true);
@@ -51,7 +35,7 @@ export const useProjectAccess = (projectId: string | null) => {
     }
     
     // Check for project specific cookie authorization
-    const projectAuthCookie = getCookieValue(`preview_auth_${projectId}`);
+    const projectAuthCookie = getCookie(`preview_auth_${projectId}`);
     if (projectAuthCookie === 'authorized') {
       console.log('[useProjectAccess] Project authorization cookie found');
       setIsAuthorized(true);
@@ -60,7 +44,7 @@ export const useProjectAccess = (projectId: string | null) => {
     }
     
     // Check for general preview access
-    const previewAccessCookie = getCookieValue('preview_access');
+    const previewAccessCookie = getCookie('preview_access');
     if (previewAccessCookie) {
       try {
         const accessData = JSON.parse(previewAccessCookie);
@@ -112,10 +96,10 @@ export const useProjectAccess = (projectId: string | null) => {
   const revokeAccess = () => {
     try {
       // Remove all preview auth cookies
-      document.cookie = 'preview_access=; Path=/; Expires=Thu, 01 Jan 1970 00:00:01 GMT;';
+      removeCookie('preview_access');
       
       if (projectId) {
-        document.cookie = `preview_auth_${projectId}=; Path=/; Expires=Thu, 01 Jan 1970 00:00:01 GMT;`;
+        removeCookie(`preview_auth_${projectId}`);
       }
       
       setIsAuthorized(false);
@@ -129,26 +113,9 @@ export const useProjectAccess = (projectId: string | null) => {
   return { isAuthorized, loading, grantAccess, revokeAccess };
 };
 
-// Set a cookie with options
-export const setProjectCookie = (name: string, value: string, options: Record<string, string> = {}) => {
-  const defaultOptions = {
-    path: '/',
-    maxAge: '86400', // 1 day
-    sameSite: 'Lax',
-    secure: window.location.protocol === 'https:',
-  };
-  
-  const cookieOptions = { ...defaultOptions, ...options };
-  
-  let cookieString = `${encodeURIComponent(name)}=${encodeURIComponent(value)}`;
-  
-  Object.entries(cookieOptions).forEach(([key, val]) => {
-    const formattedKey = key.replace(/([A-Z])/g, '-$1').toLowerCase();
-    cookieString += `; ${formattedKey}=${val}`;
-  });
-  
-  document.cookie = cookieString;
-  console.log(`[Cookie] Set: ${name} (options: ${JSON.stringify(cookieOptions)})`);
+// Remove a cookie (helper function)
+const removeCookie = (name: string): void => {
+  document.cookie = `${name}=; Path=/; Expires=Thu, 01 Jan 1970 00:00:01 GMT;`;
 };
 
 // The form-specific hook for handling project access verification
@@ -211,19 +178,13 @@ export const useProjectAccessForm = ({ projectId, onVerify }: UseProjectAccessPr
         console.warn('[ProjectAccessForm] Anonymous auth error:', authErr);
       }
       
-      // Diagnostic logs for troubleshooting
-      console.log('[ProjectAccessForm] Informações detalhadas:');
-      console.log('- Código recebido na URL:', projectId);
-      console.log('- Código decodificado:', decodedProjectId);
-      console.log('- Código usado para verificação:', code);
-      console.log('- Email fornecido:', email);
-      
       // First try to verify if the preview code exists
       console.log('[ProjectAccessForm] Consultando preview_code na tabela projects:', code);
+      
       const { data, error } = await supabase
         .from('projects')
         .select('id, client_id, preview_code, clients!inner(*)')
-        .eq('preview_code', code)
+        .eq('preview_code', code) // Use snake_case for column names
         .single();
       
       console.log('[ProjectAccessForm] Verificação de preview_code:', { data, error });
@@ -263,9 +224,6 @@ export const useProjectAccessForm = ({ projectId, onVerify }: UseProjectAccessPr
       // Fix: Properly handle the clients data with proper TypeScript types
       let clientEmail: string | null = null;
       
-      // Log the entire data structure for debugging
-      console.log('[ProjectAccessForm] Estrutura completa dos dados:', JSON.stringify(data));
-      
       if (data?.clients) {
         // Check if clients is an array and handle accordingly
         if (Array.isArray(data.clients)) {
@@ -282,12 +240,6 @@ export const useProjectAccessForm = ({ projectId, onVerify }: UseProjectAccessPr
       }
       
       console.log('[ProjectAccessForm] Email do cliente extraído:', clientEmail);
-      console.log('[ProjectAccessForm] Verificações especiais:', { 
-        isTestEmail, 
-        isDemoCode,
-        clientEmail,
-        providedEmail: email 
-      });
       
       // Client verification logic - compare emails if available
       const emailMatches = clientEmail && email.toLowerCase() === clientEmail.toLowerCase();
@@ -304,17 +256,19 @@ export const useProjectAccessForm = ({ projectId, onVerify }: UseProjectAccessPr
         });
         
         // Set cookie with appropriate attributes
-        setProjectCookie('preview_access', accessData, {
+        setCookie('preview_access', accessData, {
           maxAge: '86400', // 1 day
           path: '/',
-          sameSite: 'Lax'
+          sameSite: 'Lax',
+          secure: window.location.protocol === 'https:'
         });
         
         // Also save a specific access token for this preview
-        setProjectCookie(`preview_auth_${code}`, 'authorized', {
+        setCookie(`preview_auth_${code}`, 'authorized', {
           maxAge: '86400', // 1 day
           path: '/',
-          sameSite: 'Lax'
+          sameSite: 'Lax',
+          secure: window.location.protocol === 'https:'
         });
         
         // Call the onVerify callback to notify parent component

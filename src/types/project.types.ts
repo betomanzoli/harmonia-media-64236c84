@@ -1,222 +1,82 @@
 
-/**
- * Project Item interface with snake_case properties to match Supabase database schema
- * and camelCase aliases for front-end components
- */
-export interface ProjectItem {
-  id: string;
-  client_name: string;
-  project_title: string;
-  package_type: string;
-  status: string;
-  created_at: string;
-  last_activity_date: string;
-  expiration_date: string;
-  versions: number;
-  versionsList?: ProjectVersion[];
-  previews?: MusicPreview[];
-  feedback_history?: FeedbackItem[];
-  history?: HistoryItem[];
-  preview_code?: string;
-  client_email?: string;
-  client_phone?: string;
-  
-  // Camel case aliases for front-end components
-  clientName?: string;
-  projectTitle?: string;
-  packageType?: string;
-  createdAt?: string;
-  lastActivityDate?: string;
-  expirationDate?: string;
-  clientEmail?: string;
-  clientPhone?: string;
-  feedbackHistory?: FeedbackItem[];
-}
+// Project Types to match Supabase schema
 
-/**
- * Music Preview interface with both snake_case properties and camelCase aliases
- */
-export interface MusicPreview {
-  id: string;
-  title?: string;
-  name?: string;
-  description?: string;
-  audio_url?: string;
-  file_url?: string;
-  file_id?: string;
-  recommended?: boolean;
-  final?: boolean;
-  final_version_url?: string;
-  stems_url?: string;
-  created_at?: string;
-  date_added?: string;
-  
-  // Camel case aliases for front-end components
-  audioUrl?: string;
-  url?: string;
-  fileUrl?: string;
-  fileId?: string;
-  finalVersionUrl?: string;
-  stemsUrl?: string;
-  createdAt?: string;
-  dateAdded?: string;
-}
-
-/**
- * Project Version interface
- */
 export interface ProjectVersion {
   id: string;
-  title?: string;
-  name?: string;
+  name: string;
+  title?: string; 
   description?: string;
-  audio_url?: string;
-  file_url?: string;
-  file_id?: string;
+  audio_url?: string; // snake_case to match Supabase
+  file_url?: string; // snake_case to match Supabase
   recommended?: boolean;
   final?: boolean;
-  created_at?: string;
-  date_added?: string;
-  final_version_url?: string;
-  stems_url?: string;
-  // Camel case aliases
-  audioUrl?: string;
-  additionalLinks?: Array<string | { url: string; label: string }>;
+  created_at: string; // snake_case to match Supabase
+  is_recommended?: boolean; // snake_case to match Supabase
+  is_final?: boolean; // snake_case to match Supabase
+  final_version_url?: string; // snake_case to match Supabase
+  stems_url?: string; // snake_case to match Supabase
+  fileId?: string; // Legacy support
 }
 
-/**
- * Version Item interface
- */
-export interface VersionItem {
+// For backwards compatibility
+export type VersionItem = ProjectVersion;
+
+export interface MusicPreview {
   id: string;
-  name?: string;
-  title?: string;
-  description?: string;
-  audio_url?: string;
-  file_url?: string;
-  file_id?: string;
+  title: string;
+  name?: string; // For backwards compatibility
+  description: string;
+  audio_url: string; // snake_case to match Supabase
+  file_url?: string; // snake_case to match Supabase
   recommended?: boolean;
-  final?: boolean;
-  created_at?: string;
-  date_added?: string;
-  final_version_url?: string;
-  stems_url?: string;
-  additionalLinks?: Array<string | { url: string; label: string }>;
-  // Camel case aliases
-  audioUrl?: string;
+  file_id?: string; // snake_case to match Supabase
+  created_at?: string; // snake_case to match Supabase
+  final_version_url?: string; // snake_case to match Supabase
+  stems_url?: string; // snake_case to match Supabase
 }
 
-/**
- * Feedback Item interface
- */
-export interface FeedbackItem {
-  id: string;
-  project_id: string;
-  version_id?: string;
-  comment: string;
-  content?: string; // Alias for comment
-  sentiment?: 'positive' | 'neutral' | 'negative';
-  created_at: string;
-  createdAt?: string; // Alias for created_at
-  status?: string; // Status can be any string (more flexible than a union)
-  versionId?: string; // Alias for version_id
-}
-
-/**
- * History Item interface
- */
 export interface HistoryItem {
   id: string;
-  project_id: string;
+  project_id: string; // snake_case to match Supabase
   action: string;
-  description: string;
-  created_at: string;
-  user_id?: string;
-  // Optional fields for local history items
+  description?: string;
+  data?: any;
   timestamp?: string;
-  data?: { message: string };
+  created_at?: string; // snake_case to match Supabase
 }
 
-/**
- * History Entry interface (for admin panel)
- */
 export interface HistoryEntry {
-  id?: string;
+  id: string;
   action: string;
   timestamp: string;
-  data: { message: string };
-  project_id?: string;
-  description?: string;
-  created_at?: string;
+  data: any;
 }
 
-/**
- * Project Client interface
- */
-export interface ProjectClient {
+export interface FeedbackItem {
   id: string;
-  name: string;
-  email: string;
-  phone?: string;
-}
-
-/**
- * Project Update interface
- */
-export interface ProjectUpdate {
-  client_name?: string;
-  project_title?: string;
-  status?: string;
-  package_type?: string;
-  expiration_date?: string;
-  client_email?: string;
-  client_phone?: string;
-}
-
-/**
- * Project Data interface (for front-end use)
- */
-export interface ProjectData {
-  id: string;
-  clientName: string;
-  projectTitle: string;
-  packageType: string;
-  status: string;
+  content: string;
   createdAt: string;
-  lastActivityDate: string;
-  expirationDate: string;
-  versions: number;
-  versionsList?: ProjectVersion[];
+  status: 'pending' | 'reviewed' | 'applied';
 }
 
-/**
- * Preview Project Data interface (for front-end use)
- */
-export interface PreviewProjectData {
-  projectTitle: string;
-  clientName: string;
-  status: 'waiting' | 'feedback' | 'approved';
-  packageType?: string;
-  creationDate?: string;
-  extras?: string[];
-}
-
-/**
- * Phone Number with Country Code interface
- */
-export interface PhoneWithCountryCode {
-  countryCode: string;
-  nationalNumber: string;
-  fullNumber: string;
-}
-
-/**
- * Extra Service interface
- */
-export interface ExtraService {
+export interface ProjectItem {
   id: string;
-  name: string;
-  description: string;
-  price: number;
-  selected?: boolean;
+  client_name: string; // snake_case to match Supabase
+  client_email?: string; // snake_case to match Supabase
+  client_phone?: string; // snake_case to match Supabase
+  project_title?: string; // snake_case to match Supabase
+  title?: string; // For backwards compatibility
+  package_type?: string; // snake_case to match Supabase
+  status: 'waiting' | 'feedback' | 'approved' | 'draft' | 'completed';
+  created_at: string; // snake_case to match Supabase
+  updated_at?: string; // snake_case to match Supabase
+  expiration_date?: string; // snake_case to match Supabase
+  deadline?: string; // For backwards compatibility
+  last_activity_date?: string; // snake_case to match Supabase
+  versions?: number;
+  versionsList?: ProjectVersion[];
+  previews?: MusicPreview[];
+  feedback_history?: FeedbackItem[]; // snake_case to match Supabase
+  history?: HistoryItem[];
+  preview_code?: string; // snake_case to match Supabase
 }

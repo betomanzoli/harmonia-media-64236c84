@@ -16,6 +16,11 @@ export const supabase = createClient<Database>(SUPABASE_URL, SUPABASE_PUBLISHABL
     storageKey: 'harmonia-auth', // Key for storing auth in localStorage
   },
   global: {
+    headers: {
+      'apikey': SUPABASE_PUBLISHABLE_KEY,
+      'Authorization': `Bearer ${SUPABASE_PUBLISHABLE_KEY}`,
+      'X-Client-Info': 'harmonia-app/1.0.0'
+    },
     fetch: (...args: Parameters<typeof fetch>) => {
       return fetch(...args).catch(error => {
         console.error('Supabase fetch error:', error);
@@ -31,6 +36,13 @@ export const createAnonymousClient = () => {
     auth: {
       persistSession: false, // Don't persist session for anonymous users
       autoRefreshToken: true
+    },
+    global: {
+      headers: {
+        'apikey': SUPABASE_PUBLISHABLE_KEY,
+        'Authorization': `Bearer ${SUPABASE_PUBLISHABLE_KEY}`,
+        'X-Client-Info': 'harmonia-app/1.0.0'
+      }
     }
   });
 };
