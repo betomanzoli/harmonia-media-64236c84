@@ -1,7 +1,7 @@
 
-import React from 'react';
+import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useNewProjectForm, PACKAGE_OPTIONS } from '@/hooks/useNewProjectForm';
+import { useNewProjectForm, PACKAGE_OPTIONS, DEFAULT_EXTRA_SERVICES } from '@/hooks/useNewProjectForm';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -10,11 +10,15 @@ import { Textarea } from '@/components/ui/textarea';
 import { Plus, Trash2 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/lib/supabase';
+import PhoneInput from '@/components/PhoneInput';
+import ExtraServices from '@/components/admin/extras/ExtraServices';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 
 const NewProjectForm: React.FC = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
   const { formState, setters, actions } = useNewProjectForm();
+  const [activeTab, setActiveTab] = useState('client-info');
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -27,7 +31,7 @@ const NewProjectForm: React.FC = () => {
         .upsert({
           name: formState.clientName,
           email: formState.clientEmail,
-          phone: formState.clientPhone
+          phone: formState.clientPhone.fullNumber
         }, {
           onConflict: 'email'  // If the email already exists, update the existing client
         })
@@ -42,18 +46,22 @@ const NewProjectForm: React.FC = () => {
       // Generate a unique preview code
       const previewCode = `P${Math.floor(1000 + Math.random() * 9000)}`;
       
+      // Get selected extra services
+      const selectedExtras = formState.extras
+        .filter(extra => extra.selected)
+        .map(extra => ({ id: extra.id, name: extra.name, price: extra.price }));
+      
       // Then create the project
       const { data: projectData, error: projectError } = await supabase
         .from('projects')
         .insert({
           client_id: clientData.id,
-          client_name: formState.clientName,
           title: `Música Personalizada - ${formState.clientName}`,
-          package_id: null,  // You might want to look up the package ID based on packageType
           status: 'draft',
           preview_code: previewCode,
-          tags: JSON.stringify(['new', formState.packageType]),
-          description: `Projeto de música personalizada para ${formState.clientName} - Pacote ${formState.packageType}`
+          description: `Projeto de música personalizada para ${formState.clientName} - Pacote ${formState.packageType}${selectedExtras.length > 0 ? ' com extras' : ''}`,
+          // Store extra services in description JSON
+          extras: JSON.stringify(selectedExtras)
         })
         .select()
         .single();
@@ -68,17 +76,37 @@ const NewProjectForm: React.FC = () => {
         .from('project_history')
         .insert({
           project_id: projectData.id,
-          event_type: 'creation',
+          action: 'creation',
           description: 'Projeto criado',
-          new_value: JSON.stringify({
+          details: JSON.stringify({
             client_name: formState.clientName,
-            package_type: formState.packageType
+            package_type: formState.packageType,
+            extras: selectedExtras
           })
         });
       
       if (historyError) {
         console.error('Error creating project history:', historyError);
         // Non-critical, continue
+      }
+      
+      // Add versions if provided
+      if (formState.versions.length > 0 && formState.versions[0].title) {
+        const versionPromises = formState.versions.map(version => {
+          return supabase
+            .from('project_files')
+            .insert({
+              project_id: projectData.id,
+              title: version.title,
+              file_type: 'audio',
+              drive_url: version.audioUrl
+            });
+        });
+        
+        await Promise.all(versionPromises).catch(error => {
+          console.error('Error adding versions:', error);
+          // Non-critical, continue
+        });
       }
       
       toast({
@@ -102,9 +130,15 @@ const NewProjectForm: React.FC = () => {
 
   return (
     <div className="relative">
-      <div className="h-[85vh] overflow-y-auto pb-16">
+      <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+        <TabsList className="grid grid-cols-3 mb-4">
+          <TabsTrigger value="client-info">Dados do Cliente</TabsTrigger>
+          <TabsTrigger value="project-details">Detalhes do Projeto</TabsTrigger>
+          <TabsTrigger value="extras">Serviços Extras</TabsTrigger>
+        </TabsList>
+        
         <form onSubmit={handleSubmit} className="space-y-6">
-          <div className="space-y-4">
+          <TabsContent value="client-info" className="space-y-4">
             <h2 className="text-lg font-semibold">Dados do Cliente</h2>
             
             <div className="grid gap-4">
@@ -131,19 +165,24 @@ const NewProjectForm: React.FC = () => {
                 />
               </div>
               
-              <div>
-                <Label htmlFor="clientPhone">Telefone</Label>
-                <Input
-                  id="clientPhone"
-                  placeholder="(00) 00000-0000"
-                  value={formState.clientPhone}
-                  onChange={e => setters.setClientPhone(e.target.value)}
-                />
+              <PhoneInput
+                label="Telefone"
+                value={formState.clientPhone.fullNumber}
+                onChange={phone => setters.setClientPhone(phone)}
+              />
+              
+              <div className="flex justify-end mt-4">
+                <Button 
+                  type="button" 
+                  onClick={() => setActiveTab('project-details')}
+                >
+                  Próximo
+                </Button>
               </div>
             </div>
-          </div>
+          </TabsContent>
           
-          <div className="space-y-4">
+          <TabsContent value="project-details" className="space-y-4">
             <h2 className="text-lg font-semibold">Detalhes do Projeto</h2>
             
             <div>
@@ -224,22 +263,50 @@ const NewProjectForm: React.FC = () => {
                   </div>
                 </div>
               ))}
+              
+              <div className="flex justify-between mt-4">
+                <Button 
+                  type="button" 
+                  variant="outline" 
+                  onClick={() => setActiveTab('client-info')}
+                >
+                  Voltar
+                </Button>
+                <Button 
+                  type="button" 
+                  onClick={() => setActiveTab('extras')}
+                >
+                  Próximo
+                </Button>
+              </div>
             </div>
-          </div>
+          </TabsContent>
+          
+          <TabsContent value="extras" className="space-y-4">
+            <ExtraServices 
+              services={formState.extras} 
+              onServicesChange={setters.setExtras}
+              editable={true}
+            />
+            
+            <div className="flex justify-between mt-4">
+              <Button 
+                type="button" 
+                variant="outline" 
+                onClick={() => setActiveTab('project-details')}
+              >
+                Voltar
+              </Button>
+              <Button 
+                type="submit"
+                disabled={formState.isSubmitting}
+              >
+                {formState.isSubmitting ? 'Criando...' : 'Criar Projeto'}
+              </Button>
+            </div>
+          </TabsContent>
         </form>
-      </div>
-      
-      <div className="fixed bottom-0 left-0 right-0 bg-white p-4 border-t">
-        <div className="max-w-7xl mx-auto px-4">
-          <Button 
-            type="submit" 
-            onClick={handleSubmit}
-            disabled={formState.isSubmitting}
-          >
-            {formState.isSubmitting ? 'Criando...' : 'Criar Projeto'}
-          </Button>
-        </div>
-      </div>
+      </Tabs>
     </div>
   );
 };

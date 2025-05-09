@@ -198,4 +198,25 @@ export interface PreviewProjectData {
   status: 'waiting' | 'feedback' | 'approved';
   packageType?: string;
   creationDate?: string;
+  extras?: string[];
+}
+
+/**
+ * Phone Number with Country Code interface
+ */
+export interface PhoneWithCountryCode {
+  countryCode: string;
+  nationalNumber: string;
+  fullNumber: string;
+}
+
+/**
+ * Extra Service interface
+ */
+export interface ExtraService {
+  id: string;
+  name: string;
+  description: string;
+  price: number;
+  selected?: boolean;
 }

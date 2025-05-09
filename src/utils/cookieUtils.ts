@@ -1,21 +1,19 @@
 
 /**
- * Sets a cookie with the given name, value and options
- * 
- * @param name - Cookie name
- * @param value - Cookie value
- * @param options - Cookie options (path, max-age, etc.)
+ * Cookie utility functions for storing data in cookies rather than localStorage
+ * to support private/anonymous browsing modes
  */
+
+// Set a cookie with options
 export const setCookie = (name: string, value: string, options: Record<string, string> = {}): void => {
   const defaultOptions = {
     path: '/',
-    maxAge: '86400', // 1 day
+    maxAge: '86400', // 1 day in seconds
     sameSite: 'Lax',
     secure: window.location.protocol === 'https:',
   };
   
   const cookieOptions = { ...defaultOptions, ...options };
-  
   let cookieString = `${encodeURIComponent(name)}=${encodeURIComponent(value)}`;
   
   Object.entries(cookieOptions).forEach(([key, val]) => {
@@ -24,15 +22,10 @@ export const setCookie = (name: string, value: string, options: Record<string, s
   });
   
   document.cookie = cookieString;
-  console.log(`[Cookie] Set: ${name}`);
+  console.log(`Cookie set: ${name} with options:`, cookieOptions);
 };
 
-/**
- * Gets a cookie by name
- * 
- * @param name - Cookie name
- * @returns Cookie value or null if not found
- */
+// Get a cookie by name
 export const getCookie = (name: string): string | null => {
   const nameEQ = `${encodeURIComponent(name)}=`;
   const cookieArray = document.cookie.split(';');
@@ -40,60 +33,36 @@ export const getCookie = (name: string): string | null => {
   for (let i = 0; i < cookieArray.length; i++) {
     let c = cookieArray[i].trim();
     if (c.indexOf(nameEQ) === 0) {
-      return decodeURIComponent(c.substring(nameEQ.length, c.length));
+      return decodeURIComponent(c.substring(nameEQ.length));
     }
   }
-  
   return null;
 };
 
-/**
- * Deletes a cookie by name
- * 
- * @param name - Cookie name
- * @param path - Cookie path (defaults to '/')
- */
-export const deleteCookie = (name: string, path = '/'): void => {
-  document.cookie = `${encodeURIComponent(name)}=; path=${path}; expires=Thu, 01 Jan 1970 00:00:01 GMT;`;
-  console.log(`[Cookie] Deleted: ${name}`);
+// Remove a cookie
+export const removeCookie = (name: string): void => {
+  setCookie(name, '', { maxAge: '-1' });
 };
 
-/**
- * Alias for deleteCookie to maintain compatibility with existing code
- */
-export const removeCookie = deleteCookie;
-
-/**
- * Sets a JSON object as a cookie
- * 
- * @param name - Cookie name
- * @param value - Object to stringify and store
- * @param options - Cookie options
- */
-export const setJsonCookie = (name: string, value: any, options: Record<string, string> = {}): void => {
+// Set a JSON value in a cookie
+export const setJsonCookie = <T>(name: string, value: T, options: Record<string, string> = {}): void => {
   try {
     const jsonValue = JSON.stringify(value);
     setCookie(name, jsonValue, options);
   } catch (error) {
-    console.error('[Cookie] Error setting JSON cookie:', error);
+    console.error(`Error setting JSON cookie ${name}:`, error);
   }
 };
 
-/**
- * Gets a JSON cookie by name
- * 
- * @param name - Cookie name
- * @returns Parsed object or null if not found or invalid JSON
- */
-export const getJsonCookie = <T = any>(name: string): T | null => {
+// Get a JSON value from a cookie
+export const getJsonCookie = <T>(name: string): T | null => {
   const cookieValue = getCookie(name);
-  
   if (!cookieValue) return null;
   
   try {
     return JSON.parse(cookieValue) as T;
   } catch (error) {
-    console.error('[Cookie] Error parsing JSON cookie:', error);
+    console.error(`Error parsing JSON cookie ${name}:`, error);
     return null;
   }
 };

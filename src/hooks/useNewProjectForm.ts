@@ -1,6 +1,7 @@
 
 import { useState } from 'react';
 import { useToast } from "@/hooks/use-toast";
+import { PhoneWithCountryCode, ExtraService } from '@/types/project.types';
 
 export interface Version {
   title: string;
@@ -8,7 +9,7 @@ export interface Version {
   audioUrl: string;
 }
 
-// Package options constant - corrected to match requirements
+// Package options constant
 export const PACKAGE_OPTIONS = [
   { value: 'essential', label: 'Essencial' },
   { value: 'professional', label: 'Profissional' },
@@ -16,42 +17,46 @@ export const PACKAGE_OPTIONS = [
   { value: 'custom', label: 'Personalizado' }
 ];
 
+// Default extra services
+export const DEFAULT_EXTRA_SERVICES: ExtraService[] = [
+  { 
+    id: 'stems', 
+    name: 'Stems (Separação de Instrumentos)', 
+    description: 'Receba os instrumentos separados da sua música',
+    price: 150,
+    selected: false
+  },
+  { 
+    id: 'rush', 
+    name: 'Entrega Prioritária', 
+    description: 'Receba seu projeto com prioridade máxima',
+    price: 200,
+    selected: false
+  },
+  { 
+    id: 'commercial', 
+    name: 'Licença Comercial', 
+    description: 'Permissão para uso comercial da música',
+    price: 300,
+    selected: false
+  }
+];
+
 export const useNewProjectForm = () => {
   const [clientName, setClientName] = useState('');
   const [clientEmail, setClientEmail] = useState('');
-  const [clientPhone, setClientPhone] = useState('');
+  const [clientPhone, setClientPhone] = useState<PhoneWithCountryCode>({
+    countryCode: '+55',
+    nationalNumber: '',
+    fullNumber: '+55 '
+  });
   const [packageType, setPackageType] = useState('');
   const [versions, setVersions] = useState<Version[]>([
     { title: '', description: '', audioUrl: '' }
   ]);
+  const [extras, setExtras] = useState<ExtraService[]>(DEFAULT_EXTRA_SERVICES);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const { toast } = useToast();
-
-  // Format phone number as user types
-  const formatPhoneNumber = (phone: string): string => {
-    // Remove non-numeric characters
-    const numericValue = phone.replace(/\D/g, '');
-    
-    if (numericValue.length <= 2) {
-      return numericValue;
-    } 
-    
-    if (numericValue.length <= 7) {
-      return `(${numericValue.slice(0, 2)}) ${numericValue.slice(2)}`;
-    }
-    
-    if (numericValue.length <= 11) {
-      return `(${numericValue.slice(0, 2)}) ${numericValue.slice(2, 7)}-${numericValue.slice(7)}`;
-    }
-    
-    // Limit to standard Brazilian phone number format
-    return `(${numericValue.slice(0, 2)}) ${numericValue.slice(2, 7)}-${numericValue.slice(7, 11)}`;
-  };
-
-  // Handler for phone number changes with formatting
-  const handlePhoneChange = (value: string) => {
-    setClientPhone(formatPhoneNumber(value));
-  };
 
   const addVersion = () => {
     setVersions([...versions, { title: '', description: '', audioUrl: '' }]);
@@ -78,9 +83,14 @@ export const useNewProjectForm = () => {
   const resetForm = () => {
     setClientName('');
     setClientEmail('');
-    setClientPhone('');
+    setClientPhone({
+      countryCode: '+55',
+      nationalNumber: '',
+      fullNumber: '+55 '
+    });
     setPackageType('');
     setVersions([{ title: '', description: '', audioUrl: '' }]);
+    setExtras(DEFAULT_EXTRA_SERVICES); // Reset extras to defaults
   };
 
   return {
@@ -90,13 +100,15 @@ export const useNewProjectForm = () => {
       clientPhone,
       packageType,
       versions,
+      extras,
       isSubmitting
     },
     setters: {
       setClientName,
       setClientEmail,
-      setClientPhone: handlePhoneChange,
+      setClientPhone,
       setPackageType,
+      setExtras,
       setIsSubmitting
     },
     actions: {
