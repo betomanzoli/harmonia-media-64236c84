@@ -1,136 +1,119 @@
 
 import React, { useState } from 'react';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Copy, Check, Mail, Share2 } from 'lucide-react';
-import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
-import { useToast } from '@/hooks/use-toast';
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+} from "@/components/ui/dialog";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { ShareIcon, Copy, Check } from 'lucide-react';
 
 interface SharePreviewDialogProps {
   isOpen: boolean;
   onOpenChange: (open: boolean) => void;
   projectId: string;
-  projectName?: string;
+  projectTitle?: string;
 }
 
-const SharePreviewDialog: React.FC<SharePreviewDialogProps> = ({
-  isOpen,
+const SharePreviewDialog: React.FC<SharePreviewDialogProps> = ({ 
+  isOpen, 
   onOpenChange,
   projectId,
-  projectName = 'Prévia musical'
+  projectTitle = 'Prévia Musical'
 }) => {
-  const [copied, setCopied] = useState(false);
   const [email, setEmail] = useState('');
-  const { toast } = useToast();
+  const [copied, setCopied] = useState(false);
+  const [emailSent, setEmailSent] = useState(false);
   
-  const previewLink = `${window.location.origin}/preview/${projectId}`;
-  
-  const handleCopy = () => {
-    navigator.clipboard.writeText(previewLink);
+  const previewUrl = `${window.location.origin}/preview/${projectId}`;
+
+  const handleCopyToClipboard = () => {
+    navigator.clipboard.writeText(previewUrl);
     setCopied(true);
-    
+    setTimeout(() => setCopied(false), 2000);
+  };
+
+  const handleEmailShare = () => {
+    // In a real application, this would send the invitation via email
+    console.log(`Sharing link ${previewUrl} with ${email}`);
+    setEmailSent(true);
     setTimeout(() => {
-      setCopied(false);
+      setEmailSent(false);
+      setEmail('');
     }, 2000);
-    
-    toast({
-      title: "Link copiado",
-      description: "Link de prévia copiado para a área de transferência."
-    });
   };
-  
-  const handleEmailShare = (e: React.FormEvent) => {
-    e.preventDefault();
-    
-    if (!email) {
-      toast({
-        title: "Email requerido",
-        description: "Por favor, insira um email para compartilhar a prévia.",
-        variant: "destructive"
-      });
-      return;
-    }
-    
-    // Ideally this would call an API to send the email
-    const mailtoLink = `mailto:${email}?subject=${encodeURIComponent(`Prévia de música personalizada - ${projectName}`)}&body=${encodeURIComponent(`Olá!\n\nGostaria de compartilhar esta prévia musical com você:\n\n${previewLink}\n\nAtenciosamente,\nHarmonIA`)}`;
-    window.open(mailtoLink, '_blank');
-    
-    toast({
-      title: "Link compartilhado",
-      description: "O cliente de email foi aberto para compartilhar o link."
-    });
-  };
-  
-  const handleWhatsAppShare = () => {
-    const whatsappText = `Olá! Gostaria de compartilhar esta prévia musical "${projectName}" com você: ${previewLink}`;
-    window.open(`https://wa.me/?text=${encodeURIComponent(whatsappText)}`, '_blank');
-    
-    toast({
-      title: "Link compartilhado",
-      description: "O WhatsApp foi aberto para compartilhar o link."
-    });
-  };
-  
+
   return (
     <Dialog open={isOpen} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
-          <DialogTitle>Compartilhar Prévia</DialogTitle>
-          <DialogDescription>
-            Compartilhe o link desta prévia musical com outras pessoas.
-          </DialogDescription>
+          <DialogTitle className="flex items-center gap-2">
+            <ShareIcon className="h-5 w-5" /> Compartilhar Prévia
+          </DialogTitle>
         </DialogHeader>
         
-        <Tabs defaultValue="link" className="w-full">
-          <TabsList className="grid w-full grid-cols-3">
-            <TabsTrigger value="link">Link</TabsTrigger>
-            <TabsTrigger value="email">Email</TabsTrigger>
-            <TabsTrigger value="whatsapp">WhatsApp</TabsTrigger>
-          </TabsList>
-          
-          <TabsContent value="link" className="mt-4">
-            <div className="flex items-center space-x-2">
-              <div className="grid flex-1 gap-2">
-                <Input
-                  id="link"
-                  value={previewLink}
-                  readOnly
-                  className="w-full"
-                />
-              </div>
-              <Button type="button" size="sm" onClick={handleCopy} className="px-3">
-                {copied ? <Check className="h-4 w-4" /> : <Copy className="h-4 w-4" />}
+        <div className="flex flex-col gap-4 py-4">
+          <div>
+            <Label htmlFor="preview-link" className="mb-2 block">Link para prévia</Label>
+            <div className="flex gap-2">
+              <Input
+                id="preview-link"
+                value={previewUrl}
+                readOnly
+                className="flex-1"
+              />
+              <Button 
+                variant="outline" 
+                size="icon" 
+                onClick={handleCopyToClipboard}
+                title="Copiar link"
+              >
+                {copied ? (
+                  <Check className="h-4 w-4 text-green-600" />
+                ) : (
+                  <Copy className="h-4 w-4" />
+                )}
               </Button>
             </div>
-          </TabsContent>
+            {copied && (
+              <p className="mt-1 text-xs text-green-600">Link copiado para a área de transferência!</p>
+            )}
+          </div>
           
-          <TabsContent value="email" className="mt-4">
-            <form onSubmit={handleEmailShare} className="flex flex-col space-y-4">
-              <div className="flex flex-col space-y-2">
-                <label htmlFor="email" className="text-sm">Email</label>
-                <Input
-                  id="email"
-                  type="email"
-                  placeholder="nome@exemplo.com"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                />
-              </div>
-              <Button type="submit" className="w-full">
-                <Mail className="h-4 w-4 mr-2" />
-                Enviar por Email
+          <div className="mt-2">
+            <Label htmlFor="share-email" className="mb-2 block">Compartilhar por e-mail</Label>
+            <div className="flex gap-2">
+              <Input
+                id="share-email"
+                type="email"
+                placeholder="cliente@exemplo.com"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                className="flex-1"
+              />
+              <Button 
+                onClick={handleEmailShare}
+                disabled={!email || emailSent}
+              >
+                {emailSent ? 'Enviado!' : 'Enviar'}
               </Button>
-            </form>
-          </TabsContent>
-          
-          <TabsContent value="whatsapp" className="mt-4">
-            <Button onClick={handleWhatsAppShare} className="w-full bg-green-600 hover:bg-green-700">
-              <Share2 className="h-4 w-4 mr-2" />
-              Compartilhar via WhatsApp
-            </Button>
-          </TabsContent>
-        </Tabs>
+            </div>
+            {emailSent && (
+              <p className="mt-1 text-xs text-green-600">Link enviado com sucesso!</p>
+            )}
+          </div>
+        </div>
+        
+        <DialogFooter className="sm:justify-start">
+          <div className="text-sm text-muted-foreground">
+            Compartilhe este link para que outras pessoas possam acessar a prévia de
+            <span className="font-semibold"> {projectTitle}</span>.
+          </div>
+        </DialogFooter>
       </DialogContent>
     </Dialog>
   );

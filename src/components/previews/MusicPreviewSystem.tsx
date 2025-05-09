@@ -101,7 +101,7 @@ const MusicPreviewSystem: React.FC<MusicPreviewSystemProps> = ({ projectId }) =>
   return (
     <div className="max-w-4xl mx-auto px-4">
       <PreviewHeader 
-        projectName={projectData.projectName || 'Projeto sem nome'} 
+        projectTitle={projectData.projectTitle || 'Projeto sem nome'} 
         clientName={projectData.clientName || 'Cliente'} 
         packageType={packageType}
         status={projectData.status || 'pending'}
@@ -109,12 +109,12 @@ const MusicPreviewSystem: React.FC<MusicPreviewSystemProps> = ({ projectId }) =>
         onShareClick={() => setIsShareDialogOpen(true)}
       />
       
-      {projectData.versions && projectData.versions.length > 0 && (
+      {projectData.previews && projectData.previews.length > 0 && (
         <div className="mt-8">
           <PreviewPlayerList 
-            versions={projectData.versions}
+            versions={projectData.previews}
             selectedVersion={selectedVersion}
-            onSelectVersion={setSelectedVersion}
+            setSelectedVersion={setSelectedVersion}
           />
         </div>
       )}
@@ -122,8 +122,8 @@ const MusicPreviewSystem: React.FC<MusicPreviewSystemProps> = ({ projectId }) =>
       {!feedbackSubmitted && (
         <div className="mt-8">
           <PreviewFeedbackForm 
-            onFeedbackChange={setFeedback} 
             feedback={feedback}
+            onFeedbackChange={setFeedback} 
             onSubmit={handleFeedbackSubmit}
             onApprove={handleApprove}
           />
@@ -141,7 +141,7 @@ const MusicPreviewSystem: React.FC<MusicPreviewSystemProps> = ({ projectId }) =>
       )}
       
       <div className="mt-8">
-        <PreviewInstructions />
+        <PreviewInstructions status={projectData.status || 'waiting'} />
       </div>
       
       {feedbackSubmitted && (
@@ -158,7 +158,7 @@ const MusicPreviewSystem: React.FC<MusicPreviewSystemProps> = ({ projectId }) =>
         isOpen={isShareDialogOpen}
         onOpenChange={setIsShareDialogOpen}
         projectId={projectId} 
-        projectName={projectData.projectName || 'Projeto sem nome'}
+        projectTitle={projectData.projectTitle || 'Projeto sem nome'}
       />
     </div>
   );

@@ -1,51 +1,93 @@
+
 import { v4 as uuidv4 } from 'uuid';
+import { setPreviewAccessCookie, checkPreviewAccessCookie } from './authCookies';
+import { supabase } from '@/integrations/supabase/client';
 
 // Create a more secure mapping between encoded IDs and project IDs
 const previewLinksMap = new Map<string, string>();
 
-// Keep a record of which emails are authorized to access which project IDs
-const authorizedEmails = new Map<string, string[]>();
-
-export const generatePreviewLink = (projectId: string): string => {
-  // Generate a unique encoded ID that's harder to guess
-  const encodedId = uuidv4().replace(/-/g, ''); 
-  
-  // Store the mapping
-  previewLinksMap.set(encodedId, projectId);
-  
-  // Store this in localStorage for persistence
-  const storedMappings = JSON.parse(localStorage.getItem('previewLinksMappings') || '{}');
-  storedMappings[encodedId] = projectId;
-  localStorage.setItem('previewLinksMappings', JSON.stringify(storedMappings));
-  
-  return encodedId;
-};
-
-export const getProjectIdFromPreviewLink = (encodedId: string): string | null => {
-  // First check in-memory map
-  let projectId = previewLinksMap.get(encodedId);
-  
-  // If not found in memory, check in localStorage
-  if (!projectId) {
-    const storedMappings = JSON.parse(localStorage.getItem('previewLinksMappings') || '{}');
-    projectId = storedMappings[encodedId] || null;
+// Generate a preview link with a unique encoded ID
+export const generatePreviewLink = async (projectId: string): Promise<string> => {
+  try {
+    // Generate a unique encoded ID that's harder to guess
+    const encodedId = uuidv4().replace(/-/g, ''); 
     
-    // Add to in-memory map if found
-    if (projectId) {
-      previewLinksMap.set(encodedId, projectId);
+    // Update the project record with the preview code
+    const { error } = await supabase
+      .from('projects')
+      .update({ 
+        preview_code: encodedId,
+        updated_at: new Date().toISOString()
+      })
+      .eq('id', projectId);
+      
+    if (error) {
+      console.error('Failed to update preview code:', error);
+      throw error;
     }
+    
+    // Store the mapping locally as a fallback
+    previewLinksMap.set(encodedId, projectId);
+    
+    // Store this in localStorage for persistence
+    // This will be used as a fallback if the database query fails
+    const storedMappings = JSON.parse(localStorage.getItem('previewLinksMappings') || '{}');
+    storedMappings[encodedId] = projectId;
+    localStorage.setItem('previewLinksMappings', JSON.stringify(storedMappings));
+    
+    return encodedId;
+  } catch (error) {
+    console.error('Error generating preview link:', error);
+    return '';
   }
-  
-  return projectId;
 };
 
-export const authorizeEmailForProject = (email: string, projectId: string): void => {
-  const projectEmails = authorizedEmails.get(projectId) || [];
-  if (!projectEmails.includes(email)) {
-    projectEmails.push(email);
-    authorizedEmails.set(projectId, projectEmails);
+// Get project ID from preview link (encoded ID)
+export const getProjectIdFromPreviewLink = async (encodedId: string): Promise<string | null> => {
+  try {
+    // Try to get project ID from database first
+    const { data, error } = await supabase
+      .from('projects')
+      .select('id')
+      .eq('preview_code', encodedId)
+      .single();
+      
+    if (data && data.id) {
+      return data.id;
+    }
     
-    // Save to localStorage for persistence
+    if (error) {
+      console.warn('Error getting project from database:', error);
+    }
+    
+    // Fall back to in-memory map
+    let projectId = previewLinksMap.get(encodedId);
+    
+    // If not found in memory, check in localStorage
+    if (!projectId) {
+      const storedMappings = JSON.parse(localStorage.getItem('previewLinksMappings') || '{}');
+      projectId = storedMappings[encodedId] || null;
+      
+      // Add to in-memory map if found
+      if (projectId) {
+        previewLinksMap.set(encodedId, projectId);
+      }
+    }
+    
+    return projectId;
+  } catch (error) {
+    console.error('Error getting project ID from preview link:', error);
+    return null;
+  }
+};
+
+// Authorize access to a project preview
+export const authorizeEmailForProject = (email: string, projectId: string): void => {
+  try {
+    // Store authorization in cookie
+    setPreviewAccessCookie(projectId);
+    
+    // Also store in localStorage as a fallback
     const storedAuthorizations = JSON.parse(localStorage.getItem('previewAuthorizedEmails') || '{}');
     if (!storedAuthorizations[projectId]) {
       storedAuthorizations[projectId] = [];
@@ -54,43 +96,36 @@ export const authorizeEmailForProject = (email: string, projectId: string): void
       storedAuthorizations[projectId].push(email);
     }
     localStorage.setItem('previewAuthorizedEmails', JSON.stringify(storedAuthorizations));
+  } catch (error) {
+    console.error('Error authorizing email for project:', error);
   }
 };
 
+// Check if an email is authorized for a project
 export const isEmailAuthorizedForProject = (email: string, projectId: string): boolean => {
-  // First check in-memory map
-  const projectEmails = authorizedEmails.get(projectId);
-  if (projectEmails && projectEmails.includes(email)) {
-    return true;
-  }
-  
-  // If not found in memory, check in localStorage
-  const storedAuthorizations = JSON.parse(localStorage.getItem('previewAuthorizedEmails') || '{}');
-  const storedEmails = storedAuthorizations[projectId] || [];
-  
-  // Add to in-memory map if found
-  if (storedEmails.includes(email)) {
-    if (!authorizedEmails.has(projectId)) {
-      authorizedEmails.set(projectId, []);
+  try {
+    // First check in cookie
+    if (checkPreviewAccessCookie(projectId)) {
+      return true;
     }
-    authorizedEmails.get(projectId)?.push(email);
-    return true;
+    
+    // If not found in cookie, check in localStorage
+    const storedAuthorizations = JSON.parse(localStorage.getItem('previewAuthorizedEmails') || '{}');
+    const storedEmails = storedAuthorizations[projectId] || [];
+    
+    return storedEmails.includes(email);
+  } catch (error) {
+    console.error('Error checking email authorization for project:', error);
+    return false;
   }
-  
-  return false;
 };
 
-// Load stored mappings and authorizations when the module loads
+// Load stored mappings when the module loads
 const loadStoredData = () => {
   try {
     const storedMappings = JSON.parse(localStorage.getItem('previewLinksMappings') || '{}');
     Object.entries(storedMappings).forEach(([encodedId, projectId]) => {
       previewLinksMap.set(encodedId, projectId as string);
-    });
-    
-    const storedAuthorizations = JSON.parse(localStorage.getItem('previewAuthorizedEmails') || '{}');
-    Object.entries(storedAuthorizations).forEach(([projectId, emails]) => {
-      authorizedEmails.set(projectId, emails as string[]);
     });
   } catch (error) {
     console.error('Error loading stored preview data:', error);

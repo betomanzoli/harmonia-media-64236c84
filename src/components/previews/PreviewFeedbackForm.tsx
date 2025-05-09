@@ -1,147 +1,89 @@
 
-import React, { useState } from 'react';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from "@/components/ui/card";
+import React from 'react';
+import { Card, CardContent, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
 import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
-import { MessageSquare, CheckCircle } from 'lucide-react';
-import { Alert, AlertDescription } from "@/components/ui/alert";
+import { Send, ThumbsUp } from 'lucide-react';
 
 interface PreviewFeedbackFormProps {
   selectedPreview?: string | null;
-  feedback?: string;
-  setFeedback?: (feedback: string) => void;
-  onFeedbackChange?: (feedback: string) => void;
-  handleSubmit?: (feedback?: string) => void;
-  onSubmit?: (feedback?: string) => void;
-  handleApprove?: (feedback?: string) => void;
-  onApprove?: (feedback?: string) => void;
-  status?: string;
+  feedback: string;
+  onFeedbackChange: (feedback: string) => void;
+  handleSubmit?: () => void;
+  handleApprove?: () => void;
+  status?: 'waiting' | 'feedback' | 'approved';
   versionTitle?: string;
+  onSubmit?: (comments?: string) => void;
+  onApprove?: (comments?: string) => void;
 }
 
-const PreviewFeedbackForm: React.FC<PreviewFeedbackFormProps> = ({
-  selectedPreview,
-  feedback = '',
-  setFeedback,
+const PreviewFeedbackForm: React.FC<PreviewFeedbackFormProps> = ({ 
+  selectedPreview, 
+  feedback, 
   onFeedbackChange,
   handleSubmit,
-  onSubmit,
   handleApprove,
-  onApprove,
-  status,
-  versionTitle
+  status = 'waiting',
+  versionTitle,
+  onSubmit,
+  onApprove
 }) => {
-  const [localFeedback, setLocalFeedback] = useState(feedback || '');
+  // Determine which submit and approve handlers to use
+  const submitHandler = onSubmit || handleSubmit;
+  const approveHandler = onApprove || handleApprove;
 
-  React.useEffect(() => {
-    setLocalFeedback(feedback);
-  }, [feedback]);
-
-  const handleFeedbackChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
-    const newValue = e.target.value;
-    setLocalFeedback(newValue);
-    
-    if (setFeedback) {
-      setFeedback(newValue);
-    }
-    
-    if (onFeedbackChange) {
-      onFeedbackChange(newValue);
-    }
-  };
+  const isDisabled = status === 'approved' || status === 'feedback';
   
-  const handleSubmitFeedback = () => {
-    if (handleSubmit) {
-      handleSubmit(localFeedback);
-    }
-    if (onSubmit) {
-      onSubmit(localFeedback);
-    }
-  };
-  
-  const handleApproveVersion = () => {
-    if (handleApprove) {
-      handleApprove(localFeedback);
-    }
-    if (onApprove) {
-      onApprove(localFeedback);
-    }
-  };
-
-  if (status === 'approved' || status === 'feedback') {
-    return (
-      <Card>
-        <CardHeader>
-          <CardTitle>Seu feedback já foi enviado</CardTitle>
-          <CardDescription>
-            {status === 'approved' 
-              ? 'Você já aprovou a música. Obrigado pelo seu feedback!'
-              : 'Você já enviou seu feedback. Nossa equipe está trabalhando nos ajustes solicitados.'}
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <Alert className={status === 'approved' ? 'bg-green-50' : 'bg-blue-50'}>
-            <AlertDescription>
-              {status === 'approved' 
-                ? 'Em breve entraremos em contato com a versão final da sua música.'
-                : 'Em breve você receberá uma notificação com as novas versões para avaliação.'}
-            </AlertDescription>
-          </Alert>
-        </CardContent>
-      </Card>
-    );
-  }
-
   return (
     <Card>
       <CardHeader>
-        <CardTitle>Envie seu Feedback</CardTitle>
-        <CardDescription>
-          {selectedPreview 
-            ? `Envie seu feedback sobre a versão "${versionTitle || 'selecionada'}" ou aprove-a.`
-            : 'Selecione uma versão primeiro para enviar feedback.'}
-        </CardDescription>
+        <CardTitle className="flex items-center justify-between">
+          <span>Envie seu feedback</span>
+          {selectedPreview && <span className="text-sm font-normal text-gray-500">Versão selecionada: {versionTitle || selectedPreview}</span>}
+        </CardTitle>
       </CardHeader>
       <CardContent>
-        {!selectedPreview ? (
-          <div className="bg-amber-50 border border-amber-200 text-amber-800 p-4 rounded-md">
-            <p>Por favor, selecione uma versão na aba "Versões Propostas" antes de enviar feedback.</p>
-          </div>
-        ) : (
-          <div className="space-y-4">
-            <div>
-              <Textarea
-                placeholder="Escreva aqui seu feedback sobre a música... O que você gostou? O que gostaria de mudar?"
-                className="min-h-[150px]"
-                value={localFeedback}
-                onChange={handleFeedbackChange}
-                disabled={!selectedPreview}
-              />
+        <div className="space-y-4">
+          {!selectedPreview && (
+            <div className="bg-orange-50 border border-orange-200 text-orange-800 p-4 rounded-md">
+              <p className="text-sm">Por favor, selecione uma versão antes de enviar seu feedback.</p>
             </div>
-            <div className="text-sm text-gray-500">
-              <p>Seu feedback é importante para que possamos entregar a música perfeita para você.</p>
-            </div>
-          </div>
-        )}
+          )}
+          
+          <Textarea 
+            placeholder="Compartilhe suas impressões sobre a música. O que você gostou? O que poderia ser melhorado?"
+            className="min-h-[120px]"
+            value={feedback}
+            onChange={(e) => onFeedbackChange(e.target.value)}
+            disabled={isDisabled || !selectedPreview}
+          />
+        </div>
       </CardContent>
-      <CardFooter className="flex flex-col sm:flex-row gap-3 sm:justify-between">
-        <Button
-          onClick={handleApproveVersion}
-          disabled={!selectedPreview}
-          className="w-full sm:w-auto bg-green-600 hover:bg-green-700"
-        >
-          <CheckCircle className="h-4 w-4 mr-2" />
-          Aprovar esta Versão
-        </Button>
-        <Button
-          onClick={handleSubmitFeedback}
-          disabled={!selectedPreview || !localFeedback}
-          className="w-full sm:w-auto"
-          variant="outline"
-        >
-          <MessageSquare className="h-4 w-4 mr-2" />
-          Enviar Feedback
-        </Button>
+      <CardFooter className="flex justify-between flex-wrap gap-2">
+        <div className="text-sm text-gray-500">
+          {status === 'approved' && "Você já aprovou esta prévia. Obrigado!"}
+          {status === 'feedback' && "Seu feedback foi enviado. Obrigado!"}
+          {status === 'waiting' && !selectedPreview && "Selecione uma versão para prosseguir."}
+        </div>
+        <div className="flex space-x-2">
+          <Button 
+            onClick={() => submitHandler && submitHandler(feedback)}
+            disabled={isDisabled || !selectedPreview}
+            variant="outline"
+          >
+            <Send className="mr-2 h-4 w-4" />
+            Enviar Feedback
+          </Button>
+          <Button 
+            onClick={() => approveHandler && approveHandler(feedback)}
+            disabled={isDisabled || !selectedPreview}
+            variant="default"
+            className="bg-green-600 hover:bg-green-700"
+          >
+            <ThumbsUp className="mr-2 h-4 w-4" />
+            Aprovar Versão
+          </Button>
+        </div>
       </CardFooter>
     </Card>
   );
