@@ -96,18 +96,24 @@ export const usePreviewData = (previewId: string | undefined) => {
               let clientEmail = null;
               let clientPhone = null;
               
-              if (previewCodeData.clients) {
-                // If it's an array with at least one item
-                if (Array.isArray(previewCodeData.clients) && previewCodeData.clients.length > 0) {
-                  clientName = previewCodeData.clients[0].name || 'Cliente';
-                  clientEmail = previewCodeData.clients[0].email;
-                  clientPhone = previewCodeData.clients[0].phone;
+              // Ensure clients exists and properly handle its structure
+              const clients = previewCodeData.clients;
+              if (clients) {
+                // Check if clients is an array
+                if (Array.isArray(clients)) {
+                  // If it's a non-empty array, use the first item
+                  if (clients.length > 0) {
+                    const firstClient = clients[0];
+                    clientName = firstClient.name || 'Cliente';
+                    clientEmail = firstClient.email || null;
+                    clientPhone = firstClient.phone || null;
+                  }
                 } 
-                // If it's a direct object
-                else if (typeof previewCodeData.clients === 'object') {
-                  clientName = previewCodeData.clients.name || 'Cliente';
-                  clientEmail = previewCodeData.clients.email;
-                  clientPhone = previewCodeData.clients.phone;
+                // If it's a direct object (not an array)
+                else if (typeof clients === 'object') {
+                  clientName = clients.name || 'Cliente';
+                  clientEmail = clients.email || null;
+                  clientPhone = clients.phone || null;
                 }
               }
               
