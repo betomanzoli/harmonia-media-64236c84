@@ -1,4 +1,3 @@
-
 import React, { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import MusicPreviewSystem from '@/components/previews/MusicPreviewSystem';
@@ -8,7 +7,7 @@ import { getProjectIdFromPreviewLink, isValidEncodedPreviewLink, decodePreviewCo
 import { supabase } from '@/lib/supabase';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { AlertCircle } from 'lucide-react';
-import { getCookie } from '@/components/previews/access/useProjectAccess';
+import { getCookieValue } from '@/components/previews/access/useProjectAccess';
 
 // Force dynamic content to prevent caching
 export const dynamic = 'force-dynamic';
@@ -61,7 +60,7 @@ const PreviewPage: React.FC = () => {
       
       // For backwards compatibility, we still support direct project IDs
       // but only when accessed by admin users
-      const isAdmin = getCookie('admin_preview_access') === 'true';
+      const isAdmin = getCookieValue('admin_preview_access') === 'true';
       
       if (!isEncodedLink && !isAdmin) {
         console.log("[PreviewPage] Direct link access denied - only encoded links are allowed for clients");
@@ -168,12 +167,12 @@ const PreviewPage: React.FC = () => {
   // Check authorization based on admin status or previous authorization
   const handleAuthorizationCheck = (encodedId: string) => {
     // Check if admin access or previously authorized
-    const isAdmin = getCookie('admin_preview_access') === 'true';
+    const isAdmin = getCookieValue('admin_preview_access') === 'true';
     
     // Try both specific and general authorization cookies
     const isPreviouslyAuthorized = 
-      getCookie(`preview_auth_${encodedId}`) === 'authorized' ||
-      getCookie('preview_access') !== null;
+      getCookieValue(`preview_auth_${encodedId}`) === 'authorized' ||
+      getCookieValue('preview_access') !== null;
     
     setDebugInfo(prev => ({ 
       ...prev, 
