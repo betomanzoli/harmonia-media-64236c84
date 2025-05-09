@@ -3,6 +3,7 @@ import { useState, useEffect } from 'react';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/lib/supabase';
 import { logger } from '@/utils/logger';
+import { PostgrestError } from '@supabase/supabase-js';
 
 // Define the structure of a briefing question
 interface BriefingQuestion {
@@ -45,7 +46,7 @@ export const useBriefingStorage = () => {
           .order('order_num', { ascending: true });
           
         if (error) {
-          logger.error('Error loading briefing questions', error);
+          logger.error('Error loading briefing questions', error instanceof Error ? error.message : JSON.stringify(error));
           toast({
             title: "Erro ao carregar perguntas",
             description: "Não foi possível carregar as perguntas do briefing.",
@@ -84,7 +85,7 @@ export const useBriefingStorage = () => {
         });
         
       if (error) {
-        logger.error('Error saving briefing responses', error instanceof Error ? error.message : String(error));
+        logger.error('Error saving briefing responses', error instanceof Error ? error.message : JSON.stringify(error));
         toast({
           title: "Erro ao salvar respostas",
           description: "Não foi possível salvar as respostas do briefing.",
@@ -97,7 +98,7 @@ export const useBriefingStorage = () => {
       if ("Notification" in window && Notification.permission === "granted") {
         new Notification("Briefing Salvo", {
           body: `As respostas do projeto ${projectId} foram salvas com sucesso.`,
-          tag: `briefing-${projectId}`  // Using tag instead of id
+          tag: `briefing-${projectId}`
         });
       }
       
@@ -122,7 +123,7 @@ export const useBriefingStorage = () => {
         .eq('project_id', projectId);
         
       if (error) {
-        logger.error('Error loading briefing responses', error instanceof Error ? error.message : String(error));
+        logger.error('Error loading briefing responses', error instanceof Error ? error.message : JSON.stringify(error));
         return {};
       }
       
