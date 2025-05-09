@@ -90,12 +90,15 @@ export const usePreviewData = (previewId: string | undefined) => {
             if (!previewCodeError && previewCodeData) {
               console.log('🔍 Project found in Supabase by preview_code:', previewCodeData);
               
+              // Fix: Access client data properly - clients is an object, not an array
+              const clientData = previewCodeData.clients || { name: 'Cliente', email: null, phone: null };
+              
               // Format project data in the expected format
               const formattedProject: ProjectItem = {
                 id: previewCodeData.id,
-                client_name: previewCodeData.clients?.name || 'Cliente',
-                client_email: previewCodeData.clients?.email,
-                client_phone: previewCodeData.clients?.phone,
+                client_name: clientData.name || 'Cliente',
+                client_email: clientData.email,
+                client_phone: clientData.phone,
                 project_title: previewCodeData.title,
                 package_type: 'standard', // Default if not available
                 status: previewCodeData.status,
@@ -106,14 +109,14 @@ export const usePreviewData = (previewId: string | undefined) => {
                 preview_code: previewCodeData.preview_code,
                 
                 // Camel case aliases for front-end components
-                clientName: previewCodeData.clients?.name || 'Cliente',
+                clientName: clientData.name || 'Cliente',
                 projectTitle: previewCodeData.title,
                 packageType: 'standard',
                 createdAt: previewCodeData.created_at,
                 lastActivityDate: previewCodeData.updated_at,
                 expirationDate: previewCodeData.deadline || new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString(),
-                clientEmail: previewCodeData.clients?.email,
-                clientPhone: previewCodeData.clients?.phone
+                clientEmail: clientData.email,
+                clientPhone: clientData.phone
               };
               
               // Get versions list from project_files
