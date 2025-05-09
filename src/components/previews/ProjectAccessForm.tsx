@@ -18,10 +18,13 @@ const ProjectAccessForm: React.FC<ProjectAccessFormProps> = ({ projectId, onVeri
   const [code, setCode] = useState(projectId || '');
   const [email, setEmail] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+  const [errorMessage, setErrorMessage] = useState('');
   const { toast } = useToast();
 
   const validateAccess = async (previewCode: string, email: string) => {
     try {
+      setErrorMessage('');
+      
       // Verificar no sistema local de projetos de prévia
       const storedProjects = localStorage.getItem('harmonIA_preview_projects');
       if (storedProjects) {
@@ -32,16 +35,20 @@ const ProjectAccessForm: React.FC<ProjectAccessFormProps> = ({ projectId, onVeri
           // Verificar se o email corresponde ao cliente do projeto
           if (project.clientEmail && project.clientEmail.toLowerCase() === email.toLowerCase()) {
             // Email válido para este projeto
+            console.log("Email válido encontrado para o projeto:", previewCode);
+            
+            // Configurar cookies com SameSite=Lax para compatibilidade com navegadores anônimos
             setPreviewAccessCookie(previewCode);
             setPreviewEmailCookie(previewCode, email);
+            
+            // Armazenar também em localStorage como fallback
+            localStorage.setItem(`preview_access_${previewCode}`, 'authorized');
+            localStorage.setItem(`preview_email_${previewCode}`, email);
+            
             return true;
           } else {
             // Email não corresponde
-            toast({
-              title: "Email incorreto",
-              description: "O email informado não corresponde ao cliente deste projeto.",
-              variant: "destructive"
-            });
+            setErrorMessage(`O email informado não corresponde ao cliente deste projeto.`);
             return false;
           }
         }
@@ -57,11 +64,7 @@ const ProjectAccessForm: React.FC<ProjectAccessFormProps> = ({ projectId, onVeri
         
         if (error || !data) {
           console.error('Código de prévia inválido:', error);
-          toast({
-            title: "Código inválido",
-            description: "O código de prévia fornecido não é válido.",
-            variant: "destructive"
-          });
+          setErrorMessage('O código de prévia fornecido não é válido.');
           return false;
         }
         
@@ -75,37 +78,32 @@ const ProjectAccessForm: React.FC<ProjectAccessFormProps> = ({ projectId, onVeri
             
           if (clientError || !clientData) {
             console.error('Cliente não encontrado:', clientError);
-            toast({
-              title: "Cliente não encontrado",
-              description: "Não foi possível verificar os dados do cliente.",
-              variant: "destructive"
-            });
+            setErrorMessage('Não foi possível verificar os dados do cliente.');
             return false;
           }
           
           if (clientData.email.toLowerCase() !== email.toLowerCase()) {
             console.error('Email não corresponde');
-            toast({
-              title: "Email incorreto",
-              description: "O email informado não corresponde ao cliente deste projeto.",
-              variant: "destructive"
-            });
+            setErrorMessage('O email informado não corresponde ao cliente deste projeto.');
             return false;
+          } else {
+            // Email válido no Supabase
+            setPreviewAccessCookie(previewCode);
+            setPreviewEmailCookie(previewCode, email);
+            return true;
           }
         }
       } catch (e) {
         console.error("Erro ao verificar no Supabase:", e);
+        setErrorMessage('Ocorreu um erro ao tentar validar o acesso.');
       }
       
       // Se chegou até aqui sem retornar, significa que o email é inválido
-      toast({
-        title: "Email incorreto",
-        description: "Por favor, utilize o email cadastrado no projeto.",
-        variant: "destructive"
-      });
+      setErrorMessage('Por favor, utilize o email cadastrado no projeto.');
       return false;
     } catch (error) {
       console.error('Erro validando acesso:', error);
+      setErrorMessage('Ocorreu um erro durante a validação. Tente novamente.');
       return false;
     }
   };
@@ -179,6 +177,12 @@ const ProjectAccessForm: React.FC<ProjectAccessFormProps> = ({ projectId, onVeri
                 O mesmo email usado no momento da contratação
               </p>
             </div>
+            
+            {errorMessage && (
+              <div className="p-3 bg-red-50 border border-red-200 rounded text-red-600 text-sm">
+                {errorMessage}
+              </div>
+            )}
           </form>
         </CardContent>
         <CardFooter>
