@@ -4,12 +4,15 @@ import { useParams, Link } from 'react-router-dom';
 import AdminLayout from '@/components/admin/layout/AdminLayout';
 import { usePreviewProjects, VersionItem } from '@/hooks/admin/usePreviewProjects';
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea"; 
+import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Switch } from "@/components/ui/switch";
 import { useToast } from "@/hooks/use-toast";
-import { ArrowLeft, Calendar, Copy, Edit, Trash2, PlusCircle, MessageSquare, Mail } from "lucide-react";
-import ProjectActionCard from '@/components/admin/previews/ProjectActionCard';
+import { ArrowLeft, Calendar, PlusCircle, Trash2, Check } from "lucide-react";
+import EditVersionItem from '@/components/admin/previews/components/EditVersionItem';
 import ContactClientActions from '@/components/admin/previews/components/ContactClientActions';
 import { 
   Dialog, 
@@ -19,19 +22,25 @@ import {
   DialogDescription,
   DialogFooter
 } from "@/components/ui/dialog";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
+import { v4 as uuidv4 } from 'uuid';
 
 const ProjectEditPage = () => {
   const { projectId } = useParams<{ projectId: string }>();
   const { getProjectById, updateProject } = usePreviewProjects();
   const [project, setProject] = useState<any>(null);
   const [isLoading, setIsLoading] = useState(true);
-  const [selectedVersionId, setSelectedVersionId] = useState<string | null>(null);
+  const [showAddVersionDialog, setShowAddVersionDialog] = useState(false);
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
   const [newDeadlineDate, setNewDeadlineDate] = useState('');
+  const [selectedVersionId, setSelectedVersionId] = useState<string | null>(null);
   const [showExtendDeadlineDialog, setShowExtendDeadlineDialog] = useState(false);
+  const [newVersion, setNewVersion] = useState({
+    name: '',
+    description: '',
+    audioUrl: '',
+    recommended: false,
+    final: false
+  });
   const { toast } = useToast();
   
   useEffect(() => {
@@ -42,11 +51,39 @@ const ProjectEditPage = () => {
     }
   }, [projectId, getProjectById]);
   
-  const handleAddVersion = (newVersion: VersionItem) => {
-    if (!project || !projectId) return;
+  const handleAddVersionClick = () => {
+    setNewVersion({
+      name: '',
+      description: '',
+      audioUrl: '',
+      recommended: false,
+      final: false
+    });
+    setShowAddVersionDialog(true);
+  };
+  
+  const handleAddVersion = () => {
+    if (!project || !projectId || !newVersion.name || !newVersion.audioUrl) {
+      toast({
+        title: 'Campos obrigatórios',
+        description: 'Nome da versão e URL do áudio são obrigatórios.',
+        variant: 'destructive'
+      });
+      return;
+    }
+    
+    const versionItem: VersionItem = {
+      id: uuidv4(),
+      name: newVersion.name,
+      description: newVersion.description,
+      audioUrl: newVersion.audioUrl,
+      dateAdded: new Date().toLocaleDateString('pt-BR'),
+      recommended: newVersion.recommended,
+      final: newVersion.final
+    };
     
     // Create updated version list
-    const updatedVersions = project.versionsList ? [...project.versionsList, newVersion] : [newVersion];
+    const updatedVersions = project.versionsList ? [...project.versionsList, versionItem] : [versionItem];
     
     // Update the project
     const updatedProject = updateProject(projectId, {
@@ -57,32 +94,41 @@ const ProjectEditPage = () => {
     
     if (updatedProject) {
       setProject(updatedProject);
+      setShowAddVersionDialog(false);
       
       // Create history entry for new version
       const historyEntry = {
-        action: `Nova versão adicionada: ${newVersion.name}`,
+        action: `Nova versão adicionada: ${versionItem.name}`,
         timestamp: new Date().toLocaleString('pt-BR'),
         data: {
-          version: newVersion.id
+          version: versionItem.id
         }
       };
       
       updateProject(projectId, {
-        history: [historyEntry]
+        history: [...(project.history || []), historyEntry]
       });
       
       toast({
         title: 'Versão adicionada',
-        description: `A versão "${newVersion.name}" foi adicionada com sucesso.`,
+        description: `A versão "${versionItem.name}" foi adicionada com sucesso.`,
       });
     }
   };
+  
+  const handleDeleteVersionClick = (versionId: string) => {
+    setSelectedVersionId(versionId);
+    setShowDeleteDialog(true);
+  };
 
-  const handleDeleteVersion = (versionId: string) => {
-    if (!project || !projectId) return;
+  const handleDeleteVersion = () => {
+    if (!project || !projectId || !selectedVersionId) return;
+    
+    // Find version name before deletion
+    const versionName = project.versionsList?.find((v: VersionItem) => v.id === selectedVersionId)?.name || 'Versão';
     
     // Filter out the version to delete
-    const updatedVersions = project.versionsList?.filter((v: VersionItem) => v.id !== versionId) || [];
+    const updatedVersions = project.versionsList?.filter((v: VersionItem) => v.id !== selectedVersionId) || [];
     
     // Update the project
     const updatedProject = updateProject(projectId, {
@@ -97,17 +143,16 @@ const ProjectEditPage = () => {
       setShowDeleteDialog(false);
       
       // Create history entry for deleted version
-      const versionName = project.versionsList?.find((v: VersionItem) => v.id === versionId)?.name || 'Versão';
       const historyEntry = {
         action: `Versão removida: ${versionName}`,
         timestamp: new Date().toLocaleString('pt-BR'),
         data: {
-          version: versionId
+          version: selectedVersionId
         }
       };
       
       updateProject(projectId, {
-        history: [historyEntry]
+        history: [...(project.history || []), historyEntry]
       });
       
       toast({
@@ -115,6 +160,11 @@ const ProjectEditPage = () => {
         description: `A versão foi removida com sucesso.`,
       });
     }
+  };
+
+  const handleExtendDeadlineClick = () => {
+    setNewDeadlineDate(project.expirationDate || '');
+    setShowExtendDeadlineDialog(true);
   };
 
   const handleExtendDeadline = () => {
@@ -129,6 +179,16 @@ const ProjectEditPage = () => {
     if (updatedProject) {
       setProject(updatedProject);
       setShowExtendDeadlineDialog(false);
+      
+      // Create history entry for deadline extension
+      const historyEntry = {
+        action: `Prazo estendido para: ${newDeadlineDate}`,
+        timestamp: new Date().toLocaleString('pt-BR')
+      };
+      
+      updateProject(projectId, {
+        history: [...(project.history || []), historyEntry]
+      });
       
       toast({
         title: 'Prazo estendido',
@@ -186,6 +246,11 @@ const ProjectEditPage = () => {
               <p className="text-gray-500">Cliente: {project.clientName} • Pacote: {project.packageType}</p>
             </div>
           </div>
+          
+          <Button variant="outline" onClick={handleExtendDeadlineClick}>
+            <Calendar className="mr-2 h-4 w-4" />
+            Estender Prazo
+          </Button>
         </div>
         
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
@@ -196,7 +261,7 @@ const ProjectEditPage = () => {
               </CardHeader>
               <CardContent>
                 <div className="space-y-4">
-                  <Button onClick={() => setSelectedVersionId(null)}>
+                  <Button onClick={handleAddVersionClick}>
                     <PlusCircle className="mr-2 h-4 w-4" />
                     Adicionar Nova Versão
                   </Button>
@@ -207,28 +272,11 @@ const ProjectEditPage = () => {
                   <div className="space-y-4">
                     {project.versionsList && project.versionsList.length > 0 ? (
                       project.versionsList.map((version: VersionItem) => (
-                        <div 
-                          key={version.id} 
-                          className="flex items-center justify-between p-4 border rounded-md bg-gray-50"
-                        >
-                          <div>
-                            <h4 className="font-medium">{version.name}</h4>
-                            <p className="text-sm text-gray-600">{version.description || 'Sem descrição'}</p>
-                            <div className="text-xs text-gray-500 mt-1">Adicionado em: {version.dateAdded}</div>
-                          </div>
-                          <div className="flex space-x-2">
-                            <Button 
-                              variant="outline" 
-                              size="sm"
-                              onClick={() => {
-                                setSelectedVersionId(version.id);
-                                setShowDeleteDialog(true);
-                              }}
-                            >
-                              <Trash2 className="h-4 w-4 text-red-500" />
-                            </Button>
-                          </div>
-                        </div>
+                        <EditVersionItem
+                          key={version.id}
+                          version={version}
+                          onDelete={handleDeleteVersionClick}
+                        />
                       ))
                     ) : (
                       <p className="text-gray-500 p-4 text-center">Nenhuma versão adicionada ainda.</p>
@@ -272,55 +320,68 @@ const ProjectEditPage = () => {
               <CardContent className="space-y-4">
                 <div className="space-y-1">
                   <p className="text-sm text-gray-500">ID do Projeto</p>
-                  <div className="flex items-center justify-between">
-                    <p className="font-medium">{project.id}</p>
-                    <Button 
-                      variant="ghost" 
-                      size="sm" 
-                      className="h-8 w-8 p-0"
-                      onClick={() => {
-                        navigator.clipboard.writeText(project.id);
-                        toast({ title: "ID Copiado", description: "ID do projeto copiado para a área de transferência" });
-                      }}
-                    >
-                      <Copy className="h-4 w-4" />
-                    </Button>
-                  </div>
-                </div>
-                
-                <div className="space-y-1">
-                  <p className="text-sm text-gray-500">Status</p>
-                  <p className="font-medium">
-                    {project.status === 'waiting' ? 'Aguardando' : 
-                     project.status === 'feedback' ? 'Feedback Recebido' : 
-                     project.status === 'approved' ? 'Aprovado' : 'Desconhecido'}
-                  </p>
+                  <p className="font-medium">{project.id}</p>
                 </div>
                 
                 <div className="space-y-1">
                   <p className="text-sm text-gray-500">Cliente</p>
                   <p className="font-medium">{project.clientName}</p>
-                  <p className="text-sm text-gray-500">{project.clientEmail}</p>
-                  {project.clientPhone && <p className="text-sm text-gray-500">{project.clientPhone}</p>}
                 </div>
                 
-                <div className="flex justify-between items-center">
-                  <div className="space-y-1">
-                    <p className="text-sm text-gray-500">Data de Criação</p>
-                    <div className="flex items-center gap-2">
-                      <Calendar className="h-4 w-4 text-gray-500" />
-                      <p className="font-medium">{project.createdAt}</p>
-                    </div>
-                  </div>
-                  
-                  <div className="space-y-1">
-                    <p className="text-sm text-gray-500">Expira em</p>
-                    <div className="flex items-center gap-2">
-                      <Calendar className="h-4 w-4 text-amber-500" />
-                      <p className="font-medium text-amber-600">{project.expirationDate}</p>
-                    </div>
-                  </div>
+                <div className="space-y-1">
+                  <p className="text-sm text-gray-500">Email do Cliente</p>
+                  <p className="font-medium">{project.clientEmail || 'Não informado'}</p>
                 </div>
+                
+                <div className="space-y-1">
+                  <p className="text-sm text-gray-500">Telefone do Cliente</p>
+                  <p className="font-medium">{project.clientPhone || 'Não informado'}</p>
+                </div>
+                
+                <div className="space-y-1">
+                  <p className="text-sm text-gray-500">Pacote</p>
+                  <p className="font-medium">{project.packageType}</p>
+                </div>
+                
+                <div className="space-y-1">
+                  <p className="text-sm text-gray-500">Tipo de Projeto</p>
+                  <p className="font-medium">{project.projectType}</p>
+                </div>
+                
+                <div className="space-y-1">
+                  <p className="text-sm text-gray-500">Status</p>
+                  <p 
+                    className={`font-medium py-1 px-2 rounded-full text-xs inline-block
+                      ${project.status === 'active' ? 'bg-green-100 text-green-800' : 
+                      project.status === 'pending' ? 'bg-yellow-100 text-yellow-800' : 
+                      'bg-gray-100 text-gray-800'}`}
+                  >
+                    {project.status}
+                  </p>
+                </div>
+                
+                <div className="space-y-1">
+                  <p className="text-sm text-gray-500">Data de Adição</p>
+                  <p className="font-medium">{project.dateAdded}</p>
+                </div>
+                
+                <div className="space-y-1">
+                  <p className="text-sm text-gray-500">Data de Expiração</p>
+                  <p className="font-medium">{project.expirationDate}</p>
+                </div>
+                
+                <div className="space-y-1">
+                  <p className="text-sm text-gray-500">Última Atividade</p>
+                  <p className="font-medium">{project.lastActivityDate || 'Não disponível'}</p>
+                </div>
+                
+                <Separator />
+                
+                <ContactClientActions
+                  clientPhone={project.clientPhone}
+                  clientEmail={project.clientEmail}
+                  projectId={project.id}
+                />
               </CardContent>
             </Card>
             
@@ -328,114 +389,146 @@ const ProjectEditPage = () => {
               <CardHeader>
                 <CardTitle>Link de Prévia</CardTitle>
               </CardHeader>
-              <CardContent className="space-y-3">
-                <div className="p-3 bg-gray-50 rounded border break-all">
-                  <p className="text-sm">{window.location.origin}/preview/{project.id}</p>
-                </div>
-                <Button
-                  variant="outline"
-                  className="w-full"
+              <CardContent>
+                <Input 
+                  value={`${window.location.origin}/preview/${project.id}`}
+                  readOnly
+                />
+                <Button 
+                  variant="outline" 
+                  className="mt-2 w-full"
                   onClick={() => {
-                    const url = `${window.location.origin}/preview/${project.id}`;
-                    navigator.clipboard.writeText(url);
+                    navigator.clipboard.writeText(`${window.location.origin}/preview/${project.id}`);
                     toast({
                       title: "Link copiado",
-                      description: "Link de prévia copiado para a área de transferência"
+                      description: "O link de prévia foi copiado para a área de transferência"
                     });
                   }}
                 >
-                  <Copy className="mr-2 h-4 w-4" />
                   Copiar Link
                 </Button>
-              </CardContent>
-            </Card>
-            
-            <Card>
-              <CardHeader>
-                <CardTitle>Ações</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="grid grid-cols-1 gap-2">
-                  <Button 
-                    variant="outline"
-                    onClick={() => setShowExtendDeadlineDialog(true)}
-                  >
-                    <Calendar className="mr-2 h-4 w-4" />
-                    Estender Prazo
-                  </Button>
-                  
-                  <ContactClientActions 
-                    clientPhone={project.clientPhone}
-                    clientEmail={project.clientEmail}
-                    projectId={project.id}
-                    onDeleteVersion={handleDeleteVersion}
-                  />
-                </div>
+                <p className="text-xs text-gray-500 mt-2">
+                  Envie este link para o cliente visualizar as prévias
+                </p>
               </CardContent>
             </Card>
           </div>
         </div>
-        
-        {/* Dialog for extending deadline */}
-        <Dialog 
-          open={showExtendDeadlineDialog} 
-          onOpenChange={setShowExtendDeadlineDialog}
-        >
-          <DialogContent>
-            <DialogHeader>
-              <DialogTitle>Estender Prazo</DialogTitle>
-              <DialogDescription>
-                Defina uma nova data de expiração para este projeto.
-              </DialogDescription>
-            </DialogHeader>
-            <div className="space-y-4 py-4">
-              <div className="space-y-2">
-                <Label htmlFor="deadline">Nova data de expiração</Label>
-                <Input
-                  id="deadline"
-                  type="date"
-                  value={newDeadlineDate}
-                  onChange={(e) => setNewDeadlineDate(e.target.value)}
-                />
-              </div>
-            </div>
-            <DialogFooter>
-              <Button variant="outline" onClick={() => setShowExtendDeadlineDialog(false)}>
-                Cancelar
-              </Button>
-              <Button onClick={handleExtendDeadline}>
-                Confirmar
-              </Button>
-            </DialogFooter>
-          </DialogContent>
-        </Dialog>
-        
-        {/* Dialog for deleting version */}
-        <Dialog 
-          open={showDeleteDialog} 
-          onOpenChange={setShowDeleteDialog}
-        >
-          <DialogContent>
-            <DialogHeader>
-              <DialogTitle>Excluir Versão</DialogTitle>
-              <DialogDescription>
-                Tem certeza que deseja excluir esta versão? Esta ação não pode ser desfeita.
-              </DialogDescription>
-            </DialogHeader>
-            <DialogFooter>
-              <Button variant="outline" onClick={() => setShowDeleteDialog(false)}>
-                Cancelar
-              </Button>
-              <Button 
-                variant="destructive" 
-                onClick={() => selectedVersionId && handleDeleteVersion(selectedVersionId)}
-              >
-                Excluir
-              </Button>
-            </DialogFooter>
-          </DialogContent>
-        </Dialog>
       </div>
+      
+      {/* Add Version Dialog */}
+      <Dialog open={showAddVersionDialog} onOpenChange={setShowAddVersionDialog}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Adicionar Nova Versão</DialogTitle>
+            <DialogDescription>
+              Preencha os detalhes da nova versão do projeto.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4 py-2">
+            <div className="space-y-2">
+              <Label htmlFor="versionName">Nome da Versão *</Label>
+              <Input
+                id="versionName"
+                placeholder="Ex: Versão 1 - Acústica"
+                value={newVersion.name}
+                onChange={(e) => setNewVersion({...newVersion, name: e.target.value})}
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="versionDescription">Descrição</Label>
+              <Textarea
+                id="versionDescription"
+                placeholder="Descreva detalhes sobre essa versão..."
+                value={newVersion.description}
+                onChange={(e) => setNewVersion({...newVersion, description: e.target.value})}
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="audioUrl">URL do Áudio *</Label>
+              <Input
+                id="audioUrl"
+                placeholder="https://exemplo.com/audio.mp3"
+                value={newVersion.audioUrl}
+                onChange={(e) => setNewVersion({...newVersion, audioUrl: e.target.value})}
+              />
+              <p className="text-xs text-gray-500">URL do arquivo de áudio (MP3, WAV, etc.)</p>
+            </div>
+            <div className="flex items-center space-x-2">
+              <Switch
+                id="recommended"
+                checked={newVersion.recommended}
+                onCheckedChange={(checked) => setNewVersion({...newVersion, recommended: checked})}
+              />
+              <Label htmlFor="recommended">Versão Recomendada</Label>
+            </div>
+            <div className="flex items-center space-x-2">
+              <Switch
+                id="final"
+                checked={newVersion.final}
+                onCheckedChange={(checked) => setNewVersion({...newVersion, final: checked})}
+              />
+              <Label htmlFor="final">Versão Final</Label>
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setShowAddVersionDialog(false)}>Cancelar</Button>
+            <Button onClick={handleAddVersion}>
+              <Check className="mr-2 h-4 w-4" />
+              Adicionar
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+      
+      {/* Delete Version Dialog */}
+      <Dialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Remover Versão</DialogTitle>
+            <DialogDescription>
+              Tem certeza que deseja remover esta versão? Esta ação não pode ser desfeita.
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setShowDeleteDialog(false)}>Cancelar</Button>
+            <Button variant="destructive" onClick={handleDeleteVersion}>
+              <Trash2 className="mr-2 h-4 w-4" />
+              Remover Versão
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+      
+      {/* Extend Deadline Dialog */}
+      <Dialog open={showExtendDeadlineDialog} onOpenChange={setShowExtendDeadlineDialog}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Estender Prazo</DialogTitle>
+            <DialogDescription>
+              Defina uma nova data de expiração para este projeto.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4 py-2">
+            <div className="space-y-2">
+              <Label htmlFor="deadlineDate">Nova Data de Expiração</Label>
+              <Input
+                id="deadlineDate"
+                type="date"
+                value={newDeadlineDate}
+                onChange={(e) => setNewDeadlineDate(e.target.value)}
+              />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setShowExtendDeadlineDialog(false)}>Cancelar</Button>
+            <Button onClick={handleExtendDeadline}>
+              <Calendar className="mr-2 h-4 w-4" />
+              Atualizar Prazo
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </AdminLayout>
   );
 };

@@ -14,6 +14,9 @@ import AdminProjectManagement from "./pages/admin/AdminProjectManagement";
 import AdminProtectedRoute from './components/admin/auth/ProtectedRoute';
 import AdminPreviews from "./pages/admin/AdminPreviews";
 import ProjectEditPage from "./pages/admin/ProjectEditPage";
+import Payment from "./pages/Payment";
+import Packages from "./pages/Packages";
+import PaymentProcessing from "./pages/PaymentProcessing";
 
 import "./App.css";
 
@@ -41,7 +44,13 @@ function App() {
       <Route path="/" element={<HomePage />} />
       <Route path="/about" element={<AboutPage />} />
       <Route path="/services" element={<ServicesPage />} />
+      <Route path="/servicos" element={<ServicesPage />} />
       <Route path="/contact" element={<ContactPage />} />
+      <Route path="/contato" element={<ContactPage />} />
+      <Route path="/pacotes" element={<Packages />} />
+      <Route path="/pagamento" element={<Payment />} />
+      <Route path="/pagamento/:packageId" element={<Payment />} />
+      <Route path="/pagamento-processando" element={<PaymentProcessing />} />
       <Route path="/preview/:projectId" element={<PreviewPage />} />
       <Route path="/preview-project/:projectId" element={<PreviewProjectPage />} />
 
