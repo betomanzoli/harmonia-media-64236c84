@@ -32,7 +32,7 @@ const PaymentMethodsContainer: React.FC<PaymentMethodsContainerProps> = ({
   const { toast } = useToast();
   
   const paymentLinks = packagePaymentLinks[packageId];
-  const validDiscountCode = paymentLinks?.discountCode || '';
+  const validDiscountCode = paymentLinks?.discount?.discountCode || '';
   
   useEffect(() => {
     // Check if terms have been accepted previously in this flow
