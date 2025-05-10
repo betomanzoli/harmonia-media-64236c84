@@ -5,46 +5,49 @@ import { Handshake, DollarSign, Users } from 'lucide-react';
 
 const Partnership: React.FC = () => {
   return (
-    <section className="py-20 px-6 bg-gradient-to-b from-slate-900 to-slate-800">
-      <div className="max-w-6xl mx-auto text-center">
-        <div className="inline-block p-3 rounded-full bg-harmonia-green/20 mb-4">
-          <Handshake className="w-8 h-8 text-harmonia-green" />
+    <section className="py-16 bg-white">
+      <div className="max-w-6xl mx-auto px-4">
+        <div className="text-center mb-10">
+          <h2 className="text-3xl font-bold text-gray-900 mb-4">Parcerias e Colaborações</h2>
+          <p className="text-lg text-gray-600 max-w-3xl mx-auto">
+            Estamos abertos a parcerias com produtores, compositores e empresas que queiram inovar no mercado musical.
+          </p>
         </div>
-        <h2 className="text-3xl md:text-4xl font-bold mb-4">Parcerias e Colaborações</h2>
-        <p className="text-gray-400 max-w-2xl mx-auto mb-10">
-          Interessado em estabelecer uma parceria com a harmonIA? 
-          Estamos abertos a colaborações com artistas, produtores, empresas e agências.
-        </p>
         
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mb-10">
-          <div className="bg-slate-800 p-6 rounded-lg">
-            <DollarSign className="w-10 h-10 text-harmonia-green mb-4 mx-auto" />
-            <h3 className="text-xl font-bold mb-2">Programa de Afiliados</h3>
-            <p className="text-gray-400 mb-4">
-              Ganhe comissões indicando clientes para a harmonIA.
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mb-12">
+          <div className="bg-gray-50 p-6 rounded-lg text-center">
+            <Handshake className="w-12 h-12 mx-auto mb-4 text-harmonia-green" />
+            <h3 className="text-xl font-semibold mb-3">Parcerias Criativas</h3>
+            <p className="text-gray-600">
+              Colabore com nossos compositores e produtores em projetos inovadores que unem tecnologia e criatividade musical.
             </p>
           </div>
           
-          <div className="bg-slate-800 p-6 rounded-lg">
-            <Users className="w-10 h-10 text-harmonia-green mb-4 mx-auto" />
-            <h3 className="text-xl font-bold mb-2">Colaborações Criativas</h3>
-            <p className="text-gray-400 mb-4">
-              Trabalhe conosco em projetos especiais de música com IA.
+          <div className="bg-gray-50 p-6 rounded-lg text-center">
+            <DollarSign className="w-12 h-12 mx-auto mb-4 text-harmonia-green" />
+            <h3 className="text-xl font-semibold mb-3">Programa de Afiliados</h3>
+            <p className="text-gray-600">
+              Indique nossos serviços e ganhe comissões por cada cliente que realizar um projeto conosco.
             </p>
           </div>
           
-          <div className="bg-slate-800 p-6 rounded-lg">
-            <Handshake className="w-10 h-10 text-harmonia-green mb-4 mx-auto" />
-            <h3 className="text-xl font-bold mb-2">Parcerias Empresariais</h3>
-            <p className="text-gray-400 mb-4">
-              Soluções corporativas e integrações para o seu negócio.
+          <div className="bg-gray-50 p-6 rounded-lg text-center">
+            <Users className="w-12 h-12 mx-auto mb-4 text-harmonia-green" />
+            <h3 className="text-xl font-semibold mb-3">Parcerias Corporativas</h3>
+            <p className="text-gray-600">
+              Soluções personalizadas para empresas que desejam utilizar música em suas estratégias de comunicação e marketing.
             </p>
           </div>
         </div>
         
-        <Button className="bg-harmonia-green hover:bg-harmonia-green/90">
-          Entre em contato para parcerias
-        </Button>
+        <div className="text-center">
+          <Button 
+            className="bg-harmonia-green hover:bg-harmonia-green/90 text-white px-8 py-6 rounded-md text-lg"
+            onClick={() => window.location.href = '/contato'}
+          >
+            Fale com nossa equipe sobre parcerias
+          </Button>
+        </div>
       </div>
     </section>
   );

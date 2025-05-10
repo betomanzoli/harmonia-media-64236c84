@@ -18,18 +18,6 @@ import {
 } from "@/components/ui/dialog";
 import { Separator } from '@/components/ui/separator';
 
-// Define a mapping between ProjectItem and Project
-interface Project {
-  id: string;
-  clientName: string;
-  packageType: string;
-  projectType: string;
-  dateAdded: string;
-  status: string;
-  expirationDate: string;
-  versions: number;
-}
-
 const AdminPreviews: React.FC = () => {
   const { projects, addProject, deleteProject, loadProjects } = usePreviewProjects();
   const { toast } = useToast();
@@ -37,18 +25,6 @@ const AdminPreviews: React.FC = () => {
   const [showAddForm, setShowAddForm] = useState(false);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [projectToDelete, setProjectToDelete] = useState<string | null>(null);
-  
-  // Map ProjectItem[] to Project[]
-  const mappedProjects: Project[] = projects.map(project => ({
-    id: project.id,
-    clientName: project.clientName,
-    packageType: project.packageType,
-    projectType: project.packageType, // Using packageType as projectType if not available
-    dateAdded: project.createdAt,
-    status: project.status,
-    expirationDate: project.expirationDate,
-    versions: project.versions
-  }));
   
   useEffect(() => {
     loadProjects().then(() => {
@@ -152,7 +128,7 @@ const AdminPreviews: React.FC = () => {
             </div>
             
             <ProjectsTable 
-              projects={mappedProjects}
+              projects={projects}
               isLoading={isLoading}
               onDelete={confirmDeleteProject}
               onSendReminder={handleSendReminder}

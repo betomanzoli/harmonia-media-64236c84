@@ -26,7 +26,7 @@ const Footer: React.FC = () => {
   };
 
   const handlePaymentClick = () => {
-    navigate('/pagamento');
+    navigate('/pagamento/essencial');
   };
 
   return (
@@ -67,7 +67,7 @@ const Footer: React.FC = () => {
               </li>
               <li>
                 <NavLink 
-                  href="/pagamento" 
+                  href="/pagamento/essencial" 
                   className="text-gray-400 hover:text-harmonia-green transition-colors flex items-center gap-1"
                 >
                   <DollarSign className="w-4 h-4" /> Pagamento Direto
@@ -100,7 +100,7 @@ const Footer: React.FC = () => {
                 onClick={handleWhatsAppContact}
               >
                 <MessageCircle className="w-5 h-5 text-harmonia-green shrink-0" />
-                <span>+55 11 92058-5072</span>
+                <span>{siteConfig.contact.whatsapp}</span>
               </div>
               <div 
                 className="flex gap-2 text-gray-400 cursor-pointer hover:text-harmonia-green transition-colors"

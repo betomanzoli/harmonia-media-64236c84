@@ -1,15 +1,16 @@
 
 import React from 'react';
-import PublicLayout from '@/layouts/PublicLayout';
+import Header from '@/components/Header';
+import Footer from '@/components/Footer';
 import Contact from '@/components/Contact';
 
 const ContactPage: React.FC = () => {
   return (
-    <PublicLayout>
-      <div className="pt-24">
-        <Contact />
-      </div>
-    </PublicLayout>
+    <div className="min-h-screen bg-background">
+      <Header />
+      <Contact />
+      <Footer />
+    </div>
   );
 };
 

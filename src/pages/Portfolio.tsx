@@ -1,58 +1,61 @@
+
 import React from 'react';
-import PublicLayout from '@/layouts/PublicLayout';
-import { Card, CardContent } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Play, Headphones } from 'lucide-react';
-const Portfolio: React.FC = () => {
-  const portfolioItems = [{
-    id: 1,
-    title: "Canção de Aniversário Personalizada",
-    description: "Música criada para celebrar o aniversário de 40 anos de Maria.",
-    audioUrl: "/audio/sample1.mp3",
-    type: "Presente",
-    testimonial: "Foi um presente inesquecível! Todo mundo se emocionou quando a música tocou na festa."
-  }, {
-    id: 2,
-    title: "Música Corporativa para Lançamento",
-    description: "Tema musical criado para o lançamento da nova linha de produtos da empresa Natura.",
-    audioUrl: "/audio/sample2.mp3",
-    type: "Corporativo",
-    testimonial: "A música capturou perfeitamente a essência da nossa marca. Foi um diferencial no evento de lançamento."
-  }, {
-    id: 3,
-    title: "Declaração de Amor em Melodia",
-    description: "Canção romântica criada para um pedido de casamento.",
-    audioUrl: "/audio/sample3.mp3",
-    type: "Presente",
-    testimonial: "Ela disse sim! A música foi fundamental para criar o momento perfeito."
-  }, {
-    id: 4,
-    title: "Jingle Publicitário",
-    description: "Jingle criado para campanha de marketing digital da empresa XYZ.",
-    audioUrl: "/audio/sample4.mp3",
-    type: "Comercial",
-    testimonial: "O jingle ficou na cabeça de todos. Nossa marca ganhou muito reconhecimento após a campanha."
-  }];
-  return <PublicLayout>
-      <div className="pt-24 pb-20 px-6 md:px-10">
+import Header from '@/components/Header';
+import Footer from '@/components/Footer';
+import Portfolio from '@/components/Portfolio';
+import { Button } from "@/components/ui/button";
+import { ArrowLeft, Phone } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
+import { siteConfig } from '@/config/site';
+
+const PortfolioPage: React.FC = () => {
+  const navigate = useNavigate();
+
+  const handleWhatsAppContact = () => {
+    const phoneNumber = siteConfig.contact.whatsapp;
+    const message = "Olá! Gostaria de conhecer mais sobre suas músicas personalizadas.";
+    const whatsappUrl = `https://wa.me/${phoneNumber}?text=${encodeURIComponent(message)}`;
+    window.open(whatsappUrl, '_blank');
+  };
+
+  return (
+    <div className="min-h-screen bg-background text-foreground">
+      <Header />
+      <main className="pt-24 pb-20 px-6 md:px-10">
         <div className="max-w-7xl mx-auto">
-          <div className="text-center mb-12">
-            <h1 className="text-4xl font-bold mb-4">Nosso Portfólio</h1>
-            <p className="text-gray-500 max-w-3xl mx-auto">
-              Confira algumas das músicas que criamos para nossos clientes. Cada composição é única e personalizada para atender às necessidades específicas de cada projeto.
-            </p>
-          </div>
-          
-          
-          
-          <div className="mt-12 text-center">
-            
-            <Button className="bg-harmonia-green hover:bg-harmonia-green/90">
-              Crie sua música personalizada
+          <div className="mb-6">
+            <Button 
+              variant="ghost" 
+              className="flex items-center gap-1 text-gray-400 hover:text-white"
+              onClick={() => navigate('/')}
+            >
+              <ArrowLeft className="w-4 h-4" />
+              Voltar para a página inicial
             </Button>
           </div>
+          
+          <div className="text-center mb-10">
+            <h1 className="text-3xl md:text-4xl font-bold mb-4">Nosso Portfólio</h1>
+            <p className="text-gray-400 max-w-2xl mx-auto">
+              Explore algumas das histórias que transformamos em música. Cada composição é única e feita especificamente 
+              para atender aos desejos e necessidades de nossos clientes.
+            </p>
+            
+            <Button 
+              onClick={handleWhatsAppContact}
+              className="mt-6 bg-green-600 hover:bg-green-700 text-white flex items-center gap-2"
+            >
+              <Phone className="w-4 h-4" />
+              Fale conosco pelo WhatsApp para exemplos
+            </Button>
+          </div>
+
+          <Portfolio />
         </div>
-      </div>
-    </PublicLayout>;
+      </main>
+      <Footer />
+    </div>
+  );
 };
-export default Portfolio;
+
+export default PortfolioPage;

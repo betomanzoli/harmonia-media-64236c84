@@ -16,7 +16,7 @@ const VALID_CREDENTIALS = [
   },
   { 
     email: 'contato@harmonia.media', 
-    password: 'harmonia2023',
+    password: 'i9!_b!ThA;2H6/bt',
     userData: {
       id: 'admin-2',
       email: 'contato@harmonia.media',

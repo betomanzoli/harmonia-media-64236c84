@@ -15,29 +15,36 @@ const Portfolio: React.FC = () => {
   };
   
   return (
-    <section className="py-16 px-6 bg-gray-900">
-      <div className="max-w-6xl mx-auto">
+    <section id="portfolio" className="py-16 bg-gray-50">
+      <div className="max-w-6xl mx-auto px-4">
+        <div className="text-center mb-10">
+          <h2 className="text-3xl font-bold text-gray-900 mb-4">Nosso Portfolio</h2>
+          <p className="text-lg text-gray-600 max-w-3xl mx-auto">
+            Ouça exemplos de músicas personalizadas criadas pela nossa equipe para diversos clientes e ocasiões.
+          </p>
+        </div>
+        
         <PortfolioSummary />
         
         <div className="mt-12">
           <PortfolioTabs 
             selectedCategory={selectedCategory}
             onSelectCategory={setSelectedCategory}
-            examples={examples}
+            examples={showAll ? examples : initialExamples}
             comparisonExamples={comparisonExamples}
           />
+          
+          {!showAll && (
+            <div className="text-center mt-8">
+              <button
+                onClick={handleShowMore}
+                className="bg-harmonia-green hover:bg-harmonia-green/90 text-white px-6 py-2 rounded-md"
+              >
+                Ver mais exemplos
+              </button>
+            </div>
+          )}
         </div>
-        
-        {!showAll && (
-          <div className="text-center mt-8">
-            <button
-              onClick={handleShowMore}
-              className="text-harmonia-green hover:text-harmonia-green/80 font-medium"
-            >
-              Ver mais exemplos
-            </button>
-          </div>
-        )}
       </div>
     </section>
   );

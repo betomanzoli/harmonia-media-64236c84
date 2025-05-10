@@ -28,28 +28,16 @@ export const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children }) => {
 
   // Add a timeout to prevent infinite loading
   useEffect(() => {
-    // If loading takes more than 2 seconds, try simplified auth check
+    // If loading takes more than 2 seconds, check again
     const timeoutId = setTimeout(() => {
       if (authStatus === 'loading') {
-        console.log('Auth timeout reached - forcing authentication check');
-        
-        // Simplified auth check - if we have a token in localStorage, consider user authenticated
-        const token = localStorage.getItem('admin-auth-token') || 
-                      localStorage.getItem('sb-ivueqxyuflxsiecqvmgt-auth-token');
-        
-        if (token) {
-          console.log('Token found, proceeding to admin page');
-          // Force a page refresh to bypass the auth check
-          window.location.href = location.pathname;
-        } else {
-          console.log('No auth token found, redirecting to login');
-          window.location.href = '/admin-j28s7d1k';
-        }
+        console.log('Auth timeout reached, checking auth status again');
+        checkAuthStatus();
       }
     }, 2000);
 
     return () => clearTimeout(timeoutId);
-  }, [authStatus, location.pathname]);
+  }, [authStatus, checkAuthStatus]);
 
   if (authStatus === 'loading') {
     return (

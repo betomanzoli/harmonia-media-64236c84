@@ -1,340 +1,374 @@
 
-import React, { useState } from 'react';
-import PublicLayout from '@/layouts/PublicLayout';
-import { Button } from '@/components/ui/button';
-import { Card, CardContent } from '@/components/ui/card';
-import { Input } from '@/components/ui/input';
-import { Textarea } from '@/components/ui/textarea';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { useToast } from '@/hooks/use-toast';
+import React, { useEffect, useState } from 'react';
+import Header from '@/components/Header';
+import Footer from '@/components/Footer';
+import BriefingForm from '@/components/BriefingForm';
+import { Button } from "@/components/ui/button";
+import { Alert, AlertTitle, AlertDescription } from "@/components/ui/alert";
+import { ArrowLeft, AlertTriangle, CheckCircle2, Package } from 'lucide-react';
+import { useNavigate, Link } from 'react-router-dom';
+import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
+import { Card, CardContent } from "@/components/ui/card";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 
 const Briefing: React.FC = () => {
-  const { toast } = useToast();
-  const [step, setStep] = useState(1);
-  const [submitting, setSubmitting] = useState(false);
-  const [formData, setFormData] = useState({
-    name: '',
-    email: '',
-    phone: '',
-    orderNumber: '',
-    musicStyle: '',
-    references: '',
-    emotion: '',
-    tempo: '',
-    lyrics: '',
-    additionalInfo: ''
-  });
+  const navigate = useNavigate();
+  const [hasPurchased, setHasPurchased] = useState(false);
+  const [purchaseData, setPurchaseData] = useState<any>(null);
+  const [selectedPackage, setSelectedPackage] = useState<'essencial' | 'profissional' | 'premium'>('essencial');
+  const [showPackageDetails, setShowPackageDetails] = useState(false);
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
-    const { name, value } = e.target;
-    setFormData(prev => ({ ...prev, [name]: value }));
-  };
-
-  const handleSelectChange = (name: string, value: string) => {
-    setFormData(prev => ({ ...prev, [name]: value }));
-  };
-
-  const handleNext = () => {
-    if (step === 1 && (!formData.name || !formData.email || !formData.phone)) {
-      toast({
-        title: "Campos obrigatórios",
-        description: "Por favor, preencha todos os campos obrigatórios.",
-        variant: "destructive",
-      });
-      return;
+  useEffect(() => {
+    // Check if user has purchased a package
+    const paymentData = localStorage.getItem('paymentData');
+    if (paymentData) {
+      try {
+        const data = JSON.parse(paymentData);
+        setHasPurchased(true);
+        setPurchaseData(data);
+        
+        // Set the selected package based on the purchased package
+        if (data.packageId) {
+          setSelectedPackage(data.packageId as 'essencial' | 'profissional' | 'premium');
+        }
+      } catch (e) {
+        console.error('Error parsing payment data:', e);
+      }
     }
-    setStep(step + 1);
-    window.scrollTo(0, 0);
+  }, []);
+
+  // Handle package selection change
+  const handlePackageChange = (value: string) => {
+    setSelectedPackage(value as 'essencial' | 'profissional' | 'premium');
   };
 
-  const handleBack = () => {
-    setStep(step - 1);
-    window.scrollTo(0, 0);
-  };
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setSubmitting(true);
+  const renderPackageDetails = () => {
+    let details = {
+      title: "",
+      features: [] as string[],
+      price: "",
+      description: "",
+    };
     
-    try {
-      // Simulação de envio do briefing
-      await new Promise(resolve => setTimeout(resolve, 1500));
-      
-      toast({
-        title: "Briefing enviado!",
-        description: "Recebemos seu briefing e entraremos em contato em breve.",
-      });
-      
-      // Redirecionar para página de agradecimento ou limpar formulário
-      setFormData({
-        name: '',
-        email: '',
-        phone: '',
-        orderNumber: '',
-        musicStyle: '',
-        references: '',
-        emotion: '',
-        tempo: '',
-        lyrics: '',
-        additionalInfo: ''
-      });
-      setStep(1);
-    } catch (error) {
-      toast({
-        title: "Erro ao enviar",
-        description: "Ocorreu um erro ao enviar seu briefing. Tente novamente.",
-        variant: "destructive",
-      });
-    } finally {
-      setSubmitting(false);
+    switch (selectedPackage) {
+      case 'essencial':
+        details = {
+          title: "Pacote Essencial",
+          price: "R$299",
+          description: "Ideal para presentes emocionais rápidos.",
+          features: [
+            "• 1 composição personalizada",
+            "• 1 revisão incluída",
+            "• Entrega em até 7 dias úteis",
+            "• Formato MP3 320kbps",
+            "• Licença para uso pessoal"
+          ]
+        };
+        break;
+      case 'profissional':
+        details = {
+          title: "Pacote Profissional",
+          price: "R$699",
+          description: "Perfeito para criadores de conteúdo.",
+          features: [
+            "• 3 versões diferentes para escolha",
+            "• Até 3 revisões incluídas",
+            "• Entrega em até 10 dias úteis",
+            "• Formato MP3 e WAV",
+            "• Licença para uso em conteúdo digital",
+            "• Acompanhamento personalizado"
+          ]
+        };
+        break;
+      case 'premium':
+        details = {
+          title: "Pacote Premium",
+          price: "R$1299",
+          description: "Melhor opção para empresas.",
+          features: [
+            "• 5 versões diferentes para escolha",
+            "• Revisões ilimitadas",
+            "• Entrega em até 15 dias úteis",
+            "• Formatos MP3, WAV e STEMS",
+            "• Licença para uso comercial",
+            "• Registro na Biblioteca Nacional",
+            "• Certificado de autenticidade",
+            "• Suporte prioritário"
+          ]
+        };
+        break;
     }
+    
+    return (
+      <Dialog open={showPackageDetails} onOpenChange={setShowPackageDetails}>
+        <DialogContent className="max-w-2xl">
+          <DialogHeader>
+            <DialogTitle>{details.title}</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div className="flex justify-between items-start">
+              <p className="text-gray-400">{details.description}</p>
+              <span className="text-harmonia-green font-bold text-xl">{details.price}</span>
+            </div>
+            
+            <div className="border-t pt-4">
+              <h3 className="font-medium mb-2">Detalhes do pacote:</h3>
+              <ul className="space-y-2">
+                {details.features.map((feature, index) => (
+                  <li key={index} className="text-gray-300">{feature}</li>
+                ))}
+              </ul>
+            </div>
+            
+            <div className="bg-harmonia-green/10 p-4 rounded-lg border border-harmonia-green/20">
+              <h4 className="font-medium text-harmonia-green mb-2">Informações importantes:</h4>
+              <p className="text-sm text-gray-400">
+                Ao contratar este pacote, você terá acesso a todos os recursos listados acima. 
+                Após o preenchimento do briefing, nossa equipe entrará em contato para alinhar 
+                os detalhes da sua composição personalizada.
+              </p>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
+    );
   };
 
   return (
-    <PublicLayout>
-      <div className="pt-24 pb-20 px-6 md:px-10">
-        <div className="max-w-3xl mx-auto">
-          <div className="text-center mb-12">
-            <h1 className="text-4xl font-bold mb-4">Briefing Musical</h1>
-            <p className="text-gray-500">
-              Preencha o formulário abaixo para nos ajudar a entender melhor o que você procura em sua música personalizada.
+    <div className="min-h-screen bg-background text-foreground">
+      <Header />
+      <main className="pt-24 pb-20 px-6 md:px-10">
+        <div className="max-w-4xl mx-auto">
+          <div className="mb-6">
+            <Button 
+              variant="ghost" 
+              className="flex items-center gap-1 text-gray-400 hover:text-white"
+              onClick={() => navigate('/')}
+            >
+              <ArrowLeft className="w-4 h-4" />
+              Voltar para a página inicial
+            </Button>
+          </div>
+          
+          <div className="text-center mb-10">
+            <h1 className="text-3xl md:text-4xl font-bold mb-4">Transforme sua história em música</h1>
+            <p className="text-gray-400 max-w-2xl mx-auto">
+              {hasPurchased 
+                ? "Preencha o formulário abaixo para iniciarmos a criação de sua composição musical personalizada."
+                : "Para preencher o briefing, você precisa primeiro adquirir um de nossos pacotes."}
             </p>
           </div>
 
-          <div className="mb-8">
-            <div className="flex justify-between items-center">
-              {[1, 2, 3].map((stepNumber) => (
-                <div key={stepNumber} className="flex flex-col items-center">
-                  <div className={`w-10 h-10 rounded-full flex items-center justify-center mb-2 
-                    ${step >= stepNumber ? 'bg-harmonia-green text-white' : 'bg-gray-200 text-gray-500'}`}>
-                    {stepNumber}
-                  </div>
-                  <span className="text-sm text-gray-500">
-                    {stepNumber === 1 ? 'Dados Pessoais' : 
-                     stepNumber === 2 ? 'Detalhes Musicais' : 'Informações Adicionais'}
-                  </span>
+          {!hasPurchased ? (
+            <div className="max-w-2xl mx-auto">
+              <Alert variant="destructive" className="mb-8">
+                <AlertTriangle className="h-4 w-4" />
+                <AlertTitle>Pagamento necessário</AlertTitle>
+                <AlertDescription>
+                  Para preencher o briefing e iniciar sua composição personalizada, é necessário primeiro realizar o pagamento de um de nossos pacotes.
+                </AlertDescription>
+              </Alert>
+              
+              <div className="text-center space-y-6">
+                <p className="text-gray-300">
+                  Escolha um de nossos pacotes abaixo para prosseguir com o pagamento:
+                </p>
+                
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                  <Card className="border border-border hover:border-harmonia-green/50 cursor-pointer transition-colors">
+                    <CardContent className="p-6">
+                      <h3 className="font-semibold mb-2">Pacote Essencial</h3>
+                      <p className="text-sm text-gray-500 mb-4">Ideal para presentes emocionais rápidos.</p>
+                      <div className="flex flex-col space-y-2">
+                        <Link to="/pagamento/essencial">
+                          <Button className="w-full">Escolher</Button>
+                        </Link>
+                        <Button 
+                          variant="outline" 
+                          className="w-full"
+                          onClick={() => {
+                            setSelectedPackage('essencial');
+                            setShowPackageDetails(true);
+                          }}
+                        >
+                          Ver detalhes
+                        </Button>
+                      </div>
+                    </CardContent>
+                  </Card>
+                  
+                  <Card className="border border-harmonia-green bg-gradient-to-b from-harmonia-green/10 to-transparent shadow-lg cursor-pointer">
+                    <CardContent className="p-6">
+                      <h3 className="font-semibold mb-2">Pacote Profissional</h3>
+                      <p className="text-sm text-gray-500 mb-4">Perfeito para criadores de conteúdo.</p>
+                      <div className="flex flex-col space-y-2">
+                        <Link to="/pagamento/profissional">
+                          <Button className="w-full bg-harmonia-green hover:bg-harmonia-green/90">Escolher</Button>
+                        </Link>
+                        <Button 
+                          variant="outline" 
+                          className="w-full border-harmonia-green/50 text-harmonia-green"
+                          onClick={() => {
+                            setSelectedPackage('profissional');
+                            setShowPackageDetails(true);
+                          }}
+                        >
+                          Ver detalhes
+                        </Button>
+                      </div>
+                    </CardContent>
+                  </Card>
+                  
+                  <Card className="border border-border hover:border-harmonia-green/50 cursor-pointer transition-colors">
+                    <CardContent className="p-6">
+                      <h3 className="font-semibold mb-2">Pacote Premium</h3>
+                      <p className="text-sm text-gray-500 mb-4">Melhor opção para empresas.</p>
+                      <div className="flex flex-col space-y-2">
+                        <Link to="/pagamento/premium">
+                          <Button className="w-full">Escolher</Button>
+                        </Link>
+                        <Button 
+                          variant="outline" 
+                          className="w-full"
+                          onClick={() => {
+                            setSelectedPackage('premium');
+                            setShowPackageDetails(true);
+                          }}
+                        >
+                          Ver detalhes
+                        </Button>
+                      </div>
+                    </CardContent>
+                  </Card>
                 </div>
-              ))}
+                
+                <div className="pt-4">
+                  <Link to="/services">
+                    <Button variant="outline">
+                      <Package className="w-4 h-4 mr-2" />
+                      Ver todos os pacotes
+                    </Button>
+                  </Link>
+                </div>
+              </div>
             </div>
-            <div className="w-full bg-gray-200 h-1 mt-4">
-              <div 
-                className="bg-harmonia-green h-full transition-all duration-300"
-                style={{ width: `${((step - 1) / 2) * 100}%` }}
-              ></div>
-            </div>
-          </div>
-
-          <Card>
-            <CardContent className="pt-6">
-              <form onSubmit={handleSubmit}>
-                {step === 1 && (
-                  <div className="space-y-4">
-                    <div>
-                      <label htmlFor="name" className="block text-sm font-medium mb-1">Nome Completo *</label>
-                      <Input
-                        id="name"
-                        name="name"
-                        value={formData.name}
-                        onChange={handleChange}
-                        placeholder="Seu nome completo"
-                        required
-                      />
-                    </div>
-                    
-                    <div>
-                      <label htmlFor="email" className="block text-sm font-medium mb-1">Email *</label>
-                      <Input
-                        id="email"
-                        name="email"
-                        type="email"
-                        value={formData.email}
-                        onChange={handleChange}
-                        placeholder="seu@email.com"
-                        required
-                      />
-                    </div>
-                    
-                    <div>
-                      <label htmlFor="phone" className="block text-sm font-medium mb-1">Telefone *</label>
-                      <Input
-                        id="phone"
-                        name="phone"
-                        value={formData.phone}
-                        onChange={handleChange}
-                        placeholder="(00) 00000-0000"
-                        required
-                      />
-                    </div>
-                    
-                    <div>
-                      <label htmlFor="orderNumber" className="block text-sm font-medium mb-1">Número do Pedido (opcional)</label>
-                      <Input
-                        id="orderNumber"
-                        name="orderNumber"
-                        value={formData.orderNumber}
-                        onChange={handleChange}
-                        placeholder="Se já fez um pedido, informe o número"
-                      />
-                    </div>
-                    
-                    <div className="pt-4">
+          ) : (
+            <>
+              <div className="mb-6">
+                <Alert className="bg-card border border-border">
+                  <CheckCircle2 className="h-4 w-4 text-harmonia-green" />
+                  <AlertTitle>Pagamento confirmado</AlertTitle>
+                  <AlertDescription>
+                    {purchaseData && (
+                      <p className="text-sm text-gray-400">
+                        Você adquiriu o pacote {purchaseData.packageName} em {new Date(purchaseData.date).toLocaleDateString()}.
+                      </p>
+                    )}
+                  </AlertDescription>
+                </Alert>
+              </div>
+            
+              <div className="mb-6">
+                {/* Package selection dropdown */}
+                <div className="mb-6">
+                  <label htmlFor="package-select" className="block text-sm font-medium mb-2">
+                    Selecione o pacote para preencher o briefing:
+                  </label>
+                  <Select value={selectedPackage} onValueChange={handlePackageChange}>
+                    <SelectTrigger className="w-full md:w-64">
+                      <SelectValue placeholder="Selecione um pacote" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="essencial">Pacote Essencial</SelectItem>
+                      <SelectItem value="profissional">Pacote Profissional</SelectItem>
+                      <SelectItem value="premium">Pacote Premium</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+                  <div className="md:col-span-1 space-y-6">
+                    <Card className="p-6 border border-border">
+                      <h3 className="font-semibold mb-2">
+                        {selectedPackage === 'essencial' && "Pacote Essencial"}
+                        {selectedPackage === 'profissional' && "Pacote Profissional"}
+                        {selectedPackage === 'premium' && "Pacote Premium"}
+                      </h3>
+                      <p className="text-gray-400 text-sm mb-4">
+                        {selectedPackage === 'essencial' && "Ideal para presentes emocionais rápidos. Inclui uma composição única com direito a uma revisão."}
+                        {selectedPackage === 'profissional' && "Perfeito para criadores de conteúdo. Inclui três versões para escolha e até três revisões."}
+                        {selectedPackage === 'premium' && "Melhor opção para empresas. Inclui registro na Biblioteca Nacional e revisões ilimitadas."}
+                      </p>
                       <Button 
-                        type="button" 
-                        onClick={handleNext}
-                        className="w-full bg-harmonia-green hover:bg-harmonia-green/90"
-                      >
-                        Avançar
-                      </Button>
-                    </div>
-                  </div>
-                )}
-
-                {step === 2 && (
-                  <div className="space-y-4">
-                    <div>
-                      <label htmlFor="musicStyle" className="block text-sm font-medium mb-1">Estilo Musical</label>
-                      <Select
-                        onValueChange={(value) => handleSelectChange('musicStyle', value)}
-                        value={formData.musicStyle}
-                      >
-                        <SelectTrigger>
-                          <SelectValue placeholder="Selecione o estilo musical" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="pop">Pop</SelectItem>
-                          <SelectItem value="rock">Rock</SelectItem>
-                          <SelectItem value="mpb">MPB</SelectItem>
-                          <SelectItem value="sertanejo">Sertanejo</SelectItem>
-                          <SelectItem value="funk">Funk</SelectItem>
-                          <SelectItem value="jazz">Jazz</SelectItem>
-                          <SelectItem value="classical">Música Clássica</SelectItem>
-                          <SelectItem value="electronic">Eletrônica</SelectItem>
-                          <SelectItem value="other">Outro</SelectItem>
-                        </SelectContent>
-                      </Select>
-                    </div>
-                    
-                    <div>
-                      <label htmlFor="references" className="block text-sm font-medium mb-1">Referências Musicais</label>
-                      <Textarea
-                        id="references"
-                        name="references"
-                        value={formData.references}
-                        onChange={handleChange}
-                        placeholder="Liste artistas, músicas ou estilos que podem servir de inspiração"
-                      />
-                    </div>
-                    
-                    <div>
-                      <label htmlFor="emotion" className="block text-sm font-medium mb-1">Emoção Desejada</label>
-                      <Select
-                        onValueChange={(value) => handleSelectChange('emotion', value)}
-                        value={formData.emotion}
-                      >
-                        <SelectTrigger>
-                          <SelectValue placeholder="Selecione a emoção principal" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="alegria">Alegria</SelectItem>
-                          <SelectItem value="nostalgia">Nostalgia</SelectItem>
-                          <SelectItem value="romance">Romance</SelectItem>
-                          <SelectItem value="motivacao">Motivação</SelectItem>
-                          <SelectItem value="tranquilidade">Tranquilidade</SelectItem>
-                          <SelectItem value="energia">Energia</SelectItem>
-                          <SelectItem value="tristeza">Melancolia/Tristeza</SelectItem>
-                          <SelectItem value="other">Outra</SelectItem>
-                        </SelectContent>
-                      </Select>
-                    </div>
-                    
-                    <div>
-                      <label htmlFor="tempo" className="block text-sm font-medium mb-1">Andamento (Tempo)</label>
-                      <Select
-                        onValueChange={(value) => handleSelectChange('tempo', value)}
-                        value={formData.tempo}
-                      >
-                        <SelectTrigger>
-                          <SelectValue placeholder="Selecione o andamento" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="lenta">Lenta/Balada</SelectItem>
-                          <SelectItem value="media">Média/Moderada</SelectItem>
-                          <SelectItem value="rapida">Rápida/Agitada</SelectItem>
-                          <SelectItem value="variada">Variada (com mudanças)</SelectItem>
-                        </SelectContent>
-                      </Select>
-                    </div>
-                    
-                    <div className="flex justify-between space-x-4 pt-4">
-                      <Button 
-                        type="button" 
                         variant="outline" 
-                        onClick={handleBack}
+                        className="w-full"
+                        onClick={() => setShowPackageDetails(true)}
                       >
-                        Voltar
+                        Ver detalhes do pacote
                       </Button>
-                      <Button 
-                        type="button" 
-                        onClick={handleNext}
-                        className="flex-1 bg-harmonia-green hover:bg-harmonia-green/90"
-                      >
-                        Avançar
-                      </Button>
-                    </div>
+                    </Card>
+                    <SidebarContent />
                   </div>
-                )}
-
-                {step === 3 && (
-                  <div className="space-y-4">
-                    <div>
-                      <label htmlFor="lyrics" className="block text-sm font-medium mb-1">Ideia para a Letra</label>
-                      <Textarea
-                        id="lyrics"
-                        name="lyrics"
-                        value={formData.lyrics}
-                        onChange={handleChange}
-                        placeholder="Descreva a história ou tema que gostaria que a letra abordasse"
-                        rows={5}
-                      />
-                    </div>
-                    
-                    <div>
-                      <label htmlFor="additionalInfo" className="block text-sm font-medium mb-1">Informações Adicionais</label>
-                      <Textarea
-                        id="additionalInfo"
-                        name="additionalInfo"
-                        value={formData.additionalInfo}
-                        onChange={handleChange}
-                        placeholder="Qualquer outra informação relevante para a composição da música"
-                        rows={5}
-                      />
-                    </div>
-                    
-                    <div className="flex justify-between space-x-4 pt-4">
-                      <Button 
-                        type="button" 
-                        variant="outline" 
-                        onClick={handleBack}
-                      >
-                        Voltar
-                      </Button>
-                      <Button 
-                        type="submit"
-                        className="flex-1 bg-harmonia-green hover:bg-harmonia-green/90"
-                        disabled={submitting}
-                      >
-                        {submitting ? "Enviando..." : "Enviar Briefing"}
-                      </Button>
-                    </div>
+                  
+                  <div className="md:col-span-2">
+                    <BriefingForm packageType={selectedPackage} />
                   </div>
-                )}
-              </form>
-            </CardContent>
-          </Card>
+                </div>
+              </div>
+            </>
+          )}
+          
+          {/* Package Details Dialog */}
+          {renderPackageDetails()}
         </div>
-      </div>
-    </PublicLayout>
+      </main>
+      <Footer />
+    </div>
   );
 };
+
+// Helper component for sidebar content
+const SidebarContent = () => (
+  <>
+    <div className="bg-card border border-border rounded-lg p-6">
+      <h3 className="font-semibold mb-2">Como funciona?</h3>
+      <p className="text-gray-400 text-sm">
+        Após o envio do formulário, nossa equipe irá iniciar o processo de composição.
+        Você receberá atualizações por e-mail e poderá acompanhar o progresso do seu projeto.
+      </p>
+    </div>
+    
+    <div className="bg-card border border-border rounded-lg p-6">
+      <h3 className="font-semibold mb-2">Exemplos de músicas</h3>
+      <p className="text-gray-400 text-sm mb-4">
+        Escute exemplos das músicas que criamos para nossos clientes.
+      </p>
+      <Link to="/portfolio">
+        <Button 
+          variant="outline" 
+          className="w-full"
+        >
+          Ver portfólio
+        </Button>
+      </Link>
+    </div>
+    
+    <div className="bg-card border border-border rounded-lg p-6">
+      <h3 className="font-semibold mb-2">Suporte</h3>
+      <p className="text-gray-400 text-sm mb-4">
+        Tem alguma dúvida sobre o preenchimento do formulário?
+      </p>
+      <a href="https://wa.me/5511999999999" target="_blank" rel="noopener noreferrer">
+        <Button 
+          variant="outline" 
+          className="w-full"
+        >
+          Falar com suporte
+        </Button>
+      </a>
+    </div>
+  </>
+);
 
 export default Briefing;

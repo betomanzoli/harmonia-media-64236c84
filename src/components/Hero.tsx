@@ -3,11 +3,14 @@ import React from 'react';
 import { Button } from "@/components/ui/button";
 import { Play, ArrowUp, DollarSign } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
+
 const Hero: React.FC = () => {
   const navigate = useNavigate();
+  
   const handleCreateMusic = () => {
-    navigate('/pagamento');
+    navigate('/pagamento/essencial');
   };
+  
   const handleHowItWorks = () => {
     // Scroll to the process section
     const processSection = document.getElementById('como-funciona');
@@ -17,12 +20,14 @@ const Hero: React.FC = () => {
       });
     }
   };
+  
   const scrollToTop = () => {
     window.scrollTo({
       top: 0,
       behavior: 'smooth'
     });
   };
+  
   return <section className="pt-32 pb-20 px-6 md:px-10 max-w-7xl mx-auto relative">
       <div className="space-y-8 max-w-3xl">
         <h1 className="text-5xl md:text-6xl font-bold tracking-tight">
@@ -39,7 +44,9 @@ const Hero: React.FC = () => {
             <DollarSign className="w-4 h-4 mr-2" />
             Contratar Agora
           </Button>
-          
+          <Button onClick={handleHowItWorks} variant="outline" className="flex items-center gap-2 h-12 px-6 rounded-md">
+            <Play className="w-4 h-4" /> Como Funciona
+          </Button>
         </div>
         <div className="flex flex-col sm:flex-row items-center gap-8 pt-8 border-t border-border">
           <div className="text-center">
@@ -62,4 +69,5 @@ const Hero: React.FC = () => {
       </button>
     </section>;
 };
+
 export default Hero;

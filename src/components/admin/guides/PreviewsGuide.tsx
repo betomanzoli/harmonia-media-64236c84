@@ -44,7 +44,7 @@ Estamos ansiosos pelo seu feedback!
 
 Equipe harmonIA
 ${siteConfig.contact.email}
-${siteConfig.contact.whatsapp}`;
+${siteConfig.contact.phone}`;
 
   // Template para WhatsApp
   const whatsappTemplate = `Olá [Nome do Cliente]! 😊

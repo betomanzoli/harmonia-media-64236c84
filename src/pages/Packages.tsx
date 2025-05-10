@@ -34,7 +34,7 @@ const Packages: React.FC = () => {
                 <CardDescription>Ideal para ocasiões especiais</CardDescription>
               </CardHeader>
               <CardContent>
-                <div className="text-3xl font-bold mb-6">R$ 219</div>
+                <div className="text-3xl font-bold mb-6">R$ 499</div>
                 <ul className="space-y-2">
                   <li className="flex items-start">
                     <Check className="h-5 w-5 text-green-500 mr-2 flex-shrink-0 mt-0.5" />
@@ -76,7 +76,7 @@ const Packages: React.FC = () => {
                 <CardDescription>Perfeito para momentos especiais</CardDescription>
               </CardHeader>
               <CardContent>
-                <div className="text-3xl font-bold mb-6">R$ 969</div>
+                <div className="text-3xl font-bold mb-6">R$ 799</div>
                 <ul className="space-y-2">
                   <li className="flex items-start">
                     <Check className="h-5 w-5 text-green-500 mr-2 flex-shrink-0 mt-0.5" />
@@ -114,7 +114,7 @@ const Packages: React.FC = () => {
                 <CardDescription>Para projetos exclusivos</CardDescription>
               </CardHeader>
               <CardContent>
-                <div className="text-3xl font-bold mb-6">R$ 479</div>
+                <div className="text-3xl font-bold mb-6">R$ 1.299</div>
                 <ul className="space-y-2">
                   <li className="flex items-start">
                     <Check className="h-5 w-5 text-green-500 mr-2 flex-shrink-0 mt-0.5" />
