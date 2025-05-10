@@ -83,6 +83,17 @@ const NavLinks: React.FC<NavLinksProps> = ({ mobile = false, closeMobileMenu }) 
           Contato
         </Link>
       </Button>
+      
+      <Button
+        variant="default"
+        size={mobile ? "default" : "sm"}
+        className="bg-harmonia-green hover:bg-harmonia-green/90"
+        asChild
+      >
+        <Link to="/pagamento" onClick={handleClick}>
+          Pagamento Direto
+        </Link>
+      </Button>
     </div>
   );
 };

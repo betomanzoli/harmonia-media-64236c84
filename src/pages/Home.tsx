@@ -7,6 +7,7 @@ import Services from '@/components/Services';
 import Portfolio from '@/components/Portfolio';
 import Testimonials from '@/components/Testimonials';
 import Partnership from '@/components/Partnership';
+import Contact from '@/components/Contact';
 
 const Home: React.FC = () => {
   return (
@@ -17,6 +18,7 @@ const Home: React.FC = () => {
       <Portfolio />
       <Testimonials />
       <Partnership />
+      <Contact />
     </PublicLayout>
   );
 };

@@ -57,7 +57,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       // This is a simplified mock implementation
       // In a real app, you'd make an API call to validate credentials
       if ((username === 'admin@harmonia.com' && password === 'admin123456') || 
-          (username === 'contato@harmonia.media' && password === 'i9!_b!ThA;2H6/bt')) {
+          (username === 'contato@harmonia.media' && password === 'harmonia2023')) {
         localStorage.setItem('admin-auth-token', 'mock-token-' + new Date().getTime());
         const userData = {
           email: username,

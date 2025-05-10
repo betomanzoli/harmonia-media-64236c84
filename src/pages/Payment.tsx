@@ -93,7 +93,7 @@ const Payment: React.FC = () => {
                   </p>
                   <div className="flex flex-col space-y-2">
                     <a 
-                      href="https://wa.me/5511999999999" 
+                      href="https://wa.me/5511966710347" 
                       target="_blank" 
                       rel="noopener noreferrer"
                       className="text-sm text-harmonia-green hover:underline"

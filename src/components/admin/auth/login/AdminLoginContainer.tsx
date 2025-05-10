@@ -60,6 +60,11 @@ const AdminLoginContainer: React.FC<AdminLoginContainerProps> = ({ onAuthenticat
         />
       </MotionCard>
       
+      <div className="mt-4 text-white text-sm">
+        <p>Usuário de admin: <strong>admin@harmonia.com</strong> / Senha: <strong>admin123456</strong></p>
+        <p>Ou: <strong>contato@harmonia.media</strong> / Senha: <strong>harmonia2023</strong></p>
+      </div>
+      
       <PasswordResetDialog 
         open={isPasswordResetOpen}
         onOpenChange={setIsPasswordResetOpen}

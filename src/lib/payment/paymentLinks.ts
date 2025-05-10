@@ -57,23 +57,54 @@ export const packagePaymentLinks: Record<PackageId, PaymentLinkData> = {
   }
 };
 
-// Add the extraServicePaymentLinks export using data from extraServices
-export const extraServicePaymentLinks: Record<string, {url: string}> = {
+// Add the extraServicePaymentLinks export with the correct links and button scripts
+export const extraServicePaymentLinks: Record<string, {url: string, buttonScript?: string}> = {
+  "Revisão Extra": { 
+    url: 'https://mpago.la/23WDA5a',
+    buttonScript: '<script src="https://www.mercadopago.com.br/integrations/v1/web-payment-checkout.js" data-preference-id="178571987-5ed445de-ebe1-47d0-aaa8-1bb544bc5c88" data-source="button"></script>'
+  },
+  "Registro na BN (Letra)": { 
+    url: 'https://mpago.la/113Dotr',
+    buttonScript: '<script src="https://www.mercadopago.com.br/integrations/v1/web-payment-checkout.js" data-preference-id="178571987-266f5eb5-3e03-4083-82d9-690fbb1b2951" data-source="button"></script>'
+  },
+  "Registro UBC": { 
+    url: 'https://mpago.la/1Fyqdcw',
+    buttonScript: '<script src="https://www.mercadopago.com.br/integrations/v1/web-payment-checkout.js" data-preference-id="178571987-2bd0e019-e98c-42a6-a7fb-e8858fe13f78" data-source="button"></script>'
+  },
+  "Masterização Premium": { 
+    url: 'https://mpago.la/2bJ7gs5',
+    buttonScript: '<script src="https://www.mercadopago.com.br/integrations/v1/web-payment-checkout.js" data-preference-id="178571987-a6e460f7-4f43-4010-b1ec-fe7789090467" data-source="button"></script>'
+  },
+  "Stems Separados": { 
+    url: 'https://mpago.la/21iE6Zp',
+    buttonScript: '<script src="https://www.mercadopago.com.br/integrations/v1/web-payment-checkout.js" data-preference-id="178571987-2be0a4e2-5c8e-4e64-b554-d4068d18d23a" data-source="button"></script>'
+  },
+  "Entrega Expressa": { 
+    url: 'https://mpago.la/2grZyHu',
+    buttonScript: '<script src="https://www.mercadopago.com.br/integrations/v1/web-payment-checkout.js" data-preference-id="178571987-d2c262a6-0251-40cb-99ed-37415eb90c1d" data-source="button"></script>'
+  },
+  "Partituras MusicXML/PDF": { 
+    url: 'https://mpago.la/2grZyHu',
+    buttonScript: '<script src="https://www.mercadopago.com.br/integrations/v1/web-payment-checkout.js" data-preference-id="178571987-d2c262a6-0251-40cb-99ed-37415eb90c1d" data-source="button"></script>'
+  },
+  "Composição sem IA (letra)": { 
+    url: 'https://mpago.la/2bJ7gs5',
+    buttonScript: '<script src="https://www.mercadopago.com.br/integrations/v1/web-payment-checkout.js" data-preference-id="178571987-a6e460f7-4f43-4010-b1ec-fe7789090467" data-source="button"></script>'
+  },
+  "Composição sem IA (letra + melodia)": { 
+    url: 'https://mpago.la/2grZyHu',
+    buttonScript: '<script src="https://www.mercadopago.com.br/integrations/v1/web-payment-checkout.js" data-preference-id="178571987-d2c262a6-0251-40cb-99ed-37415eb90c1d" data-source="button"></script>'
+  },
+  "Composição sem IA (letra + melodia + gravação)": { 
+    url: 'https://mpago.li/1gjwJZY',
+    buttonScript: '<script src="https://www.mercadopago.com.br/integrations/v1/web-payment-checkout.js" data-preference-id="178571987-1b5c6c1a-2c8b-4c9a-b67c-07519f43382f" data-source="button"></script>'
+  },
+  // Backwards compatibility mapping for older IDs
   "recording": { url: 'https://mpago.la/1Fyqdcw' },
   "mastering": { url: 'https://mpago.la/21iE6Zp' },
   "express": { url: 'https://mpago.la/113Dotr' },
   "video": { url: 'https://mpago.la/2bJ7gs5' },
   "copyright": { url: 'https://mpago.la/23WDA5a' },
   "musicsheet": { url: 'https://mpago.la/2grZyHu' },
-  "mvp": { url: 'https://mpago.li/1gjwJZY' },
-  "Revisão Extra": { url: 'https://mpago.la/1Fyqdcw' },
-  "Registro na BN (Letra)": { url: 'https://mpago.la/23WDA5a' },
-  "Registro UBC": { url: 'https://mpago.la/2E1tYaj' },
-  "Masterização Premium": { url: 'https://mpago.la/21iE6Zp' },
-  "Stems Separados": { url: 'https://mpago.la/1cimFu6' },
-  "Entrega Expressa": { url: 'https://mpago.la/113Dotr' },
-  "Partituras MusicXML/PDF": { url: 'https://mpago.la/2grZyHu' },
-  "Composição sem IA (letra)": { url: 'https://mpago.la/2bJ7gs5' },
-  "Composição sem IA (letra + melodia)": { url: 'https://mpago.la/1fejmqL' },
-  "Composição sem IA (letra + melodia + gravação)": { url: 'https://mpago.li/1gjwJZY' }
+  "mvp": { url: 'https://mpago.li/1gjwJZY' }
 };

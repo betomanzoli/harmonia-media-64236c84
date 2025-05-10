@@ -27,9 +27,9 @@ const Contact: React.FC = () => {
               </div>
               <div>
                 <h4 className="font-medium mb-1">WhatsApp</h4>
-                <p className="text-gray-500">{whatsapp}</p>
+                <p className="text-gray-500">(11) 96671-0347</p>
                 <a 
-                  href={`https://wa.me/${whatsapp.replace(/\D/g, '')}`} 
+                  href={`https://wa.me/${whatsapp}`} 
                   target="_blank" 
                   rel="noopener noreferrer"
                   className="text-harmonia-green hover:underline"

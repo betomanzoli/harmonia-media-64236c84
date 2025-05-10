@@ -6,7 +6,7 @@ export const siteConfig = {
   links: {
     instagram: "https://www.instagram.com/harmonia.media",
     facebook: "https://www.facebook.com/harmonia.media",
-    whatsapp: "https://wa.me/5511999999999"
+    whatsapp: "https://wa.me/5511966710347"
   },
   urls: {
     howitworks: "/como-funciona",
@@ -37,7 +37,7 @@ export const siteConfig = {
   },
   contact: {
     email: "contato@harmonia.media",
-    whatsapp: "5511999999999",
-    phone: "5511999999999"
+    whatsapp: "5511966710347",
+    phone: "5511966710347"
   }
 };
