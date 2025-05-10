@@ -19,6 +19,15 @@ const AuthContext = createContext<AuthContextType>({
   logout: () => {},
 });
 
+// Helper function to clean up local storage auth data
+const cleanupAuthData = () => {
+  Object.keys(localStorage).forEach(key => {
+    if (key.startsWith('sb-') || key.includes('auth') || key.includes('supabase')) {
+      localStorage.removeItem(key);
+    }
+  });
+};
+
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [authStatus, setAuthStatus] = useState<AuthStatus>('loading');
 
@@ -28,20 +37,25 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   }, []);
 
   const checkAuthStatus = useCallback(() => {
-    // Check for both token formats to ensure compatibility
-    const storedToken = localStorage.getItem('admin-auth-token') || 
-                        localStorage.getItem('sb-ivueqxyuflxsiecqvmgt-auth-token');
-                        
-    const storedUser = localStorage.getItem('admin-auth-user') || 
-                       localStorage.getItem('sb-ivueqxyuflxsiecqvmgt-auth-user');
-    
-    console.log('Checking auth status. Token exists:', !!storedToken, 'User exists:', !!storedUser);
-    
-    if (storedToken && storedUser) {
-      console.log('Auth token found, setting status to authenticated');
-      setAuthStatus('authenticated');
-    } else {
-      console.log('No auth token found, setting status to unauthenticated');
+    try {
+      // Check for both token formats to ensure compatibility
+      const storedToken = localStorage.getItem('admin-auth-token') || 
+                          localStorage.getItem('sb-ivueqxyuflxsiecqvmgt-auth-token');
+                          
+      const storedUser = localStorage.getItem('admin-auth-user') || 
+                        localStorage.getItem('sb-ivueqxyuflxsiecqvmgt-auth-user');
+      
+      console.log('Checking auth status. Token exists:', !!storedToken, 'User exists:', !!storedUser);
+      
+      if (storedToken && storedUser) {
+        console.log('Auth token found, setting status to authenticated');
+        setAuthStatus('authenticated');
+      } else {
+        console.log('No auth token found, setting status to unauthenticated');
+        setAuthStatus('unauthenticated');
+      }
+    } catch (error) {
+      console.error('Error checking auth status:', error);
       setAuthStatus('unauthenticated');
     }
   }, []);
@@ -51,22 +65,26 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     
     try {
       // Clear any existing tokens first to prevent conflicts
-      localStorage.removeItem('admin-auth-token');
-      localStorage.removeItem('admin-auth-user');
+      cleanupAuthData();
       
-      // This is a simplified mock implementation
-      // In a real app, you'd make an API call to validate credentials
-      if ((username === 'admin@harmonia.com' && password === 'admin123456') || 
-          (username === 'contato@harmonia.media' && password === 'harmonia2023')) {
-        localStorage.setItem('admin-auth-token', 'mock-token-' + new Date().getTime());
+      // Enhanced login logic with hardcoded credentials for development
+      if ((username.toLowerCase() === 'admin@harmonia.com' && password === 'admin123456') || 
+          (username.toLowerCase() === 'contato@harmonia.media' && password === 'harmonia2023')) {
+        
+        // Generate a timestamp-based token
+        const mockToken = 'mock-token-' + new Date().getTime();
+        
+        // Store auth data in localStorage
+        localStorage.setItem('admin-auth-token', mockToken);
         const userData = {
           email: username,
           name: username === 'admin@harmonia.com' ? 'Admin User' : 'Contato User',
           role: 'admin'
         };
         localStorage.setItem('admin-auth-user', JSON.stringify(userData));
-        setAuthStatus('authenticated');
+        
         console.log('Login successful, token stored');
+        setAuthStatus('authenticated');
         return true;
       }
       
@@ -82,8 +100,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const logout = () => {
     console.log('Logging out, removing auth token');
-    localStorage.removeItem('admin-auth-token');
-    localStorage.removeItem('admin-auth-user');
+    cleanupAuthData();
     setAuthStatus('unauthenticated');
   };
 

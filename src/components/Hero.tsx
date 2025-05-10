@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { Button } from "@/components/ui/button";
 import { Play, ArrowUp, DollarSign } from 'lucide-react';
@@ -5,7 +6,7 @@ import { useNavigate } from 'react-router-dom';
 const Hero: React.FC = () => {
   const navigate = useNavigate();
   const handleCreateMusic = () => {
-    navigate('/pagamento/essencial');
+    navigate('/pagamento');
   };
   const handleHowItWorks = () => {
     // Scroll to the process section
