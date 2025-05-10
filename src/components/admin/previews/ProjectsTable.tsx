@@ -18,9 +18,17 @@ interface Project {
 
 interface ProjectsTableProps {
   projects: Project[];
+  isLoading?: boolean;
+  onDelete?: (projectId: string) => void;
+  onSendReminder?: (projectId: string) => void;
 }
 
-const ProjectsTable: React.FC<ProjectsTableProps> = ({ projects }) => {
+const ProjectsTable: React.FC<ProjectsTableProps> = ({ 
+  projects, 
+  isLoading = false,
+  onDelete,
+  onSendReminder
+}) => {
   const navigate = useNavigate();
 
   const handleViewProject = (projectId: string) => {
@@ -30,6 +38,26 @@ const ProjectsTable: React.FC<ProjectsTableProps> = ({ projects }) => {
   const handleEditProject = (projectId: string) => {
     navigate(`/admin-j28s7d1k/previews/edit/${projectId}`);
   };
+
+  if (isLoading) {
+    return (
+      <div className="p-6 text-center">
+        <div className="animate-pulse flex flex-col items-center space-y-4">
+          <div className="h-6 w-24 bg-gray-200 rounded"></div>
+          <div className="h-32 w-full bg-gray-100 rounded"></div>
+        </div>
+        <p className="mt-4 text-gray-500">Carregando projetos...</p>
+      </div>
+    );
+  }
+
+  if (projects.length === 0) {
+    return (
+      <div className="p-6 text-center">
+        <p className="text-gray-500">Nenhum projeto de prévia encontrado.</p>
+      </div>
+    );
+  }
 
   return (
     <div className="overflow-x-auto">
