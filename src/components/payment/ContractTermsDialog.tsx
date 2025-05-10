@@ -4,6 +4,7 @@ import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, D
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
+import { ScrollArea } from "@/components/ui/scroll-area";
 import { ContractContent } from '@/components/service-card/ContractDetails';
 
 export type PackageId = 'essencial' | 'premium' | 'profissional';
@@ -43,7 +44,7 @@ const ContractTermsDialog: React.FC<ContractTermsDialogProps> = ({
   
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-3xl">
+      <DialogContent className="max-w-3xl max-h-[90vh] flex flex-col">
         <DialogHeader>
           <DialogTitle>Contrato de Prestação de Serviços - {packageId.charAt(0).toUpperCase() + packageId.slice(1)}</DialogTitle>
           <DialogDescription>
@@ -51,9 +52,9 @@ const ContractTermsDialog: React.FC<ContractTermsDialogProps> = ({
           </DialogDescription>
         </DialogHeader>
         
-        <div className="max-h-[400px] overflow-y-auto border border-border rounded-md p-4 my-4">
+        <ScrollArea className="flex-1 max-h-[50vh] mt-4 rounded-md border p-4">
           <div dangerouslySetInnerHTML={{ __html: getContractHtml() }} />
-        </div>
+        </ScrollArea>
         
         <div className="flex items-start space-x-2 mt-4">
           <Checkbox 
