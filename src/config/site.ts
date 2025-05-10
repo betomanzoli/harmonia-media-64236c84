@@ -14,7 +14,16 @@ export const siteConfig = {
     contact: "/contato",
     services: "/servicos",
     about: "/sobre",
-    login: "/admin-j28s7d1k"
+    login: "/admin-j28s7d1k",
+    previews: "/preview",
+    admin: {
+      dashboard: "/admin-j28s7d1k/dashboard",
+      projects: "/admin-j28s7d1k/projects",
+      previews: "/admin-j28s7d1k/previews",
+      portfolio: "/admin-j28s7d1k/portfolio",
+      audioDatabase: "/admin-j28s7d1k/audio-database",
+      customers: "/admin-j28s7d1k/customers"
+    }
   },
   pricing: {
     basePrice: 219, // Pacote Essencial
@@ -23,6 +32,7 @@ export const siteConfig = {
   },
   contact: {
     email: "contato@harmonia.media",
-    whatsapp: "5511999999999"
+    whatsapp: "5511999999999",
+    phone: "5511999999999" // Added phone property
   }
 };
