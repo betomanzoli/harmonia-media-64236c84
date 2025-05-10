@@ -28,10 +28,14 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   }, []);
 
   const checkAuthStatus = useCallback(() => {
-    // This is a simplified mock implementation
-    // In a real app, you'd check tokens in localStorage or cookies
-    const storedToken = localStorage.getItem('admin-auth-token');
-    const storedUser = localStorage.getItem('admin-auth-user');
+    // Check for both token formats to ensure compatibility
+    const storedToken = localStorage.getItem('admin-auth-token') || 
+                        localStorage.getItem('sb-ivueqxyuflxsiecqvmgt-auth-token');
+                        
+    const storedUser = localStorage.getItem('admin-auth-user') || 
+                       localStorage.getItem('sb-ivueqxyuflxsiecqvmgt-auth-user');
+    
+    console.log('Checking auth status. Token exists:', !!storedToken, 'User exists:', !!storedUser);
     
     if (storedToken && storedUser) {
       console.log('Auth token found, setting status to authenticated');
@@ -46,6 +50,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     console.log('Login attempt with:', username);
     
     try {
+      // Clear any existing tokens first to prevent conflicts
+      localStorage.removeItem('admin-auth-token');
+      localStorage.removeItem('admin-auth-user');
+      
       // This is a simplified mock implementation
       // In a real app, you'd make an API call to validate credentials
       if ((username === 'admin@harmonia.com' && password === 'admin123456') || 

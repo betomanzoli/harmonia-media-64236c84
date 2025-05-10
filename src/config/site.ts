@@ -16,6 +16,11 @@ export const siteConfig = {
     about: "/sobre",
     login: "/admin-j28s7d1k",
     previews: "/preview",
+    portfolio: "/portfolio",
+    termos: "/termos",
+    privacidade: "/privacidade",
+    briefing: "/briefing",
+    orderTracking: "/acompanhar-pedido",
     admin: {
       dashboard: "/admin-j28s7d1k/dashboard",
       projects: "/admin-j28s7d1k/projects",
@@ -33,6 +38,6 @@ export const siteConfig = {
   contact: {
     email: "contato@harmonia.media",
     whatsapp: "5511999999999",
-    phone: "5511999999999" // Added phone property
+    phone: "5511999999999"
   }
 };

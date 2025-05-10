@@ -5,6 +5,7 @@ import HomePage from "./pages/HomePage";
 import AboutPage from "./pages/AboutPage";
 import ServicesPage from "./pages/ServicesPage";
 import ContactPage from "./pages/ContactPage";
+import HowItWorks from "./pages/HowItWorks";
 import PreviewPage from "./pages/PreviewPage";
 import PreviewProjectPage from "./pages/PreviewProjectPage";
 import AdminDashboard from "./pages/admin/AdminDashboard";
@@ -17,6 +18,11 @@ import ProjectEditPage from "./pages/admin/ProjectEditPage";
 import Payment from "./pages/Payment";
 import Packages from "./pages/Packages";
 import PaymentProcessing from "./pages/PaymentProcessing";
+import Portfolio from "./pages/Portfolio";
+import PrivacyPolicy from "./pages/PrivacyPolicy";
+import Terms from "./pages/Terms";
+import Briefing from "./pages/Briefing";
+import OrderTracking from "./pages/OrderTracking";
 
 import "./App.css";
 
@@ -43,6 +49,7 @@ function App() {
     <Routes>
       <Route path="/" element={<HomePage />} />
       <Route path="/about" element={<AboutPage />} />
+      <Route path="/como-funciona" element={<HowItWorks />} />
       <Route path="/services" element={<ServicesPage />} />
       <Route path="/servicos" element={<ServicesPage />} />
       <Route path="/contact" element={<ContactPage />} />
@@ -53,6 +60,11 @@ function App() {
       <Route path="/pagamento-processando" element={<PaymentProcessing />} />
       <Route path="/preview/:projectId" element={<PreviewPage />} />
       <Route path="/preview-project/:projectId" element={<PreviewProjectPage />} />
+      <Route path="/portfolio" element={<Portfolio />} />
+      <Route path="/privacidade" element={<PrivacyPolicy />} />
+      <Route path="/termos" element={<Terms />} />
+      <Route path="/briefing" element={<Briefing />} />
+      <Route path="/acompanhar-pedido" element={<OrderTracking />} />
 
       {/* Admin Routes */}
       <Route path="/admin-j28s7d1k" element={<AdminLogin />} />
