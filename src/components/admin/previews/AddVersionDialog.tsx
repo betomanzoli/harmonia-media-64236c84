@@ -7,13 +7,13 @@ import AddVersionForm from './AddVersionForm';
 import { VersionItem } from '@/hooks/admin/usePreviewProjects';
 
 interface AddVersionDialogProps {
-  projectId?: string;
+  projectId: string;
   onAddVersion: (newVersion: VersionItem) => void;
+  // Adding isOpen and onClose props to match how it's being used
   isOpen?: boolean;
   onClose?: () => void;
   onSubmit?: (version: VersionItem) => void;
   isFinalVersion?: boolean;
-  packageType?: string;
 }
 
 const AddVersionDialog: React.FC<AddVersionDialogProps> = ({
@@ -22,8 +22,7 @@ const AddVersionDialog: React.FC<AddVersionDialogProps> = ({
   isOpen,
   onClose,
   onSubmit,
-  isFinalVersion = false,
-  packageType
+  isFinalVersion = false
 }) => {
   // Use local state only if isOpen is not provided from props
   const [localOpen, setLocalOpen] = useState(false);
@@ -70,7 +69,7 @@ const AddVersionDialog: React.FC<AddVersionDialogProps> = ({
           <DialogTitle>{isFinalVersion ? "Adicionar Versão Final" : "Adicionar Nova Versão"}</DialogTitle>
         </DialogHeader>
         <AddVersionForm 
-          projectId={projectId || ''} 
+          projectId={projectId} 
           onAddVersion={handleAddVersion} 
           onCancel={() => handleOpenChange(false)} 
           isFinalVersion={isFinalVersion} 

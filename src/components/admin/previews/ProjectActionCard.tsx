@@ -2,12 +2,11 @@
 import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Copy, PlusCircle, Link, CalendarPlus } from 'lucide-react';
+import { Copy, PlusCircle, Clock, Link, CalendarPlus } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import AddVersionDialog from './AddVersionDialog';
 import { VersionItem } from '@/hooks/admin/usePreviewProjects';
 import ContactClientActions from './components/ContactClientActions';
-import ProjectActionButton from './components/ProjectActionButton';
 
 interface ProjectActionCardProps {
   projectId: string;
@@ -95,10 +94,10 @@ const ProjectActionCard: React.FC<ProjectActionCardProps> = ({
           projectId={projectId}
         />
         
-        {/* Add version dialog - Fixed prop names here */}
+        {/* Add version dialog */}
         <AddVersionDialog 
-          isOpen={showAddVersion} 
-          onClose={() => setShowAddVersion(false)}
+          open={showAddVersion} 
+          onOpenChange={setShowAddVersion}
           onAddVersion={(versionData) => {
             setShowAddVersion(false);
             onAddVersion({

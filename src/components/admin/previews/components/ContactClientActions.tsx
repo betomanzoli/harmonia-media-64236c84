@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { MessageSquare, Mail, Copy } from 'lucide-react';
+import { MessageSquare, Mail } from 'lucide-react';
 import ProjectActionButton from './ProjectActionButton';
 import { useToast } from '@/hooks/use-toast';
 
@@ -8,8 +8,6 @@ interface ContactClientActionsProps {
   clientPhone?: string;
   clientEmail?: string;
   projectId: string;
-  onDeleteVersion?: (versionId: string) => void;
-  canEdit?: boolean;
 }
 
 const ContactClientActions: React.FC<ContactClientActionsProps> = ({
@@ -60,37 +58,17 @@ const ContactClientActions: React.FC<ContactClientActionsProps> = ({
       `Olá!\n\nSua prévia musical já está disponível para avaliação.\n\nAcesse: ${window.location.origin}/preview/${projectId}\n\nAguardamos seu feedback!\n\nAtenciosamente,\nEquipe harmonIA`
     );
     
-    // Create mailto link with predefined "from" email
-    const mailtoUrl = `mailto:${clientEmail}?subject=${subject}&body=${body}&from=contato@harmonia.media`;
+    // Create mailto link
+    const mailtoUrl = `mailto:${clientEmail}?subject=${subject}&body=${body}`;
     
     // Open in new tab/email client
     window.location.href = mailtoUrl;
   };
-  
-  const handleCopyLink = () => {
-    const previewUrl = `${window.location.origin}/preview/${projectId}`;
-    
-    navigator.clipboard.writeText(previewUrl)
-      .then(() => {
-        toast({
-          title: "Link copiado",
-          description: "O link de prévia foi copiado para a área de transferência"
-        });
-      })
-      .catch(err => {
-        console.error('Erro ao copiar link:', err);
-        toast({
-          title: "Erro ao copiar",
-          description: "Não foi possível copiar o link. Por favor, tente novamente.",
-          variant: "destructive"
-        });
-      });
-  };
 
   return (
     <div className="pt-2 border-t border-gray-100 mt-4">
-      <h3 className="text-sm font-medium mb-2">Comunicação com Cliente</h3>
-      <div className="grid grid-cols-2 gap-2 mb-2">
+      <h3 className="text-sm font-medium mb-2">Contatar Cliente</h3>
+      <div className="grid grid-cols-2 gap-2">
         <ProjectActionButton
           icon={MessageSquare}
           onClick={handleWhatsApp}
@@ -105,16 +83,6 @@ const ContactClientActions: React.FC<ContactClientActionsProps> = ({
           variant="outline"
         >
           Email
-        </ProjectActionButton>
-      </div>
-      
-      <div className="grid grid-cols-1 gap-2">
-        <ProjectActionButton
-          icon={Copy}
-          onClick={handleCopyLink}
-          variant="outline"
-        >
-          Copiar Link de Prévia
         </ProjectActionButton>
       </div>
     </div>
