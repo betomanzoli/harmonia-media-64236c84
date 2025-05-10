@@ -55,7 +55,7 @@ const TermsDialog: React.FC<TermsDialogProps> = ({
           </DialogDescription>
         </DialogHeader>
         
-        <ScrollArea className="flex-1 max-h-[50vh] mt-4 rounded-md border p-4">
+        <ScrollArea className="flex-1 max-h-[50vh] overflow-auto mt-4 rounded-md border p-4">
           {getContractContent()}
         </ScrollArea>
         
