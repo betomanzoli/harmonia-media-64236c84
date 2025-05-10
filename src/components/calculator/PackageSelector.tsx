@@ -6,7 +6,7 @@ import { Label } from "@/components/ui/label";
 interface PackageSelectorProps {
   selectedPackage: string;
   setSelectedPackage: (value: string) => void;
-  packagePrices: {
+  packagePrices?: {
     essential: number;
     professional: number;
     premium: number;
@@ -16,7 +16,11 @@ interface PackageSelectorProps {
 const PackageSelector: React.FC<PackageSelectorProps> = ({ 
   selectedPackage, 
   setSelectedPackage,
-  packagePrices
+  packagePrices = {
+    essential: 219,
+    professional: 479,
+    premium: 969
+  }
 }) => {
   return (
     <div className="bg-card border border-border rounded-lg p-6">

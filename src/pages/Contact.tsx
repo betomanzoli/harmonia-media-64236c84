@@ -8,6 +8,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Mail, Phone, MapPin, Clock } from 'lucide-react';
+import { siteConfig } from '@/config/site';
 
 const Contact: React.FC = () => {
   return (
@@ -113,7 +114,7 @@ const Contact: React.FC = () => {
                       <Mail className="h-5 w-5 text-harmonia-green mr-3 mt-1" />
                       <div>
                         <h3 className="font-medium">Email</h3>
-                        <p className="text-gray-600">contato@harmonia.media</p>
+                        <p className="text-gray-600">{siteConfig.contact.email}</p>
                         <p className="text-gray-500 text-sm">Resposta em até 24h</p>
                       </div>
                     </div>
@@ -122,7 +123,7 @@ const Contact: React.FC = () => {
                       <Phone className="h-5 w-5 text-harmonia-green mr-3 mt-1" />
                       <div>
                         <h3 className="font-medium">Telefone / WhatsApp</h3>
-                        <p className="text-gray-600">(11) 96590-6009</p>
+                        <p className="text-gray-600">{siteConfig.contact.whatsapp}</p>
                         <p className="text-gray-500 text-sm">Seg-Sex, 9h às 18h</p>
                       </div>
                     </div>

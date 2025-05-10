@@ -31,7 +31,7 @@ const ServiceTabs: React.FC<ServiceTabsProps> = ({ activeTab, setActiveTab }) =>
       <TabsContent value="todos" className="grid grid-cols-1 md:grid-cols-3 gap-6">
         <ServiceCard 
           title="Pacote Essencial" 
-          price={`R$${siteConfig.pricing.basePrice}`}
+          price="R$ 219,00"
           description="Ideal para presentes emocionais rápidos."
           features={[
             "Composição musical única",
@@ -45,7 +45,7 @@ const ServiceTabs: React.FC<ServiceTabsProps> = ({ activeTab, setActiveTab }) =>
         />
         <ServiceCard 
           title="Pacote Profissional" 
-          price={`R$${siteConfig.pricing.professionalPrice}`}
+          price="R$ 479,00"
           description="Perfeito para criadores de conteúdo e pequenos negócios."
           features={[
             "Composição musical personalizada",
@@ -61,7 +61,7 @@ const ServiceTabs: React.FC<ServiceTabsProps> = ({ activeTab, setActiveTab }) =>
         />
         <ServiceCard 
           title="Pacote Premium" 
-          price={`R$${siteConfig.pricing.premiumPrice}`}
+          price="R$ 969,00"
           description="Melhor opção para empresas e projetos corporativos."
           features={[
             "Composição totalmente personalizada",
@@ -81,7 +81,7 @@ const ServiceTabs: React.FC<ServiceTabsProps> = ({ activeTab, setActiveTab }) =>
       <TabsContent value="presentes" className="grid grid-cols-1 md:grid-cols-3 gap-6">
         <ServiceCard 
           title="Pacote Essencial" 
-          price={`R$${siteConfig.pricing.basePrice}`}
+          price="R$ 219,00"
           description="Ideal para presentes emocionais rápidos."
           features={[
             "Composição musical única",
@@ -99,7 +99,7 @@ const ServiceTabs: React.FC<ServiceTabsProps> = ({ activeTab, setActiveTab }) =>
       <TabsContent value="profissionais" className="grid grid-cols-1 md:grid-cols-3 gap-6">
         <ServiceCard 
           title="Pacote Profissional" 
-          price={`R$${siteConfig.pricing.professionalPrice}`}
+          price="R$ 479,00"
           description="Perfeito para criadores de conteúdo e pequenos negócios."
           features={[
             "Composição musical personalizada",
@@ -118,7 +118,7 @@ const ServiceTabs: React.FC<ServiceTabsProps> = ({ activeTab, setActiveTab }) =>
       <TabsContent value="enterprise" className="grid grid-cols-1 md:grid-cols-3 gap-6">
         <ServiceCard 
           title="Pacote Premium" 
-          price={`R$${siteConfig.pricing.premiumPrice}`}
+          price="R$ 969,00"
           description="Melhor opção para empresas e projetos corporativos."
           features={[
             "Composição totalmente personalizada",

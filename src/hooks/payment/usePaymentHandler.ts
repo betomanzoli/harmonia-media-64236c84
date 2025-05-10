@@ -36,7 +36,7 @@ export function usePaymentHandler(
   const logContractAcceptance = async () => {
     if (!qualificationData) {
       console.warn('Qualification data not available for contract logging');
-      return;
+      return false;
     }
     
     try {

@@ -11,18 +11,20 @@ interface AddVersionDialogProps {
   onAddVersion: (newVersion: VersionItem) => void;
   // Adding isOpen and onClose props to match how it's being used
   isOpen?: boolean;
-  onClose?: () => void;
+  onOpenChange?: (open: boolean) => void;
   onSubmit?: (version: VersionItem) => void;
   isFinalVersion?: boolean;
+  packageType?: string;
 }
 
 const AddVersionDialog: React.FC<AddVersionDialogProps> = ({
   projectId,
   onAddVersion,
   isOpen,
-  onClose,
+  onOpenChange,
   onSubmit,
-  isFinalVersion = false
+  isFinalVersion = false,
+  packageType
 }) => {
   // Use local state only if isOpen is not provided from props
   const [localOpen, setLocalOpen] = useState(false);
@@ -31,9 +33,9 @@ const AddVersionDialog: React.FC<AddVersionDialogProps> = ({
   const isDialogOpen = isOpen !== undefined ? isOpen : localOpen;
   
   const handleOpenChange = (open: boolean) => {
-    if (isOpen !== undefined && onClose) {
+    if (isOpen !== undefined && onOpenChange) {
       // If controlled from parent
-      if (!open) onClose();
+      onOpenChange(open);
     } else {
       // If controlled locally
       setLocalOpen(open);
@@ -47,8 +49,8 @@ const AddVersionDialog: React.FC<AddVersionDialogProps> = ({
       onAddVersion(version);
     }
     
-    if (isOpen !== undefined && onClose) {
-      onClose();
+    if (isOpen !== undefined && onOpenChange) {
+      onOpenChange(false);
     } else {
       setLocalOpen(false);
     }
@@ -73,6 +75,7 @@ const AddVersionDialog: React.FC<AddVersionDialogProps> = ({
           onAddVersion={handleAddVersion} 
           onCancel={() => handleOpenChange(false)} 
           isFinalVersion={isFinalVersion} 
+          packageType={packageType}
         />
       </DialogContent>
     </Dialog>

@@ -8,7 +8,7 @@ const Hero: React.FC = () => {
   const navigate = useNavigate();
   
   const handleCreateMusic = () => {
-    navigate('/pagamento/essencial');
+    navigate('/pacotes');
   };
   
   const handleHowItWorks = () => {
@@ -28,7 +28,8 @@ const Hero: React.FC = () => {
     });
   };
   
-  return <section className="pt-32 pb-20 px-6 md:px-10 max-w-7xl mx-auto relative">
+  return (
+    <section className="pt-32 pb-20 px-6 md:px-10 max-w-7xl mx-auto relative">
       <div className="space-y-8 max-w-3xl">
         <h1 className="text-5xl md:text-6xl font-bold tracking-tight">
           Música feita por{" "}
@@ -67,7 +68,8 @@ const Hero: React.FC = () => {
       <button onClick={scrollToTop} className="fixed bottom-6 right-6 bg-harmonia-green hover:bg-harmonia-green/90 text-white p-3 rounded-full shadow-lg z-50" aria-label="Voltar ao topo">
         <ArrowUp className="w-5 h-5" />
       </button>
-    </section>;
+    </section>
+  );
 };
 
 export default Hero;
