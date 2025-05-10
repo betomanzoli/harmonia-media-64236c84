@@ -96,7 +96,7 @@ const ProjectActionCard: React.FC<ProjectActionCardProps> = ({
         
         {/* Add version dialog */}
         <AddVersionDialog 
-          open={showAddVersion} 
+          isOpen={showAddVersion} 
           onOpenChange={setShowAddVersion}
           onAddVersion={(versionData) => {
             setShowAddVersion(false);
@@ -107,6 +107,7 @@ const ProjectActionCard: React.FC<ProjectActionCardProps> = ({
               final: projectStatus === 'approved'
             });
           }}
+          projectId={projectId}
           isFinalVersion={projectStatus === 'approved'}
           packageType={packageType}
         />

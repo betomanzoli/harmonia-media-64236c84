@@ -94,7 +94,7 @@ const StatsSummary = () => {
         trend={{ value: 12, isPositive: true }}
         icon={<FileAudio className="w-6 h-6" />}
         linkText="Gerenciar áudios"
-        linkUrl={siteConfig.urls.admin.audioDatabase}
+        linkUrl="/admin-j28s7d1k/audio-database"
         color="text-blue-400"
         bgColor="from-blue-900/20 to-gray-900/80"
       />
@@ -106,7 +106,7 @@ const StatsSummary = () => {
         trend={{ value: 8, isPositive: true }}
         icon={<Music className="w-6 h-6" />}
         linkText="Gerenciar portfólio"
-        linkUrl={siteConfig.urls.admin.portfolio}
+        linkUrl="/admin-j28s7d1k/portfolio"
         color="text-green-400"
         bgColor="from-green-900/20 to-gray-900/80"
       />
