@@ -1,9 +1,17 @@
 
 import React from 'react';
-import Contact from './Contact';
+import Header from '@/components/Header';
+import Footer from '@/components/Footer';
+import Contact from '@/components/Contact';
 
 const ContactPage: React.FC = () => {
-  return <Contact />;
+  return (
+    <div className="min-h-screen bg-background">
+      <Header />
+      <Contact />
+      <Footer />
+    </div>
+  );
 };
 
 export default ContactPage;

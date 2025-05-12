@@ -6,30 +6,27 @@ import { initialExamples, extraExamples, comparisonExamples, AudioExample } from
 
 const Portfolio: React.FC = () => {
   const [showAll, setShowAll] = useState(false);
+  const [selectedCategory, setSelectedCategory] = useState("all");
+  const [examples, setExamples] = useState<AudioExample[]>(initialExamples);
 
   const handleShowMore = () => {
     setShowAll(true);
+    setExamples([...initialExamples, ...extraExamples]);
   };
 
   return (
-    <section id="portfolio" className="py-20 px-6 md:px-10 bg-gray-50">
-      <div className="max-w-7xl mx-auto">
-        <div className="text-center mb-12">
-          <h2 className="text-3xl font-bold mb-4">Portfolio de Composições</h2>
-          <p className="text-gray-500 max-w-2xl mx-auto">
-            Ouça algumas de nossas composições musicais personalizadas e veja como podemos transformar sua história em música.
-          </p>
-        </div>
-
+    <section className="py-12">
+      <div className="container mx-auto px-4">
+        <PortfolioSummary />
+        
         <PortfolioTabs 
-          initialExamples={initialExamples}
-          extraExamples={extraExamples}
-          comparisonExamples={comparisonExamples}
+          selectedCategory={selectedCategory}
+          onSelectCategory={setSelectedCategory}
+          examples={examples}
           showAll={showAll}
           onShowMore={handleShowMore}
+          comparisonExamples={comparisonExamples}
         />
-
-        <PortfolioSummary />
       </div>
     </section>
   );

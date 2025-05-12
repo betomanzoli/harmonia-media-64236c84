@@ -18,6 +18,15 @@ interface PreviewProject {
   projectTitle: string;
   status: 'waiting' | 'feedback' | 'approved';
   previews: MusicPreview[];
+  packageType?: string;
+  createdAt?: string;
+  expiresAt?: string;
+}
+
+// Extend ProjectItem interface with the title property that we need
+interface ExtendedProjectItem {
+  title?: string;
+  [key: string]: any;
 }
 
 export const usePreviewProject = (projectId: string | undefined) => {
@@ -36,7 +45,7 @@ export const usePreviewProject = (projectId: string | undefined) => {
     setIsLoading(true);
     
     // Get project from admin projects
-    const adminProject = getProjectById(projectId);
+    const adminProject = getProjectById(projectId) as ExtendedProjectItem;
     
     if (adminProject) {
       console.log('Project found in admin system:', adminProject);
@@ -69,8 +78,11 @@ export const usePreviewProject = (projectId: string | undefined) => {
       // Create project data
       setProjectData({
         clientName: adminProject.clientName,
-        projectTitle: adminProject.packageType || 'Música Personalizada',
+        projectTitle: adminProject.title || adminProject.packageType || 'Música Personalizada',
+        packageType: adminProject.packageType || 'Música Personalizada',
         status: adminProject.status as 'waiting' | 'feedback' | 'approved',
+        expiresAt: adminProject.expirationDate,
+        createdAt: adminProject.createdAt,
         previews: previews.length > 0 ? previews : [
           {
             id: 'v1',
@@ -105,7 +117,10 @@ export const usePreviewProject = (projectId: string | undefined) => {
       setProjectData({
         clientName: 'Cliente Exemplo',
         projectTitle: 'Projeto de Música Personalizada',
+        packageType: 'Música Personalizada',
         status: 'waiting',
+        expiresAt: new Date(Date.now() + 14 * 24 * 60 * 60 * 1000).toISOString(),
+        createdAt: new Date().toISOString(),
         previews: [
           {
             id: 'v1',
@@ -185,3 +200,5 @@ export const usePreviewProject = (projectId: string | undefined) => {
   
   return { projectData, setProjectData, isLoading, updateProjectStatus };
 };
+
+export type { PreviewProject, MusicPreview };

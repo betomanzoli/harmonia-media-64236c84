@@ -12,7 +12,7 @@ import ContactPage from './pages/ContactPage';
 import NotFoundPage from './pages/NotFoundPage';
 import AdminDashboard from './pages/admin/AdminDashboard';
 import AdminPreviews from './pages/admin/AdminPreviews';
-import PreviewProjectPage from './pages/admin/PreviewProjectPage';
+import PreviewProjectPage from './pages/PreviewProjectPage';
 import AdminLogin from './pages/admin/AdminLogin';
 import ResetPassword from './pages/admin/ResetPassword';
 import PortfolioPage from './pages/Portfolio';
@@ -72,6 +72,7 @@ const AppRoutes: React.FC = () => {
         <Route path="/calculadora" element={<Calculator />} />
         <Route path="/qualificacao" element={<QualificacaoPage />} />
         <Route path="/pacotes" element={<Packages />} />
+        <Route path="/pagamento" element={<Payment />} />
         <Route path="/pagamento/:packageId" element={<Payment />} />
         <Route path="/pagamento-retorno" element={<PaymentReturn />} />
         <Route path="/acompanhar-pedido" element={<OrderTracking />} />
@@ -80,6 +81,7 @@ const AppRoutes: React.FC = () => {
         <Route path="/preview/:projectId" element={<PreviewPage />} />
         <Route path="/preview/:previewId" element={<MusicPreviews />} />
         <Route path="/feedback-confirmacao" element={<FeedbackConfirmation />} />
+        <Route path="/como-funciona" element={<ServicesPage />} />
         
         {/* Admin routes */}
         <Route path="/admin-j28s7d1k/login" element={<AdminLogin />} />

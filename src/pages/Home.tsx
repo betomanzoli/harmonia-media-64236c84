@@ -7,8 +7,14 @@ import Services from '@/components/Services';
 import Portfolio from '@/components/Portfolio';
 import Testimonials from '@/components/Testimonials';
 import Partnership from '@/components/Partnership';
+import ServiceExtras from '@/components/ServiceExtras';
 
 const Home: React.FC = () => {
+  const handleExtraServiceClick = (serviceId: string) => {
+    console.log('Extra service clicked on Home page:', serviceId);
+    // Implementação adicional se necessário
+  };
+
   return (
     <PublicLayout>
       <Hero />
@@ -16,6 +22,7 @@ const Home: React.FC = () => {
       <Services />
       <Portfolio />
       <Testimonials />
+      <ServiceExtras onExtraServiceClick={handleExtraServiceClick} />
       <Partnership />
     </PublicLayout>
   );

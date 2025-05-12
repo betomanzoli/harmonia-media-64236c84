@@ -34,7 +34,7 @@ const Packages: React.FC = () => {
                 <CardDescription>Ideal para ocasiões especiais</CardDescription>
               </CardHeader>
               <CardContent>
-                <div className="text-3xl font-bold mb-6">R$ 499</div>
+                <div className="text-3xl font-bold mb-6">R$ 219</div>
                 <ul className="space-y-2">
                   <li className="flex items-start">
                     <Check className="h-5 w-5 text-green-500 mr-2 flex-shrink-0 mt-0.5" />
@@ -64,7 +64,7 @@ const Packages: React.FC = () => {
               </CardFooter>
             </Card>
             
-            {/* Pacote Premium */}
+            {/* Pacote Profissional */}
             <Card className="border-2 border-harmonia-green relative transform scale-105 shadow-lg">
               <div className="absolute -top-4 left-0 right-0 flex justify-center">
                 <div className="bg-harmonia-green text-white px-4 py-1 rounded-full text-sm font-medium">
@@ -72,11 +72,11 @@ const Packages: React.FC = () => {
                 </div>
               </div>
               <CardHeader>
-                <CardTitle className="text-xl">Pacote Premium</CardTitle>
+                <CardTitle className="text-xl">Pacote Profissional</CardTitle>
                 <CardDescription>Perfeito para momentos especiais</CardDescription>
               </CardHeader>
               <CardContent>
-                <div className="text-3xl font-bold mb-6">R$ 799</div>
+                <div className="text-3xl font-bold mb-6">R$ 479</div>
                 <ul className="space-y-2">
                   <li className="flex items-start">
                     <Check className="h-5 w-5 text-green-500 mr-2 flex-shrink-0 mt-0.5" />
@@ -100,25 +100,25 @@ const Packages: React.FC = () => {
                 <Button 
                   variant="default" 
                   className="w-full bg-harmonia-green hover:bg-harmonia-green/90" 
-                  onClick={() => handleSelectPackage('premium')}
+                  onClick={() => handleSelectPackage('profissional')}
                 >
                   Selecionar
                 </Button>
               </CardFooter>
             </Card>
             
-            {/* Pacote Profissional */}
+            {/* Pacote Premium */}
             <Card className="border-2 hover:border-harmonia-green/70 transition-all duration-300">
               <CardHeader>
-                <CardTitle className="text-xl">Pacote Profissional</CardTitle>
+                <CardTitle className="text-xl">Pacote Premium</CardTitle>
                 <CardDescription>Para projetos exclusivos</CardDescription>
               </CardHeader>
               <CardContent>
-                <div className="text-3xl font-bold mb-6">R$ 1.299</div>
+                <div className="text-3xl font-bold mb-6">R$ 969</div>
                 <ul className="space-y-2">
                   <li className="flex items-start">
                     <Check className="h-5 w-5 text-green-500 mr-2 flex-shrink-0 mt-0.5" />
-                    <span>Tudo do pacote Premium</span>
+                    <span>Tudo do pacote Profissional</span>
                   </li>
                   <li className="flex items-start">
                     <Check className="h-5 w-5 text-green-500 mr-2 flex-shrink-0 mt-0.5" />
@@ -137,7 +137,7 @@ const Packages: React.FC = () => {
               <CardFooter>
                 <Button 
                   className="w-full" 
-                  onClick={() => handleSelectPackage('profissional')}
+                  onClick={() => handleSelectPackage('premium')}
                 >
                   Selecionar
                 </Button>

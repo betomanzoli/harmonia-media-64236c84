@@ -1,23 +1,22 @@
 
 import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Copy, CalendarPlus, CheckCircle } from 'lucide-react';
+import { Button } from "@/components/ui/button";
+import { Copy, PlusCircle, Clock, Link, CalendarPlus } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import AddVersionDialog from './AddVersionDialog';
 import { VersionItem } from '@/hooks/admin/usePreviewProjects';
-import ProjectActionButton from './components/ProjectActionButton';
 import ContactClientActions from './components/ContactClientActions';
-import DeadlineExtensionDialog from './components/DeadlineExtensionDialog';
 
 interface ProjectActionCardProps {
   projectId: string;
+  projectStatus: string;
+  packageType?: string;
   onAddVersion: (version: VersionItem) => void;
   onExtendDeadline: () => void;
   previewUrl: string;
   clientPhone?: string;
   clientEmail?: string;
-  projectStatus?: string;
-  packageType?: string;
 }
 
 const ProjectActionCard: React.FC<ProjectActionCardProps> = ({
@@ -25,121 +24,94 @@ const ProjectActionCard: React.FC<ProjectActionCardProps> = ({
   onAddVersion,
   onExtendDeadline,
   previewUrl,
-  clientPhone = '',
-  clientEmail = '',
-  projectStatus = 'waiting',
-  packageType = ''
+  projectStatus,
+  packageType,
+  clientPhone,
+  clientEmail
 }) => {
   const { toast } = useToast();
-  const [isVersionDialogOpen, setIsVersionDialogOpen] = useState(false);
-  const [isFinalVersionDialogOpen, setIsFinalVersionDialogOpen] = useState(false);
-  const [isDeadlineConfirmOpen, setIsDeadlineConfirmOpen] = useState(false);
+  const [showAddVersion, setShowAddVersion] = useState(false);
   
   const handleCopyLink = () => {
     const fullUrl = `${window.location.origin}/preview/${projectId}`;
+    
     navigator.clipboard.writeText(fullUrl)
       .then(() => {
         toast({
-          title: "Link copiado!",
+          title: "Link copiado",
           description: "O link de prévia foi copiado para a área de transferência."
         });
       })
       .catch(err => {
-        console.error('Erro ao copiar link:', err);
+        console.error('Falha ao copiar link:', err);
         toast({
-          title: "Erro",
-          description: "Não foi possível copiar o link.",
+          title: "Erro ao copiar",
+          description: "Não foi possível copiar o link. Por favor, tente novamente.",
           variant: "destructive"
         });
       });
   };
-
-  const handleAddFinalVersion = (version: VersionItem) => {
-    // Adicione 'final: true' à versão
-    const finalVersion = {
-      ...version,
-      final: true
-    };
-    
-    onAddVersion(finalVersion);
-    setIsFinalVersionDialogOpen(false);
-  };
-
+  
   return (
     <Card>
       <CardHeader>
-        <CardTitle className="text-lg">Ações</CardTitle>
+        <CardTitle className="text-lg">Ações do Projeto</CardTitle>
       </CardHeader>
       <CardContent className="space-y-4">
-        <ProjectActionButton 
-          icon={Copy}
-          onClick={() => setIsVersionDialogOpen(true)}
-          variant="default"
-          className="w-full"
-        >
-          Adicionar Nova Versão
-        </ProjectActionButton>
-        
-        {projectStatus === 'approved' && (
-          <ProjectActionButton 
-            icon={CheckCircle}
-            onClick={() => setIsFinalVersionDialogOpen(true)}
+        <div className="grid grid-cols-1 gap-2">
+          <Button
+            onClick={() => setShowAddVersion(true)}
+            className="w-full"
             variant="default"
-            className="w-full bg-green-600 hover:bg-green-700"
           >
-            Adicionar Versão Final
-          </ProjectActionButton>
-        )}
+            <PlusCircle className="mr-2 h-4 w-4" />
+            {projectStatus === 'approved' ? "Adicionar Versão Final" : "Adicionar Versão"}
+          </Button>
+
+          <Button 
+            onClick={handleCopyLink} 
+            variant="outline" 
+            className="w-full"
+          >
+            <Link className="mr-2 h-4 w-4" />
+            Copiar Link de Prévia
+          </Button>
+          
+          <Button 
+            onClick={onExtendDeadline} 
+            variant="outline" 
+            className="w-full"
+          >
+            <CalendarPlus className="mr-2 h-4 w-4" />
+            Estender Prazo
+          </Button>
+        </div>
         
-        <ProjectActionButton 
-          icon={CalendarPlus}
-          onClick={() => setIsDeadlineConfirmOpen(true)}
-          variant="outline"
-          className="w-full"
-        >
-          Estender Prazo (+7 dias)
-        </ProjectActionButton>
-        
-        <ProjectActionButton 
-          icon={Copy}
-          onClick={handleCopyLink}
-          variant="outline"
-          className="w-full"
-        >
-          Copiar Link de Prévia
-        </ProjectActionButton>
-        
-        <ContactClientActions
-          projectId={projectId}
+        {/* Contact client actions */}
+        <ContactClientActions 
           clientPhone={clientPhone}
           clientEmail={clientEmail}
+          projectId={projectId}
+        />
+        
+        {/* Add version dialog */}
+        <AddVersionDialog 
+          isOpen={showAddVersion} 
+          onOpenChange={setShowAddVersion}
+          onAddVersion={(versionData) => {
+            setShowAddVersion(false);
+            onAddVersion({
+              ...versionData,
+              id: `v${Date.now()}`,
+              dateAdded: new Date().toLocaleDateString('pt-BR'),
+              final: projectStatus === 'approved'
+            });
+          }}
+          projectId={projectId}
+          isFinalVersion={projectStatus === 'approved'}
+          packageType={packageType}
         />
       </CardContent>
-      
-      {/* Version Dialogs */}
-      <AddVersionDialog 
-        projectId={projectId}
-        isOpen={isVersionDialogOpen}
-        onClose={() => setIsVersionDialogOpen(false)}
-        onSubmit={onAddVersion}
-        onAddVersion={onAddVersion}
-      />
-
-      <AddVersionDialog 
-        projectId={projectId}
-        isOpen={isFinalVersionDialogOpen}
-        onClose={() => setIsFinalVersionDialogOpen(false)}
-        onSubmit={handleAddFinalVersion}
-        onAddVersion={onAddVersion}
-        isFinalVersion={true}
-      />
-      
-      {/* Deadline Extension Dialog */}
-      <DeadlineExtensionDialog
-        isOpen={isDeadlineConfirmOpen}
-        onClose={() => setIsDeadlineConfirmOpen(false)}
-        onConfirm={onExtendDeadline}
-      />
     </Card>
   );
 };

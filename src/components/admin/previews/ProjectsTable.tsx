@@ -106,6 +106,7 @@ const ProjectsTable: React.FC<ProjectsTableProps> = ({
                   variant="outline" 
                   size="sm"
                   asChild
+                  title="Ver detalhes do projeto"
                 >
                   <Link to={`/admin-j28s7d1k/previews/${project.id}`}>
                     <Eye className="h-4 w-4" />

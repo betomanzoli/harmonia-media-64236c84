@@ -1,118 +1,85 @@
-import React, { useState } from 'react';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from "@/components/ui/card";
+
+import React from 'react';
+import { Card } from "@/components/ui/card";
 import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
-import { MessageSquare, CheckCircle } from 'lucide-react';
-import { Alert, AlertDescription } from "@/components/ui/alert";
+import { ThumbsUp, SendHorizonal } from 'lucide-react';
 
 interface PreviewFeedbackFormProps {
-  selectedPreview: string | null;
   feedback: string;
-  setFeedback: (feedback: string) => void;
-  handleSubmit: (feedback?: string) => void;
-  handleApprove: (feedback?: string) => void;
-  status: string;
+  onFeedbackChange: (value: string) => void;
+  onSubmit: (comments?: string) => void;
+  onApprove: (comments?: string) => void;
+  status?: 'waiting' | 'feedback' | 'approved';
+  selectedVersion?: string | null;
   versionTitle?: string;
 }
 
-const PreviewFeedbackForm: React.FC<PreviewFeedbackFormProps> = ({
-  selectedPreview,
+const PreviewFeedbackForm: React.FC<PreviewFeedbackFormProps> = ({ 
   feedback,
-  setFeedback,
-  handleSubmit,
-  handleApprove,
-  status,
+  onFeedbackChange,
+  onSubmit,
+  onApprove,
+  status = 'waiting',
+  selectedVersion,
   versionTitle
 }) => {
-  const [localFeedback, setLocalFeedback] = useState(feedback || '');
-
-  React.useEffect(() => {
-    setLocalFeedback(feedback);
-  }, [feedback]);
-
-  const handleFeedbackChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
-    const newValue = e.target.value;
-    setLocalFeedback(newValue);
-    if (setFeedback) {
-      setFeedback(newValue);
-    }
-  };
-
-  if (status === 'approved' || status === 'feedback') {
-    return (
-      <Card>
-        <CardHeader>
-          <CardTitle>Seu feedback já foi enviado</CardTitle>
-          <CardDescription>
-            {status === 'approved' 
-              ? 'Você já aprovou a música. Obrigado pelo seu feedback!'
-              : 'Você já enviou seu feedback. Nossa equipe está trabalhando nos ajustes solicitados.'}
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <Alert className={status === 'approved' ? 'bg-green-50' : 'bg-blue-50'}>
-            <AlertDescription>
-              {status === 'approved' 
-                ? 'Em breve entraremos em contato com a versão final da sua música.'
-                : 'Em breve você receberá uma notificação com as novas versões para avaliação.'}
-            </AlertDescription>
-          </Alert>
-        </CardContent>
-      </Card>
-    );
-  }
-
+  const isApproved = status === 'approved';
+  
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle>Envie seu Feedback</CardTitle>
-        <CardDescription>
-          {selectedPreview 
-            ? `Envie seu feedback sobre a versão "${versionTitle || 'selecionada'}" ou aprove-a.`
-            : 'Selecione uma versão primeiro para enviar feedback.'}
-        </CardDescription>
-      </CardHeader>
-      <CardContent>
-        {!selectedPreview ? (
-          <div className="bg-amber-50 border border-amber-200 text-amber-800 p-4 rounded-md">
-            <p>Por favor, selecione uma versão na aba "Versões Propostas" antes de enviar feedback.</p>
-          </div>
-        ) : (
-          <div className="space-y-4">
-            <div>
-              <Textarea
-                placeholder="Escreva aqui seu feedback sobre a música... O que você gostou? O que gostaria de mudar?"
-                className="min-h-[150px]"
-                value={localFeedback}
-                onChange={handleFeedbackChange}
-                disabled={!selectedPreview}
-              />
-            </div>
-            <div className="text-sm text-gray-500">
-              <p>Seu feedback é importante para que possamos entregar a música perfeita para você.</p>
-            </div>
-          </div>
-        )}
-      </CardContent>
-      <CardFooter className="flex flex-col sm:flex-row gap-3 sm:justify-between">
+    <Card className="p-6">
+      <h2 className="text-xl font-bold text-black mb-4">Envie seu feedback</h2>
+      
+      {selectedVersion && versionTitle && (
+        <div className="mb-4 p-3 bg-gray-50 rounded-md">
+          <p className="text-sm">
+            <span className="font-medium">Versão selecionada:</span> {versionTitle}
+          </p>
+        </div>
+      )}
+      
+      <div className="mb-6">
+        <label htmlFor="feedback" className="block text-sm font-medium text-gray-700 mb-1">
+          Comentários ou ajustes desejados:
+        </label>
+        <Textarea
+          id="feedback"
+          placeholder="Escreva aqui suas observações, sugestões ou pedidos de ajustes..."
+          value={feedback}
+          onChange={(e) => onFeedbackChange(e.target.value)}
+          rows={5}
+          className="w-full resize-none"
+          disabled={isApproved}
+        />
+      </div>
+      
+      <div className="flex flex-col sm:flex-row gap-3">
         <Button
-          onClick={() => handleApprove(localFeedback)}
-          disabled={!selectedPreview}
-          className="w-full sm:w-auto bg-green-600 hover:bg-green-700"
+          onClick={() => onSubmit(feedback)}
+          disabled={isApproved}
+          className="flex-1 bg-blue-600 hover:bg-blue-700 text-white"
         >
-          <CheckCircle className="h-4 w-4 mr-2" />
-          Aprovar esta Versão
-        </Button>
-        <Button
-          onClick={() => handleSubmit(localFeedback)}
-          disabled={!selectedPreview || !localFeedback}
-          className="w-full sm:w-auto"
-          variant="outline"
-        >
-          <MessageSquare className="h-4 w-4 mr-2" />
+          <SendHorizonal className="w-4 h-4 mr-2" />
           Enviar Feedback
         </Button>
-      </CardFooter>
+        
+        <Button
+          onClick={() => onApprove(feedback)}
+          disabled={isApproved}
+          className="flex-1 bg-green-600 hover:bg-green-700 text-white"
+        >
+          <ThumbsUp className="w-4 h-4 mr-2" />
+          Aprovar esta versão
+        </Button>
+      </div>
+      
+      {isApproved && (
+        <div className="mt-4 p-3 bg-green-50 border border-green-100 rounded-md">
+          <p className="text-sm text-green-800">
+            Esta prévia já foi aprovada. Obrigado pelo seu feedback!
+          </p>
+        </div>
+      )}
     </Card>
   );
 };
