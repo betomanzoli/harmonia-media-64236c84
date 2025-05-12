@@ -45,7 +45,13 @@ const Testimonials: React.FC<TestimonialsProps> = ({
         
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
           {testimonials.map(testimonial => (
-            <TestimonialCard key={testimonial.id} {...testimonial} />
+            <TestimonialCard
+              key={testimonial.id}
+              clientName={testimonial.name}
+              position={testimonial.role}
+              testimonial={testimonial.comment}
+              rating={testimonial.rating}
+            />
           ))}
         </div>
       </div>

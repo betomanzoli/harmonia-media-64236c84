@@ -21,10 +21,11 @@ const Portfolio: React.FC = () => {
         
         <PortfolioTabs 
           selectedCategory={selectedCategory}
-          onCategoryChange={setSelectedCategory}
+          onSelectCategory={setSelectedCategory}
           examples={examples}
           showAll={showAll}
           onShowMore={handleShowMore}
+          comparisonExamples={comparisonExamples}
         />
       </div>
     </section>
