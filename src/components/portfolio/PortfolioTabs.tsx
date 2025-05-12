@@ -10,13 +10,17 @@ export interface PortfolioTabsProps {
   onSelectCategory: (category: string) => void;
   examples: AudioExample[];
   comparisonExamples: AudioExample[];
+  showAll: boolean;
+  onShowMore: () => void;
 }
 
 const PortfolioTabs: React.FC<PortfolioTabsProps> = ({
   selectedCategory,
   onSelectCategory,
   examples,
-  comparisonExamples
+  comparisonExamples,
+  showAll,
+  onShowMore
 }) => {
   const filteredExamples = selectedCategory === 'all' 
     ? examples 
@@ -90,6 +94,17 @@ const PortfolioTabs: React.FC<PortfolioTabsProps> = ({
           <p className="text-center text-gray-500">
             Nenhum exemplo encontrado para esta categoria.
           </p>
+        )}
+        
+        {!showAll && examples.length > 0 && (
+          <div className="text-center mt-8">
+            <button
+              onClick={onShowMore}
+              className="bg-transparent border border-harmonia-green text-harmonia-green px-6 py-2 rounded-full hover:bg-harmonia-green hover:text-white transition-colors"
+            >
+              Carregar Mais Exemplos
+            </button>
+          </div>
         )}
       </TabsContent>
       
