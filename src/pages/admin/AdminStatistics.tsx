@@ -1,231 +1,111 @@
 
-import React, { useEffect, useState } from 'react';
+import React from 'react';
 import AdminLayout from '@/components/admin/layout/AdminLayout';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { LineChart, Line, BarChart, Bar, PieChart, Pie, AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, Cell } from 'recharts';
-
-// Mock data for demonstrating charts
-const monthlyRevenueData = [
-  { name: 'Jan', value: 4000 },
-  { name: 'Fev', value: 3000 },
-  { name: 'Mar', value: 5000 },
-  { name: 'Abr', value: 4500 },
-  { name: 'Mai', value: 6000 },
-  { name: 'Jun', value: 5500 },
-  { name: 'Jul', value: 7000 }
-];
-
-const projectTypeData = [
-  { name: 'Romântica', value: 30 },
-  { name: 'Comercial', value: 25 },
-  { name: 'Corporativa', value: 15 },
-  { name: 'Comemorativa', value: 20 },
-  { name: 'Podcast', value: 10 }
-];
-
-const clientSourceData = [
-  { name: 'Indicação', value: 40 },
-  { name: 'Google', value: 30 },
-  { name: 'Redes Sociais', value: 20 },
-  { name: 'Outros', value: 10 }
-];
-
-const weeklyProjectsData = [
-  { day: 'Seg', novos: 2, concluidos: 1 },
-  { day: 'Ter', novos: 3, concluidos: 2 },
-  { day: 'Qua', novos: 1, concluidos: 3 },
-  { day: 'Qui', novos: 4, concluidos: 2 },
-  { day: 'Sex', novos: 3, concluidos: 4 },
-  { day: 'Sab', novos: 2, concluidos: 1 },
-  { day: 'Dom', novos: 1, concluidos: 0 },
-];
-
-const COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042', '#8884d8'];
+import { Button } from "@/components/ui/button";
+import { ArrowLeft, BarChart2, PieChart, LineChart, Download } from 'lucide-react';
+import { Link } from 'react-router-dom';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { 
+  BarChart, 
+  Bar, 
+  XAxis, 
+  YAxis, 
+  CartesianGrid, 
+  Tooltip, 
+  Legend,
+  ResponsiveContainer,
+  PieChart as RechartsPieChart,
+  Pie,
+  Cell
+} from 'recharts';
 
 const AdminStatistics: React.FC = () => {
-  const [loading, setLoading] = useState(true);
-  
-  useEffect(() => {
-    // Simulate data loading
-    setTimeout(() => {
-      setLoading(false);
-    }, 1000);
-  }, []);
-  
+  // Mock data for charts
+  const monthlyOrdersData = [
+    { name: 'Jan', pedidos: 4 },
+    { name: 'Fev', pedidos: 7 },
+    { name: 'Mar', pedidos: 5 },
+    { name: 'Abr', pedidos: 9 },
+    { name: 'Mai', pedidos: 6 },
+    { name: 'Jun', pedidos: 10 },
+    { name: 'Jul', pedidos: 8 },
+    { name: 'Ago', pedidos: 12 },
+    { name: 'Set', pedidos: 14 },
+    { name: 'Out', pedidos: 11 },
+    { name: 'Nov', pedidos: 9 },
+    { name: 'Dez', pedidos: 15 },
+  ];
+
+  const portfolioViewsData = [
+    { id: '1', title: 'Tema Comercial', views: 156 },
+    { id: '2', title: 'Soundtrack Documentário', views: 98 },
+    { id: '3', title: 'Jingle Lançamento', views: 213 },
+    { id: '4', title: 'Música para Podcast', views: 87 },
+  ];
+
+  const genreDistributionData = [
+    { name: 'Pop/Eletrônico', value: 35 },
+    { name: 'Orquestral', value: 25 },
+    { name: 'Ambiental', value: 20 },
+    { name: 'Corporativo', value: 15 },
+    { name: 'Outros', value: 5 },
+  ];
+
+  const COLORS = ['#8884d8', '#82ca9d', '#ffc658', '#ff8042', '#0088FE'];
+
   return (
     <AdminLayout>
-      <div className="p-6">
-        <div className="mb-6">
-          <h1 className="text-2xl font-bold">Estatísticas</h1>
-          <p className="text-muted-foreground">Análise de performance e métricas do negócio</p>
+      <div className="space-y-6 p-6">
+        <div className="flex items-center justify-between">
+          <div>
+            <h1 className="text-3xl font-bold tracking-tight text-harmonia-green">Estatísticas</h1>
+            <p className="text-muted-foreground">
+              Visualize relatórios e métricas de desempenho
+            </p>
+          </div>
+          <div className="flex gap-2">
+            <Button 
+              variant="outline" 
+              size="sm" 
+              asChild
+              className="border-harmonia-green text-harmonia-green hover:bg-harmonia-green/10"
+            >
+              <Link to="/admin-j28s7d1k/dashboard">
+                <ArrowLeft className="mr-2 h-4 w-4" />
+                Voltar ao Dashboard
+              </Link>
+            </Button>
+            <Button 
+              variant="outline" 
+              size="sm"
+            >
+              <Download className="mr-2 h-4 w-4" />
+              Exportar Dados
+            </Button>
+          </div>
         </div>
         
         <Tabs defaultValue="overview">
-          <div className="mb-6">
-            <TabsList>
-              <TabsTrigger value="overview">Visão Geral</TabsTrigger>
-              <TabsTrigger value="revenue">Receita</TabsTrigger>
-              <TabsTrigger value="projects">Projetos</TabsTrigger>
-              <TabsTrigger value="clients">Clientes</TabsTrigger>
-            </TabsList>
-          </div>
+          <TabsList className="mb-6">
+            <TabsTrigger value="overview">Visão Geral</TabsTrigger>
+            <TabsTrigger value="portfolio">Portfólio</TabsTrigger>
+            <TabsTrigger value="financials">Financeiro</TabsTrigger>
+          </TabsList>
           
-          <TabsContent value="overview">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <Card>
-                <CardHeader>
-                  <CardTitle>Receita Mensal</CardTitle>
-                  <CardDescription>Análise de receita dos últimos 7 meses</CardDescription>
-                </CardHeader>
-                <CardContent className="h-80">
-                  {loading ? (
-                    <div className="flex items-center justify-center h-full">
-                      <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-gray-200"></div>
-                    </div>
-                  ) : (
-                    <ResponsiveContainer width="100%" height="100%">
-                      <AreaChart
-                        data={monthlyRevenueData}
-                        margin={{
-                          top: 10,
-                          right: 30,
-                          left: 0,
-                          bottom: 0,
-                        }}
-                      >
-                        <CartesianGrid strokeDasharray="3 3" />
-                        <XAxis dataKey="name" />
-                        <YAxis />
-                        <Tooltip formatter={(value) => [`R$ ${value}`, 'Receita']} />
-                        <Area type="monotone" dataKey="value" stroke="#8884d8" fill="#8884d8" />
-                      </AreaChart>
-                    </ResponsiveContainer>
-                  )}
-                </CardContent>
-              </Card>
-              
-              <Card>
-                <CardHeader>
-                  <CardTitle>Tipos de Projetos</CardTitle>
-                  <CardDescription>Distribuição por categoria</CardDescription>
-                </CardHeader>
-                <CardContent className="h-80">
-                  {loading ? (
-                    <div className="flex items-center justify-center h-full">
-                      <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-gray-200"></div>
-                    </div>
-                  ) : (
-                    <ResponsiveContainer width="100%" height="100%">
-                      <PieChart>
-                        <Pie
-                          data={projectTypeData}
-                          cx="50%"
-                          cy="50%"
-                          labelLine={true}
-                          label={({ name, percent }) => `${name}: ${(percent * 100).toFixed(0)}%`}
-                          outerRadius={80}
-                          fill="#8884d8"
-                          dataKey="value"
-                        >
-                          {projectTypeData.map((entry, index) => (
-                            <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
-                          ))}
-                        </Pie>
-                        <Legend />
-                        <Tooltip formatter={(value) => [`${value} projetos`, 'Quantidade']} />
-                      </PieChart>
-                    </ResponsiveContainer>
-                  )}
-                </CardContent>
-              </Card>
-              
-              <Card>
-                <CardHeader>
-                  <CardTitle>Projetos Semanais</CardTitle>
-                  <CardDescription>Novos vs. Concluídos por dia</CardDescription>
-                </CardHeader>
-                <CardContent className="h-80">
-                  {loading ? (
-                    <div className="flex items-center justify-center h-full">
-                      <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-gray-200"></div>
-                    </div>
-                  ) : (
-                    <ResponsiveContainer width="100%" height="100%">
-                      <BarChart
-                        data={weeklyProjectsData}
-                        margin={{
-                          top: 20,
-                          right: 30,
-                          left: 20,
-                          bottom: 5,
-                        }}
-                      >
-                        <CartesianGrid strokeDasharray="3 3" />
-                        <XAxis dataKey="day" />
-                        <YAxis />
-                        <Tooltip />
-                        <Legend />
-                        <Bar dataKey="novos" name="Novos Projetos" fill="#8884d8" />
-                        <Bar dataKey="concluidos" name="Projetos Concluídos" fill="#82ca9d" />
-                      </BarChart>
-                    </ResponsiveContainer>
-                  )}
-                </CardContent>
-              </Card>
-              
-              <Card>
-                <CardHeader>
-                  <CardTitle>Origem dos Clientes</CardTitle>
-                  <CardDescription>Como os clientes encontram nosso serviço</CardDescription>
-                </CardHeader>
-                <CardContent className="h-80">
-                  {loading ? (
-                    <div className="flex items-center justify-center h-full">
-                      <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-gray-200"></div>
-                    </div>
-                  ) : (
-                    <ResponsiveContainer width="100%" height="100%">
-                      <PieChart>
-                        <Pie
-                          data={clientSourceData}
-                          cx="50%"
-                          cy="50%"
-                          labelLine={true}
-                          label={({ name, percent }) => `${name}: ${(percent * 100).toFixed(0)}%`}
-                          outerRadius={80}
-                          fill="#8884d8"
-                          dataKey="value"
-                        >
-                          {clientSourceData.map((entry, index) => (
-                            <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
-                          ))}
-                        </Pie>
-                        <Legend />
-                        <Tooltip formatter={(value) => [`${value}%`, 'Porcentagem']} />
-                      </PieChart>
-                    </ResponsiveContainer>
-                  )}
-                </CardContent>
-              </Card>
-            </div>
-          </TabsContent>
-          
-          <TabsContent value="revenue">
+          <TabsContent value="overview" className="space-y-6">
             <Card>
               <CardHeader>
-                <CardTitle>Análise de Receita</CardTitle>
-                <CardDescription>Detalhamento financeiro por período</CardDescription>
+                <CardTitle className="flex items-center">
+                  <BarChart2 className="mr-2 h-5 w-5" />
+                  Pedidos por Mês
+                </CardTitle>
               </CardHeader>
-              <CardContent className="h-96">
-                {loading ? (
-                  <div className="flex items-center justify-center h-full">
-                    <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-gray-200"></div>
-                  </div>
-                ) : (
+              <CardContent>
+                <div className="h-[300px]">
                   <ResponsiveContainer width="100%" height="100%">
-                    <LineChart
-                      data={monthlyRevenueData}
+                    <BarChart
+                      data={monthlyOrdersData}
                       margin={{
                         top: 5,
                         right: 30,
@@ -236,85 +116,104 @@ const AdminStatistics: React.FC = () => {
                       <CartesianGrid strokeDasharray="3 3" />
                       <XAxis dataKey="name" />
                       <YAxis />
-                      <Tooltip formatter={(value) => [`R$ ${value}`, 'Receita']} />
-                      <Legend />
-                      <Line type="monotone" dataKey="value" name="Receita Mensal" stroke="#8884d8" activeDot={{ r: 8 }} />
-                    </LineChart>
-                  </ResponsiveContainer>
-                )}
-              </CardContent>
-            </Card>
-          </TabsContent>
-          
-          <TabsContent value="projects">
-            <Card>
-              <CardHeader>
-                <CardTitle>Análise de Projetos</CardTitle>
-                <CardDescription>Métricas e desempenho de projetos</CardDescription>
-              </CardHeader>
-              <CardContent className="h-96">
-                {loading ? (
-                  <div className="flex items-center justify-center h-full">
-                    <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-gray-200"></div>
-                  </div>
-                ) : (
-                  <ResponsiveContainer width="100%" height="100%">
-                    <BarChart
-                      data={weeklyProjectsData}
-                      margin={{
-                        top: 20,
-                        right: 30,
-                        left: 20,
-                        bottom: 5,
-                      }}
-                    >
-                      <CartesianGrid strokeDasharray="3 3" />
-                      <XAxis dataKey="day" />
-                      <YAxis />
                       <Tooltip />
                       <Legend />
-                      <Bar dataKey="novos" name="Novos Projetos" fill="#8884d8" />
-                      <Bar dataKey="concluidos" name="Projetos Concluídos" fill="#82ca9d" />
+                      <Bar dataKey="pedidos" fill="#8884d8" name="Quantidade de Pedidos" />
                     </BarChart>
                   </ResponsiveContainer>
-                )}
+                </div>
+              </CardContent>
+            </Card>
+            
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center">
+                    <PieChart className="mr-2 h-5 w-5" />
+                    Distribuição por Gênero
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="h-[300px]">
+                    <ResponsiveContainer width="100%" height="100%">
+                      <RechartsPieChart>
+                        <Pie
+                          data={genreDistributionData}
+                          cx="50%"
+                          cy="50%"
+                          labelLine={false}
+                          outerRadius={80}
+                          fill="#8884d8"
+                          dataKey="value"
+                          label={({ name, percent }) => `${name}: ${(percent * 100).toFixed(0)}%`}
+                        >
+                          {genreDistributionData.map((entry, index) => (
+                            <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                          ))}
+                        </Pie>
+                        <Tooltip />
+                      </RechartsPieChart>
+                    </ResponsiveContainer>
+                  </div>
+                </CardContent>
+              </Card>
+              
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center">
+                    <LineChart className="mr-2 h-5 w-5" />
+                    Visualizações do Portfólio
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="h-[300px]">
+                    <ResponsiveContainer width="100%" height="100%">
+                      <BarChart
+                        data={portfolioViewsData}
+                        layout="vertical"
+                        margin={{
+                          top: 5,
+                          right: 30,
+                          left: 20,
+                          bottom: 5,
+                        }}
+                      >
+                        <CartesianGrid strokeDasharray="3 3" />
+                        <XAxis type="number" />
+                        <YAxis dataKey="title" type="category" width={150} />
+                        <Tooltip />
+                        <Legend />
+                        <Bar dataKey="views" fill="#82ca9d" name="Visualizações" />
+                      </BarChart>
+                    </ResponsiveContainer>
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
+          </TabsContent>
+          
+          <TabsContent value="portfolio" className="space-y-6">
+            <Card>
+              <CardHeader>
+                <CardTitle>Estatísticas detalhadas do Portfólio</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <p className="text-center text-muted-foreground py-12">
+                  Estatísticas detalhadas do portfólio em desenvolvimento...
+                </p>
               </CardContent>
             </Card>
           </TabsContent>
           
-          <TabsContent value="clients">
+          <TabsContent value="financials" className="space-y-6">
             <Card>
               <CardHeader>
-                <CardTitle>Análise de Clientes</CardTitle>
-                <CardDescription>Dados sobre aquisição e retenção de clientes</CardDescription>
+                <CardTitle>Relatórios Financeiros</CardTitle>
               </CardHeader>
-              <CardContent className="h-96">
-                {loading ? (
-                  <div className="flex items-center justify-center h-full">
-                    <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-gray-200"></div>
-                  </div>
-                ) : (
-                  <ResponsiveContainer width="100%" height="100%">
-                    <PieChart>
-                      <Pie
-                        data={clientSourceData}
-                        cx="50%"
-                        cy="50%"
-                        labelLine={true}
-                        label={({ name, percent }) => `${name}: ${(percent * 100).toFixed(0)}%`}
-                        outerRadius={120}
-                        fill="#8884d8"
-                        dataKey="value"
-                      >
-                        {clientSourceData.map((entry, index) => (
-                          <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
-                        ))}
-                      </Pie>
-                      <Legend />
-                      <Tooltip formatter={(value) => [`${value}%`, 'Porcentagem']} />
-                    </PieChart>
-                  </ResponsiveContainer>
-                )}
+              <CardContent>
+                <p className="text-center text-muted-foreground py-12">
+                  Relatórios financeiros em desenvolvimento...
+                </p>
               </CardContent>
             </Card>
           </TabsContent>

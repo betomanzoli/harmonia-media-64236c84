@@ -1,115 +1,114 @@
 
-import React, { useState, useEffect } from 'react';
-import { Routes, Route, useLocation } from 'react-router-dom';
-import ScrollToTop from './components/ScrollToTop';
-import ChatbotButton from './components/chatbot/ChatbotButton';
+import React, { useEffect } from 'react';
+import { BrowserRouter as Router, Route, Routes, Navigate, useLocation } from 'react-router-dom';
+import { useAuth } from './contexts/AuthContext';
+import { ThemeProvider } from "@/components/ui/theme-provider";
+import { Toaster } from "@/components/ui/toaster";
+import { useToast } from "@/hooks/use-toast";
+import ProtectedRoute from './components/admin/auth/ProtectedRoute';
 
-// Import pages
-import HomePage from './pages/HomePage';
-import AboutPage from './pages/AboutPage';
-import ServicesPage from './pages/ServicesPage';
-import ContactPage from './pages/ContactPage';
-import NotFoundPage from './pages/NotFoundPage';
-import AdminDashboard from './pages/admin/AdminDashboard';
-import AdminPreviews from './pages/admin/AdminPreviews';
-import PreviewProjectPage from './pages/PreviewProjectPage';
-import AdminLogin from './pages/admin/AdminLogin';
-import ResetPassword from './pages/admin/ResetPassword';
-import PortfolioPage from './pages/Portfolio';
+// Public Pages
+import Home from './pages/Home';
+import NotFound from './pages/NotFound';
 import Briefing from './pages/Briefing';
 import Calculator from './pages/Calculator';
-import Packages from './pages/Packages';
 import Payment from './pages/Payment';
 import PaymentReturn from './pages/PaymentReturn';
+import ThankYou from './pages/ThankYou';
 import OrderTracking from './pages/OrderTracking';
-import PrivacyPolicy from './pages/PrivacyPolicy';
-import Terms from './pages/Terms';
-import PreviewPage from './pages/PreviewPage';
+import MusicPreviewPage from './pages/MusicPreviewPage';
 import MusicPreviews from './pages/MusicPreviews';
+import CreditRefundRequest from './pages/CreditRefundRequest';
 import FeedbackConfirmation from './pages/FeedbackConfirmation';
-import QualificacaoPage from './pages/Qualificacao';
+import ApprovalConfirmation from './pages/ApprovalConfirmation';
 
-// Import admin pages
+// Admin Pages
+import AdminLogin from './pages/admin/AdminLogin';
+import AdminDashboard from './pages/admin/Dashboard';
+import AdminPreviews from './pages/admin/AdminPreviews';
+import AdminPortfolio from './pages/admin/AdminPortfolio';
+import AdminInvoices from './pages/admin/AdminInvoices';
 import AdminBriefings from './pages/admin/AdminBriefings';
 import AdminProjects from './pages/admin/AdminProjects';
-import AdminPortfolio from './pages/admin/AdminPortfolio';
-import AdminClients from './pages/admin/AdminClients';
-import AdminSettings from './pages/admin/AdminSettings';
-import AdminInvoices from './pages/admin/AdminInvoices';
-import AdminStorage from './pages/admin/AdminStorage';
-import AdminIntegrations from './pages/admin/AdminIntegrations';
 import AdminStatistics from './pages/admin/AdminStatistics';
 import AdminGuides from './pages/admin/AdminGuides';
+import AdminStorage from './pages/admin/AdminStorage';
+import AdminIntegrations from './pages/admin/AdminIntegrations';
+
+// Forçar modo offline para desenvolvimento
+if (process.env.NODE_ENV === 'development') {
+  sessionStorage.setItem('offline-admin-mode', 'true');
+  console.log('Modo offline ativado para ambiente de desenvolvimento');
+}
 
 const App: React.FC = () => {
-  return (
-    <>
-      <ScrollToTop />
-      <AppRoutes />
-    </>
-  );
-};
+  const { authStatus, checkAuthStatus } = useAuth();
+  const { toast } = useToast();
 
-const AppRoutes: React.FC = () => {
-  const location = useLocation();
-  const [showChatbot, setShowChatbot] = useState(true);
-  
-  // Check if current route is an admin route
   useEffect(() => {
-    const isAdminRoute = location.pathname.includes('/admin-');
-    setShowChatbot(!isAdminRoute);
-  }, [location.pathname]);
-  
+    checkAuthStatus();
+  }, [checkAuthStatus]);
+
+  // Custom hook to scroll to top on route change
+  const ScrollToTop = () => {
+    const { pathname } = useLocation();
+
+    useEffect(() => {
+      window.scrollTo(0, 0);
+    }, [pathname]);
+
+    return null;
+  };
+
   return (
-    <>
-      <Routes>
-        <Route path="/" element={<HomePage />} />
-        <Route path="/sobre" element={<AboutPage />} />
-        <Route path="/servicos" element={<ServicesPage />} />
-        <Route path="/contato" element={<ContactPage />} />
-        <Route path="/portfolio" element={<PortfolioPage />} />
-        <Route path="/briefing" element={<Briefing />} />
-        <Route path="/calculadora" element={<Calculator />} />
-        <Route path="/qualificacao" element={<QualificacaoPage />} />
-        <Route path="/pacotes" element={<Packages />} />
-        <Route path="/pagamento" element={<Payment />} />
-        <Route path="/pagamento/:packageId" element={<Payment />} />
-        <Route path="/pagamento-retorno" element={<PaymentReturn />} />
-        <Route path="/acompanhar-pedido" element={<OrderTracking />} />
-        <Route path="/privacidade" element={<PrivacyPolicy />} />
-        <Route path="/termos" element={<Terms />} />
-        <Route path="/preview/:projectId" element={<PreviewPage />} />
-        <Route path="/preview/:previewId" element={<MusicPreviews />} />
-        <Route path="/feedback-confirmacao" element={<FeedbackConfirmation />} />
-        <Route path="/como-funciona" element={<ServicesPage />} />
+    <ThemeProvider defaultTheme="dark" storageKey="harmonia-theme">
+      <Router>
+        <ScrollToTop />
         
-        {/* Admin routes */}
-        <Route path="/admin-j28s7d1k/login" element={<AdminLogin />} />
-        <Route path="/admin-j28s7d1k/reset-password" element={<ResetPassword />} />
-        <Route path="/admin-j28s7d1k/dashboard" element={<AdminDashboard />} />
-        <Route path="/admin-j28s7d1k/previews" element={<AdminPreviews />} />
-        <Route path="/admin-j28s7d1k/previews/:projectId" element={<PreviewProjectPage />} />
-        <Route path="/admin-j28s7d1k/briefings" element={<AdminBriefings />} />
-        <Route path="/admin-j28s7d1k/projects" element={<AdminProjects />} />
-        <Route path="/admin-j28s7d1k/portfolio" element={<AdminPortfolio />} />
-        <Route path="/admin-j28s7d1k/clients" element={<AdminClients />} />
-        <Route path="/admin-j28s7d1k/settings" element={<AdminSettings />} />
-        <Route path="/admin-j28s7d1k/orders" element={<AdminProjects />} />
-        <Route path="/admin-j28s7d1k/payments" element={<AdminInvoices />} />
-        <Route path="/admin-j28s7d1k/analytics" element={<AdminStatistics />} />
-        <Route path="/admin-j28s7d1k/statistics" element={<AdminStatistics />} />
-        <Route path="/admin-j28s7d1k/guides" element={<AdminGuides />} />
-        <Route path="/admin-j28s7d1k/documentation" element={<AdminGuides />} />
-        <Route path="/admin-j28s7d1k/integrations" element={<AdminIntegrations />} />
-        <Route path="/admin-j28s7d1k/invoices" element={<AdminInvoices />} />
-        <Route path="/admin-j28s7d1k/storage" element={<AdminStorage />} />
-        
-        {/* 404 route */}
-        <Route path="*" element={<NotFoundPage />} />
-      </Routes>
-      
-      {showChatbot && <ChatbotButton />}
-    </>
+        <Routes>
+          <Route path="/" element={<Home />} />
+          <Route path="/briefing" element={<Briefing />} />
+          <Route path="/calculadora" element={<Calculator />} />
+          
+          {/* Admin routes */}
+          <Route path="/admin-j28s7d1k" element={<Navigate to="/admin-j28s7d1k/dashboard" />} />
+          <Route path="/admin-j28s7d1k/login" element={<AdminLogin />} />
+          <Route path="/admin-login" element={<AdminLogin />} />
+          <Route path="/admin-j28s7d1k/dashboard" element={<ProtectedRoute><AdminDashboard /></ProtectedRoute>} />
+          <Route path="/admin-j28s7d1k/previews" element={<ProtectedRoute><AdminPreviews /></ProtectedRoute>} />
+          <Route path="/admin-j28s7d1k/portfolio" element={<ProtectedRoute><AdminPortfolio /></ProtectedRoute>} />
+          <Route path="/admin-j28s7d1k/invoices" element={<ProtectedRoute><AdminInvoices /></ProtectedRoute>} />
+          <Route path="/admin-j28s7d1k/briefings" element={<ProtectedRoute><AdminBriefings /></ProtectedRoute>} />
+          <Route path="/admin-j28s7d1k/projects" element={<ProtectedRoute><AdminProjects /></ProtectedRoute>} />
+          <Route path="/admin-j28s7d1k/statistics" element={<ProtectedRoute><AdminStatistics /></ProtectedRoute>} />
+          <Route path="/admin-j28s7d1k/guides" element={<ProtectedRoute><AdminGuides /></ProtectedRoute>} />
+          <Route path="/admin-j28s7d1k/storage" element={<ProtectedRoute><AdminStorage /></ProtectedRoute>} />
+          <Route path="/admin-j28s7d1k/integrations" element={<ProtectedRoute><AdminIntegrations /></ProtectedRoute>} />
+          <Route path="/admin-j28s7d1k/settings" element={<ProtectedRoute><AdminDashboard /></ProtectedRoute>} />
+          
+          {/* Payment routes */}
+          <Route path="/pagamento/:packageId" element={<Payment />} />
+          <Route path="/pagamento-retorno" element={<PaymentReturn />} />
+          <Route path="/obrigado" element={<ThankYou />} />
+
+          {/* Order tracking */}
+          <Route path="/consultar-pedido" element={<OrderTracking />} />
+          
+          {/* Preview system */}
+          <Route path="/previa/:previewId" element={<MusicPreviewPage />} />
+          <Route path="/previews" element={<MusicPreviews />} />
+          
+          {/* Legal & Support pages */}
+          <Route path="/support/credit-refund" element={<CreditRefundRequest />} />
+          <Route path="/feedback-confirmation" element={<FeedbackConfirmation />} />
+          <Route path="/approval-confirmation" element={<ApprovalConfirmation />} />
+          
+          {/* 404 page */}
+          <Route path="*" element={<NotFound />} />
+        </Routes>
+      </Router>
+      <Toaster />
+    </ThemeProvider>
   );
 };
 

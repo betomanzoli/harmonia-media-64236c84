@@ -4,10 +4,8 @@ import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, D
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
-import { ScrollArea } from "@/components/ui/scroll-area";
 import { ContractContent } from '@/components/service-card/ContractDetails';
-
-export type PackageId = 'essencial' | 'premium' | 'profissional';
+import { PackageId } from '@/lib/payment/packageData';
 
 interface ContractTermsDialogProps {
   open: boolean;
@@ -28,11 +26,9 @@ const ContractTermsDialog: React.FC<ContractTermsDialogProps> = ({
   onConfirm,
   isLoading
 }) => {
-  // Obter o contrato específico para o pacote selecionado
-  const getContractHtml = () => {
-    switch(packageId) {
-      case 'essencial':
-        return ContractContent.getEssencialContract();
+  // Get contract content based on package ID
+  const getContractContent = () => {
+    switch (packageId) {
       case 'premium':
         return ContractContent.getPremiumContract();
       case 'profissional':
@@ -44,17 +40,17 @@ const ContractTermsDialog: React.FC<ContractTermsDialogProps> = ({
   
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-3xl max-h-[90vh] flex flex-col">
+      <DialogContent className="max-w-3xl">
         <DialogHeader>
-          <DialogTitle>Contrato de Prestação de Serviços - {packageId.charAt(0).toUpperCase() + packageId.slice(1)}</DialogTitle>
+          <DialogTitle>Contrato de Prestação de Serviços</DialogTitle>
           <DialogDescription>
             Por favor, leia com atenção o contrato abaixo antes de prosseguir com o pagamento.
           </DialogDescription>
         </DialogHeader>
         
-        <ScrollArea className="flex-1 max-h-[50vh] overflow-auto mt-4 rounded-md border p-4">
-          <div dangerouslySetInnerHTML={{ __html: getContractHtml() }} />
-        </ScrollArea>
+        <div className="max-h-[400px] overflow-y-auto border border-border rounded-md p-4 my-4">
+          <div dangerouslySetInnerHTML={{ __html: getContractContent() }} />
+        </div>
         
         <div className="flex items-start space-x-2 mt-4">
           <Checkbox 

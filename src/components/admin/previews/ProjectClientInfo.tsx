@@ -1,74 +1,59 @@
 
 import React from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { User, Mail, Package, Calendar, Clock, CalendarClock } from 'lucide-react';
+import { Card, CardHeader, CardContent, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Mail } from 'lucide-react';
+import { useToast } from '@/hooks/use-toast';
 
 interface ProjectClientInfoProps {
-  clientName: string;
-  clientEmail: string;
-  packageType: string;
-  createdAt: string;
-  expirationDate: string;
-  lastActivityDate: string;
+  client: {
+    name: string;
+    email: string;
+    packageType: string;
+  };
 }
 
-const ProjectClientInfo: React.FC<ProjectClientInfoProps> = ({
-  clientName,
-  clientEmail,
-  packageType,
-  createdAt,
-  expirationDate,
-  lastActivityDate,
-}) => {
+const ProjectClientInfo: React.FC<ProjectClientInfoProps> = ({ client }) => {
+  const { toast } = useToast();
+
+  const handleEmailClick = () => {
+    navigator.clipboard.writeText(client.email);
+    toast({
+      title: "Email copiado",
+      description: "O email do cliente foi copiado para a área de transferência."
+    });
+  };
+
   return (
-    <Card className="bg-gray-100 text-gray-900">
+    <Card>
       <CardHeader>
-        <CardTitle className="text-lg">Informações do Cliente</CardTitle>
+        <CardTitle className="text-lg">Informações do cliente</CardTitle>
       </CardHeader>
-      <CardContent className="space-y-4">
-        <div className="flex items-start gap-2">
-          <User className="h-5 w-5 text-gray-400 mt-0.5" />
+      <CardContent>
+        <div className="space-y-3">
           <div>
-            <p className="font-medium">{clientName}</p>
+            <span className="text-sm text-gray-500">Nome:</span>
+            <p className="font-medium">{client.name}</p>
           </div>
-        </div>
-        
-        <div className="flex items-start gap-2">
-          <Mail className="h-5 w-5 text-gray-400 mt-0.5" />
           <div>
-            <p className="font-medium">{clientEmail}</p>
+            <div className="flex items-center justify-between">
+              <div>
+                <span className="text-sm text-gray-500">Email:</span>
+                <p className="font-medium">{client.email}</p>
+              </div>
+              <Button 
+                variant="ghost" 
+                size="sm" 
+                onClick={handleEmailClick}
+                className="h-8 w-8 p-0"
+              >
+                <Mail className="h-4 w-4" />
+              </Button>
+            </div>
           </div>
-        </div>
-        
-        <div className="flex items-start gap-2">
-          <Package className="h-5 w-5 text-gray-400 mt-0.5" />
           <div>
-            <p className="font-medium">Pacote</p>
-            <p className="text-sm text-gray-500">{packageType}</p>
-          </div>
-        </div>
-        
-        <div className="flex items-start gap-2">
-          <Calendar className="h-5 w-5 text-gray-400 mt-0.5" />
-          <div>
-            <p className="font-medium">Data de Criação</p>
-            <p className="text-sm text-gray-500">{createdAt}</p>
-          </div>
-        </div>
-        
-        <div className="flex items-start gap-2">
-          <Clock className="h-5 w-5 text-gray-400 mt-0.5" />
-          <div>
-            <p className="font-medium">Data de Expiração</p>
-            <p className="text-sm text-gray-500">{expirationDate}</p>
-          </div>
-        </div>
-        
-        <div className="flex items-start gap-2">
-          <CalendarClock className="h-5 w-5 text-gray-400 mt-0.5" />
-          <div>
-            <p className="font-medium">Última Atividade</p>
-            <p className="text-sm text-gray-500">{lastActivityDate}</p>
+            <span className="text-sm text-gray-500">Pacote:</span>
+            <p className="font-medium">{client.packageType}</p>
           </div>
         </div>
       </CardContent>

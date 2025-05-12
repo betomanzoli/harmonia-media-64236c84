@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import Header from '@/components/Header';
@@ -8,10 +7,67 @@ import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import PreviewFeedbackForm from '@/components/previews/PreviewFeedbackForm';
 import PreviewHeader from '@/components/previews/PreviewHeader';
 import PreviewInstructions from '@/components/previews/PreviewInstructions';
-import PreviewPlayerList from '@/components/previews/player/PreviewPlayerList';
+import PreviewPlayerList from '@/components/previews/PreviewPlayerList';
 import PreviewNextSteps from '@/components/previews/PreviewNextSteps';
-import { usePreviewData } from '@/hooks/usePreviewData';
-import { notificationService } from '@/services/notificationService';
+
+interface MusicPreview {
+  id: string;
+  title: string;
+  description: string;
+  audioUrl: string;
+}
+
+const MOCK_PREVIEWS: Record<string, {
+  clientName: string;
+  projectTitle: string;
+  previews: MusicPreview[];
+  status: 'waiting' | 'feedback' | 'approved';
+}> = {
+  'preview123': {
+    clientName: 'João Silva',
+    projectTitle: 'Música para Aniversário',
+    status: 'waiting',
+    previews: [
+      {
+        id: 'p1',
+        title: 'Versão 1 - Acústica',
+        description: 'Versão acústica com violão e piano',
+        audioUrl: '/samples/preview1.mp3',
+      },
+      {
+        id: 'p2',
+        title: 'Versão 2 - Pop',
+        description: 'Versão pop com bateria e teclados',
+        audioUrl: '/samples/preview2.mp3',
+      },
+      {
+        id: 'p3',
+        title: 'Versão 3 - Orquestrada',
+        description: 'Versão com arranjo orquestral',
+        audioUrl: '/samples/preview3.mp3',
+      }
+    ]
+  },
+  'preview456': {
+    clientName: 'Maria Oliveira',
+    projectTitle: 'Jingle para Produto',
+    status: 'feedback',
+    previews: [
+      {
+        id: 'p4',
+        title: 'Versão 1 - Energética',
+        description: 'Versão energética com batidas eletrônicas',
+        audioUrl: '/samples/preview4.mp3',
+      },
+      {
+        id: 'p5',
+        title: 'Versão 2 - Suave',
+        description: 'Versão mais calma e melódica',
+        audioUrl: '/samples/preview5.mp3',
+      }
+    ]
+  }
+};
 
 const MusicPreviews: React.FC = () => {
   const { previewId } = useParams<{ previewId: string }>();
@@ -20,13 +76,15 @@ const MusicPreviews: React.FC = () => {
   
   const [selectedPreview, setSelectedPreview] = useState<string | null>(null);
   const [feedback, setFeedback] = useState('');
-  const { projectData, setProjectData, isLoading, actualProjectId } = usePreviewData(previewId);
+  const [previewData, setPreviewData] = useState<typeof MOCK_PREVIEWS[string] | null>(null);
   
   useEffect(() => {
     console.log("Preview ID:", previewId);
-    console.log("Actual Project ID:", actualProjectId);
     
-    if (!isLoading && !projectData && actualProjectId) {
+    if (previewId && MOCK_PREVIEWS[previewId]) {
+      console.log("Preview data encontrado");
+      setPreviewData(MOCK_PREVIEWS[previewId]);
+    } else {
       console.log("Preview data não encontrado");
       toast({
         title: "Preview não encontrado",
@@ -34,7 +92,7 @@ const MusicPreviews: React.FC = () => {
         variant: "destructive"
       });
     }
-  }, [previewId, projectData, isLoading, toast, actualProjectId]);
+  }, [previewId, toast]);
   
   const handleSubmitFeedback = () => {
     if (!selectedPreview) {
@@ -51,14 +109,7 @@ const MusicPreviews: React.FC = () => {
       description: "Obrigado pelo seu feedback. Nossa equipe já está trabalhando nas modificações.",
     });
     
-    // Notify about feedback
-    notificationService.notify('feedback_received', {
-      projectId: actualProjectId || previewId,
-      clientName: projectData?.clientName || 'Cliente',
-      message: feedback
-    });
-    
-    setProjectData(prev => prev ? {...prev, status: 'feedback' as const} : null);
+    setPreviewData(prev => prev ? {...prev, status: 'feedback' as const} : null);
   };
   
   const handleApprove = () => {
@@ -76,32 +127,10 @@ const MusicPreviews: React.FC = () => {
       description: "Estamos felizes que você gostou! Vamos finalizar sua música e entregar em breve.",
     });
     
-    // Notify about approval
-    notificationService.notify('preview_approved', {
-      projectId: actualProjectId || previewId,
-      clientName: projectData?.clientName || 'Cliente',
-      versionId: selectedPreview
-    });
-    
-    setProjectData(prev => prev ? {...prev, status: 'approved' as const} : null);
+    setPreviewData(prev => prev ? {...prev, status: 'approved' as const} : null);
   };
   
-  if (isLoading) {
-    return (
-      <div className="min-h-screen bg-background text-foreground">
-        <Header />
-        <div className="pt-24 pb-20 px-6 md:px-10 flex items-center justify-center">
-          <div className="text-center">
-            <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-harmonia-green"></div>
-            <p className="mt-4 text-gray-500">Carregando prévias...</p>
-          </div>
-        </div>
-        <Footer />
-      </div>
-    );
-  }
-  
-  if (!projectData) {
+  if (!previewData) {
     return (
       <div className="min-h-screen bg-background text-foreground">
         <Header />
@@ -129,13 +158,13 @@ const MusicPreviews: React.FC = () => {
         <div className="max-w-4xl mx-auto">
           <PreviewHeader 
             projectData={{
-              projectTitle: projectData.projectTitle,
-              clientName: projectData.clientName,
-              status: projectData.status
+              projectTitle: previewData.projectTitle,
+              clientName: previewData.clientName,
+              status: previewData.status
             }}
           />
           
-          <PreviewInstructions status={projectData.status} />
+          <PreviewInstructions status={previewData.status} />
           
           <Tabs defaultValue="versions" className="mb-10">
             <TabsList className="w-full mb-6">
@@ -149,30 +178,27 @@ const MusicPreviews: React.FC = () => {
             
             <TabsContent value="versions">
               <PreviewPlayerList 
-                versions={projectData.previews.map(preview => ({
-                  ...preview,
-                  description: preview.description || `Versão musical para ${projectData.clientName}`
-                }))}
-                selectedVersion={selectedPreview}
-                setSelectedVersion={setSelectedPreview}
-                isApproved={projectData.status === 'approved'}
+                previews={previewData.previews}
+                selectedPreview={selectedPreview}
+                setSelectedPreview={setSelectedPreview}
+                isApproved={previewData.status === 'approved'}
               />
             </TabsContent>
             
             <TabsContent value="feedback">
               <PreviewFeedbackForm 
+                selectedPreview={selectedPreview}
                 feedback={feedback}
-                onFeedbackChange={setFeedback}
-                onSubmit={handleSubmitFeedback}
-                onApprove={handleApprove}
-                status={projectData.status}
-                selectedVersion={selectedPreview}
-                versionTitle={projectData.previews.find(p => p.id === selectedPreview)?.title}
+                setFeedback={setFeedback}
+                handleSubmit={handleSubmitFeedback}
+                handleApprove={handleApprove}
+                status={previewData.status}
+                versionTitle={previewData.previews.find(p => p.id === selectedPreview)?.title}
               />
             </TabsContent>
           </Tabs>
           
-          <PreviewNextSteps status={projectData.status} />
+          <PreviewNextSteps status={previewData.status} />
         </div>
       </main>
       <Footer />

@@ -30,7 +30,7 @@ const PreviewsGuide: React.FC = () => {
 Estamos animados em compartilhar as primeiras versões da sua música personalizada!
 
 Para ouvi-las e fornecer seu feedback, acesse o link abaixo:
-${baseUrl}/preview/[ID_DO_PREVIEW]
+${baseUrl}${siteConfig.urls.previews}/[ID_DO_PREVIEW]
 
 Neste link, você poderá:
 - Ouvir as diferentes versões que criamos
@@ -44,7 +44,7 @@ Estamos ansiosos pelo seu feedback!
 
 Equipe harmonIA
 ${siteConfig.contact.email}
-${siteConfig.contact.whatsapp}`;
+${siteConfig.contact.phone}`;
 
   // Template para WhatsApp
   const whatsappTemplate = `Olá [Nome do Cliente]! 😊
@@ -52,7 +52,7 @@ ${siteConfig.contact.whatsapp}`;
 As primeiras versões da sua música já estão disponíveis para audição!
 
 Acesse este link para ouvir e escolher sua versão preferida:
-${baseUrl}/preview/[ID_DO_PREVIEW]
+${baseUrl}${siteConfig.urls.previews}/[ID_DO_PREVIEW]
 
 Aguardamos seu feedback!
 Equipe harmonIA`;
@@ -94,7 +94,7 @@ Equipe harmonIA`;
               <li>Copie o link gerado e envie ao cliente</li>
             </ol>
             <div className="mt-4 p-3 bg-muted rounded-md text-xs font-mono">
-              Formato do link: {baseUrl}/preview/[ID_UNICO_GERADO]
+              Formato do link: {baseUrl}{siteConfig.urls.previews}/[ID_UNICO_GERADO]
             </div>
           </AccordionContent>
         </AccordionItem>

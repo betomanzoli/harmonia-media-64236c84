@@ -6,18 +6,17 @@ import BriefingForm from '@/components/BriefingForm';
 import { Button } from "@/components/ui/button";
 import { Alert, AlertTitle, AlertDescription } from "@/components/ui/alert";
 import { ArrowLeft, AlertTriangle, CheckCircle2, Package } from 'lucide-react';
-import { useNavigate, Link } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
+import { Link } from 'react-router-dom';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { Card, CardContent } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 
 const Briefing: React.FC = () => {
   const navigate = useNavigate();
   const [hasPurchased, setHasPurchased] = useState(false);
   const [purchaseData, setPurchaseData] = useState<any>(null);
   const [selectedPackage, setSelectedPackage] = useState<'essencial' | 'profissional' | 'premium'>('essencial');
-  const [showPackageDetails, setShowPackageDetails] = useState(false);
 
   useEffect(() => {
     // Check if user has purchased a package
@@ -41,98 +40,6 @@ const Briefing: React.FC = () => {
   // Handle package selection change
   const handlePackageChange = (value: string) => {
     setSelectedPackage(value as 'essencial' | 'profissional' | 'premium');
-  };
-
-  const renderPackageDetails = () => {
-    let details = {
-      title: "",
-      features: [] as string[],
-      price: "",
-      description: "",
-    };
-    
-    switch (selectedPackage) {
-      case 'essencial':
-        details = {
-          title: "Pacote Essencial",
-          price: "R$219",
-          description: "Ideal para presentes emocionais rápidos.",
-          features: [
-            "• 1 composição personalizada",
-            "• 1 revisão incluída",
-            "• Entrega em até 7 dias úteis",
-            "• Formato MP3 320kbps",
-            "• Licença para uso pessoal"
-          ]
-        };
-        break;
-      case 'profissional':
-        details = {
-          title: "Pacote Profissional",
-          price: "R$479",
-          description: "Perfeito para criadores de conteúdo.",
-          features: [
-            "• 3 versões diferentes para escolha",
-            "• Até 3 revisões incluídas",
-            "• Entrega em até 10 dias úteis",
-            "• Formato MP3 e WAV",
-            "• Licença para uso em conteúdo digital",
-            "• Acompanhamento personalizado"
-          ]
-        };
-        break;
-      case 'premium':
-        details = {
-          title: "Pacote Premium",
-          price: "R$969",
-          description: "Melhor opção para empresas.",
-          features: [
-            "• 5 versões diferentes para escolha",
-            "• Revisões ilimitadas",
-            "• Entrega em até 15 dias úteis",
-            "• Formatos MP3, WAV e STEMS",
-            "• Licença para uso comercial",
-            "• Registro na Biblioteca Nacional",
-            "• Certificado de autenticidade",
-            "• Suporte prioritário"
-          ]
-        };
-        break;
-    }
-    
-    return (
-      <Dialog open={showPackageDetails} onOpenChange={setShowPackageDetails}>
-        <DialogContent className="max-w-2xl">
-          <DialogHeader>
-            <DialogTitle>{details.title}</DialogTitle>
-          </DialogHeader>
-          <div className="space-y-4">
-            <div className="flex justify-between items-start">
-              <p className="text-gray-400">{details.description}</p>
-              <span className="text-harmonia-green font-bold text-xl">{details.price}</span>
-            </div>
-            
-            <div className="border-t pt-4">
-              <h3 className="font-medium mb-2">Detalhes do pacote:</h3>
-              <ul className="space-y-2">
-                {details.features.map((feature, index) => (
-                  <li key={index} className="text-gray-300">{feature}</li>
-                ))}
-              </ul>
-            </div>
-            
-            <div className="bg-harmonia-green/10 p-4 rounded-lg border border-harmonia-green/20">
-              <h4 className="font-medium text-harmonia-green mb-2">Informações importantes:</h4>
-              <p className="text-sm text-gray-400">
-                Ao contratar este pacote, você terá acesso a todos os recursos listados acima. 
-                Após o preenchimento do briefing, nossa equipe entrará em contato para alinhar 
-                os detalhes da sua composição personalizada.
-              </p>
-            </div>
-          </div>
-        </DialogContent>
-      </Dialog>
-    );
   };
 
   return (
@@ -180,21 +87,9 @@ const Briefing: React.FC = () => {
                     <CardContent className="p-6">
                       <h3 className="font-semibold mb-2">Pacote Essencial</h3>
                       <p className="text-sm text-gray-500 mb-4">Ideal para presentes emocionais rápidos.</p>
-                      <div className="flex flex-col space-y-2">
-                        <Link to="/pagamento/essencial">
-                          <Button className="w-full">Escolher</Button>
-                        </Link>
-                        <Button 
-                          variant="outline" 
-                          className="w-full"
-                          onClick={() => {
-                            setSelectedPackage('essencial');
-                            setShowPackageDetails(true);
-                          }}
-                        >
-                          Ver detalhes
-                        </Button>
-                      </div>
+                      <Link to="/pagamento/essencial">
+                        <Button className="w-full">Escolher</Button>
+                      </Link>
                     </CardContent>
                   </Card>
                   
@@ -202,21 +97,9 @@ const Briefing: React.FC = () => {
                     <CardContent className="p-6">
                       <h3 className="font-semibold mb-2">Pacote Profissional</h3>
                       <p className="text-sm text-gray-500 mb-4">Perfeito para criadores de conteúdo.</p>
-                      <div className="flex flex-col space-y-2">
-                        <Link to="/pagamento/profissional">
-                          <Button className="w-full bg-harmonia-green hover:bg-harmonia-green/90">Escolher</Button>
-                        </Link>
-                        <Button 
-                          variant="outline" 
-                          className="w-full border-harmonia-green/50 text-harmonia-green"
-                          onClick={() => {
-                            setSelectedPackage('profissional');
-                            setShowPackageDetails(true);
-                          }}
-                        >
-                          Ver detalhes
-                        </Button>
-                      </div>
+                      <Link to="/pagamento/profissional">
+                        <Button className="w-full bg-harmonia-green hover:bg-harmonia-green/90">Escolher</Button>
+                      </Link>
                     </CardContent>
                   </Card>
                   
@@ -224,30 +107,18 @@ const Briefing: React.FC = () => {
                     <CardContent className="p-6">
                       <h3 className="font-semibold mb-2">Pacote Premium</h3>
                       <p className="text-sm text-gray-500 mb-4">Melhor opção para empresas.</p>
-                      <div className="flex flex-col space-y-2">
-                        <Link to="/pagamento/premium">
-                          <Button className="w-full">Escolher</Button>
-                        </Link>
-                        <Button 
-                          variant="outline" 
-                          className="w-full"
-                          onClick={() => {
-                            setSelectedPackage('premium');
-                            setShowPackageDetails(true);
-                          }}
-                        >
-                          Ver detalhes
-                        </Button>
-                      </div>
+                      <Link to="/pagamento/premium">
+                        <Button className="w-full">Escolher</Button>
+                      </Link>
                     </CardContent>
                   </Card>
                 </div>
                 
                 <div className="pt-4">
-                  <Link to="/servicos">
+                  <Link to="/services">
                     <Button variant="outline">
                       <Package className="w-4 h-4 mr-2" />
-                      Ver todos os pacotes
+                      Ver detalhes dos pacotes
                     </Button>
                   </Link>
                 </div>
@@ -303,7 +174,7 @@ const Briefing: React.FC = () => {
                       <Button 
                         variant="outline" 
                         className="w-full"
-                        onClick={() => setShowPackageDetails(true)}
+                        onClick={() => navigate('/services')}
                       >
                         Ver detalhes do pacote
                       </Button>
@@ -318,9 +189,6 @@ const Briefing: React.FC = () => {
               </div>
             </>
           )}
-          
-          {/* Package Details Dialog */}
-          {renderPackageDetails()}
         </div>
       </main>
       <Footer />

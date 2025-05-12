@@ -32,12 +32,11 @@ const LoginForm: React.FC<LoginFormProps> = ({
         <Input
           type="email"
           name="email"
-          value={email}
+          defaultValue={email}
           onChange={onEmailChange}
           placeholder="admin@exemplo.com"
           required
           disabled={loading || success}
-          autoComplete="email"
         />
       </div>
       
@@ -46,12 +45,11 @@ const LoginForm: React.FC<LoginFormProps> = ({
         <Input
           type="password"
           name="password"
-          value={password}
+          defaultValue={password}
           onChange={onPasswordChange}
           placeholder="********"
           required
           disabled={loading || success}
-          autoComplete="current-password"
         />
       </div>
       

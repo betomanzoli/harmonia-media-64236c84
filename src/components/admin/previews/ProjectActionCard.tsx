@@ -1,116 +1,57 @@
 
-import React, { useState } from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import React from 'react';
+import { Card, CardHeader, CardContent, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Copy, PlusCircle, Clock, Link, CalendarPlus } from 'lucide-react';
-import { useToast } from '@/hooks/use-toast';
-import AddVersionDialog from './AddVersionDialog';
-import { VersionItem } from '@/hooks/admin/usePreviewProjects';
-import ContactClientActions from './components/ContactClientActions';
+import { FileMusic, Calendar, Eye } from 'lucide-react';
+import { Link } from 'react-router-dom';
 
 interface ProjectActionCardProps {
-  projectId: string;
-  projectStatus: string;
-  packageType?: string;
-  onAddVersion: (version: VersionItem) => void;
+  onAddVersion: () => void;
   onExtendDeadline: () => void;
   previewUrl: string;
-  clientPhone?: string;
-  clientEmail?: string;
 }
 
-const ProjectActionCard: React.FC<ProjectActionCardProps> = ({
-  projectId,
-  onAddVersion,
+const ProjectActionCard: React.FC<ProjectActionCardProps> = ({ 
+  onAddVersion, 
   onExtendDeadline,
-  previewUrl,
-  projectStatus,
-  packageType,
-  clientPhone,
-  clientEmail
+  previewUrl
 }) => {
-  const { toast } = useToast();
-  const [showAddVersion, setShowAddVersion] = useState(false);
-  
-  const handleCopyLink = () => {
-    const fullUrl = `${window.location.origin}/preview/${projectId}`;
-    
-    navigator.clipboard.writeText(fullUrl)
-      .then(() => {
-        toast({
-          title: "Link copiado",
-          description: "O link de prévia foi copiado para a área de transferência."
-        });
-      })
-      .catch(err => {
-        console.error('Falha ao copiar link:', err);
-        toast({
-          title: "Erro ao copiar",
-          description: "Não foi possível copiar o link. Por favor, tente novamente.",
-          variant: "destructive"
-        });
-      });
-  };
-  
   return (
     <Card>
       <CardHeader>
-        <CardTitle className="text-lg">Ações do Projeto</CardTitle>
+        <CardTitle className="text-lg">Ações rápidas</CardTitle>
       </CardHeader>
-      <CardContent className="space-y-4">
-        <div className="grid grid-cols-1 gap-2">
-          <Button
-            onClick={() => setShowAddVersion(true)}
-            className="w-full"
-            variant="default"
-          >
-            <PlusCircle className="mr-2 h-4 w-4" />
-            {projectStatus === 'approved' ? "Adicionar Versão Final" : "Adicionar Versão"}
-          </Button>
-
+      <CardContent>
+        <div className="space-y-3">
           <Button 
-            onClick={handleCopyLink} 
             variant="outline" 
-            className="w-full"
+            className="w-full justify-start"
+            onClick={onAddVersion}
           >
-            <Link className="mr-2 h-4 w-4" />
-            Copiar Link de Prévia
+            <FileMusic className="mr-2 h-4 w-4" />
+            Enviar nova versão
           </Button>
           
           <Button 
-            onClick={onExtendDeadline} 
             variant="outline" 
-            className="w-full"
+            className="w-full justify-start"
+            onClick={onExtendDeadline}
           >
-            <CalendarPlus className="mr-2 h-4 w-4" />
-            Estender Prazo
+            <Calendar className="mr-2 h-4 w-4" />
+            Estender prazo
+          </Button>
+          
+          <Button 
+            variant="outline" 
+            className="w-full justify-start text-harmonia-green border-harmonia-green hover:bg-harmonia-green/10"
+            asChild
+          >
+            <Link to={previewUrl} target="_blank">
+              <Eye className="mr-2 h-4 w-4" />
+              Ver como cliente
+            </Link>
           </Button>
         </div>
-        
-        {/* Contact client actions */}
-        <ContactClientActions 
-          clientPhone={clientPhone}
-          clientEmail={clientEmail}
-          projectId={projectId}
-        />
-        
-        {/* Add version dialog */}
-        <AddVersionDialog 
-          isOpen={showAddVersion} 
-          onOpenChange={setShowAddVersion}
-          onAddVersion={(versionData) => {
-            setShowAddVersion(false);
-            onAddVersion({
-              ...versionData,
-              id: `v${Date.now()}`,
-              dateAdded: new Date().toLocaleDateString('pt-BR'),
-              final: projectStatus === 'approved'
-            });
-          }}
-          projectId={projectId}
-          isFinalVersion={projectStatus === 'approved'}
-          packageType={packageType}
-        />
       </CardContent>
     </Card>
   );

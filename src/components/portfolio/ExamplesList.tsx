@@ -3,24 +3,27 @@ import React from 'react';
 import AudioExample from './AudioExample';
 import { Button } from "@/components/ui/button";
 import { Plus } from 'lucide-react';
-import { AudioExample as AudioExampleType } from './audioData';
+
+export interface AudioExampleItem {
+  title: string;
+  subtitle: string;
+  audioSrc: string;
+  genre: string;
+  type: string;
+}
 
 interface ExamplesListProps {
-  initialExamples: AudioExampleType[];
-  extraExamples: AudioExampleType[];
+  initialExamples: AudioExampleItem[];
+  extraExamples: AudioExampleItem[];
   showAll: boolean;
   onShowMore: () => void;
-  onDelete?: (title: string) => void;
-  isAdmin?: boolean;
 }
 
 const ExamplesList: React.FC<ExamplesListProps> = ({ 
   initialExamples, 
   extraExamples, 
   showAll, 
-  onShowMore,
-  onDelete,
-  isAdmin = false
+  onShowMore 
 }) => {
   const displayedExamples = showAll ? [...initialExamples, ...extraExamples] : initialExamples;
 
@@ -31,17 +34,15 @@ const ExamplesList: React.FC<ExamplesListProps> = ({
           <AudioExample 
             key={index}
             title={example.title}
-            subtitle={example.description}
-            audioSrc={example.audioUrl}
-            genre={example.type || example.category?.[0] || ''} // Use type or fallback to first category
-            type={example.type || example.category?.[0] || ''}
-            onDelete={onDelete}
-            isAdmin={isAdmin}
+            subtitle={example.subtitle}
+            audioSrc={example.audioSrc}
+            genre={example.genre}
+            type={example.type}
           />
         ))}
       </div>
 
-      {!showAll && extraExamples.length > 0 && (
+      {!showAll && (
         <div className="flex justify-center mt-10">
           <Button 
             onClick={onShowMore} 

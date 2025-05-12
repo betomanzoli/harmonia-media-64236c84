@@ -1,71 +1,138 @@
 
 import { useState } from 'react';
-import { useToast } from "@/hooks/use-toast";
+import { toast } from "@/hooks/use-toast";
 
-export interface Version {
+export interface ProjectVersion {
   title: string;
   description: string;
-  audioUrl: string;
+  audioFile: File | null;
+}
+
+interface NewProject {
+  clientName: string;
+  clientEmail: string;
+  packageType: string;
+  expirationDays: string;
+  versions: ProjectVersion[];
+  setClientName: (name: string) => void;
+  setClientEmail: (email: string) => void;
+  setPackageType: (type: string) => void;
+  setExpirationDays: (days: string) => void;
 }
 
 export const useNewProjectForm = () => {
   const [clientName, setClientName] = useState('');
   const [clientEmail, setClientEmail] = useState('');
-  const [packageType, setPackageType] = useState('');
-  const [versions, setVersions] = useState<Version[]>([
-    { title: '', description: '', audioUrl: '' }
+  const [packageType, setPackageType] = useState('Essencial');
+  const [expirationDays, setExpirationDays] = useState('7');
+  const [versions, setVersions] = useState<ProjectVersion[]>([
+    { title: '', description: '', audioFile: null }
   ]);
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  const { toast } = useToast();
-
-  const addVersion = () => {
-    setVersions([...versions, { title: '', description: '', audioUrl: '' }]);
+  
+  const [isCreating, setIsCreating] = useState(false);
+  const [isUploading, setIsUploading] = useState(false);
+  
+  const newProject: NewProject = {
+    clientName,
+    clientEmail,
+    packageType,
+    expirationDays,
+    versions,
+    setClientName,
+    setClientEmail,
+    setPackageType,
+    setExpirationDays
   };
-
-  const removeVersion = (index: number) => {
-    if (versions.length > 1) {
-      setVersions(versions.filter((_, i) => i !== index));
-    } else {
+  
+  const handleAddVersion = () => {
+    setVersions(prev => [
+      ...prev,
+      { title: '', description: '', audioFile: null }
+    ]);
+  };
+  
+  const handleRemoveVersion = (indexToRemove: number) => {
+    if (versions.length <= 1) {
       toast({
-        title: "Não é possível remover",
-        description: "O projeto precisa ter pelo menos uma versão.",
+        title: "Operação não permitida",
+        description: "É necessário pelo menos uma versão musical.",
         variant: "destructive"
       });
+      return;
     }
+    
+    setVersions(prev => prev.filter((_, index) => index !== indexToRemove));
   };
-
-  const updateVersion = (index: number, field: keyof Version, value: string) => {
+  
+  const handleVersionChange = (index: number, field: 'title' | 'description', value: string) => {
     const updatedVersions = [...versions];
-    updatedVersions[index] = { ...updatedVersions[index], [field]: value };
+    updatedVersions[index] = {
+      ...updatedVersions[index],
+      [field]: value
+    };
+    
     setVersions(updatedVersions);
   };
-
-  const resetForm = () => {
-    setClientName('');
-    setClientEmail('');
-    setPackageType('');
-    setVersions([{ title: '', description: '', audioUrl: '' }]);
+  
+  const handleFileChange = (index: number, event: React.ChangeEvent<HTMLInputElement>) => {
+    if (!event.target.files || event.target.files.length === 0) return;
+    
+    const file = event.target.files[0];
+    const updatedVersions = [...versions];
+    updatedVersions[index] = {
+      ...updatedVersions[index],
+      audioFile: file
+    };
+    
+    setVersions(updatedVersions);
   };
-
-  return {
-    formState: {
-      clientName,
-      clientEmail,
-      packageType,
-      versions,
-      isSubmitting
-    },
-    setters: {
-      setClientName,
-      setClientEmail,
-      setPackageType,
-      setIsSubmitting
-    },
-    actions: {
-      addVersion,
-      removeVersion,
-      updateVersion,
-      resetForm
+  
+  const handleCreateProject = (e: React.FormEvent) => {
+    e.preventDefault();
+    setIsCreating(true);
+    
+    // Validação básica
+    const hasEmptyFields = versions.some(v => !v.title || !v.description || !v.audioFile);
+    
+    if (hasEmptyFields) {
+      toast({
+        title: "Campos incompletos",
+        description: "Preencha todos os campos e anexe arquivos de áudio para todas as versões.",
+        variant: "destructive"
+      });
+      setIsCreating(false);
+      return;
     }
+    
+    // Simular upload de arquivos
+    setIsUploading(true);
+    setTimeout(() => {
+      setIsUploading(false);
+      
+      // Reset the form
+      setClientName('');
+      setClientEmail('');
+      setPackageType('Essencial');
+      setExpirationDays('7');
+      setVersions([{ title: '', description: '', audioFile: null }]);
+      
+      toast({
+        title: "Projeto criado com sucesso!",
+        description: `O projeto foi criado e o cliente será notificado.`,
+      });
+      
+      setIsCreating(false);
+    }, 2000);
+  };
+  
+  return {
+    newProject,
+    handleCreateProject,
+    handleAddVersion,
+    handleRemoveVersion,
+    handleVersionChange,
+    handleFileChange,
+    isCreating,
+    isUploading,
   };
 };

@@ -1,7 +1,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { Menu, X } from 'lucide-react';
+import { Menu, X, Calculator } from 'lucide-react';
 import { Button } from "@/components/ui/button";
 import Logo from './Logo';
 
@@ -18,11 +18,6 @@ const Header: React.FC = () => {
     window.addEventListener('scroll', handleScroll);
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
-
-  useEffect(() => {
-    // Close mobile menu when route changes
-    setIsMenuOpen(false);
-  }, [location.pathname]);
 
   const toggleMenu = () => {
     setIsMenuOpen(!isMenuOpen);
@@ -63,8 +58,8 @@ const Header: React.FC = () => {
               Portfólio
             </Link>
             <Link 
-              to="/servicos" 
-              className={`text-sm ${isActive('/servicos') ? 'text-harmonia-green' : 'text-gray-300 hover:text-white'}`}
+              to="/services" 
+              className={`text-sm ${isActive('/services') ? 'text-harmonia-green' : 'text-gray-300 hover:text-white'}`}
             >
               Serviços
             </Link>
@@ -75,11 +70,20 @@ const Header: React.FC = () => {
               Briefing
             </Link>
             <Link 
-              to="/contato" 
-              className={`text-sm ${isActive('/contato') ? 'text-harmonia-green' : 'text-gray-300 hover:text-white'}`}
+              to="/contact" 
+              className={`text-sm ${isActive('/contact') ? 'text-harmonia-green' : 'text-gray-300 hover:text-white'}`}
             >
               Contato
             </Link>
+            
+            <div className="flex items-center gap-2 ml-2">
+              <Button asChild size="sm" className="bg-harmonia-green hover:bg-harmonia-green/90 text-white">
+                <Link to="/calculadora" className="flex items-center gap-1">
+                  <Calculator className="w-4 h-4" />
+                  Calcular Preço
+                </Link>
+              </Button>
+            </div>
           </nav>
 
           {/* Mobile Menu Button */}
@@ -114,8 +118,8 @@ const Header: React.FC = () => {
                 Portfólio
               </Link>
               <Link 
-                to="/servicos" 
-                className={`text-sm ${isActive('/servicos') ? 'text-harmonia-green' : 'text-gray-300 hover:text-white'}`}
+                to="/services" 
+                className={`text-sm ${isActive('/services') ? 'text-harmonia-green' : 'text-gray-300 hover:text-white'}`}
                 onClick={() => setIsMenuOpen(false)}
               >
                 Serviços
@@ -128,12 +132,21 @@ const Header: React.FC = () => {
                 Briefing
               </Link>
               <Link 
-                to="/contato" 
-                className={`text-sm ${isActive('/contato') ? 'text-harmonia-green' : 'text-gray-300 hover:text-white'}`}
+                to="/contact" 
+                className={`text-sm ${isActive('/contact') ? 'text-harmonia-green' : 'text-gray-300 hover:text-white'}`}
                 onClick={() => setIsMenuOpen(false)}
               >
                 Contato
               </Link>
+              
+              <div className="flex flex-col gap-2 pt-2 border-t border-gray-700">
+                <Button asChild size="sm" className="bg-harmonia-green hover:bg-harmonia-green/90 text-white">
+                  <Link to="/calculadora" className="flex items-center gap-1" onClick={() => setIsMenuOpen(false)}>
+                    <Calculator className="w-4 h-4" />
+                    Calcular Preço
+                  </Link>
+                </Button>
+              </div>
             </nav>
           </div>
         )}

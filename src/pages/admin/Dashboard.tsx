@@ -3,7 +3,7 @@ import React from 'react';
 import AdminLayout from '@/components/admin/layout/AdminLayout';
 import DashboardContent from '@/components/admin/dashboard/DashboardContent';
 
-const Dashboard: React.FC = () => {
+const AdminDashboard: React.FC = () => {
   return (
     <AdminLayout>
       <DashboardContent />
@@ -11,4 +11,4 @@ const Dashboard: React.FC = () => {
   );
 };
 
-export default Dashboard;
+export default AdminDashboard;

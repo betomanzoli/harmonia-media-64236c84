@@ -1,398 +1,317 @@
-
-import React, { useState } from 'react';
+import React from 'react';
 import AdminLayout from '@/components/admin/layout/AdminLayout';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
+import { Checkbox } from "@/components/ui/checkbox";
 import { Switch } from "@/components/ui/switch";
-import { useToast } from "@/hooks/use-toast";
-import { FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
-import { Separator } from "@/components/ui/separator";
-import { ArrowLeft, Save, Lock, Mail, BellRing, Cloud, FileText, Shield } from 'lucide-react';
+import { Shield, Bell, User, Lock, Globe, ArrowLeft, Link2 } from 'lucide-react';
+import { useToast } from '@/hooks/use-toast';
 import { Link } from 'react-router-dom';
+import WebhookUrlManager from '@/components/admin/integrations/WebhookUrlManager';
 
 const AdminSettings: React.FC = () => {
   const { toast } = useToast();
-  const [isLoading, setIsLoading] = useState(false);
 
-  const handleSaveSettings = () => {
-    setIsLoading(true);
-    
-    // Simular salvamento das configurações
-    setTimeout(() => {
-      setIsLoading(false);
-      toast({
-        title: "Configurações salvas",
-        description: "Suas configurações foram atualizadas com sucesso."
-      });
-    }, 1000);
+  const handleSave = () => {
+    toast({
+      title: "Configurações salvas",
+      description: "Suas configurações foram atualizadas com sucesso."
+    });
   };
 
   return (
     <AdminLayout>
-      <div className="flex flex-col h-full">
-        <div className="flex items-center justify-between p-6 border-b">
-          <div className="flex items-center">
-            <Button 
-              variant="outline" 
-              size="sm" 
-              asChild
-              className="mr-4"
-            >
-              <Link to="/admin-j28s7d1k/dashboard">
-                <ArrowLeft className="h-4 w-4 mr-2" />
-                Voltar
-              </Link>
-            </Button>
-            <h1 className="text-2xl font-bold">Configurações</h1>
+      <div className="space-y-6">
+        <div className="flex items-center justify-between">
+          <div>
+            <h1 className="text-3xl font-bold tracking-tight text-harmonia-green">Configurações</h1>
+            <p className="text-muted-foreground">
+              Gerencie as configurações da sua conta e preferências do sistema
+            </p>
           </div>
           <Button 
-            onClick={handleSaveSettings}
-            disabled={isLoading}
+            variant="outline" 
+            size="sm" 
+            asChild
+            className="border-harmonia-green text-harmonia-green hover:bg-harmonia-green/10"
           >
-            <Save className="h-4 w-4 mr-2" />
-            {isLoading ? "Salvando..." : "Salvar Configurações"}
+            <Link to="/admin-j28s7d1k/dashboard">
+              <ArrowLeft className="mr-2 h-4 w-4" />
+              Voltar ao Dashboard
+            </Link>
           </Button>
         </div>
         
-        <div className="p-6 flex-1 overflow-auto">
-          <Tabs defaultValue="general">
-            <TabsList className="mb-6">
-              <TabsTrigger value="general">Geral</TabsTrigger>
-              <TabsTrigger value="email">Email</TabsTrigger>
-              <TabsTrigger value="notifications">Notificações</TabsTrigger>
-              <TabsTrigger value="storage">Armazenamento</TabsTrigger>
-              <TabsTrigger value="contracts">Contratos</TabsTrigger>
-              <TabsTrigger value="security">Segurança</TabsTrigger>
-            </TabsList>
-            
-            {/* Configurações Gerais */}
-            <TabsContent value="general">
-              <Card>
-                <CardHeader>
-                  <CardTitle>Configurações Gerais</CardTitle>
-                  <CardDescription>Configure as opções básicas do sistema.</CardDescription>
-                </CardHeader>
-                <CardContent className="space-y-6">
-                  <div className="space-y-4">
-                    <h3 className="text-lg font-medium">Informações da Empresa</h3>
-                    <div className="grid grid-cols-2 gap-4">
-                      <div className="space-y-2">
-                        <Label htmlFor="company-name">Nome da Empresa</Label>
-                        <Input id="company-name" defaultValue="HarmonIA" />
-                      </div>
-                      <div className="space-y-2">
-                        <Label htmlFor="company-email">Email de Contato</Label>
-                        <Input id="company-email" defaultValue="contato@harmonia.media" />
-                      </div>
-                      <div className="space-y-2">
-                        <Label htmlFor="company-phone">Telefone</Label>
-                        <Input id="company-phone" defaultValue="(11) 99999-9999" />
-                      </div>
-                      <div className="space-y-2">
-                        <Label htmlFor="company-website">Website</Label>
-                        <Input id="company-website" defaultValue="https://harmonia.media" />
-                      </div>
-                    </div>
+        <Tabs defaultValue="account" className="space-y-6">
+          <TabsList className="bg-harmonia-light-green/20 text-harmonia-green">
+            <TabsTrigger 
+              value="account" 
+              className="data-[state=active]:bg-harmonia-green data-[state=active]:text-white"
+            >
+              <User className="h-4 w-4 mr-2" />
+              Conta
+            </TabsTrigger>
+            <TabsTrigger 
+              value="security"
+              className="data-[state=active]:bg-harmonia-green data-[state=active]:text-white"
+            >
+              <Shield className="h-4 w-4 mr-2" />
+              Segurança
+            </TabsTrigger>
+            <TabsTrigger 
+              value="notifications"
+              className="data-[state=active]:bg-harmonia-green data-[state=active]:text-white"
+            >
+              <Bell className="h-4 w-4 mr-2" />
+              Notificações
+            </TabsTrigger>
+            <TabsTrigger 
+              value="password"
+              className="data-[state=active]:bg-harmonia-green data-[state=active]:text-white"
+            >
+              <Lock className="h-4 w-4 mr-2" />
+              Senha
+            </TabsTrigger>
+            <TabsTrigger 
+              value="site"
+              className="data-[state=active]:bg-harmonia-green data-[state=active]:text-white"
+            >
+              <Globe className="h-4 w-4 mr-2" />
+              Site
+            </TabsTrigger>
+            <TabsTrigger 
+              value="integrations"
+              className="data-[state=active]:bg-harmonia-green data-[state=active]:text-white"
+            >
+              <Link2 className="h-4 w-4 mr-2" />
+              Integrações
+            </TabsTrigger>
+          </TabsList>
+          
+          <TabsContent value="account" className="space-y-6">
+            <Card className="shadow-md border-harmonia-green/20">
+              <CardHeader className="bg-gradient-to-r from-harmonia-light-green to-harmonia-green/10">
+                <CardTitle className="text-harmonia-green">Informações da Conta</CardTitle>
+                <CardDescription>
+                  Atualize suas informações pessoais e de contato
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-4 pt-6">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="name">Nome</Label>
+                    <Input id="name" defaultValue="Admin Usuario" />
                   </div>
-                  
-                  <Separator />
-                  
-                  <div className="space-y-4">
-                    <h3 className="text-lg font-medium">Configurações de Sistema</h3>
-                    <div className="space-y-4">
-                      <div className="flex items-center justify-between">
-                        <div>
-                          <Label htmlFor="maintenance-mode" className="text-base">Modo de Manutenção</Label>
-                          <p className="text-sm text-gray-500">Ativa o modo de manutenção no site</p>
-                        </div>
-                        <Switch id="maintenance-mode" />
-                      </div>
-                      
-                      <div className="flex items-center justify-between">
-                        <div>
-                          <Label htmlFor="debug-mode" className="text-base">Modo de Depuração</Label>
-                          <p className="text-sm text-gray-500">Ativa logs detalhados para depuração</p>
-                        </div>
-                        <Switch id="debug-mode" />
-                      </div>
-                      
-                      <div className="flex items-center justify-between">
-                        <div>
-                          <Label htmlFor="allow-registration" className="text-base">Permitir Novos Cadastros</Label>
-                          <p className="text-sm text-gray-500">Permite que novos clientes se cadastrem no site</p>
-                        </div>
-                        <Switch id="allow-registration" defaultChecked />
-                      </div>
-                    </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="email">Email</Label>
+                    <Input id="email" type="email" defaultValue="admin@harmonia.media" />
+                  </div>
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="bio">Biografia</Label>
+                  <Input id="bio" defaultValue="Administrador do sistema harmonIA" />
+                </div>
+              </CardContent>
+              <CardFooter>
+                <Button 
+                  onClick={handleSave}
+                  className="bg-harmonia-green hover:bg-harmonia-green/90"
+                >
+                  Salvar Alterações
+                </Button>
+              </CardFooter>
+            </Card>
+          </TabsContent>
+          
+          <TabsContent value="security" className="space-y-6">
+            <Card className="shadow-md border-harmonia-green/20">
+              <CardHeader className="bg-gradient-to-r from-harmonia-light-green to-harmonia-green/10">
+                <CardTitle className="text-harmonia-green">Segurança</CardTitle>
+                <CardDescription>
+                  Gerenciar configurações de segurança da conta
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-4 pt-6">
+                <div className="flex items-center justify-between">
+                  <div className="space-y-0.5">
+                    <Label>Autenticação de dois fatores</Label>
+                    <p className="text-sm text-muted-foreground">
+                      Adiciona uma camada extra de segurança à sua conta
+                    </p>
+                  </div>
+                  <Switch />
+                </div>
+                <div className="flex items-center justify-between">
+                  <div className="space-y-0.5">
+                    <Label>Notificar sobre novos logins</Label>
+                    <p className="text-sm text-muted-foreground">
+                      Receba notificações quando sua conta for acessada de um novo dispositivo
+                    </p>
+                  </div>
+                  <Switch defaultChecked />
+                </div>
+              </CardContent>
+              <CardFooter>
+                <Button 
+                  onClick={handleSave}
+                  className="bg-harmonia-green hover:bg-harmonia-green/90"
+                >
+                  Salvar Alterações
+                </Button>
+              </CardFooter>
+            </Card>
+          </TabsContent>
+          
+          <TabsContent value="notifications" className="space-y-6">
+            <Card>
+              <CardHeader>
+                <CardTitle>Notificações</CardTitle>
+                <CardDescription>
+                  Configurar quais notificações você deseja receber
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="space-y-4">
+                  <div className="flex items-center space-x-2">
+                    <Checkbox id="new-orders" defaultChecked />
+                    <Label htmlFor="new-orders">Novos pedidos</Label>
+                  </div>
+                  <div className="flex items-center space-x-2">
+                    <Checkbox id="updates" defaultChecked />
+                    <Label htmlFor="updates">Atualizações do sistema</Label>
+                  </div>
+                  <div className="flex items-center space-x-2">
+                    <Checkbox id="comments" />
+                    <Label htmlFor="comments">Novos comentários</Label>
+                  </div>
+                  <div className="flex items-center space-x-2">
+                    <Checkbox id="marketing" />
+                    <Label htmlFor="marketing">Informações de marketing</Label>
+                  </div>
+                </div>
+              </CardContent>
+              <CardFooter>
+                <Button onClick={handleSave}>Salvar Alterações</Button>
+              </CardFooter>
+            </Card>
+          </TabsContent>
+          
+          <TabsContent value="password" className="space-y-6">
+            <Card>
+              <CardHeader>
+                <CardTitle>Alterar Senha</CardTitle>
+                <CardDescription>
+                  Atualize sua senha para manter sua conta segura
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="space-y-2">
+                  <Label htmlFor="current-password">Senha Atual</Label>
+                  <Input id="current-password" type="password" />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="new-password">Nova Senha</Label>
+                  <Input id="new-password" type="password" />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="confirm-password">Confirmar Nova Senha</Label>
+                  <Input id="confirm-password" type="password" />
+                </div>
+              </CardContent>
+              <CardFooter>
+                <Button onClick={handleSave}>Alterar Senha</Button>
+              </CardFooter>
+            </Card>
+          </TabsContent>
+          
+          <TabsContent value="site" className="space-y-6">
+            <Card>
+              <CardHeader>
+                <CardTitle>Configurações do Site</CardTitle>
+                <CardDescription>
+                  Gerenciar configurações gerais do site
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="space-y-2">
+                  <Label htmlFor="site-name">Nome do Site</Label>
+                  <Input id="site-name" defaultValue="harmonIA" />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="site-description">Descrição</Label>
+                  <Input id="site-description" defaultValue="Produções musicais personalizadas" />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="maintenance-mode">Modo de Manutenção</Label>
+                  <div className="flex items-center space-x-2">
+                    <Switch id="maintenance-mode" />
+                    <Label htmlFor="maintenance-mode">Ativar modo de manutenção</Label>
+                  </div>
+                </div>
+              </CardContent>
+              <CardFooter>
+                <Button onClick={handleSave}>Salvar Alterações</Button>
+              </CardFooter>
+            </Card>
+          </TabsContent>
+          
+          <TabsContent value="integrations" className="space-y-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <WebhookUrlManager 
+                title="Webhook Global" 
+                description="Configure o webhook global para todas as notificações do sistema"
+                serviceType="portfolio"
+                storageUrl="https://drive.google.com/drive/folders/1uuhCHv0c5eePU9_m-0BdYiuo0-3vUwVJ"
+              />
+              
+              <Card className="shadow-md border-harmonia-green/20">
+                <CardHeader className="bg-gradient-to-r from-harmonia-light-green to-harmonia-green/10">
+                  <CardTitle className="text-harmonia-green">Links de Armazenamento</CardTitle>
+                  <CardDescription>
+                    Gerencie os links para pastas compartilhadas
+                  </CardDescription>
+                </CardHeader>
+                <CardContent className="pt-6 space-y-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="audio-folder">Banco de Dados de Áudio</Label>
+                    <Input 
+                      id="audio-folder" 
+                      defaultValue="https://drive.google.com/drive/folders/1zOKfHNA7rAihCmEVKZtL191k8XgUsXMg" 
+                      readOnly
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="portfolio-folder">Portfólio</Label>
+                    <Input 
+                      id="portfolio-folder" 
+                      defaultValue="https://drive.google.com/drive/folders/1MJk2diD6Bmb9Q6lNVDPnLePAznerOU29" 
+                      readOnly
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="previews-folder">Projetos de Prévias</Label>
+                    <Input 
+                      id="previews-folder" 
+                      defaultValue="https://drive.google.com/drive/folders/1lLw3oBgNhlpUiYbo3wevgUvjA0RTV7tN" 
+                      readOnly
+                    />
                   </div>
                 </CardContent>
-                <CardFooter className="flex justify-end">
-                  <Button onClick={handleSaveSettings} disabled={isLoading}>
-                    {isLoading ? "Salvando..." : "Salvar Configurações"}
+                <CardFooter>
+                  <Button 
+                    onClick={() => window.open('https://drive.google.com/', '_blank')}
+                    className="bg-harmonia-green hover:bg-harmonia-green/90"
+                  >
+                    Abrir Google Drive
                   </Button>
                 </CardFooter>
               </Card>
-            </TabsContent>
-            
-            {/* Configurações de Email */}
-            <TabsContent value="email">
-              <Card>
-                <CardHeader>
-                  <CardTitle className="flex items-center">
-                    <Mail className="h-5 w-5 mr-2" />
-                    Configurações de Email
-                  </CardTitle>
-                  <CardDescription>Configure como os emails são enviados pelo sistema.</CardDescription>
-                </CardHeader>
-                <CardContent className="space-y-6">
-                  <div className="grid grid-cols-2 gap-4">
-                    <div className="space-y-2">
-                      <Label htmlFor="smtp-host">Servidor SMTP</Label>
-                      <Input id="smtp-host" defaultValue="smtp.example.com" />
-                    </div>
-                    <div className="space-y-2">
-                      <Label htmlFor="smtp-port">Porta</Label>
-                      <Input id="smtp-port" defaultValue="587" />
-                    </div>
-                    <div className="space-y-2">
-                      <Label htmlFor="smtp-user">Usuário</Label>
-                      <Input id="smtp-user" defaultValue="user@example.com" />
-                    </div>
-                    <div className="space-y-2">
-                      <Label htmlFor="smtp-password">Senha</Label>
-                      <Input id="smtp-password" type="password" defaultValue="********" />
-                    </div>
-                  </div>
-                  
-                  <Separator />
-                  
-                  <div className="space-y-4">
-                    <h3 className="text-lg font-medium">Modelos de Email</h3>
-                    <div className="space-y-4">
-                      <div className="flex items-center justify-between">
-                        <div>
-                          <Label className="text-base">Email de Boas-vindas</Label>
-                          <p className="text-sm text-gray-500">Enviado quando um cliente se cadastra</p>
-                        </div>
-                        <Button variant="outline" size="sm">Editar</Button>
-                      </div>
-                      
-                      <div className="flex items-center justify-between">
-                        <div>
-                          <Label className="text-base">Notificação de Prévia</Label>
-                          <p className="text-sm text-gray-500">Enviado quando uma nova prévia é disponibilizada</p>
-                        </div>
-                        <Button variant="outline" size="sm">Editar</Button>
-                      </div>
-                      
-                      <div className="flex items-center justify-between">
-                        <div>
-                          <Label className="text-base">Confirmação de Pagamento</Label>
-                          <p className="text-sm text-gray-500">Enviado após confirmação de pagamento</p>
-                        </div>
-                        <Button variant="outline" size="sm">Editar</Button>
-                      </div>
-                    </div>
-                  </div>
-                </CardContent>
-                <CardFooter className="flex justify-end">
-                  <Button onClick={handleSaveSettings} disabled={isLoading}>
-                    {isLoading ? "Salvando..." : "Salvar Configurações"}
-                  </Button>
-                </CardFooter>
-              </Card>
-            </TabsContent>
-            
-            {/* Outras abas (conteúdo simplificado para este exemplo) */}
-            <TabsContent value="notifications">
-              <Card>
-                <CardHeader>
-                  <CardTitle className="flex items-center">
-                    <BellRing className="h-5 w-5 mr-2" />
-                    Configurações de Notificações
-                  </CardTitle>
-                  <CardDescription>Gerenciar notificações do sistema.</CardDescription>
-                </CardHeader>
-                <CardContent>
-                  {/* Conteúdo aqui */}
-                  <div className="space-y-4">
-                    <div className="flex items-center justify-between">
-                      <div>
-                        <Label htmlFor="notify-new-order" className="text-base">Novos Pedidos</Label>
-                        <p className="text-sm text-gray-500">Notificar quando um novo pedido for realizado</p>
-                      </div>
-                      <Switch id="notify-new-order" defaultChecked />
-                    </div>
-                    
-                    <div className="flex items-center justify-between">
-                      <div>
-                        <Label htmlFor="notify-feedback" className="text-base">Feedback de Clientes</Label>
-                        <p className="text-sm text-gray-500">Notificar quando um cliente enviar feedback</p>
-                      </div>
-                      <Switch id="notify-feedback" defaultChecked />
-                    </div>
-                    
-                    <div className="flex items-center justify-between">
-                      <div>
-                        <Label htmlFor="notify-payment" className="text-base">Pagamentos</Label>
-                        <p className="text-sm text-gray-500">Notificar sobre novos pagamentos</p>
-                      </div>
-                      <Switch id="notify-payment" defaultChecked />
-                    </div>
-                  </div>
-                </CardContent>
-                <CardFooter className="flex justify-end">
-                  <Button onClick={handleSaveSettings} disabled={isLoading}>
-                    {isLoading ? "Salvando..." : "Salvar Configurações"}
-                  </Button>
-                </CardFooter>
-              </Card>
-            </TabsContent>
-            
-            <TabsContent value="storage">
-              <Card>
-                <CardHeader>
-                  <CardTitle className="flex items-center">
-                    <Cloud className="h-5 w-5 mr-2" />
-                    Configurações de Armazenamento
-                  </CardTitle>
-                  <CardDescription>Gerenciar o armazenamento de arquivos.</CardDescription>
-                </CardHeader>
-                <CardContent>
-                  {/* Conteúdo simplificado */}
-                  <div className="space-y-4">
-                    <div className="space-y-2">
-                      <Label htmlFor="google-api-key">Google Drive API Key</Label>
-                      <Input id="google-api-key" defaultValue="***********************" type="password" />
-                    </div>
-                    
-                    <div className="space-y-2">
-                      <Label htmlFor="default-folder">Pasta Padrão</Label>
-                      <Input id="default-folder" defaultValue="HarmonIA/Projetos" />
-                    </div>
-                  </div>
-                </CardContent>
-                <CardFooter className="flex justify-end">
-                  <Button onClick={handleSaveSettings} disabled={isLoading}>
-                    {isLoading ? "Salvando..." : "Salvar Configurações"}
-                  </Button>
-                </CardFooter>
-              </Card>
-            </TabsContent>
-            
-            <TabsContent value="contracts">
-              <Card>
-                <CardHeader>
-                  <CardTitle className="flex items-center">
-                    <FileText className="h-5 w-5 mr-2" />
-                    Contratos e Termos
-                  </CardTitle>
-                  <CardDescription>Gerenciar os contratos e termos do sistema.</CardDescription>
-                </CardHeader>
-                <CardContent>
-                  {/* Conteúdo simplificado */}
-                  <div className="space-y-4">
-                    <div className="flex items-center justify-between">
-                      <div>
-                        <Label className="text-base">Contrato Padrão</Label>
-                        <p className="text-sm text-gray-500">Contrato base usado em todos os pacotes</p>
-                      </div>
-                      <Button variant="outline" size="sm">Editar</Button>
-                    </div>
-                    
-                    <div className="flex items-center justify-between">
-                      <div>
-                        <Label className="text-base">Termos do Pacote Essencial</Label>
-                        <p className="text-sm text-gray-500">Termos específicos para o pacote Essencial</p>
-                      </div>
-                      <Button variant="outline" size="sm">Editar</Button>
-                    </div>
-                    
-                    <div className="flex items-center justify-between">
-                      <div>
-                        <Label className="text-base">Termos do Pacote Premium</Label>
-                        <p className="text-sm text-gray-500">Termos específicos para o pacote Premium</p>
-                      </div>
-                      <Button variant="outline" size="sm">Editar</Button>
-                    </div>
-                    
-                    <div className="flex items-center justify-between">
-                      <div>
-                        <Label className="text-base">Termos do Pacote Profissional</Label>
-                        <p className="text-sm text-gray-500">Termos específicos para o pacote Profissional</p>
-                      </div>
-                      <Button variant="outline" size="sm">Editar</Button>
-                    </div>
-                  </div>
-                </CardContent>
-                <CardFooter className="flex justify-end">
-                  <Button onClick={handleSaveSettings} disabled={isLoading}>
-                    {isLoading ? "Salvando..." : "Salvar Configurações"}
-                  </Button>
-                </CardFooter>
-              </Card>
-            </TabsContent>
-            
-            <TabsContent value="security">
-              <Card>
-                <CardHeader>
-                  <CardTitle className="flex items-center">
-                    <Shield className="h-5 w-5 mr-2" />
-                    Segurança
-                  </CardTitle>
-                  <CardDescription>Configurações de segurança do sistema.</CardDescription>
-                </CardHeader>
-                <CardContent>
-                  {/* Conteúdo simplificado */}
-                  <div className="space-y-4">
-                    <div className="flex items-center justify-between">
-                      <div>
-                        <Label htmlFor="two-factor" className="text-base">Autenticação de Dois Fatores</Label>
-                        <p className="text-sm text-gray-500">Exigir 2FA para administradores</p>
-                      </div>
-                      <Switch id="two-factor" />
-                    </div>
-                    
-                    <div className="space-y-2">
-                      <Label htmlFor="password-policy">Política de Senhas</Label>
-                      <div className="grid grid-cols-2 gap-4">
-                        <div className="flex items-center space-x-2">
-                          <Switch id="require-uppercase" />
-                          <Label htmlFor="require-uppercase">Exigir maiúsculas</Label>
-                        </div>
-                        <div className="flex items-center space-x-2">
-                          <Switch id="require-number" />
-                          <Label htmlFor="require-number">Exigir números</Label>
-                        </div>
-                        <div className="flex items-center space-x-2">
-                          <Switch id="require-symbol" />
-                          <Label htmlFor="require-symbol">Exigir símbolos</Label>
-                        </div>
-                        <div className="flex items-center space-x-2">
-                          <Switch id="min-length" />
-                          <Label htmlFor="min-length">Mínimo de 8 caracteres</Label>
-                        </div>
-                      </div>
-                    </div>
-                    
-                    <div className="space-y-2">
-                      <Label htmlFor="session-timeout">Tempo de Sessão (minutos)</Label>
-                      <Input id="session-timeout" defaultValue="60" type="number" />
-                    </div>
-                  </div>
-                </CardContent>
-                <CardFooter className="flex justify-end">
-                  <Button onClick={handleSaveSettings} disabled={isLoading}>
-                    {isLoading ? "Salvando..." : "Salvar Configurações"}
-                  </Button>
-                </CardFooter>
-              </Card>
-            </TabsContent>
-          </Tabs>
-        </div>
+            </div>
+          </TabsContent>
+        </Tabs>
       </div>
     </AdminLayout>
   );

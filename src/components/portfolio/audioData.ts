@@ -1,87 +1,158 @@
 
-export interface AudioExample {
-  id: string;
+export interface AudioExampleItem {
   title: string;
-  description: string;
-  audioUrl: string;
-  category: string[];
-  featured?: boolean;
-  imageUrl?: string;
-  beforeUrl?: string;
-  afterUrl?: string;
-  tags?: string[];
-  type?: string;
+  subtitle: string;
+  audioSrc: string;
+  genre: string;
+  type: string;
 }
 
-// Main array of audio examples
-export const audioExamples: AudioExample[] = [
+export interface ComparisonExample {
+  title: string;
+  subtitle: string;
+  versions: {
+    name: string;
+    audioSrc: string;
+    description: string;
+  }[];
+  type: "comparison" | "stems";
+}
+
+export const initialExamples: AudioExampleItem[] = [
   {
-    id: 'audio-1',
-    title: 'Música para Casamento - Piano & Violino',
-    description: 'Composição romântica para cerimônia de casamento',
-    audioUrl: 'https://sample-music.com/wedding-piano-violin.mp3',
-    category: ['Casamento', 'Piano', 'Violino', 'Romântico'],
-    featured: true,
-    imageUrl: 'https://images.unsplash.com/photo-1532712938310-34cb3982ef74?q=80&w=2070',
-    beforeUrl: 'https://sample-music.com/wedding-piano-before.mp3',
-    afterUrl: 'https://sample-music.com/wedding-piano-after.mp3',
-    tags: ['Casamento', 'Piano', 'Violino', 'Romântico'],
-    type: 'wedding'
+    title: "Canção do Amor Familiar",
+    subtitle: "Pacote Essencial - Aniversário",
+    audioSrc: "/audio/exemplos/amor-familiar.mp3",
+    genre: "Pop/Acústico",
+    type: "completa"
   },
   {
-    id: 'audio-2',
-    title: 'Música Corporativa para Vídeo Institucional',
-    description: 'Trilha sonora profissional para apresentações empresariais',
-    audioUrl: 'https://sample-music.com/corporate-music.mp3',
-    category: ['Corporativo', 'Profissional', 'Vídeo'],
-    imageUrl: 'https://images.unsplash.com/photo-1454165804606-c3d57bc86b40?q=80&w=2070',
-    tags: ['Corporativo', 'Profissional', 'Vídeo'],
-    type: 'corporate'
+    title: "Jingle Corporativo Tech Solutions",
+    subtitle: "Pacote Profissional - Marketing",
+    audioSrc: "/audio/exemplos/jingle-tech.mp3",
+    genre: "Eletrônico/Corporativo",
+    type: "completa"
   },
   {
-    id: 'audio-3',
-    title: 'Música Publicitária para TV',
-    description: 'Jingle animado de 30 segundos para comercial de TV',
-    audioUrl: 'https://sample-music.com/tv-commercial.mp3',
-    category: ['Publicidade', 'TV', 'Jingle', 'Curto'],
-    tags: ['Publicidade', 'TV', 'Jingle', 'Curto'],
-    type: 'advertisement'
+    title: "Hino Oficial da Escola XYZ",
+    subtitle: "Pacote Premium - Institucional",
+    audioSrc: "/audio/exemplos/hino-escola.mp3",
+    genre: "Orquestral/Coral",
+    type: "completa"
   },
   {
-    id: 'audio-4',
-    title: 'Declaração de Amor - Balada Romântica',
-    description: 'Música personalizada com letra romântica para ocasiões especiais',
-    audioUrl: 'https://sample-music.com/romantic-ballad.mp3',
-    category: ['Romântico', 'Declaração', 'Vocal', 'Balada'],
-    featured: true,
-    imageUrl: 'https://images.unsplash.com/photo-1518609878373-06d740f60d8b?q=80&w=2070',
-    beforeUrl: 'https://sample-music.com/romantic-before.mp3',
-    afterUrl: 'https://sample-music.com/romantic-after.mp3',
-    tags: ['Romântico', 'Declaração', 'Vocal', 'Balada'],
-    type: 'romantic'
-  },
-  {
-    id: 'audio-5',
-    title: 'Trilha para Documentário',
-    description: 'Composição orquestral para documentário sobre natureza',
-    audioUrl: 'https://sample-music.com/documentary.mp3',
-    category: ['Documentário', 'Orquestra', 'Natureza'],
-    tags: ['Documentário', 'Orquestra', 'Natureza'],
-    type: 'documentary'
-  },
-  {
-    id: 'audio-6',
-    title: 'Música para Podcast',
-    description: 'Vinheta e trilha de fundo para podcast de entrevistas',
-    audioUrl: 'https://sample-music.com/podcast-music.mp3',
-    category: ['Podcast', 'Vinheta', 'Background'],
-    tags: ['Podcast', 'Vinheta', 'Background'],
-    type: 'podcast'
+    title: "Tema de Casamento para Maria e João",
+    subtitle: "Pacote Essencial - Casamento",
+    audioSrc: "/audio/exemplos/tema-casamento.mp3",
+    genre: "Clássico/Romântico",
+    type: "completa"
   }
 ];
 
-// Add the missing exports that Portfolio.tsx is trying to import
-export const initialExamples: AudioExample[] = audioExamples.slice(0, 3);
-export const extraExamples: AudioExample[] = audioExamples.slice(3);
-export const featuredExamples = audioExamples.filter(example => example.featured);
-export const comparisonExamples = audioExamples.filter(example => example.beforeUrl && example.afterUrl);
+export const extraExamples: AudioExampleItem[] = [
+  {
+    title: "Música Instrumental para Meditação",
+    subtitle: "Pacote Profissional - Bem-estar",
+    audioSrc: "/audio/exemplos/meditacao.mp3",
+    genre: "Ambient/New Age",
+    type: "instrumental"
+  },
+  {
+    title: "Tema para Podcast Educativo",
+    subtitle: "Pacote Essencial - Podcast",
+    audioSrc: "/audio/exemplos/tema-podcast.mp3",
+    genre: "Lo-fi/Instrumental",
+    type: "instrumental"
+  },
+  {
+    title: "Abertura para Canal no YouTube",
+    subtitle: "Pacote Profissional - Digital",
+    audioSrc: "/audio/exemplos/abertura-youtube.mp3",
+    genre: "Eletrônico/Pop",
+    type: "completa"
+  },
+  {
+    title: "Trilha para Vídeo Institucional",
+    subtitle: "Pacote Premium - Corporativo",
+    audioSrc: "/audio/exemplos/trilha-institucional.mp3",
+    genre: "Corporativo/Orquestral",
+    type: "completa"
+  }
+];
+
+export const comparisonExamples: ComparisonExample[] = [
+  // Exemplo de comparação entre masterizado e não masterizado
+  {
+    title: "Comparação: Masterizado vs. Não Masterizado",
+    subtitle: "Veja a diferença na qualidade sonora",
+    versions: [
+      {
+        name: "Versão Não Masterizada",
+        audioSrc: "/audio/comparacoes/nao-masterizado/exemplo1.mp3",
+        description: "Mix básico sem ajustes finais"
+      },
+      {
+        name: "Versão Masterizada",
+        audioSrc: "/audio/comparacoes/masterizado/exemplo1.mp3",
+        description: "Qualidade profissional com masterização"
+      }
+    ],
+    type: "comparison"
+  },
+  // Exemplo de stems separados
+  {
+    title: "Stems Separados: Composição Rock",
+    subtitle: "Ouça cada instrumento individualmente",
+    versions: [
+      {
+        name: "Música Completa",
+        audioSrc: "/audio/stems/completo/rock-exemplo.mp3",
+        description: "Composição final com todos os instrumentos"
+      },
+      {
+        name: "Vocal",
+        audioSrc: "/audio/stems/vocal/rock-exemplo.mp3",
+        description: "Apenas a faixa vocal"
+      },
+      {
+        name: "Guitarra",
+        audioSrc: "/audio/stems/guitarra/rock-exemplo.mp3",
+        description: "Apenas a faixa de guitarra"
+      },
+      {
+        name: "Bateria",
+        audioSrc: "/audio/stems/bateria/rock-exemplo.mp3",
+        description: "Apenas a faixa de bateria"
+      },
+      {
+        name: "Baixo",
+        audioSrc: "/audio/stems/baixo/rock-exemplo.mp3",
+        description: "Apenas a faixa de baixo"
+      }
+    ],
+    type: "stems"
+  },
+  // Comparação entre pacotes
+  {
+    title: "Comparação entre Pacotes: Música de Casamento",
+    subtitle: "Ouça as diferenças entre os pacotes",
+    versions: [
+      {
+        name: "Pacote Essencial",
+        audioSrc: "/audio/comparacoes/pacote-essencial/casamento.mp3",
+        description: "Qualidade básica, sem masterização"
+      },
+      {
+        name: "Pacote Profissional",
+        audioSrc: "/audio/comparacoes/pacote-profissional/casamento.mp3",
+        description: "Com masterização e arranjo aprimorado"
+      },
+      {
+        name: "Pacote Premium",
+        audioSrc: "/audio/comparacoes/pacote-premium/casamento.mp3",
+        description: "Com orquestra completa e masterização premium"
+      }
+    ],
+    type: "comparison"
+  }
+];
