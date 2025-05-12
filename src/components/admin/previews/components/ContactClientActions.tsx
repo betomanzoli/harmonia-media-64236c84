@@ -1,7 +1,7 @@
 
 import React from 'react';
-import { MessageSquare, Mail } from 'lucide-react';
-import ProjectActionButton from './ProjectActionButton';
+import { Button } from '@/components/ui/button';
+import { Mail, Phone } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 
 interface ContactClientActionsProps {
@@ -16,74 +16,73 @@ const ContactClientActions: React.FC<ContactClientActionsProps> = ({
   projectId
 }) => {
   const { toast } = useToast();
-
-  const handleWhatsApp = () => {
+  
+  const handleWhatsAppClick = () => {
     if (!clientPhone) {
       toast({
         title: "Telefone não disponível",
-        description: "Nenhum número de telefone registrado para este cliente.",
+        description: "Não há número de telefone cadastrado para este cliente.",
         variant: "destructive"
       });
       return;
     }
     
-    // Format phone number (remove non-digits)
+    // Format phone number (remove non-numeric characters)
     const formattedPhone = clientPhone.replace(/\D/g, '');
     
-    // Prepare message text
-    const message = encodeURIComponent(
-      `Olá! Sua prévia musical já está disponível para avaliação. Acesse: ${window.location.origin}/preview/${projectId}`
-    );
+    // Prepare message
+    const message = `Olá! Entro em contato sobre sua prévia musical (ID: ${projectId}).`;
     
-    // Create WhatsApp link
-    const whatsappUrl = `https://wa.me/${formattedPhone}?text=${message}`;
+    // Create WhatsApp URL
+    const whatsappUrl = `https://wa.me/${formattedPhone}?text=${encodeURIComponent(message)}`;
     
     // Open in new tab
     window.open(whatsappUrl, '_blank');
   };
   
-  const handleEmail = () => {
+  const handleEmailClick = () => {
     if (!clientEmail) {
       toast({
         title: "Email não disponível",
-        description: "Nenhum endereço de email registrado para este cliente.",
+        description: "Não há email cadastrado para este cliente.",
         variant: "destructive"
       });
       return;
     }
     
     // Prepare email subject and body
-    const subject = encodeURIComponent("Sua prévia musical está disponível");
-    const body = encodeURIComponent(
-      `Olá!\n\nSua prévia musical já está disponível para avaliação.\n\nAcesse: ${window.location.origin}/preview/${projectId}\n\nAguardamos seu feedback!\n\nAtenciosamente,\nEquipe harmonIA`
-    );
+    const subject = `Prévia Musical - harmonIA (ID: ${projectId})`;
+    const body = `Olá!\n\nEntro em contato sobre sua prévia musical (ID: ${projectId}).\n\nAtenciosamente,\nEquipe harmonIA`;
     
-    // Create mailto link
-    const mailtoUrl = `mailto:${clientEmail}?subject=${subject}&body=${body}`;
+    // Create mailto URL
+    const mailtoUrl = `mailto:${clientEmail}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
     
-    // Open in new tab/email client
+    // Open in mail client
     window.location.href = mailtoUrl;
   };
 
   return (
-    <div className="pt-2 border-t border-gray-100 mt-4">
-      <h3 className="text-sm font-medium mb-2">Contatar Cliente</h3>
+    <div className="space-y-2">
+      <h4 className="text-sm font-medium mb-2">Contatar Cliente</h4>
       <div className="grid grid-cols-2 gap-2">
-        <ProjectActionButton
-          icon={MessageSquare}
-          onClick={handleWhatsApp}
+        <Button
           variant="outline"
+          className="w-full"
+          onClick={handleWhatsAppClick}
+          disabled={!clientPhone}
         >
+          <Phone className="mr-2 h-4 w-4" />
           WhatsApp
-        </ProjectActionButton>
-        
-        <ProjectActionButton
-          icon={Mail}
-          onClick={handleEmail}
+        </Button>
+        <Button
           variant="outline"
+          className="w-full"
+          onClick={handleEmailClick}
+          disabled={!clientEmail}
         >
+          <Mail className="mr-2 h-4 w-4" />
           Email
-        </ProjectActionButton>
+        </Button>
       </div>
     </div>
   );
