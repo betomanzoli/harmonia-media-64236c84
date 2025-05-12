@@ -1,3 +1,4 @@
+
 import React from 'react';
 import Logo from './Logo';
 import { MessageCircle, Mail, Shield, ChevronUp, Clock, FileCheck, Music, Package, DollarSign } from 'lucide-react';

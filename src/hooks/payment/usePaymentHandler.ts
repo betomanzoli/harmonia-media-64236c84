@@ -3,7 +3,7 @@ import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useToast } from '@/hooks/use-toast';
 import emailService from '@/services/emailService';
-import { PackageId, PackageInfo } from '@/lib/payment/packageData';
+import { PackageId, PackageDetails } from '@/lib/payment/packageData';
 import { calculateExtrasTotal, parsePackagePrice } from '@/lib/payment/priceUtils';
 import { createOrderData } from '@/lib/payment/orderUtils';
 import { packagePaymentLinks } from '@/lib/payment/paymentLinks';
@@ -12,7 +12,7 @@ import contractAcceptanceLogger from '@/services/contractAcceptanceLogger';
 
 export function usePaymentHandler(
   packageId: PackageId,
-  selectedPackage: PackageInfo,
+  selectedPackage: PackageDetails,
   qualificationData: any,
   selectedExtras: string[] = []
 ) {
@@ -91,7 +91,7 @@ export function usePaymentHandler(
     try {
       // Calculate values
       const extrasTotal = calculateExtrasTotal(selectedExtras);
-      const packagePrice = parsePackagePrice(selectedPackage.price);
+      const packagePrice = parsePackagePrice(selectedPackage.price.toString());
       const totalPrice = packagePrice + extrasTotal;
       
       // Generate order ID
@@ -102,7 +102,7 @@ export function usePaymentHandler(
         method,
         packageId,
         packageName: selectedPackage.name,
-        price: selectedPackage.price,
+        price: selectedPackage.price.toString(),
         extras: selectedExtras,
         extrasTotal,
         total: `R$ ${totalPrice.toFixed(2).replace('.', ',')}`,

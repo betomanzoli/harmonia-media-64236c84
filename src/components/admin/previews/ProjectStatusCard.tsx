@@ -1,78 +1,89 @@
 
 import React from 'react';
-import { Card, CardHeader, CardContent, CardTitle } from "@/components/ui/card";
-import { Clock, Calendar, MessageCircle, CheckCircle, AlertCircle } from 'lucide-react';
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import { Clock, MessageSquare, CheckCircle } from 'lucide-react';
 
-interface ProjectStatusCardProps {
-  status: string;
-  createdAt: string;
-  expirationDate: string;
-  isNearExpiration: boolean;
+export interface ProjectStatusCardProps {
+  status: 'waiting' | 'feedback' | 'approved';
+  onStatusUpdate: (newStatus: 'waiting' | 'feedback' | 'approved') => void;
 }
 
-const ProjectStatusCard: React.FC<ProjectStatusCardProps> = ({ 
-  status, 
-  createdAt, 
-  expirationDate,
-  isNearExpiration
+const ProjectStatusCard: React.FC<ProjectStatusCardProps> = ({
+  status,
+  onStatusUpdate
 }) => {
-  const getStatusInfo = () => {
+  const getStatusDetails = () => {
     switch (status) {
       case 'waiting':
         return {
-          icon: <Clock className="h-4 w-4 text-yellow-500" />,
-          text: 'Aguardando avaliação',
-          color: 'text-yellow-600'
+          icon: <Clock className="h-5 w-5 text-yellow-500" />,
+          label: <Badge className="bg-yellow-100 text-yellow-800 border-yellow-300">Aguardando Avaliação</Badge>,
+          description: "O cliente ainda não avaliou as prévias enviadas.",
+          actions: [
+            { label: "Marcar como Feedback", onClick: () => onStatusUpdate('feedback'), variant: "outline" as const },
+            { label: "Marcar como Aprovado", onClick: () => onStatusUpdate('approved'), variant: "outline" as const }
+          ]
         };
       case 'feedback':
         return {
-          icon: <MessageCircle className="h-4 w-4 text-blue-500" />,
-          text: 'Feedback recebido',
-          color: 'text-blue-600'
+          icon: <MessageSquare className="h-5 w-5 text-blue-500" />,
+          label: <Badge className="bg-blue-100 text-blue-800 border-blue-300">Feedback Recebido</Badge>,
+          description: "O cliente enviou feedback para as prévias.",
+          actions: [
+            { label: "Marcar como Aguardando", onClick: () => onStatusUpdate('waiting'), variant: "outline" as const },
+            { label: "Marcar como Aprovado", onClick: () => onStatusUpdate('approved'), variant: "outline" as const }
+          ]
         };
       case 'approved':
         return {
-          icon: <CheckCircle className="h-4 w-4 text-green-500" />,
-          text: 'Música aprovada',
-          color: 'text-green-600'
+          icon: <CheckCircle className="h-5 w-5 text-green-500" />,
+          label: <Badge className="bg-green-100 text-green-800 border-green-300">Música Aprovada</Badge>,
+          description: "O cliente aprovou uma das prévias enviadas.",
+          actions: [
+            { label: "Marcar como Aguardando", onClick: () => onStatusUpdate('waiting'), variant: "outline" as const },
+            { label: "Marcar como Feedback", onClick: () => onStatusUpdate('feedback'), variant: "outline" as const }
+          ]
         };
       default:
         return {
-          icon: <Clock className="h-4 w-4 text-gray-500" />,
-          text: 'Status desconhecido',
-          color: 'text-gray-600'
+          icon: <Clock className="h-5 w-5 text-gray-500" />,
+          label: <Badge>Status Desconhecido</Badge>,
+          description: "Status do projeto não reconhecido.",
+          actions: []
         };
     }
   };
-
-  const statusInfo = getStatusInfo();
-
+  
+  const statusInfo = getStatusDetails();
+  
   return (
     <Card>
       <CardHeader>
-        <CardTitle className="text-lg">Status do projeto</CardTitle>
+        <CardTitle className="text-lg">Status do Projeto</CardTitle>
       </CardHeader>
-      <CardContent>
-        <div className="space-y-3">
-          <div className="flex items-center gap-2">
-            {statusInfo.icon}
-            <span className={`font-medium ${statusInfo.color}`}>{statusInfo.text}</span>
+      <CardContent className="space-y-4">
+        <div className="flex items-center space-x-3">
+          {statusInfo.icon}
+          <div>
+            <div className="mb-1">{statusInfo.label}</div>
+            <p className="text-sm text-gray-500">{statusInfo.description}</p>
           </div>
-          <div className="flex items-center gap-2">
-            <Clock className="h-4 w-4 text-gray-500" />
-            <span>Criado em: {createdAt}</span>
-          </div>
-          <div className="flex items-center gap-2">
-            {isNearExpiration ? (
-              <AlertCircle className="h-4 w-4 text-red-500" />
-            ) : (
-              <Calendar className="h-4 w-4 text-gray-500" />
-            )}
-            <span className={isNearExpiration ? 'text-red-600 font-medium' : ''}>
-              {isNearExpiration ? 'Expira em breve: ' : 'Expira em: '} 
-              {expirationDate}
-            </span>
-          </div>
+        </div>
+        
+        <div className="pt-2 space-y-2">
+          {statusInfo.actions.map((action, index) => (
+            <Button 
+              key={index}
+              variant={action.variant} 
+              size="sm" 
+              className="w-full"
+              onClick={action.onClick}
+            >
+              {action.label}
+            </Button>
+          ))}
         </div>
       </CardContent>
     </Card>

@@ -1,13 +1,13 @@
 
 /**
- * Configuração central do site tunealchemy-studio
+ * Configuração central do site harmonIA
  * Este arquivo centraliza todas as configurações do site para facilitar a gestão
  */
 
 export const siteConfig = {
   name: "harmonIA",
   url: "https://harmonia.media",
-  description: "Criação de músicas personalizadas com IA e músicos profissionais",
+  description: "Música feita por humanos + IA perfeita para você.",
   
   // Informações de contato
   contact: {
@@ -50,8 +50,8 @@ export const siteConfig = {
   
   // Configurações de preços
   pricing: {
-    basePrice: 219,
-    professionalPrice: 479,
-    premiumPrice: 969,
+    basePrice: 997,
+    professionalPrice: 1997,
+    premiumPrice: 2997,
   }
 };

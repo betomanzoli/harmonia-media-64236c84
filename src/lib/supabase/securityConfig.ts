@@ -59,63 +59,100 @@ export const applyRLSPolicies = async () => {
         console.error(`Exceção ao remover políticas existentes para ${table}:`, error);
       }
       
-      // Criar políticas de segurança
-      const policies = [
-        {
-          name: `${table}_select_policy`,
-          operation: 'SELECT',
-          using: `(auth.role() = 'authenticated')`
-        },
-        {
-          name: `${table}_insert_policy`,
-          operation: 'INSERT',
-          using: `(auth.role() = 'authenticated')`,
-          with_check: `(auth.role() = 'authenticated')`
-        },
-        {
-          name: `${table}_update_policy`,
-          operation: 'UPDATE',
-          using: `(auth.role() = 'authenticated')`,
-          with_check: `(auth.role() = 'authenticated')`
-        },
-        {
-          name: `${table}_delete_policy`,
-          operation: 'DELETE',
-          using: `(auth.role() = 'authenticated')`
-        }
+      // Criar políticas de segurança baseadas em funções
+      const policyCreationQueries = [
+        // Criar primeiro uma função para verificar se o usuário é um administrador
+        `
+        CREATE OR REPLACE FUNCTION public.is_admin_user()
+        RETURNS boolean
+        LANGUAGE plpgsql SECURITY DEFINER
+        AS $$
+        DECLARE
+          admin_exists boolean;
+        BEGIN
+          SELECT EXISTS(
+            SELECT 1 FROM public.admin_users 
+            WHERE user_id = auth.uid()
+          ) INTO admin_exists;
+          RETURN admin_exists;
+        END;
+        $$;
+        `,
+        
+        // Políticas de SELECT
+        `
+        CREATE POLICY "${table}_admin_select_policy" 
+        ON public.${table} 
+        FOR SELECT 
+        TO authenticated 
+        USING (public.is_admin_user());
+        `,
+        
+        // Políticas de INSERT
+        `
+        CREATE POLICY "${table}_admin_insert_policy" 
+        ON public.${table} 
+        FOR INSERT 
+        TO authenticated 
+        WITH CHECK (public.is_admin_user());
+        `,
+        
+        // Políticas de UPDATE
+        `
+        CREATE POLICY "${table}_admin_update_policy" 
+        ON public.${table} 
+        FOR UPDATE 
+        TO authenticated 
+        USING (public.is_admin_user());
+        `,
+        
+        // Políticas de DELETE
+        `
+        CREATE POLICY "${table}_admin_delete_policy" 
+        ON public.${table} 
+        FOR DELETE 
+        TO authenticated 
+        USING (public.is_admin_user());
+        `
       ];
       
-      for (const policy of policies) {
+      // Execute cada consulta de criação de política
+      for (const query of policyCreationQueries) {
         try {
-          let sqlQuery = '';
-          
-          if (policy.operation === 'INSERT') {
-            sqlQuery = `
-              CREATE POLICY "${policy.name}" ON public.${table}
-              FOR ${policy.operation}
-              TO authenticated
-              WITH CHECK (${policy.with_check});
-            `;
-          } else {
-            sqlQuery = `
-              CREATE POLICY "${policy.name}" ON public.${table}
-              FOR ${policy.operation}
-              TO authenticated
-              USING (${policy.using});
-            `;
-          }
-          
-          const { error: policyError } = await supabase.rpc('exec_sql', { sql_query: sqlQuery });
+          const { error: policyError } = await supabase.rpc('exec_sql', { 
+            sql_query: query 
+          });
           
           if (policyError) {
-            console.warn(`Erro ao criar política ${policy.name} para ${table}:`, policyError);
+            console.warn(`Erro ao criar política para ${table}:`, policyError);
           } else {
-            console.log(`Política ${policy.name} criada com sucesso para ${table}`);
+            console.log(`Política criada com sucesso para ${table}`);
           }
         } catch (error) {
-          console.error(`Exceção ao criar política ${policy.name} para ${table}:`, error);
+          console.error(`Exceção ao criar política para ${table}:`, error);
         }
       }
+    }
+    
+    // Adicionar políticas públicas para portfolio_items (para visualização pública do portfólio)
+    try {
+      const { error } = await supabase.rpc('exec_sql', { 
+        sql_query: `
+          CREATE POLICY "portfolio_items_public_select_policy" 
+          ON public.portfolio_items 
+          FOR SELECT 
+          TO anon 
+          USING (true);
+        `
+      });
+      
+      if (error) {
+        console.warn('Erro ao criar política pública para portfolio_items:', error);
+      } else {
+        console.log('Política pública criada com sucesso para portfolio_items');
+      }
+    } catch (error) {
+      console.error('Exceção ao criar política pública para portfolio_items:', error);
     }
     
     console.log('Todas as políticas RLS foram aplicadas com sucesso');
@@ -134,19 +171,48 @@ export const enhancePasswordSecurity = async () => {
   try {
     console.log('Configurando segurança de senha avançada...');
     
-    // Configurar requisitos de senha usando SQL direto
-    const passwordSettings = [
-      { setting: 'auth.min_password_length', value: '10' },
+    // Configurar requisitos de senha usando funções seguras
+    const passwordConfig = [
+      { setting: 'auth.min_password_length', value: '12' }, // Aumentado para 12 caracteres
       { setting: 'auth.require_special_chars', value: 'true' },
       { setting: 'auth.require_numbers', value: 'true' },
       { setting: 'auth.require_uppercase', value: 'true' },
       { setting: 'auth.require_lowercase', value: 'true' }
     ];
     
-    for (const setting of passwordSettings) {
+    // Criar uma função de segurança definer para configurar as senhas
+    const createSecurityFunction = `
+      CREATE OR REPLACE FUNCTION public.configure_password_policy(setting_name text, setting_value text)
+      RETURNS void
+      LANGUAGE plpgsql
+      SECURITY DEFINER
+      AS $$
+      BEGIN
+        PERFORM set_config(setting_name, setting_value, false);
+      END;
+      $$;
+    `;
+    
+    try {
+      const { error: funcError } = await supabase.rpc('exec_sql', { 
+        sql_query: createSecurityFunction 
+      });
+      
+      if (funcError) {
+        console.error('Erro ao criar função de configuração de senha:', funcError);
+        return { success: false, error: 'Falha ao criar função de segurança' };
+      }
+    } catch (error) {
+      console.error('Exceção ao criar função de configuração de senha:', error);
+      return { success: false, error: 'Exceção ao criar função de segurança' };
+    }
+    
+    // Aplicar cada configuração
+    for (const setting of passwordConfig) {
       try {
-        const { error } = await supabase.rpc('exec_sql', {
-          sql_query: `SELECT set_config('${setting.setting}', '${setting.value}', false);`
+        const { error } = await supabase.rpc('configure_password_policy', {
+          setting_name: setting.setting,
+          setting_value: setting.value
         });
         
         if (error) {
@@ -174,16 +240,44 @@ export const configureMFA = async () => {
   try {
     console.log('Ativando opções de MFA...');
     
-    // Configurar MFA usando SQL direto
-    const mfaSettings = [
+    // Criar uma função de segurança definer para configurar MFA
+    const createMfaFunction = `
+      CREATE OR REPLACE FUNCTION public.configure_mfa_policy(setting_name text, setting_value text)
+      RETURNS void
+      LANGUAGE plpgsql
+      SECURITY DEFINER
+      AS $$
+      BEGIN
+        PERFORM set_config(setting_name, setting_value, false);
+      END;
+      $$;
+    `;
+    
+    try {
+      const { error: funcError } = await supabase.rpc('exec_sql', { 
+        sql_query: createMfaFunction 
+      });
+      
+      if (funcError) {
+        console.error('Erro ao criar função de configuração MFA:', funcError);
+        return { success: false, error: 'Falha ao criar função MFA' };
+      }
+    } catch (error) {
+      console.error('Exceção ao criar função de configuração MFA:', error);
+      return { success: false, error: 'Exceção ao criar função MFA' };
+    }
+    
+    // Configurar MFA 
+    const mfaConfig = [
       { setting: 'auth.enable_totp', value: 'true' },
       { setting: 'auth.enable_recovery_codes', value: 'true' }
     ];
     
-    for (const setting of mfaSettings) {
+    for (const setting of mfaConfig) {
       try {
-        const { error } = await supabase.rpc('exec_sql', {
-          sql_query: `SELECT set_config('${setting.setting}', '${setting.value}', false);`
+        const { error } = await supabase.rpc('configure_mfa_policy', {
+          setting_name: setting.setting,
+          setting_value: setting.value
         });
         
         if (error) {
@@ -251,14 +345,35 @@ export const validateSecurity = async () => {
       }
     }
     
-    // Verificar configurações de MFA
+    // Verificar configurações de MFA usando função segura
     try {
       const { data, error } = await supabase.rpc('exec_sql', {
-        sql_query: `SELECT current_setting('auth.enable_totp', true);`
+        sql_query: `
+          CREATE OR REPLACE FUNCTION public.get_auth_setting(setting_name text)
+          RETURNS text
+          LANGUAGE plpgsql
+          SECURITY DEFINER
+          AS $$
+          DECLARE
+            setting_value text;
+          BEGIN
+            SELECT current_setting(setting_name, true) INTO setting_value;
+            RETURN setting_value;
+          END;
+          $$;
+        `
       });
       
-      if (!error && data && data.length > 0) {
-        mfaEnabled = data[0].current_setting === 'true';
+      if (error) {
+        console.warn('Erro ao criar função para verificar configurações de autenticação:', error);
+      } else {
+        const { data: totpData, error: totpError } = await supabase.rpc('get_auth_setting', {
+          setting_name: 'auth.enable_totp'
+        });
+        
+        if (!totpError && totpData) {
+          mfaEnabled = totpData === 'true';
+        }
       }
     } catch (error) {
       console.error('Erro ao verificar configuração de MFA:', error);
@@ -266,19 +381,17 @@ export const validateSecurity = async () => {
     
     // Verificar configurações de senha
     try {
-      const { data: pwLength, error: pwLengthError } = await supabase.rpc('exec_sql', {
-        sql_query: `SELECT current_setting('auth.min_password_length', true);`
+      const { data: pwLength, error: pwLengthError } = await supabase.rpc('get_auth_setting', {
+        setting_name: 'auth.min_password_length'
       });
       
-      const { data: specialChars, error: specialCharsError } = await supabase.rpc('exec_sql', {
-        sql_query: `SELECT current_setting('auth.require_special_chars', true);`
+      const { data: specialChars, error: specialCharsError } = await supabase.rpc('get_auth_setting', {
+        setting_name: 'auth.require_special_chars'
       });
       
-      if (!pwLengthError && pwLength && pwLength.length > 0 && 
-          !specialCharsError && specialChars && specialChars.length > 0) {
-        
-        const minLength = parseInt(pwLength[0].current_setting, 10);
-        const requireSpecial = specialChars[0].current_setting === 'true';
+      if (!pwLengthError && pwLength && !specialCharsError && specialChars) {
+        const minLength = parseInt(pwLength, 10);
+        const requireSpecial = specialChars === 'true';
         
         if (minLength >= 10 && requireSpecial) {
           passwordSecurityLevel = 'high';

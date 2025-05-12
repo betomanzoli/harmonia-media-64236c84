@@ -1,8 +1,10 @@
 
 import React, { useState } from 'react';
-import { Alert, AlertTitle, AlertDescription } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
-import { Info, Bug, Loader2, Wifi, WifiOff } from 'lucide-react';
+import { Info, Bug, Loader2 } from 'lucide-react';
+import ConnectionStatusIndicator from './components/ConnectionStatusIndicator';
+import BasicDiagnosticInfo from './components/BasicDiagnosticInfo';
+import AdvancedDiagnosticInfo from './components/AdvancedDiagnosticInfo';
 
 // Interface for diagnostic information
 export interface DiagnosticInfo {
@@ -54,20 +56,10 @@ const DiagnosticsPanel: React.FC<DiagnosticsPanelProps> = ({ diagnosticInfo }) =
       <div className="space-y-2">
         <div className="flex items-center">
           <span className="mr-2">Status da conexão:</span>
-          {isOnline ? (
-            <span className="text-green-600 font-medium flex items-center">
-              <Wifi className="h-3 w-3 mr-1" /> Conectado
-            </span>
-          ) : (
-            <span className="text-red-600 font-medium flex items-center">
-              <WifiOff className="h-3 w-3 mr-1" /> Desconectado
-            </span>
-          )}
+          <ConnectionStatusIndicator isOnline={isOnline} />
         </div>
         
-        <p>Navegador: {diagnosticInfo.browserName} {diagnosticInfo.browserVersion}</p>
-        <p>Sistema: {diagnosticInfo.operatingSystem}</p>
-        <p>Storage: {diagnosticInfo.localStorageAvailable ? 'Disponível' : 'Indisponível'}</p>
+        <BasicDiagnosticInfo diagnosticInfo={diagnosticInfo} />
         
         <Button 
           variant="outline" 
@@ -78,21 +70,10 @@ const DiagnosticsPanel: React.FC<DiagnosticsPanelProps> = ({ diagnosticInfo }) =
           {showDebug ? 'Ocultar detalhes' : 'Mostrar detalhes avançados'}
         </Button>
         
-        {showDebug && (
-          <div className="mt-2 space-y-2 bg-slate-100 p-2 rounded text-xs">
-            <h4 className="font-bold">Detalhes técnicos:</h4>
-            <p>URL do Supabase: {diagnosticInfo.supabaseUrl}</p>
-            <p>Timezone: {diagnosticInfo.timezone}</p>
-            <p>Idioma: {diagnosticInfo.language}</p>
-            <p>Resolução: {diagnosticInfo.screenResolution}</p>
-            <p>Cookies: {diagnosticInfo.cookiesEnabled ? 'Habilitados' : 'Desabilitados'}</p>
-            
-            <h4 className="font-bold">Configurações de autenticação:</h4>
-            <pre className="whitespace-pre-wrap break-all text-xs overflow-auto max-h-20">
-              {diagnosticInfo.authSettings}
-            </pre>
-          </div>
-        )}
+        <AdvancedDiagnosticInfo 
+          diagnosticInfo={diagnosticInfo} 
+          showDebug={showDebug} 
+        />
       </div>
     </div>
   );

@@ -1,46 +1,111 @@
 
-import { siteConfig } from '@/config/site';
 
-export interface PackageInfo {
+export type PackageId = 'essencial' | 'premium' | 'profissional';
+
+export interface PackageDetails {
+  id: PackageId;
   name: string;
-  price: string;
+  price: number;
+  description: string;
   features: string[];
+  popular?: boolean;
 }
 
-export type PackageId = 'essencial' | 'profissional' | 'premium';
+// Add PackageInfo interface that was referenced but missing
+export interface PackageInfo {
+  id: PackageId;
+  name: string;
+  price: string;
+  description: string;
+  features: string[];
+  popular?: boolean;
+}
 
+// Export both getPackageDetails function and packageData object
+export const getPackageDetails = (packageId: PackageId): PackageDetails => {
+  switch (packageId) {
+    case 'essencial':
+      return {
+        id: 'essencial',
+        name: 'Pacote Essencial',
+        price: 499,
+        description: 'Ideal para ocasiões especiais',
+        features: [
+          'Composição personalizada',
+          '1 versão + ajustes',
+          'Entrega em até 10 dias',
+          'Arquivo digital em alta qualidade'
+        ]
+      };
+    
+    case 'premium':
+      return {
+        id: 'premium',
+        name: 'Pacote Premium',
+        price: 799,
+        description: 'Perfeito para momentos especiais',
+        popular: true,
+        features: [
+          'Tudo do pacote Essencial',
+          'Até 3 versões da música',
+          'Entrega em até 7 dias',
+          'Mixagem e masterização profissional'
+        ]
+      };
+    
+    case 'profissional':
+      return {
+        id: 'profissional',
+        name: 'Pacote Profissional',
+        price: 1299,
+        description: 'Para projetos exclusivos',
+        features: [
+          'Tudo do pacote Premium',
+          'Arranjo com músicos profissionais',
+          'Acompanhamento prioritário',
+          'Direitos comerciais da música'
+        ]
+      };
+  }
+};
+
+// Add packageData object for direct access to all packages
 export const packageData: Record<PackageId, PackageInfo> = {
-  'essencial': {
+  essencial: {
+    id: 'essencial',
     name: 'Pacote Essencial',
-    price: `R$ ${siteConfig.pricing.basePrice},00`,
+    price: 'R$ 499,00',
+    description: 'Ideal para ocasiões especiais',
     features: [
-      'Composição musical personalizada',
-      'Uma revisão gratuita',
-      'Entrega em até 7 dias úteis',
-      'Licença para uso pessoal'
+      'Composição personalizada',
+      '1 versão + ajustes',
+      'Entrega em até 10 dias',
+      'Arquivo digital em alta qualidade'
     ]
   },
-  'profissional': {
-    name: 'Pacote Profissional',
-    price: `R$ ${siteConfig.pricing.professionalPrice},00`,
-    features: [
-      'Composição musical personalizada premium',
-      'Até três revisões gratuitas',
-      'Mixagem e masterização profissionais',
-      'Entrega em até 5 dias úteis',
-      'Licença para uso comercial limitado'
-    ]
-  },
-  'premium': {
+  premium: {
+    id: 'premium',
     name: 'Pacote Premium',
-    price: `R$ ${siteConfig.pricing.premiumPrice},00`,
+    price: 'R$ 799,00',
+    description: 'Perfeito para momentos especiais',
+    popular: true,
     features: [
-      'Composição musical personalizada de alto nível',
-      'Revisões ilimitadas',
-      'Mixagem e masterização avançadas',
-      'Versões alternativas da música',
-      'Entrega expressa em até 3 dias úteis',
-      'Licença para uso comercial global'
+      'Tudo do pacote Essencial',
+      'Até 3 versões da música',
+      'Entrega em até 7 dias',
+      'Mixagem e masterização profissional'
+    ]
+  },
+  profissional: {
+    id: 'profissional',
+    name: 'Pacote Profissional',
+    price: 'R$ 1.299,00',
+    description: 'Para projetos exclusivos',
+    features: [
+      'Tudo do pacote Premium',
+      'Arranjo com músicos profissionais',
+      'Acompanhamento prioritário',
+      'Direitos comerciais da música'
     ]
   }
 };

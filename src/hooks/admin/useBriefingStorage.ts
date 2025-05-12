@@ -4,7 +4,7 @@ import { useToast } from '@/hooks/use-toast';
 import { useFileUpload } from './useFileUpload';
 import { syncStorageData } from '@/services/adminStorageService';
 import { emailService } from '@/lib/supabase';
-import notificationService from '@/services/notificationService';
+import { notificationService } from '@/services/notificationService';
 
 interface BriefingSubmission {
   id: string;
@@ -42,7 +42,6 @@ export function useBriefingStorage() {
     try {
       setIsSaving(true);
       
-      // Upload reference files if provided
       let uploadedReferenceFiles = [];
       if (files && files.length > 0) {
         uploadedReferenceFiles = await uploadMultipleFiles(files, {
@@ -52,7 +51,6 @@ export function useBriefingStorage() {
         });
       }
       
-      // Create submission object
       const submissionId = `briefing-${Date.now()}`;
       const submission: BriefingSubmission = {
         id: submissionId,
@@ -68,12 +66,10 @@ export function useBriefingStorage() {
         }))
       };
       
-      // Store the submission JSON in Google Drive
       const fileName = `briefing_${clientName.replace(/\s+/g, '_')}_${submissionId}.json`;
       const result = await syncStorageData('briefings', submission, fileName);
       
       if (result.success) {
-        // Save to local storage as fallback/cache
         const storedBriefings = JSON.parse(localStorage.getItem('briefings') || '[]');
         storedBriefings.push(submission);
         localStorage.setItem('briefings', JSON.stringify(storedBriefings));
@@ -83,8 +79,8 @@ export function useBriefingStorage() {
           description: "O briefing foi salvo com sucesso no Google Drive.",
         });
         
-        // Enviar notificação
-        notificationService.notify('new_briefing', {
+        // Updated to use 'feedback_received' which is a valid NotificationType
+        notificationService.notify('feedback_received', {
           id: submissionId,
           clientName,
           clientEmail,
@@ -112,13 +108,10 @@ export function useBriefingStorage() {
     }
   };
   
-  // Send notification email to team about new briefing
   const notifyTeam = async (clientName: string, clientEmail: string, packageType: string): Promise<boolean> => {
     try {
       setIsNotifying(true);
       
-      // In a real implementation, this would send an email via API
-      // For now we use our mock email service
       const result = await emailService.sendBriefingConfirmation(clientEmail, clientName);
       
       if (result.success) {

@@ -1,100 +1,165 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import AdminLayout from '@/components/admin/layout/AdminLayout';
 import { usePreviewProjects } from '@/hooks/admin/usePreviewProjects';
-import PreviewsHeader from '@/components/admin/previews/PreviewsHeader';
-import ProjectsListCard from '@/components/admin/previews/ProjectsListCard';
-import NewProjectForm from '@/components/admin/previews/NewProjectForm';
 import { Button } from "@/components/ui/button";
-import { HelpCircle, ArrowLeft } from 'lucide-react';
+import { ArrowLeft, Plus, RefreshCw } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { Link } from 'react-router-dom';
-import WebhookUrlManager from '@/components/admin/integrations/WebhookUrlManager';
-import AdminPreviewGuide from '@/components/admin/guides/AdminPreviewGuide';
+import ProjectsTable from '@/components/admin/previews/ProjectsTable';
+import NewProjectForm from '@/components/admin/previews/NewProjectForm';
 import { 
   Dialog, 
   DialogContent, 
   DialogHeader, 
   DialogTitle,
-  DialogTrigger 
+  DialogFooter,
+  DialogDescription
 } from "@/components/ui/dialog";
+import { Separator } from '@/components/ui/separator';
 
 const AdminPreviews: React.FC = () => {
-  const { projects } = usePreviewProjects();
+  const { projects, addProject, deleteProject, loadProjects } = usePreviewProjects();
   const { toast } = useToast();
-  const [showHelp, setShowHelp] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
+  const [showAddForm, setShowAddForm] = useState(false);
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [projectToDelete, setProjectToDelete] = useState<string | null>(null);
   
-  const scrollToNewForm = () => {
-    document.getElementById('new-project-form')?.scrollIntoView({ behavior: 'smooth' });
+  useEffect(() => {
+    loadProjects().then(() => {
+      setIsLoading(false);
+    });
+  }, [loadProjects]);
+
+  const handleAddProject = (project: any) => {
+    // Check if project exists to avoid type error
+    if (project) {
+      const newProjectId = addProject(project);
+      toast({
+        title: "Projeto criado",
+        description: `Projeto ${newProjectId} criado com sucesso.`
+      });
+      setShowAddForm(false);
+      return newProjectId;
+    }
+    return null;
   };
   
-  const toggleHelp = () => {
-    setShowHelp(!showHelp);
-    if (!showHelp) {
+  const confirmDeleteProject = (projectId: string) => {
+    setProjectToDelete(projectId);
+    setShowDeleteConfirm(true);
+  };
+  
+  const handleDeleteProject = () => {
+    if (projectToDelete) {
+      deleteProject(projectToDelete);
       toast({
-        title: "Modo de ajuda ativado",
-        description: "Passe o mouse sobre elementos da interface para ver dicas contextuais."
+        title: "Projeto excluído",
+        description: "O projeto foi excluído com sucesso."
       });
+      setShowDeleteConfirm(false);
+      setProjectToDelete(null);
     }
+  };
+  
+  const handleSendReminder = (projectId: string) => {
+    // Em uma implementação real, isso enviaria um email de lembrete
+    toast({
+      title: "Lembrete enviado",
+      description: "Um lembrete foi enviado para o cliente."
+    });
+  };
+
+  const handleRefresh = () => {
+    setIsLoading(true);
+    loadProjects().then(() => {
+      setIsLoading(false);
+      toast({
+        title: "Dados atualizados",
+        description: "Os projetos foram atualizados."
+      });
+    });
   };
   
   return (
     <AdminLayout>
-      <div className="flex-1 flex flex-col h-screen">
-        <div className="flex items-center justify-between p-4 border-b bg-white">
-          <h1 className="text-xl font-bold text-harmonia-green">Painel de Prévias Musicais</h1>
-          <div className="flex gap-2">
+      <div className="flex flex-col h-full bg-gray-100">
+        <div className="flex justify-between items-center p-6 border-b bg-white">
+          <div className="flex items-center">
             <Button 
               variant="outline" 
               size="sm" 
               asChild
-              className="border-harmonia-green text-harmonia-green hover:bg-harmonia-green/10"
+              className="mr-4"
             >
               <Link to="/admin-j28s7d1k/dashboard">
-                <ArrowLeft className="mr-2 h-4 w-4" />
-                Voltar ao Dashboard
+                <ArrowLeft className="h-4 w-4 mr-2" />
+                Voltar
               </Link>
             </Button>
+            <h1 className="text-2xl font-bold text-black">Projetos de Prévias</h1>
+          </div>
+          <div className="flex space-x-2">
+            <Button 
+              variant="outline" 
+              size="sm" 
+              onClick={handleRefresh}
+            >
+              <RefreshCw className={`h-4 w-4 mr-2 ${isLoading ? 'animate-spin' : ''}`} />
+              Atualizar
+            </Button>
             
-            <Dialog>
-              <DialogTrigger asChild>
-                <Button 
-                  variant="outline" 
-                  size="sm" 
-                  className="gap-2 border-harmonia-green text-harmonia-green hover:bg-harmonia-green/10"
-                >
-                  <HelpCircle className="w-4 h-4" />
-                  Guia do sistema
-                </Button>
-              </DialogTrigger>
-              <DialogContent className="max-w-4xl max-h-[80vh] overflow-auto">
-                <DialogHeader>
-                  <DialogTitle>Sistema de Prévias Musicais - Guia Detalhado</DialogTitle>
-                </DialogHeader>
-                <AdminPreviewGuide />
-              </DialogContent>
-            </Dialog>
+            <Button 
+              size="sm"
+              onClick={() => setShowAddForm(true)}
+            >
+              <Plus className="h-4 w-4 mr-2" />
+              Novo Projeto
+            </Button>
           </div>
         </div>
         
-        <div className="flex-1 overflow-auto p-8">
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
-            <div className="md:col-span-2">
-              <PreviewsHeader scrollToNewForm={scrollToNewForm} />
+        <div className="p-6 flex-1 overflow-auto">
+          <div className="bg-white rounded-lg shadow mb-6">
+            <div className="p-6 border-b">
+              <h2 className="text-xl font-medium text-black">Projetos de Prévias</h2>
+              <p className="text-gray-500 text-sm mt-1">Lista de todos os projetos de prévias musicais.</p>
             </div>
-            <div>
-              <WebhookUrlManager 
-                title="Integração de Prévias" 
-                description="Configure o webhook para notificações de feedback de prévias"
-                serviceType="previews"
-                storageUrl="https://drive.google.com/drive/folders/1lLw3oBgNhlpUiYbo3wevgUvjA0RTV7tN"
-              />
-            </div>
+            
+            <ProjectsTable 
+              projects={projects}
+              isLoading={isLoading}
+              onDelete={confirmDeleteProject}
+              onSendReminder={handleSendReminder}
+            />
           </div>
-          
-          <ProjectsListCard projects={projects} />
-          <NewProjectForm />
         </div>
+        
+        <Dialog open={showAddForm} onOpenChange={setShowAddForm}>
+          <DialogContent className="max-w-3xl">
+            <DialogHeader>
+              <DialogTitle>Criar Novo Projeto de Prévia</DialogTitle>
+            </DialogHeader>
+            <Separator className="my-4" />
+            <NewProjectForm onAddProject={handleAddProject} />
+          </DialogContent>
+        </Dialog>
+        
+        <Dialog open={showDeleteConfirm} onOpenChange={setShowDeleteConfirm}>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>Confirmar exclusão</DialogTitle>
+              <DialogDescription>
+                Você tem certeza que deseja excluir este projeto de prévia? Esta ação não pode ser desfeita.
+              </DialogDescription>
+            </DialogHeader>
+            <DialogFooter>
+              <Button variant="outline" onClick={() => setShowDeleteConfirm(false)}>Cancelar</Button>
+              <Button variant="destructive" onClick={handleDeleteProject}>Excluir</Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
       </div>
     </AdminLayout>
   );

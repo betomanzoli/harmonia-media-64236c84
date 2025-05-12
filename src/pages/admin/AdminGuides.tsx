@@ -1,32 +1,21 @@
 
-import React from 'react';
+import React, { useState } from 'react';
 import AdminLayout from '@/components/admin/layout/AdminLayout';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
-import { ArrowLeft, FileText, Book, Bookmark, ExternalLink } from 'lucide-react';
 import { Link } from 'react-router-dom';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import AdminGuide from '@/components/admin/guides/AdminGuide';
-import PreviewsGuide from '@/components/admin/guides/PreviewsGuide';
-import InvoicesGuide from '@/components/admin/guides/InvoicesGuide';
+import { ArrowLeft, FileText, Video, BookOpen, ExternalLink, Download, PlusCircle, CheckCircle } from 'lucide-react';
 
 const AdminGuides: React.FC = () => {
+  const [activeTab, setActiveTab] = useState("docs");
+  
   return (
     <AdminLayout>
-      <div className="space-y-6 p-6">
-        <div className="flex items-center justify-between">
-          <div>
-            <h1 className="text-3xl font-bold tracking-tight text-harmonia-green">Guias</h1>
-            <p className="text-muted-foreground">
-              Documentação e manuais do sistema administrativo
-            </p>
-          </div>
-          <Button 
-            variant="outline" 
-            size="sm" 
-            asChild
-            className="border-harmonia-green text-harmonia-green hover:bg-harmonia-green/10"
-          >
+      <div className="p-6">
+        <div className="flex justify-between items-center mb-6">
+          <h1 className="text-2xl font-bold">Documentação e Guias</h1>
+          <Button variant="outline" asChild>
             <Link to="/admin-j28s7d1k/dashboard">
               <ArrowLeft className="mr-2 h-4 w-4" />
               Voltar ao Dashboard
@@ -34,136 +23,277 @@ const AdminGuides: React.FC = () => {
           </Button>
         </div>
         
-        <Tabs defaultValue="general">
-          <TabsList className="mb-6">
-            <TabsTrigger value="general">Geral</TabsTrigger>
-            <TabsTrigger value="previews">Prévias</TabsTrigger>
-            <TabsTrigger value="invoices">Faturas</TabsTrigger>
-            <TabsTrigger value="portfolio">Portfólio</TabsTrigger>
-          </TabsList>
-          
-          <TabsContent value="general" className="space-y-6">
-            <AdminGuide 
-              title="Guia do Administrador" 
-              sections={[
-                {
-                  title: "Visão Geral",
-                  content: (
-                    <p>Este sistema administrativo permite gerenciar todos os aspectos do serviço harmonIA, 
-                    incluindo prévias musicais, portfólio, faturas e projetos.</p>
-                  )
-                },
-                {
-                  title: "Acesso e Segurança",
-                  content: (
-                    <p>O acesso é restrito a administradores autorizados. Nunca compartilhe suas credenciais 
-                    ou deixe a sessão aberta em computadores públicos.</p>
-                  )
-                }
-              ]}
-              storageUrl="https://drive.google.com/drive/folders/example"
-            />
-            
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mt-8">
-              <Card>
-                <CardHeader className="pb-2">
-                  <CardTitle className="text-lg font-medium flex items-center">
-                    <Book className="mr-2 h-5 w-5 text-harmonia-green" />
-                    Manual do Administrador
-                  </CardTitle>
-                  <CardDescription>Guia completo para operações administrativas</CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <Button variant="outline" size="sm" className="w-full">
-                    <FileText className="mr-2 h-4 w-4" />
-                    Abrir Manual
-                  </Button>
-                </CardContent>
-              </Card>
-              
-              <Card>
-                <CardHeader className="pb-2">
-                  <CardTitle className="text-lg font-medium flex items-center">
-                    <Bookmark className="mr-2 h-5 w-5 text-amber-500" />
-                    Referência Rápida
-                  </CardTitle>
-                  <CardDescription>Comandos e operações frequentes</CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <Button variant="outline" size="sm" className="w-full">
-                    <FileText className="mr-2 h-4 w-4" />
-                    Ver Referência
-                  </Button>
-                </CardContent>
-              </Card>
-              
-              <Card>
-                <CardHeader className="pb-2">
-                  <CardTitle className="text-lg font-medium flex items-center">
-                    <ExternalLink className="mr-2 h-5 w-5 text-blue-500" />
-                    Recursos Externos
-                  </CardTitle>
-                  <CardDescription>Links úteis e ferramentas</CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <Button variant="outline" size="sm" className="w-full">
-                    <FileText className="mr-2 h-4 w-4" />
-                    Acessar Recursos
-                  </Button>
-                </CardContent>
-              </Card>
-            </div>
-          </TabsContent>
-          
-          <TabsContent value="previews">
-            <PreviewsGuide />
-          </TabsContent>
-          
-          <TabsContent value="invoices">
-            <InvoicesGuide />
-          </TabsContent>
-          
-          <TabsContent value="portfolio">
+        <div className="mb-6">
+          <Tabs defaultValue="docs" value={activeTab} onValueChange={setActiveTab}>
+            <TabsList>
+              <TabsTrigger value="docs">
+                <FileText className="mr-2 h-4 w-4" />
+                Documentação
+              </TabsTrigger>
+              <TabsTrigger value="tutorials">
+                <Video className="mr-2 h-4 w-4" />
+                Tutoriais
+              </TabsTrigger>
+              <TabsTrigger value="faq">
+                <BookOpen className="mr-2 h-4 w-4" />
+                FAQ
+              </TabsTrigger>
+            </TabsList>
+          </Tabs>
+        </div>
+        
+        <TabsContent value="docs" className={activeTab === "docs" ? "" : "hidden"}>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             <Card>
               <CardHeader>
-                <CardTitle>Guia de Gerenciamento de Portfólio</CardTitle>
-                <CardDescription>Como adicionar, editar e organizar itens do portfólio</CardDescription>
+                <CardTitle className="flex items-center">
+                  <FileText className="mr-2 h-5 w-5" />
+                  Guia de Administração
+                </CardTitle>
+                <CardDescription>Aprenda a gerenciar o painel administrativo</CardDescription>
               </CardHeader>
               <CardContent>
-                <p className="text-muted-foreground mb-4">
-                  Este guia ajudará você a gerenciar o portfólio de músicas e projetos da harmonIA.
+                <p className="text-sm text-gray-500 mb-4">
+                  Este guia cobre todas as funcionalidades do painel administrativo, incluindo gestão de projetos, clientes e configurações do sistema.
                 </p>
-                
-                <div className="space-y-4">
-                  <div className="border rounded-md p-4 bg-muted/50">
-                    <h3 className="text-lg font-medium mb-2">Adicionando novos itens ao portfólio</h3>
-                    <p className="text-sm">
-                      Para adicionar um novo item ao portfólio, acesse a página de Portfólio no 
-                      painel administrativo e utilize o formulário "Adicionar Novo Item".
-                    </p>
-                  </div>
-                  
-                  <div className="border rounded-md p-4 bg-muted/50">
-                    <h3 className="text-lg font-medium mb-2">Organizando por categorias</h3>
-                    <p className="text-sm">
-                      Você pode organizar os itens do portfólio por gênero musical, tipo de 
-                      projeto ou finalidade. Isso facilita para os visitantes encontrarem 
-                      exemplos relevantes.
-                    </p>
-                  </div>
-                  
-                  <div className="border rounded-md p-4 bg-muted/50">
-                    <h3 className="text-lg font-medium mb-2">Destacando projetos</h3>
-                    <p className="text-sm">
-                      Para destacar projetos especiais na página principal do portfólio, 
-                      marque a opção "Destacado" ao criar ou editar um item.
-                    </p>
-                  </div>
-                </div>
+                <Button variant="outline" className="w-full">
+                  <FileText className="mr-2 h-4 w-4" />
+                  Ver Documentação
+                </Button>
               </CardContent>
             </Card>
-          </TabsContent>
-        </Tabs>
+            
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center">
+                  <FileText className="mr-2 h-5 w-5" />
+                  Manual de Briefs
+                </CardTitle>
+                <CardDescription>Como analisar e gerenciar briefs de clientes</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <p className="text-sm text-gray-500 mb-4">
+                  Aprenda a interpretar os requisitos dos clientes, extrair informações importantes e preparar o projeto musical.
+                </p>
+                <Button variant="outline" className="w-full">
+                  <Download className="mr-2 h-4 w-4" />
+                  Baixar Manual (PDF)
+                </Button>
+              </CardContent>
+            </Card>
+            
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center">
+                  <FileText className="mr-2 h-5 w-5" />
+                  Guia de Prévias
+                </CardTitle>
+                <CardDescription>Como gerenciar o sistema de prévias musicais</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <p className="text-sm text-gray-500 mb-4">
+                  Este documento explica como criar, gerenciar e compartilhar prévias musicais com os clientes através do sistema.
+                </p>
+                <Button variant="outline" className="w-full">
+                  <FileText className="mr-2 h-4 w-4" />
+                  Ver Documentação
+                </Button>
+              </CardContent>
+            </Card>
+            
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center">
+                  <FileText className="mr-2 h-5 w-5" />
+                  Documentação da API
+                </CardTitle>
+                <CardDescription>Referência técnica para integração</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <p className="text-sm text-gray-500 mb-4">
+                  Documentação completa da API para desenvolvedores que desejam integrar suas aplicações com o sistema.
+                </p>
+                <Button variant="outline" className="w-full">
+                  <ExternalLink className="mr-2 h-4 w-4" />
+                  Abrir Documentação Técnica
+                </Button>
+              </CardContent>
+            </Card>
+            
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center">
+                  <FileText className="mr-2 h-5 w-5" />
+                  Guia de Faturamento
+                </CardTitle>
+                <CardDescription>Como gerenciar faturas e pagamentos</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <p className="text-sm text-gray-500 mb-4">
+                  Aprenda a emitir faturas, gerenciar pagamentos e entender os relatórios financeiros do sistema.
+                </p>
+                <Button variant="outline" className="w-full">
+                  <FileText className="mr-2 h-4 w-4" />
+                  Ver Guia
+                </Button>
+              </CardContent>
+            </Card>
+            
+            <Card>
+              <CardHeader className="flex items-start">
+                <div>
+                  <CardTitle className="flex items-center">
+                    <PlusCircle className="mr-2 h-5 w-5" />
+                    Solicitar Nova Documentação
+                  </CardTitle>
+                  <CardDescription>Não encontrou o que procura?</CardDescription>
+                </div>
+              </CardHeader>
+              <CardContent>
+                <p className="text-sm text-gray-500 mb-4">
+                  Solicite documentação específica para suas necessidades administrativas.
+                </p>
+                <Button className="w-full">
+                  <PlusCircle className="mr-2 h-4 w-4" />
+                  Solicitar Documentação
+                </Button>
+              </CardContent>
+            </Card>
+          </div>
+        </TabsContent>
+        
+        <TabsContent value="tutorials" className={activeTab === "tutorials" ? "" : "hidden"}>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            <Card>
+              <CardHeader>
+                <CardTitle>Introdução ao Sistema</CardTitle>
+                <CardDescription>Tutorial básico para iniciantes</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="aspect-video bg-gray-100 rounded-md mb-4 flex items-center justify-center">
+                  <Video className="h-12 w-12 text-gray-400" />
+                </div>
+                <p className="text-sm text-gray-500 mb-4">
+                  Este vídeo ensina os primeiros passos para usar o painel administrativo da harmonIA.
+                </p>
+                <Button variant="outline" className="w-full">
+                  <Video className="mr-2 h-4 w-4" />
+                  Assistir Tutorial
+                </Button>
+              </CardContent>
+            </Card>
+            
+            <Card>
+              <CardHeader>
+                <CardTitle>Gerenciamento de Prévias</CardTitle>
+                <CardDescription>Como criar e compartilhar prévias</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="aspect-video bg-gray-100 rounded-md mb-4 flex items-center justify-center">
+                  <Video className="h-12 w-12 text-gray-400" />
+                </div>
+                <p className="text-sm text-gray-500 mb-4">
+                  Aprenda a criar novas prévias musicais e compartilhá-las com os clientes.
+                </p>
+                <Button variant="outline" className="w-full">
+                  <Video className="mr-2 h-4 w-4" />
+                  Assistir Tutorial
+                </Button>
+              </CardContent>
+            </Card>
+            
+            <Card>
+              <CardHeader>
+                <CardTitle>Gestão de Clientes</CardTitle>
+                <CardDescription>Como gerenciar a base de clientes</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="aspect-video bg-gray-100 rounded-md mb-4 flex items-center justify-center">
+                  <Video className="h-12 w-12 text-gray-400" />
+                </div>
+                <p className="text-sm text-gray-500 mb-4">
+                  Tutorial completo sobre cadastro, gerenciamento e acompanhamento de clientes.
+                </p>
+                <Button variant="outline" className="w-full">
+                  <Video className="mr-2 h-4 w-4" />
+                  Assistir Tutorial
+                </Button>
+              </CardContent>
+            </Card>
+          </div>
+        </TabsContent>
+        
+        <TabsContent value="faq" className={activeTab === "faq" ? "" : "hidden"}>
+          <Card>
+            <CardHeader>
+              <CardTitle>Perguntas Frequentes</CardTitle>
+              <CardDescription>Respostas rápidas para suas dúvidas</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-4">
+                <div className="border-b pb-4">
+                  <h3 className="font-medium flex items-center">
+                    <CheckCircle className="h-4 w-4 text-green-500 mr-2" />
+                    Como posso adicionar um novo cliente no sistema?
+                  </h3>
+                  <p className="text-gray-500 text-sm mt-2 pl-6">
+                    Você pode adicionar um novo cliente acessando a seção "Clientes" no menu lateral e clicando no botão "Novo Cliente". Preencha as informações necessárias no formulário e clique em "Salvar".
+                  </p>
+                </div>
+                
+                <div className="border-b pb-4">
+                  <h3 className="font-medium flex items-center">
+                    <CheckCircle className="h-4 w-4 text-green-500 mr-2" />
+                    Como verificar o status de um projeto?
+                  </h3>
+                  <p className="text-gray-500 text-sm mt-2 pl-6">
+                    Acesse a seção "Projetos" no menu lateral, localize o projeto desejado na lista e verifique a coluna "Status". Você também pode clicar no projeto para ver informações mais detalhadas.
+                  </p>
+                </div>
+                
+                <div className="border-b pb-4">
+                  <h3 className="font-medium flex items-center">
+                    <CheckCircle className="h-4 w-4 text-green-500 mr-2" />
+                    Como enviar uma prévia para um cliente?
+                  </h3>
+                  <p className="text-gray-500 text-sm mt-2 pl-6">
+                    Na seção "Prévias", selecione o projeto desejado, adicione os arquivos de áudio e clique em "Gerar Link". Você pode então copiar o link gerado e enviá-lo ao cliente por e-mail ou WhatsApp.
+                  </p>
+                </div>
+                
+                <div className="border-b pb-4">
+                  <h3 className="font-medium flex items-center">
+                    <CheckCircle className="h-4 w-4 text-green-500 mr-2" />
+                    Como acompanhar os pagamentos recebidos?
+                  </h3>
+                  <p className="text-gray-500 text-sm mt-2 pl-6">
+                    Na seção "Faturas", você encontrará uma lista de todos os pagamentos. Os status "Pago", "Pendente" e "Vencido" indicam a situação de cada fatura.
+                  </p>
+                </div>
+                
+                <div className="border-b pb-4">
+                  <h3 className="font-medium flex items-center">
+                    <CheckCircle className="h-4 w-4 text-green-500 mr-2" />
+                    Como adicionar músicas ao portfólio?
+                  </h3>
+                  <p className="text-gray-500 text-sm mt-2 pl-6">
+                    Acesse a seção "Portfólio" e clique em "Adicionar ao Portfólio". Preencha os detalhes da música, faça upload dos arquivos de áudio e imagem, e clique em "Adicionar".
+                  </p>
+                </div>
+                
+                <div>
+                  <h3 className="font-medium flex items-center">
+                    <CheckCircle className="h-4 w-4 text-green-500 mr-2" />
+                    Como configurar integrações com serviços externos?
+                  </h3>
+                  <p className="text-gray-500 text-sm mt-2 pl-6">
+                    Acesse a seção "Integrações" no menu lateral. Lá você encontrará opções para configurar conexões com Google Drive, serviços de e-mail e outras plataformas.
+                  </p>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        </TabsContent>
       </div>
     </AdminLayout>
   );

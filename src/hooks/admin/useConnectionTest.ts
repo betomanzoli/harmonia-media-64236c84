@@ -1,11 +1,16 @@
 
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useEffect } from 'react';
 import { useToast } from '@/hooks/use-toast';
 
 export function useConnectionTest() {
   const { toast } = useToast();
-  const [connectionStatus, setConnectionStatus] = useState('untested');
+  const [connectionStatus, setConnectionStatus] = useState<string>('untested');
   const [errorDetails, setErrorDetails] = useState<string | null>(null);
+  
+  // Check connection on initial load
+  useEffect(() => {
+    testConnection();
+  }, []);
 
   // Function to test connection
   const testConnection = useCallback(async (): Promise<void> => {
@@ -15,26 +20,36 @@ export function useConnectionTest() {
       // Basic network connectivity check
       if (typeof navigator !== 'undefined' && !navigator.onLine) {
         setConnectionStatus('error');
-        setErrorDetails('No internet connection. Please check your network before continuing.');
+        setErrorDetails('Sem conexão com a internet. Verifique sua rede antes de continuar.');
         return;
       }
       
-      // In our local auth implementation, we're always connected if we have internet
+      // Test if localStorage is available (which is needed for auth)
+      try {
+        localStorage.setItem('connection-test', 'ok');
+        localStorage.removeItem('connection-test');
+      } catch (storageError) {
+        setConnectionStatus('error');
+        setErrorDetails('Não foi possível acessar o armazenamento local. Verifique as configurações do seu navegador.');
+        return;
+      }
+      
+      // If we got here, we're connected
       setConnectionStatus('connected');
       setErrorDetails(null);
       
-      console.log('Local connection established successfully');
+      console.log('Connection established successfully');
     } catch (error) {
       console.error('Error testing connection:', error);
       
       // Only set error if we're really offline
       if (!navigator.onLine) {
         setConnectionStatus('error');
-        setErrorDetails(error instanceof Error ? error.message : 'Unknown error testing connection');
+        setErrorDetails(error instanceof Error ? error.message : 'Erro desconhecido ao testar conexão');
         
         toast({
-          title: 'Error',
-          description: 'An error occurred while checking the connection.',
+          title: 'Erro',
+          description: 'Ocorreu um erro ao verificar a conexão.',
           variant: 'destructive',
         });
       } else {

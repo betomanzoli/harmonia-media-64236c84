@@ -1,7 +1,7 @@
 
 import React from 'react';
-import { Play, Pause } from 'lucide-react';
 import { Button } from "@/components/ui/button";
+import { Play, Pause } from 'lucide-react';
 
 interface PlayButtonProps {
   isPlaying: boolean;
@@ -10,17 +10,16 @@ interface PlayButtonProps {
 
 const PlayButton: React.FC<PlayButtonProps> = ({ isPlaying, onClick }) => {
   return (
-    <Button 
-      onClick={onClick} 
-      variant="outline" 
-      size="icon" 
-      className="w-12 h-12 rounded-full border-harmonia-green bg-harmonia-green/10"
+    <Button
+      onClick={onClick}
+      variant="outline"
+      size="sm"
+      className="h-8 w-8 p-0 rounded-full"
     >
-      {isPlaying ? (
-        <Pause className="h-5 w-5 text-harmonia-green" />
-      ) : (
-        <Play className="h-5 w-5 text-harmonia-green" />
-      )}
+      {isPlaying ? 
+        <Pause className="h-3.5 w-3.5" /> : 
+        <Play className="h-3.5 w-3.5 ml-0.5" />
+      }
     </Button>
   );
 };

@@ -1,42 +1,47 @@
 
 import React from 'react';
-import { Card, CardHeader, CardContent, CardTitle } from "@/components/ui/card";
-import { ScrollArea } from "@/components/ui/scroll-area";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 
-interface HistoryItem {
+interface HistoryEntry {
   action: string;
   timestamp: string;
-  data?: any;
+  data?: {
+    message?: string;
+    status?: string;
+    version?: string;
+  };
 }
 
 interface ProjectHistoryListProps {
-  history: HistoryItem[];
+  history?: HistoryEntry[];
 }
 
-const ProjectHistoryList: React.FC<ProjectHistoryListProps> = ({ history }) => {
+const ProjectHistoryList: React.FC<ProjectHistoryListProps> = ({ history = [] }) => {
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle>Histórico de atividades</CardTitle>
+    <Card className="bg-gray-100 text-gray-900">
+      <CardHeader className="border-b">
+        <CardTitle className="text-lg">Histórico do Projeto</CardTitle>
       </CardHeader>
-      <CardContent>
-        <ScrollArea className="h-[400px] pr-4">
-          <ul className="space-y-4">
-            {history.map((item, index) => (
-              <li key={index} className="border-b pb-3 last:border-0">
-                <div className="flex justify-between">
-                  <span className="font-medium">{item.action}</span>
-                  <span className="text-gray-500 text-sm">{item.timestamp}</span>
+      <CardContent className="p-0">
+        {history.length > 0 ? (
+          <ul className="divide-y">
+            {history.map((entry, index) => (
+              <li key={index} className="p-4">
+                <div className="flex flex-col md:flex-row md:justify-between mb-1">
+                  <span className="font-medium">{entry.action}</span>
+                  <span className="text-gray-500 text-sm">{entry.timestamp}</span>
                 </div>
-                {item.data && item.data.message && (
-                  <div className="mt-2 text-sm bg-gray-50 p-2 rounded border border-gray-200">
-                    {item.data.message}
-                  </div>
+                {entry.data?.message && (
+                  <p className="text-gray-600 text-sm">{entry.data.message}</p>
                 )}
               </li>
             ))}
           </ul>
-        </ScrollArea>
+        ) : (
+          <div className="text-center py-8 text-gray-500">
+            Nenhum registro de atividade ainda.
+          </div>
+        )}
       </CardContent>
     </Card>
   );

@@ -14,14 +14,14 @@ const PreviewsHeader: React.FC<PreviewsHeaderProps> = ({ scrollToNewForm }) => {
   const { projects } = usePreviewProjects();
   
   // Calculate dynamic stats based on the actual project data
-  const activeProjects = projects.filter(p => p.status === 'active' || p.status === 'pending_feedback').length;
+  const activeProjects = projects.filter(p => p.status === 'waiting' || p.status === 'feedback').length;
   const approvalRate = projects.length > 0 
     ? Math.round((projects.filter(p => p.status === 'approved').length / projects.length) * 100) 
     : 0;
     
   // Get unique client IDs to count unique clients
-  // Using email as a fallback if clientId is not available
-  const uniqueClients = [...new Set(projects.map(p => p.clientId || p.clientEmail))].length;
+  // Using email as a unique identifier since clientId might not be available
+  const uniqueClients = [...new Set(projects.map(p => p.clientEmail))].length;
   
   // Total projects count
   const totalProjects = projects.length;

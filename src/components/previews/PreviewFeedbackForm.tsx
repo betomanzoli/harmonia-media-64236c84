@@ -1,352 +1,118 @@
 import React, { useState } from 'react';
-import { Card } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
+import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from "@/components/ui/card";
 import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
-import { useNavigate } from 'react-router-dom';
-import { useToast } from '@/hooks/use-toast';
-import { Check, Send, Star, Phone, ThumbsUp, ThumbsDown } from 'lucide-react';
-import { Form, FormField, FormItem, FormLabel, FormControl, FormDescription } from "@/components/ui/form";
-import { useForm } from "react-hook-form";
-import { notificationService } from '@/services/notificationService';
-import emailService from '@/services/emailService';
+import { MessageSquare, CheckCircle } from 'lucide-react';
+import { Alert, AlertDescription } from "@/components/ui/alert";
 
-export interface PreviewFeedbackFormProps {
-  projectId?: string;
-  selectedPreview?: string | null;
-  onSubmit?: (feedback: FeedbackData) => void;
-  status: 'waiting' | 'feedback' | 'approved';
-  isSubmitting?: boolean;
-  feedback?: string;
-  setFeedback?: (feedback: string) => void;
-  handleSubmit?: (e: React.FormEvent) => void;
-  handleApprove?: () => void;
+interface PreviewFeedbackFormProps {
+  selectedPreview: string | null;
+  feedback: string;
+  setFeedback: (feedback: string) => void;
+  handleSubmit: (feedback?: string) => void;
+  handleApprove: (feedback?: string) => void;
+  status: string;
   versionTitle?: string;
 }
 
-interface FeedbackData {
-  clientEmail: string;
-  clientName: string;
-  projectId: string;
-  selectedVersion: string;
-  generalFeedback: string;
-  specificFeedback: {
-    melody?: string;
-    instruments?: string;
-    tempo?: string;
-    other?: string;
-  };
-  rating: number;
-  preferredContactMethod: 'email' | 'whatsapp';
-  timestamp: string;
-}
-
-const PreviewFeedbackForm: React.FC<PreviewFeedbackFormProps> = ({ 
-  projectId = "", 
-  selectedPreview, 
-  onSubmit,
-  status,
-  isSubmitting = false,
-  feedback = '',
+const PreviewFeedbackForm: React.FC<PreviewFeedbackFormProps> = ({
+  selectedPreview,
+  feedback,
   setFeedback,
-  handleSubmit: propHandleSubmit,
+  handleSubmit,
   handleApprove,
+  status,
   versionTitle
 }) => {
-  const navigate = useNavigate();
-  const { toast } = useToast();
-  const [rating, setRating] = useState(0);
-  const [showContactFields, setShowContactFields] = useState(false);
-  const [showExtraNotes, setShowExtraNotes] = useState(false);
-  const [feedbackSentiment, setFeedbackSentiment] = useState<'positive' | 'negative' | null>(null);
-  
-  const form = useForm<FeedbackData>({
-    defaultValues: {
-      clientEmail: '',
-      clientName: '',
-      projectId: projectId,
-      selectedVersion: selectedPreview || '',
-      generalFeedback: feedback,
-      specificFeedback: {
-        melody: '',
-        instruments: '',
-        tempo: '',
-        other: ''
-      },
-      rating: 0,
-      preferredContactMethod: 'email',
-      timestamp: new Date().toISOString()
-    }
-  });
-  
-  const handleSentimentFeedback = (sentiment: 'positive' | 'negative') => {
-    setFeedbackSentiment(sentiment);
-    
-    if (sentiment === 'positive') {
-      form.setValue('generalFeedback', 'Gostei muito desta versão! ');
-      if (setFeedback) setFeedback('Gostei muito desta versão! ');
-    } else {
-      form.setValue('generalFeedback', 'Acho que esta versão precisa de alguns ajustes: ');
-      if (setFeedback) setFeedback('Acho que esta versão precisa de alguns ajustes: ');
-    }
-    
-    setShowExtraNotes(true);
-  };
-  
-  const onFormSubmit = async (data: FeedbackData) => {
-    if (!selectedPreview) {
-      toast({
-        title: 'Selecione uma versão',
-        description: 'Por favor, selecione uma versão musical antes de enviar seu feedback.',
-        variant: 'destructive'
-      });
-      return;
-    }
-    
-    data.timestamp = new Date().toISOString();
-    data.selectedVersion = selectedPreview;
-    data.projectId = projectId;
-    
-    try {
-      notificationService.notify('feedback_received', {
-        projectId,
-        clientName: data.clientName,
-        clientEmail: data.clientEmail,
-        selectedVersion: selectedPreview,
-        feedback: data.generalFeedback,
-        rating: data.rating,
-        timestamp: data.timestamp
-      });
-      
-      await emailService.sendPreviewNotification(
-        data.clientEmail,
-        data.clientName,
-        `Feedback recebido para o projeto ${projectId}`
-      );
-      
-      toast({
-        title: "Feedback enviado com sucesso!",
-        description: "Agradecemos sua avaliação. Nossa equipe iniciará os ajustes em breve.",
-      });
-      
-      if (onSubmit) {
-        onSubmit(data);
-      } else if (propHandleSubmit) {
-        propHandleSubmit(new Event('submit') as any);
-      }
-      
-      setTimeout(() => {
-        navigate('/feedback-confirmacao');
-      }, 1500);
-    } catch (error) {
-      console.error('Erro ao enviar feedback:', error);
-      toast({
-        title: "Erro ao enviar feedback",
-        description: "Ocorreu um erro ao enviar seu feedback. Por favor, tente novamente.",
-        variant: "destructive"
-      });
+  const [localFeedback, setLocalFeedback] = useState(feedback || '');
+
+  React.useEffect(() => {
+    setLocalFeedback(feedback);
+  }, [feedback]);
+
+  const handleFeedbackChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
+    const newValue = e.target.value;
+    setLocalFeedback(newValue);
+    if (setFeedback) {
+      setFeedback(newValue);
     }
   };
-  
-  if (status === 'approved') {
+
+  if (status === 'approved' || status === 'feedback') {
     return (
-      <Card className="p-6 border-green-500 bg-green-50 text-center">
-        <Check className="w-8 h-8 text-green-500 mx-auto mb-4" />
-        <h3 className="text-xl font-bold mb-2">Música Aprovada!</h3>
-        <p className="mb-4">Você já aprovou esta música. Nossa equipe está trabalhando na finalização.</p>
-        {projectId && (
-          <Button 
-            onClick={() => navigate(`/acompanhar-pedido/${projectId}`)} 
-            className="bg-harmonia-green hover:bg-harmonia-green/90"
-          >
-            Acompanhar Pedido
-          </Button>
-        )}
+      <Card>
+        <CardHeader>
+          <CardTitle>Seu feedback já foi enviado</CardTitle>
+          <CardDescription>
+            {status === 'approved' 
+              ? 'Você já aprovou a música. Obrigado pelo seu feedback!'
+              : 'Você já enviou seu feedback. Nossa equipe está trabalhando nos ajustes solicitados.'}
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <Alert className={status === 'approved' ? 'bg-green-50' : 'bg-blue-50'}>
+            <AlertDescription>
+              {status === 'approved' 
+                ? 'Em breve entraremos em contato com a versão final da sua música.'
+                : 'Em breve você receberá uma notificação com as novas versões para avaliação.'}
+            </AlertDescription>
+          </Alert>
+        </CardContent>
       </Card>
     );
   }
-  
+
   return (
-    <Card className="p-6 border-l-4 border-l-harmonia-green mb-8">
-      <h3 className="text-xl font-bold mb-4">Envie seu feedback</h3>
-      
-      {!selectedPreview ? (
-        <div className="text-center py-6 bg-gray-50 rounded-md mb-4">
-          <p className="text-gray-500 mb-2">Por favor, selecione uma das versões acima para enviar seu feedback</p>
-          <p className="text-sm text-gray-400">Ouça cada versão e escolha a que mais se adequa às suas necessidades</p>
-        </div>
-      ) : (
-        <div className="mb-6">
-          <div className="flex flex-wrap gap-3 mb-4">
-            <div className="bg-harmonia-green/10 text-harmonia-green px-3 py-1 rounded-full text-sm font-medium flex items-center">
-              <span className="mr-1">✓</span> Versão selecionada: {versionTitle}
+    <Card>
+      <CardHeader>
+        <CardTitle>Envie seu Feedback</CardTitle>
+        <CardDescription>
+          {selectedPreview 
+            ? `Envie seu feedback sobre a versão "${versionTitle || 'selecionada'}" ou aprove-a.`
+            : 'Selecione uma versão primeiro para enviar feedback.'}
+        </CardDescription>
+      </CardHeader>
+      <CardContent>
+        {!selectedPreview ? (
+          <div className="bg-amber-50 border border-amber-200 text-amber-800 p-4 rounded-md">
+            <p>Por favor, selecione uma versão na aba "Versões Propostas" antes de enviar feedback.</p>
+          </div>
+        ) : (
+          <div className="space-y-4">
+            <div>
+              <Textarea
+                placeholder="Escreva aqui seu feedback sobre a música... O que você gostou? O que gostaria de mudar?"
+                className="min-h-[150px]"
+                value={localFeedback}
+                onChange={handleFeedbackChange}
+                disabled={!selectedPreview}
+              />
+            </div>
+            <div className="text-sm text-gray-500">
+              <p>Seu feedback é importante para que possamos entregar a música perfeita para você.</p>
             </div>
           </div>
-          
-          {!feedbackSentiment && (
-            <div className="py-4">
-              <h4 className="text-sm font-medium mb-3 text-center">O que você achou desta versão?</h4>
-              <div className="flex justify-center gap-3">
-                <Button 
-                  variant="outline" 
-                  onClick={() => handleSentimentFeedback('positive')}
-                  className="flex-1 sm:flex-none border-green-300 hover:bg-green-50 hover:text-green-700"
-                >
-                  <ThumbsUp className="h-5 w-5 mr-2 text-green-500" />
-                  Gostei
-                </Button>
-                
-                <Button 
-                  variant="outline" 
-                  onClick={() => handleSentimentFeedback('negative')}
-                  className="flex-1 sm:flex-none border-amber-300 hover:bg-amber-50 hover:text-amber-700"
-                >
-                  <ThumbsDown className="h-5 w-5 mr-2 text-amber-500" />
-                  Precisa de ajustes
-                </Button>
-              </div>
-            </div>
-          )}
-        </div>
-      )}
-      
-      {showExtraNotes && (
-        <Form {...form}>
-          <form onSubmit={form.handleSubmit(onFormSubmit)} className="space-y-6">
-            <FormField
-              control={form.control}
-              name="generalFeedback"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Seu feedback</FormLabel>
-                  <FormControl>
-                    <Textarea
-                      placeholder="Compartilhe sua opinião detalhada sobre a versão selecionada..."
-                      className="min-h-[100px]"
-                      {...field}
-                      onChange={(e) => {
-                        field.onChange(e);
-                        if (setFeedback) setFeedback(e.target.value);
-                      }}
-                    />
-                  </FormControl>
-                </FormItem>
-              )}
-            />
-            
-            <div>
-              <Button 
-                type="button" 
-                variant="ghost" 
-                onClick={() => setShowContactFields(!showContactFields)}
-                className="px-0 text-harmonia-green hover:text-harmonia-green/80 hover:bg-transparent"
-              >
-                + Adicionar informações de contato
-              </Button>
-            </div>
-            
-            {showContactFields && (
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <FormField
-                  control={form.control}
-                  name="clientName"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Seu Nome</FormLabel>
-                      <FormControl>
-                        <Input placeholder="Nome completo" {...field} required />
-                      </FormControl>
-                    </FormItem>
-                  )}
-                />
-                
-                <FormField
-                  control={form.control}
-                  name="clientEmail"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Seu Email</FormLabel>
-                      <FormControl>
-                        <Input
-                          type="email"
-                          placeholder="seu@email.com"
-                          {...field}
-                          required
-                        />
-                      </FormControl>
-                    </FormItem>
-                  )}
-                />
-              </div>
-            )}
-            
-            <div>
-              <FormLabel>Avaliação da Versão</FormLabel>
-              <div className="flex items-center gap-1 mt-1">
-                {[1, 2, 3, 4, 5].map((star) => (
-                  <button
-                    key={star}
-                    type="button"
-                    className={`text-2xl ${rating >= star ? 'text-yellow-500' : 'text-gray-300'}`}
-                    onClick={() => {
-                      setRating(star);
-                      form.setValue('rating', star);
-                    }}
-                  >
-                    <Star className="w-6 h-6" />
-                  </button>
-                ))}
-              </div>
-            </div>
-            
-            <div className="flex flex-col sm:flex-row sm:justify-between gap-4 items-center mt-6">
-              <div className="flex gap-3 w-full sm:w-auto">
-                {handleApprove && (
-                  <Button 
-                    type="button" 
-                    className="bg-green-600 hover:bg-green-700 w-full sm:w-auto"
-                    disabled={!selectedPreview || isSubmitting}
-                    onClick={handleApprove}
-                  >
-                    <Check className="w-4 h-4 mr-2" />
-                    Aprovar Versão
-                  </Button>
-                )}
-                
-                <Button 
-                  type="submit" 
-                  className="bg-harmonia-green hover:bg-harmonia-green/90 w-full sm:w-auto"
-                  disabled={!selectedPreview || isSubmitting || !form.getValues('generalFeedback')}
-                >
-                  {isSubmitting ? (
-                    <>Enviando...</>
-                  ) : (
-                    <>
-                      <Send className="w-4 h-4 mr-2" />
-                      Enviar Feedback
-                    </>
-                  )}
-                </Button>
-              </div>
-            </div>
-          </form>
-        </Form>
-      )}
-      
-      {feedbackSentiment === 'positive' && handleApprove && (
-        <div className="mt-4 p-4 bg-green-50 rounded-md border border-green-200">
-          <p className="text-sm text-green-700 mb-3">
-            Você gostou desta versão? Se ela estiver exatamente como você deseja, você pode aprová-la diretamente.
-          </p>
-          <Button 
-            onClick={handleApprove}
-            className="bg-green-600 hover:bg-green-700"
-          >
-            <Check className="w-4 h-4 mr-2" />
-            Aprovar versão sem mais alterações
-          </Button>
-        </div>
-      )}
+        )}
+      </CardContent>
+      <CardFooter className="flex flex-col sm:flex-row gap-3 sm:justify-between">
+        <Button
+          onClick={() => handleApprove(localFeedback)}
+          disabled={!selectedPreview}
+          className="w-full sm:w-auto bg-green-600 hover:bg-green-700"
+        >
+          <CheckCircle className="h-4 w-4 mr-2" />
+          Aprovar esta Versão
+        </Button>
+        <Button
+          onClick={() => handleSubmit(localFeedback)}
+          disabled={!selectedPreview || !localFeedback}
+          className="w-full sm:w-auto"
+          variant="outline"
+        >
+          <MessageSquare className="h-4 w-4 mr-2" />
+          Enviar Feedback
+        </Button>
+      </CardFooter>
     </Card>
   );
 };

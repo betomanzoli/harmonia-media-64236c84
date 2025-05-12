@@ -7,8 +7,8 @@ export function useAuthState(offlineMode: boolean = false) {
   const [user, setUser] = useState<AdminUser | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [connectionStatus, setConnectionStatus] = useState<ConnectionStatus>({
-    tested: true, // Mark as tested by default
-    connected: navigator.onLine // Set initial connection status based on navigator.onLine
+    tested: true,
+    connected: navigator.onLine
   });
   const [securityStatus, setSecurityStatus] = useState<SecurityStatus>({
     checked: false,
@@ -17,25 +17,6 @@ export function useAuthState(offlineMode: boolean = false) {
 
   // Effect to verify authentication session on mount
   useEffect(() => {
-    // If in offline mode, set a mock user and skip real auth
-    if (offlineMode) {
-      console.log('Usando modo offline - simulando autenticação');
-      setUser({
-        id: 'offline-user-id',
-        email: 'demo@example.com',
-        name: 'Demo User',
-        role: 'admin',
-        createdAt: new Date().toISOString()
-      });
-      setIsLoading(false);
-      setConnectionStatus({
-        tested: true,
-        connected: true, // Pretend we're connected in offline mode
-        details: { offlineMode: true }
-      });
-      return;
-    }
-    
     // Check for active session
     const checkSession = async () => {
       setIsLoading(true);
@@ -45,11 +26,13 @@ export function useAuthState(offlineMode: boolean = false) {
         const currentUser = localAuthService.getUser();
         const isAuthenticated = localAuthService.isAuthenticated();
         
+        console.log('Estado da autenticação:', { currentUser, isAuthenticated });
+        
         if (currentUser && isAuthenticated) {
           console.log("Sessão encontrada:", currentUser.email);
           setUser(currentUser);
         } else {
-          console.log("Nenhuma sessão encontrada");
+          console.log("Nenhuma sessão encontrada ou sessão inválida");
           setUser(null);
         }
         
@@ -63,6 +46,7 @@ export function useAuthState(offlineMode: boolean = false) {
         console.error("Erro ao checar autenticação:", err);
         setUser(null);
       } finally {
+        // Ensure we exit loading state quickly
         setIsLoading(false);
       }
     };
@@ -106,7 +90,7 @@ export function useAuthState(offlineMode: boolean = false) {
       window.removeEventListener('online', handleOnline);
       window.removeEventListener('offline', handleOffline);
     };
-  }, [offlineMode]);
+  }, []);
 
   return {
     user,
@@ -116,6 +100,6 @@ export function useAuthState(offlineMode: boolean = false) {
     setConnectionStatus,
     securityStatus,
     setSecurityStatus,
-    isAuthenticated: offlineMode ? true : !!user
+    isAuthenticated: !!user
   };
 }

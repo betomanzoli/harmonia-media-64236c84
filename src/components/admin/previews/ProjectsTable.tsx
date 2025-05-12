@@ -1,152 +1,135 @@
 
-import React, { useState } from 'react';
-import { Table, TableBody, TableCaption, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import React from 'react';
+import { 
+  Table, 
+  TableBody, 
+  TableCaption, 
+  TableCell, 
+  TableHead, 
+  TableHeader, 
+  TableRow 
+} from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { Eye, Bell, Trash2 } from 'lucide-react';
 import { Link } from 'react-router-dom';
-import { Eye, Mail, Clock, CheckCircle, RefreshCw, MessageSquare, AlertTriangle } from 'lucide-react';
 import { ProjectItem } from '@/hooks/admin/usePreviewProjects';
-import { useToast } from '@/hooks/use-toast';
 
 interface ProjectsTableProps {
   projects: ProjectItem[];
-  isLoading?: boolean;
+  isLoading: boolean;
+  onDelete: (id: string) => void;
+  onSendReminder: (id: string) => void;
 }
 
-const ProjectsTable: React.FC<ProjectsTableProps> = ({ projects, isLoading = false }) => {
-  const { toast } = useToast();
-  const [sendingReminder, setSendingReminder] = useState<string | null>(null);
-
+const ProjectsTable: React.FC<ProjectsTableProps> = ({
+  projects,
+  isLoading,
+  onDelete,
+  onSendReminder
+}) => {
   const getStatusBadge = (status: string) => {
-    switch (status) {
+    switch(status) {
       case 'waiting':
-        return (
-          <Badge variant="outline" className="bg-yellow-50 text-yellow-700 border-yellow-200">
-            <Clock className="h-3 w-3 mr-1" />
-            Aguardando avaliação
-          </Badge>
-        );
+        return <Badge variant="outline" className="bg-yellow-100 text-yellow-800 hover:bg-yellow-100">Aguardando</Badge>;
       case 'feedback':
-        return (
-          <Badge variant="outline" className="bg-blue-50 text-blue-700 border-blue-200">
-            <MessageSquare className="h-3 w-3 mr-1" />
-            Feedback recebido
-          </Badge>
-        );
+        return <Badge variant="outline" className="bg-blue-100 text-blue-800 hover:bg-blue-100">Feedback Recebido</Badge>;
       case 'approved':
-        return (
-          <Badge variant="outline" className="bg-green-50 text-green-700 border-green-200">
-            <CheckCircle className="h-3 w-3 mr-1" />
-            Aprovada
-          </Badge>
-        );
+        return <Badge variant="outline" className="bg-green-100 text-green-800 hover:bg-green-100">Aprovado</Badge>;
       default:
-        return (
-          <Badge variant="outline">
-            Desconhecido
-          </Badge>
-        );
+        return <Badge variant="outline">Desconhecido</Badge>;
     }
   };
-
-  const handleSendReminder = (project: ProjectItem) => {
-    setSendingReminder(project.id);
+  
+  const formatDate = (dateStr: string) => {
+    if (!dateStr) return 'N/A';
     
-    // Simulação de envio de lembrete
-    setTimeout(() => {
-      setSendingReminder(null);
-      toast({
-        title: "Lembrete enviado",
-        description: `Um email de lembrete foi enviado para ${project.clientName}`,
-      });
-    }, 1500);
-  };
-
-  // Verifica se o projeto está próximo da expiração (menos de 3 dias)
-  const isNearExpiration = (expirationDate: string) => {
-    const parts = expirationDate.split('/');
-    const expDate = new Date(parseInt(parts[2]), parseInt(parts[1]) - 1, parseInt(parts[0]));
-    const today = new Date();
-    const diffTime = expDate.getTime() - today.getTime();
-    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-    return diffDays <= 3 && diffDays >= 0;
+    // Check if the date is already in the desired format DD/MM/YYYY
+    if (/^\d{2}\/\d{2}\/\d{4}$/.test(dateStr)) {
+      return dateStr;
+    }
+    
+    // Otherwise, try to parse it
+    try {
+      const date = new Date(dateStr);
+      return date.toLocaleDateString('pt-BR');
+    } catch (e) {
+      return dateStr;
+    }
   };
 
   if (isLoading) {
     return (
-      <div className="rounded-md border p-8 text-center">
-        <div className="animate-spin h-8 w-8 border-2 border-harmonia-green border-t-transparent rounded-full mx-auto mb-4"></div>
-        <p className="text-gray-500">Carregando projetos...</p>
+      <div className="p-8 text-center">
+        <div className="inline-block h-8 w-8 animate-spin rounded-full border-4 border-solid border-current border-r-transparent motion-reduce:animate-[spin_1.5s_linear_infinite]" />
+        <p className="mt-2 text-gray-500">Carregando projetos...</p>
       </div>
     );
   }
-
+  
   if (projects.length === 0) {
     return (
-      <div className="rounded-md border p-8 text-center">
-        <p className="text-gray-500 mb-4">Nenhum projeto de prévia encontrado</p>
-        <Button variant="outline">Criar novo projeto</Button>
+      <div className="p-8 text-center">
+        <p className="text-gray-500">Nenhum projeto encontrado.</p>
       </div>
     );
   }
-
+  
   return (
     <Table>
-      <TableCaption>Lista de projetos de prévia musical</TableCaption>
+      <TableCaption>Lista de projetos de prévias musicais.</TableCaption>
       <TableHeader>
         <TableRow>
-          <TableHead>ID</TableHead>
-          <TableHead>Cliente</TableHead>
-          <TableHead>Status</TableHead>
-          <TableHead>Pacote</TableHead>
-          <TableHead>Criado em</TableHead>
-          <TableHead>Expiração</TableHead>
-          <TableHead>Versões</TableHead>
-          <TableHead className="text-right">Ações</TableHead>
+          <TableHead className="w-[100px] text-black">ID</TableHead>
+          <TableHead className="text-black">Cliente</TableHead>
+          <TableHead className="text-black">Pacote</TableHead>
+          <TableHead className="text-center text-black">Versões</TableHead>
+          <TableHead className="text-black">Status</TableHead>
+          <TableHead className="text-black">Criado em</TableHead>
+          <TableHead className="text-black">Expira em</TableHead>
+          <TableHead className="text-right text-black">Ações</TableHead>
         </TableRow>
       </TableHeader>
       <TableBody>
-        {projects.map((project) => (
+        {projects.map(project => (
           <TableRow key={project.id}>
-            <TableCell className="font-medium">{project.id}</TableCell>
-            <TableCell>{project.clientName}</TableCell>
+            <TableCell className="font-medium text-black">{project.id}</TableCell>
+            <TableCell className="text-black">{project.clientName}</TableCell>
+            <TableCell className="text-black">{project.packageType}</TableCell>
+            <TableCell className="text-center text-black">{project.versions}</TableCell>
             <TableCell>{getStatusBadge(project.status)}</TableCell>
-            <TableCell>{project.packageType}</TableCell>
-            <TableCell>{project.createdAt}</TableCell>
-            <TableCell>
-              <div className="flex items-center">
-                {isNearExpiration(project.expirationDate) && (
-                  <AlertTriangle className="h-4 w-4 text-amber-500 mr-1" />
-                )}
-                <span className={isNearExpiration(project.expirationDate) ? 'text-amber-600' : ''}>
-                  {project.expirationDate}
-                </span>
-              </div>
-            </TableCell>
-            <TableCell>{project.versions}</TableCell>
+            <TableCell className="text-black">{formatDate(project.createdAt)}</TableCell>
+            <TableCell className="text-black">{formatDate(project.expirationDate)}</TableCell>
             <TableCell className="text-right">
-              <div className="flex justify-end gap-2">
+              <div className="flex justify-end space-x-2">
                 <Button 
-                  size="sm" 
                   variant="outline" 
+                  size="sm"
                   asChild
                 >
                   <Link to={`/admin-j28s7d1k/previews/${project.id}`}>
                     <Eye className="h-4 w-4" />
+                    <span className="sr-only">Ver</span>
                   </Link>
                 </Button>
                 
                 <Button 
-                  size="sm" 
-                  variant="outline"
-                  onClick={() => handleSendReminder(project)}
-                  disabled={sendingReminder === project.id || project.status === 'approved'}
+                  variant="outline" 
+                  size="sm"
+                  onClick={() => onSendReminder(project.id)}
                 >
-                  {sendingReminder === project.id ? (
-                    <RefreshCw className="h-4 w-4 animate-spin" />
-                  ) : (
-                    <Mail className="h-4 w-4" />
-                  )}
+                  <Bell className="h-4 w-4" />
+                  <span className="sr-only">Lembrete</span>
+                </Button>
+                
+                <Button 
+                  variant="outline" 
+                  size="sm"
+                  onClick={() => onDelete(project.id)}
+                  className="text-red-500 hover:text-red-700 hover:bg-red-50"
+                >
+                  <Trash2 className="h-4 w-4" />
+                  <span className="sr-only">Excluir</span>
                 </Button>
               </div>
             </TableCell>
