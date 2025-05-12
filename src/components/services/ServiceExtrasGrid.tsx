@@ -10,13 +10,13 @@ interface ServiceExtrasGridProps {
 
 const ServiceExtrasGrid: React.FC<ServiceExtrasGridProps> = ({ onExtraServiceClick }) => {
   const handleServiceClick = (serviceId: string) => {
-    // Get payment URL from the serviceId
+    // Obter a URL de pagamento do serviceId
     const paymentInfo = extraServicePaymentLinks[serviceId];
     if (paymentInfo && paymentInfo.url) {
-      // Open payment URL in a new tab
+      // Abrir URL de pagamento em nova aba
       window.open(paymentInfo.url, '_blank');
     } else {
-      // Fallback to the parent component handler
+      // Fallback para o handler do componente pai
       onExtraServiceClick(serviceId);
     }
   };

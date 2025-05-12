@@ -79,7 +79,7 @@ export const extraServicePaymentLinks: Record<string, PaymentLinkData> = {
     preferenceId: '178571987-d2c262a6-0251-40cb-99ed-37415eb90c1d'
   },
   'Partituras MusicXML/PDF': {
-    url: 'https://mpago.la/2grZyHu', // Using the 149 price point link
+    url: 'https://mpago.la/2grZyHu', // Usando o mesmo link do serviço de R$149
     preferenceId: '178571987-d2c262a6-0251-40cb-99ed-37415eb90c1d'
   },
   'Composição sem IA (letra)': {
@@ -94,14 +94,14 @@ export const extraServicePaymentLinks: Record<string, PaymentLinkData> = {
     url: 'https://wa.me/5511920585072?text=Olá,%20tenho%20interesse%20no%20serviço%20de%20Composição%20sem%20IA%20completa%20(letra%20+%20melodia%20+%20gravação).%20Poderia%20me%20dar%20mais%20informações?',
     preferenceId: 'whatsapp-contact'
   },
-  // Legacy service IDs
+  // IDs de serviço legados
   'service79': {
     url: 'https://mpago.la/23WDA5a',
     preferenceId: '178571987-5ed445de-ebe1-47d0-aaa8-1bb544bc5c88'
   },
   'service99': {
     url: 'https://mpago.la/113Dotr',
-    preferenceId: '178571987-266f5eb5-3e03-4083-82d9-690fbb1b951'
+    preferenceId: '178571987-266f5eb5-3e03-4083-82d9-690fbb1b2951'
   },
   'service249': {
     url: 'https://mpago.la/1Fyqdcw',
@@ -120,7 +120,7 @@ export const extraServicePaymentLinks: Record<string, PaymentLinkData> = {
     preferenceId: '178571987-d2c262a6-0251-40cb-99ed-37415eb90c1d'
   },
   'service1499': {
-    url: 'https://wa.me/5511920585072?text=Olá,%20tenho%20interesse%20no%20serviço%20de%20Composição%20sem%20IA.%20Poderia%20me%20dar%20mais%20informações?',
-    preferenceId: 'whatsapp-contact'
+    url: 'https://mpago.li/1gjwJZY',
+    preferenceId: '178571987-1b5c6c1a-2c8b-4c9a-b67c-07519f43382f'
   }
 };
