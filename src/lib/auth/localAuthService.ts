@@ -1,35 +1,23 @@
 
 import { AdminUser } from '@/types/admin-auth';
 
-// Demo admin users
+// Demo admin user
+const DEMO_ADMIN: AdminUser = {
+  id: 'admin-1',
+  email: 'admin@harmonia.com',
+  name: 'Admin User',
+  role: 'admin',
+  createdAt: new Date().toISOString()
+};
+
+// For a real app you would hash passwords, but for demo purposes we'll use plain text
 const VALID_CREDENTIALS = [
-  { 
-    email: 'admin@harmonia.com', 
-    password: 'admin123456',
-    userData: {
-      id: 'admin-1',
-      email: 'admin@harmonia.com',
-      name: 'Admin User',
-      role: 'admin',
-      createdAt: new Date().toISOString()
-    }
-  },
-  { 
-    email: 'contato@harmonia.media', 
-    password: 'i9!_b!ThA;2H6/bt',
-    userData: {
-      id: 'admin-2',
-      email: 'contato@harmonia.media',
-      name: 'Contato User',
-      role: 'admin',
-      createdAt: new Date().toISOString()
-    }
-  }
+  { email: 'admin@harmonia.com', password: 'admin123456' }
 ];
 
 // Keys for localStorage
-const AUTH_TOKEN_KEY = 'admin-auth-token';
-const AUTH_USER_KEY = 'admin-auth-user';
+const AUTH_TOKEN_KEY = 'harmonia-admin-auth-token';
+const AUTH_USER_KEY = 'harmonia-admin-auth-user';
 
 export const localAuthService = {
   // Login function
@@ -38,18 +26,15 @@ export const localAuthService = {
     await new Promise(resolve => setTimeout(resolve, 800));
     
     try {
-      console.log("Tentando login com:", email);
-      
       // Check credentials
       const matchedUser = VALID_CREDENTIALS.find(
         cred => cred.email.toLowerCase() === email.toLowerCase() && cred.password === password
       );
       
       if (!matchedUser) {
-        console.log("Credenciais inválidas");
         return { 
           success: false, 
-          error: 'Credenciais inválidas. Por favor, verifique seu email e senha.' 
+          error: 'Credenciais inválidas. Por favor, tente novamente.' 
         };
       }
       
@@ -58,13 +43,11 @@ export const localAuthService = {
       
       // Store auth info in localStorage
       localStorage.setItem(AUTH_TOKEN_KEY, token);
-      localStorage.setItem(AUTH_USER_KEY, JSON.stringify(matchedUser.userData));
-      
-      console.log("Login bem-sucedido, dados armazenados:", matchedUser.userData);
+      localStorage.setItem(AUTH_USER_KEY, JSON.stringify(DEMO_ADMIN));
       
       return { 
         success: true,
-        user: matchedUser.userData
+        user: DEMO_ADMIN
       };
     } catch (error) {
       console.error('Erro ao fazer login:', error);
@@ -83,21 +66,15 @@ export const localAuthService = {
     // Clear auth data from localStorage
     localStorage.removeItem(AUTH_TOKEN_KEY);
     localStorage.removeItem(AUTH_USER_KEY);
-    console.log("Logout realizado, dados de autenticação removidos");
   },
   
   // Check if user is authenticated
   getUser: (): AdminUser | null => {
     try {
       const userJson = localStorage.getItem(AUTH_USER_KEY);
-      if (!userJson) {
-        console.log("Nenhum usuário encontrado no localStorage");
-        return null;
-      }
+      if (!userJson) return null;
       
-      const user = JSON.parse(userJson) as AdminUser;
-      console.log("Usuário encontrado no localStorage:", user.email);
-      return user;
+      return JSON.parse(userJson) as AdminUser;
     } catch (error) {
       console.error('Erro ao recuperar usuário:', error);
       return null;
@@ -106,9 +83,7 @@ export const localAuthService = {
   
   // Check if token exists
   isAuthenticated: (): boolean => {
-    const hasToken = !!localStorage.getItem(AUTH_TOKEN_KEY);
-    console.log("Verificação de autenticação:", hasToken ? "Autenticado" : "Não autenticado");
-    return hasToken;
+    return !!localStorage.getItem(AUTH_TOKEN_KEY);
   }
 };
 

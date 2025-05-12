@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { PackageId, packageData } from '@/lib/payment/packageData';
+import { packageData, PackageId } from '@/lib/payment/packageData';
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Label } from "@/components/ui/label";
 import { Check } from 'lucide-react';

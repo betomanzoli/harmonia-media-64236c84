@@ -1,127 +1,113 @@
 
 import React from 'react';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import AudioCard from './AudioCard';
-import ComparisonPlayer from './ComparisonPlayer';
-import { AudioExample } from './audioData';
+import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
+import { Music, Sliders, Layers, Calculator, FileCheck } from 'lucide-react';
+import ExamplesList, { AudioExampleItem } from './ExamplesList';
+import AudioVersions from './AudioVersions';
+import { Button } from "@/components/ui/button";
+import { Link } from 'react-router-dom';
 
-export interface PortfolioTabsProps {
-  selectedCategory: string;
-  onSelectCategory: (category: string) => void;
-  examples: AudioExample[];
-  comparisonExamples: AudioExample[];
+interface ComparisonExample {
+  title: string;
+  subtitle: string;
+  versions: {
+    name: string;
+    audioSrc: string;
+    description: string;
+  }[];
+  type: "comparison" | "stems";
+}
+
+interface PortfolioTabsProps {
+  initialExamples: AudioExampleItem[];
+  extraExamples: AudioExampleItem[];
+  comparisonExamples: ComparisonExample[];
   showAll: boolean;
   onShowMore: () => void;
 }
 
-const PortfolioTabs: React.FC<PortfolioTabsProps> = ({
-  selectedCategory,
-  onSelectCategory,
-  examples,
+const PortfolioTabs: React.FC<PortfolioTabsProps> = ({ 
+  initialExamples,
+  extraExamples,
   comparisonExamples,
   showAll,
   onShowMore
 }) => {
-  const filteredExamples = selectedCategory === 'all' 
-    ? examples 
-    : examples.filter(example => example.category.includes(selectedCategory));
-
   return (
-    <Tabs defaultValue="examples" className="w-full">
-      <TabsList className="grid w-full max-w-md mx-auto grid-cols-2 mb-8">
-        <TabsTrigger value="examples">Exemplos de Músicas</TabsTrigger>
-        <TabsTrigger value="comparisons">Antes & Depois</TabsTrigger>
-      </TabsList>
-      
-      <TabsContent value="examples" className="space-y-8">
-        <div className="flex flex-wrap justify-center gap-4 mb-6">
-          <button
-            className={`px-4 py-2 rounded-full text-sm ${
-              selectedCategory === 'all' 
-                ? 'bg-harmonia-green text-white' 
-                : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-            }`}
-            onClick={() => onSelectCategory('all')}
-          >
-            Todos
-          </button>
-          <button
-            className={`px-4 py-2 rounded-full text-sm ${
-              selectedCategory === 'romantic' 
-                ? 'bg-harmonia-green text-white' 
-                : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-            }`}
-            onClick={() => onSelectCategory('romantic')}
-          >
-            Românticas
-          </button>
-          <button
-            className={`px-4 py-2 rounded-full text-sm ${
-              selectedCategory === 'commercial' 
-                ? 'bg-harmonia-green text-white' 
-                : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-            }`}
-            onClick={() => onSelectCategory('commercial')}
-          >
-            Comerciais
-          </button>
-          <button
-            className={`px-4 py-2 rounded-full text-sm ${
-              selectedCategory === 'special-date' 
-                ? 'bg-harmonia-green text-white' 
-                : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-            }`}
-            onClick={() => onSelectCategory('special-date')}
-          >
-            Datas Especiais
-          </button>
-        </div>
+    <>
+      <Tabs defaultValue="exemplos" className="w-full mb-10">
+        <TabsList className="grid grid-cols-3 max-w-md mx-auto">
+          <TabsTrigger value="exemplos" className="data-[state=active]:bg-harmonia-green">
+            <Music className="w-4 h-4 mr-1" /> Exemplos
+          </TabsTrigger>
+          <TabsTrigger value="comparacoes" className="data-[state=active]:bg-harmonia-green">
+            <Sliders className="w-4 h-4 mr-1" /> Comparações
+          </TabsTrigger>
+          <TabsTrigger value="stems" className="data-[state=active]:bg-harmonia-green">
+            <Layers className="w-4 h-4 mr-1" /> Stems
+          </TabsTrigger>
+        </TabsList>
         
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {filteredExamples.map(example => (
-            <AudioCard 
-              key={example.id}
-              title={example.title}
-              description={example.description}
-              audioUrl={example.audioUrl}
-              imageUrl={example.imageUrl}
-              tags={example.tags || example.category} // Use tags or fallback to category
-            />
-          ))}
-        </div>
+        <TabsContent value="exemplos" className="mt-6">
+          <ExamplesList 
+            initialExamples={initialExamples}
+            extraExamples={extraExamples}
+            showAll={showAll}
+            onShowMore={onShowMore}
+          />
+        </TabsContent>
         
-        {filteredExamples.length === 0 && (
-          <p className="text-center text-gray-500">
-            Nenhum exemplo encontrado para esta categoria.
-          </p>
-        )}
-        
-        {!showAll && examples.length > 0 && (
-          <div className="text-center mt-8">
-            <button
-              onClick={onShowMore}
-              className="bg-transparent border border-harmonia-green text-harmonia-green px-6 py-2 rounded-full hover:bg-harmonia-green hover:text-white transition-colors"
-            >
-              Carregar Mais Exemplos
-            </button>
+        <TabsContent value="comparacoes" className="mt-6">
+          <div className="space-y-10">
+            {comparisonExamples.filter(ex => ex.type === "comparison").map((example, index) => (
+              <AudioVersions
+                key={index}
+                title={example.title}
+                subtitle={example.subtitle}
+                versions={example.versions}
+                type="comparison"
+              />
+            ))}
           </div>
-        )}
-      </TabsContent>
-      
-      <TabsContent value="comparisons">
-        <div className="space-y-8 max-w-3xl mx-auto">
-          {comparisonExamples.map(example => (
-            <ComparisonPlayer
-              key={example.id}
-              title={example.title}
-              description={example.description}
-              beforeUrl={example.beforeUrl || ''}
-              afterUrl={example.audioUrl}
-            />
-          ))}
+        </TabsContent>
+        
+        <TabsContent value="stems" className="mt-6">
+          <div className="space-y-10">
+            {comparisonExamples.filter(ex => ex.type === "stems").map((example, index) => (
+              <AudioVersions
+                key={index}
+                title={example.title}
+                subtitle={example.subtitle}
+                versions={example.versions}
+                type="stems"
+              />
+            ))}
+          </div>
+        </TabsContent>
+      </Tabs>
+
+      {/* Seção CTA para calcular preço e fazer qualificação */}
+      <div className="bg-gradient-to-r from-background via-black to-background p-6 rounded-lg border border-border mt-10 mb-16">
+        <div className="text-center mb-6">
+          <h3 className="text-xl font-bold mb-2">Pronto para criar sua música personalizada?</h3>
+          <p className="text-gray-400">Calcule o preço ou faça uma qualificação para começar seu projeto musical.</p>
         </div>
-      </TabsContent>
-    </Tabs>
+        <div className="flex flex-col sm:flex-row justify-center gap-4">
+          <Button asChild className="bg-harmonia-green hover:bg-harmonia-green/90 flex items-center gap-2">
+            <Link to="/calculadora">
+              <Calculator className="w-4 h-4" />
+              Calcular Preço
+            </Link>
+          </Button>
+          <Button asChild variant="outline" className="flex items-center gap-2">
+            <Link to="/qualificacao">
+              <FileCheck className="w-4 h-4" />
+              Fazer Qualificação
+            </Link>
+          </Button>
+        </div>
+      </div>
+    </>
   );
 };
 

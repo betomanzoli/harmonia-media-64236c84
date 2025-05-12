@@ -1,155 +1,125 @@
 
-import React, { useState } from 'react';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Textarea } from '@/components/ui/textarea';
-import { Label } from '@/components/ui/label';
-import { Switch } from '@/components/ui/switch';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import { useToast } from '@/hooks/use-toast';
-
-interface PortfolioItem {
-  title: string;
-  description: string;
-  audioUrl: string;
-  fileId?: string;
-  type: 'example' | 'comparison' | 'stem';
-  featured?: boolean;
-}
+import React from 'react';
+import { Button } from "@/components/ui/button";
+import { PortfolioItem } from '@/hooks/usePortfolioItems';
 
 interface AddPortfolioItemFormProps {
-  onAdd: (item: PortfolioItem) => string | null;
-  onCancel: () => void;
+  onAddItem: (item: Omit<PortfolioItem, 'id'>) => void;
 }
 
-const AddPortfolioItemForm: React.FC<AddPortfolioItemFormProps> = ({ onAdd, onCancel }) => {
-  const [title, setTitle] = useState('');
-  const [description, setDescription] = useState('');
-  const [audioUrl, setAudioUrl] = useState('');
-  const [type, setType] = useState<'example' | 'comparison' | 'stem'>('example');
-  const [featured, setFeatured] = useState(false);
-  const [isLoading, setIsLoading] = useState(false);
-  const { toast } = useToast();
-
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    
-    // Validate fields
-    if (!title.trim() || !description.trim() || !audioUrl.trim()) {
-      toast({
-        title: "Campos incompletos",
-        description: "Por favor, preencha todos os campos obrigatórios.",
-        variant: "destructive"
-      });
-      return;
-    }
-    
-    setIsLoading(true);
-    
-    try {
-      // Extract Google Drive file ID if possible
-      const fileIdMatch = audioUrl.match(/[-\w]{25,}/);
-      const fileId = fileIdMatch ? fileIdMatch[0] : '';
-      
-      const newItem: PortfolioItem = {
-        title: title.trim(),
-        description: description.trim(),
-        audioUrl: audioUrl.trim(),
-        fileId,
-        type,
-        featured
-      };
-      
-      onAdd(newItem);
-    } catch (error) {
-      console.error('Erro ao adicionar item:', error);
-      toast({
-        title: "Erro ao adicionar item",
-        description: "Ocorreu um erro ao adicionar o item ao portfólio. Tente novamente.",
-        variant: "destructive"
-      });
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
+const AddPortfolioItemForm: React.FC<AddPortfolioItemFormProps> = ({ onAddItem }) => {
   return (
-    <form onSubmit={handleSubmit} className="space-y-4">
-      <div className="space-y-2">
-        <Label htmlFor="title">Título</Label>
-        <Input
-          id="title"
-          value={title}
-          onChange={(e) => setTitle(e.target.value)}
-          placeholder="Ex: Música para Casamento"
-          required
-        />
-      </div>
-      
-      <div className="space-y-2">
-        <Label htmlFor="description">Descrição</Label>
-        <Textarea
-          id="description"
-          value={description}
-          onChange={(e) => setDescription(e.target.value)}
-          placeholder="Descrição detalhada do item"
-          rows={3}
-          required
-        />
-      </div>
-      
-      <div className="space-y-2">
-        <Label htmlFor="audioUrl">URL do Google Drive</Label>
-        <Input
-          id="audioUrl"
-          value={audioUrl}
-          onChange={(e) => setAudioUrl(e.target.value)}
-          placeholder="https://drive.google.com/file/d/..."
-          required
-        />
-      </div>
-      
-      <div className="space-y-2">
-        <Label htmlFor="type">Tipo de Item</Label>
-        <Select
-          value={type}
-          onValueChange={(value: 'example' | 'comparison' | 'stem') => setType(value)}
-        >
-          <SelectTrigger className="w-full">
-            <SelectValue placeholder="Selecione o tipo" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="example">Exemplo</SelectItem>
-            <SelectItem value="comparison">Comparação (AI vs Final)</SelectItem>
-            <SelectItem value="stem">Stem (Instrumental/Vocal)</SelectItem>
-          </SelectContent>
-        </Select>
-      </div>
-      
-      <div className="flex items-center space-x-2">
-        <Switch 
-          id="featured"
-          checked={featured}
-          onCheckedChange={setFeatured}
-        />
-        <Label htmlFor="featured">Exibir em destaque no portfólio</Label>
-      </div>
-      
-      <div className="flex justify-end space-x-2 pt-4">
-        <Button type="button" variant="outline" onClick={onCancel} disabled={isLoading}>
-          Cancelar
-        </Button>
-        <Button type="submit" disabled={isLoading}>
-          {isLoading ? 'Salvando...' : 'Salvar Item'}
-        </Button>
-      </div>
-    </form>
+    <div className="border rounded-md p-6">
+      <h2 className="text-xl font-semibold mb-4">Adicionar Novo Item</h2>
+      <form 
+        onSubmit={(e) => {
+          e.preventDefault();
+          const form = e.target as HTMLFormElement;
+          const title = (form.elements.namedItem('title') as HTMLInputElement).value;
+          const subtitle = (form.elements.namedItem('subtitle') as HTMLInputElement).value;
+          const genre = (form.elements.namedItem('genre') as HTMLInputElement).value;
+          const type = (form.elements.namedItem('type') as HTMLSelectElement).value;
+          const audioSrc = (form.elements.namedItem('audioSrc') as HTMLInputElement).value;
+          const category = genre; // Using genre as category
+          const description = (form.elements.namedItem('description') as HTMLTextAreaElement).value || `${title} - ${subtitle}`;
+          const imageUrl = '/images/portfolio/portfolio-default.jpg'; // Default image
+          const clientName = 'harmonIA Music';
+          const date = new Date().toISOString().split('T')[0];
+          const audioUrl = audioSrc; // Same as audioSrc for compatibility
+          
+          onAddItem({
+            title,
+            subtitle,
+            genre,
+            type,
+            audioSrc,
+            category,
+            description,
+            imageUrl,
+            clientName,
+            date,
+            audioUrl
+          });
+          
+          form.reset();
+        }}
+        className="grid grid-cols-1 md:grid-cols-2 gap-4"
+      >
+        <div>
+          <label htmlFor="title" className="block text-sm font-medium mb-1">Título</label>
+          <input
+            id="title"
+            name="title"
+            required
+            className="w-full p-2 border border-input rounded"
+            placeholder="Ex: Aniversário de 50 Anos"
+          />
+        </div>
+        
+        <div>
+          <label htmlFor="subtitle" className="block text-sm font-medium mb-1">Subtítulo</label>
+          <input
+            id="subtitle"
+            name="subtitle"
+            required
+            className="w-full p-2 border border-input rounded"
+            placeholder="Ex: Homenagem para pai"
+          />
+        </div>
+        
+        <div>
+          <label htmlFor="genre" className="block text-sm font-medium mb-1">Gênero Musical</label>
+          <input
+            id="genre"
+            name="genre"
+            required
+            className="w-full p-2 border border-input rounded"
+            placeholder="Ex: MPB, Pop, Rock"
+          />
+        </div>
+        
+        <div>
+          <label htmlFor="type" className="block text-sm font-medium mb-1">Tipo</label>
+          <select
+            id="type"
+            name="type"
+            required
+            className="w-full p-2 border border-input rounded"
+          >
+            <option value="vocal">Vocal</option>
+            <option value="instrumental">Instrumental</option>
+          </select>
+        </div>
+        
+        <div className="md:col-span-2">
+          <label htmlFor="audioSrc" className="block text-sm font-medium mb-1">URL do Áudio</label>
+          <input
+            id="audioSrc"
+            name="audioSrc"
+            required
+            className="w-full p-2 border border-input rounded"
+            placeholder="https://exemplo.com/audio.mp3"
+          />
+        </div>
+        
+        <div className="md:col-span-2">
+          <label htmlFor="description" className="block text-sm font-medium mb-1">Descrição (opcional)</label>
+          <textarea
+            id="description"
+            name="description"
+            className="w-full p-2 border border-input rounded"
+            placeholder="Descrição detalhada do item"
+            rows={3}
+          />
+        </div>
+        
+        <div className="md:col-span-2">
+          <Button type="submit" className="bg-harmonia-green hover:bg-harmonia-green/90">
+            Adicionar ao Portfólio
+          </Button>
+        </div>
+      </form>
+    </div>
   );
 };
 

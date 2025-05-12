@@ -5,6 +5,7 @@ export const ContractContent = {
   getEssencialContract: (): string => {
     return `
       <h3 style="font-weight: bold; margin-bottom: 10px;">CONTRATO DE PRESTAÇÃO DE SERVIÇOS - PACOTE ESSENCIAL</h3>
+      <p style="margin-bottom: 10px;">CONTRATADA: harmonIA, CNPJ XX.XXX.XXX/0001-XX</p>
       
       <h4 style="font-weight: bold; margin-top: 15px;">CLÁUSULA PRIMEIRA - DO OBJETO</h4>
       <p>1.1. Prestação de serviços de composição musical assistida por inteligência artificial com intervenção humana, conforme especificações do Pacote Essencial.</p>
@@ -20,7 +21,7 @@ export const ContractContent = {
       <h4 style="font-weight: bold; margin-top: 15px;">CLÁUSULA TERCEIRA - DOS DIREITOS CONCEDIDOS</h4>
       <p>3.1. O CONTRATANTE recebe uma licença não-exclusiva, intransferível, para uso EXCLUSIVAMENTE PESSOAL E NÃO-COMERCIAL da OBRA MUSICAL.<br />
          3.2. É expressamente VEDADA a reprodução pública, comercialização, adaptação, sincronização com imagens, ou cessão a terceiros da OBRA MUSICAL.<br />
-         3.3. O uso da OBRA MUSICAL exige a atribuição de crédito: "Música criada por harmonIA".</p>
+         3.3. O uso da OBRA MUSICAL exige a atribuição de crédito: "Música criada por harmonIA para [Nome do CONTRATANTE]".</p>
       
       <h4 style="font-weight: bold; margin-top: 15px;">CLÁUSULA QUARTA - DA PROPRIEDADE INTELECTUAL</h4>
       <p>4.1. O CONTRATANTE detém direitos sobre o conteúdo fornecido para criação.<br />
@@ -33,6 +34,7 @@ export const ContractContent = {
   getProfissionalContract: (): string => {
     return `
       <h3 style="font-weight: bold; margin-bottom: 10px;">CONTRATO DE PRESTAÇÃO DE SERVIÇOS - PACOTE PROFISSIONAL</h3>
+      <p style="margin-bottom: 10px;">CONTRATADA: harmonIA, CNPJ XX.XXX.XXX/0001-XX</p>
       
       <h4 style="font-weight: bold; margin-top: 15px;">CLÁUSULA PRIMEIRA - DO OBJETO</h4>
       <p>1.1. Prestação de serviços de composição musical assistida por inteligência artificial com intervenção humana, conforme especificações do Pacote Profissional.</p>
@@ -61,6 +63,7 @@ export const ContractContent = {
   getPremiumContract: (): string => {
     return `
       <h3 style="font-weight: bold; margin-bottom: 10px;">CONTRATO DE PRESTAÇÃO DE SERVIÇOS - PACOTE PREMIUM</h3>
+      <p style="margin-bottom: 10px;">CONTRATADA: harmonIA, CNPJ XX.XXX.XXX/0001-XX</p>
       
       <h4 style="font-weight: bold; margin-top: 15px;">CLÁUSULA PRIMEIRA - DO OBJETO</h4>
       <p>1.1. Prestação de serviços de composição musical assistida por inteligência artificial com intervenção humana, conforme especificações do Pacote Premium.</p>

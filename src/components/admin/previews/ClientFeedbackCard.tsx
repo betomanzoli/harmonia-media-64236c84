@@ -1,105 +1,68 @@
 
-import React, { useState } from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Textarea } from "@/components/ui/textarea";
-import { MessageSquare } from 'lucide-react';
+import React from 'react';
+import { Card, CardHeader, CardContent, CardTitle, CardFooter } from "@/components/ui/card";
+import { MessageSquare, Check } from 'lucide-react';
 
 interface ClientFeedbackCardProps {
   feedback: string;
   status: string;
-  onSaveFeedback: (feedback: string) => void;
 }
 
-const ClientFeedbackCard: React.FC<ClientFeedbackCardProps> = ({
-  feedback,
-  status,
-  onSaveFeedback
-}) => {
-  const [editMode, setEditMode] = useState(false);
-  const [feedbackText, setFeedbackText] = useState(feedback || '');
-  
-  const handleSave = () => {
-    onSaveFeedback(feedbackText);
-    setEditMode(false);
-  };
-  
+const ClientFeedbackCard: React.FC<ClientFeedbackCardProps> = ({ feedback, status }) => {
+  if (!feedback && status !== 'approved') {
+    return (
+      <Card>
+        <CardHeader>
+          <CardTitle>Feedback do cliente</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="py-8 text-center">
+            <MessageSquare className="h-12 w-12 text-gray-300 mx-auto mb-4" />
+            <p className="text-gray-500">O cliente ainda não enviou feedback para este projeto.</p>
+          </div>
+        </CardContent>
+      </Card>
+    );
+  }
+
+  if (status === 'approved') {
+    return (
+      <Card className="border-green-200">
+        <CardHeader className="bg-green-50 border-b border-green-200">
+          <CardTitle className="flex items-center">
+            <Check className="h-5 w-5 text-green-600 mr-2" />
+            <span className="text-green-700">Música aprovada pelo cliente</span>
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="pt-6">
+          {feedback ? (
+            <div className="p-4 bg-green-50 rounded-md border border-green-200">
+              <p className="text-green-800">{feedback}</p>
+            </div>
+          ) : (
+            <p className="text-green-700">O cliente aprovou a música sem comentários adicionais.</p>
+          )}
+        </CardContent>
+        <CardFooter className="bg-green-50 border-t border-green-200 text-sm text-green-700">
+          A aprovação significa que o cliente está satisfeito com a versão atual e autoriza a finalização do projeto.
+        </CardFooter>
+      </Card>
+    );
+  }
+
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle className="text-lg flex items-center">
-          <MessageSquare className="h-5 w-5 mr-2 text-gray-500" />
-          Feedback do Cliente
-        </CardTitle>
+    <Card className="border-blue-200">
+      <CardHeader className="bg-blue-50 border-b border-blue-200">
+        <CardTitle>Feedback do cliente</CardTitle>
       </CardHeader>
-      <CardContent className="space-y-4">
-        {editMode ? (
-          <>
-            <Textarea
-              value={feedbackText}
-              onChange={(e) => setFeedbackText(e.target.value)}
-              className="min-h-[120px]"
-              placeholder="Digite o feedback do cliente"
-            />
-            <div className="flex justify-end space-x-2">
-              <Button 
-                variant="outline" 
-                size="sm"
-                onClick={() => {
-                  setFeedbackText(feedback);
-                  setEditMode(false);
-                }}
-              >
-                Cancelar
-              </Button>
-              <Button 
-                size="sm"
-                onClick={handleSave}
-              >
-                Salvar
-              </Button>
-            </div>
-          </>
-        ) : feedback ? (
-          <>
-            <div className="bg-gray-50 p-4 rounded-md border text-sm">
-              {feedback}
-            </div>
-            <div className="flex justify-end">
-              <Button 
-                variant="outline" 
-                size="sm"
-                onClick={() => setEditMode(true)}
-              >
-                Editar Feedback
-              </Button>
-            </div>
-          </>
-        ) : (
-          <>
-            <div className="text-center p-4 bg-gray-50 rounded-md border border-dashed">
-              {status === 'feedback' ? (
-                <p className="text-sm text-muted-foreground">
-                  O cliente enviou feedback, mas ele ainda não foi registrado.
-                </p>
-              ) : (
-                <p className="text-sm text-muted-foreground">
-                  O cliente ainda não enviou nenhum feedback.
-                </p>
-              )}
-            </div>
-            <div className="flex justify-end">
-              <Button 
-                variant="outline" 
-                size="sm"
-                onClick={() => setEditMode(true)}
-              >
-                Adicionar Feedback
-              </Button>
-            </div>
-          </>
-        )}
+      <CardContent className="pt-6">
+        <div className="p-4 bg-blue-50 rounded-md border border-blue-200">
+          <p className="text-blue-800">{feedback}</p>
+        </div>
       </CardContent>
+      <CardFooter className="bg-blue-50 border-t border-blue-200 text-sm text-blue-700">
+        Este feedback foi recebido e precisa ser processado pela equipe de produção.
+      </CardFooter>
     </Card>
   );
 };

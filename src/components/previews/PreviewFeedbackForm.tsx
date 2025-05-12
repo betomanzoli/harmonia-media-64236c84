@@ -1,83 +1,350 @@
-
-import React from 'react';
+import React, { useState } from 'react';
 import { Card } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
-import { ThumbsUp, SendHorizonal } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
+import { useToast } from '@/hooks/use-toast';
+import { Check, Send, Star, Phone, ThumbsUp, ThumbsDown } from 'lucide-react';
+import { Form, FormField, FormItem, FormLabel, FormControl, FormDescription } from "@/components/ui/form";
+import { useForm } from "react-hook-form";
+import { notificationService } from '@/services/notificationService';
+import emailService from '@/services/emailService';
 
-interface PreviewFeedbackFormProps {
-  feedback: string;
-  onFeedbackChange: (value: string) => void;
-  onSubmit: (comments?: string) => void;
-  onApprove: (comments?: string) => void;
-  status?: 'waiting' | 'feedback' | 'approved';
-  selectedVersion?: string | null;
+export interface PreviewFeedbackFormProps {
+  projectId?: string;
+  selectedPreview?: string | null;
+  onSubmit?: (feedback: FeedbackData) => void;
+  status: 'waiting' | 'feedback' | 'approved';
+  isSubmitting?: boolean;
+  feedback?: string;
+  setFeedback?: (feedback: string) => void;
+  handleSubmit?: (e: React.FormEvent) => void;
+  handleApprove?: () => void;
   versionTitle?: string;
 }
 
+interface FeedbackData {
+  clientEmail: string;
+  clientName: string;
+  projectId: string;
+  selectedVersion: string;
+  generalFeedback: string;
+  specificFeedback: {
+    melody?: string;
+    instruments?: string;
+    tempo?: string;
+    other?: string;
+  };
+  rating: number;
+  preferredContactMethod: 'email' | 'whatsapp';
+  timestamp: string;
+}
+
 const PreviewFeedbackForm: React.FC<PreviewFeedbackFormProps> = ({ 
-  feedback,
-  onFeedbackChange,
+  projectId = "", 
+  selectedPreview, 
   onSubmit,
-  onApprove,
-  status = 'waiting',
-  selectedVersion,
+  status,
+  isSubmitting = false,
+  feedback = '',
+  setFeedback,
+  handleSubmit: propHandleSubmit,
+  handleApprove,
   versionTitle
 }) => {
-  const isApproved = status === 'approved';
+  const navigate = useNavigate();
+  const { toast } = useToast();
+  const [rating, setRating] = useState(0);
+  const [showContactFields, setShowContactFields] = useState(false);
+  const [showExtraNotes, setShowExtraNotes] = useState(false);
+  const [feedbackSentiment, setFeedbackSentiment] = useState<'positive' | 'negative' | null>(null);
+  
+  const form = useForm<FeedbackData>({
+    defaultValues: {
+      clientEmail: '',
+      clientName: '',
+      projectId: projectId,
+      selectedVersion: selectedPreview || '',
+      generalFeedback: feedback,
+      specificFeedback: {
+        melody: '',
+        instruments: '',
+        tempo: '',
+        other: ''
+      },
+      rating: 0,
+      preferredContactMethod: 'email',
+      timestamp: new Date().toISOString()
+    }
+  });
+  
+  const handleSentimentFeedback = (sentiment: 'positive' | 'negative') => {
+    setFeedbackSentiment(sentiment);
+    
+    if (sentiment === 'positive') {
+      form.setValue('generalFeedback', 'Gostei muito desta versão! ');
+      if (setFeedback) setFeedback('Gostei muito desta versão! ');
+    } else {
+      form.setValue('generalFeedback', 'Acho que esta versão precisa de alguns ajustes: ');
+      if (setFeedback) setFeedback('Acho que esta versão precisa de alguns ajustes: ');
+    }
+    
+    setShowExtraNotes(true);
+  };
+  
+  const onFormSubmit = async (data: FeedbackData) => {
+    if (!selectedPreview) {
+      toast({
+        title: 'Selecione uma versão',
+        description: 'Por favor, selecione uma versão musical antes de enviar seu feedback.',
+        variant: 'destructive'
+      });
+      return;
+    }
+    
+    data.timestamp = new Date().toISOString();
+    data.selectedVersion = selectedPreview;
+    data.projectId = projectId;
+    
+    try {
+      notificationService.notify('feedback_received', {
+        projectId,
+        clientName: data.clientName,
+        clientEmail: data.clientEmail,
+        selectedVersion: selectedPreview,
+        feedback: data.generalFeedback,
+        rating: data.rating,
+        timestamp: data.timestamp
+      });
+      
+      await emailService.sendPreviewNotification(
+        data.clientEmail,
+        data.clientName,
+        `Feedback recebido para o projeto ${projectId}`
+      );
+      
+      toast({
+        title: "Feedback enviado com sucesso!",
+        description: "Agradecemos sua avaliação. Nossa equipe iniciará os ajustes em breve.",
+      });
+      
+      if (onSubmit) {
+        onSubmit(data);
+      } else if (propHandleSubmit) {
+        propHandleSubmit(new Event('submit') as any);
+      }
+      
+      setTimeout(() => {
+        navigate('/feedback-confirmacao');
+      }, 1500);
+    } catch (error) {
+      console.error('Erro ao enviar feedback:', error);
+      toast({
+        title: "Erro ao enviar feedback",
+        description: "Ocorreu um erro ao enviar seu feedback. Por favor, tente novamente.",
+        variant: "destructive"
+      });
+    }
+  };
+  
+  if (status === 'approved') {
+    return (
+      <Card className="p-6 border-green-500 bg-green-50 text-center">
+        <Check className="w-8 h-8 text-green-500 mx-auto mb-4" />
+        <h3 className="text-xl font-bold mb-2">Música Aprovada!</h3>
+        <p className="mb-4">Você já aprovou esta música. Nossa equipe está trabalhando na finalização.</p>
+        {projectId && (
+          <Button 
+            onClick={() => navigate(`/acompanhar-pedido/${projectId}`)} 
+            className="bg-harmonia-green hover:bg-harmonia-green/90"
+          >
+            Acompanhar Pedido
+          </Button>
+        )}
+      </Card>
+    );
+  }
   
   return (
-    <Card className="p-6">
-      <h2 className="text-xl font-bold text-black mb-4">Envie seu feedback</h2>
+    <Card className="p-6 border-l-4 border-l-harmonia-green mb-8">
+      <h3 className="text-xl font-bold mb-4">Envie seu feedback</h3>
       
-      {selectedVersion && versionTitle && (
-        <div className="mb-4 p-3 bg-gray-50 rounded-md">
-          <p className="text-sm">
-            <span className="font-medium">Versão selecionada:</span> {versionTitle}
-          </p>
+      {!selectedPreview ? (
+        <div className="text-center py-6 bg-gray-50 rounded-md mb-4">
+          <p className="text-gray-500 mb-2">Por favor, selecione uma das versões acima para enviar seu feedback</p>
+          <p className="text-sm text-gray-400">Ouça cada versão e escolha a que mais se adequa às suas necessidades</p>
+        </div>
+      ) : (
+        <div className="mb-6">
+          <div className="flex flex-wrap gap-3 mb-4">
+            <div className="bg-harmonia-green/10 text-harmonia-green px-3 py-1 rounded-full text-sm font-medium flex items-center">
+              <span className="mr-1">✓</span> Versão selecionada: {versionTitle}
+            </div>
+          </div>
+          
+          {!feedbackSentiment && (
+            <div className="py-4">
+              <h4 className="text-sm font-medium mb-3 text-center">O que você achou desta versão?</h4>
+              <div className="flex justify-center gap-3">
+                <Button 
+                  variant="outline" 
+                  onClick={() => handleSentimentFeedback('positive')}
+                  className="flex-1 sm:flex-none border-green-300 hover:bg-green-50 hover:text-green-700"
+                >
+                  <ThumbsUp className="h-5 w-5 mr-2 text-green-500" />
+                  Gostei
+                </Button>
+                
+                <Button 
+                  variant="outline" 
+                  onClick={() => handleSentimentFeedback('negative')}
+                  className="flex-1 sm:flex-none border-amber-300 hover:bg-amber-50 hover:text-amber-700"
+                >
+                  <ThumbsDown className="h-5 w-5 mr-2 text-amber-500" />
+                  Precisa de ajustes
+                </Button>
+              </div>
+            </div>
+          )}
         </div>
       )}
       
-      <div className="mb-6">
-        <label htmlFor="feedback" className="block text-sm font-medium text-gray-700 mb-1">
-          Comentários ou ajustes desejados:
-        </label>
-        <Textarea
-          id="feedback"
-          placeholder="Escreva aqui suas observações, sugestões ou pedidos de ajustes..."
-          value={feedback}
-          onChange={(e) => onFeedbackChange(e.target.value)}
-          rows={5}
-          className="w-full resize-none"
-          disabled={isApproved}
-        />
-      </div>
+      {showExtraNotes && (
+        <Form {...form}>
+          <form onSubmit={form.handleSubmit(onFormSubmit)} className="space-y-6">
+            <FormField
+              control={form.control}
+              name="generalFeedback"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Seu feedback</FormLabel>
+                  <FormControl>
+                    <Textarea
+                      placeholder="Compartilhe sua opinião detalhada sobre a versão selecionada..."
+                      className="min-h-[100px]"
+                      {...field}
+                      onChange={(e) => {
+                        field.onChange(e);
+                        if (setFeedback) setFeedback(e.target.value);
+                      }}
+                    />
+                  </FormControl>
+                </FormItem>
+              )}
+            />
+            
+            <div>
+              <Button 
+                type="button" 
+                variant="ghost" 
+                onClick={() => setShowContactFields(!showContactFields)}
+                className="px-0 text-harmonia-green hover:text-harmonia-green/80 hover:bg-transparent"
+              >
+                + Adicionar informações de contato
+              </Button>
+            </div>
+            
+            {showContactFields && (
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <FormField
+                  control={form.control}
+                  name="clientName"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Seu Nome</FormLabel>
+                      <FormControl>
+                        <Input placeholder="Nome completo" {...field} required />
+                      </FormControl>
+                    </FormItem>
+                  )}
+                />
+                
+                <FormField
+                  control={form.control}
+                  name="clientEmail"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Seu Email</FormLabel>
+                      <FormControl>
+                        <Input
+                          type="email"
+                          placeholder="seu@email.com"
+                          {...field}
+                          required
+                        />
+                      </FormControl>
+                    </FormItem>
+                  )}
+                />
+              </div>
+            )}
+            
+            <div>
+              <FormLabel>Avaliação da Versão</FormLabel>
+              <div className="flex items-center gap-1 mt-1">
+                {[1, 2, 3, 4, 5].map((star) => (
+                  <button
+                    key={star}
+                    type="button"
+                    className={`text-2xl ${rating >= star ? 'text-yellow-500' : 'text-gray-300'}`}
+                    onClick={() => {
+                      setRating(star);
+                      form.setValue('rating', star);
+                    }}
+                  >
+                    <Star className="w-6 h-6" />
+                  </button>
+                ))}
+              </div>
+            </div>
+            
+            <div className="flex flex-col sm:flex-row sm:justify-between gap-4 items-center mt-6">
+              <div className="flex gap-3 w-full sm:w-auto">
+                {handleApprove && (
+                  <Button 
+                    type="button" 
+                    className="bg-green-600 hover:bg-green-700 w-full sm:w-auto"
+                    disabled={!selectedPreview || isSubmitting}
+                    onClick={handleApprove}
+                  >
+                    <Check className="w-4 h-4 mr-2" />
+                    Aprovar Versão
+                  </Button>
+                )}
+                
+                <Button 
+                  type="submit" 
+                  className="bg-harmonia-green hover:bg-harmonia-green/90 w-full sm:w-auto"
+                  disabled={!selectedPreview || isSubmitting || !form.getValues('generalFeedback')}
+                >
+                  {isSubmitting ? (
+                    <>Enviando...</>
+                  ) : (
+                    <>
+                      <Send className="w-4 h-4 mr-2" />
+                      Enviar Feedback
+                    </>
+                  )}
+                </Button>
+              </div>
+            </div>
+          </form>
+        </Form>
+      )}
       
-      <div className="flex flex-col sm:flex-row gap-3">
-        <Button
-          onClick={() => onSubmit(feedback)}
-          disabled={isApproved}
-          className="flex-1 bg-blue-600 hover:bg-blue-700 text-white"
-        >
-          <SendHorizonal className="w-4 h-4 mr-2" />
-          Enviar Feedback
-        </Button>
-        
-        <Button
-          onClick={() => onApprove(feedback)}
-          disabled={isApproved}
-          className="flex-1 bg-green-600 hover:bg-green-700 text-white"
-        >
-          <ThumbsUp className="w-4 h-4 mr-2" />
-          Aprovar esta versão
-        </Button>
-      </div>
-      
-      {isApproved && (
-        <div className="mt-4 p-3 bg-green-50 border border-green-100 rounded-md">
-          <p className="text-sm text-green-800">
-            Esta prévia já foi aprovada. Obrigado pelo seu feedback!
+      {feedbackSentiment === 'positive' && handleApprove && (
+        <div className="mt-4 p-4 bg-green-50 rounded-md border border-green-200">
+          <p className="text-sm text-green-700 mb-3">
+            Você gostou desta versão? Se ela estiver exatamente como você deseja, você pode aprová-la diretamente.
           </p>
+          <Button 
+            onClick={handleApprove}
+            className="bg-green-600 hover:bg-green-700"
+          >
+            <Check className="w-4 h-4 mr-2" />
+            Aprovar versão sem mais alterações
+          </Button>
         </div>
       )}
     </Card>

@@ -1,16 +1,9 @@
+
 // Service to manage webhooks
 import { supabase } from '@/lib/supabase';
 
 // Define acceptable notification types
-export type NotificationType = 
-  | 'new_portfolio_item' 
-  | 'test_message' 
-  | 'feedback_received' 
-  | 'new_audio' 
-  | 'new_customer' 
-  | 'new_order' 
-  | 'new_invoice'
-  | 'briefing_received';
+export type NotificationType = 'new_portfolio_item' | 'test_message' | 'feedback_received' | 'new_audio' | 'new_customer' | 'new_order' | 'new_invoice';
 
 export interface WebhookPayload {
   type: NotificationType;

@@ -11,26 +11,53 @@ const MusicPreviewPage: React.FC = () => {
 
   useEffect(() => {
     // Log preview access for analytics and monitoring
-    if (projectId) {
-      console.log(`Cliente acessando prévia: ${projectId}, data: ${new Date().toISOString()}`);
-      window.scrollTo(0, 0);
-    }
+    console.log(`Cliente acessando prévia: ${projectId}, data: ${new Date().toISOString()}`);
+
+    // Scroll to top when component mounts
+    window.scrollTo(0, 0);
   }, [projectId]);
 
-  if (!projectId) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-100">
-        <div className="bg-white p-6 rounded-lg shadow-sm text-center">
-          <h2 className="text-2xl font-bold text-black mb-4">ID do projeto não encontrado</h2>
-          <p className="text-black">O código de prévia fornecido não é válido.</p>
-        </div>
-      </div>
-    );
-  }
+  // Add protection against right-click to prevent audio downloads
+  useEffect(() => {
+    const handleContextMenu = (e: MouseEvent) => {
+      e.preventDefault();
+      toast({
+        title: "Proteção de conteúdo",
+        description: "O download direto das prévias não é permitido nesta fase.",
+        variant: "destructive"
+      });
+      return false;
+    };
+
+    // Add protection against keyboard shortcuts
+    const handleKeyDown = (e: KeyboardEvent) => {
+      // Prevent Ctrl+S, Ctrl+U, F12
+      if (
+        (e.ctrlKey && (e.key === 's' || e.key === 'S' || e.key === 'u' || e.key === 'U')) ||
+        e.key === 'F12'
+      ) {
+        e.preventDefault();
+        toast({
+          title: "Proteção de conteúdo",
+          description: "Esta ação não é permitida na página de prévias.",
+          variant: "destructive"
+        });
+        return false;
+      }
+    };
+
+    document.addEventListener("contextmenu", handleContextMenu);
+    document.addEventListener("keydown", handleKeyDown);
+    
+    return () => {
+      document.removeEventListener("contextmenu", handleContextMenu);
+      document.removeEventListener("keydown", handleKeyDown);
+    };
+  }, [toast]);
 
   return (
-    <div className="min-h-screen bg-gray-100 pt-8 pb-16">
-      <MusicPreviewSystem projectId={projectId} />
+    <div className="min-h-screen pt-20">
+      <MusicPreviewSystem />
     </div>
   );
 };

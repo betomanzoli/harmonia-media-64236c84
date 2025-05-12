@@ -55,11 +55,6 @@ export const AdminAuthProvider: React.FC<AdminAuthProviderProps> = ({ children }
     offlineMode
   });
   
-  // Log authentication state for debugging
-  useEffect(() => {
-    console.log("Auth Provider State:", { isAuthenticated, isLoading, user });
-  }, [isAuthenticated, isLoading, user]);
-  
   return (
     <AdminAuthContext.Provider 
       value={{ 

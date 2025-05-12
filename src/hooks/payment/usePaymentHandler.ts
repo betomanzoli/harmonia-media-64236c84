@@ -3,7 +3,7 @@ import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useToast } from '@/hooks/use-toast';
 import emailService from '@/services/emailService';
-import { PackageId, PackageDetails } from '@/lib/payment/packageData';
+import { PackageId, PackageInfo } from '@/lib/payment/packageData';
 import { calculateExtrasTotal, parsePackagePrice } from '@/lib/payment/priceUtils';
 import { createOrderData } from '@/lib/payment/orderUtils';
 import { packagePaymentLinks } from '@/lib/payment/paymentLinks';
@@ -12,7 +12,7 @@ import contractAcceptanceLogger from '@/services/contractAcceptanceLogger';
 
 export function usePaymentHandler(
   packageId: PackageId,
-  selectedPackage: PackageDetails,
+  selectedPackage: PackageInfo,
   qualificationData: any,
   selectedExtras: string[] = []
 ) {
@@ -36,7 +36,7 @@ export function usePaymentHandler(
   const logContractAcceptance = async () => {
     if (!qualificationData) {
       console.warn('Qualification data not available for contract logging');
-      return false;
+      return;
     }
     
     try {
@@ -91,7 +91,7 @@ export function usePaymentHandler(
     try {
       // Calculate values
       const extrasTotal = calculateExtrasTotal(selectedExtras);
-      const packagePrice = parsePackagePrice(selectedPackage.price.toString());
+      const packagePrice = parsePackagePrice(selectedPackage.price);
       const totalPrice = packagePrice + extrasTotal;
       
       // Generate order ID
@@ -102,7 +102,7 @@ export function usePaymentHandler(
         method,
         packageId,
         packageName: selectedPackage.name,
-        price: selectedPackage.price.toString(),
+        price: selectedPackage.price,
         extras: selectedExtras,
         extrasTotal,
         total: `R$ ${totalPrice.toFixed(2).replace('.', ',')}`,

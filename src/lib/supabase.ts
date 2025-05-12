@@ -1,28 +1,5 @@
 
 // Biblioteca de compatibilidade para uso offline e online
-import { createClient } from '@supabase/supabase-js';
-
-// Base Supabase configuration for the new project
-const supabaseUrl = 'https://ivueqxyuflxsiecqvmgt.supabase.co';
-const supabaseAnonKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Iml2dWVxeHl1Zmx4c2llY3F2bWd0Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDY3MjY0MzEsImV4cCI6MjA2MjMwMjQzMX0.db1UVta6PSPGokJOZozwqZ7AAs2jBljfWCdUR3LjIdM';
-
-// Initialize the Supabase client with error handling
-export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
-  auth: {
-    persistSession: true,
-    autoRefreshToken: true,
-    detectSessionInUrl: true,
-    storageKey: 'harmonia-admin-auth', // Dedicated key for admin session
-  },
-  global: {
-    fetch: (...args: Parameters<typeof fetch>) => {
-      return fetch(...args).catch(error => {
-        console.error('Supabase fetch error:', error);
-        throw error;
-      });
-    }
-  }
-});
 
 const createMockQueryResponse = () => {
   return {
@@ -90,12 +67,50 @@ const createQueryBuilder = (tableName: string) => {
   };
 };
 
-// Funções auxiliares
-export const getSupabaseUrl = () => supabaseUrl;
-export const testSupabaseConnection = async () => ({ success: true, message: 'Conexão com Supabase ativa' });
-export const testAuthSettings = async () => ({ success: true, settings: { onlineMode: true } });
-export const securityService = {
-  checkSettings: async () => ({ success: true, settings: { onlineMode: true } })
+export const supabase = {
+  auth: {
+    resetPasswordForEmail: async (email: string, options: any) => {
+      console.log('Simulando reset de senha para', email, 'com opções', options);
+      // Simulação apenas - em ambiente real, isso chamaria a API do Supabase
+      return { error: null };
+    },
+    signOut: async () => {
+      localStorage.removeItem('harmonia-admin-auth-token');
+      localStorage.removeItem('harmonia-admin-auth-user');
+      return { error: null };
+    },
+    getSession: async () => {
+      const token = localStorage.getItem('harmonia-admin-auth-token');
+      const userStr = localStorage.getItem('harmonia-admin-auth-user');
+      
+      if (!token || !userStr) {
+        return { data: { session: null } };
+      }
+      
+      try {
+        const user = JSON.parse(userStr);
+        return {
+          data: {
+            session: {
+              user,
+              expires_at: Date.now() + 86400000, // 24 horas a partir de agora
+              access_token: token,
+            }
+          }
+        };
+      } catch {
+        return { data: { session: null } };
+      }
+    }
+  },
+  // Implementação do método from para consultas de banco de dados
+  from: (table: string) => createQueryBuilder(table),
+  functions: {
+    invoke: async (functionName: string, options?: any) => {
+      console.log(`Simulando invocação da função ${functionName}:`, options);
+      return createMockQueryResponse();
+    }
+  }
 };
 
 // Serviço de email offline
@@ -117,6 +132,14 @@ export const emailService = {
     console.log('Em produção, um email seria enviado com a confirmação do pagamento');
     return { success: true };
   }
+};
+
+// Funções auxiliares
+export const getSupabaseUrl = () => 'https://yzhidpsmzabrxnkucfpt.supabase.co';
+export const testSupabaseConnection = async () => ({ success: true, message: 'Conexão com Supabase ativa' });
+export const testAuthSettings = async () => ({ success: true, settings: { onlineMode: true } });
+export const securityService = {
+  checkSettings: async () => ({ success: true, settings: { onlineMode: true } })
 };
 
 export default supabase;

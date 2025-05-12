@@ -6,53 +6,36 @@ interface TestimonialsProps {
   showTestimonials?: boolean;
 }
 
-const Testimonials: React.FC<TestimonialsProps> = ({
-  showTestimonials = true
-}) => {
+const Testimonials: React.FC<TestimonialsProps> = ({ showTestimonials = true }) => {
   if (!showTestimonials) return null;
   
-  const testimonials = [
-    {
-      id: 1,
-      name: "Maria Silva",
-      role: "Noiva",
-      comment: "A música que a harmonIA criou para nosso casamento foi simplesmente perfeita. Captou exatamente a emoção que queríamos para nosso momento especial.",
-      rating: 5
-    },
-    {
-      id: 2,
-      name: "Carlos Mendes",
-      role: "Diretor de Marketing",
-      comment: "Contratamos para um jingle publicitário e superou todas as expectativas. O resultado trouxe exatamente a identidade que buscávamos para nossa marca.",
-      rating: 5
-    },
-    {
-      id: 3,
-      name: "Ana Ferreira",
-      role: "Cliente Particular",
-      comment: "Encomendei uma música para presentear meu marido em nosso aniversário. Foi uma experiência incrível e ele se emocionou muito!",
-      rating: 5
-    }
-  ];
-
   return (
-    <section className="py-16 bg-muted/30">
-      <div className="container mx-auto px-4">
-        <h2 className="text-3xl font-bold text-center mb-2">O que nossos clientes dizem</h2>
-        <p className="text-center text-muted-foreground mb-12 max-w-2xl mx-auto">
-          Veja o que as pessoas estão falando sobre nossas músicas personalizadas
-        </p>
+    <section id="depoimentos" className="py-20 px-6 md:px-10 bg-secondary">
+      <div className="max-w-7xl mx-auto">
+        <div className="text-center mb-12">
+          <h2 className="text-3xl font-bold mb-4">O que nossos clientes dizem sobre HarmonIA</h2>
+          <p className="text-gray-400 max-w-2xl mx-auto">
+            Centenas de clientes satisfeitos compartilham suas experiências com nossos serviços de composição musical.
+          </p>
+        </div>
         
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-          {testimonials.map(testimonial => (
-            <TestimonialCard
-              key={testimonial.id}
-              clientName={testimonial.name}
-              position={testimonial.role}
-              testimonial={testimonial.comment}
-              rating={testimonial.rating}
-            />
-          ))}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          <TestimonialCard 
+            quote="A música capturou exatamente a emoção que eu queria transmitir! Foi o presente perfeito para o aniversário da minha mãe." 
+            author="Ana Silva"
+            rating={5}
+          />
+          <TestimonialCard 
+            quote="Nosso jingle ficou incrível! Os clientes adoraram a identidade sonora e já notamos um aumento no reconhecimento da marca." 
+            author="João Santos"
+            role="CEO da Tech Solutions"
+            rating={5}
+          />
+          <TestimonialCard 
+            quote="A equipe foi super atenciosa e entregou tudo antes do prazo! A qualidade da música superou todas as minhas expectativas." 
+            author="Mariana Costa"
+            rating={5}
+          />
         </div>
       </div>
     </section>

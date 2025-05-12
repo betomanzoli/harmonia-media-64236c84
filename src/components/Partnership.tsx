@@ -5,37 +5,105 @@ import { Handshake, DollarSign, Users } from 'lucide-react';
 
 const Partnership: React.FC = () => {
   return (
-    <section className="py-16 bg-background">
-      <div className="container mx-auto px-4">
-        <h2 className="text-3xl font-bold text-center mb-12">Parcerias</h2>
+    <section id="parceiro" className="py-20 px-6 md:px-10 max-w-7xl mx-auto">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-10 items-center">
+        <div>
+          <h2 className="text-3xl font-bold mb-4">Ganhe com HarmonIA!</h2>
+          <p className="text-gray-400 mb-8">
+            Seja um afiliado ou parceiro estratégico da HarmonIA e receba comissões por cada cliente indicado! 
+            Ideal para cerimonialistas, educadores musicais e influenciadores digitais.
+          </p>
+          
+          <div className="space-y-6 mb-8">
+            <div className="flex gap-4">
+              <div className="bg-harmonia-green/10 p-3 rounded-lg">
+                <Handshake className="w-6 h-6 text-harmonia-green" />
+              </div>
+              <div>
+                <h3 className="font-semibold mb-1">Parceria Estratégica</h3>
+                <p className="text-gray-400 text-sm">
+                  Oferecemos condições especiais para parceiros que integram nossos serviços em seu portfólio.
+                </p>
+              </div>
+            </div>
+            
+            <div className="flex gap-4">
+              <div className="bg-harmonia-green/10 p-3 rounded-lg">
+                <DollarSign className="w-6 h-6 text-harmonia-green" />
+              </div>
+              <div>
+                <h3 className="font-semibold mb-1">Programa de Afiliados</h3>
+                <p className="text-gray-400 text-sm">
+                  Ganhe até 20% de comissão por cada venda realizada através do seu link personalizado.
+                </p>
+              </div>
+            </div>
+            
+            <div className="flex gap-4">
+              <div className="bg-harmonia-green/10 p-3 rounded-lg">
+                <Users className="w-6 h-6 text-harmonia-green" />
+              </div>
+              <div>
+                <h3 className="font-semibold mb-1">Indicação de Clientes</h3>
+                <p className="text-gray-400 text-sm">
+                  Sistema simples de rastreamento de indicações com dashboard exclusivo para acompanhar seus ganhos.
+                </p>
+              </div>
+            </div>
+          </div>
+          
+          <Button className="bg-harmonia-green hover:bg-harmonia-green/90 h-12 px-6">
+            Tornar-se Parceiro
+          </Button>
+        </div>
         
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-          <div className="bg-card p-6 rounded-lg shadow-md flex flex-col items-center text-center">
-            <div className="bg-primary/10 p-4 rounded-full mb-4">
-              <Handshake className="w-10 h-10 text-primary" />
+        <div className="bg-card border border-border rounded-lg p-8">
+          <h3 className="text-xl font-semibold mb-6">Preencha para saber mais</h3>
+          <form className="space-y-4">
+            <div>
+              <label htmlFor="name" className="block text-sm font-medium mb-1">Nome completo</label>
+              <input
+                id="name"
+                type="text"
+                className="w-full bg-secondary border border-border rounded-md p-2 focus:border-harmonia-green focus:outline-none"
+                placeholder="Seu nome"
+              />
             </div>
-            <h3 className="text-xl font-semibold mb-3">Colaboração</h3>
-            <p className="text-muted-foreground mb-6">Trabalhamos em conjunto com profissionais criativos para oferecer soluções musicais completas.</p>
-            <Button variant="outline" className="mt-auto">Saiba Mais</Button>
-          </div>
-          
-          <div className="bg-card p-6 rounded-lg shadow-md flex flex-col items-center text-center">
-            <div className="bg-primary/10 p-4 rounded-full mb-4">
-              <DollarSign className="w-10 h-10 text-primary" />
+            <div>
+              <label htmlFor="email" className="block text-sm font-medium mb-1">Email</label>
+              <input
+                id="email"
+                type="email"
+                className="w-full bg-secondary border border-border rounded-md p-2 focus:border-harmonia-green focus:outline-none"
+                placeholder="seu@email.com"
+              />
             </div>
-            <h3 className="text-xl font-semibold mb-3">Programa de Afiliados</h3>
-            <p className="text-muted-foreground mb-6">Indique clientes e ganhe comissões por cada projeto concretizado através da sua indicação.</p>
-            <Button variant="outline" className="mt-auto">Participar</Button>
-          </div>
-          
-          <div className="bg-card p-6 rounded-lg shadow-md flex flex-col items-center text-center">
-            <div className="bg-primary/10 p-4 rounded-full mb-4">
-              <Users className="w-10 h-10 text-primary" />
+            <div>
+              <label htmlFor="business" className="block text-sm font-medium mb-1">Área de atuação</label>
+              <select
+                id="business"
+                className="w-full bg-secondary border border-border rounded-md p-2 focus:border-harmonia-green focus:outline-none"
+              >
+                <option value="">Selecione sua área</option>
+                <option value="cerimonialista">Cerimonialista</option>
+                <option value="educador">Educador Musical</option>
+                <option value="influencer">Influenciador Digital</option>
+                <option value="other">Outro</option>
+              </select>
             </div>
-            <h3 className="text-xl font-semibold mb-3">Descontos para Empresas</h3>
-            <p className="text-muted-foreground mb-6">Pacotes especiais para empresas que necessitam de músicas personalizadas com frequência.</p>
-            <Button variant="outline" className="mt-auto">Consultar</Button>
-          </div>
+            <div>
+              <label htmlFor="message" className="block text-sm font-medium mb-1">Mensagem</label>
+              <textarea
+                id="message"
+                rows={4}
+                className="w-full bg-secondary border border-border rounded-md p-2 focus:border-harmonia-green focus:outline-none"
+                placeholder="Conte-nos como podemos colaborar..."
+              ></textarea>
+            </div>
+            <Button type="submit" className="w-full bg-harmonia-green hover:bg-harmonia-green/90">
+              Enviar
+            </Button>
+          </form>
         </div>
       </div>
     </section>
