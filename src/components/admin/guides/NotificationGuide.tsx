@@ -1,84 +1,81 @@
 
 import React from 'react';
-import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
-import { AlertCircle, ExternalLink } from 'lucide-react';
-import { Button } from '@/components/ui/button';
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { Check } from 'lucide-react';
 
 const NotificationGuide: React.FC = () => {
   return (
     <div className="space-y-6">
-      <h2 className="text-xl font-semibold">Guia de Configuração de Notificações</h2>
+      <p>
+        O sistema de notificações permite que você mantenha os clientes informados sobre o progresso de seus projetos.
+        Aqui está um guia rápido sobre como utilizar essa funcionalidade:
+      </p>
       
-      <Alert>
-        <AlertCircle className="h-4 w-4" />
-        <AlertTitle>Importante</AlertTitle>
-        <AlertDescription>
-          As notificações são enviadas usando o webhook do Zapier já configurado no sistema.
-          Para personalizar e gerenciar estas notificações, siga o guia abaixo.
-        </AlertDescription>
-      </Alert>
-      
-      <div className="space-y-4">
-        <h3 className="text-lg font-medium">1. Configuração Inicial do Webhook</h3>
-        <p>
-          O sistema de notificações usa um webhook do Zapier para enviar atualizações para diferentes sistemas,
-          incluindo e-mails para clientes. A URL padrão do webhook já está configurada:
-        </p>
-        <code className="block bg-slate-100 p-2 rounded">
-          https://hooks.zapier.com/hooks/catch/22316385/2031hl7/
-        </code>
+      <div className="space-y-4 mt-4">
+        <h3 className="font-medium text-lg">Tipos de Notificações</h3>
         
-        <h3 className="text-lg font-medium mt-6">2. Como as Notificações Funcionam</h3>
-        <p>
-          Quando você clica em "Enviar notificação" na página de detalhes do projeto, o sistema:
-        </p>
-        <ol className="list-decimal pl-6 space-y-2">
-          <li>Envia os dados do cliente e da mensagem para o webhook configurado</li>
-          <li>O Zapier recebe esses dados e pode acionar diversas ações automatizadas</li>
-          <li>Por padrão, as notificações são configuradas para enviar um e-mail ao cliente</li>
-        </ol>
-        
-        <h3 className="text-lg font-medium mt-6">3. Personalizando as Notificações de E-mail</h3>
-        <p>
-          Para personalizar o modelo de e-mail enviado para os clientes:
-        </p>
-        <ol className="list-decimal pl-6 space-y-2">
-          <li>Acesse sua conta do Zapier (zapier.com)</li>
-          <li>Localize o Zap conectado ao webhook do harmonIA</li>
-          <li>Edite a etapa de envio de e-mail para personalizar o modelo</li>
-          <li>Você pode usar os dados enviados pelo webhook como variáveis no seu e-mail</li>
-        </ol>
-        
-        <h3 className="text-lg font-medium mt-6">4. Testando o Sistema de Notificações</h3>
-        <p>
-          Para testar se o sistema de notificações está funcionando corretamente:
-        </p>
-        <ol className="list-decimal pl-6 space-y-2">
-          <li>Vá para a página de Armazenamento ou de Prévias no painel administrativo</li>
-          <li>Localize a seção de configuração do webhook</li>
-          <li>Clique no botão "Enviar teste"</li>
-          <li>Verifique nos logs do Zapier se o teste foi recebido</li>
-        </ol>
-        
-        <h3 className="text-lg font-medium mt-6">5. Ações no Painel de Prévias</h3>
-        <p>
-          No painel de detalhes do projeto de prévia, você pode:
-        </p>
-        <ul className="list-disc pl-6 space-y-2">
-          <li><strong>Enviar notificação:</strong> Envia uma mensagem personalizada ao cliente sobre o projeto</li>
-          <li><strong>Adicionar versão:</strong> Adiciona uma nova versão musical ao projeto</li>
-          <li><strong>Copiar link:</strong> Copia o link da página de prévia para compartilhar com o cliente</li>
-        </ul>
-        
-        <div className="mt-8">
-          <Button asChild variant="outline" className="flex items-center">
-            <a href="https://zapier.com/app/dashboard" target="_blank" rel="noopener noreferrer">
-              <ExternalLink className="mr-2 h-4 w-4" />
-              Acessar Dashboard do Zapier
-            </a>
-          </Button>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div className="bg-gray-50 p-4 rounded-md">
+            <h4 className="font-medium mb-2">Nova Versão Disponível</h4>
+            <p className="text-sm text-gray-600">
+              Notifique o cliente quando uma nova versão musical for adicionada para avaliação.
+            </p>
+          </div>
+          
+          <div className="bg-gray-50 p-4 rounded-md">
+            <h4 className="font-medium mb-2">Lembrete</h4>
+            <p className="text-sm text-gray-600">
+              Envie um lembrete educado para clientes que ainda não avaliaram as versões enviadas.
+            </p>
+          </div>
+          
+          <div className="bg-gray-50 p-4 rounded-md">
+            <h4 className="font-medium mb-2">Extensão de Prazo</h4>
+            <p className="text-sm text-gray-600">
+              Informe ao cliente que o prazo para avaliação foi estendido.
+            </p>
+          </div>
+          
+          <div className="bg-gray-50 p-4 rounded-md">
+            <h4 className="font-medium mb-2">Confirmação</h4>
+            <p className="text-sm text-gray-600">
+              Confirme o recebimento de feedback ou a aprovação de uma versão.
+            </p>
+          </div>
         </div>
       </div>
+      
+      <div className="space-y-2 mt-4">
+        <h3 className="font-medium text-lg">Melhores Práticas</h3>
+        
+        <ul className="space-y-2">
+          <li className="flex gap-2">
+            <Check className="h-5 w-5 text-harmonia-green shrink-0" />
+            <p>Seja claro e conciso nas suas mensagens</p>
+          </li>
+          <li className="flex gap-2">
+            <Check className="h-5 w-5 text-harmonia-green shrink-0" />
+            <p>Inclua instruções específicas sobre o que o cliente deve fazer</p>
+          </li>
+          <li className="flex gap-2">
+            <Check className="h-5 w-5 text-harmonia-green shrink-0" />
+            <p>Sempre inclua o link para a prévia na mensagem</p>
+          </li>
+          <li className="flex gap-2">
+            <Check className="h-5 w-5 text-harmonia-green shrink-0" />
+            <p>Mantenha um tom profissional e amigável</p>
+          </li>
+        </ul>
+      </div>
+      
+      <Alert>
+        <AlertDescription>
+          <p className="text-sm">
+            <strong>Nota:</strong> As notificações são enviadas automaticamente para o e-mail do cliente. 
+            Certifique-se de que o endereço de e-mail está correto nas informações do projeto.
+          </p>
+        </AlertDescription>
+      </Alert>
     </div>
   );
 };

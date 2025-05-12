@@ -1,81 +1,80 @@
-
-// Constants for storage folder structure
+// Storage folders no Google Drive
 export const STORAGE_FOLDERS = {
-  PREVIEWS_BASE: "1lLw3oBgNhlpUiYbo3wevgUvjA0RTV7tN", // ID da pasta principal de prévias
-  INVOICES: "1MJk2diD6Bmb9Q6lNVDPnLePAznerOU29", // ID da pasta para faturas/notas fiscais
+  PROJECTS_BASE: '1D3_GsH5dC8W7mnPDEiep',
+  PREVIEWS_BASE: '1H62ylCwQYJ23BLpygtvN',
+  DOWNLOADS_BASE: '11c6JahRd5Lx0iKCL_gH',
+  MARKETING_ASSETS: '1fCsWubN8pXwM-mRlDtn',
+  INVOICES: '1aBcDeFgHiJkLmN0pQrStU' // Added INVOICES folder ID
 };
 
-// Webhook URL management
-export const manageWebhookUrls = {
-  getAll: (): Record<string, string> => {
-    const webhookUrls: Record<string, string> = {};
-    
-    // Retrieve all webhook URLs from localStorage
-    for (let i = 0; i < localStorage.length; i++) {
-      const key = localStorage.key(i);
-      if (key && key.endsWith('_webhookUrl')) {
-        webhookUrls[key.replace('_webhookUrl', '')] = localStorage.getItem(key) || '';
-      }
-    }
-    
-    return webhookUrls;
-  },
+class GoogleDriveService {
+  getFileViewUrl(fileId: string): string {
+    return `https://drive.google.com/file/d/${fileId}/view`;
+  }
   
+  getFileDownloadUrl(fileId: string): string {
+    return `https://drive.google.com/uc?export=download&id=${fileId}`;
+  }
+  
+  getFileStreamUrl(fileId: string): string {
+    return `https://drive.google.com/uc?export=view&id=${fileId}`;
+  }
+  
+  getFolderUrl(folderId: string): string {
+    return `https://drive.google.com/drive/folders/${folderId}`;
+  }
+  
+  createProjectFolder(projectId: string, clientName: string): Promise<string> {
+    // Em uma implementação real, isso criaria uma pasta no Google Drive
+    // Simulação para demo
+    return new Promise((resolve) => {
+      setTimeout(() => {
+        const mockFolderId = `folder_${projectId}_${Date.now()}`;
+        console.log(`[GoogleDrive] Pasta criada para ${projectId} - ${clientName}: ${mockFolderId}`);
+        resolve(mockFolderId);
+      }, 1000);
+    });
+  }
+  
+  uploadFile(folderId: string, file: File): Promise<string> {
+    // Em uma implementação real, isso faria upload do arquivo
+    // Simulação para demo
+    return new Promise((resolve) => {
+      setTimeout(() => {
+        const mockFileId = `file_${Date.now()}_${file.name.replace(/\s+/g, '_')}`;
+        console.log(`[GoogleDrive] Arquivo ${file.name} enviado para pasta ${folderId}: ${mockFileId}`);
+        resolve(mockFileId);
+      }, 2000);
+    });
+  }
+}
+
+export const googleDriveService = new GoogleDriveService();
+
+// Add webhook URL management
+export const manageWebhookUrls = {
   get: (serviceType: string): string => {
-    return localStorage.getItem(`${serviceType}_webhookUrl`) || '';
+    const key = `${serviceType}_webhookUrl`;
+    return localStorage.getItem(key) || '';
   },
   
   set: (serviceType: string, url: string): void => {
-    localStorage.setItem(`${serviceType}_webhookUrl`, url);
-    
-    // Trigger storage event for other components to update
-    window.dispatchEvent(new StorageEvent('storage', {
-      key: `${serviceType}_webhookUrl`,
-      newValue: url
-    }));
-  }
-};
-
-// Function to get Google Drive folder URL for a specific project
-export const getProjectFolderUrl = (projectId: string): string => {
-  // In a real implementation, this would map to actual subfolders
-  // For now, we'll return the base folder URL
-  return `https://drive.google.com/drive/folders/${STORAGE_FOLDERS.PREVIEWS_BASE}`;
-};
-
-// Function to get file list from Google Drive
-export const getFilesFromDrive = async (projectId: string) => {
-  // In a real implementation, this would make API calls to Google Drive
-  // For mockup purposes, we'll return sample data
-  return [
-    {
-      id: "sample1",
-      name: "Prévia Acústica",
-      mimeType: "audio/mp3",
-      thumbnail: "",
-      previewUrl: "https://drive.google.com/uc?export=download&id=sample1",
-    },
-    {
-      id: "sample2",
-      name: "Versão Orquestrada",
-      mimeType: "audio/mp3",
-      thumbnail: "",
-      previewUrl: "https://drive.google.com/uc?export=download&id=sample2",
+    const key = `${serviceType}_webhookUrl`;
+    localStorage.setItem(key, url);
+    // Trigger storage event for cross-component updates
+    window.dispatchEvent(new Event('storage'));
+  },
+  
+  getAll: (): Record<string, string> => {
+    const webhookUrls: Record<string, string> = {};
+    // Scan localStorage for webhook URLs
+    for (let i = 0; i < localStorage.length; i++) {
+      const key = localStorage.key(i);
+      if (key && key.endsWith('_webhookUrl')) {
+        const serviceType = key.replace('_webhookUrl', '');
+        webhookUrls[serviceType] = localStorage.getItem(key) || '';
+      }
     }
-  ];
-};
-
-// Process audio file to create 30-second preview
-export const createAudioPreview = async (fileId: string) => {
-  // In a real implementation, this would process the audio file to create a 30-second preview
-  // For mockup purposes, we'll just return the same file ID with a "_preview" suffix
-  return `${fileId}_preview`;
-};
-
-export default {
-  STORAGE_FOLDERS,
-  manageWebhookUrls,
-  getProjectFolderUrl,
-  getFilesFromDrive,
-  createAudioPreview
+    return webhookUrls;
+  }
 };

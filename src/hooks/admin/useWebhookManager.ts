@@ -1,7 +1,7 @@
 
 import { useState, useEffect } from 'react';
 import { useToast } from '@/hooks/use-toast';
-import { manageWebhookUrls } from '@/services/googleDriveService';
+import webhookService from '@/services/webhookService';
 
 export function useWebhookManager(serviceType: string) {
   const [webhookUrl, setWebhookUrl] = useState<string>('');
@@ -10,8 +10,12 @@ export function useWebhookManager(serviceType: string) {
 
   useEffect(() => {
     // Load the webhook URL when the component mounts
-    const url = manageWebhookUrls.get(serviceType);
-    setWebhookUrl(url || '');
+    const loadUrl = async () => {
+      const url = await webhookService.getWebhookUrl() || '';
+      setWebhookUrl(url);
+    };
+    
+    loadUrl();
   }, [serviceType]);
 
   // Save the webhook URL
@@ -25,7 +29,7 @@ export function useWebhookManager(serviceType: string) {
       return false;
     }
     
-    manageWebhookUrls.set(serviceType, webhookUrl);
+    webhookService.saveWebhookUrl(webhookUrl);
     
     toast({
       title: "URL do webhook salva",
@@ -47,29 +51,28 @@ export function useWebhookManager(serviceType: string) {
       
       // Create the payload
       const payload = {
-        type: serviceType,
-        data: data,
+        type: 'test_message' as const,
+        data: {
+          ...data,
+          serviceType,
+          timestamp: new Date().toISOString()
+        },
         timestamp: new Date().toISOString()
       };
       
       console.log(`Enviando dados para webhook ${serviceType}:`, webhookUrl);
       
       // Send data to the webhook
-      const response = await fetch(webhookUrl, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        mode: 'no-cors', // Required for some webhook services
-        body: JSON.stringify(payload),
-      });
+      const result = await webhookService.sendToWebhook(webhookUrl, payload);
       
-      toast({
-        title: "Dados enviados",
-        description: "Os dados foram enviados para o serviço externo.",
-      });
+      if (result) {
+        toast({
+          title: "Dados enviados",
+          description: "Os dados foram enviados para o serviço externo.",
+        });
+      }
       
-      return true;
+      return result;
     } catch (error) {
       console.error("Erro ao enviar para webhook:", error);
       

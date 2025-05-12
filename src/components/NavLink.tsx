@@ -14,11 +14,7 @@ interface NavLinkProps {
 const NavLink: React.FC<NavLinkProps> = ({ href, children, className, onClick, external = false }) => {
   const location = useLocation();
   
-  // Scroll to top on route change
-  useEffect(() => {
-    window.scrollTo(0, 0);
-  }, [location.pathname]);
-  
+  // Handle click for different link types
   const handleClick = () => {
     // If it's a link to an anchor on the same page
     if (href.startsWith('#')) {

@@ -89,7 +89,7 @@ const PackageRecommendations: React.FC<PackageRecommendationsProps> = ({
               isRecommended={isRecommended}
               isHighlighted={pkg.highlight}
               packageType={key}
-              packageUrl={siteConfig.urls.packages}
+              packageUrl="/pacotes"
             />
           );
         })}

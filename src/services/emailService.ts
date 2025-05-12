@@ -87,6 +87,28 @@ const emailService = {
       console.error('Erro ao enviar email de pagamento:', error);
       return { success: false, error };
     }
+  },
+  
+  // Adicionar método para confirmação de pedido
+  sendOrderConfirmation: async (email: string, name: string) => {
+    console.log(`Enviando confirmação de pedido para ${email} (${name})`);
+    
+    try {
+      // Em produção, usaria o serviço de email do Supabase
+      const result = await supabaseEmailService.sendPreviewNotification(
+        email, 
+        name, 
+        `${window.location.origin}/cliente`
+      );
+      
+      console.log(`Email de confirmação de pedido enviado para ${email}`);
+      console.log(`Conteúdo: Olá ${name}, seu pedido foi recebido e está sendo processado.`);
+      
+      return result || { success: true };
+    } catch (error) {
+      console.error('Erro ao enviar email de confirmação de pedido:', error);
+      return { success: false, error };
+    }
   }
 };
 

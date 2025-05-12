@@ -5,12 +5,12 @@ import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
-import { Upload } from 'lucide-react';
+import { Link } from 'lucide-react';
 
 interface VersionItem {
   title: string;
   description: string;
-  audioFile: File | null;
+  audioUrl: string;
 }
 
 interface ProjectVersionItemProps {
@@ -19,7 +19,7 @@ interface ProjectVersionItemProps {
   onRemove: (index: number) => void;
   onTitleChange: (index: number, value: string) => void;
   onDescriptionChange: (index: number, value: string) => void;
-  onFileChange: (index: number, event: React.ChangeEvent<HTMLInputElement>) => void;
+  onAudioUrlChange: (index: number, value: string) => void;
 }
 
 const ProjectVersionItem: React.FC<ProjectVersionItemProps> = ({
@@ -28,7 +28,7 @@ const ProjectVersionItem: React.FC<ProjectVersionItemProps> = ({
   onRemove,
   onTitleChange,
   onDescriptionChange,
-  onFileChange
+  onAudioUrlChange
 }) => {
   return (
     <Card key={index} className="p-4 border-l-4 border-l-harmonia-green/60">
@@ -57,26 +57,19 @@ const ProjectVersionItem: React.FC<ProjectVersionItemProps> = ({
         </div>
         
         <div className="space-y-2">
-          <label className="text-sm font-medium">Arquivo de Áudio</label>
+          <label className="text-sm font-medium">Link do Google Drive</label>
           <div className="flex items-center">
             <Input
-              type="file"
-              accept="audio/*"
-              onChange={e => onFileChange(index, e)}
-              className="hidden"
-              id={`audio-file-${index}`}
-              required={!version.audioFile}
+              value={version.audioUrl}
+              onChange={e => onAudioUrlChange(index, e.target.value)}
+              placeholder="https://drive.google.com/file/d/..."
+              className="flex-1"
+              required
             />
-            <Button 
-              type="button" 
-              variant="outline" 
-              onClick={() => document.getElementById(`audio-file-${index}`)?.click()}
-              className="w-full flex items-center justify-center"
-            >
-              <Upload className="w-4 h-4 mr-2" />
-              {version.audioFile ? version.audioFile.name : "Selecionar Arquivo"}
-            </Button>
           </div>
+          <p className="text-xs text-gray-500">
+            Compartilhe como "Qualquer pessoa com o link pode visualizar"
+          </p>
         </div>
       </div>
       

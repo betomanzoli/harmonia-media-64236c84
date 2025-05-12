@@ -1,66 +1,135 @@
 
 import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { motion } from "framer-motion";
-import { Clipboard, Music, Send, CheckCircle2, Settings } from 'lucide-react';
+import { Button } from "@/components/ui/button";
+import { 
+  ClipboardList, 
+  Music, 
+  Headphones, 
+  ThumbsUp, 
+  Package, 
+  Check, 
+  Upload, 
+  MessageSquare
+} from 'lucide-react';
 
 export interface ProjectPhasesProps {
-  projectId?: string;
-  projectType?: string;
-  currentPhase?: string;
+  projectId: string;
+  projectType: string;
+  currentPhase: string;
   onPhaseAction?: (phaseId: string, action: 'upload' | 'notify' | 'complete') => void;
 }
 
 const ProjectPhases: React.FC<ProjectPhasesProps> = ({ 
-  projectId = 'exemplo',
-  projectType = 'Música Personalizada',
-  currentPhase = 'producao',
+  projectId, 
+  projectType, 
+  currentPhase,
   onPhaseAction
 }) => {
+  // Define as fases do projeto
   const phases = [
-    { id: "briefing", name: "Briefing", icon: <Clipboard />, color: "bg-blue-500" },
-    { id: "composicao", name: "Composição", icon: <Music />, color: "bg-purple-500" },
-    { id: "producao", name: "Produção", icon: <Settings />, color: "bg-amber-500" },
-    { id: "entrega", name: "Entrega", icon: <Send />, color: "bg-green-500" },
-    { id: "aprovacao", name: "Aprovação", icon: <CheckCircle2 />, color: "bg-emerald-500" }
+    { id: 'briefing', name: 'Briefing', icon: ClipboardList },
+    { id: 'composicao', name: 'Composição', icon: Music },
+    { id: 'producao', name: 'Produção', icon: Headphones },
+    { id: 'aprovacao', name: 'Aprovação', icon: ThumbsUp },
+    { id: 'entrega', name: 'Entrega Final', icon: Package }
   ];
 
-  // Find the current phase index
-  const currentIndex = phases.findIndex(phase => phase.id === currentPhase.toLowerCase());
-  
+  // Encontrar o índice da fase atual
+  const currentPhaseIndex = phases.findIndex(phase => phase.id === currentPhase);
+
+  // Função para determinar o status da fase
+  const getPhaseStatus = (index: number) => {
+    if (index < currentPhaseIndex) return 'completed';
+    if (index === currentPhaseIndex) return 'current';
+    return 'upcoming';
+  };
+
+  const handleAction = (phaseId: string, action: 'upload' | 'notify' | 'complete') => {
+    if (onPhaseAction) {
+      onPhaseAction(phaseId, action);
+    }
+  };
+
   return (
-    <Card className="border-harmonia-green/40">
-      <CardHeader className="pb-2">
-        <CardTitle className="text-xl flex items-center justify-between">
-          <span>Fases do Projeto</span>
-          <span className="text-sm text-muted-foreground">ID: {projectId}</span>
-        </CardTitle>
+    <Card>
+      <CardHeader>
+        <CardTitle>Fases do Projeto: {projectType}</CardTitle>
       </CardHeader>
       <CardContent>
-        <p className="text-sm text-muted-foreground mb-6">{projectType}</p>
-        
         <div className="relative">
-          {/* Connection line */}
-          <div className="absolute top-6 left-6 w-[calc(100%-48px)] h-0.5 bg-muted z-0"></div>
+          {/* Linha de progresso conectando as fases */}
+          <div className="absolute left-7 top-8 h-full w-0.5 bg-gray-200 -z-10" />
           
-          {/* Project phases */}
-          <div className="flex justify-between relative z-10">
-            {phases.map((phase, index) => (
-              <div key={phase.id} className="flex flex-col items-center">
-                <motion.div 
-                  className={`w-12 h-12 rounded-full flex items-center justify-center text-white mb-2 
-                    ${index <= currentIndex ? phase.color : 'bg-muted'}`}
-                  initial={{ scale: 0.8 }}
-                  animate={{ scale: index === currentIndex ? 1.1 : 1 }}
-                  transition={{ duration: 0.3 }}
-                >
-                  {phase.icon}
-                </motion.div>
-                <span className={`text-xs font-medium ${index === currentIndex ? 'text-foreground' : 'text-muted-foreground'}`}>
-                  {phase.name}
-                </span>
-              </div>
-            ))}
+          {/* Lista de fases */}
+          <div className="space-y-8">
+            {phases.map((phase, index) => {
+              const status = getPhaseStatus(index);
+              const Icon = phase.icon;
+              
+              return (
+                <div key={phase.id} className="relative">
+                  <div className="flex items-start">
+                    <div className={`flex-shrink-0 h-14 w-14 rounded-full flex items-center justify-center mr-4 
+                      ${status === 'completed' ? 'bg-green-100 text-green-600' : 
+                        status === 'current' ? 'bg-harmonia-green text-white' : 
+                        'bg-gray-100 text-gray-400'}`}>
+                      <Icon className="h-6 w-6" />
+                    </div>
+                    <div className="flex-1">
+                      <h3 className={`font-semibold ${
+                        status === 'completed' ? 'text-green-600' : 
+                        status === 'current' ? 'text-harmonia-green' : 
+                        'text-gray-400'
+                      }`}>
+                        {phase.name}
+                        {status === 'completed' && <Check className="inline ml-2 h-4 w-4" />}
+                      </h3>
+                      
+                      {status === 'current' && (
+                        <div className="mt-2 space-x-2">
+                          <Button 
+                            size="sm" 
+                            variant="outline" 
+                            className="text-xs"
+                            onClick={() => handleAction(phase.id, 'upload')}
+                          >
+                            <Upload className="h-3 w-3 mr-1" />
+                            Upload
+                          </Button>
+                          <Button 
+                            size="sm" 
+                            variant="outline" 
+                            className="text-xs"
+                            onClick={() => handleAction(phase.id, 'notify')}
+                          >
+                            <MessageSquare className="h-3 w-3 mr-1" />
+                            Notificar
+                          </Button>
+                          <Button 
+                            size="sm" 
+                            variant="outline" 
+                            className="text-xs bg-green-50 text-green-600 hover:bg-green-100"
+                            onClick={() => handleAction(phase.id, 'complete')}
+                          >
+                            <Check className="h-3 w-3 mr-1" />
+                            Completar
+                          </Button>
+                        </div>
+                      )}
+                      
+                      {status === 'completed' && (
+                        <p className="text-sm text-green-600">Fase concluída</p>
+                      )}
+                      
+                      {status === 'upcoming' && (
+                        <p className="text-sm text-gray-400">Aguardando fases anteriores</p>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              );
+            })}
           </div>
         </div>
       </CardContent>

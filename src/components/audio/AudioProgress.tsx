@@ -1,7 +1,6 @@
 
 import React from 'react';
 import { Slider } from "@/components/ui/slider";
-import { formatTime, calculateMaxSliderValue } from '@/lib/audio-utils';
 
 interface AudioProgressProps {
   currentTime: number;
@@ -10,32 +9,31 @@ interface AudioProgressProps {
   onSliderChange: (value: number[]) => void;
 }
 
-const AudioProgress: React.FC<AudioProgressProps> = ({ 
-  currentTime, 
+const AudioProgress: React.FC<AudioProgressProps> = ({
+  currentTime,
   duration,
   previewDuration,
   onSliderChange
 }) => {
-  // Calculate max slider value (limit to preview duration)
-  const maxSliderValue = calculateMaxSliderValue(duration, previewDuration);
+  const formatTime = (time: number): string => {
+    const minutes = Math.floor(time / 60);
+    const seconds = Math.floor(time % 60);
+    return `${minutes}:${seconds < 10 ? '0' : ''}${seconds}`;
+  };
+
+  const maxTime = previewDuration ? Math.min(duration, previewDuration) : duration;
 
   return (
-    <div className="space-y-2">
+    <div className="flex-1 space-y-1">
       <Slider 
         value={[currentTime]} 
-        max={maxSliderValue || 100} 
-        step={0.1} 
-        onValueChange={onSliderChange} 
-        className="w-full"
+        max={maxTime}
+        step={0.1}
+        onValueChange={onSliderChange}
       />
-      <div className="flex justify-between text-xs text-gray-400">
+      <div className="flex justify-between text-xs text-gray-500">
         <span>{formatTime(currentTime)}</span>
-        <span>
-          {previewDuration && duration > previewDuration 
-            ? `${formatTime(Math.min(currentTime, previewDuration))} / ${formatTime(previewDuration)}`
-            : formatTime(duration)
-          }
-        </span>
+        <span>{formatTime(maxTime)}</span>
       </div>
     </div>
   );

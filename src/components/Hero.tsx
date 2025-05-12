@@ -8,16 +8,12 @@ const Hero: React.FC = () => {
   const navigate = useNavigate();
   
   const handleCreateMusic = () => {
-    navigate('/pagamento/essencial');
-  };
-  
-  const handleQualification = () => {
-    navigate('/qualificacao');
+    navigate('/pacotes');
   };
   
   const handleHowItWorks = () => {
     // Scroll to the process section
-    const processSection = document.getElementById('processo');
+    const processSection = document.getElementById('como-funciona');
     if (processSection) {
       processSection.scrollIntoView({
         behavior: 'smooth'
@@ -32,7 +28,8 @@ const Hero: React.FC = () => {
     });
   };
   
-  return <section className="pt-32 pb-20 px-6 md:px-10 max-w-7xl mx-auto relative">
+  return (
+    <section className="pt-32 pb-20 px-6 md:px-10 max-w-7xl mx-auto relative">
       <div className="space-y-8 max-w-3xl">
         <h1 className="text-5xl md:text-6xl font-bold tracking-tight">
           Música feita por{" "}
@@ -47,9 +44,6 @@ const Hero: React.FC = () => {
           <Button onClick={handleCreateMusic} className="bg-harmonia-green hover:bg-harmonia-green/90 text-white h-12 px-6 rounded-md">
             <DollarSign className="w-4 h-4 mr-2" />
             Contratar Agora
-          </Button>
-          <Button onClick={handleQualification} variant="outline" className="h-12 px-6 rounded-md">
-            Fazer Qualificação
           </Button>
           <Button onClick={handleHowItWorks} variant="outline" className="flex items-center gap-2 h-12 px-6 rounded-md">
             <Play className="w-4 h-4" /> Como Funciona
@@ -74,7 +68,8 @@ const Hero: React.FC = () => {
       <button onClick={scrollToTop} className="fixed bottom-6 right-6 bg-harmonia-green hover:bg-harmonia-green/90 text-white p-3 rounded-full shadow-lg z-50" aria-label="Voltar ao topo">
         <ArrowUp className="w-5 h-5" />
       </button>
-    </section>;
+    </section>
+  );
 };
 
 export default Hero;

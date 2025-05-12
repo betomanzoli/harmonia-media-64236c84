@@ -1,108 +1,96 @@
 
 import React from 'react';
-import { Card, CardContent } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import { Package2, Calendar, Music, AlertTriangle } from 'lucide-react';
-
-interface ProjectData {
-  clientName: string;
-  projectTitle: string;
-  projectId?: string;
-  packageType?: string;
-  creationDate?: string;
-  expirationDate?: string;
-  status: 'waiting' | 'feedback' | 'approved';
-}
+import { Button } from "@/components/ui/button";
+import { Share2 } from 'lucide-react';
 
 interface PreviewHeaderProps {
-  projectData: ProjectData;
+  projectData?: {
+    projectTitle: string;
+    clientName: string;
+    status: 'waiting' | 'feedback' | 'approved' | 'pending';
+    packageType?: string;
+    createdAt?: string;
+  };
+  onShareClick?: () => void;
 }
 
-const PreviewHeader: React.FC<PreviewHeaderProps> = ({ projectData }) => {
-  const getStatusBadge = () => {
-    switch (projectData.status) {
+const PreviewHeader: React.FC<PreviewHeaderProps> = ({ 
+  projectData,
+  onShareClick
+}) => {
+  const title = projectData?.projectTitle || 'Prévia Musical';
+  const client = projectData?.clientName || 'Cliente';
+  const currentStatus = projectData?.status || 'waiting';
+  const packageType = projectData?.packageType;
+  const createdAt = projectData?.createdAt;
+
+  const getStatusLabel = (status: string) => {
+    switch (status) {
       case 'waiting':
-        return (
-          <Badge variant="outline" className="bg-yellow-100 text-yellow-800 hover:bg-yellow-100 border-yellow-300">
-            Aguardando avaliação
-          </Badge>
-        );
+        return 'Aguardando avaliação';
       case 'feedback':
-        return (
-          <Badge variant="outline" className="bg-blue-100 text-blue-800 hover:bg-blue-100 border-blue-300">
-            Feedback enviado
-          </Badge>
-        );
+        return 'Feedback enviado';
       case 'approved':
-        return (
-          <Badge variant="outline" className="bg-green-100 text-green-800 hover:bg-green-100 border-green-300">
-            Música aprovada
-          </Badge>
-        );
+        return 'Prévia aprovada';
       default:
-        return null;
+        return 'Em andamento';
     }
   };
-  
-  const isNearExpiration = () => {
-    if (!projectData.expirationDate) return false;
-    
-    const expirationParts = projectData.expirationDate.split('/');
-    const expirationDate = new Date(
-      parseInt(expirationParts[2]), 
-      parseInt(expirationParts[1]) - 1, 
-      parseInt(expirationParts[0])
-    );
-    const today = new Date();
-    const diffTime = expirationDate.getTime() - today.getTime();
-    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-    
-    return diffDays <= 3 && diffDays >= 0;
+
+  const getStatusColor = (status: string) => {
+    switch (status) {
+      case 'waiting':
+        return 'bg-yellow-100 text-yellow-700';
+      case 'feedback':
+        return 'bg-blue-100 text-blue-700';
+      case 'approved':
+        return 'bg-green-100 text-green-700';
+      default:
+        return 'bg-gray-100 text-gray-700';
+    }
   };
 
   return (
-    <Card className="mb-6">
-      <CardContent className="pt-6">
-        <div className="flex flex-col md:flex-row md:items-center justify-between mb-2">
-          <h1 className="text-2xl font-bold text-harmonia-green mb-2 md:mb-0">
-            {projectData.projectTitle}
-          </h1>
-          {getStatusBadge()}
+    <div className="mb-8">
+      <div className="flex flex-col md:flex-row justify-between items-start md:items-center">
+        <div>
+          <h1 className="text-2xl md:text-3xl font-bold text-black mb-2">{title}</h1>
+          <p className="text-black">Cliente: {client}</p>
+          {packageType && <p className="text-sm text-gray-500">{packageType}</p>}
+          {createdAt && (
+            <p className="text-xs text-gray-400 mt-1">
+              Criado em: {new Date(createdAt).toLocaleDateString('pt-BR')}
+            </p>
+          )}
         </div>
         
-        <div className="text-gray-600 mb-4">
-          <p className="mb-1">Olá, <span className="font-medium">{projectData.clientName}</span>!</p>
-          <p>Estamos felizes em compartilhar as versões preliminares da sua música personalizada.</p>
-        </div>
-        
-        {projectData.packageType && projectData.projectId && (
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-6 text-sm">
-            <div className="flex items-center">
-              <Package2 className="h-4 w-4 mr-2 text-gray-400" />
-              <span className="text-gray-600">Pacote:</span>
-              <span className="font-medium ml-1">{projectData.packageType}</span>
-            </div>
-            
-            <div className="flex items-center">
-              <Music className="h-4 w-4 mr-2 text-gray-400" />
-              <span className="text-gray-600">Número do projeto:</span>
-              <span className="font-medium ml-1">{projectData.projectId}</span>
-            </div>
-            
-            {projectData.expirationDate && (
-              <div className="flex items-center">
-                <Calendar className="h-4 w-4 mr-2 text-gray-400" />
-                <span className="text-gray-600">Prazo para avaliação:</span>
-                <span className={`font-medium ml-1 ${isNearExpiration() ? 'text-orange-500' : ''}`}>
-                  {projectData.expirationDate}
-                  {isNearExpiration() && <AlertTriangle className="h-3 w-3 ml-1 inline" />}
-                </span>
-              </div>
-            )}
+        <div className="flex items-center mt-4 md:mt-0">
+          {onShareClick && (
+            <Button 
+              variant="outline" 
+              size="sm" 
+              onClick={onShareClick} 
+              className="mr-2 text-sm"
+            >
+              <Share2 className="h-4 w-4 mr-1" />
+              Compartilhar
+            </Button>
+          )}
+          
+          <div className={`px-3 py-1 rounded-full text-sm font-medium ${getStatusColor(currentStatus)}`}>
+            {getStatusLabel(currentStatus)}
           </div>
-        )}
-      </CardContent>
-    </Card>
+        </div>
+      </div>
+      
+      <div className="mt-6 pt-6 border-t">
+        <h2 className="text-xl font-semibold text-black mb-2">Avaliação de Prévias Musicais</h2>
+        <p className="text-black">
+          Abaixo você encontrará as versões musicais para avaliação. 
+          Ouça cada uma delas e escolha sua favorita ou envie um feedback para ajustes.
+        </p>
+      </div>
+    </div>
   );
 };
 

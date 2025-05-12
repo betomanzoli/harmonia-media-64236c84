@@ -1,158 +1,130 @@
 
 import React, { useState } from 'react';
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
-import { Label } from "@/components/ui/label";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { DialogFooter } from "@/components/ui/dialog";
-import { Loader2, Upload, PlusCircle, Trash2 } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Textarea } from '@/components/ui/textarea';
+import { Label } from '@/components/ui/label';
+import { Switch } from '@/components/ui/switch';
+import { Plus, Trash } from 'lucide-react';
+import { VersionItem } from '@/hooks/admin/usePreviewProjects';
 import { useToast } from '@/hooks/use-toast';
-import { Card } from "@/components/ui/card";
-import { ScrollArea } from "@/components/ui/scroll-area";
+
+interface AdditionalLink {
+  label: string;
+  url: string;
+}
 
 interface AddVersionFormProps {
   projectId: string;
-  onAddComplete: (versionName: string) => void;
+  onAddVersion: (version: VersionItem) => void;
+  onCancel: () => void;
+  isFinalVersion?: boolean;
+  packageType?: string;  // Added packageType property
 }
 
-// Expanded list of music categories
-const MUSIC_CATEGORIES = [
-  { value: 'completa', label: 'Versão Completa' },
-  { value: 'acustica', label: 'Acústica' },
-  { value: 'orquestrada', label: 'Orquestrada' },
-  { value: 'minimalista', label: 'Minimalista' },
-  { value: 'pop', label: 'Pop' },
-  { value: 'rock', label: 'Rock' },
-  { value: 'eletronica', label: 'Eletrônica' },
-  { value: 'jazz', label: 'Jazz' },
-  { value: 'classicarefrao', label: 'Clássica com Refrão' },
-  { value: 'instrumental', label: 'Instrumental' },
-  { value: 'vocal', label: 'Versão Vocal' },
-  { value: 'remix', label: 'Remix' },
-  { value: 'alternativa', label: 'Alternativa' },
-  { value: 'ambiente', label: 'Música Ambiente' },
-  { value: 'lofi', label: 'Lo-Fi' },
-  { value: 'samba', label: 'Samba' },
-  { value: 'bossanova', label: 'Bossa Nova' },
-  { value: 'mpb', label: 'MPB' },
-  { value: 'regional', label: 'Regional' },
-  { value: 'cinematografica', label: 'Cinematográfica' },
-  { value: 'comercial', label: 'Comercial' },
-  { value: 'jingle', label: 'Jingle' },
-  { value: 'outros', label: 'Outros' }
-];
-
-interface VersionItem {
-  title: string;
-  description: string;
-  category: string;
-  audioFile: File | null;
-  isRecommended: boolean;
-}
-
-const AddVersionForm: React.FC<AddVersionFormProps> = ({ projectId, onAddComplete }) => {
+const AddVersionForm: React.FC<AddVersionFormProps> = ({ 
+  projectId, 
+  onAddVersion, 
+  onCancel,
+  isFinalVersion = false,
+  packageType
+}) => {
+  const [title, setTitle] = useState('');
+  const [description, setDescription] = useState('');
+  const [audioUrl, setAudioUrl] = useState('');
+  const [recommended, setRecommended] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
-  const [versions, setVersions] = useState<VersionItem[]>([{
-    title: '',
-    description: '',
-    category: '',
-    audioFile: null,
-    isRecommended: false
-  }]);
+  const [additionalLinks, setAdditionalLinks] = useState<AdditionalLink[]>([]);
   const { toast } = useToast();
 
-  const handleAddVersion = () => {
-    setVersions([...versions, {
-      title: '',
-      description: '',
-      category: '',
-      audioFile: null,
-      isRecommended: false
-    }]);
+  const handleAddLink = () => {
+    setAdditionalLinks([...additionalLinks, { label: '', url: '' }]);
   };
 
-  const handleRemoveVersion = (index: number) => {
-    if (versions.length === 1) {
+  const handleRemoveLink = (index: number) => {
+    setAdditionalLinks(additionalLinks.filter((_, i) => i !== index));
+  };
+
+  const updateLinkLabel = (index: number, label: string) => {
+    const updatedLinks = [...additionalLinks];
+    updatedLinks[index].label = label;
+    setAdditionalLinks(updatedLinks);
+  };
+
+  const updateLinkUrl = (index: number, url: string) => {
+    const updatedLinks = [...additionalLinks];
+    updatedLinks[index].url = url;
+    setAdditionalLinks(updatedLinks);
+  };
+
+  const validateForm = () => {
+    if (!title.trim()) {
       toast({
-        title: "Atenção",
-        description: "É necessário pelo menos uma versão.",
+        title: "Título obrigatório",
+        description: "Por favor, informe um título para a versão.",
         variant: "destructive"
       });
-      return;
+      return false;
     }
-    
-    setVersions(versions.filter((_, i) => i !== index));
-  };
 
-  const handleTitleChange = (index: number, value: string) => {
-    const newVersions = [...versions];
-    newVersions[index].title = value;
-    setVersions(newVersions);
-  };
-
-  const handleDescriptionChange = (index: number, value: string) => {
-    const newVersions = [...versions];
-    newVersions[index].description = value;
-    setVersions(newVersions);
-  };
-
-  const handleCategoryChange = (index: number, value: string) => {
-    const newVersions = [...versions];
-    newVersions[index].category = value;
-    setVersions(newVersions);
-  };
-
-  const handleFileChange = (index: number, event: React.ChangeEvent<HTMLInputElement>) => {
-    if (event.target.files && event.target.files[0]) {
-      const newVersions = [...versions];
-      newVersions[index].audioFile = event.target.files[0];
-      setVersions(newVersions);
+    if (!audioUrl.trim()) {
+      toast({
+        title: "URL de áudio obrigatória",
+        description: "Por favor, informe a URL do áudio principal.",
+        variant: "destructive"
+      });
+      return false;
     }
-  };
 
-  const handleRecommendedChange = (index: number) => {
-    const newVersions = versions.map((version, i) => ({
-      ...version,
-      isRecommended: i === index
-    }));
-    setVersions(newVersions);
+    // Check if all additional links have both label and URL
+    if (additionalLinks.some(link => !link.label.trim() || !link.url.trim())) {
+      toast({
+        title: "Links adicionais incompletos",
+        description: "Todos os links adicionais devem ter um rótulo e uma URL.",
+        variant: "destructive"
+      });
+      return false;
+    }
+
+    return true;
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    // Validate form
-    if (versions.some(v => !v.title || !v.description || !v.category || !v.audioFile)) {
-      toast({
-        title: "Campos obrigatórios",
-        description: "Preencha todos os campos e adicione arquivos de áudio para cada versão.",
-        variant: "destructive"
-      });
+    if (!validateForm()) {
       return;
     }
-    
+
     setIsLoading(true);
     
     try {
-      // In a real implementation, this would upload the files and create the versions
-      // For now, we'll just simulate a successful upload
-      await new Promise((resolve) => setTimeout(resolve, 1500));
+      // Extract Google Drive file ID if possible
+      const fileIdMatch = audioUrl.match(/[-\w]{25,}/);
+      const fileId = fileIdMatch ? fileIdMatch[0] : '';
       
-      // Determine the name to return (first version or recommended version)
-      const recommendedVersion = versions.find(v => v.isRecommended) || versions[0];
+      const newVersion: VersionItem = {
+        id: `v${Date.now()}`,
+        name: title,
+        description,
+        audioUrl,
+        fileId,
+        dateAdded: new Date().toLocaleDateString('pt-BR'),
+        recommended,
+        final: isFinalVersion,
+        additionalLinks: additionalLinks.length > 0 ? additionalLinks : undefined
+      };
       
-      onAddComplete(recommendedVersion.title);
-      
+      onAddVersion(newVersion);
       toast({
-        title: "Versões adicionadas",
-        description: `${versions.length} versões foram adicionadas com sucesso.`,
+        title: isFinalVersion ? "Versão final adicionada" : "Versão adicionada",
+        description: `"${title}" foi adicionada com sucesso.`
       });
     } catch (error) {
-      console.error('Erro ao adicionar versões:', error);
+      console.error('Erro ao adicionar versão:', error);
       toast({
-        title: "Erro",
-        description: "Ocorreu um erro ao adicionar as versões. Tente novamente.",
+        title: "Erro ao adicionar versão",
+        description: "Ocorreu um erro ao adicionar a versão. Tente novamente.",
         variant: "destructive"
       });
     } finally {
@@ -161,133 +133,104 @@ const AddVersionForm: React.FC<AddVersionFormProps> = ({ projectId, onAddComplet
   };
 
   return (
-    <form onSubmit={handleSubmit}>
-      <ScrollArea className="max-h-[60vh]">
-        <div className="space-y-6 pr-4">
-          {versions.map((version, index) => (
-            <Card key={index} className="p-4 border-l-4 border-l-harmonia-green/60">
-              <div className="flex items-center justify-between mb-4">
-                <h4 className="font-medium">Versão {index + 1}</h4>
+    <form onSubmit={handleSubmit} className="space-y-4">
+      <div className="space-y-2">
+        <Label htmlFor="title">Título da Versão</Label>
+        <Input
+          id="title"
+          value={title}
+          onChange={(e) => setTitle(e.target.value)}
+          placeholder={isFinalVersion ? "Ex: Versão Final" : "Ex: Versão Acústica"}
+          required
+        />
+      </div>
+      
+      <div className="space-y-2">
+        <Label htmlFor="description">Descrição</Label>
+        <Textarea
+          id="description"
+          value={description}
+          onChange={(e) => setDescription(e.target.value)}
+          placeholder={isFinalVersion ? "Detalhes sobre a versão final" : "Detalhes sobre esta versão"}
+          rows={3}
+        />
+      </div>
+      
+      <div className="space-y-2">
+        <Label htmlFor="audioUrl">URL do Google Drive (principal)</Label>
+        <Input
+          id="audioUrl"
+          value={audioUrl}
+          onChange={(e) => setAudioUrl(e.target.value)}
+          placeholder="https://drive.google.com/file/d/..."
+          required
+        />
+      </div>
+      
+      {isFinalVersion && (
+        <div className="space-y-3">
+          <div className="flex items-center justify-between">
+            <Label>Links Adicionais (Stems, etc)</Label>
+            <Button 
+              type="button" 
+              variant="outline" 
+              size="sm"
+              onClick={handleAddLink}
+            >
+              <Plus className="w-4 h-4 mr-1" /> Adicionar Link
+            </Button>
+          </div>
+          
+          {additionalLinks.map((link, index) => (
+            <div key={index} className="grid grid-cols-12 gap-2 items-center">
+              <div className="col-span-4">
+                <Input
+                  value={link.label}
+                  onChange={(e) => updateLinkLabel(index, e.target.value)}
+                  placeholder="Tipo (Ex: Vocal Stem)"
+                />
+              </div>
+              <div className="col-span-7">
+                <Input
+                  value={link.url}
+                  onChange={(e) => updateLinkUrl(index, e.target.value)}
+                  placeholder="https://drive.google.com/file/d/..."
+                />
+              </div>
+              <div className="col-span-1">
                 <Button 
                   type="button" 
                   variant="ghost" 
-                  size="sm"
-                  onClick={() => handleRemoveVersion(index)}
-                  className="h-8 w-8 p-0 text-red-500 hover:text-red-600 hover:bg-red-100/20"
+                  size="icon"
+                  onClick={() => handleRemoveLink(index)}
                 >
-                  <Trash2 className="w-4 h-4" />
+                  <Trash className="w-4 h-4 text-gray-500" />
                 </Button>
               </div>
-              
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
-                <div className="space-y-2">
-                  <Label htmlFor={`title-${index}`}>Título da Versão</Label>
-                  <Input
-                    id={`title-${index}`}
-                    value={version.title}
-                    onChange={e => handleTitleChange(index, e.target.value)}
-                    placeholder="Ex: Versão Acústica"
-                    required
-                  />
-                </div>
-                
-                <div className="space-y-2">
-                  <Label htmlFor={`category-${index}`}>Categoria</Label>
-                  <Select 
-                    value={version.category} 
-                    onValueChange={(value) => handleCategoryChange(index, value)}
-                  >
-                    <SelectTrigger id={`category-${index}`}>
-                      <SelectValue placeholder="Selecione a categoria" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {MUSIC_CATEGORIES.map((category) => (
-                        <SelectItem key={category.value} value={category.value}>
-                          {category.label}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-              </div>
-              
-              <div className="space-y-2 mb-4">
-                <Label htmlFor={`file-${index}`}>Arquivo de Áudio</Label>
-                <div className="flex items-center">
-                  <Input
-                    id={`file-${index}`}
-                    type="file"
-                    accept="audio/*"
-                    onChange={e => handleFileChange(index, e)}
-                    className="hidden"
-                  />
-                  <Button 
-                    type="button" 
-                    variant="outline" 
-                    onClick={() => document.getElementById(`file-${index}`)?.click()}
-                    className="w-full flex items-center justify-center"
-                  >
-                    <Upload className="w-4 h-4 mr-2" />
-                    {version.audioFile ? version.audioFile.name : "Selecionar Arquivo"}
-                  </Button>
-                </div>
-              </div>
-              
-              <div className="space-y-2 mb-4">
-                <Label htmlFor={`description-${index}`}>Descrição da Versão</Label>
-                <Textarea
-                  id={`description-${index}`}
-                  value={version.description}
-                  onChange={e => handleDescriptionChange(index, e.target.value)}
-                  placeholder="Descreva as características desta versão musical..."
-                  required
-                  className="min-h-[100px]"
-                />
-              </div>
-              
-              <div className="flex items-center">
-                <input
-                  type="radio"
-                  id={`recommended-${index}`}
-                  name="recommended-version"
-                  checked={version.isRecommended}
-                  onChange={() => handleRecommendedChange(index)}
-                  className="mr-2"
-                />
-                <Label htmlFor={`recommended-${index}`} className="text-sm">
-                  Marcar como versão recomendada para o cliente
-                </Label>
-              </div>
-            </Card>
+            </div>
           ))}
-          
-          <Button
-            type="button"
-            variant="outline"
-            onClick={handleAddVersion}
-            className="w-full border-dashed border-2"
-          >
-            <PlusCircle className="w-4 h-4 mr-2" />
-            Adicionar outra versão
-          </Button>
         </div>
-      </ScrollArea>
+      )}
+
+      {!isFinalVersion && (
+        <div className="flex items-center space-x-2">
+          <Switch 
+            id="recommended"
+            checked={recommended}
+            onCheckedChange={setRecommended}
+          />
+          <Label htmlFor="recommended">Marcar como recomendada</Label>
+        </div>
+      )}
       
-      <DialogFooter className="mt-6">
-        <Button type="button" variant="outline" onClick={() => onAddComplete('')}>
+      <div className="flex justify-end space-x-2 pt-4">
+        <Button type="button" variant="outline" onClick={onCancel}>
           Cancelar
         </Button>
         <Button type="submit" disabled={isLoading}>
-          {isLoading ? (
-            <>
-              <Loader2 className="h-4 w-4 animate-spin mr-2" />
-              Processando...
-            </>
-          ) : (
-            <>Adicionar {versions.length} {versions.length === 1 ? 'versão' : 'versões'}</>
-          )}
+          {isLoading ? 'Salvando...' : 'Salvar Versão'}
         </Button>
-      </DialogFooter>
+      </div>
     </form>
   );
 };

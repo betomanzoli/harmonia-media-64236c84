@@ -1,130 +1,184 @@
 
-import React, { useState, useEffect } from 'react';
-import { useParams } from 'react-router-dom';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { useToast } from '@/hooks/use-toast';
-import { usePreviewData } from '@/hooks/use-preview-data';
+import React, { useState } from 'react';
 import PreviewHeader from './PreviewHeader';
-import PreviewInstructions from './PreviewInstructions';
-import PreviewPlayerList from './PreviewPlayerList';
+import PreviewPlayerList from './player/PreviewPlayerList';
 import PreviewFeedbackForm from './PreviewFeedbackForm';
+import PreviewCopyright from './PreviewCopyright';
+import PreviewInstructions from './PreviewInstructions';
 import PreviewNextSteps from './PreviewNextSteps';
+import SharePreviewDialog from './SharePreviewDialog';
+import PreviewCountdown from './PreviewCountdown';
 import PreviewLoadingState from './PreviewLoadingState';
-import PreviewFooter from './PreviewFooter';
+import { usePreviewProject } from '@/hooks/usePreviewProject';
+import PreviewProjectDetails from './PreviewProjectDetails';
+import { useToast } from '@/hooks/use-toast';
 
-const MusicPreviewSystem: React.FC = () => {
-  const { projectId } = useParams<{ projectId: string }>();
+interface MusicPreviewSystemProps {
+  projectId: string;
+}
+
+interface PreviewProject {
+  clientName: string;
+  projectTitle: string;
+  status: 'waiting' | 'feedback' | 'approved';
+  previews: {
+    id: string;
+    title: string;
+    description: string;
+    audioUrl: string;
+    fileId?: string;
+    recommended?: boolean;
+  }[];
+  packageType?: string;
+  createdAt?: string;
+  expiresAt?: string;
+}
+
+const MusicPreviewSystem: React.FC<MusicPreviewSystemProps> = ({ projectId }) => {
+  const { projectData, isLoading, updateProjectStatus } = usePreviewProject(projectId);
   const { toast } = useToast();
+  const [feedbackSubmitted, setFeedbackSubmitted] = useState(false);
   const [selectedVersion, setSelectedVersion] = useState<string | null>(null);
   const [feedback, setFeedback] = useState('');
-  
-  // Usar o hook personalizado para buscar dados do projeto
-  const { projectData, setProjectData, isLoading } = usePreviewData(projectId);
-  
-  // Adicionar proteção para impedir downloads de áudio
-  useEffect(() => {
-    const handleContextMenu = (e: MouseEvent) => {
-      if ((e.target as HTMLElement)?.closest('audio')) {
-        e.preventDefault();
-        toast({
-          title: "Proteção de conteúdo",
-          description: "O download direto das prévias não é permitido nesta fase.",
-          variant: "destructive"
-        });
-        return false;
-      }
-    };
+  const [isShareDialogOpen, setIsShareDialogOpen] = useState(false);
 
-    document.addEventListener("contextmenu", handleContextMenu);
-    
-    return () => {
-      document.removeEventListener("contextmenu", handleContextMenu);
-    };
-  }, [toast]);
-
-  const handleSubmitFeedback = () => {
-    if (!selectedVersion) {
-      toast({
-        title: "Selecione uma versão",
-        description: "Por favor, selecione uma das versões antes de enviar seu feedback.",
-        variant: "destructive"
-      });
-      return;
-    }
-    
-    toast({
-      title: "Feedback enviado!",
-      description: "Obrigado pelo seu feedback. Nossa equipe já está analisando.",
-    });
-    
-    // Atualizar status localmente para propósitos de demonstração
-    setProjectData(prev => prev ? {...prev, status: 'feedback' as const} : null);
-  };
-  
-  const handleApprove = () => {
-    if (!selectedVersion) {
-      toast({
-        title: "Selecione uma versão",
-        description: "Por favor, selecione uma das versões antes de aprovar.",
-        variant: "destructive"
-      });
-      return;
-    }
-    
-    toast({
-      title: "Música aprovada!",
-      description: "Excelente escolha! Vamos finalizar sua música e entregar em breve.",
-    });
-    
-    // Atualizar status localmente para propósitos de demonstração
-    setProjectData(prev => prev ? {...prev, status: 'approved' as const} : null);
-  };
-  
-  if (isLoading || !projectData) {
+  if (isLoading) {
     return <PreviewLoadingState />;
   }
-  
+
+  if (!projectData) {
+    return (
+      <div className="max-w-4xl mx-auto px-4 py-8">
+        <div className="bg-white p-8 rounded-lg shadow-sm text-center">
+          <h2 className="text-2xl font-bold text-black mb-4">Prévia não encontrada</h2>
+          <p className="text-black">
+            A prévia que você está tentando acessar não existe ou expirou.
+          </p>
+        </div>
+      </div>
+    );
+  }
+
+  // Format package type with capitalized first letter
+  const formatPackageType = (packageType: string): string => {
+    if (!packageType) return "Projeto de Música Personalizada";
+    
+    // Split by spaces and capitalize first letter of each word
+    return packageType
+      .split(' ')
+      .map(word => {
+        if (word.toLowerCase() === 'essencial' || 
+            word.toLowerCase() === 'premium' || 
+            word.toLowerCase() === 'profissional') {
+          return word.charAt(0).toUpperCase() + word.slice(1).toLowerCase();
+        }
+        return word;
+      })
+      .join(' ');
+  };
+
+  const handleFeedbackSubmit = (comments: string = feedback) => {
+    if (!selectedVersion) {
+      toast({
+        title: "Selecione uma versão",
+        description: "Por favor, selecione uma das versões antes de enviar feedback.",
+        variant: "destructive"
+      });
+      return;
+    }
+    
+    updateProjectStatus('feedback', comments);
+    setFeedbackSubmitted(true);
+    toast({
+      title: "Feedback enviado",
+      description: "Agradecemos pelo seu feedback! Nossa equipe irá analisá-lo em breve.",
+    });
+  };
+
+  const handleApprove = (comments: string = feedback) => {
+    if (!selectedVersion) {
+      toast({
+        title: "Selecione uma versão",
+        description: "Por favor, selecione uma versão antes de aprovar.",
+        variant: "destructive"
+      });
+      return;
+    }
+    
+    updateProjectStatus('approved', comments);
+    setFeedbackSubmitted(true);
+    toast({
+      title: "Prévia aprovada",
+      description: "Agradecemos pela aprovação! Nossa equipe irá finalizar seu projeto em breve.",
+    });
+  };
+
+  const packageType = formatPackageType(projectData.packageType || '');
+
   return (
-    <div className="max-w-4xl mx-auto pt-10">
-      <PreviewHeader projectData={projectData} />
+    <div className="max-w-4xl mx-auto px-4">
+      <PreviewHeader 
+        projectData={{
+          projectTitle: projectData.projectTitle || 'Projeto sem nome',
+          clientName: projectData.clientName || 'Cliente',
+          status: projectData.status || 'pending',
+          packageType: packageType,
+          createdAt: projectData.createdAt || new Date().toISOString()
+        }}
+        onShareClick={() => setIsShareDialogOpen(true)}
+      />
       
-      <PreviewInstructions status={projectData.status} />
-      
-      <Tabs defaultValue="versions" className="mt-6">
-        <TabsList className="w-full mb-6">
-          <TabsTrigger value="versions" className="flex-1 data-[state=active]:bg-harmonia-green data-[state=active]:text-white">
-            Versões Propostas
-          </TabsTrigger>
-          <TabsTrigger value="feedback" className="flex-1 data-[state=active]:bg-harmonia-green data-[state=active]:text-white">
-            Enviar Feedback
-          </TabsTrigger>
-        </TabsList>
-        
-        <TabsContent value="versions">
-          <PreviewPlayerList
-            previews={projectData.previews}
-            selectedPreview={selectedVersion}
-            setSelectedPreview={setSelectedVersion}
-            isApproved={projectData.status === 'approved'}
+      {projectData.previews && projectData.previews.length > 0 && (
+        <div className="mt-8">
+          <PreviewPlayerList 
+            versions={projectData.previews}
+            selectedVersion={selectedVersion}
+            setSelectedVersion={setSelectedVersion}
           />
-        </TabsContent>
-        
-        <TabsContent value="feedback">
+        </div>
+      )}
+      
+      {!feedbackSubmitted && (
+        <div className="mt-8">
           <PreviewFeedbackForm 
-            selectedPreview={selectedVersion}
             feedback={feedback}
-            setFeedback={setFeedback}
-            handleSubmit={handleSubmitFeedback}
-            handleApprove={handleApprove}
-            status={projectData.status}
-            versionTitle={projectData.previews.find(p => p.id === selectedVersion)?.title}
+            onFeedbackChange={setFeedback} 
+            onSubmit={handleFeedbackSubmit}
+            onApprove={handleApprove}
           />
-        </TabsContent>
-      </Tabs>
+        </div>
+      )}
       
-      <PreviewNextSteps status={projectData.status} />
+      <div className="mt-8">
+        <PreviewProjectDetails projectData={projectData} />
+      </div>
       
-      <PreviewFooter />
+      {projectData.expiresAt && (
+        <div className="mt-8">
+          <PreviewCountdown expiresAt={projectData.expiresAt} />
+        </div>
+      )}
+      
+      <div className="mt-8">
+        <PreviewInstructions status={projectData.status || 'waiting'} />
+      </div>
+      
+      {feedbackSubmitted && (
+        <div className="mt-8">
+          <PreviewNextSteps status={projectData.status || 'pending'} />
+        </div>
+      )}
+      
+      <div className="mt-8 mb-12">
+        <PreviewCopyright />
+      </div>
+      
+      <SharePreviewDialog 
+        isOpen={isShareDialogOpen}
+        onOpenChange={setIsShareDialogOpen}
+        projectId={projectId}
+        projectTitle={projectData.projectTitle || 'Projeto sem nome'}
+      />
     </div>
   );
 };
