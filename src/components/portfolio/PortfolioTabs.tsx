@@ -81,7 +81,15 @@ const PortfolioTabs: React.FC<PortfolioTabsProps> = ({
           
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {filteredExamples.slice(0, showAll ? filteredExamples.length : 6).map((example) => (
-              <AudioCard key={example.id} example={example} />
+              <AudioCard 
+                key={example.id}
+                title={example.title}
+                description={example.description}
+                audioUrl={example.audioUrl}
+                featured={example.featured}
+                imageUrl={example.imageUrl}
+                tags={example.tags}
+              />
             ))}
           </div>
           
@@ -100,7 +108,13 @@ const PortfolioTabs: React.FC<PortfolioTabsProps> = ({
         <TabsContent value="comparacoes">
           <div className="space-y-6">
             {comparisonExamples.map((example) => (
-              <ComparisonPlayer key={example.id} example={example} />
+              <ComparisonPlayer 
+                key={example.id}
+                title={example.title}
+                description={example.description}
+                beforeUrl={example.beforeUrl || ''}
+                afterUrl={example.afterUrl || ''}
+              />
             ))}
           </div>
         </TabsContent>
