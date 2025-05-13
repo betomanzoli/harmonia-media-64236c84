@@ -129,10 +129,29 @@
 
 /* Admin background fix */
 [class*="AdminGuides"],
-[class*="AdminPortfolio"] {
-  @apply bg-background;
+[class*="AdminPortfolio"],
+[class*="AdminInvoices"],
+[class*="AdminProjects"],
+[class*="AdminClients"],
+[class*="AdminDashboard"],
+[class*="AdminPreviews"],
+[class*="AdminSettings"],
+[class*="AdminStorage"],
+[class*="AdminStatistics"],
+[class*="AdminIntegrations"] {
+  @apply bg-gray-800 text-white;
 }
 
 .admin-panel {
-  @apply bg-background;
+  @apply bg-gray-800 text-white;
+}
+
+/* Fix specifically for table text in admin pages */
+.admin-table {
+  @apply text-white;
+}
+
+/* Make card content more visible in admin pages */
+.admin-content-card {
+  @apply bg-gray-700 text-white border border-gray-600;
 }
