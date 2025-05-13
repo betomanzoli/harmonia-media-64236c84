@@ -41,7 +41,8 @@ const PortfolioTabs: React.FC<PortfolioTabsProps> = ({
                 description={example.description}
                 imageUrl={example.imageUrl}
                 audioUrl={example.audioUrl}
-                category={example.category}
+                tags={example.tags}
+                featured={example.featured}
               />
             ))}
           </div>
