@@ -2,6 +2,7 @@
 import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
+import { cn } from "@/lib/utils";
 
 interface DashboardPreviewsCardProps {
   pendingCount: number;
@@ -31,7 +32,10 @@ const DashboardPreviewsCard: React.FC<DashboardPreviewsCardProps> = ({
             <span className="text-muted-foreground">Pendentes</span>
             <span className="font-medium">{pendingCount} ({pendingPercent}%)</span>
           </div>
-          <Progress value={pendingPercent} className="bg-yellow-100" indicatorClassName="bg-yellow-500" />
+          <Progress 
+            value={pendingPercent} 
+            className="bg-yellow-100"
+          />
         </div>
         
         <div className="space-y-2">
@@ -39,7 +43,10 @@ const DashboardPreviewsCard: React.FC<DashboardPreviewsCardProps> = ({
             <span className="text-muted-foreground">Em Feedback</span>
             <span className="font-medium">{feedbackCount} ({feedbackPercent}%)</span>
           </div>
-          <Progress value={feedbackPercent} className="bg-purple-100" indicatorClassName="bg-purple-500" />
+          <Progress 
+            value={feedbackPercent} 
+            className="bg-purple-100" 
+          />
         </div>
         
         <div className="space-y-2">
@@ -47,7 +54,10 @@ const DashboardPreviewsCard: React.FC<DashboardPreviewsCardProps> = ({
             <span className="text-muted-foreground">Concluídos</span>
             <span className="font-medium">{completedCount} ({completedPercent}%)</span>
           </div>
-          <Progress value={completedPercent} className="bg-green-100" indicatorClassName="bg-green-500" />
+          <Progress 
+            value={completedPercent} 
+            className="bg-green-100" 
+          />
         </div>
       </CardContent>
     </Card>
