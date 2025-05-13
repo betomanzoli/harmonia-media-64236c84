@@ -1,7 +1,7 @@
 
 import { useState } from 'react';
 import { useToast } from '@/hooks/use-toast';
-import webhookService from '@/services/webhookService';
+import webhookService, { NotificationType } from '@/services/webhookService';
 
 interface Order {
   id: string;
