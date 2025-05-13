@@ -6,7 +6,7 @@ import { useBriefings } from '@/hooks/admin/useBriefings';
 import { useCustomers } from '@/hooks/admin/useCustomers';
 import StatsSummary from './StatsSummary';
 import StatisticsCharts from './StatisticsCharts';
-import RecentProjectsList from './RecentProjectsList';
+import RecentProjectsList, { Project as RecentProject } from './RecentProjectsList';
 import RecentActivities from './RecentActivities';
 import DashboardPreviewsCard from './DashboardPreviewsCard';
 
@@ -40,7 +40,7 @@ const DashboardContent: React.FC = () => {
   const actualCompletedProjects = projects.filter(p => p.status === 'approved').length;
   
   // Converter ProjectItem para o formato compatível com RecentProjectsList
-  const formattedProjects = projects.length > 0 
+  const formattedProjects: RecentProject[] = projects.length > 0 
     ? projects.map((p: ProjectItem) => ({
         id: p.id,
         clientName: p.clientName,
@@ -48,7 +48,13 @@ const DashboardContent: React.FC = () => {
         status: p.status,
         date: p.createdAt
       }))
-    : recentProjects;
+    : recentProjects.map(p => ({
+        id: p.id,
+        clientName: p.client, // Map from 'client' field in recentProjects to 'clientName'
+        title: p.title,
+        status: p.status,
+        date: p.date
+      }));
   
   useEffect(() => {
     // Carregar projetos quando o componente montar
