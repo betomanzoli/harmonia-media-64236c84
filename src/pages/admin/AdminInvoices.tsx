@@ -1,5 +1,5 @@
 
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import AdminLayout from '@/components/admin/layout/AdminLayout';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
@@ -13,75 +13,44 @@ import {
   SelectValue
 } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
-import { Search, Download, ArrowUpDown, DollarSign, Filter, Plus, MoreHorizontal } from 'lucide-react';
+import { Search, Download, ArrowUpDown, DollarSign, Filter, Plus, MoreHorizontal, Pencil, Trash2, FileText, Eye, Link as LinkIcon } from 'lucide-react';
 import { DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, Dialog } from '@/components/ui/dialog';
 import { Label } from '@/components/ui/label';
 import { useToast } from '@/hooks/use-toast';
+import { useSupabaseData } from '@/hooks/use-supabase-data';
 
-// Mock invoice data
-const mockInvoices = [
-  {
-    id: 'INV001',
-    client: 'João Silva',
-    amount: 'R$ 1.200,00',
-    status: 'paid',
-    date: '15/06/2023',
-    dueDate: '30/06/2023'
-  },
-  {
-    id: 'INV002',
-    client: 'Maria Oliveira',
-    amount: 'R$ 950,00',
-    status: 'pending',
-    date: '18/06/2023',
-    dueDate: '02/07/2023'
-  },
-  {
-    id: 'INV003',
-    client: 'Carlos Santos',
-    amount: 'R$ 1.500,00',
-    status: 'overdue',
-    date: '10/06/2023',
-    dueDate: '25/06/2023'
-  },
-  {
-    id: 'INV004',
-    client: 'Ana Pereira',
-    amount: 'R$ 800,00',
-    status: 'paid',
-    date: '12/06/2023',
-    dueDate: '27/06/2023'
-  },
-  {
-    id: 'INV005',
-    client: 'Roberto Almeida',
-    amount: 'R$ 2.300,00',
-    status: 'pending',
-    date: '20/06/2023',
-    dueDate: '05/07/2023'
-  }
-];
+interface Invoice {
+  id: string;
+  client: string;
+  client_id?: string;
+  amount: string;
+  status: 'paid' | 'pending' | 'overdue';
+  date: string;
+  due_date: string;
+  invoice_pdf?: string;
+  has_receipt?: boolean;
+  description?: string;
+  created_at?: string;
+}
 
 const AdminInvoices: React.FC = () => {
-  const [invoices, setInvoices] = useState<any[]>([]);
-  const [loading, setLoading] = useState(true);
+  const { data: invoices, isLoading, addItem, updateItem, deleteItem } = useSupabaseData<Invoice>('invoices', {
+    orderBy: { column: 'created_at', ascending: false }
+  });
   const [filterStatus, setFilterStatus] = useState<string>("all");
   const [isNewInvoiceDialogOpen, setIsNewInvoiceDialogOpen] = useState(false);
+  const [isEditInvoiceDialogOpen, setIsEditInvoiceDialogOpen] = useState(false);
+  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
+  const [isPdfDialogOpen, setIsPdfDialogOpen] = useState(false);
+  const [currentInvoice, setCurrentInvoice] = useState<Invoice | null>(null);
   const [newInvoice, setNewInvoice] = useState({
     client: '',
     amount: '',
-    dueDate: '',
-    description: ''
+    due_date: '',
+    description: '',
+    invoice_pdf: ''
   });
   const { toast } = useToast();
-  
-  useEffect(() => {
-    // Simulate API loading
-    setTimeout(() => {
-      setInvoices(mockInvoices);
-      setLoading(false);
-    }, 800);
-  }, []);
   
   const getStatusBadge = (status: string) => {
     switch(status) {
@@ -104,14 +73,14 @@ const AdminInvoices: React.FC = () => {
   // Calculate summary values
   const totalAmount = invoices.reduce((sum, inv) => {
     const amount = parseFloat(inv.amount.replace('R$ ', '').replace('.', '').replace(',', '.'));
-    return sum + amount;
+    return sum + (isNaN(amount) ? 0 : amount);
   }, 0);
   
   const pendingAmount = invoices
     .filter(inv => inv.status === 'pending' || inv.status === 'overdue')
     .reduce((sum, inv) => {
       const amount = parseFloat(inv.amount.replace('R$ ', '').replace('.', '').replace(',', '.'));
-      return sum + amount;
+      return sum + (isNaN(amount) ? 0 : amount);
     }, 0);
   
   const handleNewInvoiceClick = () => {
@@ -125,9 +94,9 @@ const AdminInvoices: React.FC = () => {
     });
   };
   
-  const handleNewInvoiceSubmit = () => {
+  const handleNewInvoiceSubmit = async () => {
     // Validar campos obrigatórios
-    if (!newInvoice.client || !newInvoice.amount || !newInvoice.dueDate) {
+    if (!newInvoice.client || !newInvoice.amount || !newInvoice.due_date) {
       toast({
         title: "Campos obrigatórios",
         description: "Cliente, valor e data de vencimento são campos obrigatórios.",
@@ -143,33 +112,118 @@ const AdminInvoices: React.FC = () => {
     }
     
     // Criar nova fatura
-    const newId = `INV${(invoices.length + 1).toString().padStart(3, '0')}`;
-    const currentDate = new Date().toLocaleDateString('pt-BR');
-    const createdInvoice = {
-      id: newId,
+    const currentDate = new Date().toISOString();
+    await addItem({
       client: newInvoice.client,
       amount: amountValue,
       status: 'pending',
       date: currentDate,
-      dueDate: newInvoice.dueDate
-    };
-    
-    // Adicionar à lista de faturas
-    setInvoices([...invoices, createdInvoice]);
+      due_date: new Date(newInvoice.due_date).toISOString(),
+      description: newInvoice.description,
+      invoice_pdf: newInvoice.invoice_pdf,
+      has_receipt: false
+    });
     
     // Fechar o diálogo e resetar o formulário
     setIsNewInvoiceDialogOpen(false);
     setNewInvoice({
       client: '',
       amount: '',
-      dueDate: '',
-      description: ''
+      due_date: '',
+      description: '',
+      invoice_pdf: ''
+    });
+  };
+  
+  const handleEditClick = (invoice: Invoice) => {
+    setCurrentInvoice(invoice);
+    setIsEditInvoiceDialogOpen(true);
+  };
+
+  const handlePdfClick = (invoice: Invoice) => {
+    setCurrentInvoice(invoice);
+    setIsPdfDialogOpen(true);
+  };
+
+  const handleDeleteClick = (invoice: Invoice) => {
+    setCurrentInvoice(invoice);
+    setIsDeleteDialogOpen(true);
+  };
+
+  const handleEditInvoiceChange = (field: string, value: string) => {
+    if (!currentInvoice) return;
+
+    setCurrentInvoice({
+      ...currentInvoice,
+      [field]: value
+    });
+  };
+
+  const handleEditInvoiceSubmit = async () => {
+    if (!currentInvoice) return;
+
+    // Validar campos obrigatórios
+    if (!currentInvoice.client || !currentInvoice.amount || !currentInvoice.due_date) {
+      toast({
+        title: "Campos obrigatórios",
+        description: "Cliente, valor e data de vencimento são campos obrigatórios.",
+        variant: "destructive"
+      });
+      return;
+    }
+    
+    // Atualizar fatura
+    await updateItem(currentInvoice.id, {
+      client: currentInvoice.client,
+      amount: currentInvoice.amount,
+      status: currentInvoice.status,
+      due_date: currentInvoice.due_date,
+      description: currentInvoice.description,
+      invoice_pdf: currentInvoice.invoice_pdf,
+      has_receipt: currentInvoice.has_receipt
+    });
+    
+    // Fechar o diálogo
+    setIsEditInvoiceDialogOpen(false);
+    setCurrentInvoice(null);
+  };
+
+  const handlePdfUpdate = async () => {
+    if (!currentInvoice) return;
+    
+    // Atualizar PDF da fatura
+    await updateItem(currentInvoice.id, {
+      invoice_pdf: currentInvoice.invoice_pdf,
+      has_receipt: !!currentInvoice.invoice_pdf
     });
     
     toast({
-      title: "Fatura criada",
-      description: `A fatura ${newId} foi criada com sucesso.`
+      title: "PDF atualizado",
+      description: "O link do PDF da fatura foi atualizado com sucesso."
     });
+    
+    // Fechar o diálogo
+    setIsPdfDialogOpen(false);
+    setCurrentInvoice(null);
+  };
+
+  const handleDeleteConfirm = async () => {
+    if (!currentInvoice) return;
+    
+    await deleteItem(currentInvoice.id);
+    
+    setIsDeleteDialogOpen(false);
+    setCurrentInvoice(null);
+  };
+  
+  const formatDate = (dateStr: string) => {
+    if (!dateStr) return '-';
+    try {
+      const date = new Date(dateStr);
+      return date.toLocaleDateString('pt-BR');
+    } catch (e) {
+      return dateStr;
+    }
   };
   
   return (
@@ -191,7 +245,7 @@ const AdminInvoices: React.FC = () => {
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold">
-                {loading 
+                {isLoading 
                   ? '...'
                   : `R$ ${totalAmount.toFixed(2).replace('.', ',')}`}
               </div>
@@ -204,16 +258,18 @@ const AdminInvoices: React.FC = () => {
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-sm font-medium">Faturas Pendentes</CardTitle>
-              <span className="h-4 w-4 text-muted-foreground">{loading ? '' : '3'}</span>
+              <span className="h-4 w-4 text-muted-foreground">
+                {isLoading ? '' : invoices.filter(inv => inv.status === 'pending' || inv.status === 'overdue').length}
+              </span>
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold">
-                {loading 
+                {isLoading 
                   ? '...'
                   : `R$ ${pendingAmount.toFixed(2).replace('.', ',')}`}
               </div>
               <p className="text-xs text-muted-foreground">
-                2 faturas vencidas
+                {invoices.filter(inv => inv.status === 'overdue').length} faturas vencidas
               </p>
             </CardContent>
           </Card>
@@ -225,7 +281,10 @@ const AdminInvoices: React.FC = () => {
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold">
-                {loading ? '...' : '67%'}
+                {isLoading ? '...' : 
+                  invoices.length > 0 ? 
+                  `${Math.round((invoices.filter(inv => inv.status === 'paid').length / invoices.length) * 100)}%` : 
+                  '0%'}
               </div>
               <p className="text-xs text-muted-foreground">
                 +5.2% em relação ao mês anterior
@@ -270,7 +329,7 @@ const AdminInvoices: React.FC = () => {
               </div>
             </div>
             
-            {loading ? (
+            {isLoading ? (
               <div className="text-center py-4">
                 <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-gray-200"></div>
                 <p className="mt-2 text-sm text-gray-500">Carregando faturas...</p>
@@ -286,22 +345,58 @@ const AdminInvoices: React.FC = () => {
                       <TableHead>Vencimento</TableHead>
                       <TableHead className="text-right">Valor</TableHead>
                       <TableHead>Status</TableHead>
+                      <TableHead>NF</TableHead>
                       <TableHead className="text-right">Ações</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
                     {filteredInvoices.map((invoice) => (
                       <TableRow key={invoice.id}>
-                        <TableCell className="font-medium">{invoice.id}</TableCell>
+                        <TableCell className="font-medium">{invoice.id.substring(0, 6)}</TableCell>
                         <TableCell>{invoice.client}</TableCell>
-                        <TableCell>{invoice.date}</TableCell>
-                        <TableCell>{invoice.dueDate}</TableCell>
+                        <TableCell>{formatDate(invoice.date)}</TableCell>
+                        <TableCell>{formatDate(invoice.due_date)}</TableCell>
                         <TableCell className="text-right">{invoice.amount}</TableCell>
                         <TableCell>{getStatusBadge(invoice.status)}</TableCell>
+                        <TableCell>
+                          {invoice.has_receipt ? (
+                            <Badge variant="outline" className="bg-green-100 text-green-800 border-green-200">
+                              <FileText className="mr-1 h-3 w-3" /> Gerada
+                            </Badge>
+                          ) : (
+                            <Badge variant="outline" className="bg-gray-100 text-gray-800 border-gray-200">
+                              Pendente
+                            </Badge>
+                          )}
+                        </TableCell>
                         <TableCell className="text-right">
-                          <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
-                            <MoreHorizontal className="h-4 w-4" />
-                          </Button>
+                          <div className="flex justify-end gap-2">
+                            <Button 
+                              variant="ghost" 
+                              size="icon"
+                              onClick={() => handlePdfClick(invoice)}
+                              title="Gerenciar PDF da NF"
+                            >
+                              <LinkIcon className="h-4 w-4" />
+                            </Button>
+                            <Button 
+                              variant="ghost" 
+                              size="icon"
+                              onClick={() => handleEditClick(invoice)}
+                              title="Editar fatura"
+                            >
+                              <Pencil className="h-4 w-4" />
+                            </Button>
+                            <Button 
+                              variant="ghost" 
+                              size="icon"
+                              onClick={() => handleDeleteClick(invoice)}
+                              className="text-red-500 hover:text-red-700"
+                              title="Excluir fatura"
+                            >
+                              <Trash2 className="h-4 w-4" />
+                            </Button>
+                          </div>
                         </TableCell>
                       </TableRow>
                     ))}
@@ -356,8 +451,8 @@ const AdminInvoices: React.FC = () => {
                   id="invoice-due-date"
                   type="date"
                   className="col-span-3"
-                  value={newInvoice.dueDate}
-                  onChange={(e) => handleNewInvoiceChange('dueDate', e.target.value)}
+                  value={newInvoice.due_date}
+                  onChange={(e) => handleNewInvoiceChange('due_date', e.target.value)}
                 />
               </div>
               
@@ -373,12 +468,179 @@ const AdminInvoices: React.FC = () => {
                   placeholder="Descrição da fatura (opcional)"
                 />
               </div>
+              
+              <div className="grid grid-cols-4 items-center gap-4">
+                <Label htmlFor="invoice-pdf" className="text-right">
+                  Link do PDF
+                </Label>
+                <Input
+                  id="invoice-pdf"
+                  className="col-span-3"
+                  value={newInvoice.invoice_pdf}
+                  onChange={(e) => handleNewInvoiceChange('invoice_pdf', e.target.value)}
+                  placeholder="URL do PDF da nota fiscal (opcional)"
+                />
+              </div>
             </div>
             
             <DialogFooter>
               <Button type="submit" onClick={handleNewInvoiceSubmit}>
                 Criar Fatura
               </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+        
+        <Dialog open={isEditInvoiceDialogOpen} onOpenChange={setIsEditInvoiceDialogOpen}>
+          <DialogContent className="sm:max-w-[500px]">
+            <DialogHeader>
+              <DialogTitle>Editar Fatura</DialogTitle>
+              <DialogDescription>
+                Atualize os detalhes da fatura.
+              </DialogDescription>
+            </DialogHeader>
+            
+            {currentInvoice && (
+              <div className="grid gap-4 py-4">
+                <div className="grid grid-cols-4 items-center gap-4">
+                  <Label htmlFor="edit-invoice-client" className="text-right">
+                    Cliente*
+                  </Label>
+                  <Input
+                    id="edit-invoice-client"
+                    className="col-span-3"
+                    value={currentInvoice.client}
+                    onChange={(e) => handleEditInvoiceChange('client', e.target.value)}
+                    placeholder="Nome do cliente"
+                  />
+                </div>
+                
+                <div className="grid grid-cols-4 items-center gap-4">
+                  <Label htmlFor="edit-invoice-amount" className="text-right">
+                    Valor*
+                  </Label>
+                  <Input
+                    id="edit-invoice-amount"
+                    className="col-span-3"
+                    value={currentInvoice.amount}
+                    onChange={(e) => handleEditInvoiceChange('amount', e.target.value)}
+                    placeholder="R$ 0,00"
+                  />
+                </div>
+                
+                <div className="grid grid-cols-4 items-center gap-4">
+                  <Label htmlFor="edit-invoice-status" className="text-right">
+                    Status
+                  </Label>
+                  <Select 
+                    value={currentInvoice.status} 
+                    onValueChange={(value: any) => handleEditInvoiceChange('status', value)}
+                  >
+                    <SelectTrigger className="col-span-3">
+                      <SelectValue placeholder="Selecione o status" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="pending">Pendente</SelectItem>
+                      <SelectItem value="paid">Pago</SelectItem>
+                      <SelectItem value="overdue">Vencido</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                
+                <div className="grid grid-cols-4 items-center gap-4">
+                  <Label htmlFor="edit-invoice-due-date" className="text-right">
+                    Vencimento*
+                  </Label>
+                  <Input
+                    id="edit-invoice-due-date"
+                    type="date"
+                    className="col-span-3"
+                    value={new Date(currentInvoice.due_date).toISOString().split('T')[0]}
+                    onChange={(e) => handleEditInvoiceChange('due_date', e.target.value)}
+                  />
+                </div>
+                
+                <div className="grid grid-cols-4 items-center gap-4">
+                  <Label htmlFor="edit-invoice-description" className="text-right">
+                    Descrição
+                  </Label>
+                  <Input
+                    id="edit-invoice-description"
+                    className="col-span-3"
+                    value={currentInvoice.description || ''}
+                    onChange={(e) => handleEditInvoiceChange('description', e.target.value)}
+                    placeholder="Descrição da fatura (opcional)"
+                  />
+                </div>
+              </div>
+            )}
+            
+            <DialogFooter>
+              <Button type="submit" onClick={handleEditInvoiceSubmit}>
+                Salvar Alterações
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+        
+        <Dialog open={isPdfDialogOpen} onOpenChange={setIsPdfDialogOpen}>
+          <DialogContent className="sm:max-w-[500px]">
+            <DialogHeader>
+              <DialogTitle>Gerenciar PDF da NF</DialogTitle>
+              <DialogDescription>
+                Adicione ou atualize o link do PDF da nota fiscal.
+              </DialogDescription>
+            </DialogHeader>
+            
+            {currentInvoice && (
+              <div className="grid gap-4 py-4">
+                <div className="grid grid-cols-4 items-center gap-4">
+                  <Label htmlFor="pdf-url" className="text-right">
+                    Link do PDF
+                  </Label>
+                  <Input
+                    id="pdf-url"
+                    className="col-span-3"
+                    value={currentInvoice.invoice_pdf || ''}
+                    onChange={(e) => handleEditInvoiceChange('invoice_pdf', e.target.value)}
+                    placeholder="URL do PDF da nota fiscal"
+                  />
+                </div>
+                
+                {currentInvoice.invoice_pdf && (
+                  <div className="flex justify-center">
+                    <Button 
+                      variant="outline" 
+                      onClick={() => window.open(currentInvoice.invoice_pdf, '_blank')}
+                      className="mt-2"
+                    >
+                      <Eye className="mr-2 h-4 w-4" />
+                      Visualizar PDF
+                    </Button>
+                  </div>
+                )}
+              </div>
+            )}
+            
+            <DialogFooter>
+              <Button type="submit" onClick={handlePdfUpdate}>
+                Salvar PDF
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+        
+        <Dialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>Confirmar exclusão</DialogTitle>
+              <DialogDescription>
+                Você tem certeza que deseja excluir esta fatura? Esta ação não pode ser desfeita.
+              </DialogDescription>
+            </DialogHeader>
+            <DialogFooter>
+              <Button variant="outline" onClick={() => setIsDeleteDialogOpen(false)}>Cancelar</Button>
+              <Button variant="destructive" onClick={handleDeleteConfirm}>Excluir</Button>
             </DialogFooter>
           </DialogContent>
         </Dialog>

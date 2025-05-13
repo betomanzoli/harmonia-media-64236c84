@@ -1,5 +1,5 @@
 
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import AdminLayout from '@/components/admin/layout/AdminLayout';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
@@ -21,70 +21,42 @@ import {
   HeartPulse, 
   Calendar, 
   FilePlus,
-  Users
+  Trash2,
+  Pencil,
+  Eye
 } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { useToast } from '@/hooks/use-toast';
+import { useSupabaseData } from '@/hooks/use-supabase-data';
 
-// Mock data for projects
-const mockProjects = [
-  {
-    id: 'P001',
-    title: 'Música para Aniversário de Casamento',
-    client: 'João e Maria Silva',
-    status: 'in_progress',
-    progress: 65,
-    deadline: '28/07/2023',
-    type: 'Música Romântica',
-    team: ['compositor1', 'produtor2']
-  },
-  {
-    id: 'P002',
-    title: 'Jingle para Marca de Roupas',
-    client: 'ModaStyle Ltda.',
-    status: 'pending',
-    progress: 20,
-    deadline: '15/08/2023',
-    type: 'Jingle Comercial',
-    team: ['compositor2', 'produtor1', 'vocal3']
-  },
-  {
-    id: 'P003',
-    title: 'Trilha para Vídeo Institucional',
-    client: 'TechSolutions Inc.',
-    status: 'completed',
-    progress: 100,
-    deadline: '10/07/2023',
-    type: 'Trilha Corporativa',
-    team: ['compositor1', 'produtor3']
-  },
-  {
-    id: 'P004',
-    title: 'Música para Formatura',
-    client: 'Turma de Medicina 2023',
-    status: 'in_progress',
-    progress: 45,
-    deadline: '05/08/2023',
-    type: 'Música Comemorativa',
-    team: ['compositor3', 'produtor2', 'vocal1']
-  },
-  {
-    id: 'P005',
-    title: 'Tema Musical para Podcast',
-    client: 'Carlos Mendes',
-    status: 'in_progress',
-    progress: 80,
-    deadline: '20/07/2023',
-    type: 'Trilha para Mídia',
-    team: ['compositor2', 'produtor1']
-  }
-];
+interface Project {
+  id: string;
+  title: string;
+  client: string;
+  client_id?: string;
+  status: 'completed' | 'in_progress' | 'pending';
+  progress: number;
+  deadline: string;
+  type: string;
+  description?: string;
+  created_at?: string;
+  updated_at?: string;
+  package_id?: string;
+}
 
 const AdminProjects: React.FC = () => {
-  const [projects, setProjects] = useState<any[]>([]);
-  const [loading, setLoading] = useState(true);
+  const { data: projects, isLoading, addItem, updateItem, deleteItem } = useSupabaseData<Project>('projects', {
+    transformData: (data) => data.map(item => ({
+      ...item,
+      client: item.client || 'Cliente não especificado',
+      progress: item.progress || (item.status === 'completed' ? 100 : item.status === 'in_progress' ? 50 : 0)
+    }))
+  });
   const [activeTab, setActiveTab] = useState('all');
   const [isNewProjectDialogOpen, setIsNewProjectDialogOpen] = useState(false);
+  const [isEditProjectDialogOpen, setIsEditProjectDialogOpen] = useState(false);
+  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
+  const [currentProject, setCurrentProject] = useState<Project | null>(null);
   const [newProject, setNewProject] = useState({
     title: '',
     client: '',
@@ -93,14 +65,6 @@ const AdminProjects: React.FC = () => {
     description: ''
   });
   const { toast } = useToast();
-  
-  useEffect(() => {
-    // Simulate API loading
-    setTimeout(() => {
-      setProjects(mockProjects);
-      setLoading(false);
-    }, 800);
-  }, []);
   
   const getStatusBadge = (status: string) => {
     switch(status) {
@@ -147,7 +111,7 @@ const AdminProjects: React.FC = () => {
     });
   };
   
-  const handleNewProjectSubmit = () => {
+  const handleNewProjectSubmit = async () => {
     // Validar campos obrigatórios
     if (!newProject.title || !newProject.client || !newProject.type) {
       toast({
@@ -159,20 +123,15 @@ const AdminProjects: React.FC = () => {
     }
     
     // Criar novo projeto
-    const newId = `P00${projects.length + 1}`;
-    const createdProject = {
-      id: newId,
+    await addItem({
       title: newProject.title,
       client: newProject.client,
       status: 'pending',
       progress: 0,
-      deadline: newProject.deadline || new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toLocaleDateString('pt-BR'),
+      deadline: newProject.deadline || new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(),
       type: newProject.type,
-      team: []
-    };
-    
-    // Adicionar à lista de projetos
-    setProjects([...projects, createdProject]);
+      description: newProject.description
+    });
     
     // Fechar o diálogo e resetar o formulário
     setIsNewProjectDialogOpen(false);
@@ -183,11 +142,73 @@ const AdminProjects: React.FC = () => {
       deadline: '',
       description: ''
     });
+  };
+
+  const handleEditClick = (project: Project) => {
+    setCurrentProject(project);
+    setIsEditProjectDialogOpen(true);
+  };
+
+  const handleDeleteClick = (project: Project) => {
+    setCurrentProject(project);
+    setIsDeleteDialogOpen(true);
+  };
+
+  const handleEditProjectSubmit = async () => {
+    if (!currentProject) return;
+
+    // Validar campos obrigatórios
+    if (!currentProject.title || !currentProject.client || !currentProject.type) {
+      toast({
+        title: "Campos obrigatórios",
+        description: "Por favor, preencha todos os campos obrigatórios.",
+        variant: "destructive"
+      });
+      return;
+    }
     
-    toast({
-      title: "Projeto criado",
-      description: `O projeto ${newId} foi criado com sucesso.`
+    // Atualizar projeto
+    await updateItem(currentProject.id, {
+      title: currentProject.title,
+      client: currentProject.client,
+      type: currentProject.type,
+      deadline: currentProject.deadline,
+      description: currentProject.description,
+      status: currentProject.status,
+      progress: currentProject.progress
     });
+    
+    // Fechar o diálogo
+    setIsEditProjectDialogOpen(false);
+    setCurrentProject(null);
+  };
+
+  const handleDeleteConfirm = async () => {
+    if (!currentProject) return;
+    
+    await deleteItem(currentProject.id);
+    
+    setIsDeleteDialogOpen(false);
+    setCurrentProject(null);
+  };
+
+  const handleEditProjectChange = (field: string, value: string | number) => {
+    if (!currentProject) return;
+
+    setCurrentProject({
+      ...currentProject,
+      [field]: value
+    });
+  };
+  
+  const formatDate = (dateStr?: string) => {
+    if (!dateStr) return '-';
+    try {
+      const date = new Date(dateStr);
+      return date.toLocaleDateString('pt-BR');
+    } catch (e) {
+      return dateStr;
+    }
   };
   
   return (
@@ -209,7 +230,7 @@ const AdminProjects: React.FC = () => {
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold">
-                {loading ? '...' : projects.length}
+                {isLoading ? '...' : projects.length}
               </div>
               <p className="text-xs text-muted-foreground">
                 +2 novos este mês
@@ -224,9 +245,9 @@ const AdminProjects: React.FC = () => {
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold text-blue-600">
-                {loading ? '...' : inProgressCount}
+                {isLoading ? '...' : inProgressCount}
               </div>
-              <Progress value={(inProgressCount / projects.length) * 100} className="h-2 mt-2" />
+              <Progress value={(inProgressCount / (projects.length || 1)) * 100} className="h-2 mt-2" />
             </CardContent>
           </Card>
           
@@ -237,9 +258,9 @@ const AdminProjects: React.FC = () => {
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold text-yellow-600">
-                {loading ? '...' : pendingCount}
+                {isLoading ? '...' : pendingCount}
               </div>
-              <Progress value={(pendingCount / projects.length) * 100} className="h-2 mt-2" />
+              <Progress value={(pendingCount / (projects.length || 1)) * 100} className="h-2 mt-2" />
             </CardContent>
           </Card>
           
@@ -250,9 +271,9 @@ const AdminProjects: React.FC = () => {
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold text-green-600">
-                {loading ? '...' : completedCount}
+                {isLoading ? '...' : completedCount}
               </div>
-              <Progress value={(completedCount / projects.length) * 100} className="h-2 mt-2" />
+              <Progress value={(completedCount / (projects.length || 1)) * 100} className="h-2 mt-2" />
             </CardContent>
           </Card>
         </div>
@@ -272,7 +293,7 @@ const AdminProjects: React.FC = () => {
               </TabsList>
               
               <TabsContent value={activeTab}>
-                {loading ? (
+                {isLoading ? (
                   <div className="text-center py-4">
                     <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-gray-200"></div>
                     <p className="mt-2 text-sm text-gray-500">Carregando projetos...</p>
@@ -289,14 +310,13 @@ const AdminProjects: React.FC = () => {
                           <TableHead>Status</TableHead>
                           <TableHead>Progresso</TableHead>
                           <TableHead>Prazo</TableHead>
-                          <TableHead>Equipe</TableHead>
                           <TableHead className="text-right">Ações</TableHead>
                         </TableRow>
                       </TableHeader>
                       <TableBody>
                         {filteredProjects.map((project) => (
                           <TableRow key={project.id}>
-                            <TableCell className="font-medium">{project.id}</TableCell>
+                            <TableCell className="font-medium">{project.id.substring(0, 6)}</TableCell>
                             <TableCell>{project.title}</TableCell>
                             <TableCell>{project.client}</TableCell>
                             <TableCell>{project.type}</TableCell>
@@ -310,22 +330,32 @@ const AdminProjects: React.FC = () => {
                             <TableCell>
                               <div className="flex items-center">
                                 <Calendar className="mr-1 h-4 w-4 text-gray-500" />
-                                {project.deadline}
-                              </div>
-                            </TableCell>
-                            <TableCell>
-                              <div className="flex items-center">
-                                <Users className="mr-1 h-4 w-4 text-gray-500" />
-                                {project.team.length}
+                                {formatDate(project.deadline)}
                               </div>
                             </TableCell>
                             <TableCell className="text-right">
-                              <Button asChild variant="ghost" size="sm">
-                                <Link to={`/admin-j28s7d1k/projects/${project.id}`}>
-                                  <span className="sr-only">Ver projeto</span>
-                                  <ChevronRight className="h-4 w-4" />
-                                </Link>
-                              </Button>
+                              <div className="flex justify-end gap-2">
+                                <Button variant="ghost" size="icon" asChild>
+                                  <Link to={`/admin-j28s7d1k/projects/${project.id}`}>
+                                    <Eye className="h-4 w-4" />
+                                  </Link>
+                                </Button>
+                                <Button 
+                                  variant="ghost" 
+                                  size="icon"
+                                  onClick={() => handleEditClick(project)}
+                                >
+                                  <Pencil className="h-4 w-4" />
+                                </Button>
+                                <Button 
+                                  variant="ghost" 
+                                  size="icon"
+                                  onClick={() => handleDeleteClick(project)}
+                                  className="text-red-500 hover:text-red-700"
+                                >
+                                  <Trash2 className="h-4 w-4" />
+                                </Button>
+                              </div>
                             </TableCell>
                           </TableRow>
                         ))}
@@ -427,6 +457,150 @@ const AdminProjects: React.FC = () => {
               <Button type="submit" onClick={handleNewProjectSubmit}>
                 Criar Projeto
               </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+        
+        <Dialog open={isEditProjectDialogOpen} onOpenChange={setIsEditProjectDialogOpen}>
+          <DialogContent className="sm:max-w-[500px]">
+            <DialogHeader>
+              <DialogTitle>Editar Projeto</DialogTitle>
+              <DialogDescription>
+                Atualize os detalhes do projeto musical.
+              </DialogDescription>
+            </DialogHeader>
+            
+            {currentProject && (
+              <div className="grid gap-4 py-4">
+                <div className="grid grid-cols-4 items-center gap-4">
+                  <Label htmlFor="edit-project-title" className="text-right">
+                    Título
+                  </Label>
+                  <Input
+                    id="edit-project-title"
+                    className="col-span-3"
+                    value={currentProject.title}
+                    onChange={(e) => handleEditProjectChange('title', e.target.value)}
+                    placeholder="Nome do projeto musical"
+                  />
+                </div>
+                
+                <div className="grid grid-cols-4 items-center gap-4">
+                  <Label htmlFor="edit-project-client" className="text-right">
+                    Cliente
+                  </Label>
+                  <Input
+                    id="edit-project-client"
+                    className="col-span-3"
+                    value={currentProject.client}
+                    onChange={(e) => handleEditProjectChange('client', e.target.value)}
+                    placeholder="Nome do cliente"
+                  />
+                </div>
+                
+                <div className="grid grid-cols-4 items-center gap-4">
+                  <Label htmlFor="edit-project-type" className="text-right">
+                    Tipo
+                  </Label>
+                  <Select 
+                    value={currentProject.type} 
+                    onValueChange={(value) => handleEditProjectChange('type', value)}
+                  >
+                    <SelectTrigger className="col-span-3">
+                      <SelectValue placeholder="Selecione o tipo de projeto" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="Música Romântica">Música Romântica</SelectItem>
+                      <SelectItem value="Jingle Comercial">Jingle Comercial</SelectItem>
+                      <SelectItem value="Trilha Corporativa">Trilha Corporativa</SelectItem>
+                      <SelectItem value="Música Comemorativa">Música Comemorativa</SelectItem>
+                      <SelectItem value="Trilha para Mídia">Trilha para Mídia</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                
+                <div className="grid grid-cols-4 items-center gap-4">
+                  <Label htmlFor="edit-project-status" className="text-right">
+                    Status
+                  </Label>
+                  <Select 
+                    value={currentProject.status} 
+                    onValueChange={(value: any) => handleEditProjectChange('status', value)}
+                  >
+                    <SelectTrigger className="col-span-3">
+                      <SelectValue placeholder="Selecione o status" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="pending">Pendente</SelectItem>
+                      <SelectItem value="in_progress">Em Progresso</SelectItem>
+                      <SelectItem value="completed">Concluído</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                
+                <div className="grid grid-cols-4 items-center gap-4">
+                  <Label htmlFor="edit-project-progress" className="text-right">
+                    Progresso
+                  </Label>
+                  <Input
+                    id="edit-project-progress"
+                    type="number"
+                    min="0"
+                    max="100"
+                    className="col-span-3"
+                    value={currentProject.progress}
+                    onChange={(e) => handleEditProjectChange('progress', parseInt(e.target.value) || 0)}
+                  />
+                </div>
+                
+                <div className="grid grid-cols-4 items-center gap-4">
+                  <Label htmlFor="edit-project-deadline" className="text-right">
+                    Prazo
+                  </Label>
+                  <Input
+                    id="edit-project-deadline"
+                    type="date"
+                    className="col-span-3"
+                    value={currentProject.deadline ? new Date(currentProject.deadline).toISOString().split('T')[0] : ''}
+                    onChange={(e) => handleEditProjectChange('deadline', e.target.value)}
+                  />
+                </div>
+                
+                <div className="grid grid-cols-4 items-center gap-4">
+                  <Label htmlFor="edit-project-description" className="text-right">
+                    Descrição
+                  </Label>
+                  <Textarea
+                    id="edit-project-description"
+                    className="col-span-3"
+                    value={currentProject.description || ''}
+                    onChange={(e) => handleEditProjectChange('description', e.target.value)}
+                    placeholder="Descrição detalhada do projeto"
+                    rows={4}
+                  />
+                </div>
+              </div>
+            )}
+            
+            <DialogFooter>
+              <Button type="submit" onClick={handleEditProjectSubmit}>
+                Salvar Alterações
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+        
+        <Dialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>Confirmar exclusão</DialogTitle>
+              <DialogDescription>
+                Você tem certeza que deseja excluir este projeto? Esta ação não pode ser desfeita.
+              </DialogDescription>
+            </DialogHeader>
+            <DialogFooter>
+              <Button variant="outline" onClick={() => setIsDeleteDialogOpen(false)}>Cancelar</Button>
+              <Button variant="destructive" onClick={handleDeleteConfirm}>Excluir</Button>
             </DialogFooter>
           </DialogContent>
         </Dialog>

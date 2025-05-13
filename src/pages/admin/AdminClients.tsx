@@ -1,10 +1,10 @@
 
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import AdminLayout from '@/components/admin/layout/AdminLayout';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
-import { PlusCircle, UserPlus, Mail, Phone, Calendar, MoreHorizontal } from 'lucide-react';
+import { PlusCircle, UserPlus, Mail, Phone, Calendar, MoreHorizontal, Pencil, Trash2, Eye } from 'lucide-react';
 import { 
   DropdownMenu, 
   DropdownMenuContent, 
@@ -17,60 +17,25 @@ import { DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTit
 import { Label } from '@/components/ui/label';
 import { Input } from "@/components/ui/input";
 import { useToast } from '@/hooks/use-toast';
+import { useSupabaseData } from '@/hooks/use-supabase-data';
 
-// Mock client data
-const mockClients = [
-  {
-    id: 'C001',
-    name: 'João Silva',
-    email: 'joao.silva@email.com',
-    phone: '(11) 98765-4321',
-    createdAt: '12/04/2023',
-    projects: 3,
-    status: 'active'
-  },
-  {
-    id: 'C002',
-    name: 'Maria Oliveira',
-    email: 'maria.oliveira@email.com',
-    phone: '(11) 91234-5678',
-    createdAt: '23/05/2023',
-    projects: 1,
-    status: 'active'
-  },
-  {
-    id: 'C003',
-    name: 'Carlos Santos',
-    email: 'carlos.santos@email.com',
-    phone: '(21) 99876-5432',
-    createdAt: '07/06/2023',
-    projects: 2,
-    status: 'inactive'
-  },
-  {
-    id: 'C004',
-    name: 'Ana Pereira',
-    email: 'ana.pereira@email.com',
-    phone: '(31) 98765-1234',
-    createdAt: '18/07/2023',
-    projects: 0,
-    status: 'active'
-  },
-  {
-    id: 'C005',
-    name: 'Roberto Almeida',
-    email: 'roberto.almeida@email.com',
-    phone: '(41) 99988-7766',
-    createdAt: '29/08/2023',
-    projects: 5,
-    status: 'active'
-  }
-];
+interface Client {
+  id: string;
+  name: string;
+  email: string;
+  phone: string;
+  company?: string;
+  created_at: string;
+  projects?: number;
+  status?: string;
+}
 
 const AdminClients: React.FC = () => {
-  const [clients, setClients] = useState<any[]>([]);
-  const [loading, setLoading] = useState(true);
+  const { data: clients, isLoading, addItem, updateItem, deleteItem } = useSupabaseData<Client>('clients');
   const [isNewClientDialogOpen, setIsNewClientDialogOpen] = useState(false);
+  const [isEditClientDialogOpen, setIsEditClientDialogOpen] = useState(false);
+  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
+  const [currentClient, setCurrentClient] = useState<Client | null>(null);
   const [newClient, setNewClient] = useState({
     name: '',
     email: '',
@@ -79,18 +44,6 @@ const AdminClients: React.FC = () => {
   });
   const { toast } = useToast();
   
-  useEffect(() => {
-    // Simulação de carregamento de clientes da API
-    const loadClients = () => {
-      setTimeout(() => {
-        setClients(mockClients);
-        setLoading(false);
-      }, 800);
-    };
-    
-    loadClients();
-  }, []);
-
   const handleNewClientClick = () => {
     setIsNewClientDialogOpen(true);
   };
@@ -102,7 +55,7 @@ const AdminClients: React.FC = () => {
     });
   };
   
-  const handleNewClientSubmit = () => {
+  const handleNewClientSubmit = async () => {
     // Validar campos obrigatórios
     if (!newClient.name || !newClient.email) {
       toast({
@@ -125,21 +78,12 @@ const AdminClients: React.FC = () => {
     }
     
     // Criar novo cliente
-    const newId = `C00${clients.length + 1}`;
-    const currentDate = new Date().toLocaleDateString('pt-BR');
-    const createdClient = {
-      id: newId,
+    await addItem({
       name: newClient.name,
       email: newClient.email,
-      phone: newClient.phone || '-',
-      company: newClient.company,
-      createdAt: currentDate,
-      projects: 0,
-      status: 'active'
-    };
-    
-    // Adicionar à lista de clientes
-    setClients([...clients, createdClient]);
+      phone: newClient.phone || '',
+      company: newClient.company
+    });
     
     // Fechar o diálogo e resetar o formulário
     setIsNewClientDialogOpen(false);
@@ -149,11 +93,81 @@ const AdminClients: React.FC = () => {
       phone: '',
       company: ''
     });
-    
-    toast({
-      title: "Cliente adicionado",
-      description: `O cliente ${newClient.name} foi adicionado com sucesso.`
+  };
+
+  const handleEditClientClick = (client: Client) => {
+    setCurrentClient(client);
+    setIsEditClientDialogOpen(true);
+  };
+
+  const handleEditClientChange = (field: string, value: string) => {
+    if (!currentClient) return;
+
+    setCurrentClient({
+      ...currentClient,
+      [field]: value
     });
+  };
+
+  const handleEditClientSubmit = async () => {
+    if (!currentClient) return;
+
+    // Validar campos obrigatórios
+    if (!currentClient.name || !currentClient.email) {
+      toast({
+        title: "Campos obrigatórios",
+        description: "Nome e email são campos obrigatórios.",
+        variant: "destructive"
+      });
+      return;
+    }
+    
+    // Validar formato de email
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!currentClient.email && !emailRegex.test(currentClient.email)) {
+      toast({
+        title: "Email inválido",
+        description: "Por favor, insira um email válido.",
+        variant: "destructive"
+      });
+      return;
+    }
+    
+    // Atualizar cliente
+    await updateItem(currentClient.id, {
+      name: currentClient.name,
+      email: currentClient.email,
+      phone: currentClient.phone || '',
+      company: currentClient.company
+    });
+    
+    // Fechar o diálogo
+    setIsEditClientDialogOpen(false);
+    setCurrentClient(null);
+  };
+
+  const handleDeleteClick = (client: Client) => {
+    setCurrentClient(client);
+    setIsDeleteDialogOpen(true);
+  };
+
+  const handleDeleteConfirm = async () => {
+    if (!currentClient) return;
+    
+    await deleteItem(currentClient.id);
+    
+    setIsDeleteDialogOpen(false);
+    setCurrentClient(null);
+  };
+  
+  const formatDate = (dateStr: string) => {
+    if (!dateStr) return '-';
+    try {
+      const date = new Date(dateStr);
+      return date.toLocaleDateString('pt-BR');
+    } catch (e) {
+      return dateStr;
+    }
   };
   
   return (
@@ -172,7 +186,7 @@ const AdminClients: React.FC = () => {
             <CardTitle>Lista de Clientes</CardTitle>
           </CardHeader>
           <CardContent>
-            {loading ? (
+            {isLoading ? (
               <div className="text-center py-4">
                 <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-gray-200"></div>
                 <p className="mt-2 text-sm text-gray-500">Carregando clientes...</p>
@@ -186,7 +200,6 @@ const AdminClients: React.FC = () => {
                       <TableHead>Nome</TableHead>
                       <TableHead>Contato</TableHead>
                       <TableHead>Cadastro</TableHead>
-                      <TableHead>Projetos</TableHead>
                       <TableHead>Status</TableHead>
                       <TableHead className="text-right">Ações</TableHead>
                     </TableRow>
@@ -194,7 +207,7 @@ const AdminClients: React.FC = () => {
                   <TableBody>
                     {clients.map((client) => (
                       <TableRow key={client.id}>
-                        <TableCell className="font-medium">{client.id}</TableCell>
+                        <TableCell className="font-medium">{client.id.substring(0, 6)}</TableCell>
                         <TableCell>{client.name}</TableCell>
                         <TableCell>
                           <div className="flex flex-col">
@@ -202,24 +215,23 @@ const AdminClients: React.FC = () => {
                               <Mail className="mr-1 h-3 w-3 text-gray-500" />
                               {client.email}
                             </div>
-                            <div className="flex items-center text-sm mt-1">
-                              <Phone className="mr-1 h-3 w-3 text-gray-500" />
-                              {client.phone}
-                            </div>
+                            {client.phone && (
+                              <div className="flex items-center text-sm mt-1">
+                                <Phone className="mr-1 h-3 w-3 text-gray-500" />
+                                {client.phone}
+                              </div>
+                            )}
                           </div>
                         </TableCell>
                         <TableCell>
                           <div className="flex items-center">
                             <Calendar className="mr-1 h-4 w-4 text-gray-500" />
-                            {client.createdAt}
+                            {formatDate(client.created_at)}
                           </div>
                         </TableCell>
-                        <TableCell>{client.projects}</TableCell>
                         <TableCell>
-                          <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
-                            client.status === 'active' ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-800'
-                          }`}>
-                            {client.status === 'active' ? 'Ativo' : 'Inativo'}
+                          <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                            Ativo
                           </span>
                         </TableCell>
                         <TableCell className="text-right">
@@ -232,12 +244,21 @@ const AdminClients: React.FC = () => {
                             <DropdownMenuContent align="end">
                               <DropdownMenuLabel>Ações</DropdownMenuLabel>
                               <DropdownMenuSeparator />
-                              <DropdownMenuItem>Ver detalhes</DropdownMenuItem>
-                              <DropdownMenuItem>Editar cliente</DropdownMenuItem>
-                              <DropdownMenuItem>Ver projetos</DropdownMenuItem>
+                              <DropdownMenuItem onClick={() => handleEditClientClick(client)}>
+                                <Pencil className="mr-2 h-4 w-4" />
+                                Editar cliente
+                              </DropdownMenuItem>
+                              <DropdownMenuItem>
+                                <Eye className="mr-2 h-4 w-4" />
+                                Ver projetos
+                              </DropdownMenuItem>
                               <DropdownMenuSeparator />
-                              <DropdownMenuItem className="text-red-600">
-                                Desativar cliente
+                              <DropdownMenuItem 
+                                className="text-red-600"
+                                onClick={() => handleDeleteClick(client)}
+                              >
+                                <Trash2 className="mr-2 h-4 w-4" />
+                                Excluir cliente
                               </DropdownMenuItem>
                             </DropdownMenuContent>
                           </DropdownMenu>
@@ -319,6 +340,95 @@ const AdminClients: React.FC = () => {
               <Button type="submit" onClick={handleNewClientSubmit}>
                 Adicionar Cliente
               </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+
+        <Dialog open={isEditClientDialogOpen} onOpenChange={setIsEditClientDialogOpen}>
+          <DialogContent className="sm:max-w-[500px]">
+            <DialogHeader>
+              <DialogTitle>Editar Cliente</DialogTitle>
+              <DialogDescription>
+                Atualize os dados do cliente.
+              </DialogDescription>
+            </DialogHeader>
+            
+            {currentClient && (
+              <div className="grid gap-4 py-4">
+                <div className="grid grid-cols-4 items-center gap-4">
+                  <Label htmlFor="edit-client-name" className="text-right">
+                    Nome*
+                  </Label>
+                  <Input
+                    id="edit-client-name"
+                    className="col-span-3"
+                    value={currentClient.name}
+                    onChange={(e) => handleEditClientChange('name', e.target.value)}
+                    placeholder="Nome completo"
+                  />
+                </div>
+                
+                <div className="grid grid-cols-4 items-center gap-4">
+                  <Label htmlFor="edit-client-email" className="text-right">
+                    Email*
+                  </Label>
+                  <Input
+                    id="edit-client-email"
+                    type="email"
+                    className="col-span-3"
+                    value={currentClient.email}
+                    onChange={(e) => handleEditClientChange('email', e.target.value)}
+                    placeholder="email@exemplo.com"
+                  />
+                </div>
+                
+                <div className="grid grid-cols-4 items-center gap-4">
+                  <Label htmlFor="edit-client-phone" className="text-right">
+                    Telefone
+                  </Label>
+                  <Input
+                    id="edit-client-phone"
+                    className="col-span-3"
+                    value={currentClient.phone}
+                    onChange={(e) => handleEditClientChange('phone', e.target.value)}
+                    placeholder="(00) 00000-0000"
+                  />
+                </div>
+                
+                <div className="grid grid-cols-4 items-center gap-4">
+                  <Label htmlFor="edit-client-company" className="text-right">
+                    Empresa
+                  </Label>
+                  <Input
+                    id="edit-client-company"
+                    className="col-span-3"
+                    value={currentClient.company || ''}
+                    onChange={(e) => handleEditClientChange('company', e.target.value)}
+                    placeholder="Nome da empresa (opcional)"
+                  />
+                </div>
+              </div>
+            )}
+            
+            <DialogFooter>
+              <Button type="submit" onClick={handleEditClientSubmit}>
+                Salvar Alterações
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+        
+        <Dialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>Confirmar exclusão</DialogTitle>
+              <DialogDescription>
+                Você tem certeza que deseja excluir este cliente? Esta ação não pode ser desfeita.
+              </DialogDescription>
+            </DialogHeader>
+            <DialogFooter>
+              <Button variant="outline" onClick={() => setIsDeleteDialogOpen(false)}>Cancelar</Button>
+              <Button variant="destructive" onClick={handleDeleteConfirm}>Excluir</Button>
             </DialogFooter>
           </DialogContent>
         </Dialog>
