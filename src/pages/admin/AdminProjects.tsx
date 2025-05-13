@@ -7,6 +7,11 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, Dialog } from '@/components/ui/dialog';
+import { Label } from '@/components/ui/label';
+import { Input } from "@/components/ui/input";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Textarea } from "@/components/ui/textarea";
 import { 
   ChevronRight, 
   Clock, 
@@ -19,6 +24,7 @@ import {
   Users
 } from 'lucide-react';
 import { Link } from 'react-router-dom';
+import { useToast } from '@/hooks/use-toast';
 
 // Mock data for projects
 const mockProjects = [
@@ -78,6 +84,15 @@ const AdminProjects: React.FC = () => {
   const [projects, setProjects] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState('all');
+  const [isNewProjectDialogOpen, setIsNewProjectDialogOpen] = useState(false);
+  const [newProject, setNewProject] = useState({
+    title: '',
+    client: '',
+    type: '',
+    deadline: '',
+    description: ''
+  });
+  const { toast } = useToast();
   
   useEffect(() => {
     // Simulate API loading
@@ -121,12 +136,66 @@ const AdminProjects: React.FC = () => {
   const inProgressCount = projects.filter(p => p.status === 'in_progress').length;
   const pendingCount = projects.filter(p => p.status === 'pending').length;
   
+  const handleNewProjectClick = () => {
+    setIsNewProjectDialogOpen(true);
+  };
+  
+  const handleNewProjectChange = (field: string, value: string) => {
+    setNewProject({
+      ...newProject,
+      [field]: value
+    });
+  };
+  
+  const handleNewProjectSubmit = () => {
+    // Validar campos obrigatórios
+    if (!newProject.title || !newProject.client || !newProject.type) {
+      toast({
+        title: "Campos obrigatórios",
+        description: "Por favor, preencha todos os campos obrigatórios.",
+        variant: "destructive"
+      });
+      return;
+    }
+    
+    // Criar novo projeto
+    const newId = `P00${projects.length + 1}`;
+    const createdProject = {
+      id: newId,
+      title: newProject.title,
+      client: newProject.client,
+      status: 'pending',
+      progress: 0,
+      deadline: newProject.deadline || new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toLocaleDateString('pt-BR'),
+      type: newProject.type,
+      team: []
+    };
+    
+    // Adicionar à lista de projetos
+    setProjects([...projects, createdProject]);
+    
+    // Fechar o diálogo e resetar o formulário
+    setIsNewProjectDialogOpen(false);
+    setNewProject({
+      title: '',
+      client: '',
+      type: '',
+      deadline: '',
+      description: ''
+    });
+    
+    toast({
+      title: "Projeto criado",
+      description: `O projeto ${newId} foi criado com sucesso.`
+    });
+  };
+  
   return (
     <AdminLayout>
       <div className="p-6">
         <div className="flex justify-between items-center mb-6">
           <h1 className="text-2xl font-bold">Gerenciamento de Projetos</h1>
-          <Button>
+          <Button onClick={handleNewProjectClick}>
             <FilePlus className="mr-2 h-4 w-4" />
             Novo Projeto
           </Button>
@@ -268,6 +337,99 @@ const AdminProjects: React.FC = () => {
             </Tabs>
           </CardContent>
         </Card>
+        
+        <Dialog open={isNewProjectDialogOpen} onOpenChange={setIsNewProjectDialogOpen}>
+          <DialogContent className="sm:max-w-[500px]">
+            <DialogHeader>
+              <DialogTitle>Criar Novo Projeto</DialogTitle>
+              <DialogDescription>
+                Preencha os detalhes do novo projeto musical.
+              </DialogDescription>
+            </DialogHeader>
+            
+            <div className="grid gap-4 py-4">
+              <div className="grid grid-cols-4 items-center gap-4">
+                <Label htmlFor="project-title" className="text-right">
+                  Título
+                </Label>
+                <Input
+                  id="project-title"
+                  className="col-span-3"
+                  value={newProject.title}
+                  onChange={(e) => handleNewProjectChange('title', e.target.value)}
+                  placeholder="Nome do projeto musical"
+                />
+              </div>
+              
+              <div className="grid grid-cols-4 items-center gap-4">
+                <Label htmlFor="project-client" className="text-right">
+                  Cliente
+                </Label>
+                <Input
+                  id="project-client"
+                  className="col-span-3"
+                  value={newProject.client}
+                  onChange={(e) => handleNewProjectChange('client', e.target.value)}
+                  placeholder="Nome do cliente"
+                />
+              </div>
+              
+              <div className="grid grid-cols-4 items-center gap-4">
+                <Label htmlFor="project-type" className="text-right">
+                  Tipo
+                </Label>
+                <Select 
+                  value={newProject.type} 
+                  onValueChange={(value) => handleNewProjectChange('type', value)}
+                >
+                  <SelectTrigger className="col-span-3">
+                    <SelectValue placeholder="Selecione o tipo de projeto" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="Música Romântica">Música Romântica</SelectItem>
+                    <SelectItem value="Jingle Comercial">Jingle Comercial</SelectItem>
+                    <SelectItem value="Trilha Corporativa">Trilha Corporativa</SelectItem>
+                    <SelectItem value="Música Comemorativa">Música Comemorativa</SelectItem>
+                    <SelectItem value="Trilha para Mídia">Trilha para Mídia</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              
+              <div className="grid grid-cols-4 items-center gap-4">
+                <Label htmlFor="project-deadline" className="text-right">
+                  Prazo
+                </Label>
+                <Input
+                  id="project-deadline"
+                  type="date"
+                  className="col-span-3"
+                  value={newProject.deadline}
+                  onChange={(e) => handleNewProjectChange('deadline', e.target.value)}
+                />
+              </div>
+              
+              <div className="grid grid-cols-4 items-center gap-4">
+                <Label htmlFor="project-description" className="text-right">
+                  Descrição
+                </Label>
+                <Textarea
+                  id="project-description"
+                  className="col-span-3"
+                  value={newProject.description}
+                  onChange={(e) => handleNewProjectChange('description', e.target.value)}
+                  placeholder="Descrição detalhada do projeto"
+                  rows={4}
+                />
+              </div>
+            </div>
+            
+            <DialogFooter>
+              <Button type="submit" onClick={handleNewProjectSubmit}>
+                Criar Projeto
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
       </div>
     </AdminLayout>
   );

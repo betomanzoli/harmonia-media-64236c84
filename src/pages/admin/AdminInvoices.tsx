@@ -14,6 +14,9 @@ import {
 } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
 import { Search, Download, ArrowUpDown, DollarSign, Filter, Plus, MoreHorizontal } from 'lucide-react';
+import { DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, Dialog } from '@/components/ui/dialog';
+import { Label } from '@/components/ui/label';
+import { useToast } from '@/hooks/use-toast';
 
 // Mock invoice data
 const mockInvoices = [
@@ -63,6 +66,14 @@ const AdminInvoices: React.FC = () => {
   const [invoices, setInvoices] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [filterStatus, setFilterStatus] = useState<string>("all");
+  const [isNewInvoiceDialogOpen, setIsNewInvoiceDialogOpen] = useState(false);
+  const [newInvoice, setNewInvoice] = useState({
+    client: '',
+    amount: '',
+    dueDate: '',
+    description: ''
+  });
+  const { toast } = useToast();
   
   useEffect(() => {
     // Simulate API loading
@@ -103,12 +114,70 @@ const AdminInvoices: React.FC = () => {
       return sum + amount;
     }, 0);
   
+  const handleNewInvoiceClick = () => {
+    setIsNewInvoiceDialogOpen(true);
+  };
+  
+  const handleNewInvoiceChange = (field: string, value: string) => {
+    setNewInvoice({
+      ...newInvoice,
+      [field]: value
+    });
+  };
+  
+  const handleNewInvoiceSubmit = () => {
+    // Validar campos obrigatórios
+    if (!newInvoice.client || !newInvoice.amount || !newInvoice.dueDate) {
+      toast({
+        title: "Campos obrigatórios",
+        description: "Cliente, valor e data de vencimento são campos obrigatórios.",
+        variant: "destructive"
+      });
+      return;
+    }
+    
+    // Validar formato do valor
+    let amountValue = newInvoice.amount;
+    if (!amountValue.includes('R$')) {
+      amountValue = `R$ ${amountValue}`;
+    }
+    
+    // Criar nova fatura
+    const newId = `INV${(invoices.length + 1).toString().padStart(3, '0')}`;
+    const currentDate = new Date().toLocaleDateString('pt-BR');
+    const createdInvoice = {
+      id: newId,
+      client: newInvoice.client,
+      amount: amountValue,
+      status: 'pending',
+      date: currentDate,
+      dueDate: newInvoice.dueDate
+    };
+    
+    // Adicionar à lista de faturas
+    setInvoices([...invoices, createdInvoice]);
+    
+    // Fechar o diálogo e resetar o formulário
+    setIsNewInvoiceDialogOpen(false);
+    setNewInvoice({
+      client: '',
+      amount: '',
+      dueDate: '',
+      description: ''
+    });
+    
+    toast({
+      title: "Fatura criada",
+      description: `A fatura ${newId} foi criada com sucesso.`
+    });
+  };
+  
   return (
     <AdminLayout>
       <div className="p-6">
         <div className="flex justify-between items-center mb-6">
           <h1 className="text-2xl font-bold">Gerenciamento de Faturas</h1>
-          <Button>
+          <Button onClick={handleNewInvoiceClick}>
             <Plus className="mr-2 h-4 w-4" />
             Nova Fatura
           </Button>
@@ -242,6 +311,77 @@ const AdminInvoices: React.FC = () => {
             )}
           </CardContent>
         </Card>
+        
+        <Dialog open={isNewInvoiceDialogOpen} onOpenChange={setIsNewInvoiceDialogOpen}>
+          <DialogContent className="sm:max-w-[500px]">
+            <DialogHeader>
+              <DialogTitle>Criar Nova Fatura</DialogTitle>
+              <DialogDescription>
+                Preencha os detalhes para criar uma nova fatura.
+              </DialogDescription>
+            </DialogHeader>
+            
+            <div className="grid gap-4 py-4">
+              <div className="grid grid-cols-4 items-center gap-4">
+                <Label htmlFor="invoice-client" className="text-right">
+                  Cliente*
+                </Label>
+                <Input
+                  id="invoice-client"
+                  className="col-span-3"
+                  value={newInvoice.client}
+                  onChange={(e) => handleNewInvoiceChange('client', e.target.value)}
+                  placeholder="Nome do cliente"
+                />
+              </div>
+              
+              <div className="grid grid-cols-4 items-center gap-4">
+                <Label htmlFor="invoice-amount" className="text-right">
+                  Valor*
+                </Label>
+                <Input
+                  id="invoice-amount"
+                  className="col-span-3"
+                  value={newInvoice.amount}
+                  onChange={(e) => handleNewInvoiceChange('amount', e.target.value)}
+                  placeholder="R$ 0,00"
+                />
+              </div>
+              
+              <div className="grid grid-cols-4 items-center gap-4">
+                <Label htmlFor="invoice-due-date" className="text-right">
+                  Vencimento*
+                </Label>
+                <Input
+                  id="invoice-due-date"
+                  type="date"
+                  className="col-span-3"
+                  value={newInvoice.dueDate}
+                  onChange={(e) => handleNewInvoiceChange('dueDate', e.target.value)}
+                />
+              </div>
+              
+              <div className="grid grid-cols-4 items-center gap-4">
+                <Label htmlFor="invoice-description" className="text-right">
+                  Descrição
+                </Label>
+                <Input
+                  id="invoice-description"
+                  className="col-span-3"
+                  value={newInvoice.description}
+                  onChange={(e) => handleNewInvoiceChange('description', e.target.value)}
+                  placeholder="Descrição da fatura (opcional)"
+                />
+              </div>
+            </div>
+            
+            <DialogFooter>
+              <Button type="submit" onClick={handleNewInvoiceSubmit}>
+                Criar Fatura
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
       </div>
     </AdminLayout>
   );

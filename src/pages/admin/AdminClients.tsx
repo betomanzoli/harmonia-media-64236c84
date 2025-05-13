@@ -13,6 +13,10 @@ import {
   DropdownMenuSeparator, 
   DropdownMenuTrigger 
 } from "@/components/ui/dropdown-menu";
+import { DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, Dialog } from '@/components/ui/dialog';
+import { Label } from '@/components/ui/label';
+import { Input } from "@/components/ui/input";
+import { useToast } from '@/hooks/use-toast';
 
 // Mock client data
 const mockClients = [
@@ -66,6 +70,14 @@ const mockClients = [
 const AdminClients: React.FC = () => {
   const [clients, setClients] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const [isNewClientDialogOpen, setIsNewClientDialogOpen] = useState(false);
+  const [newClient, setNewClient] = useState({
+    name: '',
+    email: '',
+    phone: '',
+    company: ''
+  });
+  const { toast } = useToast();
   
   useEffect(() => {
     // Simulação de carregamento de clientes da API
@@ -78,13 +90,78 @@ const AdminClients: React.FC = () => {
     
     loadClients();
   }, []);
+
+  const handleNewClientClick = () => {
+    setIsNewClientDialogOpen(true);
+  };
+  
+  const handleNewClientChange = (field: string, value: string) => {
+    setNewClient({
+      ...newClient,
+      [field]: value
+    });
+  };
+  
+  const handleNewClientSubmit = () => {
+    // Validar campos obrigatórios
+    if (!newClient.name || !newClient.email) {
+      toast({
+        title: "Campos obrigatórios",
+        description: "Nome e email são campos obrigatórios.",
+        variant: "destructive"
+      });
+      return;
+    }
+    
+    // Validar formato de email
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(newClient.email)) {
+      toast({
+        title: "Email inválido",
+        description: "Por favor, insira um email válido.",
+        variant: "destructive"
+      });
+      return;
+    }
+    
+    // Criar novo cliente
+    const newId = `C00${clients.length + 1}`;
+    const currentDate = new Date().toLocaleDateString('pt-BR');
+    const createdClient = {
+      id: newId,
+      name: newClient.name,
+      email: newClient.email,
+      phone: newClient.phone || '-',
+      company: newClient.company,
+      createdAt: currentDate,
+      projects: 0,
+      status: 'active'
+    };
+    
+    // Adicionar à lista de clientes
+    setClients([...clients, createdClient]);
+    
+    // Fechar o diálogo e resetar o formulário
+    setIsNewClientDialogOpen(false);
+    setNewClient({
+      name: '',
+      email: '',
+      phone: '',
+      company: ''
+    });
+    
+    toast({
+      title: "Cliente adicionado",
+      description: `O cliente ${newClient.name} foi adicionado com sucesso.`
+    });
+  };
   
   return (
     <AdminLayout>
       <div className="p-6">
         <div className="flex justify-between items-center mb-6">
           <h1 className="text-2xl font-bold">Gerenciamento de Clientes</h1>
-          <Button>
+          <Button onClick={handleNewClientClick}>
             <UserPlus className="mr-2 h-4 w-4" />
             Novo Cliente
           </Button>
@@ -173,6 +250,78 @@ const AdminClients: React.FC = () => {
             )}
           </CardContent>
         </Card>
+        
+        <Dialog open={isNewClientDialogOpen} onOpenChange={setIsNewClientDialogOpen}>
+          <DialogContent className="sm:max-w-[500px]">
+            <DialogHeader>
+              <DialogTitle>Adicionar Novo Cliente</DialogTitle>
+              <DialogDescription>
+                Preencha os dados do novo cliente.
+              </DialogDescription>
+            </DialogHeader>
+            
+            <div className="grid gap-4 py-4">
+              <div className="grid grid-cols-4 items-center gap-4">
+                <Label htmlFor="client-name" className="text-right">
+                  Nome*
+                </Label>
+                <Input
+                  id="client-name"
+                  className="col-span-3"
+                  value={newClient.name}
+                  onChange={(e) => handleNewClientChange('name', e.target.value)}
+                  placeholder="Nome completo"
+                />
+              </div>
+              
+              <div className="grid grid-cols-4 items-center gap-4">
+                <Label htmlFor="client-email" className="text-right">
+                  Email*
+                </Label>
+                <Input
+                  id="client-email"
+                  type="email"
+                  className="col-span-3"
+                  value={newClient.email}
+                  onChange={(e) => handleNewClientChange('email', e.target.value)}
+                  placeholder="email@exemplo.com"
+                />
+              </div>
+              
+              <div className="grid grid-cols-4 items-center gap-4">
+                <Label htmlFor="client-phone" className="text-right">
+                  Telefone
+                </Label>
+                <Input
+                  id="client-phone"
+                  className="col-span-3"
+                  value={newClient.phone}
+                  onChange={(e) => handleNewClientChange('phone', e.target.value)}
+                  placeholder="(00) 00000-0000"
+                />
+              </div>
+              
+              <div className="grid grid-cols-4 items-center gap-4">
+                <Label htmlFor="client-company" className="text-right">
+                  Empresa
+                </Label>
+                <Input
+                  id="client-company"
+                  className="col-span-3"
+                  value={newClient.company}
+                  onChange={(e) => handleNewClientChange('company', e.target.value)}
+                  placeholder="Nome da empresa (opcional)"
+                />
+              </div>
+            </div>
+            
+            <DialogFooter>
+              <Button type="submit" onClick={handleNewClientSubmit}>
+                Adicionar Cliente
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
       </div>
     </AdminLayout>
   );
