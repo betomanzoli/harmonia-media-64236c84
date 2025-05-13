@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -110,7 +109,7 @@ const IntegrationConfig: React.FC<IntegrationConfigProps> = ({
           <TabsTrigger value="webhook">Webhook Personalizado</TabsTrigger>
         </TabsList>
         
-        <TabsContent value="zapier" className="space-y-4">
+        <TabsContent value="zapier">
           <Card>
             <CardHeader>
               <CardTitle>Guia de Configuração no Zapier</CardTitle>
@@ -170,7 +169,7 @@ const IntegrationConfig: React.FC<IntegrationConfigProps> = ({
           </Card>
         </TabsContent>
         
-        <TabsContent value="make" className="space-y-4">
+        <TabsContent value="make">
           <Card>
             <CardHeader>
               <CardTitle>Guia de Configuração no Make (Integromat)</CardTitle>
@@ -230,7 +229,7 @@ const IntegrationConfig: React.FC<IntegrationConfigProps> = ({
           </Card>
         </TabsContent>
         
-        <TabsContent value="webhook" className="space-y-4">
+        <TabsContent value="webhook">
           <Card>
             <CardHeader>
               <CardTitle>Formato dos Dados JSON</CardTitle>
