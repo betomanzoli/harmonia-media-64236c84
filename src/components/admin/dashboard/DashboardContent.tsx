@@ -9,6 +9,7 @@ import StatisticsCharts from './StatisticsCharts';
 import RecentProjectsList from './RecentProjectsList';
 import RecentActivities from './RecentActivities';
 import DashboardPreviewsCard from './DashboardPreviewsCard';
+import { Project } from './RecentProjectsList';
 
 const DashboardContent: React.FC = () => {
   const { 
@@ -38,6 +39,17 @@ const DashboardContent: React.FC = () => {
   const actualPendingProjects = projects.filter(p => p.status === 'waiting').length;
   const actualFeedbackProjects = projects.filter(p => p.status === 'feedback').length;
   const actualCompletedProjects = projects.filter(p => p.status === 'approved').length;
+  
+  // Converter ProjectItem para Project se necessário
+  const formattedProjects: Project[] = projects.length > 0 
+    ? projects.map(p => ({
+        id: p.id,
+        clientName: p.clientName,
+        title: p.title || `Projeto ${p.id}`,
+        status: p.status,
+        date: p.createdAt
+      }))
+    : recentProjects;
   
   useEffect(() => {
     // Carregar projetos quando o componente montar
@@ -73,7 +85,7 @@ const DashboardContent: React.FC = () => {
         </div>
       </div>
       
-      <RecentProjectsList projects={projects.slice(0, 5) || recentProjects} />
+      <RecentProjectsList projects={formattedProjects.slice(0, 5)} />
     </div>
   );
 };

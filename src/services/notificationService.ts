@@ -1,4 +1,6 @@
 
+import React from 'react';
+
 // Tipos de notificações que o sistema pode enviar
 export type NotificationType = 
   | 'project_created' 

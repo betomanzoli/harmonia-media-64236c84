@@ -5,15 +5,22 @@ import { Button } from "@/components/ui/button";
 import { Link } from "react-router-dom";
 import { FileMusic, AlertTriangle, CheckCircle, MessageSquare, ArrowRight, Calculator, FileCheck, CheckSquare } from "lucide-react";
 
-const DashboardPreviewsCard: React.FC = () => {
-  // Dados simulados para o card
-  const previewsStats = {
-    totalProjects: 10,
-    awaitingFeedback: 3,
-    feedbackReceived: 2,
-    approved: 5,
-    expiringSoon: 1,
-  };
+interface DashboardPreviewsCardProps {
+  pendingCount: number;
+  feedbackCount: number;
+  completedCount: number;
+}
+
+const DashboardPreviewsCard: React.FC<DashboardPreviewsCardProps> = ({
+  pendingCount,
+  feedbackCount,
+  completedCount
+}) => {
+  // Calcular o total de projetos
+  const totalProjects = pendingCount + feedbackCount + completedCount;
+  
+  // Calcular quantos projetos estão próximos da expiração (simulado)
+  const expiringSoon = Math.min(1, Math.floor(pendingCount * 0.3));
 
   return (
     <Card className="bg-gray-800/60 border-gray-700 shadow-md hover:shadow-lg transition-shadow">
@@ -25,31 +32,31 @@ const DashboardPreviewsCard: React.FC = () => {
         <div className="space-y-4">
           <div className="grid grid-cols-2 gap-4">
             <div className="flex flex-col">
-              <span className="text-3xl font-bold text-white">{previewsStats.totalProjects}</span>
+              <span className="text-3xl font-bold text-white">{totalProjects}</span>
               <span className="text-xs text-gray-400">Total de projetos</span>
             </div>
             <div className="flex items-center justify-end">
               <div className="flex flex-col items-end">
                 <div className="flex items-center text-sm text-yellow-500 mb-1">
-                  <span className="mr-1">{previewsStats.awaitingFeedback}</span>
+                  <span className="mr-1">{pendingCount}</span>
                   <AlertTriangle className="h-3 w-3" />
                 </div>
                 <div className="flex items-center text-sm text-blue-500 mb-1">
-                  <span className="mr-1">{previewsStats.feedbackReceived}</span>
+                  <span className="mr-1">{feedbackCount}</span>
                   <MessageSquare className="h-3 w-3" />
                 </div>
                 <div className="flex items-center text-sm text-green-500">
-                  <span className="mr-1">{previewsStats.approved}</span>
+                  <span className="mr-1">{completedCount}</span>
                   <CheckCircle className="h-3 w-3" />
                 </div>
               </div>
             </div>
           </div>
           
-          {previewsStats.expiringSoon > 0 && (
+          {expiringSoon > 0 && (
             <div className="p-2 bg-amber-900/30 border border-amber-800/50 rounded text-xs text-amber-400 flex items-center">
               <AlertTriangle className="h-3 w-3 mr-1" />
-              <span>{previewsStats.expiringSoon} projeto(s) próximo(s) da expiração</span>
+              <span>{expiringSoon} projeto(s) próximo(s) da expiração</span>
             </div>
           )}
           

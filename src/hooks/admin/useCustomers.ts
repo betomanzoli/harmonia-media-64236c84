@@ -24,8 +24,8 @@ export const useCustomers = () => {
       if (storedCustomers) {
         setCustomers(JSON.parse(storedCustomers));
       } else {
-        // Default data
-        const defaultCustomers = [
+        // Default data with proper typing
+        const defaultCustomers: Customer[] = [
           {
             id: '1',
             name: 'João Silva',
@@ -112,7 +112,8 @@ export const useCustomers = () => {
     const newId = (customers.length + 1).toString();
     const newCustomer: Customer = {
       id: newId,
-      ...customerData
+      ...customerData,
+      status: customerData.status || 'active' as const
     };
     
     const updatedCustomers = [...customers, newCustomer];
