@@ -1,8 +1,8 @@
 
 import { useToast, toast } from "@/hooks/use-toast";
 
-// Add better styling for admin toasts
-toast.custom = (message: string) => {
+// Create a custom toast function instead of trying to extend the toast object
+const customToast = (message: string) => {
   toast({
     title: "Notificação",
     description: message,
@@ -10,4 +10,4 @@ toast.custom = (message: string) => {
   });
 };
 
-export { useToast, toast };
+export { useToast, toast, customToast };
