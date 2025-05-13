@@ -1,17 +1,7 @@
 
 import React from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { 
-  BarChart, 
-  Bar, 
-  XAxis, 
-  YAxis, 
-  CartesianGrid, 
-  Tooltip, 
-  ResponsiveContainer,
-  LineChart,
-  Line
-} from 'recharts';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Area, AreaChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts';
 
 export interface ChartData {
   name: string;
@@ -24,77 +14,57 @@ interface StatisticsChartsProps {
   clientsData: ChartData[];
 }
 
-const StatisticsCharts: React.FC<StatisticsChartsProps> = ({ 
-  projectsData, 
-  revenueData, 
-  clientsData 
-}) => {
+const StatisticsCharts: React.FC<StatisticsChartsProps> = ({ projectsData, revenueData, clientsData }) => {
   return (
-    <div className="space-y-6">
-      {/* Projetos por Mês */}
-      <Card>
-        <CardHeader className="pb-2">
-          <CardTitle className="text-md font-medium">Projetos por Mês</CardTitle>
+    <div className="grid gap-4">
+      <Card className="col-span-2">
+        <CardHeader>
+          <CardTitle>Projetos</CardTitle>
+          <CardDescription>Número de projetos por mês</CardDescription>
         </CardHeader>
-        <CardContent>
-          <div className="h-[200px]">
-            <ResponsiveContainer width="100%" height="100%">
-              <BarChart data={projectsData}>
-                <CartesianGrid strokeDasharray="3 3" />
-                <XAxis dataKey="name" />
-                <YAxis />
-                <Tooltip />
-                <Bar dataKey="value" fill="#4f46e5" />
-              </BarChart>
-            </ResponsiveContainer>
-          </div>
+        <CardContent className="h-[200px]">
+          <ResponsiveContainer width="100%" height="100%">
+            <AreaChart data={projectsData}>
+              <XAxis dataKey="name" />
+              <YAxis />
+              <Tooltip />
+              <Area type="monotone" dataKey="value" stroke="#8884d8" fill="#8884d8" />
+            </AreaChart>
+          </ResponsiveContainer>
         </CardContent>
       </Card>
-
-      {/* Receita por Mês */}
-      <Card>
-        <CardHeader className="pb-2">
-          <CardTitle className="text-md font-medium">Receita por Mês</CardTitle>
+      
+      <Card className="col-span-2">
+        <CardHeader>
+          <CardTitle>Receita</CardTitle>
+          <CardDescription>Receita por mês (R$)</CardDescription>
         </CardHeader>
-        <CardContent>
-          <div className="h-[200px]">
-            <ResponsiveContainer width="100%" height="100%">
-              <LineChart data={revenueData}>
-                <CartesianGrid strokeDasharray="3 3" />
-                <XAxis dataKey="name" />
-                <YAxis />
-                <Tooltip 
-                  formatter={(value) => [`R$ ${value.toLocaleString('pt-BR')}`, 'Receita']}
-                />
-                <Line 
-                  type="monotone" 
-                  dataKey="value" 
-                  stroke="#10b981" 
-                  strokeWidth={2} 
-                />
-              </LineChart>
-            </ResponsiveContainer>
-          </div>
+        <CardContent className="h-[200px]">
+          <ResponsiveContainer width="100%" height="100%">
+            <AreaChart data={revenueData}>
+              <XAxis dataKey="name" />
+              <YAxis />
+              <Tooltip />
+              <Area type="monotone" dataKey="value" stroke="#82ca9d" fill="#82ca9d" />
+            </AreaChart>
+          </ResponsiveContainer>
         </CardContent>
       </Card>
-
-      {/* Novos Clientes */}
-      <Card>
-        <CardHeader className="pb-2">
-          <CardTitle className="text-md font-medium">Novos Clientes</CardTitle>
+      
+      <Card className="col-span-2">
+        <CardHeader>
+          <CardTitle>Clientes</CardTitle>
+          <CardDescription>Novos clientes por mês</CardDescription>
         </CardHeader>
-        <CardContent>
-          <div className="h-[200px]">
-            <ResponsiveContainer width="100%" height="100%">
-              <BarChart data={clientsData}>
-                <CartesianGrid strokeDasharray="3 3" />
-                <XAxis dataKey="name" />
-                <YAxis />
-                <Tooltip />
-                <Bar dataKey="value" fill="#8b5cf6" />
-              </BarChart>
-            </ResponsiveContainer>
-          </div>
+        <CardContent className="h-[200px]">
+          <ResponsiveContainer width="100%" height="100%">
+            <AreaChart data={clientsData}>
+              <XAxis dataKey="name" />
+              <YAxis />
+              <Tooltip />
+              <Area type="monotone" dataKey="value" stroke="#ffc658" fill="#ffc658" />
+            </AreaChart>
+          </ResponsiveContainer>
         </CardContent>
       </Card>
     </div>

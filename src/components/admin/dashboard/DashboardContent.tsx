@@ -5,11 +5,20 @@ import { usePreviewProjects } from '@/hooks/admin/usePreviewProjects';
 import { useBriefings } from '@/hooks/admin/useBriefings';
 import { useCustomers } from '@/hooks/admin/useCustomers';
 import StatsSummary from './StatsSummary';
-import StatisticsCharts from './StatisticsCharts';
-import RecentProjectsList from './RecentProjectsList';
+import StatisticsCharts, { ChartData } from './StatisticsCharts';
+import RecentProjectsList, { Project } from './RecentProjectsList';
 import RecentActivities from './RecentActivities';
 import DashboardPreviewsCard from './DashboardPreviewsCard';
-import { Project } from './RecentProjectsList';
+
+// Add interface for ProjectItem to include all needed properties
+interface ProjectItem {
+  id: string;
+  clientName: string;
+  title?: string; // Make title optional but ensure it exists
+  status: 'waiting' | 'feedback' | 'approved';
+  createdAt: string;
+  [key: string]: any; // Allow other properties
+}
 
 const DashboardContent: React.FC = () => {
   const { 
@@ -42,7 +51,7 @@ const DashboardContent: React.FC = () => {
   
   // Converter ProjectItem para Project se necessário
   const formattedProjects: Project[] = projects.length > 0 
-    ? projects.map(p => ({
+    ? projects.map((p: ProjectItem) => ({
         id: p.id,
         clientName: p.clientName,
         title: p.title || `Projeto ${p.id}`,
