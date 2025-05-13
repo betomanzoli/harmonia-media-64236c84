@@ -12,7 +12,7 @@ const AdminGuides: React.FC = () => {
   
   return (
     <AdminLayout>
-      <div className="p-6">
+      <div className="p-6 bg-background">
         <div className="flex justify-between items-center mb-6">
           <h1 className="text-2xl font-bold">Documentação e Guias</h1>
           <Button variant="outline" asChild>
@@ -44,7 +44,7 @@ const AdminGuides: React.FC = () => {
         
         <TabsContent value="docs" className={activeTab === "docs" ? "" : "hidden"}>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            <Card>
+            <Card className="bg-card">
               <CardHeader>
                 <CardTitle className="flex items-center">
                   <FileText className="mr-2 h-5 w-5" />
@@ -63,7 +63,7 @@ const AdminGuides: React.FC = () => {
               </CardContent>
             </Card>
             
-            <Card>
+            <Card className="bg-card">
               <CardHeader>
                 <CardTitle className="flex items-center">
                   <FileText className="mr-2 h-5 w-5" />
@@ -82,7 +82,7 @@ const AdminGuides: React.FC = () => {
               </CardContent>
             </Card>
             
-            <Card>
+            <Card className="bg-card">
               <CardHeader>
                 <CardTitle className="flex items-center">
                   <FileText className="mr-2 h-5 w-5" />
@@ -101,7 +101,7 @@ const AdminGuides: React.FC = () => {
               </CardContent>
             </Card>
             
-            <Card>
+            <Card className="bg-card">
               <CardHeader>
                 <CardTitle className="flex items-center">
                   <FileText className="mr-2 h-5 w-5" />
@@ -120,7 +120,7 @@ const AdminGuides: React.FC = () => {
               </CardContent>
             </Card>
             
-            <Card>
+            <Card className="bg-card">
               <CardHeader>
                 <CardTitle className="flex items-center">
                   <FileText className="mr-2 h-5 w-5" />
@@ -139,7 +139,7 @@ const AdminGuides: React.FC = () => {
               </CardContent>
             </Card>
             
-            <Card>
+            <Card className="bg-card">
               <CardHeader className="flex items-start">
                 <div>
                   <CardTitle className="flex items-center">
@@ -164,13 +164,13 @@ const AdminGuides: React.FC = () => {
         
         <TabsContent value="tutorials" className={activeTab === "tutorials" ? "" : "hidden"}>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            <Card>
+            <Card className="bg-card">
               <CardHeader>
                 <CardTitle>Introdução ao Sistema</CardTitle>
                 <CardDescription>Tutorial básico para iniciantes</CardDescription>
               </CardHeader>
               <CardContent>
-                <div className="aspect-video bg-gray-100 rounded-md mb-4 flex items-center justify-center">
+                <div className="aspect-video bg-gray-700 rounded-md mb-4 flex items-center justify-center">
                   <Video className="h-12 w-12 text-gray-400" />
                 </div>
                 <p className="text-sm text-gray-500 mb-4">
@@ -183,13 +183,13 @@ const AdminGuides: React.FC = () => {
               </CardContent>
             </Card>
             
-            <Card>
+            <Card className="bg-card">
               <CardHeader>
                 <CardTitle>Gerenciamento de Prévias</CardTitle>
                 <CardDescription>Como criar e compartilhar prévias</CardDescription>
               </CardHeader>
               <CardContent>
-                <div className="aspect-video bg-gray-100 rounded-md mb-4 flex items-center justify-center">
+                <div className="aspect-video bg-gray-700 rounded-md mb-4 flex items-center justify-center">
                   <Video className="h-12 w-12 text-gray-400" />
                 </div>
                 <p className="text-sm text-gray-500 mb-4">
@@ -202,13 +202,13 @@ const AdminGuides: React.FC = () => {
               </CardContent>
             </Card>
             
-            <Card>
+            <Card className="bg-card">
               <CardHeader>
                 <CardTitle>Gestão de Clientes</CardTitle>
                 <CardDescription>Como gerenciar a base de clientes</CardDescription>
               </CardHeader>
               <CardContent>
-                <div className="aspect-video bg-gray-100 rounded-md mb-4 flex items-center justify-center">
+                <div className="aspect-video bg-gray-700 rounded-md mb-4 flex items-center justify-center">
                   <Video className="h-12 w-12 text-gray-400" />
                 </div>
                 <p className="text-sm text-gray-500 mb-4">
@@ -224,14 +224,14 @@ const AdminGuides: React.FC = () => {
         </TabsContent>
         
         <TabsContent value="faq" className={activeTab === "faq" ? "" : "hidden"}>
-          <Card>
+          <Card className="bg-card">
             <CardHeader>
               <CardTitle>Perguntas Frequentes</CardTitle>
               <CardDescription>Respostas rápidas para suas dúvidas</CardDescription>
             </CardHeader>
             <CardContent>
               <div className="space-y-4">
-                <div className="border-b pb-4">
+                <div className="border-b border-border pb-4">
                   <h3 className="font-medium flex items-center">
                     <CheckCircle className="h-4 w-4 text-green-500 mr-2" />
                     Como posso adicionar um novo cliente no sistema?
@@ -241,7 +241,7 @@ const AdminGuides: React.FC = () => {
                   </p>
                 </div>
                 
-                <div className="border-b pb-4">
+                <div className="border-b border-border pb-4">
                   <h3 className="font-medium flex items-center">
                     <CheckCircle className="h-4 w-4 text-green-500 mr-2" />
                     Como verificar o status de um projeto?
@@ -251,7 +251,7 @@ const AdminGuides: React.FC = () => {
                   </p>
                 </div>
                 
-                <div className="border-b pb-4">
+                <div className="border-b border-border pb-4">
                   <h3 className="font-medium flex items-center">
                     <CheckCircle className="h-4 w-4 text-green-500 mr-2" />
                     Como enviar uma prévia para um cliente?
@@ -261,7 +261,7 @@ const AdminGuides: React.FC = () => {
                   </p>
                 </div>
                 
-                <div className="border-b pb-4">
+                <div className="border-b border-border pb-4">
                   <h3 className="font-medium flex items-center">
                     <CheckCircle className="h-4 w-4 text-green-500 mr-2" />
                     Como acompanhar os pagamentos recebidos?
@@ -271,7 +271,7 @@ const AdminGuides: React.FC = () => {
                   </p>
                 </div>
                 
-                <div className="border-b pb-4">
+                <div className="border-b border-border pb-4">
                   <h3 className="font-medium flex items-center">
                     <CheckCircle className="h-4 w-4 text-green-500 mr-2" />
                     Como adicionar músicas ao portfólio?

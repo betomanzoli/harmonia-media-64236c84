@@ -31,26 +31,38 @@ const Packages: React.FC = () => {
             <Card className="border-2 hover:border-harmonia-green/70 transition-all duration-300">
               <CardHeader>
                 <CardTitle className="text-xl">Pacote Essencial</CardTitle>
-                <CardDescription>Ideal para ocasiões especiais</CardDescription>
+                <CardDescription>Ideal para presentes emocionais rápidos</CardDescription>
               </CardHeader>
               <CardContent>
-                <div className="text-3xl font-bold mb-6">R$ 219</div>
+                <div className="text-3xl font-bold mb-6">R$ 219,00</div>
                 <ul className="space-y-2">
                   <li className="flex items-start">
                     <Check className="h-5 w-5 text-green-500 mr-2 flex-shrink-0 mt-0.5" />
-                    <span>Composição personalizada</span>
+                    <span>Composição musical única</span>
                   </li>
                   <li className="flex items-start">
                     <Check className="h-5 w-5 text-green-500 mr-2 flex-shrink-0 mt-0.5" />
-                    <span>1 versão + ajustes</span>
+                    <span>Uma revisão gratuita</span>
                   </li>
                   <li className="flex items-start">
                     <Check className="h-5 w-5 text-green-500 mr-2 flex-shrink-0 mt-0.5" />
-                    <span>Entrega em até 10 dias</span>
+                    <span>Uso exclusivamente pessoal</span>
                   </li>
                   <li className="flex items-start">
                     <Check className="h-5 w-5 text-green-500 mr-2 flex-shrink-0 mt-0.5" />
-                    <span>Arquivo digital em alta qualidade</span>
+                    <span>Entrega digital em até 7 dias</span>
+                  </li>
+                  <li className="flex items-start">
+                    <Check className="h-5 w-5 text-green-500 mr-2 flex-shrink-0 mt-0.5" />
+                    <span>Suporte por e-mail</span>
+                  </li>
+                  <li className="flex items-start">
+                    <Check className="h-5 w-5 text-green-500 mr-2 flex-shrink-0 mt-0.5" />
+                    <span>Arquivo digital em alta qualidade (MP3/WAV)</span>
+                  </li>
+                  <li className="flex items-start">
+                    <Check className="h-5 w-5 text-green-500 mr-2 flex-shrink-0 mt-0.5" />
+                    <span>Certificado digital de autoria</span>
                   </li>
                 </ul>
               </CardContent>
@@ -68,31 +80,47 @@ const Packages: React.FC = () => {
             <Card className="border-2 border-harmonia-green relative transform scale-105 shadow-lg">
               <div className="absolute -top-4 left-0 right-0 flex justify-center">
                 <div className="bg-harmonia-green text-white px-4 py-1 rounded-full text-sm font-medium">
-                  Mais Popular
+                  MAIS POPULAR
                 </div>
               </div>
               <CardHeader>
                 <CardTitle className="text-xl">Pacote Profissional</CardTitle>
-                <CardDescription>Perfeito para momentos especiais</CardDescription>
+                <CardDescription>Perfeito para criadores de conteúdo e pequenos negócios</CardDescription>
               </CardHeader>
               <CardContent>
-                <div className="text-3xl font-bold mb-6">R$ 479</div>
+                <div className="text-3xl font-bold mb-6">R$ 479,00</div>
                 <ul className="space-y-2">
                   <li className="flex items-start">
                     <Check className="h-5 w-5 text-green-500 mr-2 flex-shrink-0 mt-0.5" />
-                    <span>Tudo do pacote Essencial</span>
+                    <span>Composição musical personalizada</span>
                   </li>
                   <li className="flex items-start">
                     <Check className="h-5 w-5 text-green-500 mr-2 flex-shrink-0 mt-0.5" />
-                    <span>Até 3 versões da música</span>
+                    <span>Até três revisões gratuitas</span>
                   </li>
                   <li className="flex items-start">
                     <Check className="h-5 w-5 text-green-500 mr-2 flex-shrink-0 mt-0.5" />
-                    <span>Entrega em até 7 dias</span>
+                    <span>Licença para uso em conteúdo digital próprio</span>
                   </li>
                   <li className="flex items-start">
                     <Check className="h-5 w-5 text-green-500 mr-2 flex-shrink-0 mt-0.5" />
-                    <span>Mixagem e masterização profissional</span>
+                    <span>Três versões para escolha</span>
+                  </li>
+                  <li className="flex items-start">
+                    <Check className="h-5 w-5 text-green-500 mr-2 flex-shrink-0 mt-0.5" />
+                    <span>Entrega em até 5 dias</span>
+                  </li>
+                  <li className="flex items-start">
+                    <Check className="h-5 w-5 text-green-500 mr-2 flex-shrink-0 mt-0.5" />
+                    <span>Suporte prioritário</span>
+                  </li>
+                  <li className="flex items-start">
+                    <Check className="h-5 w-5 text-green-500 mr-2 flex-shrink-0 mt-0.5" />
+                    <span>Masterização básica IA</span>
+                  </li>
+                  <li className="flex items-start">
+                    <Check className="h-5 w-5 text-green-500 mr-2 flex-shrink-0 mt-0.5" />
+                    <span>Stems separados (vocais + instrumentação)</span>
                   </li>
                 </ul>
               </CardContent>
@@ -111,26 +139,50 @@ const Packages: React.FC = () => {
             <Card className="border-2 hover:border-harmonia-green/70 transition-all duration-300">
               <CardHeader>
                 <CardTitle className="text-xl">Pacote Premium</CardTitle>
-                <CardDescription>Para projetos exclusivos</CardDescription>
+                <CardDescription>Melhor opção para empresas e projetos corporativos</CardDescription>
               </CardHeader>
               <CardContent>
-                <div className="text-3xl font-bold mb-6">R$ 969</div>
+                <div className="text-3xl font-bold mb-6">R$ 969,00</div>
                 <ul className="space-y-2">
                   <li className="flex items-start">
                     <Check className="h-5 w-5 text-green-500 mr-2 flex-shrink-0 mt-0.5" />
-                    <span>Tudo do pacote Profissional</span>
+                    <span>Composição totalmente personalizada</span>
                   </li>
                   <li className="flex items-start">
                     <Check className="h-5 w-5 text-green-500 mr-2 flex-shrink-0 mt-0.5" />
-                    <span>Arranjo com músicos profissionais</span>
+                    <span>Revisões ilimitadas (até aprovação)</span>
                   </li>
                   <li className="flex items-start">
                     <Check className="h-5 w-5 text-green-500 mr-2 flex-shrink-0 mt-0.5" />
-                    <span>Acompanhamento prioritário</span>
+                    <span>Cessão total dos direitos autorais</span>
                   </li>
                   <li className="flex items-start">
                     <Check className="h-5 w-5 text-green-500 mr-2 flex-shrink-0 mt-0.5" />
-                    <span>Direitos comerciais da música</span>
+                    <span>Cinco versões para escolha</span>
+                  </li>
+                  <li className="flex items-start">
+                    <Check className="h-5 w-5 text-green-500 mr-2 flex-shrink-0 mt-0.5" />
+                    <span>Registro na Biblioteca Nacional</span>
+                  </li>
+                  <li className="flex items-start">
+                    <Check className="h-5 w-5 text-green-500 mr-2 flex-shrink-0 mt-0.5" />
+                    <span>Certificado blockchain</span>
+                  </li>
+                  <li className="flex items-start">
+                    <Check className="h-5 w-5 text-green-500 mr-2 flex-shrink-0 mt-0.5" />
+                    <span>Consultoria de 30 minutos</span>
+                  </li>
+                  <li className="flex items-start">
+                    <Check className="h-5 w-5 text-green-500 mr-2 flex-shrink-0 mt-0.5" />
+                    <span>Entrega prioritária</span>
+                  </li>
+                  <li className="flex items-start">
+                    <Check className="h-5 w-5 text-green-500 mr-2 flex-shrink-0 mt-0.5" />
+                    <span>Suporte VIP por WhatsApp</span>
+                  </li>
+                  <li className="flex items-start">
+                    <Check className="h-5 w-5 text-green-500 mr-2 flex-shrink-0 mt-0.5" />
+                    <span>Partitura em formato MusicXML</span>
                   </li>
                 </ul>
               </CardContent>

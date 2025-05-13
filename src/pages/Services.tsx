@@ -13,6 +13,8 @@ const Services: React.FC = () => {
     // Implementação adicional se necessário
   };
   
+  const whatsAppUrl = "https://api.whatsapp.com/send?phone=5551999999999&text=Olá!%20Estou%20interessado%20em%20saber%20mais%20sobre%20os%20serviços%20da%20harmonIA.";
+  
   return (
     <PublicLayout>
       <div className="pt-24 pb-20 px-6 md:px-10">
@@ -60,7 +62,10 @@ const Services: React.FC = () => {
             <Card className="overflow-hidden">
               <div className="h-2 bg-harmonia-green"></div>
               <CardContent className="p-6">
-                <h3 className="text-xl font-bold mb-4">Produção Musical</h3>
+                <div className="flex justify-between items-start">
+                  <h3 className="text-xl font-bold mb-4">Produção Musical</h3>
+                  <span className="bg-yellow-500 text-black text-xs font-bold px-2 py-1 rounded">Em breve</span>
+                </div>
                 <p className="text-gray-600 mb-6">
                   Produzimos sua ideia musical com qualidade profissional, dando vida ao seu projeto pessoal ou comercial.
                 </p>
@@ -82,8 +87,8 @@ const Services: React.FC = () => {
                     <span>Diferentes formatos de entrega</span>
                   </li>
                 </ul>
-                <Button className="w-full" asChild>
-                  <Link to="/contato?assunto=producao">Saber mais</Link>
+                <Button className="w-full" onClick={() => window.open(whatsAppUrl, '_blank')}>
+                  Saber mais
                 </Button>
               </CardContent>
             </Card>
@@ -91,7 +96,10 @@ const Services: React.FC = () => {
             <Card className="overflow-hidden">
               <div className="h-2 bg-purple-500"></div>
               <CardContent className="p-6">
-                <h3 className="text-xl font-bold mb-4">Trilhas para Vídeo</h3>
+                <div className="flex justify-between items-start">
+                  <h3 className="text-xl font-bold mb-4">Trilhas para Vídeo</h3>
+                  <span className="bg-yellow-500 text-black text-xs font-bold px-2 py-1 rounded">Em breve</span>
+                </div>
                 <p className="text-gray-600 mb-6">
                   Criamos trilhas sonoras exclusivas para vídeos, publicidades, apresentações e projetos audiovisuais.
                 </p>
@@ -113,8 +121,8 @@ const Services: React.FC = () => {
                     <span>Direitos de uso comercial</span>
                   </li>
                 </ul>
-                <Button className="w-full" asChild>
-                  <Link to="/contato?assunto=trilha">Saber mais</Link>
+                <Button className="w-full" onClick={() => window.open(whatsAppUrl, '_blank')}>
+                  Saber mais
                 </Button>
               </CardContent>
             </Card>
@@ -129,45 +137,56 @@ const Services: React.FC = () => {
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
               <Card className="p-6 text-center">
                 <Music className="h-8 w-8 mx-auto text-harmonia-green mb-4" />
-                <h3 className="font-bold mb-2">Registro de Música</h3>
+                <div className="flex justify-center items-center gap-2 mb-2">
+                  <h3 className="font-bold">Registro de Música</h3>
+                </div>
                 <p className="text-sm text-gray-500 mb-4">
                   Registramos sua composição para proteção legal dos direitos autorais.
                 </p>
-                <Button variant="link" size="sm" className="text-harmonia-green" asChild>
-                  <Link to="/contato?assunto=registro">Saiba mais</Link>
+                <Button variant="link" size="sm" className="text-harmonia-green" onClick={() => window.open(whatsAppUrl, '_blank')}>
+                  Saiba mais
                 </Button>
               </Card>
               
               <Card className="p-6 text-center">
                 <Package className="h-8 w-8 mx-auto text-harmonia-green mb-4" />
-                <h3 className="font-bold mb-2">Press Kit Musical</h3>
+                <div className="flex justify-center items-center gap-2 mb-2">
+                  <h3 className="font-bold">Press Kit Musical</h3>
+                  <span className="bg-yellow-500 text-black text-xs font-bold px-2 py-1 rounded">Em breve</span>
+                </div>
                 <p className="text-sm text-gray-500 mb-4">
                   Material completo para divulgação da sua música ou projeto.
                 </p>
-                <Button variant="link" size="sm" className="text-harmonia-green" asChild>
-                  <Link to="/contato?assunto=presskit">Saiba mais</Link>
+                <Button variant="link" size="sm" className="text-harmonia-green" onClick={() => window.open(whatsAppUrl, '_blank')}>
+                  Saiba mais
                 </Button>
               </Card>
               
               <Card className="p-6 text-center">
                 <Music className="h-8 w-8 mx-auto text-harmonia-green mb-4" />
-                <h3 className="font-bold mb-2">Distribuição Digital</h3>
+                <div className="flex justify-center items-center gap-2 mb-2">
+                  <h3 className="font-bold">Distribuição Digital</h3>
+                  <span className="bg-yellow-500 text-black text-xs font-bold px-2 py-1 rounded">Em breve</span>
+                </div>
                 <p className="text-sm text-gray-500 mb-4">
                   Publicamos sua música nas principais plataformas de streaming.
                 </p>
-                <Button variant="link" size="sm" className="text-harmonia-green" asChild>
-                  <Link to="/contato?assunto=distribuicao">Saiba mais</Link>
+                <Button variant="link" size="sm" className="text-harmonia-green" onClick={() => window.open(whatsAppUrl, '_blank')}>
+                  Saiba mais
                 </Button>
               </Card>
               
               <Card className="p-6 text-center">
                 <Heart className="h-8 w-8 mx-auto text-harmonia-green mb-4" />
-                <h3 className="font-bold mb-2">Versões Cover</h3>
+                <div className="flex justify-center items-center gap-2 mb-2">
+                  <h3 className="font-bold">Versões Cover</h3>
+                  <span className="bg-yellow-500 text-black text-xs font-bold px-2 py-1 rounded">Em breve</span>
+                </div>
                 <p className="text-sm text-gray-500 mb-4">
                   Produzimos versões exclusivas de músicas conhecidas adaptadas ao seu estilo.
                 </p>
-                <Button variant="link" size="sm" className="text-harmonia-green" asChild>
-                  <Link to="/contato?assunto=cover">Saiba mais</Link>
+                <Button variant="link" size="sm" className="text-harmonia-green" onClick={() => window.open(whatsAppUrl, '_blank')}>
+                  Saiba mais
                 </Button>
               </Card>
             </div>

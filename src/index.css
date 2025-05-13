@@ -126,3 +126,13 @@
 .button-danger {
   @apply bg-red-600 hover:bg-red-700 text-white;
 }
+
+/* Admin background fix */
+[class*="AdminGuides"],
+[class*="AdminPortfolio"] {
+  @apply bg-background;
+}
+
+.admin-panel {
+  @apply bg-background;
+}
