@@ -1,19 +1,33 @@
 
-import React from 'react';
+import React, { useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Clock, MessageSquare, CheckCircle } from 'lucide-react';
+import { useToast } from '@/hooks/use-toast'; 
 
 export interface ProjectStatusCardProps {
   status: 'waiting' | 'feedback' | 'approved';
   onStatusUpdate: (newStatus: 'waiting' | 'feedback' | 'approved') => void;
+  projectId?: string;
 }
 
 const ProjectStatusCard: React.FC<ProjectStatusCardProps> = ({
   status,
-  onStatusUpdate
+  onStatusUpdate,
+  projectId
 }) => {
+  const { toast } = useToast();
+
+  useEffect(() => {
+    // Este efeito é executado quando o status do projeto muda
+    // poderia ser usado para sincronizar os status com outras partes do sistema
+    if (projectId) {
+      console.log(`Status do projeto ${projectId} atualizado: ${status}`);
+      // Aqui você poderia disparar alguma ação para sincronizar o status
+    }
+  }, [status, projectId]);
+
   const getStatusDetails = () => {
     switch (status) {
       case 'waiting':
@@ -22,8 +36,8 @@ const ProjectStatusCard: React.FC<ProjectStatusCardProps> = ({
           label: <Badge className="bg-yellow-100 text-yellow-800 border-yellow-300">Aguardando Avaliação</Badge>,
           description: "O cliente ainda não avaliou as prévias enviadas.",
           actions: [
-            { label: "Marcar como Feedback", onClick: () => onStatusUpdate('feedback'), variant: "outline" as const },
-            { label: "Marcar como Aprovado", onClick: () => onStatusUpdate('approved'), variant: "outline" as const }
+            { label: "Marcar como Feedback", onClick: () => handleStatusUpdate('feedback'), variant: "outline" as const },
+            { label: "Marcar como Aprovado", onClick: () => handleStatusUpdate('approved'), variant: "outline" as const }
           ]
         };
       case 'feedback':
@@ -32,8 +46,8 @@ const ProjectStatusCard: React.FC<ProjectStatusCardProps> = ({
           label: <Badge className="bg-blue-100 text-blue-800 border-blue-300">Feedback Recebido</Badge>,
           description: "O cliente enviou feedback para as prévias.",
           actions: [
-            { label: "Marcar como Aguardando", onClick: () => onStatusUpdate('waiting'), variant: "outline" as const },
-            { label: "Marcar como Aprovado", onClick: () => onStatusUpdate('approved'), variant: "outline" as const }
+            { label: "Marcar como Aguardando", onClick: () => handleStatusUpdate('waiting'), variant: "outline" as const },
+            { label: "Marcar como Aprovado", onClick: () => handleStatusUpdate('approved'), variant: "outline" as const }
           ]
         };
       case 'approved':
@@ -42,8 +56,8 @@ const ProjectStatusCard: React.FC<ProjectStatusCardProps> = ({
           label: <Badge className="bg-green-100 text-green-800 border-green-300">Música Aprovada</Badge>,
           description: "O cliente aprovou uma das prévias enviadas.",
           actions: [
-            { label: "Marcar como Aguardando", onClick: () => onStatusUpdate('waiting'), variant: "outline" as const },
-            { label: "Marcar como Feedback", onClick: () => onStatusUpdate('feedback'), variant: "outline" as const }
+            { label: "Marcar como Aguardando", onClick: () => handleStatusUpdate('waiting'), variant: "outline" as const },
+            { label: "Marcar como Feedback", onClick: () => handleStatusUpdate('feedback'), variant: "outline" as const }
           ]
         };
       default:
@@ -54,6 +68,19 @@ const ProjectStatusCard: React.FC<ProjectStatusCardProps> = ({
           actions: []
         };
     }
+  };
+  
+  const handleStatusUpdate = (newStatus: 'waiting' | 'feedback' | 'approved') => {
+    // Atualiza o status e notifica sobre a mudança
+    onStatusUpdate(newStatus);
+    
+    toast({
+      title: "Status atualizado",
+      description: `Status do projeto alterado para ${
+        newStatus === 'waiting' ? 'Aguardando Avaliação' : 
+        newStatus === 'feedback' ? 'Feedback Recebido' : 'Aprovado'
+      }`
+    });
   };
   
   const statusInfo = getStatusDetails();

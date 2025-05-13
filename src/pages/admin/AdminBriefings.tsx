@@ -37,68 +37,24 @@ import {
   AlertDialogHeader, 
   AlertDialogTitle 
 } from "@/components/ui/alert-dialog";
-
-interface Briefing {
-  id: string;
-  clientName: string;
-  clientEmail: string;
-  submittedDate: string;
-  status: 'new' | 'reviewed' | 'in-progress' | 'completed';
-  package: string;
-  projectCreated?: boolean;
-}
+import { useBriefings } from '@/hooks/admin/useBriefings';
 
 const AdminBriefings: React.FC = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
+  const { briefings, updateBriefingStatus, deleteBriefing, createProjectFromBriefing } = useBriefings();
   
   const [searchTerm, setSearchTerm] = useState('');
-  const [briefingsData, setBriefingsData] = useState<Briefing[]>([
-    {
-      id: 'BRF-001',
-      clientName: 'João Silva',
-      clientEmail: 'joao.silva@email.com',
-      submittedDate: '10/04/2025',
-      status: 'new',
-      package: 'Profissional'
-    },
-    {
-      id: 'BRF-002',
-      clientName: 'Maria Oliveira',
-      clientEmail: 'maria.oliveira@email.com',
-      submittedDate: '12/04/2025',
-      status: 'reviewed',
-      package: 'Premium'
-    },
-    {
-      id: 'BRF-003',
-      clientName: 'Carlos Santos',
-      clientEmail: 'carlos.santos@email.com',
-      submittedDate: '15/04/2025',
-      status: 'in-progress',
-      package: 'Essencial',
-      projectCreated: true
-    },
-    {
-      id: 'BRF-004',
-      clientName: 'Ana Souza',
-      clientEmail: 'ana.souza@email.com',
-      submittedDate: '05/04/2025',
-      status: 'completed',
-      package: 'Premium',
-      projectCreated: true
-    }
-  ]);
   
   // State to track which briefing is selected for deletion
   const [briefingToDelete, setBriefingToDelete] = useState<string | null>(null);
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
 
   // Filter briefings based on search term
-  const filteredBriefings = briefingsData.filter(
+  const filteredBriefings = briefings.filter(
     (briefing) =>
-      briefing.clientName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      briefing.clientEmail.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      briefing.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      briefing.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
       briefing.id.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
@@ -118,7 +74,8 @@ const AdminBriefings: React.FC = () => {
   const handleDeleteBriefing = () => {
     if (!briefingToDelete) return;
     
-    setBriefingsData(briefingsData.filter(briefing => briefing.id !== briefingToDelete));
+    deleteBriefing(briefingToDelete);
+    
     toast({
       title: "Briefing excluído",
       description: `O briefing ${briefingToDelete} foi excluído com sucesso.`,
@@ -130,21 +87,12 @@ const AdminBriefings: React.FC = () => {
   };
 
   const handleCreateProject = (briefingId: string) => {
-    // Update the briefing status and set projectCreated to true
-    setBriefingsData(
-      briefingsData.map(briefing => 
-        briefing.id === briefingId 
-          ? { ...briefing, status: 'in-progress' as const, projectCreated: true } 
-          : briefing
-      )
+    // Criar projeto a partir do briefing
+    const projectId = createProjectFromBriefing(
+      briefings.find(b => b.id === briefingId)!
     );
     
-    toast({
-      title: "Projeto criado",
-      description: `Um novo projeto foi criado a partir do briefing ${briefingId}.`
-    });
-    
-    // Redirect to the new project page
+    // Redirecionar para página de previews
     setTimeout(() => {
       navigate('/admin-j28s7d1k/previews');
     }, 1500);
@@ -152,14 +100,12 @@ const AdminBriefings: React.FC = () => {
 
   const getStatusBadge = (status: string) => {
     switch (status) {
-      case 'new':
+      case 'pending':
         return <Badge className="bg-blue-500">Novo</Badge>;
-      case 'reviewed':
-        return <Badge className="bg-yellow-500">Analisado</Badge>;
-      case 'in-progress':
-        return <Badge className="bg-green-500">Em andamento</Badge>;
       case 'completed':
-        return <Badge className="bg-purple-500">Concluído</Badge>;
+        return <Badge className="bg-yellow-500">Analisado</Badge>;
+      case 'approved':
+        return <Badge className="bg-green-500">Aprovado</Badge>;
       default:
         return <Badge>Desconhecido</Badge>;
     }
@@ -229,14 +175,14 @@ const AdminBriefings: React.FC = () => {
                           <TableCell className="font-medium">{briefing.id}</TableCell>
                           <TableCell>
                             <div>
-                              <div className="font-medium">{briefing.clientName}</div>
+                              <div className="font-medium">{briefing.name}</div>
                               <div className="text-sm text-muted-foreground">
-                                {briefing.clientEmail}
+                                {briefing.email}
                               </div>
                             </div>
                           </TableCell>
-                          <TableCell>{briefing.submittedDate}</TableCell>
-                          <TableCell>{briefing.package}</TableCell>
+                          <TableCell>{briefing.createdAt}</TableCell>
+                          <TableCell>{briefing.packageType}</TableCell>
                           <TableCell>{getStatusBadge(briefing.status)}</TableCell>
                           <TableCell>
                             {briefing.projectCreated ? (
