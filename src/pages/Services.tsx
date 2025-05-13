@@ -1,6 +1,6 @@
 
 import React from 'react';
-import ServiceTabs from './ServiceTabs';
+import ServiceTabs from '../components/ServiceTabs';
 
 const Services: React.FC = () => {
   return (

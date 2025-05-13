@@ -107,6 +107,56 @@ export type Database = {
         }
         Relationships: []
       }
+      invoices: {
+        Row: {
+          amount: string
+          client: string
+          client_id: string | null
+          created_at: string | null
+          date: string | null
+          description: string | null
+          due_date: string
+          has_receipt: boolean | null
+          id: string
+          invoice_pdf: string | null
+          status: string | null
+        }
+        Insert: {
+          amount: string
+          client: string
+          client_id?: string | null
+          created_at?: string | null
+          date?: string | null
+          description?: string | null
+          due_date: string
+          has_receipt?: boolean | null
+          id?: string
+          invoice_pdf?: string | null
+          status?: string | null
+        }
+        Update: {
+          amount?: string
+          client?: string
+          client_id?: string | null
+          created_at?: string | null
+          date?: string | null
+          description?: string | null
+          due_date?: string
+          has_receipt?: boolean | null
+          id?: string
+          invoice_pdf?: string | null
+          status?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "invoices_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "clients"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       packages: {
         Row: {
           description: string | null
