@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
@@ -11,7 +10,7 @@ import {
   DropdownMenuSeparator, 
   DropdownMenuTrigger 
 } from "@/components/ui/dropdown-menu";
-import { Plus, MoreHorizontal, Edit, Trash2, Download, FilePdf, Check } from 'lucide-react';
+import { Plus, MoreHorizontal, Edit, Trash2, Download, FileText, Check } from 'lucide-react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { 
   AlertDialog, 
@@ -43,6 +42,13 @@ interface Invoice {
   project_id?: string;
 }
 
+interface Project {
+  id: string;
+  title: string;
+  client_id?: string;
+  [key: string]: any; // For any other properties
+}
+
 const InvoicesList: React.FC = () => {
   const [invoices, setInvoices] = useState<Invoice[]>([]);
   const [showNewInvoiceDialog, setShowNewInvoiceDialog] = useState(false);
@@ -60,8 +66,8 @@ const InvoicesList: React.FC = () => {
   });
   const { toast } = useToast();
 
-  // Fetch projects for dropdown
-  const { data: projects } = useSupabaseData('projects', {
+  // Fetch projects for dropdown with proper typing
+  const { data: projects } = useSupabaseData<Project>('projects', {
     orderBy: { column: 'created_at', ascending: false }
   });
 
@@ -381,7 +387,7 @@ const InvoicesList: React.FC = () => {
                               rel="noopener noreferrer"
                               className="flex items-center w-full"
                             >
-                              <FilePdf className="mr-2 h-4 w-4" />
+                              <FileText className="mr-2 h-4 w-4" />
                               Ver PDF
                             </a>
                           </DropdownMenuItem>

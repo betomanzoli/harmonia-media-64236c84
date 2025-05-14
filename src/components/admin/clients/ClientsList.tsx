@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect, useCallback } from 'react';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
@@ -21,6 +20,12 @@ import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { useSupabaseData } from '@/hooks/use-supabase-data';
 
+interface Project {
+  id: string;
+  client_id: string;
+  [key: string]: any; // For any other properties
+}
+
 const ClientsList = () => {
   const { customers, isLoading, addCustomer, updateCustomer, deleteCustomer, refreshCustomers } = useCustomers();
   const [showNewClientDialog, setShowNewClientDialog] = useState(false);
@@ -34,8 +39,8 @@ const ClientsList = () => {
   });
   const { toast } = useToast();
 
-  // Fetch projects count for each client
-  const { data: projects } = useSupabaseData('projects', {});
+  // Fetch projects count for each client with proper typing
+  const { data: projects } = useSupabaseData<Project>('projects', {});
 
   // Count projects per client
   const getProjectCount = useCallback((clientId: string) => {
