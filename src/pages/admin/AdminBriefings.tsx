@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import AdminLayout from '@/components/admin/layout/AdminLayout';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -84,7 +83,7 @@ const AdminBriefings: React.FC = () => {
       phone: briefingData.phone,
       packageType: briefingData.packageType,
       createdAt: new Date().toLocaleDateString('pt-BR'),
-      status: 'pending',
+      status: 'pending' as 'pending' | 'completed' | 'approved', // Use type assertion to match the expected type
       description: briefingData.description || 'Novo briefing',
       projectCreated: false,
       formData: briefingData.formData || {}
