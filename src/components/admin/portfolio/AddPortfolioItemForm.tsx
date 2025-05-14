@@ -23,7 +23,7 @@ interface PortfolioItem {
   featured?: boolean;
 }
 
-interface AddPortfolioItemFormProps {
+export interface AddPortfolioItemFormProps {
   onAdd: (item: PortfolioItem) => string | null;
   onCancel: () => void;
 }

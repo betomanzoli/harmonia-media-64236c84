@@ -1,264 +1,99 @@
-import React from 'react';
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Loader2 } from "lucide-react";
-import { useIntegrationConfig } from '@/hooks/admin/useIntegrationConfig';
-import webhookService, { NotificationType } from '@/services/webhookService';
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
-interface IntegrationConfigProps {
-  portfolioItems: any[];
+import React from 'react';
+import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
+import { Label } from "@/components/ui/label";
+import { Card } from "@/components/ui/card";
+import { Settings, Copy, Check } from "lucide-react";
+import { useToast } from "@/hooks/use-toast";
+import { PortfolioItem } from '@/hooks/usePortfolioItems';
+
+export interface IntegrationConfigProps {
+  portfolioItems: PortfolioItem[];
 }
 
-const IntegrationConfig: React.FC<IntegrationConfigProps> = ({
-  portfolioItems
-}) => {
-  const {
-    webhookUrl,
-    setWebhookUrl,
-    saveWebhookUrl,
-    sendTestPing,
-    isLoading,
-    isTesting,
-    copyToClipboard
-  } = useIntegrationConfig();
+const IntegrationConfig: React.FC<IntegrationConfigProps> = ({ portfolioItems }) => {
+  const { toast } = useToast();
+  const [copied, setCopied] = React.useState(false);
+  
+  // Placeholder webhook URL - In a real implementation, this would be stored in your database
+  const webhookUrl = "https://your-domain.com/api/portfolio-webhook";
+  
+  const copyToClipboard = (text: string) => {
+    navigator.clipboard.writeText(text);
+    setCopied(true);
+    
+    toast({
+      title: "URL copiada!",
+      description: "URL copiada para a área de transferência",
+    });
+    
+    setTimeout(() => {
+      setCopied(false);
+    }, 2000);
+  };
+  
+  const generateExamplePayload = () => {
+    const sampleItem = portfolioItems[0] || {
+      id: "example-1",
+      title: "Exemplo de Música",
+      description: "Esta é uma descrição de exemplo",
+      audioUrl: "https://drive.google.com/file/d/your-file-id/view",
+      type: "example" as const
+    };
+    
+    return JSON.stringify({
+      action: "add_portfolio_item",
+      item: {
+        title: sampleItem.title,
+        description: sampleItem.description,
+        audioUrl: sampleItem.audioUrl,
+        type: sampleItem.type
+      }
+    }, null, 2);
+  };
 
   return (
-    <div className="space-y-6">
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
-        <div className="col-span-1 md:col-span-2">
-          <Card>
-            <CardHeader>
-              <CardTitle>Configuração de Webhooks</CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div>
-                <label htmlFor="webhook" className="block text-sm font-medium mb-2">
-                  URL do Webhook (Zapier/Make)
-                </label>
-                <div className="flex gap-2">
-                  <Input
-                    id="webhook"
-                    type="text"
-                    value={webhookUrl}
-                    onChange={(e) => setWebhookUrl(e.target.value)}
-                    placeholder="https://hooks.zapier.com/hooks/catch/..."
-                    className="flex-1"
-                  />
-                  <Button 
-                    onClick={saveWebhookUrl} 
-                    disabled={isLoading}
-                  >
-                    {isLoading ? (
-                      <>
-                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                        Salvando...
-                      </>
-                    ) : (
-                      'Salvar'
-                    )}
-                  </Button>
-                </div>
-                <p className="text-sm text-muted-foreground mt-1">
-                  Configure um webhook no Zapier/Make para integração com atualizações de portfólio
-                </p>
-              </div>
-            </CardContent>
-          </Card>
+    <div className="space-y-4">
+      <p className="text-sm text-muted-foreground mb-4">
+        Configure integrações para automaticamente adicionar novos exemplos ao seu portfólio.
+      </p>
+      
+      <div className="space-y-2">
+        <Label htmlFor="webhook-url">URL do Webhook</Label>
+        <div className="flex space-x-2">
+          <Input
+            id="webhook-url"
+            value={webhookUrl}
+            readOnly
+            className="flex-1"
+          />
+          <Button
+            size="icon"
+            variant="outline"
+            onClick={() => copyToClipboard(webhookUrl)}
+          >
+            {copied ? <Check className="h-4 w-4" /> : <Copy className="h-4 w-4" />}
+          </Button>
         </div>
-        
-        <div>
-          <Card>
-            <CardHeader>
-              <CardTitle>Ações Rápidas</CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <Button 
-                variant="default" 
-                className="w-full"
-                onClick={sendTestPing}
-                disabled={isTesting || !webhookUrl}
-              >
-                {isTesting ? (
-                  <>
-                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                    Enviando teste...
-                  </>
-                ) : (
-                  'Enviar Ping de Teste'
-                )}
-              </Button>
-              
-              <Button 
-                variant="outline" 
-                className="w-full"
-                onClick={() => copyToClipboard(JSON.stringify(portfolioItems, null, 2))}
-              >
-                Copiar JSON Completo
-              </Button>
-            </CardContent>
-          </Card>
-        </div>
+        <p className="text-xs text-muted-foreground mt-1">
+          Use esta URL para configurar integrações com Make ou Zapier.
+        </p>
       </div>
       
-      <Tabs defaultValue="zapier" className="space-y-4">
-        <TabsList>
-          <TabsTrigger value="zapier">Zapier</TabsTrigger>
-          <TabsTrigger value="make">Make (Integromat)</TabsTrigger>
-          <TabsTrigger value="webhook">Webhook Personalizado</TabsTrigger>
-        </TabsList>
-        
-        <TabsContent value="zapier">
-          <Card>
-            <CardHeader>
-              <CardTitle>Guia de Configuração no Zapier</CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <ol className="list-decimal list-inside space-y-4">
-                <li className="pb-2 border-b border-gray-100">
-                  <strong>Crie uma nova Zap no Zapier</strong>
-                  <p className="mt-1 ml-6 text-sm text-muted-foreground">
-                    Acesse <a href="https://zapier.com" target="_blank" rel="noopener noreferrer" className="text-primary underline">zapier.com</a> e clique em "Create Zap"
-                  </p>
-                </li>
-                
-                <li className="pb-2 border-b border-gray-100">
-                  <strong>Selecione "Webhooks by Zapier" como trigger (gatilho)</strong>
-                  <p className="mt-1 ml-6 text-sm text-muted-foreground">
-                    Na seção de gatilho, pesquise e selecione "Webhooks by Zapier"
-                  </p>
-                </li>
-                
-                <li className="pb-2 border-b border-gray-100">
-                  <strong>Escolha "Catch Hook" como evento</strong>
-                  <p className="mt-1 ml-6 text-sm text-muted-foreground">
-                    Isso criará um endpoint único para receber dados do harmonIA
-                  </p>
-                </li>
-                
-                <li className="pb-2 border-b border-gray-100">
-                  <strong>Copie a URL do webhook gerada pelo Zapier</strong>
-                  <p className="mt-1 ml-6 text-sm text-muted-foreground">
-                    Cole esta URL no campo "URL do Webhook" acima e clique em "Salvar"
-                  </p>
-                </li>
-                
-                <li className="pb-2 border-b border-gray-100">
-                  <strong>Clique em "Enviar Ping de Teste" acima</strong>
-                  <p className="mt-1 ml-6 text-sm text-muted-foreground">
-                    Isso enviará dados de teste para seu webhook no Zapier para verificar a conexão
-                  </p>
-                </li>
-                
-                <li className="pb-2 border-b border-gray-100">
-                  <strong>Configure as ações desejadas</strong>
-                  <p className="mt-1 ml-6 text-sm text-muted-foreground">
-                    Adicione ações como enviar emails, notificações Slack, atualizar planilhas, etc.
-                  </p>
-                </li>
-                
-                <li>
-                  <strong>Ative seu Zap</strong>
-                  <p className="mt-1 ml-6 text-sm text-muted-foreground">
-                    Após testar com sucesso, ative seu Zap para começar a receber notificações
-                  </p>
-                </li>
-              </ol>
-            </CardContent>
-          </Card>
-        </TabsContent>
-        
-        <TabsContent value="make">
-          <Card>
-            <CardHeader>
-              <CardTitle>Guia de Configuração no Make (Integromat)</CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <ol className="list-decimal list-inside space-y-4">
-                <li className="pb-2 border-b border-gray-100">
-                  <strong>Crie um novo cenário no Make</strong>
-                  <p className="mt-1 ml-6 text-sm text-muted-foreground">
-                    Acesse <a href="https://make.com" target="_blank" rel="noopener noreferrer" className="text-primary underline">make.com</a> e clique em "Create a new scenario"
-                  </p>
-                </li>
-                
-                <li className="pb-2 border-b border-gray-100">
-                  <strong>Adicione o módulo "Webhooks"</strong>
-                  <p className="mt-1 ml-6 text-sm text-muted-foreground">
-                    Selecione o app "Webhooks" e escolha "Custom webhook" como gatilho
-                  </p>
-                </li>
-                
-                <li className="pb-2 border-b border-gray-100">
-                  <strong>Configure o webhook para receber dados JSON</strong>
-                  <p className="mt-1 ml-6 text-sm text-muted-foreground">
-                    Deixe as configurações padrão para receber dados JSON
-                  </p>
-                </li>
-                
-                <li className="pb-2 border-b border-gray-100">
-                  <strong>Copie a URL do webhook gerada pelo Make</strong>
-                  <p className="mt-1 ml-6 text-sm text-muted-foreground">
-                    Cole esta URL no campo "URL do Webhook" acima e clique em "Salvar"
-                  </p>
-                </li>
-                
-                <li className="pb-2 border-b border-gray-100">
-                  <strong>Clique em "Enviar Ping de Teste" acima</strong>
-                  <p className="mt-1 ml-6 text-sm text-muted-foreground">
-                    Isso enviará dados de teste para seu webhook no Make
-                  </p>
-                </li>
-                
-                <li className="pb-2 border-b border-gray-100">
-                  <strong>Adicione módulos para processamento</strong>
-                  <p className="mt-1 ml-6 text-sm text-muted-foreground">
-                    Conecte outros módulos como Gmail, Slack, Google Sheets, etc.
-                  </p>
-                </li>
-                
-                <li>
-                  <strong>Ative seu cenário</strong>
-                  <p className="mt-1 ml-6 text-sm text-muted-foreground">
-                    Após testar com sucesso, ative seu cenário para começar a receber notificações
-                  </p>
-                </li>
-              </ol>
-            </CardContent>
-          </Card>
-        </TabsContent>
-        
-        <TabsContent value="webhook">
-          <Card>
-            <CardHeader>
-              <CardTitle>Formato dos Dados JSON</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="bg-muted p-4 rounded-md">
-                <pre className="text-xs overflow-auto">
-{`{
-  "type": "test_message",  // Tipo de notificação (test_message, new_portfolio_item, feedback_received)
-  "data": {                // Dados específicos do evento
-    "testMessage": "Este é um teste de webhook"
-  },
-  "timestamp": "2025-04-07T20:16:10Z"  // Timestamp ISO
-}`}
-                </pre>
-              </div>
-              
-              <div className="mt-4">
-                <h4 className="font-medium mb-2">Tipos de notificações disponíveis:</h4>
-                <ul className="list-disc list-inside space-y-2 text-sm text-muted-foreground">
-                  <li><code>test_message</code> - Mensagem de teste para verificar a integração</li>
-                  <li><code>new_portfolio_item</code> - Quando um novo item de portfólio é adicionado</li>
-                  <li><code>feedback_received</code> - Quando feedback é recebido sobre uma prévia</li>
-                </ul>
-              </div>
-            </CardContent>
-          </Card>
-        </TabsContent>
-      </Tabs>
+      <div className="pt-2">
+        <Label htmlFor="example-payload">Exemplo de Payload</Label>
+        <Card className="mt-2 p-3 bg-muted">
+          <pre className="text-xs overflow-auto whitespace-pre-wrap">
+            {generateExamplePayload()}
+          </pre>
+        </Card>
+      </div>
+      
+      <Button className="w-full mt-4 flex items-center" variant="outline">
+        <Settings className="mr-2 h-4 w-4" />
+        Configurações Avançadas
+      </Button>
     </div>
   );
 };

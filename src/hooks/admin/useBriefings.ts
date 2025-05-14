@@ -1,5 +1,5 @@
 
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useEffect } from 'react';
 import { createId } from '@paralleldrive/cuid2';
 
 export interface Briefing {
@@ -214,6 +214,3 @@ export const useBriefings = () => {
     createProjectFromBriefing
   };
 };
-
-// Import useEffect at the top
-import { useState, useCallback, useEffect } from 'react';
