@@ -11,17 +11,9 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
-import { Check, X, MoreHorizontal } from 'lucide-react';
-import { Button } from "@/components/ui/button";
-import { 
-  DropdownMenu, 
-  DropdownMenuContent, 
-  DropdownMenuItem, 
-  DropdownMenuLabel, 
-  DropdownMenuSeparator, 
-  DropdownMenuTrigger 
-} from "@/components/ui/dropdown-menu";
+import { Check, X } from 'lucide-react';
 import { Invoice, Project } from '../types';
+import InvoiceActionMenu from './InvoiceActionMenu';
 
 interface InvoiceTableProps {
   invoices: Invoice[];
@@ -116,39 +108,13 @@ const InvoiceTable: React.FC<InvoiceTableProps> = ({
                   )}
                 </TableCell>
                 <TableCell className="text-right">
-                  <DropdownMenu>
-                    <DropdownMenuTrigger asChild>
-                      <Button variant="ghost" className="h-8 w-8 p-0">
-                        <span className="sr-only">Abrir menu</span>
-                        <MoreHorizontal className="h-4 w-4" />
-                      </Button>
-                    </DropdownMenuTrigger>
-                    <DropdownMenuContent align="end">
-                      <DropdownMenuLabel>Ações</DropdownMenuLabel>
-                      <DropdownMenuSeparator />
-                      {invoice.invoice_pdf && (
-                        <DropdownMenuItem onClick={() => onViewPdf(invoice.invoice_pdf!)}>
-                          <span className="mr-2">📄</span>
-                          Ver fatura
-                        </DropdownMenuItem>
-                      )}
-                      <DropdownMenuItem onClick={() => onEdit(invoice)}>
-                        <span className="mr-2">✏️</span>
-                        Editar
-                      </DropdownMenuItem>
-                      <DropdownMenuItem onClick={() => onDownload(invoice)}>
-                        <span className="mr-2">⬇️</span>
-                        Baixar
-                      </DropdownMenuItem>
-                      <DropdownMenuItem 
-                        className="text-red-600"
-                        onClick={() => onDelete(invoice.id)}
-                      >
-                        <span className="mr-2">🗑️</span>
-                        Excluir
-                      </DropdownMenuItem>
-                    </DropdownMenuContent>
-                  </DropdownMenu>
+                  <InvoiceActionMenu
+                    invoice={invoice}
+                    onEdit={onEdit}
+                    onDelete={onDelete}
+                    onViewPdf={onViewPdf}
+                    onDownload={onDownload}
+                  />
                 </TableCell>
               </TableRow>
             ))
