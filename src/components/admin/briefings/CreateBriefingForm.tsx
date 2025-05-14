@@ -1,27 +1,31 @@
 
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { Button } from "@/components/ui/button";
+import { DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { useToast } from "@/hooks/use-toast";
-import PhoneInput, { PhoneWithCountryCode } from '@/components/PhoneInput';
 import { 
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
+  Select, 
+  SelectTrigger, 
+  SelectValue, 
+  SelectContent, 
+  SelectItem 
 } from "@/components/ui/select";
+import { Label } from "@/components/ui/label";
+import { Separator } from "@/components/ui/separator";
+import { useToast } from "@/hooks/use-toast";
 import { useBriefings } from '@/hooks/admin/useBriefings';
 import { useCustomers } from '@/hooks/admin/useCustomers';
+import PhoneInput, { PhoneWithCountryCode } from '@/components/PhoneInput';
 
-const CreateBriefingForm: React.FC<{
+interface CreateBriefingFormProps {
   onClose: () => void;
-}> = ({ onClose }) => {
-  const { toast } = useToast();
+}
+
+const CreateBriefingForm: React.FC<CreateBriefingFormProps> = ({ onClose }) => {
   const { addBriefing } = useBriefings();
-  const { addCustomer, customers } = useCustomers();
+  const { toast } = useToast();
+  const { customers } = useCustomers();
   
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
@@ -32,28 +36,31 @@ const CreateBriefingForm: React.FC<{
   });
   const [packageType, setPackageType] = useState('');
   const [description, setDescription] = useState('');
-  const [useExistingCustomer, setUseExistingCustomer] = useState(false);
-  const [selectedCustomerId, setSelectedCustomerId] = useState('');
+  const [isLoading, setIsLoading] = useState(false);
+  const [selectedClientId, setSelectedClientId] = useState<string>('');
 
-  const handleSelectCustomer = (customerId: string) => {
-    const customer = customers.find(c => c.id === customerId);
-    if (customer) {
-      setName(customer.name);
-      setEmail(customer.email);
-      if (customer.phone) {
-        // Format phone to our structure
-        const phoneNumber = customer.phone.replace(/\D/g, '');
-        setPhone({
-          fullNumber: `+${phoneNumber}`,
-          countryCode: phoneNumber.substring(0, 2),
-          nationalNumber: phoneNumber.substring(2)
-        });
-      }
-      setSelectedCustomerId(customerId);
+  const handleSelectClient = (clientId: string) => {
+    const customer = customers.find(c => c.id === clientId);
+    if (!customer) return;
+    
+    setSelectedClientId(customer.id);
+    setName(customer.name);
+    setEmail(customer.email);
+    
+    if (customer.phone) {
+      const phoneNumber = customer.phone.replace(/\D/g, '');
+      const countryCode = phoneNumber.substring(0, 2);
+      const nationalNumber = phoneNumber.substring(2);
+      
+      setPhone({
+        fullNumber: customer.phone,
+        countryCode,
+        nationalNumber
+      });
     }
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
     if (!name || !email || !packageType) {
@@ -64,8 +71,8 @@ const CreateBriefingForm: React.FC<{
       });
       return;
     }
-
-    // Verify phone has international format
+    
+    // Validate phone format
     if (!phone.fullNumber || !phone.fullNumber.startsWith('+')) {
       toast({
         title: "Formato de telefone inválido",
@@ -74,28 +81,20 @@ const CreateBriefingForm: React.FC<{
       });
       return;
     }
-
+    
+    setIsLoading(true);
+    
     try {
-      // Create new briefing
       const briefingId = addBriefing({
         name,
         email,
-        packageType,
         phone: phone.fullNumber,
-        description
+        packageType,
+        description,
+        status: 'pending',
+        createdAt: new Date().toLocaleDateString('pt-BR'),
+        projectCreated: false
       });
-      
-      // If this is a new customer, add them to the database
-      if (!useExistingCustomer) {
-        addCustomer({
-          name,
-          email,
-          phone: phone.fullNumber,
-          projects: 0,
-          status: 'active',
-          createdAt: new Date().toISOString()
-        });
-      }
       
       toast({
         title: "Briefing criado",
@@ -104,120 +103,117 @@ const CreateBriefingForm: React.FC<{
       
       onClose();
     } catch (error) {
-      console.error('Error creating briefing:', error);
       toast({
         title: "Erro ao criar briefing",
         description: "Ocorreu um erro ao criar o briefing. Tente novamente.",
         variant: "destructive"
       });
+    } finally {
+      setIsLoading(false);
     }
   };
-
+  
   return (
-    <form onSubmit={handleSubmit} className="space-y-6">
-      <div>
-        <h2 className="text-xl font-semibold mb-4">Novo Briefing</h2>
-        
+    <form onSubmit={handleSubmit}>
+      <DialogHeader>
+        <DialogTitle>Novo Briefing</DialogTitle>
+        <DialogDescription>
+          Preencha as informações para criar um novo briefing
+        </DialogDescription>
+      </DialogHeader>
+      
+      <Separator className="my-4" />
+      
+      <div className="space-y-4 mt-4">
         <div className="mb-4">
-          <div className="flex items-center space-x-2">
-            <input 
-              type="checkbox" 
-              id="useExistingCustomer"
-              checked={useExistingCustomer}
-              onChange={() => setUseExistingCustomer(prev => !prev)}
-              className="h-4 w-4 rounded border-gray-300 text-harmonia-green focus:ring-harmonia-green"
-            />
-            <Label htmlFor="useExistingCustomer">Usar cliente existente</Label>
-          </div>
+          <Label htmlFor="clientSelect">Cliente Existente</Label>
+          <Select onValueChange={handleSelectClient} value={selectedClientId}>
+            <SelectTrigger className="w-full">
+              <SelectValue placeholder="Selecione um cliente existente" />
+            </SelectTrigger>
+            <SelectContent>
+              {customers.map((customer) => (
+                <SelectItem key={customer.id} value={customer.id}>
+                  {customer.name} - {customer.email}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
         </div>
-
-        {useExistingCustomer ? (
-          <div className="mb-6">
-            <Label htmlFor="customerId">Selecione um cliente</Label>
-            <Select value={selectedCustomerId} onValueChange={handleSelectCustomer}>
-              <SelectTrigger>
-                <SelectValue placeholder="Selecione um cliente" />
-              </SelectTrigger>
-              <SelectContent>
-                {customers.map(customer => (
-                  <SelectItem key={customer.id} value={customer.id}>
-                    {customer.name} ({customer.email})
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-        ) : null}
-
-        <div className="space-y-4">
-          <div>
+        
+        <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+          <div className="space-y-2">
             <Label htmlFor="name">Nome do Cliente *</Label>
             <Input 
               id="name"
-              value={name}
+              value={name} 
               onChange={(e) => setName(e.target.value)}
               placeholder="Nome completo"
-              disabled={useExistingCustomer && selectedCustomerId !== ''}
-              required
             />
           </div>
           
-          <div>
-            <Label htmlFor="email">Email do Cliente *</Label>
+          <div className="space-y-2">
+            <Label htmlFor="email">E-mail do Cliente *</Label>
             <Input 
               id="email"
-              type="email"
-              value={email}
+              value={email} 
               onChange={(e) => setEmail(e.target.value)}
               placeholder="email@exemplo.com"
-              disabled={useExistingCustomer && selectedCustomerId !== ''}
-              required
+              type="email"
             />
           </div>
-          
-          <div>
+        </div>
+        
+        <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+          <div className="space-y-2">
             <Label htmlFor="phone">Telefone (WhatsApp) *</Label>
             <PhoneInput
               id="phone"
               value={phone}
               onChange={setPhone}
-              required
-              disabled={useExistingCustomer && selectedCustomerId !== ''}
+              label=""
+              className="w-full"
             />
-            <p className="text-xs text-gray-400 mt-1">Formato internacional: +55 11 99999-9999</p>
+            <p className="text-xs text-muted-foreground">
+              Formato internacional necessário para WhatsApp
+            </p>
           </div>
           
-          <div>
-            <Label htmlFor="packageType">Pacote *</Label>
-            <Select value={packageType} onValueChange={setPackageType} required>
-              <SelectTrigger>
-                <SelectValue placeholder="Selecione o tipo de pacote" />
+          <div className="space-y-2">
+            <Label htmlFor="packageType">Tipo de Pacote *</Label>
+            <Select onValueChange={setPackageType} value={packageType}>
+              <SelectTrigger id="packageType">
+                <SelectValue placeholder="Selecione o pacote" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="Pacote Essencial">Essencial</SelectItem>
-                <SelectItem value="Pacote Profissional">Profissional</SelectItem>
-                <SelectItem value="Pacote Premium">Premium</SelectItem>
-                <SelectItem value="Pacote Personalizado">Personalizado</SelectItem>
+                <SelectItem value="Essencial">Essencial</SelectItem>
+                <SelectItem value="Premium">Premium</SelectItem>
+                <SelectItem value="Profissional">Profissional</SelectItem>
+                <SelectItem value="Outro">Outro</SelectItem>
               </SelectContent>
             </Select>
           </div>
-          
-          <div>
-            <Label htmlFor="description">Observações</Label>
-            <Textarea 
-              id="description"
-              value={description}
-              onChange={(e) => setDescription(e.target.value)}
-              placeholder="Detalhes adicionais sobre o briefing..."
-              rows={4}
-            />
-          </div>
+        </div>
+        
+        <div className="space-y-2">
+          <Label htmlFor="description">Descrição</Label>
+          <Textarea 
+            id="description"
+            value={description} 
+            onChange={(e) => setDescription(e.target.value)}
+            placeholder="Informações adicionais sobre o briefing"
+            rows={4}
+          />
         </div>
       </div>
-
-      <div className="flex justify-end space-x-2 pt-4">
-        <Button type="button" variant="outline" onClick={onClose}>Cancelar</Button>
-        <Button type="submit">Criar Briefing</Button>
+      
+      <div className="flex justify-end gap-2 mt-6">
+        <Button type="button" variant="outline" onClick={onClose}>
+          Cancelar
+        </Button>
+        <Button type="submit" disabled={isLoading}>
+          {isLoading ? 'Criando...' : 'Criar Briefing'}
+        </Button>
       </div>
     </form>
   );

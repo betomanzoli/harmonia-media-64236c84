@@ -5,10 +5,16 @@ import { Plus, Search } from 'lucide-react';
 import PreviewVersionInput from './PreviewVersionInput';
 import { useToast } from "@/hooks/use-toast";
 import { useNewProjectForm } from '@/hooks/admin/useNewProjectForm';
-import ClientInfoForm from './ClientInfoForm';
 import { Input } from '@/components/ui/input';
 import { useCustomers } from '@/hooks/admin/useCustomers';
 import PhoneInput, { PhoneWithCountryCode } from '@/components/PhoneInput';
+import { 
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
 interface NewProjectFormProps {
   onAddProject: (project: any) => string | null;
@@ -44,6 +50,7 @@ const NewProjectForm: React.FC<NewProjectFormProps> = ({
   
   const [searchTerm, setSearchTerm] = useState('');
   const [showResults, setShowResults] = useState(false);
+  const [selectedClientId, setSelectedClientId] = useState<string>('');
   const [clientPhone, setClientPhone] = useState<PhoneWithCountryCode>({
     fullNumber: '',
     countryCode: '55',
@@ -57,7 +64,11 @@ const NewProjectForm: React.FC<NewProjectFormProps> = ({
       customer.email.toLowerCase().includes(searchTerm.toLowerCase())
   ).slice(0, 5); // Limit to 5 results
   
-  const handleSelectCustomer = (customer: any) => {
+  const handleSelectCustomer = (customerId: string) => {
+    const customer = customers.find(c => c.id === customerId);
+    if (!customer) return;
+    
+    setSelectedClientId(customer.id);
     setClientName(customer.name);
     setClientEmail(customer.email);
     
@@ -68,14 +79,11 @@ const NewProjectForm: React.FC<NewProjectFormProps> = ({
       const nationalNumber = phoneNumber.substring(2);
       
       setClientPhone({
-        fullNumber: `+${phoneNumber}`,
+        fullNumber: customer.phone,
         countryCode,
         nationalNumber
       });
     }
-    
-    setSearchTerm('');
-    setShowResults(false);
   };
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -156,64 +164,72 @@ const NewProjectForm: React.FC<NewProjectFormProps> = ({
   return (
     <form onSubmit={handleSubmit} className="space-y-6">
       <div className="space-y-4">
-        <h3 className="text-lg font-semibold">Informações do Cliente</h3>
+        <h3 className="text-lg font-semibold">Selecione um Cliente</h3>
         
-        <div className="relative">
-          <div className="flex items-center gap-2 mb-4">
-            <div className="relative flex-1">
-              <Search className="absolute left-2.5 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-500" />
-              <Input
-                placeholder="Buscar cliente por nome ou email..."
-                className="pl-8"
-                value={searchTerm}
-                onChange={(e) => {
-                  setSearchTerm(e.target.value);
-                  setShowResults(e.target.value.length > 0);
-                }}
-              />
-            </div>
-            <Button 
-              type="button" 
-              variant="outline"
-              onClick={() => {
-                setSearchTerm('');
-                setShowResults(false);
-              }}
-            >
-              Limpar
-            </Button>
-          </div>
-          
-          {showResults && searchTerm.length > 0 && (
-            <div className="absolute z-10 mt-1 w-full bg-popover shadow-md rounded-md border p-2 max-h-60 overflow-auto">
-              {filteredCustomers.length === 0 ? (
-                <div className="py-2 px-3 text-sm text-muted-foreground">
-                  Nenhum cliente encontrado
-                </div>
-              ) : (
-                filteredCustomers.map((customer) => (
-                  <div 
-                    key={customer.id}
-                    className="px-3 py-2 hover:bg-muted cursor-pointer rounded-sm"
-                    onClick={() => handleSelectCustomer(customer)}
-                  >
-                    <div className="font-medium">{customer.name}</div>
-                    <div className="text-sm text-muted-foreground">{customer.email}</div>
-                  </div>
-                ))
-              )}
-            </div>
-          )}
+        <div>
+          <label htmlFor="clientSelect" className="block text-sm font-medium mb-1">
+            Cliente
+          </label>
+          <Select onValueChange={handleSelectCustomer} value={selectedClientId}>
+            <SelectTrigger>
+              <SelectValue placeholder="Selecione um cliente" />
+            </SelectTrigger>
+            <SelectContent>
+              {customers.map((customer) => (
+                <SelectItem key={customer.id} value={customer.id}>
+                  {customer.name} - {customer.email}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
         </div>
         
-        <ClientInfoForm 
-          clientName={clientName}
-          clientEmail={clientEmail}
-          packageType={packageType}
-          onClientNameChange={setClientName}
-          onClientEmailChange={setClientEmail}
-          onPackageTypeChange={setPackageType}
-        />
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div>
+            <label htmlFor="clientName" className="block text-sm font-medium">
+              Nome do Cliente
+            </label>
+            <Input
+              id="clientName"
+              value={clientName}
+              onChange={(e) => setClientName(e.target.value)}
+              placeholder="Nome do cliente"
+              readOnly
+              className="bg-gray-50"
+            />
+          </div>
+          
+          <div>
+            <label htmlFor="clientEmail" className="block text-sm font-medium">
+              E-mail do Cliente
+            </label>
+            <Input
+              id="clientEmail"
+              value={clientEmail}
+              onChange={(e) => setClientEmail(e.target.value)}
+              placeholder="Email do cliente"
+              readOnly
+              className="bg-gray-50"
+            />
+          </div>
+        </div>
+        
+        <div>
+          <label htmlFor="packageType" className="block text-sm font-medium">
+            Pacote Contratado *
+          </label>
+          <Select onValueChange={setPackageType} value={packageType}>
+            <SelectTrigger>
+              <SelectValue placeholder="Selecione o pacote" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="Essencial">Essencial</SelectItem>
+              <SelectItem value="Premium">Premium</SelectItem>
+              <SelectItem value="Profissional">Profissional</SelectItem>
+              <SelectItem value="Outro">Outro</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
         
         <div className="space-y-2">
           <label htmlFor="clientPhone" className="block text-sm font-medium">
@@ -241,7 +257,7 @@ const NewProjectForm: React.FC<NewProjectFormProps> = ({
           </Button>
         </div>
 
-        <div className="space-y-4 max-h-[50vh] overflow-y-auto pr-2 pb-4">
+        <div className="space-y-4 max-h-[40vh] overflow-y-auto pr-2 pb-4">
           {versions.map((version, index) => (
             <div key={index} className="version-container">
               <PreviewVersionInput 
@@ -264,7 +280,7 @@ const NewProjectForm: React.FC<NewProjectFormProps> = ({
       
       <div className="flex justify-end pt-4">
         <Button type="submit" disabled={isSubmitting}>
-          {isSubmitting ? 'Criando...' : 'Criar Projeto'}
+          {isSubmitting ? 'Criando...' : 'Inserir Prévias'}
         </Button>
       </div>
     </form>

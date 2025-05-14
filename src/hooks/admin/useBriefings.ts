@@ -1,11 +1,8 @@
 
-import { useState, useEffect, useCallback } from 'react';
-import { supabase } from '@/integrations/supabase/client';
-import { usePreviewProjects } from './usePreviewProjects';
-import { useToast } from '@/hooks/use-toast';
-import { useCustomers } from './useCustomers';
+import { useState, useCallback } from 'react';
+import { createId } from '@paralleldrive/cuid2';
 
-export interface BriefingItem {
+export interface Briefing {
   id: string;
   name: string;
   email: string;
@@ -13,191 +10,86 @@ export interface BriefingItem {
   packageType: string;
   createdAt: string;
   status: 'pending' | 'completed' | 'approved';
-  projectCreated?: boolean;
   description?: string;
+  projectCreated: boolean;
 }
 
 export const useBriefings = () => {
-  const [briefings, setBriefings] = useState<BriefingItem[]>([]);
-  const [isLoading, setIsLoading] = useState(false);
-  const { addProject } = usePreviewProjects();
-  const { customers, addCustomer } = useCustomers();
-  const { toast } = useToast();
-  
-  // Update briefing status - moved up before it's used
-  const updateBriefingStatus = useCallback((id: string, status: 'pending' | 'completed' | 'approved', projectCreated: boolean = false) => {
-    setBriefings(prevBriefings => {
-      const updatedBriefings = prevBriefings.map(briefing => {
-        if (briefing.id === id) {
-          return { ...briefing, status, projectCreated };
-        }
-        return briefing;
-      });
-      
-      // Update localStorage
-      localStorage.setItem('harmonIA_briefings', JSON.stringify(updatedBriefings));
-      
-      return updatedBriefings;
-    });
-  }, []);
-  
-  // Load briefings from Supabase or localStorage
-  const loadBriefings = useCallback(async () => {
-    setIsLoading(true);
-    try {
-      // Try to load from localStorage first as fallback
-      const storedBriefings = localStorage.getItem('harmonIA_briefings');
-      if (storedBriefings) {
-        setBriefings(JSON.parse(storedBriefings));
-      } else {
-        // Sample data if nothing exists
-        const sampleBriefings: BriefingItem[] = [
-          {
-            id: 'B0001',
-            name: 'Maria Silva',
-            email: 'maria@example.com',
-            phone: '+5511999999999',
-            packageType: 'Essencial',
-            createdAt: new Date().toLocaleDateString('pt-BR'),
-            status: 'pending'
-          },
-          {
-            id: 'B0002',
-            name: 'João Santos',
-            email: 'joao@example.com',
-            phone: '+5521987654321',
-            packageType: 'Premium',
-            createdAt: new Date().toLocaleDateString('pt-BR'),
-            status: 'completed'
-          }
-        ];
-        setBriefings(sampleBriefings);
-        // Save sample data to localStorage
-        localStorage.setItem('harmonIA_briefings', JSON.stringify(sampleBriefings));
-      }
-    } catch (err) {
-      console.error('Error loading briefings:', err);
-      
-      // Fallback to empty array if everything fails
-      setBriefings([]);
-    } finally {
-      setIsLoading(false);
+  const [briefings, setBriefings] = useState<Briefing[]>([
+    {
+      id: 'B001',
+      name: 'João Silva',
+      email: 'joao.silva@exemplo.com',
+      phone: '+5511999999999',
+      packageType: 'Premium',
+      createdAt: '10/04/2025',
+      status: 'pending',
+      description: 'Música para casamento',
+      projectCreated: false
+    },
+    {
+      id: 'B002',
+      name: 'Maria Oliveira',
+      email: 'maria.oliveira@exemplo.com',
+      phone: '+5521987654321',
+      packageType: 'Essencial',
+      createdAt: '08/04/2025',
+      status: 'completed',
+      description: 'Música de aniversário',
+      projectCreated: true
+    },
+    {
+      id: 'B003',
+      name: 'Carlos Santos',
+      email: 'carlos.santos@exemplo.com',
+      phone: '+5531912345678',
+      packageType: 'Profissional',
+      createdAt: '05/04/2025',
+      status: 'approved',
+      description: 'Trilha sonora para vídeo',
+      projectCreated: true
     }
-  }, []);
-  
-  // Create client from briefing if needed
-  const ensureClientExists = useCallback((briefing: BriefingItem) => {
-    // Check if client with this email already exists
-    const existingCustomer = customers.find(c => c.email.toLowerCase() === briefing.email.toLowerCase());
+  ]);
+
+  const addBriefing = useCallback((briefing: Omit<Briefing, 'id'>) => {
+    const id = `B${String(briefings.length + 1).padStart(3, '0')}`;
+    const newBriefing = { ...briefing, id };
     
-    if (!existingCustomer) {
-      // Create new customer
-      addCustomer({
-        name: briefing.name,
-        email: briefing.email,
-        phone: briefing.phone || '',
-        projects: 1,
-        status: 'active',
-        createdAt: new Date().toISOString()
-      });
-      
-      return null; // Return null as no existing customer was found
-    }
+    setBriefings(prev => [...prev, newBriefing as Briefing]);
     
-    // Update project count for existing customer
-    return {
-      ...existingCustomer,
-      projects: existingCustomer.projects + 1
-    };
-  }, [customers, addCustomer]);
-  
-  // Create project from briefing
-  const createProjectFromBriefing = useCallback((briefing: BriefingItem) => {
-    // First, make sure client exists
-    const existingCustomer = ensureClientExists(briefing);
-    
-    // Create project
-    const projectData = {
-      clientName: briefing.name,
-      clientEmail: briefing.email,
-      clientPhone: briefing.phone,
-      packageType: briefing.packageType,
-      createdAt: new Date().toLocaleDateString('pt-BR'),
-      status: 'waiting' as const,
-      versions: 0,
-      previewUrl: '',
-      expirationDate: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toLocaleDateString('pt-BR'),
-      lastActivityDate: new Date().toLocaleDateString('pt-BR'),
-      versionsList: [],
-      briefingId: briefing.id
-    };
-    
-    const newProjectId = addProject(projectData);
-    
-    // Update briefing status
-    updateBriefingStatus(briefing.id, 'completed', true);
-    
-    toast({
-      title: "Projeto criado",
-      description: `Projeto ${newProjectId} criado a partir do briefing ${briefing.id}.`
-    });
-    
-    return newProjectId;
-  }, [ensureClientExists, addProject, toast, updateBriefingStatus]);
-  
-  // Add new briefing
-  const addBriefing = useCallback((briefing: Omit<BriefingItem, "id" | "createdAt" | "status">) => {
-    const newId = `B${(briefings.length + 1).toString().padStart(4, '0')}`;
-    
-    const newBriefing: BriefingItem = {
-      id: newId,
-      ...briefing,
-      createdAt: new Date().toLocaleDateString('pt-BR'),
-      status: 'pending'
-    };
-    
-    setBriefings(prevBriefings => {
-      const updatedBriefings = [...prevBriefings, newBriefing];
-      localStorage.setItem('harmonIA_briefings', JSON.stringify(updatedBriefings));
-      return updatedBriefings;
-    });
-    
-    return newId;
+    return id;
   }, [briefings]);
-  
-  // Delete briefing
+
+  const updateBriefingStatus = useCallback((id: string, status: Briefing['status']) => {
+    setBriefings(prev => 
+      prev.map(briefing => 
+        briefing.id === id ? { ...briefing, status } : briefing
+      )
+    );
+  }, []);
+
   const deleteBriefing = useCallback((id: string) => {
-    setBriefings(prevBriefings => {
-      const updatedBriefings = prevBriefings.filter(briefing => briefing.id !== id);
-      localStorage.setItem('harmonIA_briefings', JSON.stringify(updatedBriefings));
-      return updatedBriefings;
-    });
+    setBriefings(prev => prev.filter(briefing => briefing.id !== id));
   }, []);
-  
-  // Load briefings on component mount
-  useEffect(() => {
-    loadBriefings();
-  }, [loadBriefings]);
-  
-  // Get briefing by ID
-  const getBriefingById = useCallback((id: string) => {
-    return briefings.find(briefing => briefing.id === id) || null;
-  }, [briefings]);
-  
-  // Get briefing by email
-  const getBriefingByEmail = useCallback((email: string) => {
-    return briefings.find(briefing => briefing.email.toLowerCase() === email.toLowerCase()) || null;
-  }, [briefings]);
+
+  const createProjectFromBriefing = useCallback((briefing: Briefing) => {
+    // In a real implementation, this would create a project in the database
+    // For now, we just mark the briefing as having a project created
+    setBriefings(prev => 
+      prev.map(b => 
+        b.id === briefing.id ? { ...b, projectCreated: true } : b
+      )
+    );
+    
+    // Return a fake project ID (in a real implementation, this would be the actual project ID)
+    return `P${String(Math.floor(Math.random() * 1000)).padStart(4, '0')}`;
+  }, []);
 
   return {
     briefings,
-    isLoading,
-    getBriefingById,
-    getBriefingByEmail,
-    loadBriefings,
-    createProjectFromBriefing,
-    updateBriefingStatus,
     addBriefing,
-    deleteBriefing
+    updateBriefingStatus,
+    deleteBriefing,
+    createProjectFromBriefing
   };
 };
