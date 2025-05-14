@@ -41,11 +41,15 @@ export const useCreateBriefingForm = ({ onSubmit }: UseCreateBriefingFormProps) 
     },
   });
 
-  const handleSubmit = async (data: BriefingFormValues) => {
+  const handleSubmit = async (data: BriefingFormValues, submitCallback?: (data: BriefingFormValues) => Promise<void>) => {
     setIsSubmitting(true);
     
     try {
-      await onSubmit(data);
+      if (submitCallback) {
+        await submitCallback(data);
+      } else {
+        await onSubmit(data);
+      }
       form.reset();
     } catch (error) {
       console.error('Error submitting form:', error);

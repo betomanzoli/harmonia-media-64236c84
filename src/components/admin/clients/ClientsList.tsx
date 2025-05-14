@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect, useCallback } from 'react';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
@@ -40,6 +39,7 @@ const ClientsList = () => {
   const [formData, setFormData] = useState({
     name: '',
     email: '',
+    status: 'active' as 'active' | 'inactive',
     phone: { fullNumber: '+55', countryCode: '55', nationalNumber: '' } as PhoneWithCountryCode
   });
   const { toast } = useToast();
@@ -85,6 +85,7 @@ const ClientsList = () => {
       setFormData({
         name: selectedClient.name,
         email: selectedClient.email,
+        status: selectedClient.status || 'active',
         phone: { 
           fullNumber: selectedClient.phone || '+55',
           countryCode: '55',
@@ -117,7 +118,7 @@ const ClientsList = () => {
       name: formData.name,
       email: formData.email,
       phone: formData.phone.fullNumber,
-      status: 'active',
+      status: formData.status || 'active',
       projects: 0,
       createdAt: new Date().toISOString()
     });
@@ -131,6 +132,7 @@ const ClientsList = () => {
     setFormData({
       name: '',
       email: '',
+      status: 'active',
       phone: { fullNumber: '+55', countryCode: '55', nationalNumber: '' }
     });
   };
@@ -141,6 +143,7 @@ const ClientsList = () => {
     updateCustomer(selectedClient.id, {
       name: formData.name,
       email: formData.email,
+      status: formData.status || 'active',
       phone: formData.phone.fullNumber
     });
 
@@ -308,6 +311,21 @@ const ClientsList = () => {
                 onChange={handlePhoneChange}
               />
             </div>
+            <div>
+              <label className="text-sm font-medium" htmlFor="status">
+                Status
+              </label>
+              <select
+                id="status"
+                name="status"
+                className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background"
+                value={formData.status}
+                onChange={(e) => setFormData(prev => ({ ...prev, status: e.target.value as 'active' | 'inactive' }))}
+              >
+                <option value="active">Ativo</option>
+                <option value="inactive">Inativo</option>
+              </select>
+            </div>
             <div className="flex justify-end space-x-2 pt-4">
               <Button variant="outline" onClick={() => setShowNewClientDialog(false)}>
                 Cancelar
@@ -358,6 +376,21 @@ const ClientsList = () => {
                 value={formData.phone}
                 onChange={handlePhoneChange}
               />
+            </div>
+            <div>
+              <label className="text-sm font-medium" htmlFor="edit-status">
+                Status
+              </label>
+              <select
+                id="edit-status"
+                name="status"
+                className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background"
+                value={formData.status}
+                onChange={(e) => setFormData(prev => ({ ...prev, status: e.target.value as 'active' | 'inactive' }))}
+              >
+                <option value="active">Ativo</option>
+                <option value="inactive">Inativo</option>
+              </select>
             </div>
             <div className="flex justify-end space-x-2 pt-4">
               <Button variant="outline" onClick={() => setShowEditDialog(false)}>

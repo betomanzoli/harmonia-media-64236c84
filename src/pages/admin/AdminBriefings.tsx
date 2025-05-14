@@ -78,65 +78,8 @@ const AdminBriefings: React.FC = () => {
     try {
       console.log("Creating briefing with data:", briefingData);
       
-      // First, check if client exists or create a new one
-      let clientId: string | null = null;
-      
-      const { data: existingClients, error: clientError } = await supabase
-        .from('clients')
-        .select('id')
-        .eq('email', briefingData.email)
-        .limit(1);
-      
-      if (clientError) {
-        throw clientError;
-      }
-      
-      if (existingClients && existingClients.length > 0) {
-        clientId = existingClients[0].id;
-      } else {
-        // Create a new client
-        const { data: newClient, error: newClientError } = await supabase
-          .from('clients')
-          .insert([
-            {
-              name: briefingData.name,
-              email: briefingData.email,
-              phone: briefingData.phone.fullNumber // Store in international format
-            }
-          ])
-          .select()
-          .single();
-        
-        if (newClientError) {
-          throw newClientError;
-        }
-        
-        clientId = newClient.id;
-      }
-      
-      // Create the briefing
-      const { data: newBriefing, error: briefingError } = await supabase
-        .from('briefings')
-        .insert([
-          {
-            client_id: clientId,
-            package_type: briefingData.packageType as 'essencial' | 'profissional' | 'premium' | 'outros',
-            status: 'pending' as 'pending' | 'completed' | 'approved',
-            data: {
-              description: briefingData.description || 'Novo briefing',
-              name: briefingData.name,
-              email: briefingData.email,
-              phone: briefingData.phone.fullNumber,
-              ...briefingData.formData || {}
-            }
-          }
-        ])
-        .select()
-        .single();
-      
-      if (briefingError) {
-        throw briefingError;
-      }
+      // The actual database operation is now handled in the CreateBriefingForm component
+      // This function is now mainly for UI state management
       
       setShowCreateDialog(false);
       toast({
