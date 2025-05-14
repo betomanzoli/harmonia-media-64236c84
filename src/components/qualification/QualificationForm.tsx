@@ -3,8 +3,8 @@ import React, { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { 
-  QualificationFormData, 
-  qualificationFormSchema 
+  FormValues as QualificationFormData, 
+  formSchema as qualificationFormSchema 
 } from './qualificationFormSchema';
 import BasicInfoSection from './BasicInfoSection';
 import PurposeSection from './PurposeSection';
@@ -27,15 +27,15 @@ const QualificationForm: React.FC = () => {
     defaultValues: {
       name: '',
       email: '',
-      phone: { fullNumber: '', countryCode: '55', nationalNumber: '' },
+      phone: '',
       referralSource: '',
-      purpose: '',
-      purposeOther: '',
-      projectDescription: '',
+      purpose: [],
+      otherPurpose: '',
+      description: '',
       timeline: '',
       budget: '',
       features: [],
-      contractAccepted: false,
+      termsAccepted: false,
     }
   });
 
@@ -46,7 +46,6 @@ const QualificationForm: React.FC = () => {
       // Format data for storage
       const formattedData = {
         ...data,
-        phone: data.phone.fullNumber,
         features: data.features?.join(',')
       };
 
@@ -66,7 +65,7 @@ const QualificationForm: React.FC = () => {
           .insert([{
             name: data.name,
             email: data.email,
-            phone: data.phone.fullNumber // Store full international format phone
+            phone: data.phone // Store full international format phone
           }])
           .select('id')
           .single();
