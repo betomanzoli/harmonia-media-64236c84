@@ -2,9 +2,9 @@
 import React, { useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
 import { Clock, MessageSquare, CheckCircle } from 'lucide-react';
-import { useToast } from '@/hooks/use-toast'; 
+import { useToast } from '@/hooks/use-toast';
+import { StatusBadge } from '@/components/ui/status-badge';
 
 export interface ProjectStatusCardProps {
   status: 'waiting' | 'feedback' | 'approved';
@@ -33,7 +33,7 @@ const ProjectStatusCard: React.FC<ProjectStatusCardProps> = ({
       case 'waiting':
         return {
           icon: <Clock className="h-5 w-5 text-yellow-500" />,
-          label: <Badge className="bg-yellow-100 text-yellow-800 border-yellow-300">Aguardando Avaliação</Badge>,
+          label: <StatusBadge status="pending" customLabel="Aguardando Avaliação" className="bg-yellow-100 text-yellow-800 border-yellow-300" />,
           description: "O cliente ainda não avaliou as prévias enviadas.",
           actions: [
             { label: "Marcar como Feedback", onClick: () => handleStatusUpdate('feedback'), variant: "outline" as const },
@@ -43,7 +43,7 @@ const ProjectStatusCard: React.FC<ProjectStatusCardProps> = ({
       case 'feedback':
         return {
           icon: <MessageSquare className="h-5 w-5 text-blue-500" />,
-          label: <Badge className="bg-blue-100 text-blue-800 border-blue-300">Feedback Recebido</Badge>,
+          label: <StatusBadge status="in_progress" customLabel="Feedback Recebido" className="bg-blue-100 text-blue-800 border-blue-300" />,
           description: "O cliente enviou feedback para as prévias.",
           actions: [
             { label: "Marcar como Aguardando", onClick: () => handleStatusUpdate('waiting'), variant: "outline" as const },
@@ -53,7 +53,7 @@ const ProjectStatusCard: React.FC<ProjectStatusCardProps> = ({
       case 'approved':
         return {
           icon: <CheckCircle className="h-5 w-5 text-green-500" />,
-          label: <Badge className="bg-green-100 text-green-800 border-green-300">Música Aprovada</Badge>,
+          label: <StatusBadge status="approved" customLabel="Música Aprovada" className="bg-green-100 text-green-800 border-green-300" />,
           description: "O cliente aprovou uma das prévias enviadas.",
           actions: [
             { label: "Marcar como Aguardando", onClick: () => handleStatusUpdate('waiting'), variant: "outline" as const },
@@ -63,7 +63,7 @@ const ProjectStatusCard: React.FC<ProjectStatusCardProps> = ({
       default:
         return {
           icon: <Clock className="h-5 w-5 text-gray-500" />,
-          label: <Badge>Status Desconhecido</Badge>,
+          label: <StatusBadge status="pending" customLabel="Status Desconhecido" />,
           description: "Status do projeto não reconhecido.",
           actions: []
         };

@@ -8,12 +8,12 @@ import {
   TableHeader, 
   TableRow 
 } from "@/components/ui/table";
-import { Badge } from "@/components/ui/badge";
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { Check, X } from 'lucide-react';
 import { Invoice, Project } from '../types';
 import InvoiceActionMenu from './InvoiceActionMenu';
+import { StatusBadge } from '@/components/ui/status-badge';
 
 interface InvoiceTableProps {
   invoices: Invoice[];
@@ -39,19 +39,6 @@ const InvoiceTable: React.FC<InvoiceTableProps> = ({
       return format(new Date(dateString), 'dd/MM/yyyy', { locale: ptBR });
     } catch (e) {
       return dateString;
-    }
-  };
-
-  const getStatusBadge = (status: string) => {
-    switch (status) {
-      case 'paid':
-        return <Badge className="bg-green-500">Pago</Badge>;
-      case 'pending':
-        return <Badge className="bg-yellow-500">Pendente</Badge>;
-      case 'overdue':
-        return <Badge className="bg-red-500">Vencido</Badge>;
-      default:
-        return <Badge>{status}</Badge>;
     }
   };
 
@@ -99,7 +86,9 @@ const InvoiceTable: React.FC<InvoiceTableProps> = ({
                 <TableCell>R$ {invoice.amount}</TableCell>
                 <TableCell>{formatDate(invoice.date)}</TableCell>
                 <TableCell>{formatDate(invoice.due_date)}</TableCell>
-                <TableCell>{getStatusBadge(invoice.status)}</TableCell>
+                <TableCell>
+                  <StatusBadge status={invoice.status} size="sm" />
+                </TableCell>
                 <TableCell>
                   {invoice.has_receipt ? (
                     <Check className="h-5 w-5 text-green-500" />
