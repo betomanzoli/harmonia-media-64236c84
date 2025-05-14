@@ -25,7 +25,8 @@ import {
   Trash, 
   Play,
   PackageCheck,
-  Package
+  Package,
+  Plus
 } from 'lucide-react';
 import { 
   AlertDialog, 
@@ -37,7 +38,9 @@ import {
   AlertDialogHeader, 
   AlertDialogTitle 
 } from "@/components/ui/alert-dialog";
+import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { useBriefings } from '@/hooks/admin/useBriefings';
+import CreateBriefingForm from '@/components/admin/briefings/CreateBriefingForm';
 
 const AdminBriefings: React.FC = () => {
   const navigate = useNavigate();
@@ -45,6 +48,7 @@ const AdminBriefings: React.FC = () => {
   const { briefings, updateBriefingStatus, deleteBriefing, createProjectFromBriefing } = useBriefings();
   
   const [searchTerm, setSearchTerm] = useState('');
+  const [showCreateDialog, setShowCreateDialog] = useState(false);
   
   // State to track which briefing is selected for deletion
   const [briefingToDelete, setBriefingToDelete] = useState<string | null>(null);
@@ -121,17 +125,28 @@ const AdminBriefings: React.FC = () => {
               Gerencie os briefings enviados pelos clientes
             </p>
           </div>
-          <Button 
-            variant="outline" 
-            size="sm" 
-            asChild
-            className="border-harmonia-green text-harmonia-green hover:bg-harmonia-green/10"
-          >
-            <Link to="/admin-j28s7d1k/dashboard">
-              <ArrowLeft className="mr-2 h-4 w-4" />
-              Voltar ao Dashboard
-            </Link>
-          </Button>
+          <div className="flex space-x-2">
+            <Button 
+              variant="outline" 
+              size="sm" 
+              asChild
+              className="border-harmonia-green text-harmonia-green hover:bg-harmonia-green/10"
+            >
+              <Link to="/admin-j28s7d1k/dashboard">
+                <ArrowLeft className="mr-2 h-4 w-4" />
+                Voltar ao Dashboard
+              </Link>
+            </Button>
+            
+            <Button 
+              onClick={() => setShowCreateDialog(true)}
+              size="sm"
+              className="bg-harmonia-green hover:bg-harmonia-green/90"
+            >
+              <Plus className="h-4 w-4 mr-2" />
+              Novo Briefing
+            </Button>
+          </div>
         </div>
         
         <Card>
@@ -266,6 +281,13 @@ const AdminBriefings: React.FC = () => {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      {/* Create briefing dialog */}
+      <Dialog open={showCreateDialog} onOpenChange={setShowCreateDialog}>
+        <DialogContent className="sm:max-w-[550px]">
+          <CreateBriefingForm onClose={() => setShowCreateDialog(false)} />
+        </DialogContent>
+      </Dialog>
     </AdminLayout>
   );
 };

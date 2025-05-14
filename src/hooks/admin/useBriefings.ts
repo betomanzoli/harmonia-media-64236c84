@@ -9,10 +9,12 @@ export interface BriefingItem {
   id: string;
   name: string;
   email: string;
+  phone?: string;
   packageType: string;
   createdAt: string;
   status: 'pending' | 'completed' | 'approved';
   projectCreated?: boolean;
+  description?: string;
 }
 
 export const useBriefings = () => {
@@ -37,6 +39,7 @@ export const useBriefings = () => {
             id: 'B0001',
             name: 'Maria Silva',
             email: 'maria@example.com',
+            phone: '+5511999999999',
             packageType: 'Essencial',
             createdAt: new Date().toLocaleDateString('pt-BR'),
             status: 'pending'
@@ -45,6 +48,7 @@ export const useBriefings = () => {
             id: 'B0002',
             name: 'João Santos',
             email: 'joao@example.com',
+            phone: '+5521987654321',
             packageType: 'Premium',
             createdAt: new Date().toLocaleDateString('pt-BR'),
             status: 'completed'
@@ -74,7 +78,7 @@ export const useBriefings = () => {
       addCustomer({
         name: briefing.name,
         email: briefing.email,
-        phone: '',
+        phone: briefing.phone || '',
         projects: 1,
         status: 'active',
         createdAt: new Date().toISOString()
@@ -99,6 +103,7 @@ export const useBriefings = () => {
     const projectData = {
       clientName: briefing.name,
       clientEmail: briefing.email,
+      clientPhone: briefing.phone,
       packageType: briefing.packageType,
       createdAt: new Date().toLocaleDateString('pt-BR'),
       status: 'waiting' as const,
@@ -121,7 +126,7 @@ export const useBriefings = () => {
     });
     
     return newProjectId;
-  }, [ensureClientExists, addProject, toast]);
+  }, [ensureClientExists, addProject, toast, updateBriefingStatus]);
   
   // Update briefing status
   const updateBriefingStatus = useCallback((id: string, status: 'pending' | 'completed' | 'approved', projectCreated: boolean = false) => {
