@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import AdminLayout from '@/components/admin/layout/AdminLayout';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -41,18 +41,33 @@ import {
 import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { useBriefings } from '@/hooks/admin/useBriefings';
 import CreateBriefingForm from '@/components/admin/briefings/CreateBriefingForm';
+import BriefingDetailForm from '@/components/admin/briefings/BriefingDetailForm';
 
 const AdminBriefings: React.FC = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
-  const { briefings, updateBriefingStatus, deleteBriefing, createProjectFromBriefing } = useBriefings();
+  const { briefings, updateBriefingStatus, deleteBriefing, createProjectFromBriefing, updateBriefing } = useBriefings();
   
   const [searchTerm, setSearchTerm] = useState('');
   const [showCreateDialog, setShowCreateDialog] = useState(false);
   
-  // State to track which briefing is selected for deletion
+  // State to track which briefing is selected for actions
   const [briefingToDelete, setBriefingToDelete] = useState<string | null>(null);
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
+  
+  // State for view/edit briefing
+  const [selectedBriefing, setSelectedBriefing] = useState<any>(null);
+  const [showViewDialog, setShowViewDialog] = useState(false);
+  const [showEditDialog, setShowEditDialog] = useState(false);
+  
+  // Load briefings from localStorage on component mount
+  useEffect(() => {
+    const storedBriefings = localStorage.getItem('harmonIA_briefings');
+    if (storedBriefings) {
+      // We're using the hook's state, just log for debug
+      console.log('Loaded briefings from localStorage:', JSON.parse(storedBriefings));
+    }
+  }, []);
 
   // Filter briefings based on search term
   const filteredBriefings = briefings.filter(
@@ -62,11 +77,23 @@ const AdminBriefings: React.FC = () => {
       briefing.id.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
-  const handleViewBriefing = (id: string) => {
-    // In a real implementation, this would navigate to a briefing detail page
+  const handleViewBriefing = (briefing: any) => {
+    setSelectedBriefing(briefing);
+    setShowViewDialog(true);
+  };
+
+  const handleEditBriefing = (briefing: any) => {
+    setSelectedBriefing(briefing);
+    setShowEditDialog(true);
+  };
+
+  const handleBriefingUpdate = (updatedBriefing: any) => {
+    updateBriefing(updatedBriefing.id, updatedBriefing);
+    setShowEditDialog(false);
+    
     toast({
-      title: "Visualizar Briefing",
-      description: `Visualizando briefing ${id}`
+      title: "Briefing atualizado",
+      description: `O briefing foi atualizado com sucesso.`
     });
   };
 
@@ -92,9 +119,15 @@ const AdminBriefings: React.FC = () => {
 
   const handleCreateProject = (briefingId: string) => {
     // Criar projeto a partir do briefing
-    const projectId = createProjectFromBriefing(
-      briefings.find(b => b.id === briefingId)!
-    );
+    const briefing = briefings.find(b => b.id === briefingId);
+    if (!briefing) return;
+    
+    const projectId = createProjectFromBriefing(briefing);
+    
+    toast({
+      title: "Projeto criado",
+      description: `Projeto ${projectId} criado com sucesso a partir do briefing ${briefingId}.`
+    });
     
     // Redirecionar para página de previews
     setTimeout(() => {
@@ -223,7 +256,7 @@ const AdminBriefings: React.FC = () => {
                               <DropdownMenuContent align="end">
                                 <DropdownMenuLabel>Ações</DropdownMenuLabel>
                                 <DropdownMenuSeparator />
-                                <DropdownMenuItem onClick={() => handleViewBriefing(briefing.id)}>
+                                <DropdownMenuItem onClick={() => handleViewBriefing(briefing)}>
                                   <Eye className="mr-2 h-4 w-4" />
                                   Visualizar
                                 </DropdownMenuItem>
@@ -235,7 +268,7 @@ const AdminBriefings: React.FC = () => {
                                   </DropdownMenuItem>
                                 )}
                                 
-                                <DropdownMenuItem onClick={() => handleViewBriefing(briefing.id)}>
+                                <DropdownMenuItem onClick={() => handleEditBriefing(briefing)}>
                                   <FileText className="mr-2 h-4 w-4" />
                                   Editar
                                 </DropdownMenuItem>
@@ -288,6 +321,34 @@ const AdminBriefings: React.FC = () => {
           <CreateBriefingForm onClose={() => setShowCreateDialog(false)} />
         </DialogContent>
       </Dialog>
+
+      {/* View briefing dialog */}
+      {selectedBriefing && (
+        <>
+          <Dialog open={showViewDialog} onOpenChange={setShowViewDialog}>
+            <DialogContent className="sm:max-w-[700px]">
+              <h2 className="text-xl font-semibold mb-4">Detalhes do Briefing</h2>
+              <BriefingDetailForm 
+                briefing={selectedBriefing}
+                isEditing={false}
+                onClose={() => setShowViewDialog(false)}
+              />
+            </DialogContent>
+          </Dialog>
+
+          <Dialog open={showEditDialog} onOpenChange={setShowEditDialog}>
+            <DialogContent className="sm:max-w-[700px]">
+              <h2 className="text-xl font-semibold mb-4">Editar Briefing</h2>
+              <BriefingDetailForm 
+                briefing={selectedBriefing}
+                isEditing={true}
+                onClose={() => setShowEditDialog(false)}
+                onUpdate={handleBriefingUpdate}
+              />
+            </DialogContent>
+          </Dialog>
+        </>
+      )}
     </AdminLayout>
   );
 };
