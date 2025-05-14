@@ -8,10 +8,12 @@ import GoogleDriveGuide from '@/components/admin/portfolio/GoogleDriveGuide';
 import AddPortfolioItemForm from '@/components/admin/portfolio/AddPortfolioItemForm';
 import { usePortfolioItems } from '@/hooks/usePortfolioItems';
 import { useToast } from '@/hooks/use-toast';
+import { Dialog, DialogContent } from "@/components/ui/dialog";
 
 const AdminPortfolio: React.FC = () => {
   const [showAddForm, setShowAddForm] = useState(false);
-  const { portfolioItems, handleAddItem, isLoading } = usePortfolioItems();
+  const [editingItem, setEditingItem] = useState<any>(null);
+  const { portfolioItems, handleAddItem, deletePortfolioItem, updatePortfolioItem, isLoading } = usePortfolioItems();
   const { toast } = useToast();
   
   const handleAddPortfolioItem = (item: any) => {
@@ -26,8 +28,33 @@ const AdminPortfolio: React.FC = () => {
     return id;
   };
   
+  const handleUpdateItem = (item: any) => {
+    updatePortfolioItem(item.id, item);
+    setEditingItem(null);
+    
+    toast({
+      title: "Item atualizado",
+      description: `O item "${item.title}" foi atualizado no portfólio`,
+    });
+  };
+  
+  const handleDeleteItem = (id: string) => {
+    deletePortfolioItem(id);
+    
+    toast({
+      title: "Item excluído",
+      description: "O item foi removido do portfólio",
+      variant: "destructive"
+    });
+  };
+  
+  const handleEdit = (item: any) => {
+    setEditingItem(item);
+  };
+  
   const handleCancel = () => {
     setShowAddForm(false);
+    setEditingItem(null);
   };
   
   return (
@@ -37,8 +64,13 @@ const AdminPortfolio: React.FC = () => {
         
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mt-6">
           <div className="lg:col-span-2 space-y-6">
-            <div className="bg-slate-800 rounded-lg shadow">
-              <PortfolioTable portfolioItems={portfolioItems} isLoading={isLoading} />
+            <div className="bg-slate-800 rounded-lg shadow p-6">
+              <PortfolioTable 
+                portfolioItems={portfolioItems} 
+                isLoading={isLoading} 
+                onEdit={handleEdit} 
+                onDelete={handleDeleteItem} 
+              />
             </div>
             
             {showAddForm && (
@@ -47,6 +79,20 @@ const AdminPortfolio: React.FC = () => {
                 <AddPortfolioItemForm onAdd={handleAddPortfolioItem} onCancel={handleCancel} />
               </div>
             )}
+            
+            <Dialog open={!!editingItem} onOpenChange={(open) => !open && setEditingItem(null)}>
+              <DialogContent className="bg-slate-800 text-white max-w-3xl">
+                <h2 className="text-xl font-bold mb-4">Editar Item do Portfólio</h2>
+                {editingItem && (
+                  <AddPortfolioItemForm 
+                    initialData={editingItem} 
+                    onAdd={handleUpdateItem} 
+                    onCancel={() => setEditingItem(null)} 
+                    isEditing={true}
+                  />
+                )}
+              </DialogContent>
+            </Dialog>
           </div>
           
           <div className="space-y-6">

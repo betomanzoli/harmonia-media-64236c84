@@ -1,8 +1,8 @@
 
-import React, { useState, useEffect } from 'react';
-import { Button } from "@/components/ui/button";
+import React, { useState } from 'react';
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
+import { Button } from "@/components/ui/button";
 import { 
   Select, 
   SelectContent, 
@@ -10,202 +10,171 @@ import {
   SelectTrigger, 
   SelectValue 
 } from "@/components/ui/select";
-import { Label } from "@/components/ui/label";
-import { useBriefings } from '@/hooks/admin/useBriefings';
-import { useToast } from '@/hooks/use-toast';
-
-interface Client {
-  id: string;
-  name: string;
-  email: string;
-  phone?: string;
-  packageType?: string;
-}
 
 interface CreateBriefingFormProps {
   onClose: () => void;
+  onSubmit: (briefingData: any) => void;
 }
 
-const CreateBriefingForm: React.FC<CreateBriefingFormProps> = ({ onClose }) => {
-  const [clients, setClients] = useState<Client[]>([]);
-  const [selectedClientId, setSelectedClientId] = useState<string>("");
-  const [name, setName] = useState("");
-  const [email, setEmail] = useState("");
-  const [phone, setPhone] = useState("");
-  const [packageType, setPackageType] = useState("Essencial");
-  const [description, setDescription] = useState("");
-  const { addBriefing } = useBriefings();
-  const { toast } = useToast();
+const CreateBriefingForm: React.FC<CreateBriefingFormProps> = ({ onClose, onSubmit }) => {
+  const [formData, setFormData] = useState({
+    name: '',
+    email: '',
+    phone: '',
+    packageType: '',
+    description: '',
+  });
 
-  // Load clients on component mount
-  useEffect(() => {
-    // For demonstration, using localStorage
-    const loadClients = () => {
-      try {
-        const storedClients = localStorage.getItem('harmonIA_clients');
-        if (storedClients) {
-          const parsedClients = JSON.parse(storedClients);
-          setClients(parsedClients);
-        } else {
-          // Sample clients
-          const sampleClients = [
-            { id: 'client1', name: 'Maria Silva', email: 'maria@example.com', phone: '+5511999999999', packageType: 'Premium' },
-            { id: 'client2', name: 'João Santos', email: 'joao@example.com', phone: '+5521888888888', packageType: 'Essencial' },
-            { id: 'client3', name: 'Empresa XYZ', email: 'contato@xyz.com', phone: '+5531777777777', packageType: 'Profissional' }
-          ];
-          setClients(sampleClients);
-          localStorage.setItem('harmonIA_clients', JSON.stringify(sampleClients));
-        }
-      } catch (error) {
-        console.error('Error loading clients:', error);
-      }
-    };
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+    const { name, value } = e.target;
+    setFormData(prev => ({
+      ...prev,
+      [name]: value
+    }));
+  };
 
-    loadClients();
-  }, []);
-
-  const handleClientChange = (clientId: string) => {
-    setSelectedClientId(clientId);
-    const selectedClient = clients.find(client => client.id === clientId);
-    
-    if (selectedClient) {
-      setName(selectedClient.name);
-      setEmail(selectedClient.email);
-      setPhone(selectedClient.phone || '');
-      
-      // If client has a package type associated, set it
-      if (selectedClient.packageType) {
-        setPackageType(selectedClient.packageType);
-      }
-    }
+  const handleSelectChange = (name: string, value: string) => {
+    setFormData(prev => ({
+      ...prev,
+      [name]: value
+    }));
   };
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     
-    // Check required fields
-    if (!name.trim() || !email.trim() || !packageType) {
-      toast({
-        title: "Campos obrigatórios",
-        description: "Por favor, preencha todos os campos obrigatórios.",
-        variant: "destructive"
-      });
-      return;
+    // Create formData specific to package type
+    let packageFormData = {};
+    
+    switch (formData.packageType) {
+      case 'Essencial':
+        packageFormData = {
+          story: '',
+          emotions: [],
+          musicStyle: '',
+          artists: '',
+          tempo: '',
+          specificWords: '',
+          duration: '',
+          vocalPreference: ''
+        };
+        break;
+      case 'Profissional':
+        packageFormData = {
+          concept: '',
+          purpose: '',
+          musicStyles: [],
+          tempo: '',
+          instruments: '',
+          structure: '',
+          references: [],
+          usePlatforms: [],
+          targetAudience: ''
+        };
+        break;
+      case 'Premium':
+        packageFormData = {
+          concept: '',
+          objectives: '',
+          audience: '',
+          primaryEmotions: [],
+          secondaryEmotions: [],
+          progression: '',
+          message: '',
+          styles: [],
+          references: [],
+          soundCharacteristics: []
+        };
+        break;
+      default:
+        break;
     }
     
-    const formData = {
-      name,
-      email,
-      phone,
-      packageType,
-      description,
-      createdAt: new Date().toLocaleDateString('pt-BR'),
-      status: 'pending' as const,
-      projectCreated: false
-    };
-    
-    const newBriefingId = addBriefing(formData);
-    
-    toast({
-      title: "Briefing criado",
-      description: `Briefing ${newBriefingId} criado com sucesso.`
+    // Submit with package-specific form data
+    onSubmit({
+      ...formData,
+      formData: packageFormData
     });
-    
-    onClose();
   };
 
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
-      <div className="space-y-2">
-        <Label htmlFor="clientSelect">Cliente Existente (opcional)</Label>
-        <Select 
-          value={selectedClientId} 
-          onValueChange={handleClientChange}
-        >
-          <SelectTrigger id="clientSelect">
-            <SelectValue placeholder="Selecione um cliente existente" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="">Novo Cliente</SelectItem>
-            {clients.map(client => (
-              <SelectItem key={client.id} value={client.id}>
-                {client.name} ({client.email})
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-      </div>
-
-      <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-        <div className="space-y-2">
-          <Label htmlFor="name">Nome do Cliente *</Label>
+      <h2 className="text-xl font-semibold mb-2">Criar Novo Briefing</h2>
+      
+      <div className="space-y-4">
+        <div>
+          <label className="block text-sm font-medium mb-1" htmlFor="name">Nome do Cliente</label>
           <Input
             id="name"
-            value={name}
-            onChange={(e) => setName(e.target.value)}
-            placeholder="Nome do cliente"
+            name="name"
+            value={formData.name}
+            onChange={handleChange}
+            placeholder="Nome completo do cliente"
             required
           />
         </div>
-
-        <div className="space-y-2">
-          <Label htmlFor="email">Email *</Label>
+        
+        <div>
+          <label className="block text-sm font-medium mb-1" htmlFor="email">Email</label>
           <Input
             id="email"
+            name="email"
             type="email"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
+            value={formData.email}
+            onChange={handleChange}
             placeholder="email@exemplo.com"
             required
           />
         </div>
-      </div>
-
-      <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-        <div className="space-y-2">
-          <Label htmlFor="phone">Telefone</Label>
+        
+        <div>
+          <label className="block text-sm font-medium mb-1" htmlFor="phone">Telefone</label>
           <Input
             id="phone"
-            value={phone}
-            onChange={(e) => setPhone(e.target.value)}
-            placeholder="+55 (00) 00000-0000"
+            name="phone"
+            value={formData.phone}
+            onChange={handleChange}
+            placeholder="+55 (11) 99999-9999"
           />
         </div>
-
-        <div className="space-y-2">
-          <Label htmlFor="packageType">Pacote *</Label>
-          <Select 
-            value={packageType} 
-            onValueChange={setPackageType}
-            required
+        
+        <div>
+          <label className="block text-sm font-medium mb-1" htmlFor="packageType">Pacote</label>
+          <Select
+            value={formData.packageType}
+            onValueChange={(value) => handleSelectChange('packageType', value)}
           >
             <SelectTrigger id="packageType">
-              <SelectValue />
+              <SelectValue placeholder="Selecione um pacote" />
             </SelectTrigger>
             <SelectContent>
               <SelectItem value="Essencial">Essencial</SelectItem>
-              <SelectItem value="Premium">Premium</SelectItem>
               <SelectItem value="Profissional">Profissional</SelectItem>
+              <SelectItem value="Premium">Premium</SelectItem>
             </SelectContent>
           </Select>
         </div>
+        
+        <div>
+          <label className="block text-sm font-medium mb-1" htmlFor="description">Descrição</label>
+          <Textarea
+            id="description"
+            name="description"
+            value={formData.description}
+            onChange={handleChange}
+            placeholder="Breve descrição do projeto"
+            rows={3}
+          />
+        </div>
       </div>
-
-      <div className="space-y-2">
-        <Label htmlFor="description">Descrição do Projeto</Label>
-        <Textarea
-          id="description"
-          value={description}
-          onChange={(e) => setDescription(e.target.value)}
-          placeholder="Breve descrição do projeto musical"
-        />
-      </div>
-
+      
       <div className="flex justify-end space-x-2 pt-4">
         <Button type="button" variant="outline" onClick={onClose}>
           Cancelar
         </Button>
-        <Button type="submit">Criar Briefing</Button>
+        <Button type="submit">
+          Criar Briefing
+        </Button>
       </div>
     </form>
   );

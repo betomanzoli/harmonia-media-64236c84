@@ -46,7 +46,7 @@ import BriefingDetailForm from '@/components/admin/briefings/BriefingDetailForm'
 const AdminBriefings: React.FC = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
-  const { briefings, updateBriefingStatus, deleteBriefing, createProjectFromBriefing, updateBriefing } = useBriefings();
+  const { briefings, addBriefing, updateBriefingStatus, deleteBriefing, createProjectFromBriefing, updateBriefing } = useBriefings();
   
   const [searchTerm, setSearchTerm] = useState('');
   const [showCreateDialog, setShowCreateDialog] = useState(false);
@@ -76,6 +76,28 @@ const AdminBriefings: React.FC = () => {
       briefing.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
       briefing.id.toLowerCase().includes(searchTerm.toLowerCase())
   );
+
+  const handleCreateBriefing = (briefingData: any) => {
+    const newBriefing = {
+      name: briefingData.name,
+      email: briefingData.email,
+      phone: briefingData.phone,
+      packageType: briefingData.packageType,
+      createdAt: new Date().toLocaleDateString('pt-BR'),
+      status: 'pending',
+      description: briefingData.description || 'Novo briefing',
+      projectCreated: false,
+      formData: briefingData.formData || {}
+    };
+    
+    const id = addBriefing(newBriefing);
+    
+    setShowCreateDialog(false);
+    toast({
+      title: "Briefing criado",
+      description: `O briefing ${id} foi criado com sucesso.`
+    });
+  };
 
   const handleViewBriefing = (briefing: any) => {
     setSelectedBriefing(briefing);
@@ -318,7 +340,7 @@ const AdminBriefings: React.FC = () => {
       {/* Create briefing dialog */}
       <Dialog open={showCreateDialog} onOpenChange={setShowCreateDialog}>
         <DialogContent className="sm:max-w-[550px]">
-          <CreateBriefingForm onClose={() => setShowCreateDialog(false)} />
+          <CreateBriefingForm onClose={() => setShowCreateDialog(false)} onSubmit={handleCreateBriefing} />
         </DialogContent>
       </Dialog>
 
