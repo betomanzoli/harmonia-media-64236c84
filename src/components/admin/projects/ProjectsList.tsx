@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { 
   Table, 
@@ -11,7 +10,7 @@ import {
 } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge"; 
-import { Eye, Pencil, Trash2 } from "lucide-react";
+import { Eye, Pencil, Trash2, Plus } from "lucide-react";
 import { Link } from "react-router-dom";
 import { useToast } from "@/hooks/use-toast";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
@@ -35,6 +34,7 @@ const ProjectsList: React.FC = () => {
   const [showEditDialog, setShowEditDialog] = useState(false);
   const [currentProject, setCurrentProject] = useState<Project | null>(null);
   const [showViewDialog, setShowViewDialog] = useState(false);
+  const [showCreateDialog, setShowCreateDialog] = useState(false);
   const { toast } = useToast();
   
   // Fetch projects on component mount
@@ -134,6 +134,19 @@ const ProjectsList: React.FC = () => {
     setShowViewDialog(true);
   };
 
+  const handleCreateProject = (newProject: Project) => {
+    const updatedProjects = [...projects, { ...newProject, id: `proj${projects.length + 1}` }];
+    setProjects(updatedProjects);
+    localStorage.setItem('harmonIA_projects', JSON.stringify(updatedProjects));
+    
+    toast({
+      title: 'Projeto criado',
+      description: 'O novo projeto foi criado com sucesso.',
+    });
+    
+    setShowCreateDialog(false);
+  };
+
   const handleUpdateProject = (updatedProject: Project) => {
     const updatedProjects = projects.map(project => 
       project.id === updatedProject.id ? updatedProject : project
@@ -185,6 +198,17 @@ const ProjectsList: React.FC = () => {
   
   return (
     <>
+      <div className="flex justify-between items-center mb-6">
+        <h2 className="text-2xl font-bold">Projetos</h2>
+        <Button 
+          onClick={() => setShowCreateDialog(true)}
+          className="bg-green-600 hover:bg-green-700"
+        >
+          <Plus className="mr-2 h-4 w-4" />
+          Novo Projeto
+        </Button>
+      </div>
+    
       <Table>
         <TableCaption>Lista de projetos ativos.</TableCaption>
         <TableHeader>

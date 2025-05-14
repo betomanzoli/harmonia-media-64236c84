@@ -33,7 +33,7 @@ const AdminPortfolio: React.FC = () => {
   return (
     <AdminLayout>
       <div className="bg-slate-900 p-6 min-h-screen text-white">
-        <PortfolioHeader />
+        <PortfolioHeader onAdd={() => setShowAddForm(true)} />
         
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mt-6">
           <div className="lg:col-span-2 space-y-6">
