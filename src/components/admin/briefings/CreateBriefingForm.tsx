@@ -53,9 +53,9 @@ const CreateBriefingForm: React.FC<CreateBriefingFormProps> = ({ onClose, onSubm
       name: '',
       email: '',
       phone: {
-        fullNumber: '+55',
-        countryCode: '55',
-        nationalNumber: ''
+        fullNumber: '+55', // Ensure this is a non-empty string
+        countryCode: '55',  // Ensure this is a non-empty string
+        nationalNumber: ''  // This can be empty initially but is validated before submission
       },
       packageType: 'essencial',
       description: '',
