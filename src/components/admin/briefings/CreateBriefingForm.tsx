@@ -1,182 +1,190 @@
 
 import React, { useState } from 'react';
+import { useForm } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+import * as z from 'zod';
+import { DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
+import { Button } from "@/components/ui/button";
+import { Loader2 } from 'lucide-react';
+import {
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import { Button } from "@/components/ui/button";
-import { 
-  Select, 
-  SelectContent, 
-  SelectItem, 
-  SelectTrigger, 
-  SelectValue 
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
 } from "@/components/ui/select";
+
+const formSchema = z.object({
+  name: z.string().min(2, { message: "Nome deve ter pelo menos 2 caracteres" }),
+  email: z.string().email({ message: "Email inválido" }),
+  phone: z.string().min(10, { message: "Telefone deve ter pelo menos 10 caracteres" }),
+  packageType: z.string(),
+  description: z.string().optional(),
+});
+
+type FormValues = z.infer<typeof formSchema>;
 
 interface CreateBriefingFormProps {
   onClose: () => void;
-  onSubmit: (briefingData: any) => void;
+  onSubmit: (data: FormValues) => void;
 }
 
 const CreateBriefingForm: React.FC<CreateBriefingFormProps> = ({ onClose, onSubmit }) => {
-  const [formData, setFormData] = useState({
-    name: '',
-    email: '',
-    phone: '',
-    packageType: '',
-    description: '',
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
+  const form = useForm<FormValues>({
+    resolver: zodResolver(formSchema),
+    defaultValues: {
+      name: '',
+      email: '',
+      phone: '',
+      packageType: 'essencial',
+      description: '',
+    },
   });
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
-    const { name, value } = e.target;
-    setFormData(prev => ({
-      ...prev,
-      [name]: value
-    }));
-  };
-
-  const handleSelectChange = (name: string, value: string) => {
-    setFormData(prev => ({
-      ...prev,
-      [name]: value
-    }));
-  };
-
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
+  const handleSubmit = async (data: FormValues) => {
+    setIsSubmitting(true);
     
-    // Create formData specific to package type
-    let packageFormData = {};
-    
-    switch (formData.packageType) {
-      case 'Essencial':
-        packageFormData = {
-          story: '',
-          emotions: [],
-          musicStyle: '',
-          artists: '',
-          tempo: '',
-          specificWords: '',
-          duration: '',
-          vocalPreference: ''
-        };
-        break;
-      case 'Profissional':
-        packageFormData = {
-          concept: '',
-          purpose: '',
-          musicStyles: [],
-          tempo: '',
-          instruments: '',
-          structure: '',
-          references: [],
-          usePlatforms: [],
-          targetAudience: ''
-        };
-        break;
-      case 'Premium':
-        packageFormData = {
-          concept: '',
-          objectives: '',
-          audience: '',
-          primaryEmotions: [],
-          secondaryEmotions: [],
-          progression: '',
-          message: '',
-          styles: [],
-          references: [],
-          soundCharacteristics: []
-        };
-        break;
-      default:
-        break;
+    try {
+      await onSubmit(data);
+      form.reset();
+    } catch (error) {
+      console.error('Error submitting form:', error);
+    } finally {
+      setIsSubmitting(false);
     }
-    
-    // Submit with package-specific form data
-    onSubmit({
-      ...formData,
-      formData: packageFormData
-    });
   };
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-4">
-      <h2 className="text-xl font-semibold mb-2">Criar Novo Briefing</h2>
-      
-      <div className="space-y-4">
-        <div>
-          <label className="block text-sm font-medium mb-1" htmlFor="name">Nome do Cliente</label>
-          <Input
-            id="name"
+    <div className="space-y-4">
+      <DialogHeader>
+        <DialogTitle>Criar Novo Briefing</DialogTitle>
+        <DialogDescription>
+          Preencha os detalhes abaixo para adicionar um novo briefing.
+        </DialogDescription>
+      </DialogHeader>
+
+      <Form {...form}>
+        <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-4">
+          <FormField
+            control={form.control}
             name="name"
-            value={formData.name}
-            onChange={handleChange}
-            placeholder="Nome completo do cliente"
-            required
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Nome do Cliente</FormLabel>
+                <FormControl>
+                  <Input placeholder="Nome completo" {...field} />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
           />
-        </div>
-        
-        <div>
-          <label className="block text-sm font-medium mb-1" htmlFor="email">Email</label>
-          <Input
-            id="email"
+
+          <FormField
+            control={form.control}
             name="email"
-            type="email"
-            value={formData.email}
-            onChange={handleChange}
-            placeholder="email@exemplo.com"
-            required
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Email</FormLabel>
+                <FormControl>
+                  <Input type="email" placeholder="email@exemplo.com" {...field} />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
           />
-        </div>
-        
-        <div>
-          <label className="block text-sm font-medium mb-1" htmlFor="phone">Telefone</label>
-          <Input
-            id="phone"
+
+          <FormField
+            control={form.control}
             name="phone"
-            value={formData.phone}
-            onChange={handleChange}
-            placeholder="+55 (11) 99999-9999"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Telefone</FormLabel>
+                <FormControl>
+                  <Input placeholder="(00) 00000-0000" {...field} />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
           />
-        </div>
-        
-        <div>
-          <label className="block text-sm font-medium mb-1" htmlFor="packageType">Pacote</label>
-          <Select
-            value={formData.packageType}
-            onValueChange={(value) => handleSelectChange('packageType', value)}
-          >
-            <SelectTrigger id="packageType">
-              <SelectValue placeholder="Selecione um pacote" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="Essencial">Essencial</SelectItem>
-              <SelectItem value="Profissional">Profissional</SelectItem>
-              <SelectItem value="Premium">Premium</SelectItem>
-            </SelectContent>
-          </Select>
-        </div>
-        
-        <div>
-          <label className="block text-sm font-medium mb-1" htmlFor="description">Descrição</label>
-          <Textarea
-            id="description"
+
+          <FormField
+            control={form.control}
+            name="packageType"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Tipo de Pacote</FormLabel>
+                <Select 
+                  onValueChange={field.onChange} 
+                  defaultValue={field.value}
+                >
+                  <FormControl>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Selecione o pacote" />
+                    </SelectTrigger>
+                  </FormControl>
+                  <SelectContent>
+                    <SelectItem value="essencial">Essencial</SelectItem>
+                    <SelectItem value="profissional">Profissional</SelectItem>
+                    <SelectItem value="premium">Premium</SelectItem>
+                  </SelectContent>
+                </Select>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+
+          <FormField
+            control={form.control}
             name="description"
-            value={formData.description}
-            onChange={handleChange}
-            placeholder="Breve descrição do projeto"
-            rows={3}
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Descrição</FormLabel>
+                <FormControl>
+                  <Textarea
+                    placeholder="Descreva o briefing em poucas palavras"
+                    className="resize-none"
+                    {...field}
+                  />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
           />
-        </div>
-      </div>
-      
-      <div className="flex justify-end space-x-2 pt-4">
-        <Button type="button" variant="outline" onClick={onClose}>
-          Cancelar
-        </Button>
-        <Button type="submit">
-          Criar Briefing
-        </Button>
-      </div>
-    </form>
+
+          <DialogFooter className="pt-4">
+            <Button variant="outline" onClick={onClose} type="button">
+              Cancelar
+            </Button>
+            <Button 
+              type="submit" 
+              className="bg-harmonia-green hover:bg-harmonia-green/90"
+              disabled={isSubmitting}
+            >
+              {isSubmitting ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  Criando...
+                </>
+              ) : (
+                "Criar Briefing"
+              )}
+            </Button>
+          </DialogFooter>
+        </form>
+      </Form>
+    </div>
   );
 };
 

@@ -11,6 +11,7 @@ import {
   premiumPackageSchema 
 } from './formSchema';
 import { useLocation, useNavigate } from 'react-router-dom';
+import { supabase } from '@/lib/supabase';
 
 export const useBriefingForm = (initialPackage?: 'essencial' | 'profissional' | 'premium') => {
   const { toast } = useToast();
@@ -97,6 +98,42 @@ export const useBriefingForm = (initialPackage?: 'essencial' | 'profissional' | 
     setIsSubmitting(true);
     
     try {
+      // Check if client exists and get or create the client
+      let clientId = null;
+      const { data: existingClients, error: clientError } = await supabase
+        .from('clients')
+        .select('id')
+        .eq('email', data.email)
+        .limit(1);
+      
+      if (clientError) {
+        throw clientError;
+      }
+      
+      if (existingClients && existingClients.length > 0) {
+        clientId = existingClients[0].id;
+      } else {
+        // Create a new client
+        const { data: newClient, error: newClientError } = await supabase
+          .from('clients')
+          .insert([
+            {
+              name: data.name,
+              email: data.email,
+              phone: data.phone
+            }
+          ])
+          .select()
+          .single();
+        
+        if (newClientError) {
+          throw newClientError;
+        }
+        
+        clientId = newClient.id;
+      }
+      
+      // Prepare form data and handle file uploads
       const formDataToSend = {
         ...data,
         referenceFilesCount: referenceFiles.length,
@@ -105,37 +142,60 @@ export const useBriefingForm = (initialPackage?: 'essencial' | 'profissional' | 
       console.log("Form data to be sent:", formDataToSend);
       console.log("Reference files:", referenceFiles);
       
-      setTimeout(() => {
-        toast({
-          title: "Formulário enviado com sucesso!",
-          description: "Entraremos em contato em breve para discutir seu projeto musical.",
-        });
-        
-        // Criar um ID de pedido fictício para simulação
-        const orderId = `HAR-${new Date().getFullYear()}-${Math.floor(1000 + Math.random() * 9000)}`;
-        
-        // Armazenar dados do pedido para rastreamento
-        localStorage.setItem('orderData', JSON.stringify({
-          orderId,
-          clientName: data.name,
-          packageType: selectedPackage === 'essencial' ? 'Essencial' : 
-                       selectedPackage === 'profissional' ? 'Profissional' : 'Premium',
-          status: 'Em Análise',
-          dateSubmitted: new Date().toISOString(),
-          contactPreference: data.contactPreference
-        }));
-        
-        form.reset();
-        setReferenceFiles([]);
-        setIsSubmitting(false);
-        
-        console.log("Zapier automation: Creating Trello card for new project");
-        console.log("Zapier automation: Initiating Suno AI music generation task");
-        console.log("Zapier automation: Scheduling Moises mastering task");
-        
-        // Redirecionar para a página de agradecimento
-        navigate('/agradecimento');
-      }, 1500);
+      // Save briefing to Supabase
+      const { data: briefingData, error: briefingError } = await supabase
+        .from('briefings')
+        .insert([
+          {
+            client_id: clientId,
+            package_type: selectedPackage,
+            data: formDataToSend,
+            status: 'pending'
+          }
+        ])
+        .select()
+        .single();
+      
+      if (briefingError) {
+        throw briefingError;
+      }
+      
+      // Upload reference files if any
+      if (referenceFiles.length > 0) {
+        // In a real implementation, you would upload the files to Supabase Storage
+        // or use another file storage service
+        console.log("Would upload files to Supabase Storage");
+      }
+      
+      toast({
+        title: "Formulário enviado com sucesso!",
+        description: "Entraremos em contato em breve para discutir seu projeto musical.",
+      });
+      
+      // Criar um ID de pedido fictício para simulação
+      const orderId = `HAR-${new Date().getFullYear()}-${Math.floor(1000 + Math.random() * 9000)}`;
+      
+      // Armazenar dados do pedido para rastreamento
+      localStorage.setItem('orderData', JSON.stringify({
+        orderId,
+        clientName: data.name,
+        packageType: selectedPackage === 'essencial' ? 'Essencial' : 
+                    selectedPackage === 'profissional' ? 'Profissional' : 'Premium',
+        status: 'Em Análise',
+        dateSubmitted: new Date().toISOString(),
+        contactPreference: data.contactPreference
+      }));
+      
+      form.reset();
+      setReferenceFiles([]);
+      setIsSubmitting(false);
+      
+      console.log("Zapier automation: Creating Trello card for new project");
+      console.log("Zapier automation: Initiating Suno AI music generation task");
+      console.log("Zapier automation: Scheduling Moises mastering task");
+      
+      // Redirecionar para a página de agradecimento
+      navigate('/agradecimento');
     } catch (error) {
       console.error("Error submitting form:", error);
       toast({

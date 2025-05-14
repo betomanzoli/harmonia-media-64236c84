@@ -9,6 +9,59 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
+      briefing_fields: {
+        Row: {
+          created_at: string | null
+          field_key: string
+          field_name: string
+          field_type: Database["public"]["Enums"]["field_type"]
+          id: string
+          is_active: boolean | null
+          is_required: boolean | null
+          max_length: number | null
+          options: Json | null
+          order_num: number
+          placeholder: string | null
+          section_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          field_key: string
+          field_name: string
+          field_type: Database["public"]["Enums"]["field_type"]
+          id?: string
+          is_active?: boolean | null
+          is_required?: boolean | null
+          max_length?: number | null
+          options?: Json | null
+          order_num: number
+          placeholder?: string | null
+          section_id: string
+        }
+        Update: {
+          created_at?: string | null
+          field_key?: string
+          field_name?: string
+          field_type?: Database["public"]["Enums"]["field_type"]
+          id?: string
+          is_active?: boolean | null
+          is_required?: boolean | null
+          max_length?: number | null
+          options?: Json | null
+          order_num?: number
+          placeholder?: string | null
+          section_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "briefing_fields_section_id_fkey"
+            columns: ["section_id"]
+            isOneToOne: false
+            referencedRelation: "briefing_sections"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       briefing_questions: {
         Row: {
           id: string
@@ -76,6 +129,86 @@ export type Database = {
             columns: ["question_id"]
             isOneToOne: false
             referencedRelation: "briefing_questions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      briefing_sections: {
+        Row: {
+          created_at: string | null
+          description: string | null
+          id: string
+          is_active: boolean | null
+          order_num: number
+          package_type: Database["public"]["Enums"]["package_type"]
+          section_type: Database["public"]["Enums"]["section_type"]
+          title: string
+        }
+        Insert: {
+          created_at?: string | null
+          description?: string | null
+          id?: string
+          is_active?: boolean | null
+          order_num: number
+          package_type: Database["public"]["Enums"]["package_type"]
+          section_type: Database["public"]["Enums"]["section_type"]
+          title: string
+        }
+        Update: {
+          created_at?: string | null
+          description?: string | null
+          id?: string
+          is_active?: boolean | null
+          order_num?: number
+          package_type?: Database["public"]["Enums"]["package_type"]
+          section_type?: Database["public"]["Enums"]["section_type"]
+          title?: string
+        }
+        Relationships: []
+      }
+      briefings: {
+        Row: {
+          client_id: string | null
+          completed_at: string | null
+          created_at: string | null
+          data: Json
+          id: string
+          is_deleted: boolean | null
+          package_type: Database["public"]["Enums"]["package_type"]
+          project_id: string | null
+          status: Database["public"]["Enums"]["briefing_status"] | null
+          updated_at: string | null
+        }
+        Insert: {
+          client_id?: string | null
+          completed_at?: string | null
+          created_at?: string | null
+          data: Json
+          id?: string
+          is_deleted?: boolean | null
+          package_type: Database["public"]["Enums"]["package_type"]
+          project_id?: string | null
+          status?: Database["public"]["Enums"]["briefing_status"] | null
+          updated_at?: string | null
+        }
+        Update: {
+          client_id?: string | null
+          completed_at?: string | null
+          created_at?: string | null
+          data?: Json
+          id?: string
+          is_deleted?: boolean | null
+          package_type?: Database["public"]["Enums"]["package_type"]
+          project_id?: string | null
+          status?: Database["public"]["Enums"]["briefing_status"] | null
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "briefings_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "clients"
             referencedColumns: ["id"]
           },
         ]
@@ -375,7 +508,40 @@ export type Database = {
       [_ in never]: never
     }
     Enums: {
-      [_ in never]: never
+      briefing_status: "pending" | "completed" | "approved"
+      field_type:
+        | "text"
+        | "textarea"
+        | "select"
+        | "multi_select"
+        | "radio"
+        | "checkbox"
+        | "file"
+        | "date"
+      package_type: "essencial" | "profissional" | "premium" | "qualification"
+      section_type:
+        | "basic_info"
+        | "purpose"
+        | "timeline"
+        | "description"
+        | "budget"
+        | "features"
+        | "story_concept"
+        | "emotions"
+        | "music_preferences"
+        | "specific_elements"
+        | "certificate_info"
+        | "history_concept"
+        | "stylistic_preferences"
+        | "technical_details"
+        | "commercial_requirements"
+        | "call_scheduling"
+        | "strategic_concept"
+        | "emotional_palette"
+        | "aesthetic_preferences"
+        | "technical_specs"
+        | "registration_info"
+        | "consultation_scheduling"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -490,6 +656,43 @@ export type CompositeTypes<
 
 export const Constants = {
   public: {
-    Enums: {},
+    Enums: {
+      briefing_status: ["pending", "completed", "approved"],
+      field_type: [
+        "text",
+        "textarea",
+        "select",
+        "multi_select",
+        "radio",
+        "checkbox",
+        "file",
+        "date",
+      ],
+      package_type: ["essencial", "profissional", "premium", "qualification"],
+      section_type: [
+        "basic_info",
+        "purpose",
+        "timeline",
+        "description",
+        "budget",
+        "features",
+        "story_concept",
+        "emotions",
+        "music_preferences",
+        "specific_elements",
+        "certificate_info",
+        "history_concept",
+        "stylistic_preferences",
+        "technical_details",
+        "commercial_requirements",
+        "call_scheduling",
+        "strategic_concept",
+        "emotional_palette",
+        "aesthetic_preferences",
+        "technical_specs",
+        "registration_info",
+        "consultation_scheduling",
+      ],
+    },
   },
 } as const

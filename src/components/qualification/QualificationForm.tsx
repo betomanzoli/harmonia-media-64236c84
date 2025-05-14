@@ -6,7 +6,7 @@ import { useNavigate } from "react-router-dom";
 import { useToast } from "@/hooks/use-toast";
 import { Form } from "@/components/ui/form";
 import { Button } from "@/components/ui/button";
-import { formSchema, FormValues } from "./qualificationFormSchema";
+import { formSchema } from "./qualificationFormSchema";
 import QualificationFormHeader from "./QualificationFormHeader";
 import BasicInfoSection from "./BasicInfoSection";
 import PurposeSection from "./PurposeSection";
@@ -18,8 +18,9 @@ import ContractAcceptance from "./ContractAcceptance";
 import * as z from "zod";
 import { getRecommendedPackage } from "@/utils/packageRecommendation";
 import { supabase } from "@/lib/supabase";
-import emailService from "@/services/emailService";
 import { Loader2 } from "lucide-react";
+import { useBriefingData } from "@/hooks/useBriefingData";
+import DynamicFormSection from "./DynamicFormSection";
 
 // Extend the form schema to include terms acceptance
 const extendedFormSchema = formSchema.extend({
@@ -34,6 +35,7 @@ export function QualificationForm() {
   const navigate = useNavigate();
   const { toast } = useToast();
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const { sections, fields, isLoading, saveBriefingData } = useBriefingData('qualification');
   
   const form = useForm<ExtendedFormValues>({
     resolver: zodResolver(extendedFormSchema),
@@ -60,41 +62,11 @@ export function QualificationForm() {
     const { termsAccepted, ...qualificationData } = data;
     
     try {
-      let saveSuccess = true;
+      // Save to Supabase
+      const result = await saveBriefingData(qualificationData);
       
-      try {
-        // 1. Salvar os dados na tabela do Supabase
-        const { error } = await supabase
-          .from('qualification_submissions')
-          .insert([
-            { 
-              ...qualificationData,
-              status: 'pending', 
-              created_at: new Date().toISOString()
-            }
-          ]);
-
-        if (error) {
-          console.error("Erro ao salvar qualificação:", error);
-          saveSuccess = false;
-        }
-      } catch (err) {
-        console.error("Erro na conexão com o Supabase:", err);
-        saveSuccess = false;
-      }
-
-      // 2. Enviar email de confirmação para o cliente (assíncrono)
-      if (data.email) {
-        try {
-          emailService.sendBriefingConfirmation(data.email, data.name || "Cliente")
-            .then(result => {
-              if (!result.success) {
-                console.warn("Falha ao enviar email de confirmação");
-              }
-            });
-        } catch (err) {
-          console.warn("Erro ao tentar enviar email:", err);
-        }
+      if (!result.success) {
+        throw new Error(result.error || "Falha ao salvar dados");
       }
       
       // Store form data in localStorage to use it on the payment page
@@ -106,9 +78,7 @@ export function QualificationForm() {
       // Show success toast
       toast({
         title: "Formulário enviado com sucesso!",
-        description: saveSuccess 
-          ? "Você será redirecionado para a página de pagamento."
-          : "Dados salvos localmente. Redirecionando para pagamento.",
+        description: "Você será redirecionado para a página de pagamento.",
       });
       
       // Determinar pacote recomendado
@@ -121,7 +91,7 @@ export function QualificationForm() {
       setTimeout(() => {
         navigate(`/pagamento/${recommendedPackage}`);
       }, 1500);
-    } catch (err) {
+    } catch (err: any) {
       console.error("Erro na submissão:", err);
       toast({
         title: "Erro inesperado",
@@ -132,6 +102,55 @@ export function QualificationForm() {
     }
   }
 
+  if (isLoading) {
+    return (
+      <div className="w-full max-w-3xl mx-auto bg-card border border-border rounded-lg p-6 shadow-lg flex justify-center items-center h-64">
+        <Loader2 className="h-8 w-8 animate-spin text-harmonia-green" />
+        <span className="ml-2">Carregando formulário...</span>
+      </div>
+    );
+  }
+
+  // Use the dynamic form if we have sections from Supabase
+  if (sections.length > 0 && Object.keys(fields).length > 0) {
+    return (
+      <div className="w-full max-w-3xl mx-auto bg-card border border-border rounded-lg p-6 shadow-lg">
+        <QualificationFormHeader />
+
+        <Form {...form}>
+          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+            {sections.map((section) => (
+              <DynamicFormSection
+                key={section.id}
+                section={section}
+                fields={fields[section.id] || []}
+                form={form}
+              />
+            ))}
+            
+            <ContractAcceptance form={form} />
+
+            <Button 
+              type="submit" 
+              className="w-full bg-harmonia-green hover:bg-harmonia-green/90"
+              disabled={isSubmitting}
+            >
+              {isSubmitting ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  Enviando...
+                </>
+              ) : (
+                "Enviar e Prosseguir para Pagamento"
+              )}
+            </Button>
+          </form>
+        </Form>
+      </div>
+    );
+  }
+
+  // Fallback to the static form if we don't have sections from Supabase
   return (
     <div className="w-full max-w-3xl mx-auto bg-card border border-border rounded-lg p-6 shadow-lg">
       <QualificationFormHeader />

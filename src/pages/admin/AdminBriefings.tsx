@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import AdminLayout from '@/components/admin/layout/AdminLayout';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -25,7 +26,8 @@ import {
   Play,
   PackageCheck,
   Package,
-  Plus
+  Plus,
+  Loader2
 } from 'lucide-react';
 import { 
   AlertDialog, 
@@ -41,11 +43,12 @@ import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { useBriefings } from '@/hooks/admin/useBriefings';
 import CreateBriefingForm from '@/components/admin/briefings/CreateBriefingForm';
 import BriefingDetailForm from '@/components/admin/briefings/BriefingDetailForm';
+import { supabase } from '@/lib/supabase';
 
 const AdminBriefings: React.FC = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
-  const { briefings, addBriefing, updateBriefingStatus, deleteBriefing, createProjectFromBriefing, updateBriefing } = useBriefings();
+  const { briefings, isLoading, error, addBriefing, updateBriefingStatus, deleteBriefing, createProjectFromBriefing, updateBriefing, fetchBriefings } = useBriefings();
   
   const [searchTerm, setSearchTerm] = useState('');
   const [showCreateDialog, setShowCreateDialog] = useState(false);
@@ -59,14 +62,10 @@ const AdminBriefings: React.FC = () => {
   const [showViewDialog, setShowViewDialog] = useState(false);
   const [showEditDialog, setShowEditDialog] = useState(false);
   
-  // Load briefings from localStorage on component mount
+  // Refresh briefings when component mounts
   useEffect(() => {
-    const storedBriefings = localStorage.getItem('harmonIA_briefings');
-    if (storedBriefings) {
-      // We're using the hook's state, just log for debug
-      console.log('Loaded briefings from localStorage:', JSON.parse(storedBriefings));
-    }
-  }, []);
+    fetchBriefings();
+  }, [fetchBriefings]);
 
   // Filter briefings based on search term
   const filteredBriefings = briefings.filter(
@@ -76,26 +75,85 @@ const AdminBriefings: React.FC = () => {
       briefing.id.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
-  const handleCreateBriefing = (briefingData: any) => {
-    const newBriefing = {
-      name: briefingData.name,
-      email: briefingData.email,
-      phone: briefingData.phone,
-      packageType: briefingData.packageType,
-      createdAt: new Date().toLocaleDateString('pt-BR'),
-      status: 'pending' as 'pending' | 'completed' | 'approved', // Use type assertion to match the expected type
-      description: briefingData.description || 'Novo briefing',
-      projectCreated: false,
-      formData: briefingData.formData || {}
-    };
-    
-    const id = addBriefing(newBriefing);
-    
-    setShowCreateDialog(false);
-    toast({
-      title: "Briefing criado",
-      description: `O briefing ${id} foi criado com sucesso.`
-    });
+  const handleCreateBriefing = async (briefingData: any) => {
+    try {
+      // First, check if client exists or create a new one
+      let clientId: string | null = null;
+      
+      const { data: existingClients, error: clientError } = await supabase
+        .from('clients')
+        .select('id')
+        .eq('email', briefingData.email)
+        .limit(1);
+      
+      if (clientError) {
+        throw clientError;
+      }
+      
+      if (existingClients && existingClients.length > 0) {
+        clientId = existingClients[0].id;
+      } else {
+        // Create a new client
+        const { data: newClient, error: newClientError } = await supabase
+          .from('clients')
+          .insert([
+            {
+              name: briefingData.name,
+              email: briefingData.email,
+              phone: briefingData.phone
+            }
+          ])
+          .select()
+          .single();
+        
+        if (newClientError) {
+          throw newClientError;
+        }
+        
+        clientId = newClient.id;
+      }
+      
+      // Create the briefing
+      const { data: newBriefing, error: briefingError } = await supabase
+        .from('briefings')
+        .insert([
+          {
+            client_id: clientId,
+            package_type: briefingData.packageType as 'essencial' | 'profissional' | 'premium',
+            status: 'pending' as 'pending' | 'completed' | 'approved', // Use type assertion to match the expected type
+            data: {
+              description: briefingData.description || 'Novo briefing',
+              name: briefingData.name,
+              email: briefingData.email,
+              phone: briefingData.phone,
+              ...briefingData.formData || {}
+            }
+          }
+        ])
+        .select()
+        .single();
+      
+      if (briefingError) {
+        throw briefingError;
+      }
+      
+      setShowCreateDialog(false);
+      toast({
+        title: "Briefing criado",
+        description: `O briefing foi criado com sucesso.`
+      });
+      
+      // Refresh briefings
+      fetchBriefings();
+      
+    } catch (error: any) {
+      console.error('Error creating briefing:', error);
+      toast({
+        title: "Erro ao criar briefing",
+        description: error.message || "Não foi possível criar o briefing",
+        variant: "destructive"
+      });
+    }
   };
 
   const handleViewBriefing = (briefing: any) => {
@@ -169,6 +227,59 @@ const AdminBriefings: React.FC = () => {
     }
   };
 
+  if (isLoading) {
+    return (
+      <AdminLayout>
+        <div className="flex justify-center items-center h-screen">
+          <Loader2 className="h-8 w-8 animate-spin text-harmonia-green" />
+          <span className="ml-2">Carregando briefings...</span>
+        </div>
+      </AdminLayout>
+    );
+  }
+
+  if (error) {
+    return (
+      <AdminLayout>
+        <div className="space-y-6 p-6">
+          <div className="flex items-center justify-between">
+            <div>
+              <h1 className="text-3xl font-bold tracking-tight text-harmonia-green">Briefings</h1>
+              <p className="text-muted-foreground">
+                Gerencie os briefings enviados pelos clientes
+              </p>
+            </div>
+            <Button 
+              variant="outline" 
+              size="sm" 
+              asChild
+              className="border-harmonia-green text-harmonia-green hover:bg-harmonia-green/10"
+            >
+              <Link to="/admin-j28s7d1k/dashboard">
+                <ArrowLeft className="mr-2 h-4 w-4" />
+                Voltar ao Dashboard
+              </Link>
+            </Button>
+          </div>
+          
+          <Card className="bg-red-50 border-red-200">
+            <CardContent className="p-6">
+              <h2 className="text-lg font-semibold text-red-700 mb-2">Erro ao carregar briefings</h2>
+              <p className="text-red-600">{error}</p>
+              <Button 
+                onClick={fetchBriefings} 
+                variant="outline" 
+                className="mt-4 border-red-500 text-red-500 hover:bg-red-50"
+              >
+                Tentar novamente
+              </Button>
+            </CardContent>
+          </Card>
+        </div>
+      </AdminLayout>
+    );
+  }
+
   return (
     <AdminLayout>
       <div className="space-y-6 p-6">
@@ -241,7 +352,7 @@ const AdminBriefings: React.FC = () => {
                     ) : (
                       filteredBriefings.map((briefing) => (
                         <TableRow key={briefing.id}>
-                          <TableCell className="font-medium">{briefing.id}</TableCell>
+                          <TableCell className="font-medium">{briefing.id.slice(0, 8)}</TableCell>
                           <TableCell>
                             <div>
                               <div className="font-medium">{briefing.name}</div>

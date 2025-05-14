@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { Button } from "@/components/ui/button";
 import { Form } from "@/components/ui/form";
@@ -7,8 +8,10 @@ import ReferencesSection from './briefing/ReferencesSection';
 import EssentialPackageFields from './briefing/EssentialPackageFields';
 import ProfessionalPackageFields from './briefing/ProfessionalPackageFields';
 import PremiumPackageFields from './briefing/PremiumPackageFields';
-import { Music } from 'lucide-react';
+import { Music, Loader2 } from 'lucide-react';
 import { useLocation } from 'react-router-dom';
+import { useBriefingData } from '@/hooks/useBriefingData';
+import DynamicFormSection from './qualification/DynamicFormSection';
 
 interface BriefingFormProps {
   packageType?: 'essencial' | 'profissional' | 'premium';
@@ -38,6 +41,8 @@ const BriefingForm: React.FC<BriefingFormProps> = ({ packageType }) => {
     return 'essencial';
   };
   
+  const initialPackage = getInitialPackage();
+  
   const { 
     form, 
     isSubmitting, 
@@ -45,7 +50,9 @@ const BriefingForm: React.FC<BriefingFormProps> = ({ packageType }) => {
     setReferenceFiles, 
     onSubmit,
     selectedPackage
-  } = useBriefingForm(getInitialPackage());
+  } = useBriefingForm(initialPackage);
+
+  const { sections, fields, isLoading } = useBriefingData(selectedPackage);
 
   const renderPackageTitle = () => {
     switch (selectedPackage) {
@@ -61,6 +68,23 @@ const BriefingForm: React.FC<BriefingFormProps> = ({ packageType }) => {
   };
 
   const renderPackageFields = () => {
+    // Use dynamic form if we have data from Supabase
+    if (sections.length > 0 && Object.keys(fields).length > 0) {
+      return (
+        <>
+          {sections.map((section) => (
+            <DynamicFormSection
+              key={section.id}
+              section={section}
+              fields={fields[section.id] || []}
+              form={form}
+            />
+          ))}
+        </>
+      );
+    }
+    
+    // Fallback to static components
     switch (selectedPackage) {
       case 'essencial':
         return <EssentialPackageFields />;
@@ -72,6 +96,15 @@ const BriefingForm: React.FC<BriefingFormProps> = ({ packageType }) => {
         return <EssentialPackageFields />;
     }
   };
+
+  if (isLoading) {
+    return (
+      <div className="bg-card border border-border rounded-lg p-8 flex justify-center items-center h-64">
+        <Loader2 className="h-8 w-8 animate-spin text-harmonia-green" />
+        <span className="ml-2">Carregando formulário...</span>
+      </div>
+    );
+  }
 
   return (
     <div className="bg-card border border-border rounded-lg p-8">
@@ -99,7 +132,14 @@ const BriefingForm: React.FC<BriefingFormProps> = ({ packageType }) => {
             className="w-full bg-harmonia-green hover:bg-harmonia-green/90"
             disabled={isSubmitting}
           >
-            {isSubmitting ? "Enviando..." : "Enviar Briefing"}
+            {isSubmitting ? (
+              <>
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                Enviando...
+              </>
+            ) : (
+              "Enviar Briefing"
+            )}
           </Button>
         </form>
       </Form>
