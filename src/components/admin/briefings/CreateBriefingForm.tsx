@@ -23,11 +23,16 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import PhoneInput, { PhoneWithCountryCode } from '@/components/PhoneInput';
 
 const formSchema = z.object({
   name: z.string().min(2, { message: "Nome deve ter pelo menos 2 caracteres" }),
   email: z.string().email({ message: "Email inválido" }),
-  phone: z.string().min(10, { message: "Telefone deve ter pelo menos 10 caracteres" }),
+  phone: z.object({
+    fullNumber: z.string(),
+    countryCode: z.string(),
+    nationalNumber: z.string().min(10, { message: "Telefone deve ter pelo menos 10 caracteres" })
+  }),
   packageType: z.string(),
   description: z.string().optional(),
 });
@@ -47,7 +52,11 @@ const CreateBriefingForm: React.FC<CreateBriefingFormProps> = ({ onClose, onSubm
     defaultValues: {
       name: '',
       email: '',
-      phone: '',
+      phone: {
+        fullNumber: '+55',
+        countryCode: '55',
+        nationalNumber: ''
+      },
       packageType: 'essencial',
       description: '',
     },
@@ -112,7 +121,11 @@ const CreateBriefingForm: React.FC<CreateBriefingFormProps> = ({ onClose, onSubm
               <FormItem>
                 <FormLabel>Telefone</FormLabel>
                 <FormControl>
-                  <Input placeholder="(00) 00000-0000" {...field} />
+                  <PhoneInput
+                    value={field.value}
+                    onChange={field.onChange}
+                    placeholder="(00) 00000-0000"
+                  />
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -138,6 +151,7 @@ const CreateBriefingForm: React.FC<CreateBriefingFormProps> = ({ onClose, onSubm
                     <SelectItem value="essencial">Essencial</SelectItem>
                     <SelectItem value="profissional">Profissional</SelectItem>
                     <SelectItem value="premium">Premium</SelectItem>
+                    <SelectItem value="outros">Outros</SelectItem>
                   </SelectContent>
                 </Select>
                 <FormMessage />

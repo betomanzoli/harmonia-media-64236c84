@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect, useCallback } from 'react';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
@@ -19,10 +20,13 @@ import { useToast } from '@/hooks/use-toast';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { useSupabaseData } from '@/hooks/use-supabase-data';
+import { supabase } from '@/lib/supabase';
 
 interface Project {
   id: string;
   client_id: string;
+  title: string;
+  status: string;
   [key: string]: any; // For any other properties
 }
 
@@ -32,6 +36,7 @@ const ClientsList = () => {
   const [showEditDialog, setShowEditDialog] = useState(false);
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
   const [selectedClient, setSelectedClient] = useState<any>(null);
+  const [projectCounts, setProjectCounts] = useState<{[clientId: string]: number}>({});
   const [formData, setFormData] = useState({
     name: '',
     email: '',
@@ -39,14 +44,41 @@ const ClientsList = () => {
   });
   const { toast } = useToast();
 
-  // Fetch projects count for each client with proper typing
-  const { data: projects } = useSupabaseData<Project>('projects', {});
+  // Fetch projects from supabase
+  useEffect(() => {
+    const fetchProjects = async () => {
+      try {
+        const { data: projects, error } = await supabase
+          .from('projects')
+          .select('id, client_id');
+        
+        if (error) {
+          throw error;
+        }
 
-  // Count projects per client
+        if (projects) {
+          // Count projects for each client
+          const counts: {[clientId: string]: number} = {};
+          projects.forEach((project: Project) => {
+            if (project.client_id) {
+              counts[project.client_id] = (counts[project.client_id] || 0) + 1;
+            }
+          });
+          setProjectCounts(counts);
+          console.log("Project counts:", counts);
+        }
+      } catch (err) {
+        console.error("Error fetching projects:", err);
+      }
+    };
+
+    fetchProjects();
+  }, []);
+
+  // Get project count for a client
   const getProjectCount = useCallback((clientId: string) => {
-    if (!projects) return 0;
-    return projects.filter(project => project.client_id === clientId).length;
-  }, [projects]);
+    return projectCounts[clientId] || 0;
+  }, [projectCounts]);
 
   useEffect(() => {
     if (selectedClient && showEditDialog) {

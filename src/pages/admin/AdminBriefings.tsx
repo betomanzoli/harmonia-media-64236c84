@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import AdminLayout from '@/components/admin/layout/AdminLayout';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -77,6 +76,8 @@ const AdminBriefings: React.FC = () => {
 
   const handleCreateBriefing = async (briefingData: any) => {
     try {
+      console.log("Creating briefing with data:", briefingData);
+      
       // First, check if client exists or create a new one
       let clientId: string | null = null;
       
@@ -100,7 +101,7 @@ const AdminBriefings: React.FC = () => {
             {
               name: briefingData.name,
               email: briefingData.email,
-              phone: briefingData.phone
+              phone: briefingData.phone.fullNumber // Store in international format
             }
           ])
           .select()
@@ -119,13 +120,13 @@ const AdminBriefings: React.FC = () => {
         .insert([
           {
             client_id: clientId,
-            package_type: briefingData.packageType as 'essencial' | 'profissional' | 'premium',
-            status: 'pending' as 'pending' | 'completed' | 'approved', // Use type assertion to match the expected type
+            package_type: briefingData.packageType as 'essencial' | 'profissional' | 'premium' | 'outros',
+            status: 'pending' as 'pending' | 'completed' | 'approved',
             data: {
               description: briefingData.description || 'Novo briefing',
               name: briefingData.name,
               email: briefingData.email,
-              phone: briefingData.phone,
+              phone: briefingData.phone.fullNumber,
               ...briefingData.formData || {}
             }
           }
@@ -454,7 +455,7 @@ const AdminBriefings: React.FC = () => {
         </DialogContent>
       </Dialog>
 
-      {/* View briefing dialog */}
+      {/* View/edit briefing dialogs */}
       {selectedBriefing && (
         <>
           <Dialog open={showViewDialog} onOpenChange={setShowViewDialog}>
