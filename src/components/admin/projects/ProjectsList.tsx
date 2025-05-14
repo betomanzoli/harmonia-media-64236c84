@@ -1,338 +1,233 @@
 
-import React, { useState } from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
+import React, { useState, useEffect } from 'react';
 import { 
   Table, 
   TableBody, 
+  TableCaption, 
   TableCell, 
   TableHead, 
   TableHeader, 
   TableRow 
 } from "@/components/ui/table";
-import { Badge } from "@/components/ui/badge";
-import { Search, Plus } from 'lucide-react';
-import { Dialog, DialogContent } from "@/components/ui/dialog";
-import { 
-  Select, 
-  SelectContent, 
-  SelectItem, 
-  SelectTrigger, 
-  SelectValue 
-} from "@/components/ui/select";
-import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge"; 
+import { Eye, Pencil, Trash2 } from "lucide-react";
+import { Link } from "react-router-dom";
 import { useToast } from "@/hooks/use-toast";
-import { useCustomers } from '@/hooks/admin/useCustomers';
-import PhoneInput, { PhoneWithCountryCode } from '@/components/PhoneInput';
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 
-const dummyProjects = [
-  {
-    id: "P001",
-    title: "Música Personalizada - Aniversário",
-    client: "João Silva",
-    dateCreated: "15/03/2025",
-    status: "Em andamento",
-    deadline: "30/03/2025",
-  },
-  {
-    id: "P002",
-    title: "Jingle Comercial - Loja XYZ",
-    client: "Maria Oliveira",
-    dateCreated: "10/03/2025",
-    status: "Concluído",
-    deadline: "22/03/2025",
-  },
-  {
-    id: "P003",
-    title: "Trilha Sonora - Vídeo Institucional",
-    client: "Empresa ABC",
-    dateCreated: "05/03/2025",
-    status: "Aguardando aprovação",
-    deadline: "28/03/2025",
-  }
-];
+interface Project {
+  id: string;
+  title: string;
+  clientName: string;
+  status: string;
+  deadline: string;
+  createdAt: string;
+}
 
-const ProjectsList = () => {
-  const [isDialogOpen, setIsDialogOpen] = useState(false);
-  const [searchTerm, setSearchTerm] = useState("");
+const ProjectsList: React.FC = () => {
+  const [projects, setProjects] = useState<Project[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [projectToDelete, setProjectToDelete] = useState<string | null>(null);
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const { toast } = useToast();
-  const { customers } = useCustomers();
   
-  // Form state
-  const [projectTitle, setProjectTitle] = useState("");
-  const [projectDescription, setProjectDescription] = useState("");
-  const [selectedClientId, setSelectedClientId] = useState("");
-  const [clientName, setClientName] = useState("");
-  const [clientEmail, setClientEmail] = useState("");
-  const [packageType, setPackageType] = useState("");
-  const [phone, setPhone] = useState<PhoneWithCountryCode>({
-    fullNumber: '',
-    countryCode: '55',
-    nationalNumber: ''
-  });
+  // Fetch projects on component mount
+  useEffect(() => {
+    const loadProjects = async () => {
+      setIsLoading(true);
+      try {
+        // For demonstration, using localStorage
+        const storedProjects = localStorage.getItem('harmonIA_projects');
+        if (storedProjects) {
+          setProjects(JSON.parse(storedProjects));
+        } else {
+          // Sample data
+          const sampleProjects = [
+            {
+              id: 'proj1',
+              title: 'Música para Aniversário de 15 anos',
+              clientName: 'Maria Silva',
+              status: 'em_andamento',
+              deadline: '2023-12-15',
+              createdAt: '2023-10-25'
+            },
+            {
+              id: 'proj2',
+              title: 'Jingle Corporativo',
+              clientName: 'Empresa ABC',
+              status: 'concluido',
+              deadline: '2023-11-30',
+              createdAt: '2023-10-10'
+            },
+            {
+              id: 'proj3',
+              title: 'Trilha para Vídeo de Casamento',
+              clientName: 'João e Ana',
+              status: 'aguardando_aprovacao',
+              deadline: '2023-12-25',
+              createdAt: '2023-10-15'
+            }
+          ];
+          setProjects(sampleProjects);
+          localStorage.setItem('harmonIA_projects', JSON.stringify(sampleProjects));
+        }
+      } catch (error) {
+        console.error('Erro ao carregar projetos:', error);
+        toast({
+          title: 'Erro ao carregar dados',
+          description: 'Não foi possível carregar a lista de projetos.',
+          variant: 'destructive'
+        });
+      } finally {
+        setIsLoading(false);
+      }
+    };
+    
+    loadProjects();
+  }, [toast]);
   
-  const handleSelectClient = (clientId: string) => {
-    const customer = customers.find(c => c.id === clientId);
-    if (!customer) return;
+  const confirmDeleteProject = (id: string) => {
+    setProjectToDelete(id);
+    setShowDeleteConfirm(true);
+  };
+  
+  const handleDeleteProject = () => {
+    if (!projectToDelete) return;
     
-    setSelectedClientId(customer.id);
-    setClientName(customer.name);
-    setClientEmail(customer.email);
-    
-    if (customer.phone) {
-      const phoneNumber = customer.phone.replace(/\D/g, '');
-      const countryCode = phoneNumber.substring(0, 2);
-      const nationalNumber = phoneNumber.substring(2);
+    try {
+      const updatedProjects = projects.filter(project => project.id !== projectToDelete);
+      setProjects(updatedProjects);
+      localStorage.setItem('harmonIA_projects', JSON.stringify(updatedProjects));
       
-      setPhone({
-        fullNumber: customer.phone,
-        countryCode,
-        nationalNumber
+      toast({
+        title: 'Projeto excluído',
+        description: 'O projeto foi excluído com sucesso.',
       });
+    } catch (error) {
+      toast({
+        title: 'Erro ao excluir',
+        description: 'Não foi possível excluir o projeto.',
+        variant: 'destructive'
+      });
+    } finally {
+      setProjectToDelete(null);
+      setShowDeleteConfirm(false);
     }
   };
   
-  const handleCreateProject = (e: React.FormEvent) => {
-    e.preventDefault();
-    
-    if (!projectTitle || !clientName || !packageType) {
-      toast({
-        title: "Campos obrigatórios",
-        description: "Por favor, preencha todos os campos obrigatórios.",
-        variant: "destructive"
-      });
-      return;
+  const getStatusBadge = (status: string) => {
+    switch (status) {
+      case 'em_andamento':
+        return <Badge className="bg-blue-500">Em andamento</Badge>;
+      case 'concluido':
+        return <Badge className="bg-green-500">Concluído</Badge>;
+      case 'aguardando_aprovacao':
+        return <Badge className="bg-yellow-500">Aguardando aprovação</Badge>;
+      default:
+        return <Badge className="bg-gray-500">{status}</Badge>;
     }
-    
-    // Validate phone format
-    if (!phone.fullNumber || !phone.fullNumber.startsWith('+')) {
-      toast({
-        title: "Formato de telefone inválido",
-        description: "O telefone deve estar no formato internacional (ex: +5511999999999)",
-        variant: "destructive"
-      });
-      return;
-    }
-    
-    toast({
-      title: "Projeto criado",
-      description: "O projeto foi criado com sucesso!"
-    });
-    
-    setIsDialogOpen(false);
-    
-    // Reset form fields
-    setProjectTitle("");
-    setProjectDescription("");
-    setSelectedClientId("");
-    setClientName("");
-    setClientEmail("");
-    setPackageType("");
-    setPhone({
-      fullNumber: '',
-      countryCode: '55',
-      nationalNumber: ''
-    });
   };
   
-  // Filter projects based on search term
-  const filteredProjects = dummyProjects.filter(project =>
-    project.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    project.client.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    project.id.toLowerCase().includes(searchTerm.toLowerCase())
-  );
-
+  const formatDate = (dateString: string) => {
+    if (!dateString) return 'N/A';
+    
+    try {
+      const date = new Date(dateString);
+      return date.toLocaleDateString('pt-BR');
+    } catch (e) {
+      return dateString;
+    }
+  };
+  
+  if (isLoading) {
+    return (
+      <div className="text-center p-6">
+        <div className="inline-block h-8 w-8 animate-spin rounded-full border-4 border-solid border-current border-r-transparent motion-reduce:animate-[spin_1.5s_linear_infinite]" />
+        <p className="mt-2 text-gray-500">Carregando projetos...</p>
+      </div>
+    );
+  }
+  
   return (
-    <div>
-      <Card>
-        <CardHeader className="flex flex-row items-center justify-between pb-2">
-          <CardTitle className="text-lg">Projetos</CardTitle>
-          <div className="flex items-center gap-2">
-            <div className="relative">
-              <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-gray-500" />
-              <Input
-                placeholder="Buscar projeto..."
-                className="pl-8 w-[260px]"
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-              />
-            </div>
-            <Button
-              onClick={() => setIsDialogOpen(true)}
-              className="bg-harmonia-green hover:bg-harmonia-green/90"
-            >
-              <Plus className="h-4 w-4 mr-2" />
-              Novo Projeto
-            </Button>
-          </div>
-        </CardHeader>
-        <CardContent>
-          <div className="rounded-md border overflow-hidden">
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>ID</TableHead>
-                  <TableHead>Projeto</TableHead>
-                  <TableHead>Cliente</TableHead>
-                  <TableHead>Data</TableHead>
-                  <TableHead>Status</TableHead>
-                  <TableHead>Prazo</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {filteredProjects.length === 0 ? (
-                  <TableRow>
-                    <TableCell colSpan={6} className="text-center py-5">
-                      Nenhum projeto encontrado
-                    </TableCell>
-                  </TableRow>
-                ) : (
-                  filteredProjects.map((project) => (
-                    <TableRow key={project.id} className="cursor-pointer hover:bg-muted/50">
-                      <TableCell className="font-medium">{project.id}</TableCell>
-                      <TableCell>{project.title}</TableCell>
-                      <TableCell>{project.client}</TableCell>
-                      <TableCell>{project.dateCreated}</TableCell>
-                      <TableCell>
-                        <Badge
-                          className={
-                            project.status === "Em andamento"
-                              ? "bg-blue-500"
-                              : project.status === "Concluído"
-                                ? "bg-green-500"
-                                : "bg-yellow-500"
-                          }
-                        >
-                          {project.status}
-                        </Badge>
-                      </TableCell>
-                      <TableCell>{project.deadline}</TableCell>
-                    </TableRow>
-                  ))
-                )}
-              </TableBody>
-            </Table>
-          </div>
-        </CardContent>
-      </Card>
+    <>
+      <Table>
+        <TableCaption>Lista de projetos ativos.</TableCaption>
+        <TableHeader>
+          <TableRow>
+            <TableHead>Nome do Projeto</TableHead>
+            <TableHead>Cliente</TableHead>
+            <TableHead>Status</TableHead>
+            <TableHead>Prazo</TableHead>
+            <TableHead>Criado em</TableHead>
+            <TableHead className="text-right">Ações</TableHead>
+          </TableRow>
+        </TableHeader>
+        <TableBody>
+          {projects.length > 0 ? (
+            projects.map((project) => (
+              <TableRow key={project.id}>
+                <TableCell className="font-medium">{project.title}</TableCell>
+                <TableCell>{project.clientName}</TableCell>
+                <TableCell>{getStatusBadge(project.status)}</TableCell>
+                <TableCell>{formatDate(project.deadline)}</TableCell>
+                <TableCell>{formatDate(project.createdAt)}</TableCell>
+                <TableCell className="text-right">
+                  <div className="flex justify-end space-x-2">
+                    <Button variant="outline" size="sm" asChild>
+                      <Link to={`/admin-j28s7d1k/projects/${project.id}`}>
+                        <Eye className="h-4 w-4" />
+                        <span className="sr-only">Ver</span>
+                      </Link>
+                    </Button>
+                    <Button 
+                      variant="outline" 
+                      size="sm" 
+                      asChild
+                    >
+                      <Link to={`/admin-j28s7d1k/projects/${project.id}/edit`}>
+                        <Pencil className="h-4 w-4" />
+                        <span className="sr-only">Editar</span>
+                      </Link>
+                    </Button>
+                    <Button 
+                      variant="outline" 
+                      size="sm"
+                      className="text-red-500 hover:text-red-700 hover:bg-red-50"
+                      onClick={() => confirmDeleteProject(project.id)}
+                    >
+                      <Trash2 className="h-4 w-4" />
+                      <span className="sr-only">Excluir</span>
+                    </Button>
+                  </div>
+                </TableCell>
+              </TableRow>
+            ))
+          ) : (
+            <TableRow>
+              <TableCell colSpan={6} className="text-center py-6">
+                Nenhum projeto encontrado.
+              </TableCell>
+            </TableRow>
+          )}
+        </TableBody>
+      </Table>
       
-      {/* New Project Dialog */}
-      <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-        <DialogContent className="sm:max-w-[550px]">
-          <form onSubmit={handleCreateProject}>
-            <h2 className="text-xl font-bold mb-4">Novo Projeto</h2>
-            
-            <div className="space-y-4">
-              <div className="mb-4">
-                <Label htmlFor="clientSelect">Cliente Existente</Label>
-                <Select onValueChange={handleSelectClient} value={selectedClientId}>
-                  <SelectTrigger className="w-full">
-                    <SelectValue placeholder="Selecione um cliente existente" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {customers.map((customer) => (
-                      <SelectItem key={customer.id} value={customer.id}>
-                        {customer.name} - {customer.email}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-              
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label htmlFor="projectTitle">Título do Projeto *</Label>
-                  <Input
-                    id="projectTitle"
-                    value={projectTitle}
-                    onChange={(e) => setProjectTitle(e.target.value)}
-                    placeholder="Título do projeto"
-                  />
-                </div>
-                
-                <div className="space-y-2">
-                  <Label htmlFor="packageType">Pacote *</Label>
-                  <Select onValueChange={setPackageType} value={packageType}>
-                    <SelectTrigger id="packageType">
-                      <SelectValue placeholder="Selecione o pacote" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="Essencial">Essencial</SelectItem>
-                      <SelectItem value="Premium">Premium</SelectItem>
-                      <SelectItem value="Profissional">Profissional</SelectItem>
-                      <SelectItem value="Outro">Outro</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-              </div>
-              
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label htmlFor="clientName">Nome do Cliente *</Label>
-                  <Input
-                    id="clientName"
-                    value={clientName}
-                    onChange={(e) => setClientName(e.target.value)}
-                    placeholder="Nome do cliente"
-                  />
-                </div>
-                
-                <div className="space-y-2">
-                  <Label htmlFor="clientEmail">E-mail do Cliente *</Label>
-                  <Input
-                    id="clientEmail"
-                    value={clientEmail}
-                    onChange={(e) => setClientEmail(e.target.value)}
-                    placeholder="Email do cliente"
-                    type="email"
-                  />
-                </div>
-              </div>
-              
-              <div className="space-y-2">
-                <Label htmlFor="phone">Telefone (WhatsApp) *</Label>
-                <PhoneInput
-                  id="phone"
-                  value={phone}
-                  onChange={setPhone}
-                  label=""
-                  className="w-full"
-                />
-                <p className="text-xs text-muted-foreground">
-                  Formato internacional necessário para WhatsApp
-                </p>
-              </div>
-              
-              <div className="space-y-2">
-                <Label htmlFor="projectDescription">Descrição</Label>
-                <Textarea
-                  id="projectDescription"
-                  value={projectDescription}
-                  onChange={(e) => setProjectDescription(e.target.value)}
-                  placeholder="Descreva o projeto"
-                  rows={3}
-                />
-              </div>
-            </div>
-            
-            <div className="flex justify-end gap-2 mt-6">
-              <Button 
-                type="button" 
-                variant="outline" 
-                onClick={() => setIsDialogOpen(false)}
-              >
-                Cancelar
-              </Button>
-              <Button type="submit">
-                Criar Projeto
-              </Button>
-            </div>
-          </form>
+      <Dialog open={showDeleteConfirm} onOpenChange={setShowDeleteConfirm}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Confirmar exclusão</DialogTitle>
+            <DialogDescription>
+              Você tem certeza que deseja excluir este projeto? Esta ação não pode ser desfeita.
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setShowDeleteConfirm(false)}>Cancelar</Button>
+            <Button variant="destructive" onClick={handleDeleteProject}>Excluir</Button>
+          </DialogFooter>
         </DialogContent>
       </Dialog>
-    </div>
+    </>
   );
 };
 

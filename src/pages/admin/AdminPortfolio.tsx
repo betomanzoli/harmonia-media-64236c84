@@ -168,60 +168,77 @@ const AdminPortfolio: React.FC = () => {
         
         <div className="p-6 flex-1 overflow-auto">
           <Card className="bg-white shadow mb-6">
-            <CardHeader className="pb-3">
-              <CardTitle>Itens do Portfólio</CardTitle>
-              <CardDescription>
+            <CardHeader className="pb-3 border-b">
+              <CardTitle className="text-black">Itens do Portfólio</CardTitle>
+              <CardDescription className="text-gray-600">
                 Gerencie os exemplos de músicas exibidos no site.
               </CardDescription>
               
               <Tabs defaultValue="all" value={activeTab} onValueChange={setActiveTab} className="mt-4">
-                <TabsList>
-                  <TabsTrigger value="all">Todos ({portfolioItems.length})</TabsTrigger>
-                  <TabsTrigger value="example">Exemplos ({portfolioItems.filter(i => i.type === 'example').length})</TabsTrigger>
-                  <TabsTrigger value="comparison">Comparações ({portfolioItems.filter(i => i.type === 'comparison').length})</TabsTrigger>
-                  <TabsTrigger value="stem">Stems ({portfolioItems.filter(i => i.type === 'stem').length})</TabsTrigger>
+                <TabsList className="bg-gray-200">
+                  <TabsTrigger value="all" className="data-[state=active]:bg-white data-[state=active]:text-black">
+                    Todos ({portfolioItems.length})
+                  </TabsTrigger>
+                  <TabsTrigger value="example" className="data-[state=active]:bg-white data-[state=active]:text-black">
+                    Exemplos ({portfolioItems.filter(i => i.type === 'example').length})
+                  </TabsTrigger>
+                  <TabsTrigger value="comparison" className="data-[state=active]:bg-white data-[state=active]:text-black">
+                    Comparações ({portfolioItems.filter(i => i.type === 'comparison').length})
+                  </TabsTrigger>
+                  <TabsTrigger value="stem" className="data-[state=active]:bg-white data-[state=active]:text-black">
+                    Stems ({portfolioItems.filter(i => i.type === 'stem').length})
+                  </TabsTrigger>
                 </TabsList>
               </Tabs>
             </CardHeader>
-            <CardContent className="">
+            <CardContent className="pt-4">
               {isLoading ? <div className="flex justify-center py-20">
-                  <RefreshCw className="h-8 w-8 animate-spin text-gray-400" />
+                  <RefreshCw className="h-8 w-8 animate-spin text-gray-600" />
                 </div> : getFilteredItems().length > 0 ? <Table>
-                  <TableHeader>
+                  <TableHeader className="bg-gray-100">
                     <TableRow>
-                      <TableHead>Título</TableHead>
-                      <TableHead>Tipo</TableHead>
-                      <TableHead>Data</TableHead>
-                      <TableHead>Status</TableHead>
-                      <TableHead className="text-right">Ações</TableHead>
+                      <TableHead className="text-black font-semibold">Título</TableHead>
+                      <TableHead className="text-black font-semibold">Tipo</TableHead>
+                      <TableHead className="text-black font-semibold">Data</TableHead>
+                      <TableHead className="text-black font-semibold">Status</TableHead>
+                      <TableHead className="text-right text-black font-semibold">Ações</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    {getFilteredItems().map(item => <TableRow key={item.id}>
-                        <TableCell className="font-medium">{item.title}</TableCell>
+                    {getFilteredItems().map(item => <TableRow key={item.id} className="border-b border-gray-200">
+                        <TableCell className="font-medium text-black">{item.title}</TableCell>
                         <TableCell>
-                          <Badge variant="outline">
+                          <Badge variant="outline" className="bg-gray-100 text-black border-gray-300">
                             {getItemTypeLabel(item.type)}
                           </Badge>
                         </TableCell>
-                        <TableCell>{item.dateAdded}</TableCell>
+                        <TableCell className="text-black">{item.dateAdded}</TableCell>
                         <TableCell>
-                          {item.featured ? <Badge className="bg-green-500">Em destaque</Badge> : <Badge variant="outline">Normal</Badge>}
+                          {item.featured ? 
+                            <Badge className="bg-green-500 text-white">Em destaque</Badge> : 
+                            <Badge variant="outline" className="bg-gray-100 text-gray-800 border-gray-300">Normal</Badge>
+                          }
                         </TableCell>
                         <TableCell className="text-right">
                           <DropdownMenu>
                             <DropdownMenuTrigger asChild>
-                              <Button variant="ghost" size="sm">
+                              <Button variant="ghost" size="sm" className="text-black hover:bg-gray-100">
                                 Ações
                               </Button>
                             </DropdownMenuTrigger>
-                            <DropdownMenuContent align="end">
-                              <DropdownMenuLabel>Opções</DropdownMenuLabel>
-                              <DropdownMenuSeparator />
-                              <DropdownMenuItem onClick={() => handleToggleFeatured(item.id)}>
+                            <DropdownMenuContent align="end" className="bg-white border border-gray-200">
+                              <DropdownMenuLabel className="text-black">Opções</DropdownMenuLabel>
+                              <DropdownMenuSeparator className="bg-gray-200" />
+                              <DropdownMenuItem 
+                                onClick={() => handleToggleFeatured(item.id)}
+                                className="text-black hover:bg-gray-100"
+                              >
                                 {item.featured ? 'Remover destaque' : 'Marcar como destaque'}
                               </DropdownMenuItem>
-                              <DropdownMenuItem onClick={() => confirmDeleteItem(item.id)} className="text-red-600">
+                              <DropdownMenuItem 
+                                onClick={() => confirmDeleteItem(item.id)} 
+                                className="text-red-600 hover:bg-red-50"
+                              >
                                 Remover
                               </DropdownMenuItem>
                             </DropdownMenuContent>
@@ -229,7 +246,7 @@ const AdminPortfolio: React.FC = () => {
                         </TableCell>
                       </TableRow>)}
                   </TableBody>
-                </Table> : <div className="text-center py-10 text-gray-500">
+                </Table> : <div className="text-center py-10 text-gray-700 bg-gray-50 rounded-md">
                   Nenhum item encontrado.
                 </div>}
             </CardContent>
@@ -237,9 +254,9 @@ const AdminPortfolio: React.FC = () => {
         </div>
         
         <Dialog open={showAddForm} onOpenChange={setShowAddForm}>
-          <DialogContent className="max-w-2xl">
+          <DialogContent className="max-w-2xl bg-white">
             <DialogHeader>
-              <DialogTitle>Adicionar Item ao Portfólio</DialogTitle>
+              <DialogTitle className="text-black">Adicionar Item ao Portfólio</DialogTitle>
             </DialogHeader>
             <Separator className="my-4" />
             <AddPortfolioItemForm onAdd={handleAddItem} onCancel={() => setShowAddForm(false)} />
@@ -247,10 +264,10 @@ const AdminPortfolio: React.FC = () => {
         </Dialog>
         
         <Dialog open={showDeleteConfirm} onOpenChange={setShowDeleteConfirm}>
-          <DialogContent>
+          <DialogContent className="bg-white">
             <DialogHeader>
-              <DialogTitle>Confirmar exclusão</DialogTitle>
-              <DialogDescription>
+              <DialogTitle className="text-black">Confirmar exclusão</DialogTitle>
+              <DialogDescription className="text-gray-600">
                 Você tem certeza que deseja excluir este item do portfólio? Esta ação não pode ser desfeita.
               </DialogDescription>
             </DialogHeader>

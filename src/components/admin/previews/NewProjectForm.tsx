@@ -192,10 +192,8 @@ const NewProjectForm: React.FC<NewProjectFormProps> = ({
             <Input
               id="clientName"
               value={clientName}
-              onChange={(e) => setClientName(e.target.value)}
-              placeholder="Nome do cliente"
               readOnly
-              className="bg-gray-50"
+              className="bg-gray-50 text-gray-800"
             />
           </div>
           
@@ -206,10 +204,8 @@ const NewProjectForm: React.FC<NewProjectFormProps> = ({
             <Input
               id="clientEmail"
               value={clientEmail}
-              onChange={(e) => setClientEmail(e.target.value)}
-              placeholder="Email do cliente"
               readOnly
-              className="bg-gray-50"
+              className="bg-gray-50 text-gray-800"
             />
           </div>
         </div>
@@ -246,6 +242,12 @@ const NewProjectForm: React.FC<NewProjectFormProps> = ({
             Formato internacional necessário para funcionar com WhatsApp
           </p>
         </div>
+        
+        <div className="pt-2">
+          <Button type="submit" disabled={isSubmitting} className="w-full">
+            {isSubmitting ? 'Criando...' : 'Inserir Prévias'}
+          </Button>
+        </div>
       </div>
 
       <div className="space-y-4">
@@ -276,12 +278,6 @@ const NewProjectForm: React.FC<NewProjectFormProps> = ({
             </div>
           ))}
         </div>
-      </div>
-      
-      <div className="flex justify-end pt-4">
-        <Button type="submit" disabled={isSubmitting}>
-          {isSubmitting ? 'Criando...' : 'Inserir Prévias'}
-        </Button>
       </div>
     </form>
   );
