@@ -42,7 +42,10 @@ interface RenderFormFieldProps {
 }
 
 const RenderFormField: React.FC<RenderFormFieldProps> = ({ field, form }) => {
-  const options = field.options ? JSON.parse(field.options) : [];
+  // Parse the options string to an array if it exists, or use an empty array
+  const options = field.options ? 
+    (typeof field.options === 'string' ? JSON.parse(field.options as string) : field.options) : 
+    [];
 
   switch (field.field_type) {
     case 'text':
