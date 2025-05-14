@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
@@ -455,7 +454,7 @@ const InvoicesList: React.FC = () => {
                             </SelectItem>
                           ))
                         ) : (
-                          <SelectItem value="" disabled>
+                          <SelectItem value="no_projects" disabled>
                             {form.watch("client_id") ? "Cliente sem projetos" : "Selecione um cliente primeiro"}
                           </SelectItem>
                         )}
