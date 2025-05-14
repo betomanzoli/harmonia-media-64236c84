@@ -76,7 +76,7 @@ const ProjectEditForm: React.FC<ProjectEditFormProps> = ({ project, onSubmit, on
         <div className="grid gap-2">
           <Label htmlFor="packageType">Pacote</Label>
           <Select 
-            value={formData.packageType || ''} 
+            value={formData.packageType || 'default'} 
             onValueChange={handlePackageChange}
           >
             <SelectTrigger>
@@ -86,6 +86,7 @@ const ProjectEditForm: React.FC<ProjectEditFormProps> = ({ project, onSubmit, on
               <SelectItem value="Essencial">Essencial</SelectItem>
               <SelectItem value="Premium">Premium</SelectItem>
               <SelectItem value="Profissional">Profissional</SelectItem>
+              <SelectItem value="default">Selecione um pacote</SelectItem>
             </SelectContent>
           </Select>
         </div>
