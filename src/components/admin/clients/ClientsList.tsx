@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Table, TableHeader, TableBody, TableHead, TableRow, TableCell } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
@@ -62,15 +61,13 @@ const ClientsList: React.FC = () => {
     
     // Format phone if it exists
     if (customer.phone) {
-      const phoneNumber = customer.phone.replace(/\D/g, '');
-      if (phoneNumber.startsWith('+')) {
-        phoneNumber = phoneNumber.substring(1);
-      }
+      // Fixed: Using a new variable instead of trying to reassign phoneNumber
+      const cleanPhoneNumber = customer.phone.replace(/\D/g, '');
       
       phoneData = {
-        fullNumber: `+${phoneNumber}`,
-        countryCode: phoneNumber.substring(0, 2),
-        nationalNumber: phoneNumber.substring(2)
+        fullNumber: `+${cleanPhoneNumber}`,
+        countryCode: cleanPhoneNumber.substring(0, 2),
+        nationalNumber: cleanPhoneNumber.substring(2)
       };
     }
     

@@ -157,7 +157,7 @@ const CreateBriefingForm: React.FC<{
               value={name}
               onChange={(e) => setName(e.target.value)}
               placeholder="Nome completo"
-              disabled={useExistingCustomer && selectedCustomerId}
+              disabled={useExistingCustomer && selectedCustomerId !== ''}
               required
             />
           </div>
@@ -170,7 +170,7 @@ const CreateBriefingForm: React.FC<{
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               placeholder="email@exemplo.com"
-              disabled={useExistingCustomer && selectedCustomerId}
+              disabled={useExistingCustomer && selectedCustomerId !== ''}
               required
             />
           </div>
@@ -182,7 +182,7 @@ const CreateBriefingForm: React.FC<{
               value={phone}
               onChange={setPhone}
               required
-              disabled={useExistingCustomer && selectedCustomerId}
+              disabled={useExistingCustomer && selectedCustomerId !== ''}
             />
             <p className="text-xs text-gray-400 mt-1">Formato internacional: +55 11 99999-9999</p>
           </div>

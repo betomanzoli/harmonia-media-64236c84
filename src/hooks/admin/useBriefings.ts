@@ -24,6 +24,23 @@ export const useBriefings = () => {
   const { customers, addCustomer } = useCustomers();
   const { toast } = useToast();
   
+  // Update briefing status - moved up before it's used
+  const updateBriefingStatus = useCallback((id: string, status: 'pending' | 'completed' | 'approved', projectCreated: boolean = false) => {
+    setBriefings(prevBriefings => {
+      const updatedBriefings = prevBriefings.map(briefing => {
+        if (briefing.id === id) {
+          return { ...briefing, status, projectCreated };
+        }
+        return briefing;
+      });
+      
+      // Update localStorage
+      localStorage.setItem('harmonIA_briefings', JSON.stringify(updatedBriefings));
+      
+      return updatedBriefings;
+    });
+  }, []);
+  
   // Load briefings from Supabase or localStorage
   const loadBriefings = useCallback(async () => {
     setIsLoading(true);
@@ -127,23 +144,6 @@ export const useBriefings = () => {
     
     return newProjectId;
   }, [ensureClientExists, addProject, toast, updateBriefingStatus]);
-  
-  // Update briefing status
-  const updateBriefingStatus = useCallback((id: string, status: 'pending' | 'completed' | 'approved', projectCreated: boolean = false) => {
-    setBriefings(prevBriefings => {
-      const updatedBriefings = prevBriefings.map(briefing => {
-        if (briefing.id === id) {
-          return { ...briefing, status, projectCreated };
-        }
-        return briefing;
-      });
-      
-      // Update localStorage
-      localStorage.setItem('harmonIA_briefings', JSON.stringify(updatedBriefings));
-      
-      return updatedBriefings;
-    });
-  }, []);
   
   // Add new briefing
   const addBriefing = useCallback((briefing: Omit<BriefingItem, "id" | "createdAt" | "status">) => {
