@@ -1,519 +1,682 @@
 
-import React, { useState } from 'react';
-import { Button } from "@/components/ui/button";
+import React, { useState, useEffect } from 'react';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { useSupabaseData } from '@/hooks/use-supabase-data';
-import { PlusCircle, Pencil, Trash2, FileText, Check, X } from 'lucide-react';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { useToast } from '@/hooks/use-toast';
+import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Textarea } from '@/components/ui/textarea';
-import { Switch } from '@/components/ui/switch';
-
-interface Client {
-  id: string;
-  name: string;
-  email: string;
-}
+import { 
+  DropdownMenu, 
+  DropdownMenuContent, 
+  DropdownMenuItem, 
+  DropdownMenuLabel, 
+  DropdownMenuSeparator, 
+  DropdownMenuTrigger 
+} from "@/components/ui/dropdown-menu";
+import { Plus, MoreHorizontal, Edit, Trash2, Download, FilePdf, Check } from 'lucide-react';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { 
+  AlertDialog, 
+  AlertDialogAction, 
+  AlertDialogCancel, 
+  AlertDialogContent, 
+  AlertDialogDescription, 
+  AlertDialogFooter, 
+  AlertDialogHeader, 
+  AlertDialogTitle 
+} from "@/components/ui/alert-dialog";
+import { format } from "date-fns";
+import { ptBR } from "date-fns/locale";
+import { useToast } from '@/hooks/use-toast';
+import { supabase } from '@/lib/supabase';
+import { useSupabaseData } from '@/hooks/use-supabase-data';
 
 interface Invoice {
   id: string;
   client: string;
-  client_id: string;
-  amount: string;
-  status: string;
-  date?: string;
-  due_date: string;
-  invoice_pdf?: string;
-  has_receipt: boolean;
   description?: string;
-  created_at?: string;
+  amount: string;
+  date: string;
+  due_date: string;
+  status: 'pending' | 'paid' | 'overdue' | 'cancelled';
+  has_receipt: boolean;
+  invoice_pdf?: string;
+  client_id?: string;
+  project_id?: string;
 }
 
-export default function InvoicesList() {
-  const { data: invoices, isLoading, addItem, updateItem, deleteItem } = useSupabaseData<Invoice>('invoices', {
+const InvoicesList: React.FC = () => {
+  const [invoices, setInvoices] = useState<Invoice[]>([]);
+  const [showNewInvoiceDialog, setShowNewInvoiceDialog] = useState(false);
+  const [showEditDialog, setShowEditDialog] = useState(false);
+  const [showDeleteDialog, setShowDeleteDialog] = useState(false);
+  const [selectedInvoice, setSelectedInvoice] = useState<Invoice | null>(null);
+  const [formData, setFormData] = useState({
+    client: '',
+    description: '',
+    amount: '',
+    date: format(new Date(), 'yyyy-MM-dd'),
+    due_date: format(new Date(new Date().setDate(new Date().getDate() + 15)), 'yyyy-MM-dd'),
+    status: 'pending',
+    project_id: ''
+  });
+  const { toast } = useToast();
+
+  // Fetch projects for dropdown
+  const { data: projects } = useSupabaseData('projects', {
     orderBy: { column: 'created_at', ascending: false }
   });
-  
-  const { data: clients } = useSupabaseData<Client>('clients', {
-    orderBy: { column: 'name', ascending: true }
-  });
-  
-  const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
-  const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
-  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
-  const [isViewInvoiceDialogOpen, setIsViewInvoiceDialogOpen] = useState(false);
-  const [currentInvoice, setCurrentInvoice] = useState<Invoice | null>(null);
-  const [formData, setFormData] = useState<Partial<Invoice>>({
-    client: '',
-    client_id: '',
-    amount: '',
-    status: 'pending',
-    due_date: '',
-    invoice_pdf: '',
-    has_receipt: false,
-    description: ''
-  });
-  
-  const { toast } = useToast();
-  
-  const statusTypes = [
-    { value: 'pending', label: 'Pendente' },
-    { value: 'paid', label: 'Pago' },
-    { value: 'overdue', label: 'Atrasado' },
-    { value: 'canceled', label: 'Cancelado' }
-  ];
 
-  const handleAddInvoice = async () => {
-    if (!formData.client_id || !formData.amount || !formData.due_date) {
-      toast({
-        title: "Campos obrigatórios",
-        description: "Cliente, valor e data de vencimento são obrigatórios.",
-        variant: "destructive"
+  useEffect(() => {
+    // Load invoices from localStorage or API
+    const fetchInvoices = async () => {
+      try {
+        const { data, error } = await supabase
+          .from('invoices')
+          .select('*')
+          .order('date', { ascending: false });
+        
+        if (error) throw error;
+        
+        if (data) {
+          setInvoices(data as Invoice[]);
+        }
+      } catch (error) {
+        console.error('Error loading invoices:', error);
+        
+        // Fallback to localStorage
+        const storedInvoices = localStorage.getItem('harmonIA_invoices');
+        if (storedInvoices) {
+          setInvoices(JSON.parse(storedInvoices));
+        }
+      }
+    };
+
+    fetchInvoices();
+  }, []);
+
+  useEffect(() => {
+    if (selectedInvoice && showEditDialog) {
+      setFormData({
+        client: selectedInvoice.client,
+        description: selectedInvoice.description || '',
+        amount: selectedInvoice.amount,
+        date: format(new Date(selectedInvoice.date), 'yyyy-MM-dd'),
+        due_date: format(new Date(selectedInvoice.due_date), 'yyyy-MM-dd'),
+        status: selectedInvoice.status,
+        project_id: selectedInvoice.project_id || ''
       });
-      return;
     }
+  }, [selectedInvoice, showEditDialog]);
 
-    // Get client name from the selected client_id
-    const selectedClient = clients.find(c => c.id === formData.client_id);
-    if (!selectedClient) return;
-
-    await addItem({
-      ...formData,
-      client: selectedClient.name,
-      has_receipt: formData.has_receipt || false
-    });
-    
-    setIsAddDialogOpen(false);
-    resetForm();
+  const saveInvoices = (updatedInvoices: Invoice[]) => {
+    localStorage.setItem('harmonIA_invoices', JSON.stringify(updatedInvoices));
+    setInvoices(updatedInvoices);
   };
 
-  const handleUpdateInvoice = async () => {
-    if (!formData.client_id || !formData.amount || !formData.due_date) {
+  const handleAddInvoice = async () => {
+    try {
+      const newInvoice = {
+        client: formData.client,
+        description: formData.description,
+        amount: formData.amount,
+        date: new Date(formData.date).toISOString(),
+        due_date: new Date(formData.due_date).toISOString(),
+        status: formData.status as 'pending' | 'paid' | 'overdue' | 'cancelled',
+        has_receipt: false,
+        project_id: formData.project_id || null
+      };
+
+      const { data, error } = await supabase
+        .from('invoices')
+        .insert([newInvoice])
+        .select()
+        .single();
+
+      if (error) throw error;
+
+      // Update local state
+      setInvoices(prev => [data as Invoice, ...prev]);
+      
       toast({
-        title: "Campos obrigatórios",
-        description: "Cliente, valor e data de vencimento são obrigatórios.",
+        title: "Fatura criada",
+        description: `A fatura para ${formData.client} foi adicionada com sucesso.`
+      });
+      
+      setShowNewInvoiceDialog(false);
+      // Reset form data
+      setFormData({
+        client: '',
+        description: '',
+        amount: '',
+        date: format(new Date(), 'yyyy-MM-dd'),
+        due_date: format(new Date(new Date().setDate(new Date().getDate() + 15)), 'yyyy-MM-dd'),
+        status: 'pending',
+        project_id: ''
+      });
+    } catch (error) {
+      console.error('Error adding invoice:', error);
+      toast({
+        title: "Erro ao criar fatura",
+        description: "Não foi possível adicionar a fatura. Tente novamente.",
         variant: "destructive"
       });
-      return;
     }
+  };
 
-    // Get client name from the selected client_id if it was changed
-    if (formData.client_id !== currentInvoice?.client_id) {
-      const selectedClient = clients.find(c => c.id === formData.client_id);
-      if (selectedClient) {
-        formData.client = selectedClient.name;
-      }
-    }
+  const handleEditInvoice = async () => {
+    if (!selectedInvoice) return;
 
-    if (currentInvoice) {
-      await updateItem(currentInvoice.id, formData);
-      setIsEditDialogOpen(false);
-      resetForm();
+    try {
+      const updatedInvoice = {
+        client: formData.client,
+        description: formData.description,
+        amount: formData.amount,
+        date: new Date(formData.date).toISOString(),
+        due_date: new Date(formData.due_date).toISOString(),
+        status: formData.status as 'pending' | 'paid' | 'overdue' | 'cancelled',
+        project_id: formData.project_id || null
+      };
+
+      const { error } = await supabase
+        .from('invoices')
+        .update(updatedInvoice)
+        .eq('id', selectedInvoice.id);
+
+      if (error) throw error;
+
+      // Update local state
+      setInvoices(prev => 
+        prev.map(invoice => 
+          invoice.id === selectedInvoice.id 
+            ? { ...invoice, ...updatedInvoice }
+            : invoice
+        )
+      );
+      
+      toast({
+        title: "Fatura atualizada",
+        description: `A fatura para ${formData.client} foi atualizada com sucesso.`
+      });
+      
+      setShowEditDialog(false);
+      setSelectedInvoice(null);
+    } catch (error) {
+      console.error('Error updating invoice:', error);
+      toast({
+        title: "Erro ao atualizar fatura",
+        description: "Não foi possível atualizar a fatura. Tente novamente.",
+        variant: "destructive"
+      });
     }
   };
 
   const handleDeleteInvoice = async () => {
-    if (currentInvoice) {
-      await deleteItem(currentInvoice.id);
-      setIsDeleteDialogOpen(false);
+    if (!selectedInvoice) return;
+
+    try {
+      const { error } = await supabase
+        .from('invoices')
+        .delete()
+        .eq('id', selectedInvoice.id);
+
+      if (error) throw error;
+
+      // Update local state
+      setInvoices(prev => prev.filter(invoice => invoice.id !== selectedInvoice.id));
+      
+      toast({
+        title: "Fatura excluída",
+        description: `A fatura foi excluída com sucesso.`,
+        variant: "destructive"
+      });
+      
+      setShowDeleteDialog(false);
+      setSelectedInvoice(null);
+    } catch (error) {
+      console.error('Error deleting invoice:', error);
+      toast({
+        title: "Erro ao excluir fatura",
+        description: "Não foi possível excluir a fatura. Tente novamente.",
+        variant: "destructive"
+      });
     }
   };
 
-  const openEditDialog = (invoice: Invoice) => {
-    setCurrentInvoice(invoice);
-    setFormData({
-      client: invoice.client,
-      client_id: invoice.client_id,
-      amount: invoice.amount,
-      status: invoice.status,
-      due_date: invoice.due_date ? new Date(invoice.due_date).toISOString().split('T')[0] : '',
-      invoice_pdf: invoice.invoice_pdf || '',
-      has_receipt: invoice.has_receipt,
-      description: invoice.description || ''
-    });
-    setIsEditDialogOpen(true);
+  const handleMarkAsPaid = async (invoice: Invoice) => {
+    try {
+      const { error } = await supabase
+        .from('invoices')
+        .update({ status: 'paid' })
+        .eq('id', invoice.id);
+
+      if (error) throw error;
+
+      // Update local state
+      setInvoices(prev => 
+        prev.map(inv => 
+          inv.id === invoice.id 
+            ? { ...inv, status: 'paid' }
+            : inv
+        )
+      );
+      
+      toast({
+        title: "Status atualizado",
+        description: `A fatura foi marcada como paga.`
+      });
+    } catch (error) {
+      console.error('Error updating invoice status:', error);
+      toast({
+        title: "Erro ao atualizar status",
+        description: "Não foi possível atualizar o status da fatura.",
+        variant: "destructive"
+      });
+    }
   };
 
-  const openDeleteDialog = (invoice: Invoice) => {
-    setCurrentInvoice(invoice);
-    setIsDeleteDialogOpen(true);
-  };
-
-  const openViewInvoiceDialog = (invoice: Invoice) => {
-    setCurrentInvoice(invoice);
-    setIsViewInvoiceDialogOpen(true);
-  };
-
-  const resetForm = () => {
-    setFormData({
-      client: '',
-      client_id: '',
-      amount: '',
-      status: 'pending',
-      due_date: '',
-      invoice_pdf: '',
-      has_receipt: false,
-      description: ''
-    });
-    setCurrentInvoice(null);
-  };
-
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
-    const { name, value } = e.target;
-    setFormData(prev => ({ ...prev, [name]: value }));
-  };
-
-  const handleSelectChange = (name: string, value: string) => {
-    setFormData(prev => ({ ...prev, [name]: value }));
-  };
-
-  const handleSwitchChange = (name: string, value: boolean) => {
-    setFormData(prev => ({ ...prev, [name]: value }));
+  const formatDate = (dateString: string) => {
+    try {
+      return format(new Date(dateString), "dd/MM/yyyy", { locale: ptBR });
+    } catch (e) {
+      return dateString;
+    }
   };
 
   const getStatusBadge = (status: string) => {
-    const statusMap: Record<string, { color: string, label: string }> = {
-      pending: { color: "bg-yellow-100 text-yellow-800", label: "Pendente" },
-      paid: { color: "bg-green-100 text-green-800", label: "Pago" },
-      overdue: { color: "bg-red-100 text-red-800", label: "Atrasado" },
-      canceled: { color: "bg-gray-100 text-gray-800", label: "Cancelado" }
-    };
+    switch (status) {
+      case 'paid':
+        return <Badge className="bg-green-500">Pago</Badge>;
+      case 'pending':
+        return <Badge className="bg-yellow-500">Pendente</Badge>;
+      case 'overdue':
+        return <Badge className="bg-red-500">Atrasado</Badge>;
+      case 'cancelled':
+        return <Badge className="bg-gray-500">Cancelado</Badge>;
+      default:
+        return <Badge>{status}</Badge>;
+    }
+  };
 
-    const statusInfo = statusMap[status] || { color: "bg-gray-100 text-gray-800", label: status };
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
+    const { name, value } = e.target;
+    setFormData(prev => ({ ...prev, [name]: value }));
+  };
+  
+  // Function to get project code by ID
+  const getProjectCode = (projectId: string | undefined) => {
+    if (!projectId || !projects) return "N/A";
+    const project = projects.find(p => p.id === projectId);
+    return project ? project.id : "N/A";
+  };
 
-    return <span className={`px-2 py-1 rounded-full text-xs font-medium ${statusInfo.color}`}>
-      {statusInfo.label}
-    </span>;
+  // Get project name by ID for display
+  const getProjectName = (projectId: string | undefined) => {
+    if (!projectId || !projects) return "";
+    const project = projects.find(p => p.id === projectId);
+    return project ? `${project.title}` : "";
   };
 
   return (
     <div className="space-y-4">
       <div className="flex justify-between items-center">
         <h2 className="text-2xl font-bold">Faturas</h2>
-        <Button onClick={() => setIsAddDialogOpen(true)}>
-          <PlusCircle className="mr-2 h-4 w-4" />
+        <Button onClick={() => setShowNewInvoiceDialog(true)}>
+          <Plus className="mr-2 h-4 w-4" />
           Nova Fatura
         </Button>
       </div>
-
-      {isLoading ? (
-        <div className="text-center py-4">Carregando faturas...</div>
-      ) : (
+      
+      <div className="rounded-md border overflow-hidden">
         <Table>
           <TableHeader>
             <TableRow>
               <TableHead>Cliente</TableHead>
-              <TableHead>Valor</TableHead>
-              <TableHead>Status</TableHead>
-              <TableHead>Data de Vencimento</TableHead>
-              <TableHead>Nota Fiscal</TableHead>
+              <TableHead>Projeto</TableHead>
               <TableHead>Descrição</TableHead>
-              <TableHead className="w-[120px]">Ações</TableHead>
+              <TableHead>Valor</TableHead>
+              <TableHead>Data</TableHead>
+              <TableHead>Vencimento</TableHead>
+              <TableHead>Status</TableHead>
+              <TableHead className="text-right">Ações</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
             {invoices.length === 0 ? (
               <TableRow>
-                <TableCell colSpan={7} className="text-center">
-                  Nenhuma fatura cadastrada
+                <TableCell colSpan={8} className="h-24 text-center">
+                  Nenhuma fatura encontrada.
                 </TableCell>
               </TableRow>
             ) : (
               invoices.map((invoice) => (
                 <TableRow key={invoice.id}>
                   <TableCell>{invoice.client}</TableCell>
+                  <TableCell>{getProjectCode(invoice.project_id)}</TableCell>
+                  <TableCell>{invoice.description || "—"}</TableCell>
                   <TableCell>R$ {invoice.amount}</TableCell>
-                  <TableCell>
-                    {getStatusBadge(invoice.status)}
-                  </TableCell>
-                  <TableCell>
-                    {invoice.due_date ? new Date(invoice.due_date).toLocaleDateString() : '-'}
-                  </TableCell>
-                  <TableCell>
-                    {invoice.has_receipt ? (
-                      <Badge variant="outline" className="bg-green-50 text-green-700 border-green-200">
-                        <Check className="h-3 w-3 mr-1" /> Emitida
-                      </Badge>
-                    ) : (
-                      <Badge variant="outline" className="bg-gray-50 text-gray-700 border-gray-200">
-                        <X className="h-3 w-3 mr-1" /> Não emitida
-                      </Badge>
-                    )}
-                  </TableCell>
-                  <TableCell className="truncate max-w-[200px]">
-                    {invoice.description || '-'}
-                  </TableCell>
-                  <TableCell>
-                    <div className="flex space-x-1">
-                      <Button variant="outline" size="icon" onClick={() => openEditDialog(invoice)}>
-                        <Pencil className="h-4 w-4" />
-                      </Button>
-                      <Button variant="destructive" size="icon" onClick={() => openDeleteDialog(invoice)}>
-                        <Trash2 className="h-4 w-4" />
-                      </Button>
-                      {invoice.invoice_pdf && (
-                        <Button variant="default" size="icon" onClick={() => openViewInvoiceDialog(invoice)}>
-                          <FileText className="h-4 w-4" />
+                  <TableCell>{formatDate(invoice.date)}</TableCell>
+                  <TableCell>{formatDate(invoice.due_date)}</TableCell>
+                  <TableCell>{getStatusBadge(invoice.status)}</TableCell>
+                  <TableCell className="text-right">
+                    <DropdownMenu>
+                      <DropdownMenuTrigger asChild>
+                        <Button variant="ghost" className="h-8 w-8 p-0">
+                          <span className="sr-only">Abrir menu</span>
+                          <MoreHorizontal className="h-4 w-4" />
                         </Button>
-                      )}
-                    </div>
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent align="end">
+                        <DropdownMenuLabel>Ações</DropdownMenuLabel>
+                        <DropdownMenuSeparator />
+                        {invoice.status === 'pending' && (
+                          <DropdownMenuItem onClick={() => handleMarkAsPaid(invoice)}>
+                            <Check className="mr-2 h-4 w-4" />
+                            Marcar como Pago
+                          </DropdownMenuItem>
+                        )}
+                        {invoice.invoice_pdf && (
+                          <DropdownMenuItem>
+                            <a 
+                              href={invoice.invoice_pdf} 
+                              target="_blank" 
+                              rel="noopener noreferrer"
+                              className="flex items-center w-full"
+                            >
+                              <FilePdf className="mr-2 h-4 w-4" />
+                              Ver PDF
+                            </a>
+                          </DropdownMenuItem>
+                        )}
+                        <DropdownMenuItem
+                          onClick={() => {
+                            setSelectedInvoice(invoice);
+                            setShowEditDialog(true);
+                          }}
+                        >
+                          <Edit className="mr-2 h-4 w-4" />
+                          Editar
+                        </DropdownMenuItem>
+                        <DropdownMenuItem
+                          onClick={() => {
+                            setSelectedInvoice(invoice);
+                            setShowDeleteDialog(true);
+                          }}
+                          className="text-red-600"
+                        >
+                          <Trash2 className="mr-2 h-4 w-4" />
+                          Excluir
+                        </DropdownMenuItem>
+                      </DropdownMenuContent>
+                    </DropdownMenu>
                   </TableCell>
                 </TableRow>
               ))
             )}
           </TableBody>
         </Table>
-      )}
+      </div>
 
-      {/* Add Invoice Dialog */}
-      <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
-        <DialogContent className="max-w-md">
+      {/* New Invoice Dialog */}
+      <Dialog open={showNewInvoiceDialog} onOpenChange={setShowNewInvoiceDialog}>
+        <DialogContent>
           <DialogHeader>
-            <DialogTitle>Adicionar Nova Fatura</DialogTitle>
+            <DialogTitle>Criar Nova Fatura</DialogTitle>
           </DialogHeader>
-          <div className="space-y-4 py-4">
-            <div className="space-y-2">
-              <Label htmlFor="client">Cliente*</Label>
-              <Select 
-                onValueChange={(value) => handleSelectChange('client_id', value)} 
-                value={formData.client_id}
+          <div className="space-y-4 pt-4">
+            <div>
+              <label className="text-sm font-medium" htmlFor="client">
+                Nome do Cliente
+              </label>
+              <input
+                id="client"
+                name="client"
+                className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background"
+                placeholder="Nome do cliente"
+                value={formData.client}
+                onChange={handleChange}
+              />
+            </div>
+            <div>
+              <label className="text-sm font-medium" htmlFor="project_id">
+                Projeto
+              </label>
+              <select
+                id="project_id"
+                name="project_id"
+                className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background"
+                value={formData.project_id}
+                onChange={handleChange}
               >
-                <SelectTrigger>
-                  <SelectValue placeholder="Selecione um cliente" />
-                </SelectTrigger>
-                <SelectContent>
-                  {clients.map((client) => (
-                    <SelectItem key={client.id} value={client.id}>
-                      {client.name}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+                <option value="">Selecione um projeto</option>
+                {projects && projects.map(project => (
+                  <option key={project.id} value={project.id}>
+                    {project.id} - {project.title}
+                  </option>
+                ))}
+              </select>
             </div>
-            
-            <div className="space-y-2">
-              <Label htmlFor="amount">Valor*</Label>
-              <Input id="amount" name="amount" value={formData.amount} onChange={handleInputChange} placeholder="0.00" />
+            <div>
+              <label className="text-sm font-medium" htmlFor="description">
+                Descrição
+              </label>
+              <textarea
+                id="description"
+                name="description"
+                className="flex min-h-20 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background"
+                placeholder="Descrição da fatura"
+                value={formData.description}
+                onChange={handleChange}
+              />
             </div>
-            
-            <div className="space-y-2">
-              <Label htmlFor="status">Status</Label>
-              <Select 
-                onValueChange={(value) => handleSelectChange('status', value)} 
+            <div>
+              <label className="text-sm font-medium" htmlFor="amount">
+                Valor (R$)
+              </label>
+              <input
+                id="amount"
+                name="amount"
+                className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background"
+                placeholder="Valor em reais (ex: 1500.00)"
+                value={formData.amount}
+                onChange={handleChange}
+              />
+            </div>
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <label className="text-sm font-medium" htmlFor="date">
+                  Data de Emissão
+                </label>
+                <input
+                  id="date"
+                  name="date"
+                  type="date"
+                  className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background"
+                  value={formData.date}
+                  onChange={handleChange}
+                />
+              </div>
+              <div>
+                <label className="text-sm font-medium" htmlFor="due_date">
+                  Data de Vencimento
+                </label>
+                <input
+                  id="due_date"
+                  name="due_date"
+                  type="date"
+                  className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background"
+                  value={formData.due_date}
+                  onChange={handleChange}
+                />
+              </div>
+            </div>
+            <div>
+              <label className="text-sm font-medium" htmlFor="status">
+                Status
+              </label>
+              <select
+                id="status"
+                name="status"
+                className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background"
                 value={formData.status}
+                onChange={handleChange}
               >
-                <SelectTrigger>
-                  <SelectValue placeholder="Selecione o status" />
-                </SelectTrigger>
-                <SelectContent>
-                  {statusTypes.map((status) => (
-                    <SelectItem key={status.value} value={status.value}>
-                      {status.label}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+                <option value="pending">Pendente</option>
+                <option value="paid">Pago</option>
+                <option value="overdue">Atrasado</option>
+                <option value="cancelled">Cancelado</option>
+              </select>
             </div>
-            
-            <div className="space-y-2">
-              <Label htmlFor="due_date">Data de Vencimento*</Label>
-              <Input 
-                id="due_date" 
-                name="due_date" 
-                type="date" 
-                value={formData.due_date} 
-                onChange={handleInputChange} 
-              />
-            </div>
-            
-            <div className="space-y-2">
-              <Label htmlFor="invoice_pdf">Link da Nota Fiscal (PDF)</Label>
-              <Input 
-                id="invoice_pdf" 
-                name="invoice_pdf" 
-                value={formData.invoice_pdf} 
-                onChange={handleInputChange} 
-                placeholder="https://exemplo.com/nota-fiscal.pdf"
-              />
-            </div>
-            
-            <div className="flex items-center space-x-2 pt-2">
-              <Switch 
-                id="has_receipt" 
-                checked={formData.has_receipt} 
-                onCheckedChange={(value) => handleSwitchChange('has_receipt', value)} 
-              />
-              <Label htmlFor="has_receipt">Nota Fiscal Emitida</Label>
-            </div>
-            
-            <div className="space-y-2">
-              <Label htmlFor="description">Descrição</Label>
-              <Textarea 
-                id="description" 
-                name="description" 
-                rows={3} 
-                value={formData.description} 
-                onChange={handleInputChange} 
-              />
+            <div className="flex justify-end space-x-2 pt-4">
+              <Button variant="outline" onClick={() => setShowNewInvoiceDialog(false)}>
+                Cancelar
+              </Button>
+              <Button onClick={handleAddInvoice}>Criar Fatura</Button>
             </div>
           </div>
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setIsAddDialogOpen(false)}>Cancelar</Button>
-            <Button onClick={handleAddInvoice}>Salvar</Button>
-          </DialogFooter>
         </DialogContent>
       </Dialog>
 
       {/* Edit Invoice Dialog */}
-      <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
-        <DialogContent className="max-w-md">
+      <Dialog open={showEditDialog} onOpenChange={setShowEditDialog}>
+        <DialogContent>
           <DialogHeader>
             <DialogTitle>Editar Fatura</DialogTitle>
           </DialogHeader>
-          <div className="space-y-4 py-4">
-            <div className="space-y-2">
-              <Label htmlFor="edit-client">Cliente*</Label>
-              <Select 
-                onValueChange={(value) => handleSelectChange('client_id', value)} 
-                value={formData.client_id}
+          <div className="space-y-4 pt-4">
+            <div>
+              <label className="text-sm font-medium" htmlFor="edit-client">
+                Nome do Cliente
+              </label>
+              <input
+                id="edit-client"
+                name="client"
+                className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background"
+                placeholder="Nome do cliente"
+                value={formData.client}
+                onChange={handleChange}
+              />
+            </div>
+            <div>
+              <label className="text-sm font-medium" htmlFor="edit-project_id">
+                Projeto
+              </label>
+              <select
+                id="edit-project_id"
+                name="project_id"
+                className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background"
+                value={formData.project_id || ''}
+                onChange={handleChange}
               >
-                <SelectTrigger>
-                  <SelectValue placeholder="Selecione um cliente" />
-                </SelectTrigger>
-                <SelectContent>
-                  {clients.map((client) => (
-                    <SelectItem key={client.id} value={client.id}>
-                      {client.name}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+                <option value="">Selecione um projeto</option>
+                {projects && projects.map(project => (
+                  <option key={project.id} value={project.id}>
+                    {project.id} - {project.title}
+                  </option>
+                ))}
+              </select>
             </div>
-            
-            <div className="space-y-2">
-              <Label htmlFor="edit-amount">Valor*</Label>
-              <Input id="edit-amount" name="amount" value={formData.amount} onChange={handleInputChange} />
-            </div>
-            
-            <div className="space-y-2">
-              <Label htmlFor="edit-status">Status</Label>
-              <Select 
-                onValueChange={(value) => handleSelectChange('status', value)} 
-                value={formData.status}
-              >
-                <SelectTrigger>
-                  <SelectValue placeholder="Selecione o status" />
-                </SelectTrigger>
-                <SelectContent>
-                  {statusTypes.map((status) => (
-                    <SelectItem key={status.value} value={status.value}>
-                      {status.label}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-            
-            <div className="space-y-2">
-              <Label htmlFor="edit-due_date">Data de Vencimento*</Label>
-              <Input 
-                id="edit-due_date" 
-                name="due_date" 
-                type="date" 
-                value={formData.due_date} 
-                onChange={handleInputChange} 
+            <div>
+              <label className="text-sm font-medium" htmlFor="edit-description">
+                Descrição
+              </label>
+              <textarea
+                id="edit-description"
+                name="description"
+                className="flex min-h-20 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background"
+                placeholder="Descrição da fatura"
+                value={formData.description}
+                onChange={handleChange}
               />
             </div>
-            
-            <div className="space-y-2">
-              <Label htmlFor="edit-invoice_pdf">Link da Nota Fiscal (PDF)</Label>
-              <Input 
-                id="edit-invoice_pdf" 
-                name="invoice_pdf" 
-                value={formData.invoice_pdf} 
-                onChange={handleInputChange} 
+            <div>
+              <label className="text-sm font-medium" htmlFor="edit-amount">
+                Valor (R$)
+              </label>
+              <input
+                id="edit-amount"
+                name="amount"
+                className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background"
+                placeholder="Valor em reais (ex: 1500.00)"
+                value={formData.amount}
+                onChange={handleChange}
               />
             </div>
-            
-            <div className="flex items-center space-x-2 pt-2">
-              <Switch 
-                id="edit-has_receipt" 
-                checked={formData.has_receipt} 
-                onCheckedChange={(value) => handleSwitchChange('has_receipt', value)} 
-              />
-              <Label htmlFor="edit-has_receipt">Nota Fiscal Emitida</Label>
-            </div>
-            
-            <div className="space-y-2">
-              <Label htmlFor="edit-description">Descrição</Label>
-              <Textarea 
-                id="edit-description" 
-                name="description" 
-                rows={3} 
-                value={formData.description} 
-                onChange={handleInputChange} 
-              />
-            </div>
-          </div>
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setIsEditDialogOpen(false)}>Cancelar</Button>
-            <Button onClick={handleUpdateInvoice}>Atualizar</Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
-
-      {/* Delete Confirmation Dialog */}
-      <Dialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Confirmar Exclusão</DialogTitle>
-          </DialogHeader>
-          <div className="py-4">
-            <p>Tem certeza que deseja excluir a fatura de {currentInvoice?.client}?</p>
-            <p className="text-sm text-gray-500">Esta ação não pode ser desfeita.</p>
-          </div>
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setIsDeleteDialogOpen(false)}>Cancelar</Button>
-            <Button variant="destructive" onClick={handleDeleteInvoice}>Excluir</Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
-
-      {/* View Invoice Dialog */}
-      <Dialog open={isViewInvoiceDialogOpen} onOpenChange={setIsViewInvoiceDialogOpen}>
-        <DialogContent className="max-w-3xl">
-          <DialogHeader>
-            <DialogTitle>Nota Fiscal</DialogTitle>
-          </DialogHeader>
-          <div className="py-4">
-            {currentInvoice?.invoice_pdf ? (
-              <div className="aspect-ratio">
-                <iframe 
-                  src={currentInvoice.invoice_pdf} 
-                  className="w-full h-[500px]" 
-                  title="Nota Fiscal"
-                ></iframe>
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <label className="text-sm font-medium" htmlFor="edit-date">
+                  Data de Emissão
+                </label>
+                <input
+                  id="edit-date"
+                  name="date"
+                  type="date"
+                  className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background"
+                  value={formData.date}
+                  onChange={handleChange}
+                />
               </div>
-            ) : (
-              <p className="text-center">Nenhum arquivo PDF disponível.</p>
-            )}
-          </div>
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setIsViewInvoiceDialogOpen(false)}>Fechar</Button>
-            {currentInvoice?.invoice_pdf && (
-              <Button asChild>
-                <a href={currentInvoice.invoice_pdf} target="_blank" rel="noopener noreferrer">
-                  Abrir em Nova Aba
-                </a>
+              <div>
+                <label className="text-sm font-medium" htmlFor="edit-due_date">
+                  Data de Vencimento
+                </label>
+                <input
+                  id="edit-due_date"
+                  name="due_date"
+                  type="date"
+                  className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background"
+                  value={formData.due_date}
+                  onChange={handleChange}
+                />
+              </div>
+            </div>
+            <div>
+              <label className="text-sm font-medium" htmlFor="edit-status">
+                Status
+              </label>
+              <select
+                id="edit-status"
+                name="status"
+                className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background"
+                value={formData.status}
+                onChange={handleChange}
+              >
+                <option value="pending">Pendente</option>
+                <option value="paid">Pago</option>
+                <option value="overdue">Atrasado</option>
+                <option value="cancelled">Cancelado</option>
+              </select>
+            </div>
+            <div className="flex justify-end space-x-2 pt-4">
+              <Button variant="outline" onClick={() => setShowEditDialog(false)}>
+                Cancelar
               </Button>
-            )}
-          </DialogFooter>
+              <Button onClick={handleEditInvoice}>Salvar Alterações</Button>
+            </div>
+          </div>
         </DialogContent>
       </Dialog>
+
+      {/* Delete Confirmation */}
+      <AlertDialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Confirmar exclusão</AlertDialogTitle>
+            <AlertDialogDescription>
+              Tem certeza que deseja excluir a fatura para "{selectedInvoice?.client}"? Esta ação não pode ser desfeita.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancelar</AlertDialogCancel>
+            <AlertDialogAction
+              className="bg-red-500 hover:bg-red-600"
+              onClick={handleDeleteInvoice}
+            >
+              Excluir
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
-}
+};
+
+export default InvoicesList;

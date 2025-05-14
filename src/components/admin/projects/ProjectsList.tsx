@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
@@ -307,6 +306,7 @@ const ProjectsList: React.FC = () => {
                 <option value="Essencial">Essencial</option>
                 <option value="Profissional">Profissional</option>
                 <option value="Premium">Premium</option>
+                <option value="Outros">Outros</option>
               </select>
             </div>
             <div>
@@ -397,6 +397,7 @@ const ProjectsList: React.FC = () => {
                 <option value="Essencial">Essencial</option>
                 <option value="Profissional">Profissional</option>
                 <option value="Premium">Premium</option>
+                <option value="Outros">Outros</option>
               </select>
             </div>
             <div>
