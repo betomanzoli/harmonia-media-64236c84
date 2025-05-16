@@ -35,6 +35,15 @@ const CreateBriefingForm: React.FC<CreateBriefingFormProps> = ({ onClose, onSubm
       
       if (existingClients && existingClients.length > 0) {
         clientId = existingClients[0].id;
+        
+        // Atualizar informações do cliente caso tenha mudado
+        await supabase
+          .from('clients')
+          .update({
+            name: data.name,
+            phone: data.phone.fullNumber // Armazenar no formato internacional
+          })
+          .eq('id', clientId);
       } else {
         // Create a new client
         const { data: newClient, error: newClientError } = await supabase
@@ -43,7 +52,7 @@ const CreateBriefingForm: React.FC<CreateBriefingFormProps> = ({ onClose, onSubm
             {
               name: data.name,
               email: data.email,
-              phone: data.phone.fullNumber // Store in international format
+              phone: data.phone.fullNumber // Armazenar no formato internacional
             }
           ])
           .select()
@@ -69,6 +78,9 @@ const CreateBriefingForm: React.FC<CreateBriefingFormProps> = ({ onClose, onSubm
               name: data.name,
               email: data.email,
               phone: data.phone.fullNumber,
+              // Incluir todos os campos importantes para garantir consistência
+              packageType: data.packageType,
+              createdAt: new Date().toISOString(),
             }
           }
         ])

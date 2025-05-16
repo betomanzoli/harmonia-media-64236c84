@@ -3,7 +3,6 @@ import { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
-import { PhoneWithCountryCode } from '@/components/PhoneInput';
 
 const formSchema = z.object({
   name: z.string().min(2, { message: "Nome deve ter pelo menos 2 caracteres" }),
@@ -45,10 +44,22 @@ export const useCreateBriefingForm = ({ onSubmit }: UseCreateBriefingFormProps) 
     setIsSubmitting(true);
     
     try {
+      // Garantir que o telefone esteja formatado corretamente
+      const formattedData = {
+        ...data,
+        phone: {
+          ...data.phone,
+          // Garantir que fullNumber tenha o formato internacional
+          fullNumber: data.phone.fullNumber.startsWith('+') 
+            ? data.phone.fullNumber 
+            : `+${data.phone.countryCode}${data.phone.nationalNumber}`
+        }
+      };
+      
       if (submitCallback) {
-        await submitCallback(data);
+        await submitCallback(formattedData);
       } else {
-        await onSubmit(data);
+        await onSubmit(formattedData);
       }
       form.reset();
     } catch (error) {

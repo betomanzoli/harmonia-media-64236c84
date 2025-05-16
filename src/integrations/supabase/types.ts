@@ -170,9 +170,12 @@ export type Database = {
         Row: {
           client_id: string | null
           completed_at: string | null
+          completion_status: string | null
           created_at: string | null
           data: Json
+          full_responses: Json | null
           id: string
+          initial_responses: Json | null
           is_deleted: boolean | null
           package_type: Database["public"]["Enums"]["package_type"]
           project_id: string | null
@@ -182,9 +185,12 @@ export type Database = {
         Insert: {
           client_id?: string | null
           completed_at?: string | null
+          completion_status?: string | null
           created_at?: string | null
           data: Json
+          full_responses?: Json | null
           id?: string
+          initial_responses?: Json | null
           is_deleted?: boolean | null
           package_type: Database["public"]["Enums"]["package_type"]
           project_id?: string | null
@@ -194,9 +200,12 @@ export type Database = {
         Update: {
           client_id?: string | null
           completed_at?: string | null
+          completion_status?: string | null
           created_at?: string | null
           data?: Json
+          full_responses?: Json | null
           id?: string
+          initial_responses?: Json | null
           is_deleted?: boolean | null
           package_type?: Database["public"]["Enums"]["package_type"]
           project_id?: string | null
