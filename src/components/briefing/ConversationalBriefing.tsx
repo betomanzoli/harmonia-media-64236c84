@@ -2,7 +2,6 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
-import { Card } from "@/components/ui/card";
 import { Loader2, ArrowRight, ArrowLeft, Send } from 'lucide-react';
 import { useConversationalBriefing } from '@/hooks/useConversationalBriefing';
 import PackageSelection from './PackageSelection';
@@ -91,7 +90,37 @@ const ConversationalBriefing: React.FC<ConversationalBriefingProps> = ({ onCompl
       // If we've completed all initial questions
       else if (currentStep === initialQuestions.length - 1) {
         nextStep();
-        await simulateTyping("Obrigado pelas respostas iniciais! Para continuarmos criando sua música personalizada, é necessário escolher e contratar um dos pacotes abaixo. Após a confirmação do pagamento, poderemos aprofundar nos detalhes da sua composição.");
+        
+        // Prepare a summary of what the user has shared
+        const inspirationSummary = initialResponses.inspiration ? 
+          `Uma música inspirada em "${initialResponses.inspiration.substring(0, 50)}${initialResponses.inspiration.length > 50 ? '...' : ''}"` : '';
+        
+        const emotionSummary = initialResponses.emotion ?
+          `que transmite sentimentos de ${initialResponses.emotion.toLowerCase()}` : '';
+        
+        const connectionSummary = initialResponses.specialConnection ?
+          `com uma conexão especial a "${initialResponses.specialConnection.substring(0, 50)}${initialResponses.specialConnection.length > 50 ? '...' : ''}"` : '';
+        
+        // Create a natural language summary
+        let summary = "Com base no que você compartilhou, vejo que deseja ";
+        
+        if (inspirationSummary) {
+          summary += inspirationSummary;
+        }
+        
+        if (emotionSummary) {
+          summary += inspirationSummary ? ` ${emotionSummary}` : emotionSummary;
+        }
+        
+        if (connectionSummary) {
+          summary += (inspirationSummary || emotionSummary) ? ` e ${connectionSummary}` : connectionSummary;
+        }
+        
+        summary += ".";
+        
+        // Show the summary and then the package selection message
+        await simulateTyping(summary);
+        await simulateTyping("Para continuar criando sua música personalizada, precisamos de mais detalhes específicos que são desbloqueados após a contratação de um dos pacotes abaixo. Escolha o que melhor atende às suas necessidades:");
       }
     }, 500);
   };

@@ -38,12 +38,45 @@ serve(async (req) => {
     // This would check the payment status with the Mercado Pago API
     // For now, we'll trust the incoming webhook data
     
+    // Get the current briefing data to update it
+    const { data: briefingData, error: fetchError } = await supabase
+      .from('briefings')
+      .select('*')
+      .eq('id', briefing_id)
+      .single();
+      
+    if (fetchError) {
+      console.error("Error fetching briefing data:", fetchError);
+      return new Response(
+        JSON.stringify({ success: false, error: fetchError.message }), 
+        { headers: { ...corsHeaders, "Content-Type": "application/json" }, status: 500 }
+      );
+    }
+    
+    // Update the workflow data to reflect payment completion
+    let updatedData = briefingData.data || {};
+    updatedData.workflow = {
+      ...(updatedData.workflow || {}),
+      currentStage: 'payment_complete',
+      nextStage: 'full_briefing',
+      completedSteps: [
+        ...(updatedData.workflow?.completedSteps || ['initial_briefing']),
+        'payment'
+      ],
+      paymentInfo: {
+        id: payment_id,
+        date: new Date().toISOString(),
+        status: data.status || 'processed'
+      }
+    };
+    
     // Update briefing status in database
     const { error } = await supabase
       .from('briefings')
       .update({ 
         payment_status: 'completed', 
-        completion_status: 'ready_for_full' 
+        completion_status: 'ready_for_full',
+        data: updatedData
       })
       .eq('id', briefing_id)
     
@@ -62,7 +95,12 @@ serve(async (req) => {
         await fetch('https://n8n.harmonia.media/webhook/continuar-briefing', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ briefing_id })
+          body: JSON.stringify({ 
+            briefing_id,
+            package_type: briefingData.package_type,
+            initial_responses: briefingData.initial_responses,
+            timestamp: new Date().toISOString()
+          })
         })
         console.log("N8n webhook triggered successfully for briefing_id:", briefing_id)
       } catch (fetchError) {

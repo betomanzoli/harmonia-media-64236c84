@@ -20,11 +20,11 @@ export function useConversationalBriefing() {
   });
   const { toast } = useToast();
 
-  // Initial questions for pre-payment briefing
+  // Initial questions for pre-payment briefing - more targeted for music composition
   const initialQuestions = [
-    "O que inspirou você a criar esta música?",
-    "Existe alguma pessoa ou momento especial relacionado a esta música?",
-    "Que emoção principal você gostaria que a música transmitisse?"
+    "O que inspirou você a criar esta música? Conte um pouco sobre a história ou sentimento por trás dela.",
+    "Existe alguma pessoa ou momento especial relacionado a esta música? Quem ou o que você gostaria de homenagear?",
+    "Que emoção principal você gostaria que a música transmitisse ao ouvinte?"
   ];
 
   // Update response for a specific step
@@ -58,6 +58,33 @@ export function useConversationalBriefing() {
   const saveInitialBriefing = async (packageType: 'essencial' | 'profissional' | 'premium') => {
     setIsSubmitting(true);
     try {
+      // Prepare a structured format for the briefing data that will be used by n8n later
+      const formattedData = {
+        initialBriefing: true,
+        responses: initialResponses,
+        createdAt: new Date().toISOString(),
+        packageType,
+        questions: {
+          inspiration: initialQuestions[0],
+          specialConnection: initialQuestions[1],
+          emotion: initialQuestions[2]
+        },
+        briefingSummary: {
+          inspiration: initialResponses.inspiration?.substring(0, 100) || 'Não especificado',
+          connection: initialResponses.specialConnection?.substring(0, 100) || 'Nenhuma',
+          emotion: initialResponses.emotion || 'Não especificado'
+        },
+        status: {
+          conversationComplete: false,
+          needsRevision: false
+        },
+        workflow: {
+          currentStage: 'initial',
+          nextStage: 'payment',
+          completedSteps: ['initial_briefing']
+        }
+      };
+
       const { data, error } = await supabase
         .from('briefings')
         .insert([{
@@ -65,12 +92,7 @@ export function useConversationalBriefing() {
           payment_status: 'pending',
           completion_status: 'initial',
           package_type: packageType,
-          data: {
-            initialBriefing: true,
-            responses: initialResponses,
-            createdAt: new Date().toISOString(),
-            packageType
-          }
+          data: formattedData
         }])
         .select()
         .single();
@@ -78,7 +100,12 @@ export function useConversationalBriefing() {
       if (error) throw error;
 
       if (data) {
+        console.log("Briefing created successfully:", data.id);
         setBriefingId(data.id);
+        
+        // Log for debugging n8n integration
+        console.log("Data prepared for n8n workflow:", formattedData);
+        
         return data.id;
       }
 
