@@ -4,7 +4,7 @@ import { Link } from 'react-router-dom';
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
 import { Button } from "@/components/ui/button";
-import { CheckCircle2, ArrowRight, Home } from 'lucide-react';
+import { CheckCircle2, ArrowRight, Home, MessageSquareText } from 'lucide-react';
 
 const BriefingSuccess: React.FC = () => {
   return (
@@ -18,10 +18,10 @@ const BriefingSuccess: React.FC = () => {
             </div>
           </div>
           
-          <h1 className="text-3xl md:text-4xl font-bold mb-6">Briefing Enviado com Sucesso!</h1>
+          <h1 className="text-3xl md:text-4xl font-bold mb-6">Pagamento Confirmado!</h1>
           
           <p className="text-gray-400 mb-8">
-            Obrigado por compartilhar sua visão musical conosco. Nossa equipe já começou a trabalhar na sua composição personalizada e você receberá atualizações por email em breve.
+            Obrigado por compartilhar sua visão musical conosco. Nossa equipe começará a trabalhar na sua composição personalizada em breve.
           </p>
           
           <div className="space-y-4">
@@ -30,17 +30,28 @@ const BriefingSuccess: React.FC = () => {
               <ol className="space-y-3 text-left">
                 <li className="flex items-start">
                   <div className="bg-harmonia-green/20 text-harmonia-green h-6 w-6 rounded-full flex items-center justify-center mr-3 mt-0.5 flex-shrink-0">1</div>
-                  <p className="text-gray-300">Nossa equipe criativa irá analisar seu briefing e começar o processo de composição.</p>
+                  <p className="text-gray-300">Em breve, você receberá um email para continuar o processo de briefing mais detalhado.</p>
                 </li>
                 <li className="flex items-start">
                   <div className="bg-harmonia-green/20 text-harmonia-green h-6 w-6 rounded-full flex items-center justify-center mr-3 mt-0.5 flex-shrink-0">2</div>
-                  <p className="text-gray-300">Você receberá um email com acesso à sua área do cliente para acompanhar o progresso.</p>
+                  <p className="text-gray-300">Nosso assistente virtual irá guiá-lo através de perguntas adicionais específicas para o seu pacote.</p>
                 </li>
                 <li className="flex items-start">
                   <div className="bg-harmonia-green/20 text-harmonia-green h-6 w-6 rounded-full flex items-center justify-center mr-3 mt-0.5 flex-shrink-0">3</div>
-                  <p className="text-gray-300">Enviaremos versões prévias da sua música para aprovação ou ajustes conforme o seu pacote.</p>
+                  <p className="text-gray-300">Assim que completar o briefing detalhado, nossa equipe criativa começará o processo de composição.</p>
                 </li>
               </ol>
+            </div>
+            
+            <div className="bg-harmonia-green/10 border border-harmonia-green/20 rounded-lg p-6">
+              <div className="flex items-center mb-3">
+                <MessageSquareText className="text-harmonia-green h-5 w-5 mr-2" />
+                <h3 className="font-semibold">Estamos processando suas informações</h3>
+              </div>
+              <p className="text-gray-300 text-left">
+                Com base nas suas respostas iniciais, nosso sistema está preparando a próxima etapa do briefing. 
+                Você receberá em breve um convite por email para continuar a conversa e aprofundar os detalhes da sua música personalizada.
+              </p>
             </div>
             
             <div className="flex flex-col sm:flex-row gap-4 justify-center">

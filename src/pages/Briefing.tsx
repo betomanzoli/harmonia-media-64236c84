@@ -32,8 +32,10 @@ const Briefing: React.FC = () => {
     console.log('Briefing complete with ID:', briefingId);
     console.log('Selected package:', packageType);
     
-    // In a real implementation, this would redirect to the payment page with the briefing ID
-    // For now, we'll simulate adding the briefing ID as a URL parameter
+    // Save briefingId to localStorage for later use
+    localStorage.setItem('currentBriefingId', briefingId);
+    
+    // Redirect to payment page with briefingId parameter
     navigate(`/pagamento/${packageType}?briefingId=${briefingId}`);
   };
 

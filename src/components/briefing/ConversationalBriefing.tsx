@@ -91,7 +91,7 @@ const ConversationalBriefing: React.FC<ConversationalBriefingProps> = ({ onCompl
       // If we've completed all initial questions
       else if (currentStep === initialQuestions.length - 1) {
         nextStep();
-        await simulateTyping("Obrigado pelas respostas iniciais! Para continuarmos criando sua música personalizada, escolha um dos pacotes abaixo.");
+        await simulateTyping("Obrigado pelas respostas iniciais! Para continuarmos criando sua música personalizada, é necessário escolher e contratar um dos pacotes abaixo. Após a confirmação do pagamento, poderemos aprofundar nos detalhes da sua composição.");
       }
     }, 500);
   };

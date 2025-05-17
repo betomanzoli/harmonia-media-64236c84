@@ -28,6 +28,8 @@ import PreviewPage from './pages/PreviewPage';
 import MusicPreviews from './pages/MusicPreviews';
 import FeedbackConfirmation from './pages/FeedbackConfirmation';
 import QualificacaoPage from './pages/Qualificacao';
+import BriefingSuccess from './pages/BriefingSuccess';
+import BriefingComplete from './pages/BriefingComplete';
 
 // Import admin pages
 import AdminBriefings from './pages/admin/AdminBriefings';
@@ -69,6 +71,8 @@ const AppRoutes: React.FC = () => {
         <Route path="/contato" element={<ContactPage />} />
         <Route path="/portfolio" element={<PortfolioPage />} />
         <Route path="/briefing" element={<Briefing />} />
+        <Route path="/briefing-success" element={<BriefingSuccess />} />
+        <Route path="/briefing-complete" element={<BriefingComplete />} />
         <Route path="/calculadora" element={<Calculator />} />
         <Route path="/qualificacao" element={<QualificacaoPage />} />
         <Route path="/pacotes" element={<Packages />} />

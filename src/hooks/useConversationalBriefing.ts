@@ -69,6 +69,7 @@ export function useConversationalBriefing() {
             initialBriefing: true,
             responses: initialResponses,
             createdAt: new Date().toISOString(),
+            packageType
           }
         }])
         .select()
