@@ -1,128 +1,89 @@
 
-import { useState, useEffect } from 'react';
-import { useForm } from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";
-import { useToast } from "@/hooks/use-toast";
-import { 
-  briefingFormSchema, 
-  BriefingFormValues,
-  essentialPackageSchema,
-  professionalPackageSchema,
-  premiumPackageSchema 
-} from './formSchema';
-import { useLocation, useNavigate } from 'react-router-dom';
+import { useState } from 'react';
+import { useForm } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+import * as z from 'zod';
 import { supabase } from '@/lib/supabase';
+import { useToast } from '@/hooks/use-toast';
 
-export const useBriefingForm = (initialPackage?: 'essencial' | 'profissional' | 'premium') => {
-  const { toast } = useToast();
-  const [isSubmitting, setIsSubmitting] = useState(false);
+const formSchema = z.object({
+  name: z.string().min(2, {
+    message: "Nome deve ter pelo menos 2 caracteres"
+  }),
+  email: z.string().email({
+    message: "Email inválido"
+  }),
+  phone: z.string().min(5, {
+    message: "Telefone é obrigatório"
+  }),
+  story: z.string().optional(),
+  emotionsToTransmit: z.array(z.string()).optional(),
+  musicReferences: z.array(z.string()).optional(),
+  musicalStyle: z.string().optional(),
+  specificInstruments: z.string().optional(),
+  additionalComments: z.string().optional(),
+});
+
+type FormValues = z.infer<typeof formSchema>;
+
+export const useBriefingForm = (initialPackage: 'essencial' | 'profissional' | 'premium' = 'essencial', initialData?: any) => {
+  const [selectedPackage, setSelectedPackage] = useState<'essencial' | 'profissional' | 'premium'>(initialPackage);
   const [referenceFiles, setReferenceFiles] = useState<File[]>([]);
-  const location = useLocation();
-  const navigate = useNavigate();
-  const [selectedPackage, setSelectedPackage] = useState<'essencial' | 'profissional' | 'premium'>(
-    initialPackage || 'essencial'
-  );
-
-  useEffect(() => {
-    if (initialPackage) {
-      setSelectedPackage(initialPackage);
-    }
-  }, [initialPackage]);
-
-  const getSchemaResolver = () => {
-    switch (selectedPackage) {
-      case 'essencial':
-        return zodResolver(essentialPackageSchema);
-      case 'profissional':
-        return zodResolver(professionalPackageSchema);
-      case 'premium':
-        return zodResolver(premiumPackageSchema);
-      default:
-        return zodResolver(essentialPackageSchema);
-    }
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const { toast } = useToast();
+  
+  const defaultValues = {
+    name: initialData?.name || '',
+    email: initialData?.email || '',
+    phone: initialData?.phone || '',
+    story: initialData?.inspiration || '',
+    emotionsToTransmit: initialData?.emotion ? [initialData.emotion] : [],
+    specificInstruments: '',
+    additionalComments: initialData?.specialConnection || '',
+    musicalStyle: '',
   };
-
-  const form = useForm<BriefingFormValues>({
-    resolver: getSchemaResolver(),
-    defaultValues: {
-      selectedPackage,
-      name: "",
-      email: "",
-      phone: "",
-      contactPreference: "whatsapp",
-      referenceDescription: "",
-    },
+  
+  const form = useForm<FormValues>({
+    resolver: zodResolver(formSchema),
+    defaultValues
   });
-
-  useEffect(() => {
-    form.setValue('selectedPackage', selectedPackage);
-  }, [selectedPackage, form]);
-
-  useEffect(() => {
-    const userData = localStorage.getItem('qualificationData');
-    if (userData) {
-      try {
-        const data = JSON.parse(userData);
-        if (data.name) form.setValue('name', data.name);
-        if (data.email) form.setValue('email', data.email);
-        if (data.phone) form.setValue('phone', data.phone);
-      } catch (e) {
-        console.error('Error parsing user data from localStorage:', e);
-      }
-    }
-
-    // Verificar se o pagamento foi realizado
-    const paymentData = localStorage.getItem('paymentData');
-    if (!paymentData) {
-      toast({
-        title: "Pagamento não detectado",
-        description: "Por favor, realize o pagamento antes de preencher o briefing.",
-        variant: "destructive"
-      });
-    }
-  }, [form, toast]);
-
-  const onSubmit = async (data: BriefingFormValues) => {
-    // Verificar se o pagamento foi realizado
-    const paymentData = localStorage.getItem('paymentData');
-    if (!paymentData) {
-      toast({
-        title: "Pagamento não detectado",
-        description: "Por favor, realize o pagamento antes de preencher o briefing.",
-        variant: "destructive"
-      });
-      navigate('/services');
-      return;
-    }
-
+  
+  const onSubmit = async (data: FormValues) => {
     setIsSubmitting(true);
     
     try {
-      // Check if client exists and get or create the client
-      let clientId = null;
-      const { data: existingClients, error: clientError } = await supabase
+      const { data: clientsData, error: clientError } = await supabase
         .from('clients')
         .select('id')
         .eq('email', data.email)
         .limit(1);
       
+      let clientId = null;
+      
       if (clientError) {
         throw clientError;
       }
       
-      if (existingClients && existingClients.length > 0) {
-        clientId = existingClients[0].id;
+      if (clientsData && clientsData.length > 0) {
+        clientId = clientsData[0].id;
+        
+        // Update client info if changed
+        await supabase
+          .from('clients')
+          .update({
+            name: data.name,
+            phone: data.phone
+          })
+          .eq('id', clientId);
       } else {
         // Create a new client
         const { data: newClient, error: newClientError } = await supabase
           .from('clients')
-          .insert([
-            {
-              name: data.name,
-              email: data.email,
-              phone: data.phone
-            }
-          ])
+          .insert([{
+            name: data.name,
+            email: data.email,
+            phone: data.phone
+          }])
           .select()
           .single();
         
@@ -133,87 +94,50 @@ export const useBriefingForm = (initialPackage?: 'essencial' | 'profissional' | 
         clientId = newClient.id;
       }
       
-      // Prepare form data and handle file uploads
-      const formDataToSend = {
-        ...data,
-        referenceFilesCount: referenceFiles.length,
-      };
-      
-      console.log("Form data to be sent:", formDataToSend);
-      console.log("Reference files:", referenceFiles);
-      
-      // Save briefing to Supabase
-      const { data: briefingData, error: briefingError } = await supabase
+      // Create briefing
+      const { error: briefingError } = await supabase
         .from('briefings')
-        .insert([
-          {
-            client_id: clientId,
-            package_type: selectedPackage,
-            data: formDataToSend,
-            status: 'pending'
+        .insert([{
+          client_id: clientId,
+          package_type: selectedPackage,
+          status: 'pending',
+          data: {
+            ...data,
+            createdAt: new Date().toISOString(),
+            packageType: selectedPackage
           }
-        ])
-        .select()
-        .single();
+        }]);
       
       if (briefingError) {
         throw briefingError;
       }
       
-      // Upload reference files if any
-      if (referenceFiles.length > 0) {
-        // In a real implementation, you would upload the files to Supabase Storage
-        // or use another file storage service
-        console.log("Would upload files to Supabase Storage");
-      }
-      
       toast({
-        title: "Formulário enviado com sucesso!",
-        description: "Entraremos em contato em breve para discutir seu projeto musical.",
+        title: "Sucesso!",
+        description: "Seu briefing foi enviado com sucesso. Entraremos em contato em breve.",
       });
-      
-      // Criar um ID de pedido fictício para simulação
-      const orderId = `HAR-${new Date().getFullYear()}-${Math.floor(1000 + Math.random() * 9000)}`;
-      
-      // Armazenar dados do pedido para rastreamento
-      localStorage.setItem('orderData', JSON.stringify({
-        orderId,
-        clientName: data.name,
-        packageType: selectedPackage === 'essencial' ? 'Essencial' : 
-                    selectedPackage === 'profissional' ? 'Profissional' : 'Premium',
-        status: 'Em Análise',
-        dateSubmitted: new Date().toISOString(),
-        contactPreference: data.contactPreference
-      }));
       
       form.reset();
-      setReferenceFiles([]);
-      setIsSubmitting(false);
+    } catch (error: any) {
+      console.error('Error submitting form:', error);
       
-      console.log("Zapier automation: Creating Trello card for new project");
-      console.log("Zapier automation: Initiating Suno AI music generation task");
-      console.log("Zapier automation: Scheduling Moises mastering task");
-      
-      // Redirecionar para a página de agradecimento
-      navigate('/agradecimento');
-    } catch (error) {
-      console.error("Error submitting form:", error);
       toast({
+        variant: "destructive",
         title: "Erro ao enviar formulário",
-        description: "Ocorreu um erro ao enviar seu briefing. Por favor, tente novamente.",
-        variant: "destructive"
+        description: error.message || "Não foi possível enviar o formulário. Tente novamente mais tarde.",
       });
+    } finally {
       setIsSubmitting(false);
     }
   };
 
   return {
     form,
-    isSubmitting,
+    selectedPackage,
+    setSelectedPackage,
     referenceFiles,
     setReferenceFiles,
-    onSubmit,
-    selectedPackage,
-    setSelectedPackage
+    isSubmitting,
+    onSubmit
   };
 };

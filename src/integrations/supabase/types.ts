@@ -178,6 +178,7 @@ export type Database = {
           initial_responses: Json | null
           is_deleted: boolean | null
           package_type: Database["public"]["Enums"]["package_type"]
+          payment_status: string | null
           project_id: string | null
           status: Database["public"]["Enums"]["briefing_status"] | null
           updated_at: string | null
@@ -193,6 +194,7 @@ export type Database = {
           initial_responses?: Json | null
           is_deleted?: boolean | null
           package_type: Database["public"]["Enums"]["package_type"]
+          payment_status?: string | null
           project_id?: string | null
           status?: Database["public"]["Enums"]["briefing_status"] | null
           updated_at?: string | null
@@ -208,6 +210,7 @@ export type Database = {
           initial_responses?: Json | null
           is_deleted?: boolean | null
           package_type?: Database["public"]["Enums"]["package_type"]
+          payment_status?: string | null
           project_id?: string | null
           status?: Database["public"]["Enums"]["briefing_status"] | null
           updated_at?: string | null

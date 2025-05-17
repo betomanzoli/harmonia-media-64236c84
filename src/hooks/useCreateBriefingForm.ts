@@ -20,23 +20,24 @@ export type BriefingFormValues = z.infer<typeof formSchema>;
 
 interface UseCreateBriefingFormProps {
   onSubmit: (data: BriefingFormValues) => void;
+  initialData?: any;
 }
 
-export const useCreateBriefingForm = ({ onSubmit }: UseCreateBriefingFormProps) => {
+export const useCreateBriefingForm = ({ onSubmit, initialData }: UseCreateBriefingFormProps) => {
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const form = useForm<BriefingFormValues>({
     resolver: zodResolver(formSchema),
     defaultValues: {
-      name: '',
-      email: '',
+      name: initialData?.name || '',
+      email: initialData?.email || '',
       phone: {
         fullNumber: '+55',
         countryCode: '55',
-        nationalNumber: ''
+        nationalNumber: initialData?.phone?.nationalNumber || ''
       },
       packageType: 'essencial',
-      description: '',
+      description: initialData?.description || initialData?.inspiration || '',
     },
   });
 

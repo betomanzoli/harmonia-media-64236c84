@@ -15,9 +15,15 @@ import DynamicFormSection from './qualification/DynamicFormSection';
 
 interface BriefingFormProps {
   packageType?: 'essencial' | 'profissional' | 'premium';
+  initialData?: any;
+  onSubmit?: (data: any) => void;
 }
 
-const BriefingForm: React.FC<BriefingFormProps> = ({ packageType }) => {
+const BriefingForm: React.FC<BriefingFormProps> = ({ 
+  packageType,
+  initialData,
+  onSubmit 
+}) => {
   const location = useLocation();
   
   const getInitialPackage = (): 'essencial' | 'profissional' | 'premium' => {
@@ -48,11 +54,20 @@ const BriefingForm: React.FC<BriefingFormProps> = ({ packageType }) => {
     isSubmitting, 
     referenceFiles, 
     setReferenceFiles, 
-    onSubmit,
+    onSubmit: handleFormSubmit,
     selectedPackage
-  } = useBriefingForm(initialPackage);
+  } = useBriefingForm(initialPackage, initialData);
 
   const { sections, fields, isLoading } = useBriefingData(selectedPackage);
+
+  // Custom submit handler that calls the provided onSubmit if available
+  const handleCustomSubmit = async (data: any) => {
+    if (onSubmit) {
+      onSubmit(data);
+    } else {
+      await handleFormSubmit(data);
+    }
+  };
 
   const renderPackageTitle = () => {
     switch (selectedPackage) {
@@ -116,7 +131,7 @@ const BriefingForm: React.FC<BriefingFormProps> = ({ packageType }) => {
       </div>
       
       <Form {...form}>
-        <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+        <form onSubmit={form.handleSubmit(handleCustomSubmit)} className="space-y-6">
           <PersonalInfoSection />
           
           {renderPackageFields()}
