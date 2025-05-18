@@ -25,9 +25,12 @@ const PreviewPage: React.FC = () => {
         setIsLoading(true);
         
         try {
+          console.log('Checking authorization for project:', projectId);
+          
           // First check if the access is from client dashboard (userEmail in localStorage)
           const userEmail = localStorage.getItem('userEmail');
           if (userEmail) {
+            console.log('User authenticated via localStorage email:', userEmail);
             // Set cookie access for future visits
             setPreviewAccessCookie(projectId);
             setPreviewEmailCookie(projectId, userEmail);
@@ -53,8 +56,10 @@ const PreviewPage: React.FC = () => {
           // Then check if we have a cookie-based access
           const hasCookieAccess = checkPreviewAccessCookie(projectId);
           if (hasCookieAccess) {
+            console.log('User authenticated via cookie for project:', projectId);
             // Get the email from the cookie for logging purposes
-            const email = getPreviewEmailCookie(projectId);
+            const email = getPreviewEmailCookie(projectId) || 'anonymous@user.com';
+            console.log('Email from cookie:', email);
             
             // Log the access in the database
             try {
@@ -78,6 +83,7 @@ const PreviewPage: React.FC = () => {
           const { data: { session } } = await supabase.auth.getSession();
           
           if (session?.user?.email) {
+            console.log('User authenticated via Supabase auth:', session.user.email);
             // Store user email in localStorage for future access
             localStorage.setItem('userEmail', session.user.email);
             
@@ -85,15 +91,7 @@ const PreviewPage: React.FC = () => {
             setPreviewAccessCookie(projectId);
             setPreviewEmailCookie(projectId, session.user.email);
             
-            // Check if the email is authorized to view this preview
-            const { data: previewData, error } = await supabase
-              .from('previews')
-              .select('allowed_emails')
-              .eq('preview_id', projectId)
-              .maybeSingle();
-            
             // Always authorize if authenticated (for simplicity)
-            // In a production environment, you'd check against allowed_emails
             setIsAuthorized(true);
             
             // Log the successful access
@@ -112,14 +110,15 @@ const PreviewPage: React.FC = () => {
               console.error("Error logging access:", logError);
               // Non-blocking error, continue with access
             }
+            setIsLoading(false);
           } else {
             // No authenticated user, redirect to auth page
+            console.log('No authentication found, redirecting to auth page');
             navigate(`/auth/preview/${projectId}`);
           }
         } catch (error) {
           console.error("Error during authorization check:", error);
           setIsAuthorized(false);
-        } finally {
           setIsLoading(false);
         }
       };
@@ -130,7 +129,7 @@ const PreviewPage: React.FC = () => {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-100">
+      <div className="min-h-screen flex items-center justify-center bg-white">
         <div className="bg-white p-8 rounded-lg shadow-sm text-center">
           <div className="flex flex-col items-center justify-center space-y-4">
             <Loader2 className="h-10 w-10 animate-spin text-harmonia-green" />
@@ -144,7 +143,7 @@ const PreviewPage: React.FC = () => {
 
   if (!projectId) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-100">
+      <div className="min-h-screen flex items-center justify-center bg-white">
         <div className="bg-white p-6 rounded-lg shadow-sm text-center">
           <h2 className="text-2xl font-bold text-black mb-4">ID do projeto não encontrado</h2>
           <p className="text-gray-600">O link que você acessou não é válido.</p>
@@ -156,7 +155,7 @@ const PreviewPage: React.FC = () => {
   // Show authentication form if not authorized yet
   if (!isAuthorized) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-100">
+      <div className="min-h-screen flex items-center justify-center bg-white">
         <ProjectAccessForm 
           projectId={projectId} 
           onVerify={async (email, code) => {
@@ -195,7 +194,7 @@ const PreviewPage: React.FC = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gray-100 pt-8 pb-16">
+    <div className="min-h-screen bg-white pt-8 pb-16">
       <div className="max-w-4xl mx-auto px-4 mb-6">
         <div className="bg-green-50 border border-green-100 rounded-md p-3 flex items-center">
           <Lock className="h-5 w-5 text-green-600 mr-2" />

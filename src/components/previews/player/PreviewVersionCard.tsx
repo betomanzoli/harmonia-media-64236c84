@@ -55,25 +55,25 @@ const PreviewVersionCard: React.FC<PreviewVersionCardProps> = ({
   return (
     <Card 
       className={`
-        cursor-pointer transition-all hover:border-harmonia-green/50
-        ${isSelected ? 'border-2 border-harmonia-green shadow-md' : ''}
+        cursor-pointer transition-all bg-white border-gray-200
+        ${isSelected ? 'border-2 border-harmonia-green shadow-md' : 'hover:border-harmonia-green/50'}
         ${isApproved && isSelected ? 'border-green-500' : ''}
       `}
       onClick={handleSelect}
     >
-      <CardHeader className="flex flex-row items-start justify-between pb-2">
+      <CardHeader className="flex flex-row items-start justify-between pb-2 bg-gray-50 border-b border-gray-100">
         <div className="flex items-center">
-          <CardTitle className="text-lg text-black">{version.title}</CardTitle>
+          <CardTitle className="text-lg text-gray-800">{version.title}</CardTitle>
           {version.recommended && (
-            <span className="ml-2 text-yellow-500 flex items-center text-sm font-medium">
-              <Star className="h-4 w-4 fill-yellow-500" />
+            <span className="ml-2 text-yellow-700 flex items-center text-sm font-medium">
+              <Star className="h-4 w-4 fill-yellow-500 stroke-yellow-500" />
               <span className="ml-1">Recomendada</span>
             </span>
           )}
         </div>
       </CardHeader>
-      <CardContent>
-        <p className="text-sm text-black mb-4">{version.description}</p>
+      <CardContent className="pt-4">
+        <p className="text-sm text-gray-700 mb-4">{version.description}</p>
         
         <div className="flex justify-between items-center">
           <div className="flex space-x-2">
@@ -81,7 +81,7 @@ const PreviewVersionCard: React.FC<PreviewVersionCardProps> = ({
               variant="outline" 
               size="sm"
               onClick={handlePlay}
-              className="flex items-center"
+              className="flex items-center border-gray-300 bg-white text-gray-700 hover:bg-gray-100"
             >
               <Play className="h-4 w-4 mr-1" />
               Ouvir
@@ -91,7 +91,7 @@ const PreviewVersionCard: React.FC<PreviewVersionCardProps> = ({
               variant="ghost" 
               size="icon"
               onClick={toggleMute}
-              className="h-8 w-8"
+              className="h-8 w-8 text-gray-700 hover:bg-gray-100"
             >
               {isMuted ? (
                 <VolumeX className="h-4 w-4" />

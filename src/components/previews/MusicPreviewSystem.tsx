@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { usePreviewProject } from '@/hooks/usePreviewProject';
 import { Loader2, Calendar, Music, MessageSquare, ArrowLeft, CheckCircle } from 'lucide-react';
@@ -157,10 +158,10 @@ const MusicPreviewSystem: React.FC<MusicPreviewSystemProps> = ({ projectId }) =>
   
   if (isLoading) {
     return (
-      <div className="container mx-auto max-w-5xl px-4">
+      <div className="container mx-auto max-w-5xl px-4 bg-white">
         <div className="flex flex-col items-center justify-center py-12">
           <Loader2 className="h-12 w-12 animate-spin text-harmonia-green mb-6" />
-          <p className="text-lg">Carregando prévia do projeto...</p>
+          <p className="text-lg text-black">Carregando prévia do projeto...</p>
         </div>
       </div>
     );
@@ -168,7 +169,7 @@ const MusicPreviewSystem: React.FC<MusicPreviewSystemProps> = ({ projectId }) =>
   
   if (!projectData) {
     return (
-      <div className="container mx-auto max-w-5xl px-4">
+      <div className="container mx-auto max-w-5xl px-4 bg-white">
         <div className="flex flex-col items-center justify-center py-12">
           <div className="bg-white p-8 rounded-lg shadow-sm w-full max-w-lg text-center">
             <h2 className="text-2xl font-bold text-black mb-4">Prévia não encontrada</h2>
@@ -183,7 +184,7 @@ const MusicPreviewSystem: React.FC<MusicPreviewSystemProps> = ({ projectId }) =>
   const isApproved = projectData.status === 'approved';
   
   return (
-    <div className="container mx-auto max-w-5xl px-4">
+    <div className="container mx-auto max-w-5xl px-4 bg-white text-black">
       <div className="mb-8">
         <h1 className="text-2xl md:text-3xl font-bold text-black mb-3">{projectData.projectTitle}</h1>
         <p className="text-gray-600">
@@ -212,11 +213,11 @@ const MusicPreviewSystem: React.FC<MusicPreviewSystemProps> = ({ projectId }) =>
           />
           
           {selectedPreview && selectedPreview.fileId && (
-            <Card className="mb-6">
-              <CardHeader>
-                <CardTitle className="text-lg">Player</CardTitle>
+            <Card className="mb-6 bg-white border-gray-200">
+              <CardHeader className="bg-gray-50 border-b border-gray-100">
+                <CardTitle className="text-lg text-gray-800">Player</CardTitle>
               </CardHeader>
-              <CardContent>
+              <CardContent className="pt-4">
                 <GoogleDriveAudioPlayer
                   fileId={selectedPreview.fileId}
                   title={selectedPreview.title}
@@ -227,14 +228,14 @@ const MusicPreviewSystem: React.FC<MusicPreviewSystemProps> = ({ projectId }) =>
             </Card>
           )}
           
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center">
+          <Card className="bg-white border-gray-200">
+            <CardHeader className="bg-gray-50 border-b border-gray-100">
+              <CardTitle className="flex items-center text-gray-800">
                 <MessageSquare className="h-5 w-5 mr-2 text-harmonia-green" />
                 {isApproved ? 'Feedback enviado' : 'Envie seu feedback'}
               </CardTitle>
             </CardHeader>
-            <CardContent>
+            <CardContent className="pt-4">
               {isApproved ? (
                 <div className="bg-green-50 p-4 rounded-md">
                   <p className="text-green-700">
@@ -252,7 +253,7 @@ const MusicPreviewSystem: React.FC<MusicPreviewSystemProps> = ({ projectId }) =>
                     
                     <Textarea
                       placeholder="Conte-nos o que você achou da versão selecionada. O que você gostou? Há algo que você gostaria de mudar?"
-                      className="min-h-[150px]"
+                      className="min-h-[150px] bg-white text-black border-gray-300"
                       value={feedback}
                       onChange={(e) => setFeedback(e.target.value)}
                       disabled={isApproved || submitting}
@@ -264,12 +265,13 @@ const MusicPreviewSystem: React.FC<MusicPreviewSystemProps> = ({ projectId }) =>
                       variant="outline"
                       onClick={handleApproveVersion}
                       disabled={isApproved || submitting || !selectedVersion}
+                      className="border-gray-300 text-gray-700 hover:bg-gray-100"
                     >
                       <CheckCircle className="h-4 w-4 mr-2" />
                       Aprovar versão
                     </Button>
                     <Button
-                      className="bg-harmonia-green hover:bg-harmonia-green/90"
+                      className="bg-harmonia-green hover:bg-harmonia-green/90 text-white"
                       onClick={handleFeedbackSubmit}
                       disabled={isApproved || submitting || !selectedVersion || !feedback.trim()}
                     >
