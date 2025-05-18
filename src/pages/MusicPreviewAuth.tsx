@@ -6,7 +6,7 @@ import { useToast } from '@/hooks/use-toast';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Loader2, Mail, Shield, ArrowRight } from 'lucide-react';
+import { Loader2, Mail, Shield, ArrowRight, Clipboard, User } from 'lucide-react';
 import MusicNoteIcon from '@/components/icons/MusicNoteIcon';
 
 const MusicPreviewAuth: React.FC = () => {
@@ -205,6 +205,22 @@ const MusicPreviewAuth: React.FC = () => {
             </div>
           </div>
         )}
+
+        <div className="mt-6 pt-6 border-t">
+          <div className="flex flex-col items-center space-y-4">
+            <p className="text-sm text-gray-500">
+              Já é um cliente registrado?
+            </p>
+            <Button 
+              variant="outline" 
+              className="w-full flex items-center justify-center"
+              onClick={() => navigate('/client-dashboard')}
+            >
+              <User className="h-4 w-4 mr-2" />
+              Acessar área do cliente
+            </Button>
+          </div>
+        </div>
       </div>
     </div>
   );

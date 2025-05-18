@@ -33,6 +33,8 @@ import FeedbackConfirmation from './pages/FeedbackConfirmation';
 import QualificacaoPage from './pages/Qualificacao';
 import BriefingSuccess from './pages/BriefingSuccess';
 import BriefingComplete from './pages/BriefingComplete';
+import ClientDashboard from './pages/ClientDashboard';
+import FinalDeliveryPage from './pages/FinalDeliveryPage';
 
 // Import admin pages
 import AdminBriefings from './pages/admin/AdminBriefings';
@@ -85,6 +87,10 @@ const AppRoutes: React.FC = () => {
         <Route path="/acompanhar-pedido" element={<OrderTracking />} />
         <Route path="/privacidade" element={<PrivacyPolicy />} />
         <Route path="/termos" element={<Terms />} />
+        
+        {/* Client Dashboard and Delivery Routes */}
+        <Route path="/client-dashboard" element={<ClientDashboard />} />
+        <Route path="/deliveries/:projectId" element={<FinalDeliveryPage />} />
         
         {/* Authentication routes */}
         <Route path="/auth/preview/:projectId" element={<MusicPreviewAuth />} />
