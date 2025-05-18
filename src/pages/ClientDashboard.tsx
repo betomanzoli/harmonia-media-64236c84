@@ -2,13 +2,15 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/lib/supabase';
-import { Loader2, Music, Clock, CheckCircle, AlertTriangle, FileAudio, MessageSquare } from 'lucide-react';
+import { Loader2, Music, Clock, CheckCircle, AlertTriangle, FileAudio, MessageSquare, ArrowLeft } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { useToast } from '@/hooks/use-toast';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import GoogleDrivePreviewsList from '@/components/previews/GoogleDrivePreviewsList';
 import { usePreviewProjects } from '@/hooks/admin/usePreviewProjects';
+import ProjectPreviewDetails from '@/components/client/ProjectPreviewDetails';
+import { setPreviewAccessCookie, setPreviewEmailCookie } from '@/utils/authCookies';
 
 interface Project {
   id: string;
@@ -44,6 +46,8 @@ const ClientDashboard: React.FC = () => {
         }
         
         setUser(session.user);
+        // Store user email in localStorage for preview access
+        localStorage.setItem('userEmail', session.user.email || '');
         fetchProjects(session.user.id);
       } catch (error) {
         console.error('Error checking auth:', error);
@@ -97,7 +101,22 @@ const ClientDashboard: React.FC = () => {
             status: 'em_andamento',
             created_at: '2023-11-10T14:23:00Z',
             updated_at: '2023-11-12T09:15:00Z',
-            preview_link: '/preview/P0001'
+            preview_link: '/preview/P0001',
+            versionsList: [
+              {
+                id: 'v1',
+                name: 'Versão Acústica',
+                description: 'Versão suave com violão e piano',
+                fileId: '1H62ylCwQYJ23BLpygtvNmCgwTDcHX6Cl',
+                recommended: true
+              },
+              {
+                id: 'v2',
+                name: 'Versão Orquestral',
+                description: 'Arranjo completo com cordas e metais',
+                fileId: '11c6JahRd5Lx0iKCL_gHZ0zrZ3LFBJ47a'
+              }
+            ]
           },
           {
             id: 'P0002',
@@ -106,7 +125,16 @@ const ClientDashboard: React.FC = () => {
             created_at: '2023-10-05T11:30:00Z',
             updated_at: '2023-10-20T16:45:00Z',
             preview_link: '/preview/P0002',
-            delivery_files: ['música_final.wav', 'música_final.mp3', 'stems.zip']
+            delivery_files: ['música_final.wav', 'música_final.mp3', 'stems.zip'],
+            versionsList: [
+              {
+                id: 'v1',
+                name: 'Jingle 30 segundos',
+                description: 'Versão completa para o comercial',
+                fileId: '1fCsWubN8pXwM-mRlDtnQFTCkBbIkuUyW',
+                recommended: true
+              }
+            ]
           },
           {
             id: 'P0003',
@@ -114,7 +142,22 @@ const ClientDashboard: React.FC = () => {
             status: 'aguardando_feedback',
             created_at: '2023-11-18T08:20:00Z',
             updated_at: '2023-11-20T14:10:00Z',
-            preview_link: '/preview/P0003'
+            preview_link: '/preview/P0003',
+            versionsList: [
+              {
+                id: 'v1',
+                name: 'Versão Corporativa',
+                description: 'Trilha institucional com piano e strings',
+                fileId: '1H62ylCwQYJ23BLpygtvNmCgwTDcHX6Cl',
+                recommended: true
+              },
+              {
+                id: 'v2',
+                name: 'Versão Minimalista',
+                description: 'Abordagem mais clean e moderna',
+                fileId: '11c6JahRd5Lx0iKCL_gHZ0zrZ3LFBJ47a'
+              }
+            ]
           }
         ];
         
@@ -161,6 +204,24 @@ const ClientDashboard: React.FC = () => {
     navigate(`/deliveries/${projectId}`);
   };
   
+  const handleViewPreviews = (project: Project) => {
+    if (!project.id) return;
+    
+    // Try to get userEmail from localStorage
+    const userEmail = localStorage.getItem('userEmail');
+    
+    // Set access cookies to allow direct preview access
+    if (userEmail) {
+      setPreviewAccessCookie(project.id);
+      setPreviewEmailCookie(project.id, userEmail);
+    }
+    
+    // Navigate to preview page directly
+    if (project.preview_link) {
+      navigate(project.preview_link);
+    }
+  };
+  
   if (isLoading) {
     return (
       <div className="min-h-screen flex flex-col items-center justify-center bg-gray-50">
@@ -174,62 +235,10 @@ const ClientDashboard: React.FC = () => {
     return (
       <div className="min-h-screen bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
         <div className="max-w-5xl mx-auto">
-          <Button 
-            variant="ghost" 
-            className="mb-6 flex items-center text-gray-600"
-            onClick={backToProjectsList}
-          >
-            <ArrowLeft className="h-4 w-4 mr-1" /> Voltar aos projetos
-          </Button>
-          
-          <div className="mb-6">
-            <h1 className="text-3xl font-bold text-gray-900 mb-2">{selectedProject.title}</h1>
-            <div className="flex items-center space-x-3">
-              {getStatusBadge(selectedProject.status)}
-              <span className="text-sm text-gray-500">
-                Última atualização: {new Date(selectedProject.updated_at).toLocaleString('pt-BR')}
-              </span>
-            </div>
-          </div>
-          
-          <div className="space-y-8">
-            <GoogleDrivePreviewsList projectId={selectedProject.id} title="Prévias disponíveis" />
-            
-            <Card>
-              <CardHeader>
-                <CardTitle className="text-xl">Ações disponíveis</CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="flex flex-wrap gap-3">
-                  {selectedProject.status === 'aprovado' && (
-                    <Button 
-                      variant="default"
-                      className="bg-harmonia-green hover:bg-harmonia-green/90"
-                      onClick={() => viewDeliveryFiles(selectedProject.id)}
-                    >
-                      <FileAudio className="h-4 w-4 mr-2" />
-                      Ver arquivos finais
-                    </Button>
-                  )}
-                  
-                  <Button 
-                    variant="outline"
-                    onClick={() => navigate(`/preview/${selectedProject.id}`)}
-                  >
-                    <Music className="h-4 w-4 mr-2" />
-                    Ver página de prévias
-                  </Button>
-                  
-                  {selectedProject.status !== 'aprovado' && (
-                    <Button variant="outline">
-                      <MessageSquare className="h-4 w-4 mr-2" />
-                      Enviar feedback
-                    </Button>
-                  )}
-                </div>
-              </CardContent>
-            </Card>
-          </div>
+          <ProjectPreviewDetails 
+            project={selectedProject}
+            onBack={backToProjectsList}
+          />
         </div>
       </div>
     );
@@ -286,7 +295,7 @@ const ClientDashboard: React.FC = () => {
                         <Button 
                           variant="outline" 
                           size="sm"
-                          onClick={() => navigate(project.preview_link!)}
+                          onClick={() => handleViewPreviews(project)}
                           className="flex items-center gap-1"
                         >
                           <Music className="h-4 w-4" />
@@ -367,7 +376,7 @@ const ClientDashboard: React.FC = () => {
                           <Button 
                             variant="outline" 
                             size="sm"
-                            onClick={() => navigate(project.preview_link!)}
+                            onClick={() => handleViewPreviews(project)}
                             className="flex items-center gap-1"
                           >
                             <Music className="h-4 w-4" />
@@ -478,12 +487,5 @@ const ClientDashboard: React.FC = () => {
     </div>
   );
 };
-
-// Componente ArrowLeft para ser utilizado no botão de voltar
-const ArrowLeft: React.FC<{ className?: string }> = ({ className }) => (
-  <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}>
-    <path d="M19 12H5M12 19l-7-7 7-7" />
-  </svg>
-);
 
 export default ClientDashboard;

@@ -6,9 +6,11 @@ import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Textarea } from '@/components/ui/textarea';
 import { useToast } from '@/hooks/use-toast';
-import { Music, MessageSquare, ArrowLeft, CheckCircle } from 'lucide-react';
+import { Music, MessageSquare, ArrowLeft, CheckCircle, Star } from 'lucide-react';
 import { notificationService } from '@/services/notificationService';
 import GoogleDriveAudioPlayer from '@/components/previews/GoogleDriveAudioPlayer';
+import { supabase } from '@/lib/supabase';
+import { checkPreviewAccessCookie, setPreviewAccessCookie, setPreviewEmailCookie } from '@/utils/authCookies';
 
 interface ProjectPreviewDetailsProps {
   project: {
@@ -37,35 +39,69 @@ const ProjectPreviewDetails: React.FC<ProjectPreviewDetailsProps> = ({ project, 
   const navigate = useNavigate();
 
   useEffect(() => {
-    if (project.versions && project.versions.length > 0) {
-      setVersions(project.versions);
-      // Select the recommended version by default if available
-      const recommendedVersion = project.versions.find(v => v.recommended);
-      if (recommendedVersion) {
-        setSelectedVersion(recommendedVersion.id);
-      } else if (project.versions.length > 0) {
-        setSelectedVersion(project.versions[0].id);
-      }
-    } else {
-      // Fallback demo versions
-      const demoVersions = [
-        {
-          id: 'v1',
-          name: 'Versão Acústica',
-          description: 'Versão suave com violão e piano',
-          fileId: '1H62ylCwQYJ23BLpygtvNmCgwTDcHX6Cl',
-          recommended: true
-        },
-        {
-          id: 'v2',
-          name: 'Versão Orquestral',
-          description: 'Arranjo completo com cordas e metais',
-          fileId: '11c6JahRd5Lx0iKCL_gHZ0zrZ3LFBJ47a'
-        }
-      ];
-      setVersions(demoVersions);
-      setSelectedVersion('v1');
+    // Ensure client has access to previews
+    const currentEmail = localStorage.getItem('userEmail') || '';
+    if (currentEmail && project.id) {
+      setPreviewAccessCookie(project.id);
+      setPreviewEmailCookie(project.id, currentEmail);
     }
+
+    // Load versions from project or fetch from backend
+    const loadVersions = async () => {
+      if (project.versions && project.versions.length > 0) {
+        setVersions(project.versions);
+        // Select the recommended version by default if available
+        const recommendedVersion = project.versions.find(v => v.recommended);
+        if (recommendedVersion) {
+          setSelectedVersion(recommendedVersion.id);
+        } else if (project.versions.length > 0) {
+          setSelectedVersion(project.versions[0].id);
+        }
+      } else {
+        try {
+          // Try to fetch versions from admin preview data
+          const { data: previewData, error } = await supabase
+            .from('previews')
+            .select('*')
+            .eq('preview_id', project.id)
+            .maybeSingle();
+
+          if (error) throw error;
+
+          if (previewData?.versions) {
+            setVersions(previewData.versions);
+            if (previewData.versions.length > 0) {
+              const recommendedVersion = previewData.versions.find(v => v.recommended);
+              setSelectedVersion(recommendedVersion?.id || previewData.versions[0].id);
+            }
+            return;
+          }
+        } catch (error) {
+          console.error("Error fetching preview versions:", error);
+        }
+
+        // Fallback demo versions
+        const demoVersions = [
+          {
+            id: 'v1',
+            name: 'Versão Acústica',
+            description: 'Versão suave com violão e piano',
+            fileId: '1H62ylCwQYJ23BLpygtvNmCgwTDcHX6Cl',
+            recommended: true
+          },
+          {
+            id: 'v2',
+            name: 'Versão Orquestral',
+            description: 'Arranjo completo com cordas e metais',
+            fileId: '11c6JahRd5Lx0iKCL_gHZ0zrZ3LFBJ47a'
+          }
+        ];
+        setVersions(demoVersions);
+        setSelectedVersion('v1');
+      }
+    };
+
+    loadVersions();
   }, [project]);
 
   const handleSubmitFeedback = () => {
@@ -83,7 +119,8 @@ const ProjectPreviewDetails: React.FC<ProjectPreviewDetailsProps> = ({ project, 
     // Notify about feedback using the notification service
     notificationService.notify('feedback_received', {
       projectId: project.id,
-      message: feedback
+      message: feedback,
+      versionId: selectedVersion
     });
     
     setTimeout(() => {
@@ -168,7 +205,7 @@ const ProjectPreviewDetails: React.FC<ProjectPreviewDetailsProps> = ({ project, 
                     <CardTitle className="text-lg">{version.name}</CardTitle>
                     {version.recommended && (
                       <span className="ml-2 text-yellow-500 flex items-center text-sm font-medium">
-                        ★ Recomendada
+                        <Star className="h-4 w-4 mr-1" /> Recomendada
                       </span>
                     )}
                   </div>
