@@ -17,7 +17,7 @@ interface ProjectPreviewDetailsProps {
     id: string;
     title: string;
     status: string;
-    versions?: any[];
+    versions?: any[]; // Make sure this is an array
   };
   onBack: () => void;
 }
@@ -48,7 +48,7 @@ const ProjectPreviewDetails: React.FC<ProjectPreviewDetailsProps> = ({ project, 
 
     // Load versions from project or fetch from backend
     const loadVersions = async () => {
-      if (project.versions && project.versions.length > 0) {
+      if (project.versions && Array.isArray(project.versions) && project.versions.length > 0) {
         setVersions(project.versions);
         // Select the recommended version by default if available
         const recommendedVersion = project.versions.find(v => v.recommended);

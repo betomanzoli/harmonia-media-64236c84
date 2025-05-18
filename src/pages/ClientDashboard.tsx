@@ -1,4 +1,3 @@
-
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/lib/supabase';
@@ -20,7 +19,7 @@ interface Project {
   updated_at: string;
   preview_link?: string;
   delivery_files?: string[];
-  versions?: number;
+  versions?: any[]; // Changed from number to any[]
   versionsList?: any[];
   previewUrl?: string;
 }
@@ -86,7 +85,7 @@ const ClientDashboard: React.FC = () => {
           created_at: adminProject.createdAt,
           updated_at: adminProject.lastActivityDate || adminProject.createdAt,
           preview_link: `/preview/${adminProject.id}`,
-          versions: adminProject.versions || 0,
+          versions: adminProject.versionsList || [], // Make sure this is always an array
           versionsList: adminProject.versionsList || [],
           previewUrl: adminProject.previewUrl
         };
