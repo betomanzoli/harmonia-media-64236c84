@@ -25,6 +25,9 @@ import OrderTracking from './pages/OrderTracking';
 import PrivacyPolicy from './pages/PrivacyPolicy';
 import Terms from './pages/Terms';
 import PreviewPage from './pages/PreviewPage';
+import MusicPreviewAuth from './pages/MusicPreviewAuth';
+import AuthCallback from './pages/AuthCallback';
+import AuthError from './pages/AuthError';
 import MusicPreviews from './pages/MusicPreviews';
 import FeedbackConfirmation from './pages/FeedbackConfirmation';
 import QualificacaoPage from './pages/Qualificacao';
@@ -82,6 +85,13 @@ const AppRoutes: React.FC = () => {
         <Route path="/acompanhar-pedido" element={<OrderTracking />} />
         <Route path="/privacidade" element={<PrivacyPolicy />} />
         <Route path="/termos" element={<Terms />} />
+        
+        {/* Authentication routes */}
+        <Route path="/auth/preview/:projectId" element={<MusicPreviewAuth />} />
+        <Route path="/auth/callback" element={<AuthCallback />} />
+        <Route path="/auth-error" element={<AuthError />} />
+        
+        {/* Preview routes */}
         <Route path="/preview/:projectId" element={<PreviewPage />} />
         <Route path="/preview/:previewId" element={<MusicPreviews />} />
         <Route path="/feedback-confirmacao" element={<FeedbackConfirmation />} />

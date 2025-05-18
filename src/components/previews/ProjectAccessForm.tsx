@@ -1,174 +1,215 @@
 
 import React, { useState } from 'react';
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
-import { Button } from "@/components/ui/button";
-import { Label } from "@/components/ui/label";
-import { Music, Mail, Key } from 'lucide-react';
-import { supabase } from '@/integrations/supabase/client';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
 import { useToast } from '@/hooks/use-toast';
+import { Loader2, Mail, ArrowRight } from 'lucide-react';
+import { supabase } from '@/lib/supabase';
+import { setPreviewAccessCookie } from '@/utils/authCookies';
+import MusicNoteIcon from '@/components/icons/MusicNoteIcon';
+import { useNavigate } from 'react-router-dom';
 
 interface ProjectAccessFormProps {
   projectId: string;
-  onVerify: (code: string, email: string) => void;
+  onVerify: (email: string, code: string) => void;
 }
 
 const ProjectAccessForm: React.FC<ProjectAccessFormProps> = ({ projectId, onVerify }) => {
-  const [code, setCode] = useState(projectId || '');
   const [email, setEmail] = useState('');
-  const [isLoading, setIsLoading] = useState(false);
+  const [code, setCode] = useState('');
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [showCodeInput, setShowCodeInput] = useState(false);
   const { toast } = useToast();
+  const navigate = useNavigate();
 
-  const validateAccess = async (previewCode: string, email: string) => {
+  const handleEmailSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+
+    if (!email || !email.includes('@')) {
+      toast({
+        title: "Email inválido",
+        description: "Por favor, insira um endereço de email válido",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    setIsSubmitting(true);
+
     try {
-      // Try to find a project with matching preview code
-      const { data, error } = await supabase
-        .from('projects')
-        .select('client_id')
-        .eq('preview_code', previewCode)
-        .single();
-      
-      if (error || !data) {
-        console.error('Invalid preview code:', error);
-        toast({
-          title: "Código inválido",
-          description: "O código de prévia fornecido não é válido.",
-          variant: "destructive"
-        });
-        return false;
-      }
-      
-      // If we find a project, check if it belongs to a client with this email
-      if (data.client_id) {
-        const { data: clientData, error: clientError } = await supabase
-          .from('clients')
-          .select('email')
-          .eq('id', data.client_id)
-          .single();
-          
-        if (clientError || !clientData) {
-          console.error('Client not found:', clientError);
-          toast({
-            title: "Cliente não encontrado",
-            description: "Não foi possível verificar os dados do cliente.",
-            variant: "destructive"
-          });
-          return false;
-        }
-        
-        if (clientData.email.toLowerCase() !== email.toLowerCase()) {
-          console.error('Email mismatch');
-          toast({
-            title: "Email não correspondente",
-            description: "O email informado não corresponde ao cliente deste projeto.",
-            variant: "destructive"
-          });
-          return false;
-        }
-      }
-      
-      // Email is valid for this preview code
-      document.cookie = `preview_access_${previewCode}=authorized; path=/; Secure; SameSite=None; max-age=86400`;
-      document.cookie = `preview_email_${previewCode}=${email}; path=/; Secure; SameSite=None; max-age=86400`;
-      return true;
+      // Redirect to the Supabase auth flow for this preview
+      navigate(`/auth/preview/${projectId}`);
     } catch (error) {
-      console.error('Error validating access:', error);
-      return false;
+      console.error("Verification error:", error);
+      toast({
+        title: "Erro na verificação",
+        description: "Não foi possível verificar seu acesso. Por favor, tente novamente.",
+        variant: "destructive"
+      });
+      setIsSubmitting(false);
     }
   };
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleCodeSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setIsLoading(true);
-    
-    try {
-      const isValid = await validateAccess(code, email);
-      if (isValid) {
-        onVerify(code, email);
-      } else {
-        setIsLoading(false);
-      }
-    } catch (error) {
-      console.error('Access verification error:', error);
+
+    if (!code) {
       toast({
-        title: "Erro de verificação",
-        description: "Ocorreu um erro ao verificar seu acesso. Tente novamente.",
+        title: "Código inválido",
+        description: "Por favor, insira o código de acesso",
         variant: "destructive"
       });
-      setIsLoading(false);
+      return;
+    }
+
+    setIsSubmitting(true);
+
+    try {
+      // Check against Supabase if this is a valid code
+      const { data, error } = await supabase
+        .from('preview_codes')
+        .select('*')
+        .eq('project_id', projectId)
+        .eq('code', code)
+        .single();
+
+      if (error || !data) {
+        toast({
+          title: "Código inválido",
+          description: "O código inserido não é válido para esta prévia",
+          variant: "destructive"
+        });
+        setIsSubmitting(false);
+        return;
+      }
+
+      // Set cookie for future access
+      setPreviewAccessCookie(projectId);
+      
+      // Call the verification callback
+      onVerify(email, code);
+    } catch (error) {
+      console.error("Code verification error:", error);
+      toast({
+        title: "Erro na verificação",
+        description: "Não foi possível verificar o código. Por favor, tente novamente.",
+        variant: "destructive"
+      });
+      setIsSubmitting(false);
     }
   };
 
   return (
-    <div className="w-full max-w-md mx-auto px-4">
-      <Card className="bg-white shadow-lg border-0">
-        <CardHeader className="text-center">
-          <div className="mx-auto w-12 h-12 bg-harmonia-green/10 rounded-full flex items-center justify-center mb-2">
-            <Music className="text-harmonia-green h-6 w-6" />
+    <div className="bg-white p-8 rounded-lg shadow-md max-w-md w-full">
+      <div className="text-center mb-6">
+        <div className="inline-flex items-center justify-center h-16 w-16 rounded-full bg-harmonia-green/10 mb-4">
+          <MusicNoteIcon className="h-8 w-8 text-harmonia-green" />
+        </div>
+        <h2 className="text-2xl font-bold text-gray-800">Prévia Musical Exclusiva</h2>
+        <p className="text-gray-500 mt-1">
+          Por favor, verifique seu acesso para visualizar sua prévia musical.
+        </p>
+      </div>
+
+      {!showCodeInput ? (
+        <form onSubmit={handleEmailSubmit} className="space-y-4">
+          <div>
+            <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-1">
+              Email
+            </label>
+            <div className="relative">
+              <Mail className="text-gray-400 absolute left-3 top-3 h-5 w-5" />
+              <Input
+                id="email"
+                type="email"
+                placeholder="seu@email.com"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                className="pl-10"
+                required
+              />
+            </div>
+            <p className="text-xs text-gray-500 mt-1">
+              Digite o email onde você recebeu a notificação sobre esta prévia musical.
+            </p>
           </div>
-          <CardTitle className="text-2xl">Acesse sua Prévia</CardTitle>
-          <CardDescription>
-            Por favor, informe os dados abaixo para acessar a prévia do seu projeto musical.
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <form onSubmit={handleSubmit} className="space-y-4">
-            <div className="space-y-2">
-              <Label htmlFor="projectCode">Código do Projeto</Label>
-              <div className="relative">
-                <Key className="absolute left-3 top-2.5 h-5 w-5 text-gray-400" />
-                <Input
-                  id="projectCode"
-                  value={code}
-                  onChange={(e) => setCode(e.target.value)}
-                  className="pl-10"
-                  placeholder="Informe o código do projeto"
-                  required
-                />
-              </div>
-            </div>
-            
-            <div className="space-y-2">
-              <Label htmlFor="email">Email</Label>
-              <div className="relative">
-                <Mail className="absolute left-3 top-2.5 h-5 w-5 text-gray-400" />
-                <Input
-                  id="email"
-                  type="email"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  className="pl-10"
-                  placeholder="Informe seu email"
-                  required
-                />
-              </div>
-              <p className="text-xs text-gray-500 mt-1">
-                O mesmo email usado no momento da contratação
-              </p>
-            </div>
-          </form>
-        </CardContent>
-        <CardFooter>
-          <Button 
-            onClick={handleSubmit}
+          
+          <Button
+            type="submit"
             className="w-full bg-harmonia-green hover:bg-harmonia-green/90"
-            disabled={isLoading}
+            disabled={isSubmitting}
           >
-            {isLoading ? (
+            {isSubmitting ? (
               <>
-                <span className="animate-spin mr-2">⭘</span>
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                 Verificando...
               </>
             ) : (
-              "Acessar Prévia"
+              <>
+                Verificar acesso
+                <ArrowRight className="ml-2 h-4 w-4" />
+              </>
             )}
           </Button>
-        </CardFooter>
-      </Card>
-      
-      <p className="text-center text-sm text-gray-500 mt-4">
-        Dúvidas? Entre em contato pelo WhatsApp +55 11 92058-5072
-      </p>
+          
+          <div className="text-center">
+            <button
+              type="button"
+              onClick={() => setShowCodeInput(true)}
+              className="text-sm text-gray-500 hover:text-harmonia-green"
+            >
+              Tenho um código de acesso
+            </button>
+          </div>
+        </form>
+      ) : (
+        <form onSubmit={handleCodeSubmit} className="space-y-4">
+          <div>
+            <label htmlFor="code" className="block text-sm font-medium text-gray-700 mb-1">
+              Código de acesso
+            </label>
+            <Input
+              id="code"
+              type="text"
+              placeholder="Digite o código de acesso"
+              value={code}
+              onChange={(e) => setCode(e.target.value)}
+              required
+            />
+            <p className="text-xs text-gray-500 mt-1">
+              Digite o código que você recebeu para acessar esta prévia musical.
+            </p>
+          </div>
+          
+          <Button
+            type="submit"
+            className="w-full bg-harmonia-green hover:bg-harmonia-green/90"
+            disabled={isSubmitting}
+          >
+            {isSubmitting ? (
+              <>
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                Verificando...
+              </>
+            ) : (
+              <>
+                Acessar prévia
+                <ArrowRight className="ml-2 h-4 w-4" />
+              </>
+            )}
+          </Button>
+          
+          <div className="text-center">
+            <button
+              type="button"
+              onClick={() => setShowCodeInput(false)}
+              className="text-sm text-gray-500 hover:text-harmonia-green"
+            >
+              Verificar por email
+            </button>
+          </div>
+        </form>
+      )}
     </div>
   );
 };

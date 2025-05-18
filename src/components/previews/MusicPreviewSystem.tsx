@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import PreviewHeader from './PreviewHeader';
 import PreviewPlayerList from './player/PreviewPlayerList';
@@ -12,26 +11,10 @@ import PreviewLoadingState from './PreviewLoadingState';
 import { usePreviewProject } from '@/hooks/usePreviewProject';
 import PreviewProjectDetails from './PreviewProjectDetails';
 import { useToast } from '@/hooks/use-toast';
+import { Lock } from 'lucide-react';
 
 interface MusicPreviewSystemProps {
   projectId: string;
-}
-
-interface PreviewProject {
-  clientName: string;
-  projectTitle: string;
-  status: 'waiting' | 'feedback' | 'approved';
-  previews: {
-    id: string;
-    title: string;
-    description: string;
-    audioUrl: string;
-    fileId?: string;
-    recommended?: boolean;
-  }[];
-  packageType?: string;
-  createdAt?: string;
-  expiresAt?: string;
 }
 
 const MusicPreviewSystem: React.FC<MusicPreviewSystemProps> = ({ projectId }) => {
@@ -117,6 +100,15 @@ const MusicPreviewSystem: React.FC<MusicPreviewSystemProps> = ({ projectId }) =>
 
   return (
     <div className="max-w-4xl mx-auto px-4">
+      <div className="mb-6 flex items-center justify-between">
+        <div className="inline-flex items-center bg-green-50 border border-green-100 rounded-md px-3 py-1.5">
+          <Lock className="h-4 w-4 text-green-600 mr-1.5" />
+          <span className="text-xs text-green-700 font-medium">
+            Conteúdo protegido - Acesso restrito
+          </span>
+        </div>
+      </div>
+      
       <PreviewHeader 
         projectData={{
           projectTitle: projectData.projectTitle || 'Projeto sem nome',
