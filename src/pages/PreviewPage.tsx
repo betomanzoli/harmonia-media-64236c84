@@ -142,23 +142,27 @@ const PreviewPage: React.FC = () => {
       <div className="min-h-screen flex items-center justify-center bg-gray-100">
         <ProjectAccessForm 
           projectId={projectId} 
-          onVerify={(email, code) => {
+          onVerify={async (email, code) => {
             setIsAuthorized(true);
             toast({
               title: "Acesso autorizado",
               description: "Bem-vindo à página de prévia do seu projeto."
             });
             
-            // Log the access
-            const { error } = supabase.from('access_logs').insert({
-              preview_id: projectId,
-              user_email: email,
-              access_method: 'verification_code',
-              ip_address: 'not-tracked'
-            });
-            
-            if (error) {
-              console.error("Error logging access:", error);
+            // Log the access - Fixed: Need to await the insert operation to properly access error
+            try {
+              const { error } = await supabase.from('access_logs').insert({
+                preview_id: projectId,
+                user_email: email,
+                access_method: 'verification_code',
+                ip_address: 'not-tracked'
+              });
+              
+              if (error) {
+                console.error("Error logging access:", error);
+              }
+            } catch (err) {
+              console.error("Error logging access:", err);
             }
           }}
         />
