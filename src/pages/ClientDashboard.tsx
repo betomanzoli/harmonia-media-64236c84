@@ -281,10 +281,10 @@ const ClientDashboard: React.FC = () => {
                           <span className="text-sm text-gray-500">Última atualização:</span>
                           <span className="text-sm">{new Date(project.updated_at).toLocaleString('pt-BR')}</span>
                         </div>
-                        {project.versions && project.versions > 0 && (
+                        {project.versions && project.versions.length > 0 && (
                           <div className="flex justify-between items-center">
                             <span className="text-sm text-gray-500">Versões disponíveis:</span>
-                            <span className="text-sm">{project.versions}</span>
+                            <span className="text-sm">{project.versions.length}</span>
                           </div>
                         )}
                       </div>
