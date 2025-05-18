@@ -68,12 +68,16 @@ const PreviewPage: React.FC = () => {
               
               // Log the successful access
               try {
-                await supabase.from('access_logs').insert({
+                const { error: logError } = await supabase.from('access_logs').insert({
                   preview_id: projectId,
                   user_email: session.user.email,
                   access_method: 'auth',
                   ip_address: 'not-tracked'
                 });
+                
+                if (logError) {
+                  console.error("Error logging access:", logError);
+                }
               } catch (logError) {
                 console.error("Error logging access:", logError);
                 // Non-blocking error, continue with access
@@ -146,16 +150,16 @@ const PreviewPage: React.FC = () => {
             });
             
             // Log the access
-            supabase.from('access_logs').insert({
+            const { error } = supabase.from('access_logs').insert({
               preview_id: projectId,
               user_email: email,
               access_method: 'verification_code',
               ip_address: 'not-tracked'
-            }).then(() => {
-              console.log("Access logged successfully");
-            }).catch(error => {
-              console.error("Error logging access:", error);
             });
+            
+            if (error) {
+              console.error("Error logging access:", error);
+            }
           }}
         />
       </div>
