@@ -4,7 +4,7 @@ import { useParams, useNavigate } from 'react-router-dom';
 import MusicPreviewSystem from '@/components/previews/MusicPreviewSystem';
 import ProjectAccessForm from '@/components/previews/ProjectAccessForm';
 import { useToast } from '@/hooks/use-toast';
-import { checkPreviewAccessCookie } from '@/utils/authCookies';
+import { checkPreviewAccessCookie, getPreviewEmailCookie } from '@/utils/authCookies';
 import { supabase } from '@/lib/supabase';
 import { Loader2, Lock } from 'lucide-react';
 
@@ -28,6 +28,22 @@ const PreviewPage: React.FC = () => {
           // First check if we have a cookie-based access
           const hasCookieAccess = checkPreviewAccessCookie(projectId);
           if (hasCookieAccess) {
+            // Get the email from the cookie for logging purposes
+            const email = getPreviewEmailCookie(projectId);
+            
+            // Log the access in the database
+            try {
+              await supabase.from('access_logs').insert({
+                preview_id: projectId,
+                user_email: email,
+                access_method: 'cookie',
+                ip_address: 'not-tracked'
+              });
+            } catch (logError) {
+              console.error("Error logging access:", logError);
+              // Non-blocking error, continue with access
+            }
+            
             setIsAuthorized(true);
             setIsLoading(false);
             return;
@@ -49,6 +65,20 @@ const PreviewPage: React.FC = () => {
               setIsAuthorized(false);
             } else if (previewData && previewData.allowed_emails && 
                       previewData.allowed_emails.includes(session.user.email)) {
+              
+              // Log the successful access
+              try {
+                await supabase.from('access_logs').insert({
+                  preview_id: projectId,
+                  user_email: session.user.email,
+                  access_method: 'auth',
+                  ip_address: 'not-tracked'
+                });
+              } catch (logError) {
+                console.error("Error logging access:", logError);
+                // Non-blocking error, continue with access
+              }
+              
               setIsAuthorized(true);
             } else {
               // User is not authorized
@@ -113,6 +143,18 @@ const PreviewPage: React.FC = () => {
             toast({
               title: "Acesso autorizado",
               description: "Bem-vindo à página de prévia do seu projeto."
+            });
+            
+            // Log the access
+            supabase.from('access_logs').insert({
+              preview_id: projectId,
+              user_email: email,
+              access_method: 'verification_code',
+              ip_address: 'not-tracked'
+            }).then(() => {
+              console.log("Access logged successfully");
+            }).catch(error => {
+              console.error("Error logging access:", error);
             });
           }}
         />

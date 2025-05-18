@@ -9,6 +9,33 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
+      access_logs: {
+        Row: {
+          access_method: string
+          accessed_at: string
+          id: string
+          ip_address: string | null
+          preview_id: string
+          user_email: string | null
+        }
+        Insert: {
+          access_method: string
+          accessed_at?: string
+          id?: string
+          ip_address?: string | null
+          preview_id: string
+          user_email?: string | null
+        }
+        Update: {
+          access_method?: string
+          accessed_at?: string
+          id?: string
+          ip_address?: string | null
+          preview_id?: string
+          user_email?: string | null
+        }
+        Relationships: []
+      }
       briefing_fields: {
         Row: {
           created_at: string | null
@@ -369,6 +396,69 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      preview_codes: {
+        Row: {
+          code: string
+          created_at: string
+          expires_at: string | null
+          id: string
+          is_active: boolean | null
+          project_id: string
+        }
+        Insert: {
+          code: string
+          created_at?: string
+          expires_at?: string | null
+          id?: string
+          is_active?: boolean | null
+          project_id: string
+        }
+        Update: {
+          code?: string
+          created_at?: string
+          expires_at?: string | null
+          id?: string
+          is_active?: boolean | null
+          project_id?: string
+        }
+        Relationships: []
+      }
+      previews: {
+        Row: {
+          allowed_emails: string[]
+          created_at: string
+          description: string | null
+          expires_at: string | null
+          id: string
+          is_active: boolean | null
+          preview_id: string
+          project_id: string | null
+          title: string
+        }
+        Insert: {
+          allowed_emails: string[]
+          created_at?: string
+          description?: string | null
+          expires_at?: string | null
+          id?: string
+          is_active?: boolean | null
+          preview_id: string
+          project_id?: string | null
+          title: string
+        }
+        Update: {
+          allowed_emails?: string[]
+          created_at?: string
+          description?: string | null
+          expires_at?: string | null
+          id?: string
+          is_active?: boolean | null
+          preview_id?: string
+          project_id?: string | null
+          title?: string
+        }
+        Relationships: []
       }
       project_files: {
         Row: {
