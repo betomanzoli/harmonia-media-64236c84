@@ -2,11 +2,13 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/lib/supabase';
-import { Loader2, Music, Clock, CheckCircle, AlertTriangle, FileAudio } from 'lucide-react';
+import { Loader2, Music, Clock, CheckCircle, AlertTriangle, FileAudio, MessageSquare } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { useToast } from '@/hooks/use-toast';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import GoogleDrivePreviewsList from '@/components/previews/GoogleDrivePreviewsList';
+import { usePreviewProjects } from '@/hooks/admin/usePreviewProjects';
 
 interface Project {
   id: string;
@@ -16,14 +18,20 @@ interface Project {
   updated_at: string;
   preview_link?: string;
   delivery_files?: string[];
+  versions?: number;
+  versionsList?: any[];
+  previewUrl?: string;
 }
 
 const ClientDashboard: React.FC = () => {
   const [projects, setProjects] = useState<Project[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [user, setUser] = useState<any>(null);
+  const [selectedProject, setSelectedProject] = useState<Project | null>(null);
+  const [showProjectDetails, setShowProjectDetails] = useState(false);
   const navigate = useNavigate();
   const { toast } = useToast();
+  const { projects: adminProjects } = usePreviewProjects();
   
   useEffect(() => {
     const checkAuth = async () => {
@@ -54,41 +62,66 @@ const ClientDashboard: React.FC = () => {
   const fetchProjects = async (userId: string) => {
     setIsLoading(true);
     try {
-      // In a real implementation, this would query projects linked to the user
-      // For now, we'll use mock data
+      // Use the admin projects from usePreviewProjects hook for now
+      // Later this will be replaced with a query to the actual user projects
       
-      // Simulating API delay
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      
-      const mockProjects: Project[] = [
-        {
-          id: '1',
-          title: 'Música para Casamento',
-          status: 'em_andamento',
-          created_at: '2023-11-10T14:23:00Z',
-          updated_at: '2023-11-12T09:15:00Z',
-          preview_link: '/preview/mock-preview-1'
-        },
-        {
-          id: '2',
-          title: 'Jingle Publicitário',
-          status: 'aprovado',
-          created_at: '2023-10-05T11:30:00Z',
-          updated_at: '2023-10-20T16:45:00Z',
-          preview_link: '/preview/mock-preview-2',
-          delivery_files: ['música_final.wav', 'música_final.mp3', 'stems.zip']
-        },
-        {
-          id: '3',
-          title: 'Trilha para Vídeo Corporativo',
-          status: 'aguardando_feedback',
-          created_at: '2023-11-18T08:20:00Z',
-          updated_at: '2023-11-20T14:10:00Z',
-          preview_link: '/preview/mock-preview-3'
+      // Map admin projects to client projects format
+      const clientProjects = adminProjects.map(adminProject => {
+        // Convert status from admin format to client format
+        let clientStatus = 'em_andamento';
+        if (adminProject.status === 'approved') {
+          clientStatus = 'aprovado';
+        } else if (adminProject.status === 'feedback') {
+          clientStatus = 'aguardando_feedback';
         }
-      ];
+        
+        return {
+          id: adminProject.id,
+          title: adminProject.packageType || 'Música Personalizada',
+          status: clientStatus,
+          created_at: adminProject.createdAt,
+          updated_at: adminProject.lastActivityDate || adminProject.createdAt,
+          preview_link: `/preview/${adminProject.id}`,
+          versions: adminProject.versions || 0,
+          versionsList: adminProject.versionsList || [],
+          previewUrl: adminProject.previewUrl
+        };
+      });
       
-      setProjects(mockProjects);
+      // If there are no admin projects, use mockProjects
+      if (clientProjects.length === 0) {
+        const mockProjects: Project[] = [
+          {
+            id: 'P0001',
+            title: 'Música para Casamento',
+            status: 'em_andamento',
+            created_at: '2023-11-10T14:23:00Z',
+            updated_at: '2023-11-12T09:15:00Z',
+            preview_link: '/preview/P0001'
+          },
+          {
+            id: 'P0002',
+            title: 'Jingle Publicitário',
+            status: 'aprovado',
+            created_at: '2023-10-05T11:30:00Z',
+            updated_at: '2023-10-20T16:45:00Z',
+            preview_link: '/preview/P0002',
+            delivery_files: ['música_final.wav', 'música_final.mp3', 'stems.zip']
+          },
+          {
+            id: 'P0003',
+            title: 'Trilha para Vídeo Corporativo',
+            status: 'aguardando_feedback',
+            created_at: '2023-11-18T08:20:00Z',
+            updated_at: '2023-11-20T14:10:00Z',
+            preview_link: '/preview/P0003'
+          }
+        ];
+        
+        setProjects(mockProjects);
+      } else {
+        setProjects(clientProjects);
+      }
     } catch (error) {
       console.error('Error fetching projects:', error);
       toast({
@@ -114,11 +147,90 @@ const ClientDashboard: React.FC = () => {
     }
   };
   
+  const viewProjectDetails = (project: Project) => {
+    setSelectedProject(project);
+    setShowProjectDetails(true);
+  };
+  
+  const backToProjectsList = () => {
+    setSelectedProject(null);
+    setShowProjectDetails(false);
+  };
+  
+  const viewDeliveryFiles = (projectId: string) => {
+    navigate(`/deliveries/${projectId}`);
+  };
+  
   if (isLoading) {
     return (
       <div className="min-h-screen flex flex-col items-center justify-center bg-gray-50">
         <Loader2 className="h-8 w-8 animate-spin text-harmonia-green mb-4" />
         <h2 className="text-xl font-medium text-gray-700">Carregando seus projetos...</h2>
+      </div>
+    );
+  }
+
+  if (showProjectDetails && selectedProject) {
+    return (
+      <div className="min-h-screen bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
+        <div className="max-w-5xl mx-auto">
+          <Button 
+            variant="ghost" 
+            className="mb-6 flex items-center text-gray-600"
+            onClick={backToProjectsList}
+          >
+            <ArrowLeft className="h-4 w-4 mr-1" /> Voltar aos projetos
+          </Button>
+          
+          <div className="mb-6">
+            <h1 className="text-3xl font-bold text-gray-900 mb-2">{selectedProject.title}</h1>
+            <div className="flex items-center space-x-3">
+              {getStatusBadge(selectedProject.status)}
+              <span className="text-sm text-gray-500">
+                Última atualização: {new Date(selectedProject.updated_at).toLocaleString('pt-BR')}
+              </span>
+            </div>
+          </div>
+          
+          <div className="space-y-8">
+            <GoogleDrivePreviewsList projectId={selectedProject.id} title="Prévias disponíveis" />
+            
+            <Card>
+              <CardHeader>
+                <CardTitle className="text-xl">Ações disponíveis</CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="flex flex-wrap gap-3">
+                  {selectedProject.status === 'aprovado' && (
+                    <Button 
+                      variant="default"
+                      className="bg-harmonia-green hover:bg-harmonia-green/90"
+                      onClick={() => viewDeliveryFiles(selectedProject.id)}
+                    >
+                      <FileAudio className="h-4 w-4 mr-2" />
+                      Ver arquivos finais
+                    </Button>
+                  )}
+                  
+                  <Button 
+                    variant="outline"
+                    onClick={() => navigate(`/preview/${selectedProject.id}`)}
+                  >
+                    <Music className="h-4 w-4 mr-2" />
+                    Ver página de prévias
+                  </Button>
+                  
+                  {selectedProject.status !== 'aprovado' && (
+                    <Button variant="outline">
+                      <MessageSquare className="h-4 w-4 mr-2" />
+                      Enviar feedback
+                    </Button>
+                  )}
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+        </div>
       </div>
     );
   }
@@ -161,6 +273,12 @@ const ClientDashboard: React.FC = () => {
                           <span className="text-sm text-gray-500">Última atualização:</span>
                           <span className="text-sm">{new Date(project.updated_at).toLocaleString('pt-BR')}</span>
                         </div>
+                        {project.versions && project.versions > 0 && (
+                          <div className="flex justify-between items-center">
+                            <span className="text-sm text-gray-500">Versões disponíveis:</span>
+                            <span className="text-sm">{project.versions}</span>
+                          </div>
+                        )}
                       </div>
                     </CardContent>
                     <CardFooter className="flex gap-2 justify-end pt-3 border-t">
@@ -176,11 +294,21 @@ const ClientDashboard: React.FC = () => {
                         </Button>
                       )}
                       
-                      {project.delivery_files && project.delivery_files.length > 0 && (
+                      <Button 
+                        variant="default" 
+                        size="sm"
+                        className="bg-harmonia-green hover:bg-harmonia-green/90"
+                        onClick={() => viewProjectDetails(project)}
+                      >
+                        Ver detalhes
+                      </Button>
+                      
+                      {project.status === 'aprovado' && project.delivery_files && project.delivery_files.length > 0 && (
                         <Button 
                           variant="default" 
                           size="sm"
                           className="bg-harmonia-green hover:bg-harmonia-green/90 flex items-center gap-1"
+                          onClick={() => viewDeliveryFiles(project.id)}
                         >
                           <FileAudio className="h-4 w-4" />
                           Download
@@ -246,6 +374,14 @@ const ClientDashboard: React.FC = () => {
                             Ver prévias
                           </Button>
                         )}
+                        <Button 
+                          variant="default" 
+                          size="sm"
+                          className="bg-harmonia-green hover:bg-harmonia-green/90"
+                          onClick={() => viewProjectDetails(project)}
+                        >
+                          Ver detalhes
+                        </Button>
                       </CardFooter>
                     </Card>
                   ))
@@ -295,11 +431,20 @@ const ClientDashboard: React.FC = () => {
                         </div>
                       </CardContent>
                       <CardFooter className="flex gap-2 justify-end pt-3 border-t">
+                        <Button 
+                          variant="default" 
+                          size="sm"
+                          className="bg-harmonia-green hover:bg-harmonia-green/90"
+                          onClick={() => viewProjectDetails(project)}
+                        >
+                          Ver detalhes
+                        </Button>
                         {project.delivery_files && project.delivery_files.length > 0 && (
                           <Button 
                             variant="default" 
                             size="sm"
                             className="bg-harmonia-green hover:bg-harmonia-green/90 flex items-center gap-1"
+                            onClick={() => viewDeliveryFiles(project.id)}
                           >
                             <FileAudio className="h-4 w-4" />
                             Download
@@ -333,5 +478,12 @@ const ClientDashboard: React.FC = () => {
     </div>
   );
 };
+
+// Componente ArrowLeft para ser utilizado no botão de voltar
+const ArrowLeft: React.FC<{ className?: string }> = ({ className }) => (
+  <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}>
+    <path d="M19 12H5M12 19l-7-7 7-7" />
+  </svg>
+);
 
 export default ClientDashboard;
