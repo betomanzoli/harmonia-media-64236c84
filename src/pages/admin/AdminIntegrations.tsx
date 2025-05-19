@@ -5,12 +5,14 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import WebhookUrlManager from '@/components/admin/integrations/WebhookUrlManager';
+import N8nWebhookManager from '@/components/admin/integrations/N8nWebhookManager';
 import N8nWorkflowGuide from '@/components/admin/guides/N8nWorkflowGuide';
-import { ArrowLeft } from 'lucide-react';
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { ArrowLeft, AlertTriangle } from 'lucide-react';
 import { Link } from 'react-router-dom';
 
 const AdminIntegrations: React.FC = () => {
-  const [activeTab, setActiveTab] = useState<string>('webhooks');
+  const [activeTab, setActiveTab] = useState<string>('n8n');
 
   return (
     <AdminLayout>
@@ -34,13 +36,27 @@ const AdminIntegrations: React.FC = () => {
           </Button>
         </div>
 
-        <Tabs defaultValue="webhooks" value={activeTab} onValueChange={setActiveTab}>
+        <Alert className="bg-amber-50 border-amber-300">
+          <AlertTriangle className="h-4 w-4 text-amber-600" />
+          <AlertTitle className="text-amber-800">Configuração de Integração</AlertTitle>
+          <AlertDescription className="text-amber-700">
+            Para o funcionamento correto do sistema, configure os webhooks para cada tipo de workflow no n8n.
+            Siga o guia de implementação para configurar os workflows no n8n antes de usar os webhooks.
+          </AlertDescription>
+        </Alert>
+
+        <Tabs defaultValue="n8n" value={activeTab} onValueChange={setActiveTab}>
           <TabsList className="mb-6">
+            <TabsTrigger value="n8n">n8n Workflows</TabsTrigger>
             <TabsTrigger value="webhooks">Webhooks</TabsTrigger>
             <TabsTrigger value="email">Email</TabsTrigger>
-            <TabsTrigger value="n8n">n8n Workflows</TabsTrigger>
             <TabsTrigger value="api">APIs</TabsTrigger>
           </TabsList>
+
+          <TabsContent value="n8n" className="space-y-6">
+            <N8nWebhookManager defaultTab="preview" />
+            <N8nWorkflowGuide />
+          </TabsContent>
 
           <TabsContent value="webhooks" className="space-y-6">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -73,10 +89,6 @@ const AdminIntegrations: React.FC = () => {
                 </p>
               </CardContent>
             </Card>
-          </TabsContent>
-
-          <TabsContent value="n8n" className="space-y-6">
-            <N8nWorkflowGuide />
           </TabsContent>
 
           <TabsContent value="api" className="space-y-6">
