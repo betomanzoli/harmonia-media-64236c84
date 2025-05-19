@@ -14,6 +14,7 @@ const PreviewPage: React.FC = () => {
   const { toast } = useToast();
   const [isAuthorized, setIsAuthorized] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
+  const [projectExists, setProjectExists] = useState(false);
 
   useEffect(() => {
     // Log access for analytics
@@ -26,6 +27,34 @@ const PreviewPage: React.FC = () => {
         
         try {
           console.log('Checking authorization for project:', projectId);
+          
+          // First check if the project exists in Supabase
+          const { data: projectData, error: projectError } = await supabase
+            .from('preview_projects')
+            .select('id')
+            .eq('id', projectId)
+            .maybeSingle();
+            
+          if (projectError) {
+            console.error("Error checking project existence:", projectError);
+          }
+          
+          if (projectData) {
+            console.log("Project found in Supabase:", projectData);
+            setProjectExists(true);
+          } else {
+            console.log("Project not found in Supabase, checking local storage...");
+            // Check if project exists in local storage
+            const storedProjects = localStorage.getItem('harmonIA_preview_projects');
+            if (storedProjects) {
+              const parsedProjects = JSON.parse(storedProjects);
+              const localProject = parsedProjects.find((p: any) => p.id === projectId);
+              if (localProject) {
+                console.log("Project found in local storage:", localProject);
+                setProjectExists(true);
+              }
+            }
+          }
           
           // First check if the access is from client dashboard (userEmail in localStorage)
           const userEmail = localStorage.getItem('userEmail');

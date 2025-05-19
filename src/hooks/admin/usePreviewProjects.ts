@@ -1,4 +1,6 @@
+
 import { useState, useEffect, useCallback } from 'react';
+import { supabase } from '@/lib/supabase';
 
 export interface VersionItem {
   id: string;
@@ -47,20 +49,95 @@ export const usePreviewProjects = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   
-  // Load projects from local storage
+  // Load projects from local storage and Supabase
   const loadProjects = useCallback(async () => {
     setIsLoading(true);
     try {
-      // Try to load from localStorage
+      // Try to load from localStorage first for fast loading
       const storedProjects = localStorage.getItem('harmonIA_preview_projects');
+      let localProjects: ProjectItem[] = [];
+      
       if (storedProjects) {
-        const parsedProjects = JSON.parse(storedProjects);
-        console.log('Projects loaded from localStorage:', parsedProjects);
-        setProjects(parsedProjects);
+        localProjects = JSON.parse(storedProjects);
+        console.log('Projects loaded from localStorage:', localProjects);
+        setProjects(localProjects);
       } else {
         // Initialize with empty array if nothing found
-        setProjects([]);
-        console.log('No projects found, initialized with empty array');
+        localProjects = [];
+        console.log('No projects found in localStorage, initialized with empty array');
+      }
+
+      // Then try to fetch from Supabase to get the latest data
+      try {
+        const { data: supabaseProjects, error } = await supabase
+          .from('preview_projects')
+          .select('*');
+          
+        if (error) {
+          console.error('Error loading projects from Supabase:', error);
+          return;
+        }
+          
+        if (supabaseProjects && supabaseProjects.length > 0) {
+          console.log('Projects loaded from Supabase:', supabaseProjects);
+          
+          // Convert Supabase data to ProjectItem format
+          const supabaseProjectItems: ProjectItem[] = await Promise.all(
+            supabaseProjects.map(async (project) => {
+              // Fetch versions for this project
+              const { data: versionData, error: versionError } = await supabase
+                .from('project_versions')
+                .select('*')
+                .eq('project_id', project.id);
+                
+              if (versionError) {
+                console.error(`Error loading versions for project ${project.id}:`, versionError);
+              }
+              
+              const versionsList: VersionItem[] = versionData ? versionData.map(v => ({
+                id: v.version_id,
+                name: v.name,
+                description: v.description || '',
+                fileId: v.file_id,
+                audioUrl: v.audio_url,
+                dateAdded: new Date(v.created_at).toLocaleDateString('pt-BR'),
+                recommended: v.recommended
+              })) : [];
+              
+              return {
+                id: project.id,
+                clientName: project.client_name,
+                clientEmail: project.client_email || '',
+                packageType: project.package_type || 'Música Personalizada',
+                createdAt: new Date(project.created_at).toLocaleDateString('pt-BR'),
+                status: project.status as 'waiting' | 'feedback' | 'approved',
+                versions: versionsList.length,
+                previewUrl: `/preview/${project.id}`,
+                expirationDate: project.expiration_date ? new Date(project.expiration_date).toLocaleDateString('pt-BR') : '',
+                lastActivityDate: project.last_activity_date ? new Date(project.last_activity_date).toLocaleDateString('pt-BR') : new Date().toLocaleDateString('pt-BR'),
+                versionsList: versionsList,
+                feedback: project.feedback
+              };
+            })
+          );
+          
+          // Merge with local projects (local overrides if already exists)
+          const mergedProjects = [...supabaseProjectItems];
+          
+          // Add any local projects that aren't in Supabase yet
+          localProjects.forEach(localProject => {
+            if (!mergedProjects.some(p => p.id === localProject.id)) {
+              mergedProjects.push(localProject);
+            }
+          });
+          
+          setProjects(mergedProjects);
+          
+          // Update localStorage with merged data
+          localStorage.setItem('harmonIA_preview_projects', JSON.stringify(mergedProjects));
+        }
+      } catch (err) {
+        console.error('Error in Supabase fetch:', err);
       }
     } catch (err: any) {
       console.error('Error loading projects:', err);
@@ -71,21 +148,59 @@ export const usePreviewProjects = () => {
     }
   }, []);
 
-  // Save projects to local storage
+  // Save projects to local storage and Supabase
   const saveProjects = useCallback(async (updatedProjects: ProjectItem[]) => {
     try {
-      // Save to localStorage
+      // Save to localStorage for offline access
       localStorage.setItem('harmonIA_preview_projects', JSON.stringify(updatedProjects));
       console.log('Projects saved to localStorage:', updatedProjects);
+      
+      // Save to Supabase for cross-device access
+      for (const project of updatedProjects) {
+        // Upsert project in preview_projects
+        const { error: projectError } = await supabase
+          .from('preview_projects')
+          .upsert({
+            id: project.id,
+            client_name: project.clientName,
+            client_email: project.clientEmail,
+            project_title: project.packageType || 'Música Personalizada',
+            package_type: project.packageType,
+            status: project.status,
+            feedback: project.feedback,
+            expiration_date: project.expirationDate ? new Date(project.expirationDate) : null,
+            last_activity_date: project.lastActivityDate ? new Date(project.lastActivityDate) : new Date()
+          }, { onConflict: 'id' });
+          
+        if (projectError) {
+          console.error(`Error saving project ${project.id} to Supabase:`, projectError);
+        }
+        
+        // Save versions list to project_versions
+        if (project.versionsList && project.versionsList.length > 0) {
+          for (const version of project.versionsList) {
+            const { error: versionError } = await supabase
+              .from('project_versions')
+              .upsert({
+                project_id: project.id,
+                version_id: version.id,
+                name: version.name,
+                description: version.description || '',
+                file_id: version.fileId,
+                audio_url: version.audioUrl,
+                recommended: version.recommended || false
+              }, { onConflict: 'project_id,version_id' });
+              
+            if (versionError) {
+              console.error(`Error saving version ${version.id} for project ${project.id} to Supabase:`, versionError);
+            }
+          }
+        }
+      }
     } catch (error) {
       console.error('Error saving projects:', error);
     }
   }, []);
-
-  // Load projects on component mount
-  useEffect(() => {
-    loadProjects();
-  }, [loadProjects]);
 
   // Format package type with capitalized first letter
   const formatPackageType = (packageType: string): string => {
@@ -106,20 +221,102 @@ export const usePreviewProjects = () => {
   };
 
   // Get project by ID
-  const getProjectById = useCallback((id: string) => {
+  const getProjectById = useCallback(async (id: string) => {
     console.log("Getting project by ID:", id);
-    console.log("Available projects:", projects);
     
-    const project = projects.find(project => project.id === id);
-    console.log("Found project:", project);
+    // First try to find in local state for faster access
+    const localProject = projects.find(project => project.id === id);
     
-    // Format package type if project exists
-    if (project) {
-      project.packageType = formatPackageType(project.packageType);
+    if (localProject) {
+      console.log("Found project in local state:", localProject);
+      
+      // Format package type if project exists
+      if (localProject) {
+        localProject.packageType = formatPackageType(localProject.packageType);
+      }
+      
+      return localProject;
     }
     
-    return project || null;
-  }, [projects]);
+    // If not found locally, try to fetch from Supabase
+    try {
+      console.log("Trying to fetch project from Supabase");
+      const { data: projectData, error: projectError } = await supabase
+        .from('preview_projects')
+        .select('*')
+        .eq('id', id)
+        .maybeSingle();
+        
+      if (projectError) {
+        console.error(`Error fetching project ${id} from Supabase:`, projectError);
+        return null;
+      }
+      
+      if (!projectData) {
+        console.log(`Project ${id} not found in Supabase`);
+        return null;
+      }
+      
+      // Fetch versions for this project
+      const { data: versionData, error: versionError } = await supabase
+        .from('project_versions')
+        .select('*')
+        .eq('project_id', id);
+        
+      if (versionError) {
+        console.error(`Error loading versions for project ${id}:`, versionError);
+      }
+      
+      const versionsList: VersionItem[] = versionData ? versionData.map(v => ({
+        id: v.version_id,
+        name: v.name,
+        description: v.description || '',
+        fileId: v.file_id,
+        audioUrl: v.audio_url,
+        dateAdded: new Date(v.created_at).toLocaleDateString('pt-BR'),
+        recommended: v.recommended
+      })) : [];
+      
+      // Convert to ProjectItem format
+      const projectItem: ProjectItem = {
+        id: projectData.id,
+        clientName: projectData.client_name,
+        clientEmail: projectData.client_email || '',
+        packageType: formatPackageType(projectData.package_type || 'Música Personalizada'),
+        createdAt: new Date(projectData.created_at).toLocaleDateString('pt-BR'),
+        status: projectData.status as 'waiting' | 'feedback' | 'approved',
+        versions: versionsList.length,
+        previewUrl: `/preview/${projectData.id}`,
+        expirationDate: projectData.expiration_date ? new Date(projectData.expiration_date).toLocaleDateString('pt-BR') : '',
+        lastActivityDate: projectData.last_activity_date ? new Date(projectData.last_activity_date).toLocaleDateString('pt-BR') : new Date().toLocaleDateString('pt-BR'),
+        versionsList: versionsList,
+        feedback: projectData.feedback
+      };
+      
+      console.log("Found project in Supabase:", projectItem);
+      
+      // Update local state with this project
+      setProjects(prevProjects => {
+        const updated = [...prevProjects];
+        const index = updated.findIndex(p => p.id === id);
+        if (index >= 0) {
+          updated[index] = projectItem;
+        } else {
+          updated.push(projectItem);
+        }
+        
+        // Update localStorage with updated projects
+        localStorage.setItem('harmonIA_preview_projects', JSON.stringify(updated));
+        
+        return updated;
+      });
+      
+      return projectItem;
+    } catch (err) {
+      console.error(`Error getting project ${id}:`, err);
+      return null;
+    }
+  }, [projects, formatPackageType]);
 
   // Generate unique project ID
   const generateProjectId = useCallback(() => {
@@ -133,7 +330,7 @@ export const usePreviewProjects = () => {
   }, [projects]);
 
   // Add new project
-  const addProject = useCallback((project: Omit<ProjectItem, "id">) => {
+  const addProject = useCallback(async (project: Omit<ProjectItem, "id">) => {
     // Generate ID based on highest existing ID
     const newId = generateProjectId();
     
@@ -153,24 +350,49 @@ export const usePreviewProjects = () => {
     
     setProjects(updatedProjects);
     
-    // Save to storage
-    saveProjects(updatedProjects);
+    // Save to storage (local and Supabase)
+    await saveProjects(updatedProjects);
     
     return newId;
-  }, [projects, generateProjectId, saveProjects]);
+  }, [projects, generateProjectId, saveProjects, formatPackageType]);
 
   // Delete project
-  const deleteProject = useCallback((id: string) => {
+  const deleteProject = useCallback(async (id: string) => {
     const updatedProjects = projects.filter(project => project.id !== id);
     console.log(`Deleting project ${id}`);
     console.log("Updated project list:", updatedProjects);
     
     setProjects(updatedProjects);
-    saveProjects(updatedProjects);
+    await saveProjects(updatedProjects);
+    
+    // Delete from Supabase
+    try {
+      // Delete project versions first
+      const { error: versionsError } = await supabase
+        .from('project_versions')
+        .delete()
+        .eq('project_id', id);
+        
+      if (versionsError) {
+        console.error(`Error deleting versions for project ${id} from Supabase:`, versionsError);
+      }
+      
+      // Then delete the project
+      const { error: projectError } = await supabase
+        .from('preview_projects')
+        .delete()
+        .eq('id', id);
+        
+      if (projectError) {
+        console.error(`Error deleting project ${id} from Supabase:`, projectError);
+      }
+    } catch (err) {
+      console.error(`Error deleting project ${id} from Supabase:`, err);
+    }
   }, [projects, saveProjects]);
 
   // Update project
-  const updateProject = useCallback((id: string, updates: Partial<ProjectItem>) => {
+  const updateProject = useCallback(async (id: string, updates: Partial<ProjectItem>) => {
     console.log(`Updating project ${id} with:`, updates);
     
     const projectIndex = projects.findIndex(p => p.id === id);
@@ -253,10 +475,15 @@ export const usePreviewProjects = () => {
     console.log("Updated project list:", updatedProjects);
     
     setProjects(updatedProjects);
-    saveProjects(updatedProjects);
+    await saveProjects(updatedProjects);
     
     return updatedProject;
-  }, [projects, saveProjects]);
+  }, [projects, saveProjects, formatPackageType]);
+
+  // Load projects on component mount
+  useEffect(() => {
+    loadProjects();
+  }, [loadProjects]);
 
   return {
     projects,
