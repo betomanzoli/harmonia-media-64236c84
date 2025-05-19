@@ -3,6 +3,7 @@ import { useState, useCallback, useEffect } from 'react';
 import { createId } from '@paralleldrive/cuid2';
 import { supabase } from '@/lib/supabase';
 import { useToast } from '@/hooks/use-toast';
+import { useCustomers } from '@/hooks/admin/useCustomers';
 
 export interface Briefing {
   id: string;
@@ -22,6 +23,7 @@ export const useBriefings = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const { toast } = useToast();
+  const { getCustomerByEmail, addCustomer, updateCustomer } = useCustomers();
 
   // Load briefings from Supabase
   const fetchBriefings = useCallback(async () => {
@@ -56,9 +58,9 @@ export const useBriefings = () => {
       // Transform data to match the Briefing interface
       const transformedBriefings: Briefing[] = data.map((item: any) => ({
         id: item.id,
-        name: item.clients?.name || 'Cliente sem nome',
-        email: item.clients?.email || 'sem email',
-        phone: item.clients?.phone || '',
+        name: item.clients?.name || item.data?.client_name || 'Cliente sem nome',
+        email: item.clients?.email || item.data?.client_email || 'sem email',
+        phone: item.clients?.phone || item.data?.client_phone || '',
         packageType: item.package_type,
         createdAt: new Date(item.created_at).toLocaleDateString('pt-BR'),
         status: item.status,
@@ -235,15 +237,65 @@ export const useBriefings = () => {
 
   const createProjectFromBriefing = useCallback(async (briefing: Briefing) => {
     try {
+      // Check if client exists or create a new one
+      let clientId: string | null = null;
+      const existingClient = getCustomerByEmail(briefing.email);
+      
+      if (existingClient) {
+        clientId = existingClient.id;
+        // Update project count for this client
+        updateCustomer(clientId, {
+          projects: existingClient.projects + 1
+        });
+      } else {
+        // Create a new client
+        const newClientData = {
+          name: briefing.name,
+          email: briefing.email,
+          phone: briefing.phone,
+          status: 'active' as const,
+          projects: 1,
+          createdAt: new Date().toISOString()
+        };
+        clientId = addCustomer(newClientData);
+        
+        // Also try to create in Supabase
+        try {
+          const { data: client, error } = await supabase
+            .from('clients')
+            .insert([
+              {
+                name: briefing.name,
+                email: briefing.email,
+                phone: briefing.phone
+              }
+            ])
+            .select()
+            .single();
+          
+          if (client && !error) {
+            clientId = client.id;
+          }
+        } catch (err) {
+          console.error('Error creating client in Supabase:', err);
+          // Continue with local client ID
+        }
+      }
+      
+      // Generate a unique project ID
+      const projectId = createId();
+      
       // Create a project in Supabase
       const { data: project, error } = await supabase
         .from('projects')
         .insert([
           {
+            id: projectId,
             title: briefing.description || `Projeto para ${briefing.name}`,
-            client_id: briefing.formData?.client_id,
+            client_id: clientId,
             status: 'waiting',
-            description: briefing.description
+            description: briefing.description,
+            deadline: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString()
           }
         ])
         .select()
@@ -251,6 +303,51 @@ export const useBriefings = () => {
       
       if (error) {
         throw error;
+      }
+      
+      // Create a preview project
+      const previewId = `P${Math.random().toString(36).substring(2, 8).toUpperCase()}`;
+      const expirationDate = new Date();
+      expirationDate.setDate(expirationDate.getDate() + 14); // 14 days expiration
+      
+      // Create preview record in localStorage
+      const previewProjects = JSON.parse(localStorage.getItem('harmonIA_preview_projects') || '[]');
+      const newPreviewProject = {
+        id: previewId,
+        clientName: briefing.name,
+        clientEmail: briefing.email,
+        clientPhone: briefing.phone,
+        packageType: briefing.packageType,
+        createdAt: new Date().toISOString(),
+        expirationDate: expirationDate.toISOString(),
+        status: 'waiting',
+        projectId: project.id,
+        projectTitle: briefing.description || `Música para ${briefing.name}`,
+        lastActivityDate: new Date().toISOString(),
+        versionsList: []
+      };
+      
+      previewProjects.push(newPreviewProject);
+      localStorage.setItem('harmonIA_preview_projects', JSON.stringify(previewProjects));
+      
+      // Try to create in Supabase as well
+      try {
+        await supabase
+          .from('preview_projects')
+          .insert([
+            {
+              id: previewId,
+              client_name: briefing.name,
+              project_title: briefing.description || `Música para ${briefing.name}`,
+              package_type: briefing.packageType,
+              status: 'waiting',
+              expiration_date: expirationDate.toISOString(),
+              last_activity_date: new Date().toISOString()
+            }
+          ]);
+      } catch (err) {
+        console.error('Error creating preview project in Supabase:', err);
+        // Continue with local storage
       }
       
       // Update the briefing to link it to the project
@@ -315,7 +412,7 @@ export const useBriefings = () => {
       
       return projectId;
     }
-  }, [briefings, toast]);
+  }, [briefings, toast, getCustomerByEmail, updateCustomer, addCustomer]);
 
   return {
     briefings,
