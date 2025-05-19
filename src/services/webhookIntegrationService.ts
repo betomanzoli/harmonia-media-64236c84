@@ -1,270 +1,179 @@
 
-import webhookService, { NotificationType } from './webhookService';
 import { supabase } from '@/lib/supabase';
 
-// Enhanced webhook service specifically for n8n integrations
-interface WebhookPayload {
-  type: NotificationType;
-  data: any;
-  timestamp: string;
-  source?: string;
-}
+const N8N_URL_TYPES = {
+  PREVIEW_NOTIFICATION: 'preview_notification',
+  PAYMENT_WEBHOOK: 'payment_webhook',
+  BRIEFING_WEBHOOK: 'briefing_webhook',
+  FEEDBACK_WEBHOOK: 'feedback_webhook',
+  CHATBOT_WEBHOOK: 'chatbot_webhook'
+};
 
-export const n8nIntegrationService = {
-  // Base URL for n8n workflows
-  getN8nBaseUrl: (): string => {
-    return 'https://humbrock.app.n8n.cloud/webhook';
-  },
-  
-  // Get workflow-specific webhook URL with fallback
-  getWebhookUrl: async (workflowType: 'preview' | 'payment' | 'briefing' | 'chatbot' | 'feedback'): Promise<string> => {
+class WebhookIntegrationService {
+  private async getWebhookUrl(type: string): Promise<string | null> {
     try {
-      // Try to load from database first
       const { data, error } = await supabase
         .from('system_settings')
         .select('value')
-        .eq('key', `webhook_url_${workflowType}`)
+        .eq('key', `webhook_url_${type}`)
         .single();
-      
+
       if (error || !data) {
-        // Fall back to localStorage
-        const url = localStorage.getItem(`webhook_url_${workflowType}`);
-        
-        if (url) return url;
-        
-        // Default URLs as fallback
-        const defaultUrls: Record<string, string> = {
-          preview: 'https://humbrock.app.n8n.cloud/webhook/16ae1112-2469-420d-8fcc-c9569152bd8f/preview',
-          payment: 'https://humbrock.app.n8n.cloud/webhook/2469-420d-8fcc-c9569152bd8f/payment',
-          briefing: 'https://humbrock.app.n8n.cloud/webhook/3698-5247-931a-dc5478af2c1b/briefing',
-          chatbot: 'https://humbrock.app.n8n.cloud/webhook/16ae1112-2469-420d-8fcc-c9569152bd8f/chat',
-          feedback: 'https://humbrock.app.n8n.cloud/webhook/7241-f932-8e41-bd674a239c6f/feedback'
-        };
-        
-        return defaultUrls[workflowType];
+        console.error(`Error fetching webhook URL for ${type}:`, error);
+        return null;
       }
-      
-      return data.value;
+
+      return data.value?.url || null;
     } catch (error) {
-      console.error(`Error getting webhook URL for ${workflowType}:`, error);
-      return `https://humbrock.app.n8n.cloud/webhook/default/${workflowType}`;
+      console.error(`Error in getWebhookUrl for ${type}:`, error);
+      return null;
     }
-  },
-  
-  saveWebhookUrl: async (workflowType: 'preview' | 'payment' | 'briefing' | 'chatbot' | 'feedback', url: string): Promise<boolean> => {
+  }
+
+  private async sendWebhookRequest(type: string, payload: any): Promise<boolean> {
     try {
-      // Save to localStorage for immediate use
-      localStorage.setItem(`webhook_url_${workflowType}`, url);
-      
-      // Save to database for persistence
-      const { error } = await supabase
-        .from('system_settings')
-        .upsert({ 
-          key: `webhook_url_${workflowType}`,
-          value: url
-        }, { 
-          onConflict: 'key' 
-        });
-      
-      if (error) throw error;
-      
+      const webhookUrl = await this.getWebhookUrl(type);
+      if (!webhookUrl) {
+        console.error(`No webhook URL configured for ${type}`);
+        return false;
+      }
+
+      const response = await fetch(webhookUrl, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          data: payload
+        })
+      });
+
+      if (!response.ok) {
+        throw new Error(`Webhook response not OK: ${response.status} ${response.statusText}`);
+      }
+
+      const responseData = await response.json();
+      console.log(`Webhook ${type} response:`, responseData);
       return true;
     } catch (error) {
-      console.error(`Error saving webhook URL for ${workflowType}:`, error);
+      console.error(`Error sending webhook for ${type}:`, error);
       return false;
     }
-  },
-  
-  /**
-   * Send preview notification to n8n
-   * @param projectId Project ID
-   * @param clientName Client name
-   * @param clientEmail Client email
-   * @param projectTitle Project title
-   * @param versions Array of versions with audio URLs
-   * @returns Promise<boolean> Success status
-   */
-  sendPreviewNotification: async (
+  }
+
+  async sendPreviewNotification(
     projectId: string,
     clientName: string,
     clientEmail: string,
     projectTitle: string,
     versions: Array<{id: string, name: string, audioUrl: string}>
-  ): Promise<boolean> => {
-    try {
-      const webhookUrl = await n8nIntegrationService.getWebhookUrl('preview');
-      
-      const payload: WebhookPayload = {
-        type: 'preview_approved',
-        data: {
-          projectId,
-          clientName,
-          clientEmail,
-          projectTitle,
-          versions,
-          timestamp: new Date().toISOString(),
-          baseUrl: window.location.origin,
-          previewUrl: `${window.location.origin}/preview/${projectId}`
-        },
-        timestamp: new Date().toISOString(),
-        source: 'harmonia_admin_panel'
-      };
-      
-      return await webhookService.sendToWebhook(webhookUrl, payload);
-    } catch (error) {
-      console.error('Error sending preview notification:', error);
-      return false;
-    }
-  },
-  
-  /**
-   * Process payment confirmation through n8n
-   * @param paymentId Payment identifier
-   * @param briefingId Briefing ID
-   * @param clientEmail Client email
-   * @param packageType Package type purchased
-   * @param amount Payment amount
-   * @returns Promise<boolean> Success status
-   */
-  processPaymentNotification: async (
-    paymentId: string,
-    briefingId: string,
-    clientEmail: string,
-    packageType: string,
-    amount: number
-  ): Promise<boolean> => {
-    try {
-      const webhookUrl = await n8nIntegrationService.getWebhookUrl('payment');
-      
-      const payload: WebhookPayload = {
-        type: 'new_customer',
-        data: {
-          paymentId,
-          briefingId,
-          clientEmail,
-          packageType,
-          amount,
-          status: 'approved',
-          timestamp: new Date().toISOString()
-        },
-        timestamp: new Date().toISOString(),
-        source: 'harmonia_payment_processor'
-      };
-      
-      return await webhookService.sendToWebhook(webhookUrl, payload);
-    } catch (error) {
-      console.error('Error processing payment notification:', error);
-      return false;
-    }
-  },
-  
-  /**
-   * Notify n8n about briefing submission
-   * @param briefingId Briefing ID
-   * @param clientName Client name
-   * @param clientEmail Client email
-   * @param packageType Package type
-   * @param briefingData Briefing data object
-   * @returns Promise<boolean> Success status
-   */
-  processBriefingSubmission: async (
+  ): Promise<boolean> {
+    return this.sendWebhookRequest(N8N_URL_TYPES.PREVIEW_NOTIFICATION, {
+      projectId,
+      clientName,
+      clientEmail,
+      projectTitle,
+      versions,
+      baseUrl: window.location.origin,
+      timestamp: new Date().toISOString()
+    });
+  }
+
+  async processBriefingSubmission(
     briefingId: string,
     clientName: string,
     clientEmail: string,
     packageType: string,
     briefingData: any
-  ): Promise<boolean> => {
-    try {
-      const webhookUrl = await n8nIntegrationService.getWebhookUrl('briefing');
-      
-      const payload: WebhookPayload = {
-        type: 'new_portfolio_item',
-        data: {
-          briefingId,
-          clientName,
-          clientEmail,
-          packageType,
-          briefingData,
-          submittedAt: new Date().toISOString()
-        },
-        timestamp: new Date().toISOString(),
-        source: 'harmonia_briefing_form'
-      };
-      
-      return await webhookService.sendToWebhook(webhookUrl, payload);
-    } catch (error) {
-      console.error('Error processing briefing submission:', error);
-      return false;
-    }
-  },
-  
-  /**
-   * Process feedback from client about previews
-   * @param projectId Project ID
-   * @param clientName Client name
-   * @param clientEmail Client email
-   * @param feedback Feedback text
-   * @param status Approval status
-   * @returns Promise<boolean> Success status
-   */
-  processFeedbackSubmission: async (
+  ): Promise<boolean> {
+    return this.sendWebhookRequest(N8N_URL_TYPES.BRIEFING_WEBHOOK, {
+      briefingId,
+      clientName,
+      clientEmail,
+      packageType,
+      briefingData,
+      timestamp: new Date().toISOString()
+    });
+  }
+
+  async processPayment(
+    paymentId: string,
+    briefingId: string,
+    clientName: string,
+    clientEmail: string,
+    packageType: string,
+    amount: number,
+    status: string
+  ): Promise<boolean> {
+    return this.sendWebhookRequest(N8N_URL_TYPES.PAYMENT_WEBHOOK, {
+      payment_id: paymentId,
+      briefing_id: briefingId,
+      client_name: clientName,
+      client_email: clientEmail,
+      package_type: packageType,
+      amount,
+      status,
+      timestamp: new Date().toISOString()
+    });
+  }
+
+  async submitFeedback(
     projectId: string,
     clientName: string,
     clientEmail: string,
     feedback: string,
     status: 'approved' | 'revision' | 'feedback'
-  ): Promise<boolean> => {
+  ): Promise<boolean> {
+    return this.sendWebhookRequest(N8N_URL_TYPES.FEEDBACK_WEBHOOK, {
+      projectId,
+      clientName,
+      clientEmail,
+      feedback,
+      status,
+      timestamp: new Date().toISOString()
+    });
+  }
+
+  async sendChatbotMessage(
+    message: string,
+    userData: any
+  ): Promise<{success: boolean, response?: string}> {
     try {
-      const webhookUrl = await n8nIntegrationService.getWebhookUrl('feedback');
-      
-      const payload: WebhookPayload = {
-        type: 'feedback_received',
-        data: {
-          projectId,
-          clientName,
-          clientEmail,
-          feedback,
-          status,
-          timestamp: new Date().toISOString()
+      const webhookUrl = await this.getWebhookUrl(N8N_URL_TYPES.CHATBOT_WEBHOOK);
+      if (!webhookUrl) {
+        console.error('No chatbot webhook URL configured');
+        return { success: false };
+      }
+
+      const response = await fetch(webhookUrl, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
         },
-        timestamp: new Date().toISOString(),
-        source: 'harmonia_preview_feedback'
+        body: JSON.stringify({
+          data: {
+            message,
+            userData,
+            timestamp: new Date().toISOString()
+          }
+        })
+      });
+
+      if (!response.ok) {
+        throw new Error(`Chatbot webhook response not OK: ${response.status} ${response.statusText}`);
+      }
+
+      const responseData = await response.json();
+      console.log('Chatbot webhook response:', responseData);
+      return { 
+        success: true, 
+        response: responseData.response || 'Obrigado por sua mensagem! Estamos processando sua solicitação.'
       };
-      
-      return await webhookService.sendToWebhook(webhookUrl, payload);
     } catch (error) {
-      console.error('Error processing feedback submission:', error);
-      return false;
-    }
-  },
-  
-  /**
-   * Send message to chatbot through n8n
-   * @param message Message text
-   * @param userData User data (optional)
-   * @returns Promise<boolean> Success status
-   */
-  sendChatbotMessage: async (message: string, userData?: any): Promise<boolean> => {
-    try {
-      const webhookUrl = await n8nIntegrationService.getWebhookUrl('chatbot');
-      
-      const payload: WebhookPayload = {
-        type: 'client_message',
-        data: {
-          message,
-          userData,
-          timestamp: new Date().toISOString()
-        },
-        timestamp: new Date().toISOString(),
-        source: 'harmonia_chatbot'
-      };
-      
-      return await webhookService.sendToWebhook(webhookUrl, payload);
-    } catch (error) {
-      console.error('Error sending chatbot message:', error);
-      return false;
+      console.error('Error sending chatbot webhook:', error);
+      return { success: false };
     }
   }
-};
+}
 
-export default n8nIntegrationService;
+export const n8nIntegrationService = new WebhookIntegrationService();

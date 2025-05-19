@@ -1,4 +1,3 @@
-
 import { useState, useCallback } from 'react';
 import { useToast } from '@/hooks/use-toast';
 import { useSupabaseData } from '@/hooks/use-supabase-data';
@@ -17,6 +16,8 @@ export interface Briefing {
   createdAt: string;
   projectCreated: boolean;
   data?: any;
+  description?: string;
+  formData?: Record<string, any>;
 }
 
 export function useBriefings() {
@@ -44,7 +45,9 @@ export function useBriefings() {
         status: item.status || 'pending',
         createdAt: new Date(item.created_at).toLocaleDateString('pt-BR'),
         projectCreated: !!item.project_id,
-        data: item.data || {}
+        data: item.data || {},
+        description: item.data?.description || '',
+        formData: item.data?.formData || {}
       }));
     }
   });

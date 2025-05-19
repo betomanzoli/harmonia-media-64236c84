@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
@@ -792,7 +791,7 @@ const N8nWorkflowGuide: React.FC = () => {
                 <CodeBlock
                   code={JSON.stringify(workflowExamples[activeWorkflow].template, null, 2)}
                   language="json"
-                  className="max-h-80 overflow-y-auto text-xs"
+                  showLineNumbers={true}
                 />
               </div>
               
