@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import AdminLayout from '@/components/admin/layout/AdminLayout';
 import { Card } from '@/components/ui/card';
 import ProjectHeader from '@/components/admin/previews/ProjectHeader';
@@ -7,23 +7,42 @@ import PreviewVersionsList from '@/components/admin/previews/PreviewVersionsList
 import ProjectClientInfo from '@/components/admin/previews/ProjectClientInfo';
 import ProjectActionCard from '@/components/admin/previews/ProjectActionCard';
 import ProjectHistoryList from '@/components/admin/previews/ProjectHistoryList';
-import { useParams } from 'react-router-dom';
+import { useParams, useNavigate } from 'react-router-dom';
 import { usePreviewProjects, VersionItem } from '@/hooks/admin/usePreviewProjects';
 import { useToast } from '@/hooks/use-toast';
+import { Button } from '@/components/ui/button';
+import { ArrowLeft } from 'lucide-react';
 
 const PreviewProjectPage: React.FC = () => {
   const { projectId } = useParams<{ projectId: string }>();
+  const navigate = useNavigate();
   const { getProjectById, updateProject } = usePreviewProjects();
   const { toast } = useToast();
   
-  const project = projectId ? getProjectById(projectId) : null;
+  const [project, setProject] = useState<any>(null);
+  
+  useEffect(() => {
+    if (projectId) {
+      const projectData = getProjectById(projectId);
+      if (projectData) {
+        setProject(projectData);
+      } else {
+        toast({
+          title: "Projeto não encontrado",
+          description: `Não foi possível encontrar o projeto com ID: ${projectId}`,
+          variant: "destructive"
+        });
+        navigate('/admin-j28s7d1k/previews');
+      }
+    }
+  }, [projectId, getProjectById, navigate, toast]);
   
   if (!project) {
     return (
       <AdminLayout>
-        <Card className="p-6">
-          <p className="text-center text-gray-500">Projeto não encontrado</p>
-        </Card>
+        <div className="flex flex-col items-center justify-center h-full p-8">
+          <h2 className="text-2xl font-semibold mb-2">Carregando projeto...</h2>
+        </div>
       </AdminLayout>
     );
   }
@@ -77,6 +96,15 @@ const PreviewProjectPage: React.FC = () => {
       lastActivityDate: new Date().toLocaleDateString('pt-BR')
     });
     
+    // Update local state
+    setProject({
+      ...project,
+      versionsList: updatedVersions,
+      versions: updatedVersions.length,
+      history,
+      lastActivityDate: new Date().toLocaleDateString('pt-BR')
+    });
+    
     toast({
       title: isFinalVersion ? "Versão final adicionada" : "Versão adicionada",
       description: `${versionTitle} foi adicionada ao projeto com sucesso.`
@@ -107,6 +135,14 @@ const PreviewProjectPage: React.FC = () => {
     
     // Update project
     updateProject(projectId, {
+      expirationDate: newExpirationDate,
+      history,
+      lastActivityDate: new Date().toLocaleDateString('pt-BR')
+    });
+    
+    // Update local state
+    setProject({
+      ...project,
       expirationDate: newExpirationDate,
       history,
       lastActivityDate: new Date().toLocaleDateString('pt-BR')
@@ -148,6 +184,15 @@ const PreviewProjectPage: React.FC = () => {
       lastActivityDate: new Date().toLocaleDateString('pt-BR')
     });
     
+    // Update local state
+    setProject({
+      ...project,
+      versionsList: updatedVersions,
+      versions: updatedVersions.length,
+      history,
+      lastActivityDate: new Date().toLocaleDateString('pt-BR')
+    });
+    
     toast({
       title: "Versão removida",
       description: `${versionToDelete.name} foi removida com sucesso.`
@@ -169,14 +214,29 @@ const PreviewProjectPage: React.FC = () => {
     }).join(' ');
   };
   
+  // Generate a project title based on available data
+  const projectTitle = project.packageType 
+    ? formatPackageType(project.packageType) 
+    : "Projeto de Música Personalizada";
+  
   // Gera o link de prévia para o cliente
   const previewUrl = `/preview/${projectId}`;
   
   return (
     <AdminLayout>
       <div className="space-y-6 p-6 min-h-screen bg-slate-100">
+        <div className="flex justify-between items-center">
+          <Button 
+            variant="ghost"
+            onClick={() => navigate('/admin-j28s7d1k/previews')}
+          >
+            <ArrowLeft className="mr-2 h-4 w-4" />
+            Voltar
+          </Button>
+        </div>
+        
         <ProjectHeader 
-          projectTitle={formatPackageType(project.packageType || "Projeto de Música Personalizada")} 
+          projectTitle={projectTitle} 
           clientName={project.clientName}
           packageType={formatPackageType(project.packageType)}
         />
@@ -205,13 +265,14 @@ const PreviewProjectPage: React.FC = () => {
             
             <ProjectActionCard 
               projectId={projectId}
+              projectStatus={project.status}
+              packageType={project.packageType}
               onAddVersion={handleAddVersion}
               onExtendDeadline={handleExtendDeadline}
               previewUrl={previewUrl}
               clientPhone={project.clientPhone || ''}
               clientEmail={project.clientEmail || ''}
-              projectStatus={project.status}
-              packageType={project.packageType}
+              clientName={project.clientName}
             />
           </div>
         </div>

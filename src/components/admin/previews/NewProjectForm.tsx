@@ -10,70 +10,30 @@ import {
   SelectValue 
 } from "@/components/ui/select";
 import { Label } from "@/components/ui/label";
-import { createId } from "@paralleldrive/cuid2";
 import { useToast } from "@/hooks/use-toast";
-
-interface Client {
-  id: string;
-  name: string;
-  email: string;
-  phone?: string;
-  packageType?: string;
-}
+import { useCustomers } from '@/hooks/admin/useCustomers';
 
 interface NewProjectFormProps {
   onAddProject: (project: any) => string | null;
 }
 
 const NewProjectForm: React.FC<NewProjectFormProps> = ({ onAddProject }) => {
-  const [clients, setClients] = useState<Client[]>([]);
   const [selectedClientId, setSelectedClientId] = useState<string>("");
   const [clientName, setClientName] = useState<string>("");
   const [clientEmail, setClientEmail] = useState<string>("");
   const [clientPhone, setClientPhone] = useState<string>("");
   const [packageType, setPackageType] = useState<string>("Essencial");
   const { toast } = useToast();
-
-  // Load clients on component mount
-  useEffect(() => {
-    // For demonstration, using localStorage
-    const loadClients = () => {
-      try {
-        const storedClients = localStorage.getItem('harmonIA_clients');
-        if (storedClients) {
-          const parsedClients = JSON.parse(storedClients);
-          setClients(parsedClients);
-        } else {
-          // Sample clients
-          const sampleClients = [
-            { id: 'client1', name: 'Maria Silva', email: 'maria@example.com', phone: '+5511999999999', packageType: 'Premium' },
-            { id: 'client2', name: 'João Santos', email: 'joao@example.com', phone: '+5521888888888', packageType: 'Essencial' },
-            { id: 'client3', name: 'Empresa XYZ', email: 'contato@xyz.com', phone: '+5531777777777', packageType: 'Profissional' }
-          ];
-          setClients(sampleClients);
-          localStorage.setItem('harmonIA_clients', JSON.stringify(sampleClients));
-        }
-      } catch (error) {
-        console.error('Error loading clients:', error);
-      }
-    };
-
-    loadClients();
-  }, []);
+  const { customers, isLoading } = useCustomers();
 
   const handleClientChange = (clientId: string) => {
     setSelectedClientId(clientId);
-    const selectedClient = clients.find(client => client.id === clientId);
+    const selectedClient = customers.find(client => client.id === clientId);
     
     if (selectedClient) {
       setClientName(selectedClient.name);
       setClientEmail(selectedClient.email);
       setClientPhone(selectedClient.phone || '');
-      
-      // If client has a package type associated, set it
-      if (selectedClient.packageType) {
-        setPackageType(selectedClient.packageType);
-      }
     }
   };
 
@@ -101,10 +61,9 @@ const NewProjectForm: React.FC<NewProjectFormProps> = ({ onAddProject }) => {
       createdAt: new Date().toLocaleDateString('pt-BR'),
       status: 'waiting' as const,
       versions: 0,
-      previewUrl: `/preview/${createId()}`,
+      previewUrl: `/preview/${selectedClientId}`,
       expirationDate: expirationDate.toLocaleDateString('pt-BR'),
       lastActivityDate: new Date().toLocaleDateString('pt-BR'),
-      briefingId: `B${Math.floor(Math.random() * 1000)}`,
       versionsList: []
     };
     
@@ -126,13 +85,14 @@ const NewProjectForm: React.FC<NewProjectFormProps> = ({ onAddProject }) => {
           <Select 
             value={selectedClientId} 
             onValueChange={handleClientChange}
+            disabled={isLoading}
             required
           >
             <SelectTrigger id="clientSelect" className="w-full">
-              <SelectValue placeholder="Selecione um cliente" />
+              <SelectValue placeholder={isLoading ? "Carregando clientes..." : "Selecione um cliente"} />
             </SelectTrigger>
             <SelectContent>
-              {clients.map(client => (
+              {customers.map(client => (
                 <SelectItem key={client.id} value={client.id}>
                   {client.name} ({client.email})
                 </SelectItem>

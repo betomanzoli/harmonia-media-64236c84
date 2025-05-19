@@ -8,6 +8,8 @@ import PackageInfoSection from './FormSections/PackageInfoSection';
 import FormFooter from './FormSections/FormFooter';
 import { supabase } from '@/lib/supabase';
 import { useToast } from '@/hooks/use-toast';
+import { usePreviewProjects } from '@/hooks/admin/usePreviewProjects';
+import { useCustomers } from '@/hooks/admin/useCustomers';
 
 interface CreateBriefingFormProps {
   onClose: () => void;
@@ -17,6 +19,8 @@ interface CreateBriefingFormProps {
 const CreateBriefingForm: React.FC<CreateBriefingFormProps> = ({ onClose, onSubmit }) => {
   const { form, isSubmitting, handleSubmit } = useCreateBriefingForm({ onSubmit });
   const { toast } = useToast();
+  const { addProject } = usePreviewProjects();
+  const { addCustomer, getCustomerByEmail } = useCustomers();
 
   const processFormSubmit = async (data: BriefingFormValues) => {
     try {
@@ -91,12 +95,51 @@ const CreateBriefingForm: React.FC<CreateBriefingFormProps> = ({ onClose, onSubm
         throw briefingError;
       }
       
+      // Also add or update customer in the local storage system
+      // This ensures the customer is also available in the preview system
+      let existingCustomer = getCustomerByEmail(data.email);
+      if (!existingCustomer) {
+        addCustomer({
+          name: data.name,
+          email: data.email,
+          phone: data.phone.fullNumber,
+          status: 'active',
+          projects: 1,
+          createdAt: new Date().toISOString()
+        });
+      } else {
+        // Update projects count for existing customer
+        // This is handled in the addCustomer function itself
+      }
+      
+      // Create a preview project automatically linked to this briefing
+      const expirationDate = new Date();
+      expirationDate.setDate(expirationDate.getDate() + 30); // 30-day expiration
+      
+      const previewProject = {
+        clientName: data.name,
+        clientEmail: data.email,
+        clientPhone: data.phone.fullNumber,
+        packageType: data.packageType,
+        createdAt: new Date().toLocaleDateString('pt-BR'),
+        status: 'waiting' as const,
+        versions: 0,
+        previewUrl: `/preview/${newBriefing.id}`,
+        expirationDate: expirationDate.toLocaleDateString('pt-BR'),
+        lastActivityDate: new Date().toLocaleDateString('pt-BR'),
+        briefingId: newBriefing.id,
+        versionsList: []
+      };
+      
+      const previewProjectId = addProject(previewProject);
+      console.log(`Created preview project ${previewProjectId} for briefing ${newBriefing.id}`);
+      
       // Call the passed onSubmit to update the UI
       onSubmit(data);
       
       toast({
         title: "Briefing criado",
-        description: `O briefing foi criado com sucesso.`
+        description: `O briefing foi criado com sucesso e o projeto de prévia foi iniciado automaticamente.`
       });
       
     } catch (error: any) {
