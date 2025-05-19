@@ -93,7 +93,7 @@ const PreviewProjectPage: React.FC = () => {
         // Create a Project object from projectData
         const projectWithTitle: Project = {
           ...projectData,
-          projectTitle: projectData.title || projectData.packageType || 'Projeto de Música'
+          projectTitle: projectData.packageType || 'Projeto de Música'
         };
         
         setProject(projectWithTitle);
