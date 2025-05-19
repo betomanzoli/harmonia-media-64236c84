@@ -2,34 +2,21 @@
 project_id = "ivueqxyuflxsiecqvmgt"
 
 [api]
-# Swagger API docs path
+enabled = true
 port = 54321
 schemas = ["public", "storage", "graphql_public"]
-extra_search_path = ["public", "extensions"]
-max_rows = 1000
 
 [db]
-studio_port = 54322
 port = 54322
 
-[db.pooler]
-max_client_conn = 50
-
-[functions]
-node_version = 20
-serve_port = 54323
+[studio]
 port = 54323
 
-[functions.send-email]
-verify_jwt = false
+[inbucket]
+port = 54324
 
-[functions.payment-notification]
-verify_jwt = false
+[storage]
+port = 54325
 
 [functions.payment-webhook]
 verify_jwt = false
-
-[studio]
-port = 54324
-
-# No other configuration is needed

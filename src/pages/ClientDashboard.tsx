@@ -1,3 +1,4 @@
+
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/lib/supabase';
@@ -115,6 +116,21 @@ const ClientDashboard: React.FC = () => {
                 description: 'Arranjo completo com cordas e metais',
                 fileId: '11c6JahRd5Lx0iKCL_gHZ0zrZ3LFBJ47a'
               }
+            ],
+            versions: [
+              {
+                id: 'v1',
+                name: 'Versão Acústica',
+                description: 'Versão suave com violão e piano',
+                fileId: '1H62ylCwQYJ23BLpygtvNmCgwTDcHX6Cl',
+                recommended: true
+              },
+              {
+                id: 'v2',
+                name: 'Versão Orquestral',
+                description: 'Arranjo completo com cordas e metais',
+                fileId: '11c6JahRd5Lx0iKCL_gHZ0zrZ3LFBJ47a'
+              }
             ]
           },
           {
@@ -133,6 +149,15 @@ const ClientDashboard: React.FC = () => {
                 fileId: '1fCsWubN8pXwM-mRlDtnQFTCkBbIkuUyW',
                 recommended: true
               }
+            ],
+            versions: [
+              {
+                id: 'v1',
+                name: 'Jingle 30 segundos',
+                description: 'Versão completa para o comercial',
+                fileId: '1fCsWubN8pXwM-mRlDtnQFTCkBbIkuUyW',
+                recommended: true
+              }
             ]
           },
           {
@@ -143,6 +168,21 @@ const ClientDashboard: React.FC = () => {
             updated_at: '2023-11-20T14:10:00Z',
             preview_link: '/preview/P0003',
             versionsList: [
+              {
+                id: 'v1',
+                name: 'Versão Corporativa',
+                description: 'Trilha institucional com piano e strings',
+                fileId: '1H62ylCwQYJ23BLpygtvNmCgwTDcHX6Cl',
+                recommended: true
+              },
+              {
+                id: 'v2',
+                name: 'Versão Minimalista',
+                description: 'Abordagem mais clean e moderna',
+                fileId: '11c6JahRd5Lx0iKCL_gHZ0zrZ3LFBJ47a'
+              }
+            ],
+            versions: [
               {
                 id: 'v1',
                 name: 'Versão Corporativa',
