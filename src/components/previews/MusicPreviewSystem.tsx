@@ -1,353 +1,300 @@
-
 import React, { useState, useEffect } from 'react';
-import { usePreviewData } from '@/hooks/usePreviewData';
+import { usePreviewProject } from '@/hooks/usePreviewProject';
+import { Loader2, Calendar, Music, MessageSquare, ArrowLeft, CheckCircle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Textarea } from '@/components/ui/textarea';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { useToast } from '@/hooks/use-toast';
-import { MessageSquare, CheckCircle, Music, Calendar, ArrowUpRight, Loader2 } from 'lucide-react';
-import GoogleDriveAudioPlayer from './GoogleDriveAudioPlayer';
-import { notificationService } from '@/services/notificationService';
-import { formatDate } from '@/utils/dateUtils';
-import webhookService from '@/services/webhookService';
+import { Textarea } from '@/components/ui/textarea';
+import PreviewPlayerList from '@/components/previews/player/PreviewPlayerList';
+import PreviewProjectDetails from '@/components/previews/PreviewProjectDetails';
+import GoogleDriveAudioPlayer from '@/components/previews/GoogleDriveAudioPlayer';
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 
 interface MusicPreviewSystemProps {
   projectId: string;
 }
 
 const MusicPreviewSystem: React.FC<MusicPreviewSystemProps> = ({ projectId }) => {
-  const { projectData, isLoading, updateProjectStatus } = usePreviewData(projectId);
-  const [selectedPreview, setSelectedPreview] = useState<string | null>(null);
+  const { projectData, isLoading, updateProjectStatus } = usePreviewProject(projectId);
+  const [selectedVersion, setSelectedVersion] = useState<string | null>(null);
   const [feedback, setFeedback] = useState('');
-  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
+  const [playingAudio, setPlayingAudio] = useState<HTMLAudioElement | null>(null);
   const { toast } = useToast();
-
+  
   useEffect(() => {
+    // If project data is loaded and there are previews, select the first one
     if (projectData && projectData.previews && projectData.previews.length > 0) {
-      // Find a recommended preview or use the first one
+      // Try to find recommended preview first
       const recommendedPreview = projectData.previews.find(p => p.recommended);
-      setSelectedPreview(recommendedPreview ? recommendedPreview.id : projectData.previews[0].id);
+      
+      if (recommendedPreview) {
+        setSelectedVersion(recommendedPreview.id);
+      } else {
+        // Otherwise select the first one
+        setSelectedVersion(projectData.previews[0].id);
+      }
     }
+    
+    // Clean up any playing audio on dismount
+    return () => {
+      if (playingAudio) {
+        playingAudio.pause();
+        playingAudio.src = '';
+      }
+    };
   }, [projectData]);
-
-  const handleSendFeedback = async () => {
-    if (!selectedPreview || !feedback.trim()) {
+  
+  const handlePlay = (preview: any) => {
+    // Stop any currently playing audio
+    if (playingAudio) {
+      playingAudio.pause();
+      playingAudio.src = '';
+    }
+    
+    // Create a new audio element and play it
+    if (preview.audioUrl) {
+      const audio = new Audio(preview.audioUrl);
+      audio.play().catch(error => {
+        console.error('Error playing audio:', error);
+        toast({
+          title: 'Erro ao reproduzir áudio',
+          description: 'Não foi possível reproduzir o áudio. Tente abrir no Google Drive.',
+          variant: 'destructive'
+        });
+      });
+      
+      setPlayingAudio(audio);
+    } else if (preview.fileId) {
+      // If there's a fileId but no audioUrl, redirect to Google Drive
+      window.open(`https://drive.google.com/file/d/${preview.fileId}/view`, '_blank');
+    }
+  };
+  
+  const handleVersionSelect = (id: string) => {
+    setSelectedVersion(id);
+  };
+  
+  const handleFeedbackSubmit = () => {
+    if (!selectedVersion) {
       toast({
-        title: "Informações incompletas",
-        description: "Por favor, selecione uma versão e escreva seu feedback",
-        variant: "destructive"
+        title: 'Versão não selecionada',
+        description: 'Por favor, selecione uma versão antes de enviar seu feedback.',
+        variant: 'destructive'
       });
       return;
     }
-
-    setIsSubmitting(true);
-
-    try {
-      // Find the selected preview's title
-      const selectedPreviewTitle = projectData?.previews.find(p => p.id === selectedPreview)?.title || 'Versão não identificada';
+    
+    if (!feedback.trim()) {
+      toast({
+        title: 'Feedback vazio',
+        description: 'Por favor, escreva seu feedback antes de enviar.',
+        variant: 'destructive'
+      });
+      return;
+    }
+    
+    setSubmitting(true);
+    
+    // Update project status
+    const success = updateProjectStatus('feedback', feedback);
+    
+    setTimeout(() => {
+      setSubmitting(false);
       
-      // Update project status with feedback
-      const result = updateProjectStatus('feedback', feedback);
-      
-      if (result) {
-        // Notify about feedback using notification service
-        notificationService.notify('feedback_received', {
-          projectId,
-          previewId: selectedPreview,
-          feedback,
-          previewTitle: selectedPreviewTitle
-        });
-        
-        // Also send webhook notification if configured
-        await webhookService.sendItemNotification('feedback_received', {
-          projectId,
-          previewId: selectedPreview,
-          feedback,
-          previewTitle: selectedPreviewTitle,
-          clientName: projectData?.clientName || 'Cliente'
-        });
-        
+      if (success) {
         toast({
-          title: "Feedback enviado",
-          description: "Agradecemos pelo seu feedback! Nossa equipe irá analisá-lo em breve.",
+          title: 'Feedback enviado',
+          description: 'Seu feedback foi enviado com sucesso.',
+          variant: 'default'
         });
-        
-        // Reset feedback text
         setFeedback('');
       } else {
-        throw new Error("Não foi possível atualizar o status do projeto");
+        toast({
+          title: 'Erro ao enviar feedback',
+          description: 'Não foi possível enviar seu feedback. Tente novamente mais tarde.',
+          variant: 'destructive'
+        });
       }
-    } catch (error) {
-      console.error('Error sending feedback:', error);
-      toast({
-        title: "Erro ao enviar feedback",
-        description: "Houve um problema ao enviar seu feedback. Por favor, tente novamente.",
-        variant: "destructive"
-      });
-    } finally {
-      setIsSubmitting(false);
-    }
+    }, 1000); // Simulating API call delay
   };
-
-  const handleApprovePreview = async () => {
-    if (!selectedPreview) {
+  
+  const handleApproveVersion = () => {
+    if (!selectedVersion) {
       toast({
-        title: "Nenhuma versão selecionada",
-        description: "Por favor, selecione uma versão para aprovar",
-        variant: "destructive"
+        title: 'Versão não selecionada',
+        description: 'Por favor, selecione uma versão antes de aprovar.',
+        variant: 'destructive'
       });
       return;
     }
-
-    setIsSubmitting(true);
-
-    try {
-      // Find the selected preview's title
-      const selectedPreviewTitle = projectData?.previews.find(p => p.id === selectedPreview)?.title || 'Versão não identificada';
+    
+    setSubmitting(true);
+    
+    // Update project status
+    const success = updateProjectStatus('approved', feedback || 'Cliente aprovou a versão sem comentários adicionais.');
+    
+    setTimeout(() => {
+      setSubmitting(false);
       
-      // Update project status with approval
-      const result = updateProjectStatus('approved', feedback || 'Versão aprovada pelo cliente');
-      
-      if (result) {
-        // Notify about approval using notification service
-        notificationService.notify('preview_approved', {
-          projectId,
-          previewId: selectedPreview,
-          feedback: feedback || 'Versão aprovada pelo cliente',
-          previewTitle: selectedPreviewTitle
-        });
-        
-        // Also send webhook notification if configured
-        await webhookService.sendItemNotification('preview_approved', {
-          projectId,
-          previewId: selectedPreview,
-          feedback: feedback || 'Versão aprovada pelo cliente',
-          previewTitle: selectedPreviewTitle,
-          clientName: projectData?.clientName || 'Cliente'
-        });
-        
+      if (success) {
         toast({
-          title: "Versão aprovada!",
-          description: "Obrigado pela aprovação! Entraremos em contato para os próximos passos.",
+          title: 'Versão aprovada',
+          description: 'Sua aprovação foi registrada com sucesso.',
+          variant: 'default'
         });
+        setFeedback('');
       } else {
-        throw new Error("Não foi possível atualizar o status do projeto");
+        toast({
+          title: 'Erro ao aprovar versão',
+          description: 'Não foi possível registrar sua aprovação. Tente novamente mais tarde.',
+          variant: 'destructive'
+        });
       }
-    } catch (error) {
-      console.error('Error approving preview:', error);
-      toast({
-        title: "Erro ao aprovar versão",
-        description: "Houve um problema ao aprovar a versão. Por favor, tente novamente.",
-        variant: "destructive"
-      });
-    } finally {
-      setIsSubmitting(false);
-    }
+    }, 1000); // Simulating API call delay
   };
-
+  
   if (isLoading) {
     return (
-      <div className="max-w-4xl mx-auto px-4">
-        <Card className="bg-white border border-gray-200">
-          <CardContent className="pt-6">
-            <div className="flex flex-col items-center justify-center p-8">
-              <Loader2 className="h-12 w-12 animate-spin text-gray-400" />
-              <p className="mt-4 text-gray-500">Carregando prévia musical...</p>
-            </div>
-          </CardContent>
-        </Card>
+      <div className="container mx-auto max-w-5xl px-4">
+        <div className="flex flex-col items-center justify-center py-12">
+          <Loader2 className="h-12 w-12 animate-spin text-harmonia-green mb-6" />
+          <p className="text-lg">Carregando prévia do projeto...</p>
+        </div>
       </div>
     );
   }
-
+  
   if (!projectData) {
     return (
-      <div className="max-w-4xl mx-auto px-4">
-        <Card className="bg-white border border-gray-200">
-          <CardContent className="pt-6">
-            <div className="flex flex-col items-center justify-center p-8">
-              <h2 className="text-2xl font-semibold text-gray-800">Prévia não encontrada</h2>
-              <p className="mt-2 text-gray-500">Não foi possível encontrar a prévia solicitada.</p>
-            </div>
-          </CardContent>
-        </Card>
+      <div className="container mx-auto max-w-5xl px-4">
+        <div className="flex flex-col items-center justify-center py-12">
+          <div className="bg-white p-8 rounded-lg shadow-sm w-full max-w-lg text-center">
+            <h2 className="text-2xl font-bold text-black mb-4">Prévia não encontrada</h2>
+            <p className="text-black mb-6">Esta prévia não existe ou expirou. Por favor, verifique o link ou entre em contato conosco.</p>
+          </div>
+        </div>
       </div>
     );
   }
-
-  // Determine if the project has already been approved
+  
+  const selectedPreview = projectData.previews.find(p => p.id === selectedVersion);
   const isApproved = projectData.status === 'approved';
-
+  
   return (
-    <div className="max-w-4xl mx-auto px-4">
+    <div className="container mx-auto max-w-5xl px-4">
       <div className="mb-8">
-        <h1 className="text-3xl font-bold text-gray-800 mb-2">{projectData.projectTitle}</h1>
+        <h1 className="text-2xl md:text-3xl font-bold text-black mb-3">{projectData.projectTitle}</h1>
         <p className="text-gray-600">
-          Olá, {projectData.clientName}! Aqui você pode ouvir e avaliar as versões da sua música personalizada.
+          Olá {projectData.clientName}, avalie as versões do seu projeto e envie seu feedback.
         </p>
       </div>
-
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+      
+      {isApproved && (
+        <Alert className="mb-6 bg-green-50 border-green-200">
+          <CheckCircle className="h-5 w-5 text-green-600" />
+          <AlertTitle className="text-green-800">Projeto aprovado</AlertTitle>
+          <AlertDescription className="text-green-700">
+            Você já aprovou este projeto. Em breve enviaremos os arquivos finais.
+          </AlertDescription>
+        </Alert>
+      )}
+      
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         <div className="md:col-span-2">
-          <Card className="bg-white border border-gray-200 h-full">
-            <CardHeader className="bg-gray-50 border-b border-gray-100">
-              <CardTitle>Versões Disponíveis</CardTitle>
+          <PreviewPlayerList
+            versions={projectData.previews}
+            selectedVersion={selectedVersion}
+            setSelectedVersion={handleVersionSelect}
+            isApproved={isApproved}
+            onPlay={handlePlay}
+          />
+          
+          {selectedPreview && selectedPreview.fileId && (
+            <Card className="mb-6">
+              <CardHeader>
+                <CardTitle className="text-lg">Player</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <GoogleDriveAudioPlayer
+                  fileId={selectedPreview.fileId}
+                  title={selectedPreview.title}
+                  subtitle="Clique para ouvir a prévia"
+                  isPreview={true}
+                />
+              </CardContent>
+            </Card>
+          )}
+          
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center">
+                <MessageSquare className="h-5 w-5 mr-2 text-harmonia-green" />
+                {isApproved ? 'Feedback enviado' : 'Envie seu feedback'}
+              </CardTitle>
             </CardHeader>
-            <CardContent className="p-0">
-              <div className="space-y-1 p-4">
-                {projectData.previews.map((preview) => (
-                  <div
-                    key={preview.id}
-                    className={`p-4 rounded-md cursor-pointer transition-all ${
-                      selectedPreview === preview.id
-                        ? 'bg-green-50 border border-green-200'
-                        : 'hover:bg-gray-50 border border-gray-100'
-                    }`}
-                    onClick={() => setSelectedPreview(preview.id)}
-                  >
-                    <div className="flex justify-between items-center mb-2">
-                      <h3 className="font-medium text-gray-800">
-                        {preview.title}
-                        {preview.recommended && (
-                          <span className="ml-2 text-xs bg-yellow-100 text-yellow-800 px-2 py-0.5 rounded-full">
-                            Recomendada
-                          </span>
-                        )}
-                      </h3>
-                    </div>
-                    <p className="text-sm text-gray-600 mb-3">{preview.description}</p>
+            <CardContent>
+              {isApproved ? (
+                <div className="bg-green-50 p-4 rounded-md">
+                  <p className="text-green-700">
+                    Obrigado pelo seu feedback! Seu projeto foi aprovado e estamos finalizando os detalhes.
+                  </p>
+                </div>
+              ) : (
+                <div className="space-y-4">
+                  <div className="bg-gray-50 p-4 rounded-md">
+                    <p className="text-sm text-gray-600 mb-2">
+                      {selectedVersion 
+                        ? `Versão selecionada: ${projectData.previews.find(p => p.id === selectedVersion)?.title || 'Versão selecionada'}` 
+                        : 'Nenhuma versão selecionada. Por favor, escolha uma opção acima.'}
+                    </p>
                     
-                    <GoogleDriveAudioPlayer 
-                      fileId={preview.fileId || ''} 
-                      title={preview.title} 
-                      isPreview={true}
+                    <Textarea
+                      placeholder="Conte-nos o que você achou da versão selecionada. O que você gostou? Há algo que você gostaria de mudar?"
+                      className="min-h-[150px]"
+                      value={feedback}
+                      onChange={(e) => setFeedback(e.target.value)}
+                      disabled={isApproved || submitting}
                     />
                   </div>
-                ))}
-              </div>
-            </CardContent>
-          </Card>
-        </div>
-
-        <div>
-          <Card className="bg-white border border-gray-200 mb-6">
-            <CardHeader className="bg-gray-50 border-b border-gray-100">
-              <CardTitle>Detalhes do Projeto</CardTitle>
-            </CardHeader>
-            <CardContent className="pt-4">
-              <div className="space-y-3">
-                <div className="flex items-start">
-                  <Music className="h-5 w-5 text-gray-400 mt-0.5 mr-2" />
-                  <div>
-                    <p className="text-sm font-medium text-gray-700">Tipo de Pacote</p>
-                    <p className="text-sm text-gray-600">{projectData.packageType || 'Música Personalizada'}</p>
-                  </div>
-                </div>
-                
-                {projectData.createdAt && (
-                  <div className="flex items-start">
-                    <Calendar className="h-5 w-5 text-gray-400 mt-0.5 mr-2" />
-                    <div>
-                      <p className="text-sm font-medium text-gray-700">Data de Criação</p>
-                      <p className="text-sm text-gray-600">{formatDate(projectData.createdAt)}</p>
-                    </div>
-                  </div>
-                )}
-                
-                {projectData.expiresAt && (
-                  <div className="flex items-start">
-                    <Calendar className="h-5 w-5 text-gray-400 mt-0.5 mr-2" />
-                    <div>
-                      <p className="text-sm font-medium text-gray-700">Disponível até</p>
-                      <p className="text-sm text-gray-600">{formatDate(projectData.expiresAt)}</p>
-                    </div>
-                  </div>
-                )}
-
-                <div className="pt-2">
-                  <p className="text-xs text-gray-500">
-                    Para seu melhor proveito e avaliação, recomendamos que utilize fones de ouvido ou caixas de som de qualidade.
-                  </p>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-        </div>
-      </div>
-
-      {!isApproved ? (
-        <Card className="bg-white border border-gray-200 mb-10">
-          <CardHeader className="bg-gray-50 border-b border-gray-100">
-            <CardTitle className="flex items-center">
-              <MessageSquare className="mr-2 h-5 w-5 text-gray-500" />
-              Envie seu feedback
-            </CardTitle>
-            <CardDescription>
-              Selecione uma versão acima e compartilhe sua opinião
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="pt-6">
-            <div className="space-y-4">
-              {selectedPreview ? (
-                <div>
-                  <p className="text-sm text-gray-700 mb-2">
-                    Versão selecionada: <span className="font-medium">{
-                      projectData.previews.find(p => p.id === selectedPreview)?.title || 'Versão não identificada'
-                    }</span>
-                  </p>
-                  
-                  <Textarea
-                    placeholder="Conte para nós o que você achou desta versão. O que gostou e o que gostaria de mudar..."
-                    className="min-h-[120px] mb-4"
-                    value={feedback}
-                    onChange={(e) => setFeedback(e.target.value)}
-                  />
                   
                   <div className="flex justify-end space-x-3">
                     <Button
                       variant="outline"
-                      onClick={handleApprovePreview}
-                      disabled={isSubmitting}
+                      onClick={handleApproveVersion}
+                      disabled={isApproved || submitting || !selectedVersion}
                     >
-                      <CheckCircle className="mr-2 h-4 w-4" />
+                      <CheckCircle className="h-4 w-4 mr-2" />
                       Aprovar versão
                     </Button>
-                    
                     <Button
-                      onClick={handleSendFeedback}
-                      disabled={isSubmitting || !feedback.trim()}
-                      className="bg-green-600 hover:bg-green-700 text-white"
+                      className="bg-harmonia-green hover:bg-harmonia-green/90"
+                      onClick={handleFeedbackSubmit}
+                      disabled={isApproved || submitting || !selectedVersion || !feedback.trim()}
                     >
-                      <MessageSquare className="mr-2 h-4 w-4" />
+                      <MessageSquare className="h-4 w-4 mr-2" />
                       Enviar feedback
                     </Button>
                   </div>
                 </div>
-              ) : (
-                <p className="text-amber-600 flex items-center">
-                  <ArrowUpRight className="h-4 w-4 mr-2" />
-                  Por favor, selecione uma versão acima para enviar seu feedback
-                </p>
               )}
-            </div>
-          </CardContent>
-        </Card>
-      ) : (
-        <Card className="bg-green-50 border border-green-200 mb-10">
-          <CardContent className="p-6">
-            <div className="flex items-center">
-              <CheckCircle className="h-6 w-6 text-green-600 mr-3" />
-              <div>
-                <h3 className="font-medium text-green-800 text-lg">Versão aprovada!</h3>
-                <p className="text-green-700">
-                  Obrigado pela sua aprovação. Nossa equipe já está trabalhando na finalização da sua música.
-                </p>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-      )}
+            </CardContent>
+          </Card>
+        </div>
+        
+        <div>
+          <PreviewProjectDetails 
+            projectData={{
+              projectTitle: projectData.projectTitle,
+              clientName: projectData.clientName,
+              status: projectData.status,
+              packageType: projectData.packageType,
+              creationDate: projectData.createdAt ? new Date(projectData.createdAt).toLocaleDateString('pt-BR') : undefined
+            }}
+          />
+        </div>
+      </div>
     </div>
   );
 };
