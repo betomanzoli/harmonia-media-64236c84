@@ -424,42 +424,6 @@ export type Database = {
         }
         Relationships: []
       }
-      preview_projects: {
-        Row: {
-          client_name: string
-          created_at: string | null
-          expiration_date: string | null
-          feedback: string | null
-          id: string
-          last_activity_date: string | null
-          package_type: string | null
-          project_title: string
-          status: string
-        }
-        Insert: {
-          client_name: string
-          created_at?: string | null
-          expiration_date?: string | null
-          feedback?: string | null
-          id: string
-          last_activity_date?: string | null
-          package_type?: string | null
-          project_title: string
-          status: string
-        }
-        Update: {
-          client_name?: string
-          created_at?: string | null
-          expiration_date?: string | null
-          feedback?: string | null
-          id?: string
-          last_activity_date?: string | null
-          package_type?: string | null
-          project_title?: string
-          status?: string
-        }
-        Relationships: []
-      }
       previews: {
         Row: {
           allowed_emails: string[]
@@ -562,42 +526,6 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
-      }
-      project_versions: {
-        Row: {
-          audio_url: string | null
-          created_at: string | null
-          description: string | null
-          file_id: string | null
-          id: string
-          name: string
-          project_id: string
-          recommended: boolean | null
-          version_id: string
-        }
-        Insert: {
-          audio_url?: string | null
-          created_at?: string | null
-          description?: string | null
-          file_id?: string | null
-          id?: string
-          name: string
-          project_id: string
-          recommended?: boolean | null
-          version_id: string
-        }
-        Update: {
-          audio_url?: string | null
-          created_at?: string | null
-          description?: string | null
-          file_id?: string | null
-          id?: string
-          name?: string
-          project_id?: string
-          recommended?: boolean | null
-          version_id?: string
-        }
-        Relationships: []
       }
       projects: {
         Row: {

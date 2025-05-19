@@ -1,167 +1,125 @@
 
 import React, { useState, useEffect } from 'react';
-import { usePreviewProject } from '@/hooks/usePreviewProject';
-import { Loader2, Calendar, Music, MessageSquare, ArrowLeft, CheckCircle } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { useToast } from '@/hooks/use-toast';
 import { Textarea } from '@/components/ui/textarea';
-import PreviewPlayerList from '@/components/previews/player/PreviewPlayerList';
-import PreviewProjectDetails from '@/components/previews/PreviewProjectDetails';
-import GoogleDriveAudioPlayer from '@/components/previews/GoogleDriveAudioPlayer';
-import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
+import { useToast } from '@/hooks/use-toast';
+import { Lock, MessageSquare, Music, Info, CheckCircle, Star } from 'lucide-react';
+import { usePreviewData } from '@/hooks/usePreviewData';
+import PreviewProjectDetails from './PreviewProjectDetails';
+import GoogleDriveAudioPlayer from './GoogleDriveAudioPlayer';
+import { checkPreviewAccessCookie } from '@/utils/authCookies';
+import { supabase } from '@/lib/supabase';
 
 interface MusicPreviewSystemProps {
   projectId: string;
 }
 
 const MusicPreviewSystem: React.FC<MusicPreviewSystemProps> = ({ projectId }) => {
-  const { projectData, isLoading, updateProjectStatus } = usePreviewProject(projectId);
+  const { projectData, isLoading, updateProjectStatus } = usePreviewData(projectId);
   const [selectedVersion, setSelectedVersion] = useState<string | null>(null);
   const [feedback, setFeedback] = useState('');
-  const [submitting, setSubmitting] = useState(false);
-  const [playingAudio, setPlayingAudio] = useState<HTMLAudioElement | null>(null);
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const { toast } = useToast();
+  const navigate = useNavigate();
   
   useEffect(() => {
-    // If project data is loaded and there are previews, select the first one
-    if (projectData && projectData.previews && projectData.previews.length > 0) {
-      // Try to find recommended preview first
-      const recommendedPreview = projectData.previews.find(p => p.recommended);
+    // Check if access is authorized by cookie or user session
+    const checkAuthorization = async () => {
+      const cookieAuthorized = checkPreviewAccessCookie(projectId);
       
-      if (recommendedPreview) {
-        setSelectedVersion(recommendedPreview.id);
-      } else {
-        // Otherwise select the first one
-        setSelectedVersion(projectData.previews[0].id);
+      if (cookieAuthorized) {
+        return;
       }
-    }
-    
-    // Clean up any playing audio on dismount
-    return () => {
-      if (playingAudio) {
-        playingAudio.pause();
-        playingAudio.src = '';
+
+      // Check if authenticated with Supabase
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) {
+        // Redirect to auth page if no authorization found
+        navigate(`/auth/preview/${projectId}`);
       }
     };
-  }, [projectData]);
-  
-  const handlePlay = (preview: any) => {
-    // Stop any currently playing audio
-    if (playingAudio) {
-      playingAudio.pause();
-      playingAudio.src = '';
-    }
     
-    // Create a new audio element and play it
-    if (preview.audioUrl) {
-      const audio = new Audio(preview.audioUrl);
-      audio.play().catch(error => {
-        console.error('Error playing audio:', error);
-        toast({
-          title: 'Erro ao reproduzir áudio',
-          description: 'Não foi possível reproduzir o áudio. Tente abrir no Google Drive.',
-          variant: 'destructive'
-        });
-      });
-      
-      setPlayingAudio(audio);
-    } else if (preview.fileId) {
-      // If there's a fileId but no audioUrl, redirect to Google Drive
-      window.open(`https://drive.google.com/file/d/${preview.fileId}/view`, '_blank');
+    checkAuthorization();
+    
+    // Set default selected version
+    if (projectData?.previews && projectData.previews.length > 0) {
+      const recommendedPreview = projectData.previews.find(p => p.recommended);
+      setSelectedVersion(recommendedPreview ? recommendedPreview.id : projectData.previews[0].id);
     }
-  };
-  
-  const handleVersionSelect = (id: string) => {
-    setSelectedVersion(id);
-  };
-  
-  const handleFeedbackSubmit = () => {
+  }, [projectId, projectData, navigate]);
+
+  const handleSubmitFeedback = () => {
     if (!selectedVersion) {
       toast({
-        title: 'Versão não selecionada',
-        description: 'Por favor, selecione uma versão antes de enviar seu feedback.',
-        variant: 'destructive'
+        title: "Selecione uma versão",
+        description: "Por favor, selecione uma versão da música para enviar feedback.",
+        variant: "destructive",
       });
       return;
     }
     
-    if (!feedback.trim()) {
-      toast({
-        title: 'Feedback vazio',
-        description: 'Por favor, escreva seu feedback antes de enviar.',
-        variant: 'destructive'
-      });
-      return;
-    }
+    setIsSubmitting(true);
     
-    setSubmitting(true);
-    
-    // Update project status
     const success = updateProjectStatus('feedback', feedback);
     
     setTimeout(() => {
-      setSubmitting(false);
-      
+      setIsSubmitting(false);
       if (success) {
         toast({
-          title: 'Feedback enviado',
-          description: 'Seu feedback foi enviado com sucesso.',
-          variant: 'default'
+          title: "Feedback enviado",
+          description: "Seu feedback foi enviado com sucesso. Obrigado!",
         });
         setFeedback('');
       } else {
         toast({
-          title: 'Erro ao enviar feedback',
-          description: 'Não foi possível enviar seu feedback. Tente novamente mais tarde.',
-          variant: 'destructive'
+          title: "Erro ao enviar feedback",
+          description: "Ocorreu um erro ao enviar seu feedback. Por favor, tente novamente.",
+          variant: "destructive"
         });
       }
-    }, 1000); // Simulating API call delay
+    }, 1000);
   };
   
   const handleApproveVersion = () => {
     if (!selectedVersion) {
       toast({
-        title: 'Versão não selecionada',
-        description: 'Por favor, selecione uma versão antes de aprovar.',
-        variant: 'destructive'
+        title: "Selecione uma versão",
+        description: "Por favor, selecione uma versão da música para aprovar.",
+        variant: "destructive",
       });
       return;
     }
     
-    setSubmitting(true);
+    setIsSubmitting(true);
     
-    // Update project status
-    const success = updateProjectStatus('approved', feedback || 'Cliente aprovou a versão sem comentários adicionais.');
+    const success = updateProjectStatus('approved', feedback);
     
     setTimeout(() => {
-      setSubmitting(false);
-      
+      setIsSubmitting(false);
       if (success) {
         toast({
-          title: 'Versão aprovada',
-          description: 'Sua aprovação foi registrada com sucesso.',
-          variant: 'default'
+          title: "Versão aprovada!",
+          description: "Esta versão foi aprovada. Agora estamos finalizando seu projeto.",
         });
-        setFeedback('');
       } else {
         toast({
-          title: 'Erro ao aprovar versão',
-          description: 'Não foi possível registrar sua aprovação. Tente novamente mais tarde.',
-          variant: 'destructive'
+          title: "Erro ao aprovar versão",
+          description: "Ocorreu um erro ao aprovar esta versão. Por favor, tente novamente.",
+          variant: "destructive"
         });
       }
-    }, 1000); // Simulating API call delay
+    }, 1000);
   };
   
   if (isLoading) {
     return (
-      <div className="container mx-auto max-w-5xl px-4 bg-white">
+      <div className="max-w-4xl mx-auto px-4">
         <div className="flex flex-col items-center justify-center py-12">
-          <Loader2 className="h-12 w-12 animate-spin text-harmonia-green mb-6" />
-          <p className="text-lg text-black">Carregando prévia do projeto...</p>
+          <div className="w-12 h-12 border-4 border-harmonia-green border-t-transparent rounded-full animate-spin"></div>
+          <p className="mt-4 text-gray-600">Carregando sua prévia musical...</p>
         </div>
       </div>
     );
@@ -169,132 +127,188 @@ const MusicPreviewSystem: React.FC<MusicPreviewSystemProps> = ({ projectId }) =>
   
   if (!projectData) {
     return (
-      <div className="container mx-auto max-w-5xl px-4 bg-white">
-        <div className="flex flex-col items-center justify-center py-12">
-          <div className="bg-white p-8 rounded-lg shadow-sm w-full max-w-lg text-center">
-            <h2 className="text-2xl font-bold text-black mb-4">Prévia não encontrada</h2>
-            <p className="text-black mb-6">Esta prévia não existe ou expirou. Por favor, verifique o link ou entre em contato conosco.</p>
-          </div>
-        </div>
+      <div className="max-w-4xl mx-auto px-4">
+        <Card className="border-red-200">
+          <CardHeader>
+            <CardTitle className="text-red-600">Prévia não encontrada</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <p className="text-gray-600">
+              A prévia que você está procurando não existe ou expirou.
+              Por favor, verifique o link e tente novamente.
+            </p>
+            <Button 
+              className="mt-4"
+              onClick={() => navigate('/client-dashboard')}
+            >
+              Voltar ao Dashboard
+            </Button>
+          </CardContent>
+        </Card>
       </div>
     );
   }
   
-  const selectedPreview = projectData.previews.find(p => p.id === selectedVersion);
+  const currentVersion = selectedVersion 
+    ? projectData.previews.find(p => p.id === selectedVersion) 
+    : null;
+    
   const isApproved = projectData.status === 'approved';
   
   return (
-    <div className="container mx-auto max-w-5xl px-4 bg-white text-black">
+    <div className="max-w-4xl mx-auto px-4">
       <div className="mb-8">
-        <h1 className="text-2xl md:text-3xl font-bold text-black mb-3">{projectData.projectTitle}</h1>
-        <p className="text-gray-600">
-          Olá {projectData.clientName}, avalie as versões do seu projeto e envie seu feedback.
-        </p>
+        <h1 className="text-3xl font-bold text-gray-900 mb-2">
+          {projectData.projectTitle}
+        </h1>
+        <div className="flex items-center text-sm text-gray-500">
+          <Info className="h-4 w-4 mr-1" />
+          <span>
+            {isApproved
+              ? "Este projeto foi aprovado e está em fase de finalização."
+              : "Por favor, ouça as versões e envie seu feedback."}
+          </span>
+        </div>
       </div>
       
-      {isApproved && (
-        <Alert className="mb-6 bg-green-50 border-green-200">
-          <CheckCircle className="h-5 w-5 text-green-600" />
-          <AlertTitle className="text-green-800">Projeto aprovado</AlertTitle>
-          <AlertDescription className="text-green-700">
-            Você já aprovou este projeto. Em breve enviaremos os arquivos finais.
-          </AlertDescription>
-        </Alert>
-      )}
-      
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        <div className="md:col-span-2">
-          <PreviewPlayerList
-            versions={projectData.previews}
-            selectedVersion={selectedVersion}
-            setSelectedVersion={handleVersionSelect}
-            isApproved={isApproved}
-            onPlay={handlePlay}
-          />
-          
-          {selectedPreview && selectedPreview.fileId && (
-            <Card className="mb-6 bg-white border-gray-200">
-              <CardHeader className="bg-gray-50 border-b border-gray-100">
-                <CardTitle className="text-lg text-gray-800">Player</CardTitle>
-              </CardHeader>
-              <CardContent className="pt-4">
-                <GoogleDriveAudioPlayer
-                  fileId={selectedPreview.fileId}
-                  title={selectedPreview.title}
-                  subtitle="Clique para ouvir a prévia"
-                  isPreview={true}
-                />
-              </CardContent>
-            </Card>
-          )}
-          
-          <Card className="bg-white border-gray-200">
-            <CardHeader className="bg-gray-50 border-b border-gray-100">
-              <CardTitle className="flex items-center text-gray-800">
-                <MessageSquare className="h-5 w-5 mr-2 text-harmonia-green" />
-                {isApproved ? 'Feedback enviado' : 'Envie seu feedback'}
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="pt-4">
-              {isApproved ? (
-                <div className="bg-green-50 p-4 rounded-md">
-                  <p className="text-green-700">
-                    Obrigado pelo seu feedback! Seu projeto foi aprovado e estamos finalizando os detalhes.
-                  </p>
-                </div>
-              ) : (
-                <div className="space-y-4">
-                  <div className="bg-gray-50 p-4 rounded-md">
-                    <p className="text-sm text-gray-600 mb-2">
-                      {selectedVersion 
-                        ? `Versão selecionada: ${projectData.previews.find(p => p.id === selectedVersion)?.title || 'Versão selecionada'}` 
-                        : 'Nenhuma versão selecionada. Por favor, escolha uma opção acima.'}
-                    </p>
-                    
-                    <Textarea
-                      placeholder="Conte-nos o que você achou da versão selecionada. O que você gostou? Há algo que você gostaria de mudar?"
-                      className="min-h-[150px] bg-white text-black border-gray-300"
-                      value={feedback}
-                      onChange={(e) => setFeedback(e.target.value)}
-                      disabled={isApproved || submitting}
-                    />
-                  </div>
+      <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
+        <div className="lg:col-span-2">
+          <Tabs defaultValue="versions" className="w-full">
+            <TabsList className="grid w-full grid-cols-2">
+              <TabsTrigger value="versions">Versões</TabsTrigger>
+              <TabsTrigger value="feedback">Feedback</TabsTrigger>
+            </TabsList>
+            
+            <TabsContent value="versions" className="mt-6 space-y-4">
+              {projectData.previews.map((preview) => (
+                <Card 
+                  key={preview.id}
+                  className={`cursor-pointer transition-all border hover:border-harmonia-green/50 
+                    ${selectedVersion === preview.id ? 'border-2 border-harmonia-green shadow-md' : ''}
+                  `}
+                  onClick={() => setSelectedVersion(preview.id)}
+                >
+                  <CardHeader className="flex flex-row items-start justify-between pb-2">
+                    <div>
+                      <CardTitle className="text-lg">{preview.title}</CardTitle>
+                      {preview.recommended && (
+                        <div className="flex items-center mt-1">
+                          <Star className="h-4 w-4 text-yellow-500 mr-1" />
+                          <span className="text-sm text-yellow-600 font-medium">Recomendada</span>
+                        </div>
+                      )}
+                    </div>
+                  </CardHeader>
                   
-                  <div className="flex justify-end space-x-3">
-                    <Button
-                      variant="outline"
-                      onClick={handleApproveVersion}
-                      disabled={isApproved || submitting || !selectedVersion}
-                      className="border-gray-300 text-gray-700 hover:bg-gray-100"
-                    >
-                      <CheckCircle className="h-4 w-4 mr-2" />
-                      Aprovar versão
-                    </Button>
-                    <Button
-                      className="bg-harmonia-green hover:bg-harmonia-green/90 text-white"
-                      onClick={handleFeedbackSubmit}
-                      disabled={isApproved || submitting || !selectedVersion || !feedback.trim()}
-                    >
-                      <MessageSquare className="h-4 w-4 mr-2" />
-                      Enviar feedback
-                    </Button>
-                  </div>
-                </div>
-              )}
-            </CardContent>
-          </Card>
+                  <CardContent>
+                    {preview.description && (
+                      <p className="text-sm text-gray-600 mb-4">{preview.description}</p>
+                    )}
+                    
+                    <div className="bg-gray-100 rounded-md p-3">
+                      <GoogleDriveAudioPlayer
+                        fileId={preview.fileId || ''}
+                        title={preview.title}
+                        subtitle="Clique para ouvir"
+                        isPreview={true}
+                      />
+                    </div>
+                  </CardContent>
+                </Card>
+              ))}
+            </TabsContent>
+            
+            <TabsContent value="feedback" className="mt-6">
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center">
+                    <MessageSquare className="h-5 w-5 mr-2 text-harmonia-green" />
+                    Enviar feedback
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  {isApproved ? (
+                    <div className="bg-green-50 p-4 rounded-md flex items-center">
+                      <CheckCircle className="h-5 w-5 text-green-500 mr-2" />
+                      <p className="text-green-700">
+                        Este projeto já foi aprovado e está em fase de finalização.
+                      </p>
+                    </div>
+                  ) : (
+                    <>
+                      <div className="bg-gray-50 p-4 rounded-md">
+                        <p className="text-sm text-gray-600 mb-3">
+                          {selectedVersion 
+                            ? `Versão selecionada: ${projectData.previews.find(p => p.id === selectedVersion)?.title}`
+                            : 'Nenhuma versão selecionada. Por favor, escolha uma versão na aba "Versões".'
+                          }
+                        </p>
+                        
+                        <div className="space-y-2">
+                          <p className="text-sm font-medium">Seu feedback</p>
+                          <Textarea
+                            value={feedback}
+                            onChange={(e) => setFeedback(e.target.value)}
+                            placeholder="Descreva o que você gostou e o que gostaria de mudar nesta versão..."
+                            className="min-h-[150px]"
+                          />
+                        </div>
+                      </div>
+                      
+                      <div className="flex justify-end space-x-3">
+                        <Button 
+                          variant="outline"
+                          onClick={handleApproveVersion}
+                          disabled={isSubmitting || !selectedVersion}
+                        >
+                          <CheckCircle className="h-4 w-4 mr-2" />
+                          Aprovar esta versão
+                        </Button>
+                        <Button 
+                          onClick={handleSubmitFeedback}
+                          disabled={isSubmitting || !selectedVersion || !feedback.trim()}
+                          className="bg-harmonia-green hover:bg-harmonia-green/90"
+                        >
+                          <MessageSquare className="h-4 w-4 mr-2" />
+                          Enviar feedback
+                        </Button>
+                      </div>
+                    </>
+                  )}
+                </CardContent>
+              </Card>
+            </TabsContent>
+          </Tabs>
         </div>
         
         <div>
           <PreviewProjectDetails 
             projectData={{
               projectTitle: projectData.projectTitle,
-              clientName: projectData.clientName,
+              clientName: projectData.clientName || 'Cliente',
               status: projectData.status,
               packageType: projectData.packageType,
-              creationDate: projectData.createdAt ? new Date(projectData.createdAt).toLocaleDateString('pt-BR') : undefined
-            }}
+              creationDate: projectData.createdAt
+            }} 
           />
+          
+          <Card className="mt-6">
+            <CardHeader className="pb-3">
+              <CardTitle className="text-lg flex items-center">
+                <Music className="h-5 w-5 mr-2 text-harmonia-green" />
+                Informações adicionais
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="text-sm text-gray-600">
+              <p className="mb-2">
+                Esta é uma prévia exclusiva da sua música. Você pode ouvir as versões disponíveis e enviar seu feedback.
+              </p>
+              <div className="text-xs text-gray-500 mt-4 flex items-center">
+                <Lock className="h-3 w-3 mr-1" />
+                <span>Conteúdo exclusivo e protegido</span>
+              </div>
+            </CardContent>
+          </Card>
         </div>
       </div>
     </div>
