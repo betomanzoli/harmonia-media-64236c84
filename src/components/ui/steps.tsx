@@ -14,7 +14,8 @@ export function Steps({ children, className, ...props }: StepsProps) {
 
   const steps = stepsArray.map((step, index) => {
     if (React.isValidElement(step)) {
-      return React.cloneElement(step, {
+      // We need to use the type assertion here to avoid the TypeScript error
+      return React.cloneElement(step as React.ReactElement<StepProps>, {
         stepNumber: index + 1,
       })
     }
