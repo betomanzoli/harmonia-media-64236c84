@@ -34,13 +34,18 @@ export const usePreviewData = (projectId: string | undefined) => {
 
     setActualProjectId(projectId);
     
-    // First try to get project from local cache
-    let adminProject = getProjectById(projectId);
-    
     const loadProject = async () => {
+      // First try to get project from local cache
+      let adminProject = getProjectById(projectId);
+      
       // If not in local cache, try to fetch from Supabase
       if (!adminProject) {
-        adminProject = await fetchProjectById(projectId);
+        try {
+          adminProject = await fetchProjectById(projectId);
+        } catch (error) {
+          console.error("Error fetching project:", error);
+          adminProject = null;
+        }
       }
       
       if (adminProject) {
