@@ -13,7 +13,7 @@ import Payment from '@/pages/Payment';
 import Success from '@/pages/Success';
 import MusicPreviewPage from '@/pages/MusicPreviewPage';
 import PreviewPage from '@/pages/PreviewPage';
-import PreviewProjectPage from '@/pages/PreviewProjectPage';
+import ClientPreviewProjectPage from '@/pages/PreviewProjectPage';
 import AuthPage from '@/pages/AuthPage';
 
 // Admin Pages
@@ -23,7 +23,7 @@ import AdminProjects from '@/pages/admin/AdminProjects';
 import AdminBriefings from '@/pages/admin/AdminBriefings';
 import AdminClients from '@/pages/admin/AdminClients';
 import AdminSettings from '@/pages/admin/AdminSettings';
-import PreviewProjectPage from '@/pages/admin/PreviewProjectPage';
+import AdminPreviewProjectPage from '@/pages/admin/PreviewProjectPage';
 
 // Client Dashboard
 import ClientDashboard from '@/pages/client/ClientDashboard';
@@ -49,13 +49,13 @@ function App() {
         {/* Preview routes */}
         <Route path="/preview/:projectId" element={<PreviewPage />} />
         <Route path="/music-preview/:projectId" element={<MusicPreviewPage />} />
-        <Route path="/project/:projectId" element={<PreviewProjectPage />} />
+        <Route path="/project/:projectId" element={<ClientPreviewProjectPage />} />
         <Route path="/auth/preview/:projectId" element={<AuthPage />} />
         
         {/* Admin routes */}
         <Route path="/admin-j28s7d1k/dashboard" element={<AdminDashboard />} />
         <Route path="/admin-j28s7d1k/previews" element={<AdminPreviews />} />
-        <Route path="/admin-j28s7d1k/previews/:projectId" element={<PreviewProjectPage />} />
+        <Route path="/admin-j28s7d1k/previews/:projectId" element={<AdminPreviewProjectPage />} />
         <Route path="/admin-j28s7d1k/projects" element={<AdminProjects />} />
         <Route path="/admin-j28s7d1k/briefings" element={<AdminBriefings />} />
         <Route path="/admin-j28s7d1k/clients" element={<AdminClients />} />

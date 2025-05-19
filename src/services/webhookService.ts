@@ -1,5 +1,12 @@
 
-export type NotificationType = 'test_message' | 'new_portfolio_item' | 'feedback_received' | 'new_customer' | 'client_message';
+export type NotificationType = 
+  | 'test_message' 
+  | 'new_portfolio_item' 
+  | 'feedback_received' 
+  | 'new_customer' 
+  | 'client_message'
+  | 'preview_approved'
+  | 'new_preview';
 
 const webhookService = {
   getWebhookUrl: async (): Promise<string> => {
