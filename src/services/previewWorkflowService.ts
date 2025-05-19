@@ -24,7 +24,7 @@ const previewWorkflowService = {
       // First, try to send to the n8n webhook
       const webhookSuccess = await webhookService.sendPreviewData({
         ...data,
-        created_at: new Date().toISOString()
+        timestamp: new Date().toISOString() // Use timestamp instead of created_at
       });
 
       console.log('Webhook notification result:', webhookSuccess);
@@ -66,11 +66,13 @@ const previewWorkflowService = {
       const data: PreviewWorkflowData = {
         preview_id: previewId,
         status: 'feedback',
-        feedback,
-        created_at: new Date().toISOString()
+        feedback
       };
 
-      return await webhookService.sendPreviewData(data);
+      return await webhookService.sendPreviewData({
+        ...data,
+        timestamp: new Date().toISOString() // Use timestamp instead of created_at
+      });
     } catch (error) {
       console.error('Error in previewWorkflowService.sendFeedback:', error);
       return false;
@@ -85,11 +87,13 @@ const previewWorkflowService = {
       const data: PreviewWorkflowData = {
         preview_id: previewId,
         status: 'approved',
-        version: versionId,
-        created_at: new Date().toISOString()
+        version: versionId
       };
 
-      return await webhookService.sendPreviewData(data);
+      return await webhookService.sendPreviewData({
+        ...data,
+        timestamp: new Date().toISOString() // Use timestamp instead of created_at
+      });
     } catch (error) {
       console.error('Error in previewWorkflowService.approvePreview:', error);
       return false;

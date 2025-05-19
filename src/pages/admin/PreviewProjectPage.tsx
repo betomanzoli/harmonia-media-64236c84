@@ -1,3 +1,4 @@
+
 import React, { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { usePreviewProjects } from '@/hooks/admin/usePreviewProjects';
@@ -10,17 +11,9 @@ import ProjectActionCard from '@/components/admin/previews/ProjectActionCard';
 import ProjectMetadataCard from '@/components/admin/previews/ProjectMetadataCard';
 import VersionPlayerCard from '@/components/admin/previews/VersionPlayerCard';
 import { useToast } from '@/hooks/use-toast';
+import { VersionItem } from '@/hooks/admin/usePreviewProjects';
 
-// Define the VersionItem interface
-interface VersionItem {
-  id: string;
-  name: string;
-  description?: string;
-  fileId: string;
-  recommended?: boolean;
-  final?: boolean;
-}
-
+// Define the Project interface
 interface Project {
   id: string;
   clientName: string;
@@ -97,10 +90,16 @@ const PreviewProjectPage: React.FC = () => {
     if (id) {
       const projectData = getProjectById(id);
       if (projectData) {
-        setProject(projectData as Project);
+        // Create a Project object from projectData
+        const projectWithTitle: Project = {
+          ...projectData,
+          projectTitle: projectData.title || projectData.packageType || 'Projeto de Música'
+        };
+        
+        setProject(projectWithTitle);
         
         // Set versions list if it exists or create a default array
-        const versionsList = (projectData as any).versionsList || [];
+        const versionsList = projectData.versionsList || [];
         setVersions(versionsList);
         
         // Set selected version to the recommended one or the first one
@@ -131,7 +130,7 @@ const PreviewProjectPage: React.FC = () => {
   return (
     <AdminLayout>
       <div className="flex justify-between items-center p-6">
-        <Button variant="ghost" onClick={() => navigate('/admin/previews')}>
+        <Button variant="ghost" onClick={() => navigate('/admin-j28s7d1k/previews')}>
           <ArrowLeft className="mr-2 h-4 w-4" />
           Voltar
         </Button>
@@ -162,7 +161,7 @@ const PreviewProjectPage: React.FC = () => {
             clientEmail={project.clientEmail}
             projectStatus={project.status}
             packageType={project.packageType}
-            clientName={project.clientName} // Pass the required clientName prop
+            clientName={project.clientName}
           />
           
           <ProjectMetadataCard 
