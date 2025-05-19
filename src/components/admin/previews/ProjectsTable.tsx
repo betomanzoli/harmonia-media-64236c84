@@ -1,22 +1,23 @@
 
 import React from 'react';
-import { 
-  Table, 
-  TableBody, 
-  TableCaption, 
-  TableCell, 
-  TableHead, 
-  TableHeader, 
-  TableRow 
-} from "@/components/ui/table";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Eye, Bell, Trash2 } from 'lucide-react';
+import { MoreHorizontal, Eye, Edit, Trash, Bell, AlarmClock } from 'lucide-react';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import { Link } from 'react-router-dom';
-import { ProjectItem } from '@/hooks/admin/usePreviewProjects';
+import { Skeleton } from "@/components/ui/skeleton";
+import { useToast } from "@/hooks/use-toast";
 
 interface ProjectsTableProps {
-  projects: ProjectItem[];
+  projects: any[];
   isLoading: boolean;
   onDelete: (id: string) => void;
   onSendReminder: (id: string) => void;
@@ -28,116 +29,148 @@ const ProjectsTable: React.FC<ProjectsTableProps> = ({
   onDelete,
   onSendReminder
 }) => {
-  const getStatusBadge = (status: string) => {
-    switch(status) {
-      case 'waiting':
-        return <Badge variant="outline" className="bg-yellow-100 text-yellow-800 hover:bg-yellow-100">Aguardando</Badge>;
-      case 'feedback':
-        return <Badge variant="outline" className="bg-blue-100 text-blue-800 hover:bg-blue-100">Feedback Recebido</Badge>;
-      case 'approved':
-        return <Badge variant="outline" className="bg-green-100 text-green-800 hover:bg-green-100">Aprovado</Badge>;
-      default:
-        return <Badge variant="outline">Desconhecido</Badge>;
+  const { toast } = useToast();
+  
+  // Helper to format dates for better display
+  const formatDate = (dateString: string) => {
+    if (!dateString) return 'N/A';
+    
+    // If it's already in DD/MM/YYYY format, return as is
+    if (/^\d{2}\/\d{2}\/\d{4}$/.test(dateString)) {
+      return dateString;
+    }
+    
+    try {
+      // Try to parse the date string
+      const date = new Date(dateString);
+      return date.toLocaleDateString('pt-BR');
+    } catch {
+      return dateString;
     }
   };
-  
-  const formatDate = (dateStr: string) => {
-    if (!dateStr) return 'N/A';
-    
-    // Check if the date is already in the desired format DD/MM/YYYY
-    if (/^\d{2}\/\d{2}\/\d{4}$/.test(dateStr)) {
-      return dateStr;
+
+  const getStatusBadge = (status: string) => {
+    switch(status?.toLowerCase()) {
+      case 'waiting':
+      case 'em_andamento':
+        return <Badge className="bg-blue-500">Em Análise</Badge>;
+      case 'feedback':
+        return <Badge className="bg-yellow-500">Com Feedback</Badge>;
+      case 'approved':
+        return <Badge className="bg-green-500">Aprovado</Badge>;
+      case 'expired':
+        return <Badge variant="outline" className="text-red-600 border-red-600">Expirado</Badge>;
+      default:
+        return <Badge variant="outline">Aguardando</Badge>;
     }
-    
-    // Otherwise, try to parse it
-    try {
-      const date = new Date(dateStr);
-      return date.toLocaleDateString('pt-BR');
-    } catch (e) {
-      return dateStr;
-    }
+  };
+
+  const copyPreviewLink = (projectId: string) => {
+    const link = `${window.location.origin}/preview/${projectId}`;
+    navigator.clipboard.writeText(link);
+    toast({
+      title: "Link copiado!",
+      description: "Link de prévia copiado para a área de transferência."
+    });
   };
 
   if (isLoading) {
     return (
-      <div className="p-8 text-center">
-        <div className="inline-block h-8 w-8 animate-spin rounded-full border-4 border-solid border-current border-r-transparent motion-reduce:animate-[spin_1.5s_linear_infinite]" />
-        <p className="mt-2 text-gray-500">Carregando projetos...</p>
+      <div className="p-4">
+        <div className="space-y-2">
+          {Array.from({ length: 5 }).map((_, index) => (
+            <div key={index} className="flex items-center space-x-4">
+              <Skeleton className="h-12 w-full" />
+            </div>
+          ))}
+        </div>
       </div>
     );
   }
-  
-  if (projects.length === 0) {
-    return (
-      <div className="p-8 text-center">
-        <p className="text-gray-500">Nenhum projeto encontrado.</p>
-      </div>
-    );
-  }
-  
+
   return (
-    <Table>
-      <TableCaption>Lista de projetos de prévias musicais.</TableCaption>
-      <TableHeader>
-        <TableRow>
-          <TableHead className="w-[100px] text-black">ID</TableHead>
-          <TableHead className="text-black">Cliente</TableHead>
-          <TableHead className="text-black">Pacote</TableHead>
-          <TableHead className="text-center text-black">Versões</TableHead>
-          <TableHead className="text-black">Status</TableHead>
-          <TableHead className="text-black">Criado em</TableHead>
-          <TableHead className="text-black">Expira em</TableHead>
-          <TableHead className="text-right text-black">Ações</TableHead>
-        </TableRow>
-      </TableHeader>
-      <TableBody>
-        {projects.map(project => (
-          <TableRow key={project.id}>
-            <TableCell className="font-medium text-black">{project.id}</TableCell>
-            <TableCell className="text-black">{project.clientName}</TableCell>
-            <TableCell className="text-black">{project.packageType}</TableCell>
-            <TableCell className="text-center text-black">{project.versions}</TableCell>
-            <TableCell>{getStatusBadge(project.status)}</TableCell>
-            <TableCell className="text-black">{formatDate(project.createdAt)}</TableCell>
-            <TableCell className="text-black">{formatDate(project.expirationDate)}</TableCell>
-            <TableCell className="text-right">
-              <div className="flex justify-end space-x-2">
-                <Button 
-                  variant="outline" 
-                  size="sm"
-                  asChild
-                  title="Ver detalhes do projeto"
-                >
-                  <Link to={`/admin-j28s7d1k/previews/${project.id}`}>
-                    <Eye className="h-4 w-4" />
-                    <span className="sr-only">Ver</span>
-                  </Link>
-                </Button>
-                
-                <Button 
-                  variant="outline" 
-                  size="sm"
-                  onClick={() => onSendReminder(project.id)}
-                >
-                  <Bell className="h-4 w-4" />
-                  <span className="sr-only">Lembrete</span>
-                </Button>
-                
-                <Button 
-                  variant="outline" 
-                  size="sm"
-                  onClick={() => onDelete(project.id)}
-                  className="text-red-500 hover:text-red-700 hover:bg-red-50"
-                >
-                  <Trash2 className="h-4 w-4" />
-                  <span className="sr-only">Excluir</span>
-                </Button>
-              </div>
-            </TableCell>
+    <div className="border rounded-md overflow-hidden">
+      <Table>
+        <TableHeader>
+          <TableRow>
+            <TableHead>Cliente</TableHead>
+            <TableHead>Pacote</TableHead>
+            <TableHead>Status</TableHead>
+            <TableHead>Versões</TableHead>
+            <TableHead>Atualizado</TableHead>
+            <TableHead>Expira</TableHead>
+            <TableHead className="text-right">Ações</TableHead>
           </TableRow>
-        ))}
-      </TableBody>
-    </Table>
+        </TableHeader>
+        <TableBody>
+          {projects.length === 0 ? (
+            <TableRow>
+              <TableCell colSpan={7} className="h-24 text-center">
+                Nenhum projeto de prévia encontrado.
+              </TableCell>
+            </TableRow>
+          ) : (
+            projects.map((project) => (
+              <TableRow key={project.id}>
+                <TableCell className="font-medium">
+                  {project.clientName || "Cliente sem nome"}
+                </TableCell>
+                <TableCell>
+                  {project.packageType ? (
+                    <span className="capitalize">{project.packageType}</span>
+                  ) : (
+                    "Padrão"
+                  )}
+                </TableCell>
+                <TableCell>{getStatusBadge(project.status)}</TableCell>
+                <TableCell>{project.versions || 0}</TableCell>
+                <TableCell>{formatDate(project.lastActivityDate)}</TableCell>
+                <TableCell>{formatDate(project.expirationDate)}</TableCell>
+                <TableCell className="text-right">
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                      <Button variant="ghost" size="icon">
+                        <MoreHorizontal className="h-4 w-4" />
+                        <span className="sr-only">Abrir menu</span>
+                      </Button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="end">
+                      <DropdownMenuLabel>Ações</DropdownMenuLabel>
+                      <DropdownMenuSeparator />
+                      <DropdownMenuItem
+                        onClick={() => copyPreviewLink(project.id)}
+                      >
+                        <Eye className="mr-2 h-4 w-4" />
+                        Copiar Link
+                      </DropdownMenuItem>
+                      <DropdownMenuItem asChild>
+                        <Link to={`/admin-j28s7d1k/previews/${project.id}`}>
+                          <Edit className="mr-2 h-4 w-4" />
+                          Editar
+                        </Link>
+                      </DropdownMenuItem>
+                      <DropdownMenuItem
+                        onClick={() => onSendReminder(project.id)}
+                      >
+                        <Bell className="mr-2 h-4 w-4" />
+                        Enviar Lembrete
+                      </DropdownMenuItem>
+                      <DropdownMenuItem
+                        onClick={() => onDelete(project.id)}
+                        className="text-red-600 focus:text-red-600"
+                      >
+                        <Trash className="mr-2 h-4 w-4" />
+                        Excluir
+                      </DropdownMenuItem>
+                    </DropdownMenuContent>
+                  </DropdownMenu>
+                </TableCell>
+              </TableRow>
+            ))
+          )}
+        </TableBody>
+      </Table>
+    </div>
   );
 };
 

@@ -1,5 +1,4 @@
-
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useNavigate } from 'react';
 import AdminLayout from '@/components/admin/layout/AdminLayout';
 import { usePreviewProjects } from '@/hooks/admin/usePreviewProjects';
 import { Button } from "@/components/ui/button";
@@ -25,6 +24,7 @@ const AdminPreviews: React.FC = () => {
   const [showAddForm, setShowAddForm] = useState(false);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [projectToDelete, setProjectToDelete] = useState<string | null>(null);
+  const navigate = useNavigate();
   
   useEffect(() => {
     loadProjects().then(() => {
@@ -81,6 +81,18 @@ const AdminPreviews: React.FC = () => {
       });
     });
   };
+
+  const handleCreateNewProject = () => {
+    toast({
+      title: "Fluxo correto",
+      description: "Por favor, inicie o fluxo a partir da página de briefings.",
+      variant: "destructive"
+    });
+    
+    setTimeout(() => {
+      navigate('/admin-j28s7d1k/briefings');
+    }, 2000);
+  };
   
   return (
     <AdminLayout>
@@ -109,14 +121,6 @@ const AdminPreviews: React.FC = () => {
               <RefreshCw className={`h-4 w-4 mr-2 ${isLoading ? 'animate-spin' : ''}`} />
               Atualizar
             </Button>
-            
-            <Button 
-              size="sm"
-              onClick={() => setShowAddForm(true)}
-            >
-              <Plus className="h-4 w-4 mr-2" />
-              Novo Projeto
-            </Button>
           </div>
         </div>
         
@@ -135,16 +139,6 @@ const AdminPreviews: React.FC = () => {
             />
           </div>
         </div>
-        
-        <Dialog open={showAddForm} onOpenChange={setShowAddForm}>
-          <DialogContent className="max-w-3xl">
-            <DialogHeader>
-              <DialogTitle>Criar Novo Projeto de Prévia</DialogTitle>
-            </DialogHeader>
-            <Separator className="my-4" />
-            <NewProjectForm onAddProject={handleAddProject} />
-          </DialogContent>
-        </Dialog>
         
         <Dialog open={showDeleteConfirm} onOpenChange={setShowDeleteConfirm}>
           <DialogContent>
