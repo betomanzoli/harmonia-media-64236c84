@@ -32,26 +32,16 @@ const AdminPreviews: React.FC = () => {
     });
   }, [loadProjects]);
 
-  const handleAddProject = async (project: any) => {
+  const handleAddProject = (project: any) => {
     // Check if project exists to avoid type error
     if (project) {
-      try {
-        const newProjectId = await addProject(project);
-        toast({
-          title: "Projeto criado",
-          description: `Projeto ${newProjectId} criado com sucesso.`
-        });
-        setShowAddForm(false);
-        return newProjectId;
-      } catch (error) {
-        console.error("Error adding project:", error);
-        toast({
-          title: "Erro",
-          description: "Ocorreu um erro ao criar o projeto.",
-          variant: "destructive"
-        });
-        return null;
-      }
+      const newProjectId = addProject(project);
+      toast({
+        title: "Projeto criado",
+        description: `Projeto ${newProjectId} criado com sucesso.`
+      });
+      setShowAddForm(false);
+      return newProjectId;
     }
     return null;
   };

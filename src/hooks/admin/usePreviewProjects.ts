@@ -220,8 +220,8 @@ export const usePreviewProjects = () => {
       .join(' ');
   };
 
-  // Get project by ID - Modified to handle sync and async modes
-  const getProjectById = useCallback((id: string): ProjectItem | null => {
+  // Get project by ID
+  const getProjectById = useCallback(async (id: string) => {
     console.log("Getting project by ID:", id);
     
     // First try to find in local state for faster access
@@ -238,15 +238,9 @@ export const usePreviewProjects = () => {
       return localProject;
     }
     
-    // If not found locally, return null
-    // All async loading is now handled internally by loadProjects
-    return null;
-  }, [projects, formatPackageType]);
-
-  // Method to fetch project by ID from Supabase (async)
-  const fetchProjectById = useCallback(async (id: string): Promise<ProjectItem | null> => {
+    // If not found locally, try to fetch from Supabase
     try {
-      console.log("Fetching project from Supabase:", id);
+      console.log("Trying to fetch project from Supabase");
       const { data: projectData, error: projectError } = await supabase
         .from('preview_projects')
         .select('*')
@@ -322,7 +316,7 @@ export const usePreviewProjects = () => {
       console.error(`Error getting project ${id}:`, err);
       return null;
     }
-  }, [formatPackageType]);
+  }, [projects, formatPackageType]);
 
   // Generate unique project ID
   const generateProjectId = useCallback(() => {
@@ -497,7 +491,6 @@ export const usePreviewProjects = () => {
     error,
     loadProjects,
     getProjectById,
-    fetchProjectById,
     addProject,
     deleteProject,
     updateProject
