@@ -1,219 +1,178 @@
-
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
+import { useParams, useNavigate } from 'react-router-dom';
+import { usePreviewProjects } from '@/hooks/admin/usePreviewProjects';
 import AdminLayout from '@/components/admin/layout/AdminLayout';
-import { Card } from '@/components/ui/card';
-import ProjectHeader from '@/components/admin/previews/ProjectHeader';
-import PreviewVersionsList from '@/components/admin/previews/PreviewVersionsList';
-import ProjectClientInfo from '@/components/admin/previews/ProjectClientInfo';
+import { Button } from '@/components/ui/button';
+import { ArrowLeft } from 'lucide-react';
+import ProjectStatusBadge from '@/components/admin/previews/ProjectStatusBadge';
+import ProjectVersionsList from '@/components/admin/previews/ProjectVersionsList';
 import ProjectActionCard from '@/components/admin/previews/ProjectActionCard';
-import ProjectHistoryList from '@/components/admin/previews/ProjectHistoryList';
-import { useParams } from 'react-router-dom';
-import { usePreviewProjects, VersionItem } from '@/hooks/admin/usePreviewProjects';
+import ProjectMetadataCard from '@/components/admin/previews/ProjectMetadataCard';
+import VersionPlayerCard from '@/components/admin/previews/VersionPlayerCard';
 import { useToast } from '@/hooks/use-toast';
 
+// Define the VersionItem interface
+interface VersionItem {
+  id: string;
+  name: string;
+  description?: string;
+  fileId: string;
+  recommended?: boolean;
+  final?: boolean;
+}
+
+interface Project {
+  id: string;
+  clientName: string;
+  projectTitle: string;
+  status: 'waiting' | 'feedback' | 'approved';
+  feedback?: string;
+  packageType?: string;
+  createdAt?: string;
+  expirationDate?: string;
+  lastActivityDate?: string;
+  versionsList?: VersionItem[];
+  versions?: number;
+  currentVersion?: string;
+  clientEmail?: string;
+  clientPhone?: string;
+}
+
 const PreviewProjectPage: React.FC = () => {
-  const { projectId } = useParams<{ projectId: string }>();
-  const { getProjectById, updateProject } = usePreviewProjects();
+  const { id } = useParams();
+  const navigate = useNavigate();
+  const { getProjectById } = usePreviewProjects();
+  const [project, setProject] = useState<Project | null>(null);
+  const [selectedVersion, setSelectedVersion] = useState<VersionItem | null>(null);
+  const [versions, setVersions] = useState<VersionItem[]>([]);
   const { toast } = useToast();
-  
-  const project = projectId ? getProjectById(projectId) : null;
-  
+
+  const handleVersionSelect = (version: VersionItem) => {
+    setSelectedVersion(version);
+  };
+
+  const handleAddVersion = (newVersion: VersionItem) => {
+    if (project) {
+      const updatedVersions = [...versions, newVersion];
+      setVersions(updatedVersions);
+
+      // Update the project with the new version
+      const updatedProject = {
+        ...project,
+        versionsList: updatedVersions
+      };
+
+      // Update the project in the admin system
+      // updateProject(project.id, updatedProject);
+
+      // Update local state
+      setProject(updatedProject);
+    }
+  };
+
+  const handleExtendDeadline = () => {
+    if (project) {
+      const newExpirationDate = new Date(new Date(project.expirationDate || '').getTime() + 7 * 24 * 60 * 60 * 1000).toISOString();
+      
+      // Update the project with the extended deadline
+      const updatedProject = {
+        ...project,
+        expirationDate: newExpirationDate
+      };
+      
+      // Update the project in the admin system
+      // updateProject(project.id, updatedProject);
+      
+      // Update local state
+      setProject(updatedProject);
+      
+      toast({
+        title: "Prazo estendido",
+        description: "O prazo do projeto foi estendido em 7 dias."
+      });
+    }
+  };
+
+  useEffect(() => {
+    if (id) {
+      const projectData = getProjectById(id);
+      if (projectData) {
+        setProject(projectData as Project);
+        
+        // Set versions list if it exists or create a default array
+        const versionsList = (projectData as any).versionsList || [];
+        setVersions(versionsList);
+        
+        // Set selected version to the recommended one or the first one
+        const recommended = versionsList.find((v: VersionItem) => v.recommended);
+        setSelectedVersion(recommended || (versionsList.length > 0 ? versionsList[0] : null));
+      } else {
+        toast({
+          title: "Projeto não encontrado",
+          description: `Não foi possível encontrar o projeto com ID: ${id}`,
+          variant: "destructive"
+        });
+        
+        navigate('/admin/previews');
+      }
+    }
+  }, [id, getProjectById, navigate, toast]);
+
   if (!project) {
     return (
       <AdminLayout>
-        <Card className="p-6">
-          <p className="text-center text-gray-500">Projeto não encontrado</p>
-        </Card>
+        <div className="flex flex-col items-center justify-center h-full p-8">
+          <h2 className="text-2xl font-semibold mb-2">Carregando projeto...</h2>
+        </div>
       </AdminLayout>
     );
   }
-  
-  const handleAddVersion = (newVersion: VersionItem) => {
-    if (!projectId) return;
-    
-    const currentVersions = project.versionsList || [];
-    
-    // Se a nova versão for marcada como final, adiciona um indicador
-    const isFinalVersion = newVersion.final === true;
-    const versionTitle = isFinalVersion ? `FINAL - ${newVersion.name}` : newVersion.name;
-    
-    const versionToAdd = {
-      ...newVersion,
-      name: versionTitle
-    };
-    
-    // If the new version is marked as recommended, remove recommended from others
-    let updatedVersions = currentVersions;
-    if (newVersion.recommended) {
-      updatedVersions = currentVersions.map(v => ({
-        ...v,
-        recommended: false
-      }));
-    }
-    
-    // Add the new version
-    updatedVersions = [...updatedVersions, versionToAdd];
-    
-    // Update history
-    const historyAction = isFinalVersion 
-      ? `Versão final adicionada: ${versionTitle}` 
-      : `Nova versão adicionada: ${versionTitle}`;
-      
-    const historyEntry = {
-      action: historyAction,
-      timestamp: new Date().toLocaleString('pt-BR'),
-      data: {
-        message: newVersion.description || 'Sem descrição'
-      }
-    };
-    
-    const history = [...(project.history || []), historyEntry];
-    
-    // Update project
-    updateProject(projectId, {
-      versionsList: updatedVersions,
-      versions: updatedVersions.length,
-      history,
-      lastActivityDate: new Date().toLocaleDateString('pt-BR')
-    });
-    
-    toast({
-      title: isFinalVersion ? "Versão final adicionada" : "Versão adicionada",
-      description: `${versionTitle} foi adicionada ao projeto com sucesso.`
-    });
-  };
-  
-  const handleExtendDeadline = () => {
-    if (!projectId) return;
-    
-    // Calculate new expiration date (current + 7 days)
-    const currentDate = project.expirationDate 
-      ? new Date(project.expirationDate.split('/').reverse().join('-')) 
-      : new Date();
-      
-    currentDate.setDate(currentDate.getDate() + 7);
-    const newExpirationDate = currentDate.toLocaleDateString('pt-BR');
-    
-    // Add history entry
-    const historyEntry = {
-      action: "Prazo estendido",
-      timestamp: new Date().toLocaleString('pt-BR'),
-      data: {
-        message: `Prazo estendido por +7 dias. Nova data de expiração: ${newExpirationDate}`
-      }
-    };
-    
-    const history = [...(project.history || []), historyEntry];
-    
-    // Update project
-    updateProject(projectId, {
-      expirationDate: newExpirationDate,
-      history,
-      lastActivityDate: new Date().toLocaleDateString('pt-BR')
-    });
-    
-    toast({
-      title: "Prazo estendido",
-      description: `O prazo foi estendido por +7 dias. Nova data: ${newExpirationDate}`
-    });
-  };
 
-  // Function to handle version deletion
-  const handleDeleteVersion = (versionId: string) => {
-    if (!projectId) return;
-    
-    const currentVersions = project.versionsList || [];
-    const versionToDelete = currentVersions.find(v => v.id === versionId);
-    
-    if (!versionToDelete) return;
-    
-    const updatedVersions = currentVersions.filter(v => v.id !== versionId);
-    
-    // Add history entry
-    const historyEntry = {
-      action: `Versão removida: ${versionToDelete.name}`,
-      timestamp: new Date().toLocaleString('pt-BR'),
-      data: {
-        message: `A versão "${versionToDelete.name}" foi removida do projeto.`
-      }
-    };
-    
-    const history = [...(project.history || []), historyEntry];
-    
-    // Update project
-    updateProject(projectId, {
-      versionsList: updatedVersions,
-      versions: updatedVersions.length,
-      history,
-      lastActivityDate: new Date().toLocaleDateString('pt-BR')
-    });
-    
-    toast({
-      title: "Versão removida",
-      description: `${versionToDelete.name} foi removida com sucesso.`
-    });
-  };
-  
-  // Format package type with capitalized first letter
-  const formatPackageType = (packageType: string): string => {
-    if (!packageType) return "Projeto de Música Personalizada";
-    
-    // Split by spaces and capitalize first letter of each word
-    return packageType.split(' ').map(word => {
-      if (word.toLowerCase() === 'essencial' || 
-          word.toLowerCase() === 'premium' || 
-          word.toLowerCase() === 'profissional') {
-        return word.charAt(0).toUpperCase() + word.slice(1).toLowerCase();
-      }
-      return word;
-    }).join(' ');
-  };
-  
-  // Gera o link de prévia para o cliente
-  const previewUrl = `/preview/${projectId}`;
-  
   return (
     <AdminLayout>
-      <div className="space-y-6 p-6 min-h-screen bg-slate-100">
-        <ProjectHeader 
-          projectTitle={formatPackageType(project.packageType || "Projeto de Música Personalizada")} 
-          clientName={project.clientName}
-          packageType={formatPackageType(project.packageType)}
-        />
+      <div className="flex justify-between items-center p-6">
+        <Button variant="ghost" onClick={() => navigate('/admin/previews')}>
+          <ArrowLeft className="mr-2 h-4 w-4" />
+          Voltar
+        </Button>
         
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          <div className="md:col-span-2 space-y-6">
-            <PreviewVersionsList 
-              versions={project.versionsList || []} 
-              projectId={projectId}
-              onDeleteVersion={handleDeleteVersion}
-            />
-            <ProjectHistoryList 
-              history={project.history || []} 
-            />
-          </div>
+        <div>
+          <ProjectStatusBadge status={project.status} />
+        </div>
+      </div>
+      
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 p-6">
+        <div className="lg:col-span-2 space-y-6">
+          <VersionPlayerCard selectedVersion={selectedVersion} />
           
-          <div className="space-y-6">
-            <ProjectClientInfo 
-              clientName={project.clientName}
-              clientEmail={project.clientEmail || "email@exemplo.com"}
-              packageType={formatPackageType(project.packageType || "Pacote Básico")}
-              createdAt={project.createdAt || new Date().toLocaleDateString('pt-BR')}
-              expirationDate={project.expirationDate || "N/A"}
-              lastActivityDate={project.lastActivityDate || new Date().toLocaleDateString('pt-BR')}
-            />
-            
-            <ProjectActionCard 
-              projectId={projectId}
-              onAddVersion={handleAddVersion}
-              onExtendDeadline={handleExtendDeadline}
-              previewUrl={previewUrl}
-              clientPhone={project.clientPhone || ''}
-              clientEmail={project.clientEmail || ''}
-              projectStatus={project.status}
-              packageType={project.packageType}
-            />
-          </div>
+          <ProjectVersionsList 
+            versions={versions}
+            selectedVersion={selectedVersion}
+            onVersionSelect={handleVersionSelect}
+          />
+        </div>
+        
+        <div className="space-y-6">
+          <ProjectActionCard 
+            projectId={project.id}
+            onAddVersion={handleAddVersion}
+            onExtendDeadline={handleExtendDeadline}
+            previewUrl={`/preview/${project.id}`}
+            clientPhone={project.clientPhone}
+            clientEmail={project.clientEmail}
+            projectStatus={project.status}
+            packageType={project.packageType}
+            clientName={project.clientName} // Pass the required clientName prop
+          />
+          
+          <ProjectMetadataCard 
+            clientName={project.clientName}
+            projectTitle={project.projectTitle}
+            status={project.status}
+            createdAt={project.createdAt}
+            expirationDate={project.expirationDate}
+            packageType={project.packageType}
+          />
         </div>
       </div>
     </AdminLayout>

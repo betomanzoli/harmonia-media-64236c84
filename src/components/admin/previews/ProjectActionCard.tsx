@@ -8,6 +8,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Switch } from "@/components/ui/switch";
 import emailService from '@/services/emailService';
+import previewWorkflowService from '@/services/previewWorkflowService';
 
 interface ProjectActionCardProps {
   projectId: string;
@@ -74,6 +75,18 @@ const ProjectActionCard: React.FC<ProjectActionCardProps> = ({
         title: "Versão adicionada",
         description: "Nova versão adicionada com sucesso."
       });
+      
+      // After adding the version, notify the workflow system
+      try {
+        await previewWorkflowService.createPreview({
+          preview_id: projectId,
+          version: versionName,
+          notes: versionDescription,
+          files: [versionFileId]
+        });
+      } catch (error) {
+        console.error("Error notifying workflow system:", error);
+      }
     } catch (error) {
       console.error("Erro ao adicionar versão:", error);
       toast({
@@ -86,7 +99,7 @@ const ProjectActionCard: React.FC<ProjectActionCardProps> = ({
     }
   };
 
-  // Na função ProjectActionCard, adicione o uso do emailService.sendPreviewAccessLink:
+  // In the ProjectActionCard, use the emailService.sendPreviewAccessLink:
   const handleSendEmail = async () => {
     if (!clientEmail) {
       toast({
