@@ -252,7 +252,7 @@ return {
                     <p className="font-medium">Configuração do Email:</p>
                     <ul className="list-disc list-inside mt-1">
                       <li>De: <span className="font-mono">seu@email.com</span></li>
-                      <li>Para: <span className="font-mono">{{$json.clientEmail}}</span></li>
+                      <li>Para: <span className="font-mono">{"{{$json.clientEmail}}"}</span></li>
                       <li>Assunto: <span className="font-mono">Sua prévia musical está disponível!</span></li>
                       <li>Formato: <span className="font-mono">HTML</span></li>
                       <li>Cole o template HTML modificado com estas variáveis:</li>
@@ -270,7 +270,7 @@ return {
                   <Check className="h-5 w-5 text-green-500 mt-0.5 mr-2 flex-shrink-0" />
                   <div>
                     <p className="font-medium text-green-700">Finalize e Ative</p>
-                    <p className="text-green-600 text-sm">Salve o workflow e ative-o. Copie a URL do webhook gerada e configure-a no sistema de prévia em Configurações > Webhooks.</p>
+                    <p className="text-green-600 text-sm">Salve o workflow e ative-o. Copie a URL do webhook gerada e configure-a no sistema de prévia em Configurações {">"} Webhooks.</p>
                   </div>
                 </div>
                 
