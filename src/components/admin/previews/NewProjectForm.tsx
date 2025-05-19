@@ -33,13 +33,13 @@ const NewProjectForm: React.FC<NewProjectFormProps> = ({ onAddProject }) => {
       expDate.setDate(expDate.getDate() + 30);
       const expirationDate = expDate.toLocaleDateString('pt-BR');
       
-      // Create project object
+      // Create project object with properly typed status
       const projectData = {
         clientName: data.clientName,
         clientEmail: data.clientEmail,
         packageType: data.packageType,
         createdAt: new Date().toLocaleDateString('pt-BR'),
-        status: 'waiting',
+        status: 'waiting' as 'waiting', // Type assertion to match the expected type
         versions: 0,
         previewUrl: '',
         expirationDate: expirationDate,
