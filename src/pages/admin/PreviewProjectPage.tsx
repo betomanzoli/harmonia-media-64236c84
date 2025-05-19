@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import AdminLayout from '@/components/admin/layout/AdminLayout';
 import { Card } from '@/components/ui/card';
 import ProjectHeader from '@/components/admin/previews/ProjectHeader';
@@ -10,13 +10,47 @@ import ProjectHistoryList from '@/components/admin/previews/ProjectHistoryList';
 import { useParams } from 'react-router-dom';
 import { usePreviewProjects, VersionItem } from '@/hooks/admin/usePreviewProjects';
 import { useToast } from '@/hooks/use-toast';
+import { Loader2 } from 'lucide-react';
 
 const PreviewProjectPage: React.FC = () => {
   const { projectId } = useParams<{ projectId: string }>();
-  const { getProjectById, updateProject } = usePreviewProjects();
+  const { getProjectById, fetchProjectById, updateProject } = usePreviewProjects();
   const { toast } = useToast();
+  const [project, setProject] = useState<any>(null);
+  const [isLoading, setIsLoading] = useState(true);
   
-  const project = projectId ? getProjectById(projectId) : null;
+  useEffect(() => {
+    const loadProject = async () => {
+      if (!projectId) {
+        setIsLoading(false);
+        return;
+      }
+      
+      // Try to get from cache first
+      let projectData = getProjectById(projectId);
+      
+      // If not in cache, fetch from Supabase
+      if (!projectData) {
+        projectData = await fetchProjectById(projectId);
+      }
+      
+      setProject(projectData);
+      setIsLoading(false);
+    };
+    
+    loadProject();
+  }, [projectId, getProjectById, fetchProjectById]);
+  
+  if (isLoading) {
+    return (
+      <AdminLayout>
+        <div className="flex items-center justify-center h-96">
+          <Loader2 className="h-10 w-10 animate-spin text-harmonia-green" />
+          <span className="ml-2 text-lg">Carregando projeto...</span>
+        </div>
+      </AdminLayout>
+    );
+  }
   
   if (!project) {
     return (
@@ -77,6 +111,15 @@ const PreviewProjectPage: React.FC = () => {
       lastActivityDate: new Date().toLocaleDateString('pt-BR')
     });
     
+    // Update local state
+    setProject({
+      ...project,
+      versionsList: updatedVersions,
+      versions: updatedVersions.length,
+      history,
+      lastActivityDate: new Date().toLocaleDateString('pt-BR')
+    });
+    
     toast({
       title: isFinalVersion ? "Versão final adicionada" : "Versão adicionada",
       description: `${versionTitle} foi adicionada ao projeto com sucesso.`
@@ -112,6 +155,14 @@ const PreviewProjectPage: React.FC = () => {
       lastActivityDate: new Date().toLocaleDateString('pt-BR')
     });
     
+    // Update local state
+    setProject({
+      ...project,
+      expirationDate: newExpirationDate,
+      history,
+      lastActivityDate: new Date().toLocaleDateString('pt-BR')
+    });
+    
     toast({
       title: "Prazo estendido",
       description: `O prazo foi estendido por +7 dias. Nova data: ${newExpirationDate}`
@@ -142,6 +193,15 @@ const PreviewProjectPage: React.FC = () => {
     
     // Update project
     updateProject(projectId, {
+      versionsList: updatedVersions,
+      versions: updatedVersions.length,
+      history,
+      lastActivityDate: new Date().toLocaleDateString('pt-BR')
+    });
+    
+    // Update local state
+    setProject({
+      ...project,
       versionsList: updatedVersions,
       versions: updatedVersions.length,
       history,
