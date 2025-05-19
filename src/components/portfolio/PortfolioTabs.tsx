@@ -90,6 +90,7 @@ const PortfolioTabs: React.FC<PortfolioTabsProps> = ({
                     beforeUrl={example.beforeUrl}
                     afterUrl={example.afterUrl}
                     title={example.title}
+                    description={example.description || 'Comparação de áudio antes e depois da masterização'}
                   />
                 )}
               </div>
