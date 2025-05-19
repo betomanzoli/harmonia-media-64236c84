@@ -10,7 +10,7 @@ const N8N_URL_TYPES = {
 };
 
 class WebhookIntegrationService {
-  private async getWebhookUrl(type: string): Promise<string | null> {
+  public async getWebhookUrl(type: string): Promise<string | null> {
     try {
       const { data, error } = await supabase
         .from('system_settings')
@@ -57,6 +57,29 @@ class WebhookIntegrationService {
       return true;
     } catch (error) {
       console.error(`Error sending webhook for ${type}:`, error);
+      return false;
+    }
+  }
+
+  public async saveWebhookUrl(type: string, url: string): Promise<boolean> {
+    try {
+      const { error } = await supabase
+        .from('system_settings')
+        .upsert({
+          key: `webhook_url_${type}`,
+          value: { url }
+        }, {
+          onConflict: 'key'
+        });
+
+      if (error) {
+        console.error(`Error saving webhook URL for ${type}:`, error);
+        return false;
+      }
+
+      return true;
+    } catch (error) {
+      console.error(`Error in saveWebhookUrl for ${type}:`, error);
       return false;
     }
   }
@@ -117,6 +140,24 @@ class WebhookIntegrationService {
     });
   }
 
+  async processPaymentNotification(
+    paymentId: string,
+    briefingId: string,
+    clientEmail: string,
+    packageType: string,
+    amount: number
+  ): Promise<boolean> {
+    return this.sendWebhookRequest(N8N_URL_TYPES.PAYMENT_WEBHOOK, {
+      payment_id: paymentId,
+      briefing_id: briefingId,
+      client_email: clientEmail,
+      package_type: packageType,
+      amount,
+      status: 'completed',
+      timestamp: new Date().toISOString()
+    });
+  }
+
   async submitFeedback(
     projectId: string,
     clientName: string,
@@ -132,6 +173,16 @@ class WebhookIntegrationService {
       status,
       timestamp: new Date().toISOString()
     });
+  }
+
+  async processFeedbackSubmission(
+    projectId: string,
+    clientName: string,
+    clientEmail: string,
+    feedback: string,
+    status: 'approved' | 'revision' | 'feedback'
+  ): Promise<boolean> {
+    return this.submitFeedback(projectId, clientName, clientEmail, feedback, status);
   }
 
   async sendChatbotMessage(

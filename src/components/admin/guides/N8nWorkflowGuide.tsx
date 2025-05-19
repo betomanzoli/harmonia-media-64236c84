@@ -1,908 +1,1624 @@
-import React, { useState } from 'react';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
-import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
-import { Steps, Step } from "@/components/ui/steps";
-import { CodeBlock } from "@/components/ui/code-block";
-import { Button } from "@/components/ui/button";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { ExternalLink, Copy, Download } from 'lucide-react';
-import { useToast } from '@/hooks/use-toast';
 
-interface WorkflowExample {
-  title: string;
-  description: string;
-  content: string;
-  template: any;
-}
+import React, { useState } from 'react';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Button } from "@/components/ui/button";
+import { Copy, Check, Download } from 'lucide-react';
+import { useToast } from '@/hooks/use-toast';
+import { CodeBlock } from "@/components/ui/code-block";
 
 const N8nWorkflowGuide: React.FC = () => {
+  const [activeTab, setActiveTab] = useState<string>('overview');
+  const [copiedStates, setCopiedStates] = useState<Record<string, boolean>>({});
   const { toast } = useToast();
-  const [activeWorkflow, setActiveWorkflow] = useState<string>('preview');
 
-  const copyToClipboard = (text: string) => {
-    navigator.clipboard.writeText(text);
-    toast({
-      title: "Copiado!",
-      description: "Texto copiado para a área de transferência.",
+  const copyToClipboard = (text: string, key: string) => {
+    navigator.clipboard.writeText(text).then(() => {
+      setCopiedStates((prev) => ({ ...prev, [key]: true }));
+      
+      toast({
+        title: "Copiado!",
+        description: "Código copiado para a área de transferência."
+      });
+      
+      setTimeout(() => {
+        setCopiedStates((prev) => ({ ...prev, [key]: false }));
+      }, 2000);
     });
   };
 
-  const openExternalLink = (url: string) => {
-    window.open(url, '_blank');
-  };
-
-  const downloadJson = (jsonObject: any, fileName: string) => {
-    const jsonString = JSON.stringify(jsonObject, null, 2);
-    const blob = new Blob([jsonString], { type: 'application/json' });
-    const url = URL.createObjectURL(blob);
+  const downloadJson = (jsonContent: string, fileName: string) => {
+    const blob = new Blob([jsonContent], { type: 'application/json' });
+    const href = URL.createObjectURL(blob);
     
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = fileName;
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-    URL.revokeObjectURL(url);
+    const link = document.createElement('a');
+    link.href = href;
+    link.download = fileName;
+    document.body.appendChild(link);
+    link.click();
+    
+    document.body.removeChild(link);
+    URL.revokeObjectURL(href);
     
     toast({
       title: "Download iniciado",
-      description: `O arquivo ${fileName} está sendo baixado.`,
+      description: `O arquivo ${fileName} foi baixado.`
     });
   };
 
-  const workflowExamples: Record<string, WorkflowExample> = {
-    preview: {
-      title: "Workflow de Notificações de Prévia",
-      description: "Envia emails de notificação quando novas prévias estão disponíveis, com links mágicos seguros",
-      content: `Este workflow recebe notificações de novas prévias disponíveis, gera um token de acesso seguro e envia um email para o cliente com um link que permite acessar as prévias sem necessidade de login.`,
-      template: {
-        "nodes": [
-          {
-            "parameters": {
-              "path": "preview-notification",
-              "responseMode": "responseNode",
-              "options": {}
-            },
-            "name": "Webhook",
-            "type": "n8n-nodes-base.webhook",
-            "typeVersion": 1,
-            "position": [
-              250,
-              300
-            ],
-            "webhookId": "16ae1112-2469-420d-8fcc-c9569152bd8f"
-          },
-          {
-            "parameters": {
-              "mode": "runOnceForEachItem",
-              "jsCode": "// Process the incoming data\nconst projectId = $input.item.json.data.projectId;\nconst clientName = $input.item.json.data.clientName;\nconst clientEmail = $input.item.json.data.clientEmail;\nconst projectTitle = $input.item.json.data.projectTitle;\nconst baseUrl = $input.item.json.data.baseUrl || 'https://harmonia.media';\nconst versions = $input.item.json.data.versions || [];\n\n// Generate a magic token\nconst timestamp = Date.now().toString();\nconst tokenData = `${projectId}:${timestamp}`;\nconst magicToken = Buffer.from(tokenData).toString('base64');\n\n// Create the magic link\nconst previewUrl = `${baseUrl}/preview/${projectId}?token=${magicToken}`;\n\nreturn {\n  projectId,\n  clientName,\n  clientEmail,\n  projectTitle,\n  previewUrl,\n  magicToken,\n  timestamp,\n  versions\n};"
-            },
-            "name": "Generate Magic Link",
-            "type": "n8n-nodes-base.code",
-            "typeVersion": 1,
-            "position": [
-              450,
-              300
-            ]
-          },
-          {
-            "parameters": {
-              "operation": "send",
-              "fromEmail": "studio@harmonia.media",
-              "fromName": "Estúdio HarmoniA",
-              "to": "={{ $json.clientEmail }}",
-              "subject": "=Prévias disponíveis - {{ $json.projectTitle }}",
-              "text": "",
-              "html": "=<h1>Olá {{ $json.clientName }}!</h1>\n<p>Estamos felizes em informar que uma prévia do seu projeto \"{{ $json.projectTitle }}\" está disponível para sua avaliação.</p>\n<p>Clique no link abaixo para acessar sua prévia:</p>\n<p><a href=\"{{ $json.previewUrl }}\" style=\"background-color: #4CAF50; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px;\">Ver Prévia</a></p>\n<p>Ou copie e cole este link no seu navegador:</p>\n<p>{{ $json.previewUrl }}</p>\n<p>Este link é válido por 7 dias. Aguardamos seu feedback!</p>\n<p>Atenciosamente,<br>Equipe HarmoniA</p>",
-              "additionalFields": {}
-            },
-            "name": "Send Email",
-            "type": "n8n-nodes-base.emailSend",
-            "typeVersion": 1,
-            "position": [
-              650,
-              300
-            ],
-            "credentials": {
-              "smtp": "SMTP Account"
-            }
-          },
-          {
-            "parameters": {
-              "respondWith": "json",
-              "responseBody": "={ \"success\": true, \"message\": \"Email sent successfully to \" + $json.clientEmail, \"previewUrl\": $json.previewUrl }",
-              "options": {}
-            },
-            "name": "Respond to Webhook",
-            "type": "n8n-nodes-base.respondToWebhook",
-            "typeVersion": 1,
-            "position": [
-              850,
-              300
-            ]
-          }
-        ],
-        "connections": {
-          "Webhook": {
-            "main": [
-              [
-                {
-                  "node": "Generate Magic Link",
-                  "type": "main",
-                  "index": 0
-                }
-              ]
-            ]
-          },
-          "Generate Magic Link": {
-            "main": [
-              [
-                {
-                  "node": "Send Email",
-                  "type": "main",
-                  "index": 0
-                }
-              ]
-            ]
-          },
-          "Send Email": {
-            "main": [
-              [
-                {
-                  "node": "Respond to Webhook",
-                  "type": "main",
-                  "index": 0
-                }
-              ]
-            ]
-          }
-        }
-      }
+  const previewWorkflowJson = `{
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "preview",
+        "options": {}
+      },
+      "name": "Preview Notification Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 1,
+      "position": [
+        250,
+        300
+      ]
     },
-    payment: {
-      title: "Workflow de Processamento de Pagamento",
-      description: "Processa pagamentos do MercadoPago e atualiza o status no Supabase",
-      content: "Este workflow recebe notificações de pagamento do MercadoPago, verifica o status do pagamento, atualiza os dados no Supabase e envia um email de confirmação ao cliente.",
-      template: {
-        "nodes": [
-          {
-            "parameters": {
-              "path": "payment-webhook",
-              "responseMode": "responseNode",
-              "options": {}
-            },
-            "name": "Webhook",
-            "type": "n8n-nodes-base.webhook",
-            "typeVersion": 1,
-            "position": [
-              250,
-              300
-            ],
-            "webhookId": "2469-420d-8fcc-c9569152bd8f"
-          },
-          {
-            "parameters": {
-              "mode": "runOnceForEachItem",
-              "jsCode": "// Process the payment data\nconst { payment_id, briefing_id, client_name, client_email, package_type, amount, status } = $input.item.json.data;\n\n// Validate required fields\nif (!payment_id || !briefing_id) {\n  throw new Error('Missing required payment information');\n}\n\nreturn {\n  payment_id,\n  briefing_id,\n  client_name,\n  client_email,\n  package_type,\n  amount,\n  status: status || 'approved',\n  timestamp: new Date().toISOString()\n};"
-            },
-            "name": "Process Payment Data",
-            "type": "n8n-nodes-base.code",
-            "typeVersion": 1,
-            "position": [
-              450,
-              300
-            ]
-          },
-          {
-            "parameters": {
-              "operation": "executeQuery",
-              "query": "=UPDATE \"briefings\" \nSET \"payment_status\" = 'completed',\n    \"completion_status\" = 'ready_for_full',\n    \"data\" = jsonb_set(\n        COALESCE(\"data\", '{}'::jsonb),\n        '{paymentInfo}',\n        jsonb_build_object(\n            'id', '{{ $json.payment_id }}',\n            'amount', {{ $json.amount }},\n            'date', '{{ $json.timestamp }}',\n            'status', '{{ $json.status }}'\n        )\n    )\nWHERE \"id\" = '{{ $json.briefing_id }}';"
-            },
-            "name": "Update Briefing",
-            "type": "n8n-nodes-base.postgres",
-            "typeVersion": 1,
-            "position": [
-              650,
-              300
-            ],
-            "credentials": {
-              "postgres": "Supabase Postgres"
+    {
+      "parameters": {
+        "conditions": {
+          "string": [
+            {
+              "value1": "={{ $json.data.clientEmail }}",
+              "operation": "exists"
             }
-          },
-          {
-            "parameters": {
-              "operation": "send",
-              "fromEmail": "pagamentos@harmonia.media",
-              "fromName": "HarmoniA Pagamentos",
-              "to": "={{ $json.client_email }}",
-              "subject": "=Pagamento confirmado - {{ $json.package_type }}",
-              "text": "",
-              "html": "=<h1>Olá {{ $json.client_name }}!</h1>\n<p>Seu pagamento para o pacote \"{{ $json.package_type }}\" no valor de R$ {{ $json.amount }} foi confirmado com sucesso!</p>\n<p>ID do pagamento: {{ $json.payment_id }}</p>\n<p>O próximo passo é preencher o briefing detalhado para que possamos iniciar a produção da sua música personalizada.</p>\n<p>Acesse o link abaixo para preencher o briefing:</p>\n<p><a href=\"https://harmonia.media/briefing/{{ $json.briefing_id }}\" style=\"background-color: #4CAF50; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px;\">Preencher Briefing</a></p>\n<p>Atenciosamente,<br>Equipe HarmoniA</p>",
-              "additionalFields": {}
-            },
-            "name": "Send Confirmation Email",
-            "type": "n8n-nodes-base.emailSend",
-            "typeVersion": 1,
-            "position": [
-              850,
-              300
-            ],
-            "credentials": {
-              "smtp": "SMTP Account"
-            }
-          },
-          {
-            "parameters": {
-              "respondWith": "json",
-              "responseBody": "={ \"success\": true, \"message\": \"Payment processed successfully\", \"briefing_id\": $json.briefing_id }",
-              "options": {}
-            },
-            "name": "Respond to Webhook",
-            "type": "n8n-nodes-base.respondToWebhook",
-            "typeVersion": 1,
-            "position": [
-              1050,
-              300
-            ]
-          }
-        ],
-        "connections": {
-          "Webhook": {
-            "main": [
-              [
-                {
-                  "node": "Process Payment Data",
-                  "type": "main",
-                  "index": 0
-                }
-              ]
-            ]
-          },
-          "Process Payment Data": {
-            "main": [
-              [
-                {
-                  "node": "Update Briefing",
-                  "type": "main",
-                  "index": 0
-                }
-              ]
-            ]
-          },
-          "Update Briefing": {
-            "main": [
-              [
-                {
-                  "node": "Send Confirmation Email",
-                  "type": "main",
-                  "index": 0
-                }
-              ]
-            ]
-          },
-          "Send Confirmation Email": {
-            "main": [
-              [
-                {
-                  "node": "Respond to Webhook",
-                  "type": "main",
-                  "index": 0
-                }
-              ]
-            ]
-          }
+          ]
         }
-      }
+      },
+      "name": "Validate Input",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 1,
+      "position": [
+        460,
+        300
+      ]
     },
-    briefing: {
-      title: "Workflow de Processamento de Briefing",
-      description: "Processa novos briefings submetidos pelos clientes",
-      content: "Este workflow recebe dados de briefing, processa as informações, salva no Supabase e notifica a equipe sobre o novo briefing.",
-      template: {
-        "nodes": [
-          {
-            "parameters": {
-              "path": "briefing-webhook",
-              "responseMode": "responseNode",
-              "options": {}
-            },
-            "name": "Webhook",
-            "type": "n8n-nodes-base.webhook",
-            "typeVersion": 1,
-            "position": [
-              250,
-              300
-            ],
-            "webhookId": "3698-5247-931a-dc5478af2c1b"
-          },
-          {
-            "parameters": {
-              "mode": "runOnceForEachItem",
-              "jsCode": "// Process the briefing data\nconst { briefingId, clientName, clientEmail, packageType, briefingData } = $input.item.json.data;\n\nreturn {\n  briefingId,\n  clientName,\n  clientEmail,\n  packageType,\n  briefingData: JSON.stringify(briefingData),\n  timestamp: new Date().toISOString(),\n  summaryItems: Object.entries(briefingData)\n    .filter(([key, value]) => typeof value === 'string' && value.length < 50)\n    .map(([key, value]) => `${key}: ${value}`)\n    .join('\\n')\n};"
-            },
-            "name": "Process Briefing",
-            "type": "n8n-nodes-base.code",
-            "typeVersion": 1,
-            "position": [
-              450,
-              300
-            ]
-          },
-          {
-            "parameters": {
-              "method": "POST",
-              "url": "https://api.slack.com/hooks/your-slack-webhook",
-              "sendHeaders": true,
-              "headerParameters": {
-                "parameters": [
-                  {
-                    "name": "Content-Type",
-                    "value": "application/json"
-                  }
-                ]
-              },
-              "sendBody": true,
-              "bodyParameters": {
-                "parameters": [
-                  {
-                    "name": "text",
-                    "value": "=Novo briefing recebido!\n\nCliente: {{ $json.clientName }} ({{ $json.clientEmail }})\nPacote: {{ $json.packageType }}\nData: {{ $json.timestamp }}\n\nResumo:\n{{ $json.summaryItems }}"
-                  }
-                ]
-              },
-              "options": {}
-            },
-            "name": "Notify Team",
-            "type": "n8n-nodes-base.httpRequest",
-            "typeVersion": 3,
-            "position": [
-              650,
-              300
-            ]
-          },
-          {
-            "parameters": {
-              "operation": "send",
-              "fromEmail": "studio@harmonia.media",
-              "fromName": "Estúdio HarmoniA",
-              "to": "={{ $json.clientEmail }}",
-              "subject": "=Recebemos seu briefing - HarmoniA",
-              "text": "",
-              "html": "=<h1>Olá {{ $json.clientName }}!</h1>\n<p>Recebemos seu briefing para o pacote \"{{ $json.packageType }}\" com sucesso!</p>\n<p>Nossa equipe já está analisando suas informações e entraremos em contato em breve para discutir os próximos passos de seu projeto.</p>\n<p>Atenciosamente,<br>Equipe HarmoniA</p>",
-              "additionalFields": {}
-            },
-            "name": "Send Receipt Email",
-            "type": "n8n-nodes-base.emailSend",
-            "typeVersion": 1,
-            "position": [
-              850,
-              300
-            ],
-            "credentials": {
-              "smtp": "SMTP Account"
-            }
-          },
-          {
-            "parameters": {
-              "respondWith": "json",
-              "responseBody": "={ \"success\": true, \"message\": \"Briefing processed successfully\", \"briefingId\": $json.briefingId }",
-              "options": {}
-            },
-            "name": "Respond to Webhook",
-            "type": "n8n-nodes-base.respondToWebhook",
-            "typeVersion": 1,
-            "position": [
-              1050,
-              300
-            ]
-          }
-        ],
-        "connections": {
-          "Webhook": {
-            "main": [
-              [
-                {
-                  "node": "Process Briefing",
-                  "type": "main",
-                  "index": 0
-                }
-              ]
-            ]
-          },
-          "Process Briefing": {
-            "main": [
-              [
-                {
-                  "node": "Notify Team",
-                  "type": "main",
-                  "index": 0
-                }
-              ]
-            ]
-          },
-          "Notify Team": {
-            "main": [
-              [
-                {
-                  "node": "Send Receipt Email",
-                  "type": "main",
-                  "index": 0
-                }
-              ]
-            ]
-          },
-          "Send Receipt Email": {
-            "main": [
-              [
-                {
-                  "node": "Respond to Webhook",
-                  "type": "main",
-                  "index": 0
-                }
-              ]
-            ]
-          }
-        }
-      }
+    {
+      "parameters": {
+        "fromEmail": "no-reply@harmoniamusic.com",
+        "toEmail": "={{ $json.data.clientEmail }}",
+        "subject": "=Nova Prévia Musical Disponível: {{ $json.data.projectTitle }}",
+        "text": "=Olá {{ $json.data.clientName }},\\n\\nEstamos felizes em compartilhar com você a prévia do seu projeto musical!\\n\\nProjeto: {{ $json.data.projectTitle }}\\nLink de acesso: {{ $json.data.baseUrl }}/preview/{{ $json.data.projectId }}?token={{ $node[\"Generate Access Token\"].json[\"token\"] }}\\n\\nEste link é válido por 7 dias e permite que você ouça as versões, faça comentários e aprove a faixa.\\n\\nAtenciosamente,\\nEquipe harmonIA",
+        "options": {}
+      },
+      "name": "Send Email",
+      "type": "n8n-nodes-base.emailSend",
+      "typeVersion": 2,
+      "position": [
+        900,
+        200
+      ]
     },
-    feedback: {
-      title: "Workflow de Processamento de Feedback",
-      description: "Processa feedback sobre prévias enviado pelos clientes",
-      content: "Este workflow recebe feedback de clientes sobre prévias, atualiza o status no Supabase e notifica a equipe.",
-      template: {
-        "nodes": [
-          {
-            "parameters": {
-              "path": "feedback-webhook",
-              "responseMode": "responseNode",
-              "options": {}
-            },
-            "name": "Webhook",
-            "type": "n8n-nodes-base.webhook",
-            "typeVersion": 1,
-            "position": [
-              250,
-              300
-            ],
-            "webhookId": "7241-f932-8e41-bd674a239c6f"
-          },
-          {
-            "parameters": {
-              "mode": "runOnceForEachItem",
-              "jsCode": "// Process the feedback data\nconst { projectId, clientName, clientEmail, feedback, status } = $input.item.json.data;\n\n// Color code based on status\nconst statusColor = status === 'approved' ? '#4CAF50' : \n                  status === 'revision' ? '#FF9800' : '#2196F3';\n\n// Emoji based on status\nconst statusEmoji = status === 'approved' ? '✅' : \n                  status === 'revision' ? '🔄' : '💬';\n\n// Status text\nconst statusText = status === 'approved' ? 'APROVADO' : \n                  status === 'revision' ? 'REVISÃO SOLICITADA' : 'FEEDBACK';\n\nreturn {\n  projectId,\n  clientName,\n  clientEmail,\n  feedback,\n  status,\n  statusText,\n  statusColor,\n  statusEmoji,\n  timestamp: new Date().toISOString(),\n  notificationSubject: `${statusEmoji} ${statusText}: Feedback sobre prévia`\n};"
-            },
-            "name": "Process Feedback",
-            "type": "n8n-nodes-base.code",
-            "typeVersion": 1,
-            "position": [
-              450,
-              300
-            ]
-          },
-          {
-            "parameters": {
-              "operation": "executeQuery",
-              "query": "=UPDATE \"preview_projects\" \nSET \n    \"feedback\" = '{{ $json.feedback }}',\n    \"status\" = '{{ $json.status === 'approved' ? 'approved' : 'feedback' }}',\n    \"last_activity_date\" = '{{ $json.timestamp }}'\nWHERE \"id\" = '{{ $json.projectId }}';"
-            },
-            "name": "Update Preview Status",
-            "type": "n8n-nodes-base.postgres",
-            "typeVersion": 1,
-            "position": [
-              650,
-              300
-            ],
-            "credentials": {
-              "postgres": "Supabase Postgres"
-            }
-          },
-          {
-            "parameters": {
-              "method": "POST",
-              "url": "https://api.slack.com/hooks/your-slack-webhook",
-              "sendHeaders": true,
-              "headerParameters": {
-                "parameters": [
-                  {
-                    "name": "Content-Type",
-                    "value": "application/json"
-                  }
-                ]
-              },
-              "sendBody": true,
-              "bodyParameters": {
-                "parameters": [
-                  {
-                    "name": "text",
-                    "value": "={{ $json.statusEmoji }} {{ $json.statusText }}: Feedback recebido para o projeto {{ $json.projectId }}\n\nCliente: {{ $json.clientName }} ({{ $json.clientEmail }})\nStatus: {{ $json.statusText }}\nData: {{ $json.timestamp }}\n\nFeedback:\n{{ $json.feedback }}"
-                  }
-                ]
-              },
-              "options": {}
-            },
-            "name": "Notify Team",
-            "type": "n8n-nodes-base.httpRequest",
-            "typeVersion": 3,
-            "position": [
-              850,
-              300
-            ]
-          },
-          {
-            "parameters": {
-              "respondWith": "json",
-              "responseBody": "={ \"success\": true, \"message\": \"Feedback processed successfully\", \"projectId\": $json.projectId, \"status\": $json.status }",
-              "options": {}
-            },
-            "name": "Respond to Webhook",
-            "type": "n8n-nodes-base.respondToWebhook",
-            "typeVersion": 1,
-            "position": [
-              1050,
-              300
-            ]
-          }
-        ],
-        "connections": {
-          "Webhook": {
-            "main": [
-              [
-                {
-                  "node": "Process Feedback",
-                  "type": "main",
-                  "index": 0
-                }
-              ]
-            ]
-          },
-          "Process Feedback": {
-            "main": [
-              [
-                {
-                  "node": "Update Preview Status",
-                  "type": "main",
-                  "index": 0
-                }
-              ]
-            ]
-          },
-          "Update Preview Status": {
-            "main": [
-              [
-                {
-                  "node": "Notify Team",
-                  "type": "main",
-                  "index": 0
-                }
-              ]
-            ]
-          },
-          "Notify Team": {
-            "main": [
-              [
-                {
-                  "node": "Respond to Webhook",
-                  "type": "main",
-                  "index": 0
-                }
-              ]
-            ]
-          }
-        }
-      }
+    {
+      "parameters": {
+        "functionCode": "// Generate a unique token with timestamp and projectId\nconst timestamp = new Date().getTime();\nconst projectId = $input.item.json.data.projectId;\nconst tokenData = projectId + ':' + timestamp;\n\n// Base64 encode the token\nconst token = Buffer.from(tokenData).toString('base64');\n\nreturn {\n  token,\n  projectId,\n  timestamp,\n  expiresAt: new Date(timestamp + 7 * 24 * 60 * 60 * 1000).toISOString() // 7 days from now\n};"
+      },
+      "name": "Generate Access Token",
+      "type": "n8n-nodes-base.function",
+      "typeVersion": 1,
+      "position": [
+        680,
+        300
+      ]
     },
-    chatbot: {
-      title: "Workflow de Integração com Chatbot",
-      description: "Processa mensagens do chatbot e envia respostas personalizadas",
-      content: "Este workflow recebe mensagens do chatbot, classifica o conteúdo e envia respostas personalizadas baseadas no tipo de mensagem.",
-      template: {
-        "nodes": [
-          {
-            "parameters": {
-              "path": "chatbot-webhook",
-              "responseMode": "responseNode",
-              "options": {}
+    {
+      "parameters": {
+        "url": "=https://harmoniaapi.io/store-preview-token",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
             },
-            "name": "Webhook",
-            "type": "n8n-nodes-base.webhook",
-            "typeVersion": 1,
-            "position": [
-              250,
-              300
-            ],
-            "webhookId": "16ae1112-2469-420d-8fcc-c9569152bd8f"
-          },
-          {
-            "parameters": {
-              "mode": "runOnceForEachItem",
-              "jsCode": "// Process the chatbot message\nconst { message, userData } = $input.item.json.data;\n\n// Simple message classification\nlet messageType = 'general';\nlet priority = 'normal';\n\nif (message.includes('preço') || message.includes('valor') || message.includes('custo')) {\n  messageType = 'pricing';\n}\nelse if (message.includes('ajuda') || message.includes('suporte')) {\n  messageType = 'support';\n  priority = 'high';\n}\nelse if (message.includes('briefing') || message.includes('projeto')) {\n  messageType = 'project';\n}\nelse if (message.includes('pagamento') || message.includes('pagar')) {\n  messageType = 'payment';\n}\n\nreturn {\n  message,\n  userData,\n  messageType,\n  priority,\n  timestamp: new Date().toISOString(),\n  formattedTimestamp: new Date().toLocaleString('pt-BR')\n};"
+            {
+              "name": "Authorization",
+              "value": "={{ $json.auth_token }}"
+            }
+          ]
+        },
+        "sendQuery": false,
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "project_id",
+              "value": "={{ $json.data.projectId }}"
             },
-            "name": "Process Message",
-            "type": "n8n-nodes-base.code",
-            "typeVersion": 1,
-            "position": [
-              450,
-              300
-            ]
-          },
-          {
-            "parameters": {
-              "method": "POST",
-              "url": "https://api.slack.com/hooks/your-slack-webhook",
-              "sendHeaders": true,
-              "headerParameters": {
-                "parameters": [
-                  {
-                    "name": "Content-Type",
-                    "value": "application/json"
-                  }
-                ]
-              },
-              "sendBody": true,
-              "bodyParameters": {
-                "parameters": [
-                  {
-                    "name": "text",
-                    "value": "=Nova mensagem do chatbot\n\nTipo: {{ $json.messageType }}\nPrioridade: {{ $json.priority }}\nData: {{ $json.formattedTimestamp }}\n\nMensagem:\n{{ $json.message }}"
-                  }
-                ]
-              },
-              "options": {}
+            {
+              "name": "token",
+              "value": "={{ $node[\"Generate Access Token\"].json[\"token\"] }}"
             },
-            "name": "Notify Team",
-            "type": "n8n-nodes-base.httpRequest",
-            "typeVersion": 3,
-            "position": [
-              650,
-              300
-            ]
-          },
-          {
-            "parameters": {
-              "content": "={{ \n  $json.messageType === 'pricing' ? \n    \"Obrigado por seu interesse em nossos preços! Nossos pacotes variam de R$199 a R$799, dependendo do tipo de composição e serviços adicionais. Você pode ver todos os detalhes em nossa página de preços: https://harmonia.media/precos ou falar diretamente com um de nossos atendentes.\" :\n  $json.messageType === 'support' ?\n    \"Estamos aqui para ajudar! Por favor, nos conte mais detalhes sobre o que você precisa e um de nossos especialistas irá atendê-lo o mais breve possível. Você também pode nos contatar pelo WhatsApp: (11) 98765-4321.\" :\n  $json.messageType === 'project' ?\n    \"Que bom que você está interessado em iniciar um projeto conosco! Para começarmos, precisaremos que você preencha nosso briefing. É um processo simples que nos ajuda a entender melhor suas necessidades. Você gostaria de começar agora?\" :\n  $json.messageType === 'payment' ?\n    \"Oferecemos várias opções de pagamento, incluindo cartão de crédito, PIX e transferência bancária. Todas as transações são processadas de forma segura. Se você já tem um projeto em andamento e deseja efetuar o pagamento, posso te direcionar para nossa página de pagamento.\" :\n    \"Obrigado por entrar em contato com a HarmoniA! Como posso ajudar você hoje? Estou aqui para responder suas dúvidas sobre nossos serviços de composição musical personalizada.\"\n})",
-              "options": {}
+            {
+              "name": "expires_at",
+              "value": "={{ $node[\"Generate Access Token\"].json[\"expiresAt\"] }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "name": "Store Token in Database",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 1,
+      "position": [
+        900,
+        400
+      ]
+    },
+    {
+      "parameters": {
+        "fields": {
+          "values": [
+            {
+              "name": "success",
+              "value": "true"
             },
-            "name": "Generate Response",
-            "type": "n8n-nodes-base.set",
-            "typeVersion": 1,
-            "position": [
-              850,
-              300
-            ]
-          },
-          {
-            "parameters": {
-              "respondWith": "json",
-              "responseBody": "={ \"success\": true, \"response\": $json.content, \"messageType\": $json.messageType }",
-              "options": {}
+            {
+              "name": "message",
+              "value": "=Cliente {{ $json.data.clientName }} ({{ $json.data.clientEmail }}) notificado sobre a prévia {{ $json.data.projectTitle }}."
             },
-            "name": "Respond to Webhook",
-            "type": "n8n-nodes-base.respondToWebhook",
-            "typeVersion": 1,
-            "position": [
-              1050,
-              300
-            ]
-          }
-        ],
-        "connections": {
-          "Webhook": {
-            "main": [
-              [
-                {
-                  "node": "Process Message",
-                  "type": "main",
-                  "index": 0
-                }
-              ]
-            ]
-          },
-          "Process Message": {
-            "main": [
-              [
-                {
-                  "node": "Notify Team",
-                  "type": "main",
-                  "index": 0
-                }
-              ]
-            ]
-          },
-          "Notify Team": {
-            "main": [
-              [
-                {
-                  "node": "Generate Response",
-                  "type": "main",
-                  "index": 0
-                }
-              ]
-            ]
-          },
-          "Generate Response": {
-            "main": [
-              [
-                {
-                  "node": "Respond to Webhook",
-                  "type": "main",
-                  "index": 0
-                }
-              ]
-            ]
-          }
-        }
-      }
+            {
+              "name": "previewUrl",
+              "value": "={{ $json.data.baseUrl }}/preview/{{ $json.data.projectId }}?token={{ $node[\"Generate Access Token\"].json[\"token\"] }}"
+            },
+            {
+              "name": "token",
+              "value": "={{ $node[\"Generate Access Token\"].json[\"token\"] }}"
+            }
+          ]
+        },
+        "include": "all",
+        "options": {}
+      },
+      "name": "Create Success Response",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 2,
+      "position": [
+        1120,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "fields": {
+          "values": [
+            {
+              "name": "success",
+              "value": "false"
+            },
+            {
+              "name": "message",
+              "value": "Dados inválidos. clientEmail é obrigatório."
+            }
+          ]
+        },
+        "include": "all",
+        "options": {}
+      },
+      "name": "Create Error Response",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 2,
+      "position": [
+        680,
+        500
+      ]
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "name": "Respond to Webhook",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1,
+      "position": [
+        1340,
+        300
+      ]
+    },
+    {
+      "parameters": {},
+      "name": "Log Operation",
+      "type": "n8n-nodes-base.noOp",
+      "typeVersion": 1,
+      "position": [
+        1120,
+        500
+      ]
     }
-  };
+  ],
+  "connections": {
+    "Preview Notification Webhook": {
+      "main": [
+        [
+          {
+            "node": "Validate Input",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Validate Input": {
+      "main": [
+        [
+          {
+            "node": "Generate Access Token",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Create Error Response",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Send Email": {
+      "main": [
+        [
+          {
+            "node": "Create Success Response",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Generate Access Token": {
+      "main": [
+        [
+          {
+            "node": "Send Email",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Store Token in Database",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Store Token in Database": {
+      "main": [
+        [
+          {
+            "node": "Log Operation",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Create Success Response": {
+      "main": [
+        [
+          {
+            "node": "Respond to Webhook",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Create Error Response": {
+      "main": [
+        [
+          {
+            "node": "Log Operation",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Log Operation": {
+      "main": [
+        [
+          {
+            "node": "Respond to Webhook",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  }
+}`;
+
+  const paymentWorkflowJson = `{
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "payment",
+        "options": {}
+      },
+      "name": "Payment Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 1,
+      "position": [
+        250,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "string": [
+            {
+              "value1": "={{ $json.data.payment_id }}",
+              "operation": "exists"
+            },
+            {
+              "value1": "={{ $json.data.briefing_id }}",
+              "operation": "exists"
+            }
+          ]
+        }
+      },
+      "name": "Validate Payment Data",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 1,
+      "position": [
+        460,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "url": "=https://harmoniaapi.io/update-briefing-status",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            },
+            {
+              "name": "Authorization",
+              "value": "={{ $json.auth_token }}"
+            }
+          ]
+        },
+        "sendQuery": false,
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "briefing_id",
+              "value": "={{ $json.data.briefing_id }}"
+            },
+            {
+              "name": "payment_status",
+              "value": "completed"
+            },
+            {
+              "name": "completion_status",
+              "value": "ready_for_full"
+            },
+            {
+              "name": "payment_info",
+              "value": "={{ {id: $json.data.payment_id, amount: $json.data.amount, date: new Date().toISOString(), status: $json.data.status || \"completed\"} | stringify }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "name": "Update Briefing Status",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 1,
+      "position": [
+        680,
+        200
+      ]
+    },
+    {
+      "parameters": {
+        "fromEmail": "pagamentos@harmoniamusic.com",
+        "toEmail": "={{ $json.data.client_email }}",
+        "subject": "=Pagamento Confirmado - harmonIA Music",
+        "text": "=Olá,\\n\\nAgradecemos pelo seu pagamento! Confirmamos o recebimento de R$ {{ $json.data.amount }} referente ao pacote {{ $json.data.package_type }}.\\n\\nNossa equipe já começou a trabalhar no seu projeto e entraremos em contato em breve com mais informações.\\n\\nDetalhes do Pagamento:\\n- ID do Pagamento: {{ $json.data.payment_id }}\\n- Valor: R$ {{ $json.data.amount }}\\n- Data: {{ $node[\"Create Notification\"].json[\"paymentDate\"] }}\\n\\nAtenciosamente,\\nEquipe harmonIA",
+        "options": {}
+      },
+      "name": "Send Payment Confirmation Email",
+      "type": "n8n-nodes-base.emailSend",
+      "typeVersion": 2,
+      "position": [
+        900,
+        200
+      ]
+    },
+    {
+      "parameters": {
+        "fields": {
+          "values": [
+            {
+              "name": "paymentDate",
+              "value": "={{ new Date().toLocaleDateString('pt-BR') }}"
+            },
+            {
+              "name": "subject",
+              "value": "=Novo Pagamento: {{ $json.data.client_email }} - {{ $json.data.package_type }}"
+            },
+            {
+              "name": "message",
+              "value": "=Um novo pagamento de R$ {{ $json.data.amount }} foi recebido para o briefing {{ $json.data.briefing_id }}. Cliente: {{ $json.data.client_email }}, Pacote: {{ $json.data.package_type }}."
+            }
+          ]
+        },
+        "include": "all",
+        "options": {}
+      },
+      "name": "Create Notification",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 2,
+      "position": [
+        680,
+        400
+      ]
+    },
+    {
+      "parameters": {
+        "fromEmail": "sistema@harmoniamusic.com",
+        "toEmail": "equipe@harmoniamusic.com",
+        "subject": "={{ $node[\"Create Notification\"].json[\"subject\"] }}",
+        "text": "={{ $node[\"Create Notification\"].json[\"message\"] }}",
+        "options": {}
+      },
+      "name": "Notify Team",
+      "type": "n8n-nodes-base.emailSend",
+      "typeVersion": 2,
+      "position": [
+        900,
+        400
+      ]
+    },
+    {
+      "parameters": {
+        "fields": {
+          "values": [
+            {
+              "name": "success",
+              "value": "true"
+            },
+            {
+              "name": "message",
+              "value": "=Pagamento processado com sucesso para o briefing {{ $json.data.briefing_id }}."
+            }
+          ]
+        },
+        "include": "all",
+        "options": {}
+      },
+      "name": "Create Success Response",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 2,
+      "position": [
+        1120,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "fields": {
+          "values": [
+            {
+              "name": "success",
+              "value": "false"
+            },
+            {
+              "name": "message",
+              "value": "Dados de pagamento inválidos. payment_id e briefing_id são obrigatórios."
+            }
+          ]
+        },
+        "include": "all",
+        "options": {}
+      },
+      "name": "Create Error Response",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 2,
+      "position": [
+        680,
+        600
+      ]
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "name": "Respond to Webhook",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1,
+      "position": [
+        1340,
+        300
+      ]
+    }
+  ],
+  "connections": {
+    "Payment Webhook": {
+      "main": [
+        [
+          {
+            "node": "Validate Payment Data",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Validate Payment Data": {
+      "main": [
+        [
+          {
+            "node": "Update Briefing Status",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Create Notification",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Create Error Response",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Update Briefing Status": {
+      "main": [
+        [
+          {
+            "node": "Send Payment Confirmation Email",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Send Payment Confirmation Email": {
+      "main": [
+        [
+          {
+            "node": "Create Success Response",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Create Notification": {
+      "main": [
+        [
+          {
+            "node": "Notify Team",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Notify Team": {
+      "main": [
+        [
+          {
+            "node": "Create Success Response",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Create Success Response": {
+      "main": [
+        [
+          {
+            "node": "Respond to Webhook",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Create Error Response": {
+      "main": [
+        [
+          {
+            "node": "Respond to Webhook",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  }
+}`;
+
+  const chatbotWorkflowJson = `{
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "chatbot",
+        "options": {}
+      },
+      "name": "Chatbot Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 1,
+      "position": [
+        250,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "string": [
+            {
+              "value1": "={{ $json.data.message }}",
+              "operation": "exists"
+            }
+          ]
+        }
+      },
+      "name": "Validate Input",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 1,
+      "position": [
+        460,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "functionCode": "// Message classification function\nfunction classifyMessage(message) {\n  message = message.toLowerCase();\n  \n  if (message.includes('preço') || message.includes('pagamento') || message.includes('custo') || message.includes('valor')) {\n    return 'pricing';\n  }\n  if (message.includes('prazo') || message.includes('tempo') || message.includes('quando') || message.includes('entreg')) {\n    return 'timeline';\n  }\n  if (message.includes('acompanhar') || message.includes('status') || message.includes('andamento')) {\n    return 'status';\n  }\n  if (message.includes('briefing') || message.includes('formulário') || message.includes('informações')) {\n    return 'briefing';\n  }\n  if (message.includes('contato') || message.includes('falar') || message.includes('atendimento')) {\n    return 'contact';\n  }\n  \n  return 'general';\n}\n\n// Get the message text\nconst message = $input.item.json.data.message;\nconst messageType = classifyMessage(message);\nconst userData = $input.item.json.data.userData || {};\n\n// Prepare canned responses based on message type\nlet responseText = '';\n\nswitch (messageType) {\n  case 'pricing':\n    responseText = 'Temos diferentes pacotes disponíveis para atender às suas necessidades. Nosso pacote Essencial começa em R$199, o Professional em R$499 e o Premium em R$999. Para mais detalhes sobre o que inclui cada pacote, visite nossa página de serviços.';\n    break;\n  case 'timeline':\n    responseText = 'Nosso prazo de entrega varia conforme o pacote escolhido. Em geral, o pacote Essencial é entregue em 3-5 dias, o Professional em 7-10 dias, e o Premium em 14-21 dias. Prazos personalizados podem ser acordados durante o briefing.';\n    break;\n  case 'status':\n    responseText = 'Para acompanhar o status do seu projeto, acesse sua área de cliente usando o código de acompanhamento enviado ao seu email. Lá você encontrará informações atualizadas sobre o andamento do seu projeto.';\n    break;\n  case 'briefing':\n    responseText = 'O briefing é uma etapa essencial do nosso processo. Você receberá um formulário detalhado para preencher com informações sobre seu projeto. Quanto mais detalhes você fornecer, melhor conseguiremos atender às suas expectativas.';\n    break;\n  case 'contact':\n    responseText = 'Você pode entrar em contato conosco pelo email contato@harmoniamusic.com ou pelo telefone (11) 1234-5678. Nosso horário de atendimento é de segunda a sexta, das 9h às 18h.';\n    break;\n  default:\n    responseText = 'Obrigado pelo seu contato. Para melhor atendê-lo, poderia fornecer mais detalhes sobre sua dúvida ou necessidade? Estamos prontos para ajudar com informações sobre nossos serviços, preços, prazos e processo de trabalho.';\n}\n\nreturn {\n  messageType,\n  response: responseText,\n  timestamp: new Date().toISOString(),\n  userData\n};"
+      },
+      "name": "Process Message",
+      "type": "n8n-nodes-base.function",
+      "typeVersion": 1,
+      "position": [
+        680,
+        200
+      ]
+    },
+    {
+      "parameters": {
+        "url": "=https://harmoniaapi.io/log-chat-message",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            },
+            {
+              "name": "Authorization",
+              "value": "={{ $json.auth_token }}"
+            }
+          ]
+        },
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "message",
+              "value": "={{ $json.data.message }}"
+            },
+            {
+              "name": "response",
+              "value": "={{ $node[\"Process Message\"].json[\"response\"] }}"
+            },
+            {
+              "name": "messageType",
+              "value": "={{ $node[\"Process Message\"].json[\"messageType\"] }}"
+            },
+            {
+              "name": "userData",
+              "value": "={{ $node[\"Process Message\"].json[\"userData\"] | stringify }}"
+            },
+            {
+              "name": "timestamp",
+              "value": "={{ new Date().toISOString() }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "name": "Log Chat Interaction",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 1,
+      "position": [
+        900,
+        400
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "string": [
+            {
+              "value1": "={{ $node[\"Process Message\"].json[\"messageType\"] }}",
+              "value2": "contact",
+              "operation": "equal"
+            }
+          ]
+        }
+      },
+      "name": "Is Contact Request",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 1,
+      "position": [
+        900,
+        200
+      ]
+    },
+    {
+      "parameters": {
+        "fromEmail": "chatbot@harmoniamusic.com",
+        "toEmail": "atendimento@harmoniamusic.com",
+        "subject": "=Nova Solicitação de Contato via Chatbot",
+        "text": "=Um cliente solicitou informações de contato através do chatbot.\\n\\nMensagem original: \"{{ $json.data.message }}\"\\n\\nDados do usuário: {{ $node[\"Process Message\"].json[\"userData\"] | stringify }}\\n\\nFavor entrar em contato o mais breve possível.",
+        "options": {}
+      },
+      "name": "Notify Team",
+      "type": "n8n-nodes-base.emailSend",
+      "typeVersion": 2,
+      "position": [
+        1120,
+        100
+      ]
+    },
+    {
+      "parameters": {
+        "fields": {
+          "values": [
+            {
+              "name": "success",
+              "value": "true"
+            },
+            {
+              "name": "response",
+              "value": "={{ $node[\"Process Message\"].json[\"response\"] }}"
+            }
+          ]
+        },
+        "include": "all",
+        "options": {}
+      },
+      "name": "Create Success Response",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 2,
+      "position": [
+        1120,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "fields": {
+          "values": [
+            {
+              "name": "success",
+              "value": "false"
+            },
+            {
+              "name": "response",
+              "value": "Desculpe, não consegui processar sua mensagem. Por favor, tente novamente."
+            }
+          ]
+        },
+        "include": "all",
+        "options": {}
+      },
+      "name": "Create Error Response",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 2,
+      "position": [
+        680,
+        500
+      ]
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "name": "Respond to Webhook",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1,
+      "position": [
+        1340,
+        300
+      ]
+    }
+  ],
+  "connections": {
+    "Chatbot Webhook": {
+      "main": [
+        [
+          {
+            "node": "Validate Input",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Validate Input": {
+      "main": [
+        [
+          {
+            "node": "Process Message",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Create Error Response",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Process Message": {
+      "main": [
+        [
+          {
+            "node": "Is Contact Request",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Log Chat Interaction",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Log Chat Interaction": {
+      "main": [
+        [
+          {
+            "node": "Create Success Response",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Is Contact Request": {
+      "main": [
+        [
+          {
+            "node": "Notify Team",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Create Success Response",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Notify Team": {
+      "main": [
+        [
+          {
+            "node": "Create Success Response",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Create Success Response": {
+      "main": [
+        [
+          {
+            "node": "Respond to Webhook",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Create Error Response": {
+      "main": [
+        [
+          {
+            "node": "Respond to Webhook",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  }
+}`;
+
+  const feedbackWorkflowJson = `{
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "feedback",
+        "options": {}
+      },
+      "name": "Feedback Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 1,
+      "position": [
+        250,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "string": [
+            {
+              "value1": "={{ $json.data.projectId }}",
+              "operation": "exists"
+            },
+            {
+              "value1": "={{ $json.data.feedback }}",
+              "operation": "exists"
+            }
+          ]
+        }
+      },
+      "name": "Validate Input",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 1,
+      "position": [
+        460,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "url": "=https://harmoniaapi.io/update-project-feedback",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            },
+            {
+              "name": "Authorization",
+              "value": "={{ $json.auth_token }}"
+            }
+          ]
+        },
+        "sendQuery": false,
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "project_id",
+              "value": "={{ $json.data.projectId }}"
+            },
+            {
+              "name": "feedback",
+              "value": "={{ $json.data.feedback }}"
+            },
+            {
+              "name": "status",
+              "value": "={{ $json.data.status }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "name": "Update Project Feedback",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 1,
+      "position": [
+        680,
+        200
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "string": [
+            {
+              "value1": "={{ $json.data.status }}",
+              "value2": "approved",
+              "operation": "equal"
+            }
+          ]
+        }
+      },
+      "name": "Is Approved",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 1,
+      "position": [
+        900,
+        200
+      ]
+    },
+    {
+      "parameters": {
+        "fromEmail": "sistema@harmoniamusic.com",
+        "toEmail": "equipe@harmoniamusic.com",
+        "subject": "=APROVADO: Projeto {{ $json.data.projectId }}",
+        "text": "=Ótimas notícias! O cliente aprovou o projeto {{ $json.data.projectId }}.\\n\\nFeedback do cliente:\\n{{ $json.data.feedback }}\\n\\nCliente: {{ $json.data.clientName || 'Não identificado' }} ({{ $json.data.clientEmail || 'Email não disponível' }})\\n\\nÉ hora de preparar os arquivos finais e fazer a entrega.",
+        "options": {}
+      },
+      "name": "Send Approval Notification",
+      "type": "n8n-nodes-base.emailSend",
+      "typeVersion": 2,
+      "position": [
+        1120,
+        100
+      ]
+    },
+    {
+      "parameters": {
+        "fromEmail": "sistema@harmoniamusic.com",
+        "toEmail": "equipe@harmoniamusic.com",
+        "subject": "=Novo Feedback: Projeto {{ $json.data.projectId }}",
+        "text": "=Um cliente enviou feedback para o projeto {{ $json.data.projectId }}.\\n\\nFeedback:\\n{{ $json.data.feedback }}\\n\\nStatus: {{ $json.data.status }}\\n\\nCliente: {{ $json.data.clientName || 'Não identificado' }} ({{ $json.data.clientEmail || 'Email não disponível' }})",
+        "options": {}
+      },
+      "name": "Send Feedback Notification",
+      "type": "n8n-nodes-base.emailSend",
+      "typeVersion": 2,
+      "position": [
+        1120,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "url": "=https://harmoniaapi.io/log-project-history",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            },
+            {
+              "name": "Authorization",
+              "value": "={{ $json.auth_token }}"
+            }
+          ]
+        },
+        "sendQuery": false,
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "project_id",
+              "value": "={{ $json.data.projectId }}"
+            },
+            {
+              "name": "action",
+              "value": "={{ $json.data.status === 'approved' ? 'preview_approved' : 'feedback_received' }}"
+            },
+            {
+              "name": "details",
+              "value": "={{ {feedback: $json.data.feedback, status: $json.data.status, timestamp: new Date().toISOString(), clientName: $json.data.clientName, clientEmail: $json.data.clientEmail} | stringify }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "name": "Log to Project History",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 1,
+      "position": [
+        680,
+        400
+      ]
+    },
+    {
+      "parameters": {
+        "fields": {
+          "values": [
+            {
+              "name": "success",
+              "value": "true"
+            },
+            {
+              "name": "message",
+              "value": "=Feedback processado com sucesso. Status: {{ $json.data.status }}"
+            }
+          ]
+        },
+        "include": "all",
+        "options": {}
+      },
+      "name": "Create Success Response",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 2,
+      "position": [
+        1340,
+        200
+      ]
+    },
+    {
+      "parameters": {
+        "fields": {
+          "values": [
+            {
+              "name": "success",
+              "value": "false"
+            },
+            {
+              "name": "message",
+              "value": "Dados inválidos. projectId e feedback são obrigatórios."
+            }
+          ]
+        },
+        "include": "all",
+        "options": {}
+      },
+      "name": "Create Error Response",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 2,
+      "position": [
+        680,
+        600
+      ]
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "name": "Respond to Webhook",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1,
+      "position": [
+        1560,
+        300
+      ]
+    }
+  ],
+  "connections": {
+    "Feedback Webhook": {
+      "main": [
+        [
+          {
+            "node": "Validate Input",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Validate Input": {
+      "main": [
+        [
+          {
+            "node": "Update Project Feedback",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Log to Project History",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Create Error Response",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Update Project Feedback": {
+      "main": [
+        [
+          {
+            "node": "Is Approved",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Is Approved": {
+      "main": [
+        [
+          {
+            "node": "Send Approval Notification",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Send Feedback Notification",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Send Approval Notification": {
+      "main": [
+        [
+          {
+            "node": "Create Success Response",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Send Feedback Notification": {
+      "main": [
+        [
+          {
+            "node": "Create Success Response",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Log to Project History": {
+      "main": [
+        [
+          {
+            "node": "Send Feedback Notification",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Create Success Response": {
+      "main": [
+        [
+          {
+            "node": "Respond to Webhook",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Create Error Response": {
+      "main": [
+        [
+          {
+            "node": "Respond to Webhook",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  }
+}`;
+
+  const installationGuide = `
+# Guia de Instalação de Workflows n8n para harmonIA
+
+Este guia explica como importar e configurar os workflows n8n para integração com a plataforma harmonIA.
+
+## Requisitos Prévios
+
+1. Uma conta no n8n (https://n8n.io)
+2. n8n instalado e configurado (local ou na nuvem)
+3. Acesso à API da harmonIA (chaves e URLs)
+
+## Passo a Passo para Importação
+
+1. Faça login no seu dashboard n8n
+2. Clique em "Workflows" no menu lateral
+3. Clique no botão "Create Workflow"
+4. No editor de workflow, clique no botão de menu (três pontos) no canto superior direito
+5. Selecione "Import from JSON"
+6. Cole o JSON do workflow desejado
+7. Clique em "Import"
+
+## Configuração após Importação
+
+Para cada workflow importado, você precisará:
+
+1. Verificar e ajustar os endpoints de API
+2. Configurar as credenciais de email para notificações
+3. Testar o webhook usando o botão "Test" na interface do n8n
+4. Ativar o workflow usando o toggle "Active" no canto superior direito
+
+## Integrando com a harmonIA
+
+1. Copie a URL do webhook gerada pelo n8n para cada workflow
+2. Acesse o painel de administração da harmonIA
+3. Vá para "Integrações" > "n8n Workflows"
+4. Cole as URLs correspondentes em cada campo
+5. Salve as configurações
+6. Teste cada integração usando o botão "Testar Webhook"
+
+## Solução de Problemas
+
+Se encontrar problemas durante a configuração:
+
+1. Verifique os logs de execução no n8n
+2. Confirme se as URLs e chaves de API estão corretas
+3. Verifique a conectividade entre o n8n e a API da harmonIA
+4. Teste cada nó individualmente para localizar falhas específicas
+`;
 
   return (
-    <Card className="w-full">
+    <Card>
       <CardHeader>
-        <CardTitle>Guia de Configuração de Workflows n8n</CardTitle>
+        <CardTitle>Guia de Implementação de Workflows n8n</CardTitle>
         <CardDescription>
-          Siga este guia para configurar os workflows n8n para integrações com harmonIA
+          Instruções e exemplos para configurar workflows no n8n para integração com a harmonIA
         </CardDescription>
       </CardHeader>
-      <CardContent className="space-y-6">
-        <p className="text-sm text-gray-600">
-          Este guia mostra como configurar workflows no n8n para automatizar processos de notificação, pagamento, feedback e mais para a plataforma harmonIA.
-        </p>
-
-        <Tabs value={activeWorkflow} onValueChange={setActiveWorkflow}>
-          <TabsList>
-            <TabsTrigger value="preview">Prévias</TabsTrigger>
-            <TabsTrigger value="payment">Pagamentos</TabsTrigger>
-            <TabsTrigger value="briefing">Briefing</TabsTrigger>
-            <TabsTrigger value="feedback">Feedback</TabsTrigger>
+      <CardContent>
+        <Tabs defaultValue={activeTab} value={activeTab} onValueChange={setActiveTab}>
+          <TabsList className="mb-6">
+            <TabsTrigger value="overview">Visão Geral</TabsTrigger>
+            <TabsTrigger value="preview">Prévia</TabsTrigger>
+            <TabsTrigger value="payment">Pagamento</TabsTrigger>
             <TabsTrigger value="chatbot">Chatbot</TabsTrigger>
+            <TabsTrigger value="feedback">Feedback</TabsTrigger>
+            <TabsTrigger value="installation">Instalação</TabsTrigger>
           </TabsList>
-          
-          <TabsContent value={activeWorkflow} className="mt-4 pt-4 border-t">
-            <div className="space-y-4">
-              <div className="flex justify-between items-start">
-                <div>
-                  <h3 className="text-lg font-semibold">{workflowExamples[activeWorkflow].title}</h3>
-                  <p className="text-sm text-gray-600">{workflowExamples[activeWorkflow].description}</p>
-                </div>
-                <div className="flex gap-2">
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => downloadJson(workflowExamples[activeWorkflow].template, `harmonia-${activeWorkflow}-workflow.json`)}
-                  >
-                    <Download className="h-4 w-4 mr-2" />
-                    Download JSON
-                  </Button>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    asChild
-                  >
-                    <a href="https://humbrock.app.n8n.cloud/" target="_blank" rel="noopener noreferrer">
-                      <ExternalLink className="h-4 w-4 mr-2" />
-                      Abrir n8n
-                    </a>
-                  </Button>
-                </div>
+
+          <TabsContent value="overview" className="space-y-6">
+            <div className="prose max-w-none">
+              <h3>Integração de Workflows n8n com harmonIA</h3>
+              <p>
+                O n8n é uma plataforma de automação que permite criar fluxos de trabalho personalizados 
+                para integrar diferentes serviços e APIs. Esta página fornece exemplos de workflows 
+                para integrar com a plataforma harmonIA.
+              </p>
+              <h4>Workflows Disponíveis</h4>
+              <ul>
+                <li><strong>Notificações de Prévia</strong> - Envia notificações quando novas prévias estão disponíveis</li>
+                <li><strong>Processamento de Pagamento</strong> - Processa pagamentos e atualiza o status no sistema</li>
+                <li><strong>Chatbot</strong> - Integra um chatbot para responder perguntas comuns</li>
+                <li><strong>Feedback</strong> - Processa feedback de clientes sobre prévias</li>
+              </ul>
+              <h4>Como Usar</h4>
+              <p>
+                Para cada tipo de workflow, fornecemos um exemplo em JSON que pode ser importado diretamente 
+                para o n8n. Depois de importar, você precisará configurar as credenciais e parâmetros específicos 
+                para o seu ambiente.
+              </p>
+              <p>
+                Use a aba de cada workflow para ver o exemplo e as instruções de instalação.
+              </p>
+            </div>
+          </TabsContent>
+
+          <TabsContent value="preview" className="space-y-6">
+            <div className="prose max-w-none mb-4">
+              <h3>Workflow de Notificações de Prévia</h3>
+              <p>
+                Este workflow processa solicitações de envio de notificações quando novas prévias 
+                estão disponíveis. Ele gera um token de acesso seguro, envia um email para o cliente 
+                e registra as informações no banco de dados.
+              </p>
+              <h4>Funcionalidades:</h4>
+              <ul>
+                <li>Recebe dados da prévia via webhook</li>
+                <li>Gera um token de acesso único com expiração</li>
+                <li>Envia email para o cliente com link para acessar a prévia</li>
+                <li>Registra o token e informações de acesso no banco de dados</li>
+              </ul>
+            </div>
+            
+            <div className="bg-gray-100 p-4 rounded-md relative">
+              <div className="absolute right-4 top-4 flex space-x-2">
+                <Button 
+                  size="sm" 
+                  variant="outline" 
+                  onClick={() => copyToClipboard(previewWorkflowJson, 'preview')}
+                >
+                  {copiedStates['preview'] ? <Check className="h-4 w-4" /> : <Copy className="h-4 w-4" />}
+                  {copiedStates['preview'] ? 'Copiado!' : 'Copiar'}
+                </Button>
+                <Button 
+                  size="sm" 
+                  variant="outline" 
+                  onClick={() => downloadJson(previewWorkflowJson, 'preview-notification-workflow.json')}
+                >
+                  <Download className="h-4 w-4 mr-2" />
+                  Baixar
+                </Button>
               </div>
-              
-              <div className="bg-gray-50 p-4 rounded-md border">
-                <p className="mb-2">{workflowExamples[activeWorkflow].content}</p>
-                
-                <CodeBlock
-                  code={JSON.stringify(workflowExamples[activeWorkflow].template, null, 2)}
-                  language="json"
-                  showLineNumbers={true}
-                />
+              <CodeBlock 
+                code={previewWorkflowJson} 
+                language="json" 
+              />
+            </div>
+          </TabsContent>
+
+          <TabsContent value="payment" className="space-y-6">
+            <div className="prose max-w-none mb-4">
+              <h3>Workflow de Processamento de Pagamento</h3>
+              <p>
+                Este workflow processa notificações de pagamento, atualiza o status do briefing no 
+                banco de dados e envia emails de confirmação para o cliente e para a equipe.
+              </p>
+              <h4>Funcionalidades:</h4>
+              <ul>
+                <li>Recebe confirmações de pagamento via webhook</li>
+                <li>Atualiza o status do briefing para "completo"</li>
+                <li>Envia email de confirmação para o cliente</li>
+                <li>Notifica a equipe sobre o novo pagamento</li>
+              </ul>
+            </div>
+            
+            <div className="bg-gray-100 p-4 rounded-md relative">
+              <div className="absolute right-4 top-4 flex space-x-2">
+                <Button 
+                  size="sm" 
+                  variant="outline" 
+                  onClick={() => copyToClipboard(paymentWorkflowJson, 'payment')}
+                >
+                  {copiedStates['payment'] ? <Check className="h-4 w-4" /> : <Copy className="h-4 w-4" />}
+                  {copiedStates['payment'] ? 'Copiado!' : 'Copiar'}
+                </Button>
+                <Button 
+                  size="sm" 
+                  variant="outline" 
+                  onClick={() => downloadJson(paymentWorkflowJson, 'payment-workflow.json')}
+                >
+                  <Download className="h-4 w-4 mr-2" />
+                  Baixar
+                </Button>
               </div>
-              
-              <Accordion type="single" collapsible className="mt-4">
-                <AccordionItem value="instructions">
-                  <AccordionTrigger>Instruções de Importação</AccordionTrigger>
-                  <AccordionContent className="space-y-2 text-sm">
-                    <Steps>
-                      <Step title="Baixe o arquivo JSON do workflow">
-                        <p>Clique no botão "Download JSON" acima para baixar o arquivo do workflow.</p>
-                      </Step>
-                      
-                      <Step title="Acesse o n8n">
-                        <p>Entre na plataforma n8n em <a href="https://humbrock.app.n8n.cloud/" target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:underline">https://humbrock.app.n8n.cloud/</a></p>
-                      </Step>
-                      
-                      <Step title="Crie um novo workflow">
-                        <p>Clique no botão "New Workflow" no painel do n8n.</p>
-                      </Step>
-                      
-                      <Step title="Importe o arquivo JSON">
-                        <p>No n8n, clique em "Actions" → "Import from file" e selecione o arquivo JSON baixado.</p>
-                      </Step>
-                      
-                      <Step title="Configure credenciais">
-                        <p>Você precisará configurar as credenciais para cada nó que requer autenticação (como nós de email ou banco de dados).</p>
-                      </Step>
-                      
-                      <Step title="Ative o workflow">
-                        <p>Depois de configurar tudo, clique em "Activate" para ativar o webhook e deixar o workflow pronto para uso.</p>
-                      </Step>
-                      
-                      <Step title="Copie a URL do webhook">
-                        <p>Copie a URL do webhook que será mostrada no nó "Webhook" e salve-a na seção de configuração de Webhooks da harmonIA.</p>
-                      </Step>
-                    </Steps>
-                  </AccordionContent>
-                </AccordionItem>
-                
-                <AccordionItem value="configuration">
-                  <AccordionTrigger>Configurações Adicionais</AccordionTrigger>
-                  <AccordionContent className="space-y-2 text-sm">
-                    <div className="space-y-4">
-                      <div>
-                        <h4 className="font-medium">Configuração de Email</h4>
-                        <p>Para os workflows que enviam emails, você precisará configurar um serviço de email no n8n:</p>
-                        <ol className="list-decimal ml-5 mt-2 space-y-1">
-                          <li>No n8n, vá para "Settings" → "Credentials"</li>
-                          <li>Adicione credenciais para o serviço de email (SMTP, SendGrid etc.)</li>
-                          <li>Configure o nó "Send Email" para usar essas credenciais</li>
-                        </ol>
-                      </div>
-                      
-                      <div>
-                        <h4 className="font-medium">Configuração do Banco de Dados</h4>
-                        <p>Para workflows que se conectam ao Supabase, configure as credenciais PostgreSQL:</p>
-                        <ol className="list-decimal ml-5 mt-2 space-y-1">
-                          <li>No n8n, adicione credenciais do tipo "PostgreSQL"</li>
-                          <li>Use os dados de conexão do Supabase (disponíveis no painel do Supabase)</li>
-                          <li>Teste a conexão antes de ativar o workflow</li>
-                        </ol>
-                      </div>
-                      
-                      <div>
-                        <h4 className="font-medium">Notificações para Slack/Discord</h4>
-                        <p>Para receber notificações no Slack ou Discord:</p>
-                        <ol className="list-decimal ml-5 mt-2 space-y-1">
-                          <li>Crie um webhook no seu workspace Slack/servidor Discord</li>
-                          <li>Substitua a URL "https://api.slack.com/hooks/your-slack-webhook" nos nós HTTP Request</li>
-                          <li>Personalize o formato das mensagens conforme necessário</li>
-                        </ol>
-                      </div>
-                    </div>
-                  </AccordionContent>
-                </AccordionItem>
-              </Accordion>
+              <CodeBlock 
+                code={paymentWorkflowJson} 
+                language="json" 
+              />
+            </div>
+          </TabsContent>
+
+          <TabsContent value="chatbot" className="space-y-6">
+            <div className="prose max-w-none mb-4">
+              <h3>Workflow do Chatbot</h3>
+              <p>
+                Este workflow processa mensagens recebidas do chatbot, classifica o tipo de pergunta 
+                e retorna respostas adequadas automaticamente. Em caso de solicitação de contato, 
+                notifica a equipe.
+              </p>
+              <h4>Funcionalidades:</h4>
+              <ul>
+                <li>Recebe mensagens do cliente via webhook</li>
+                <li>Classifica o tipo de mensagem (preço, prazo, status, etc.)</li>
+                <li>Retorna respostas pré-definidas conforme o tipo</li>
+                <li>Em caso de solicitação de contato, notifica a equipe</li>
+                <li>Registra todas as interações para análise futura</li>
+              </ul>
+            </div>
+            
+            <div className="bg-gray-100 p-4 rounded-md relative">
+              <div className="absolute right-4 top-4 flex space-x-2">
+                <Button 
+                  size="sm" 
+                  variant="outline" 
+                  onClick={() => copyToClipboard(chatbotWorkflowJson, 'chatbot')}
+                >
+                  {copiedStates['chatbot'] ? <Check className="h-4 w-4" /> : <Copy className="h-4 w-4" />}
+                  {copiedStates['chatbot'] ? 'Copiado!' : 'Copiar'}
+                </Button>
+                <Button 
+                  size="sm" 
+                  variant="outline" 
+                  onClick={() => downloadJson(chatbotWorkflowJson, 'chatbot-workflow.json')}
+                >
+                  <Download className="h-4 w-4 mr-2" />
+                  Baixar
+                </Button>
+              </div>
+              <CodeBlock 
+                code={chatbotWorkflowJson} 
+                language="json" 
+              />
+            </div>
+          </TabsContent>
+
+          <TabsContent value="feedback" className="space-y-6">
+            <div className="prose max-w-none mb-4">
+              <h3>Workflow de Feedback</h3>
+              <p>
+                Este workflow processa feedback enviado pelos clientes sobre as prévias musicais. 
+                Ele atualiza o status do projeto, notifica a equipe e registra o feedback no histórico.
+              </p>
+              <h4>Funcionalidades:</h4>
+              <ul>
+                <li>Recebe feedback do cliente via webhook</li>
+                <li>Atualiza o status do projeto conforme o feedback</li>
+                <li>Envia notificações diferentes para aprovações e revisões</li>
+                <li>Registra o feedback no histórico do projeto</li>
+              </ul>
+            </div>
+            
+            <div className="bg-gray-100 p-4 rounded-md relative">
+              <div className="absolute right-4 top-4 flex space-x-2">
+                <Button 
+                  size="sm" 
+                  variant="outline" 
+                  onClick={() => copyToClipboard(feedbackWorkflowJson, 'feedback')}
+                >
+                  {copiedStates['feedback'] ? <Check className="h-4 w-4" /> : <Copy className="h-4 w-4" />}
+                  {copiedStates['feedback'] ? 'Copiado!' : 'Copiar'}
+                </Button>
+                <Button 
+                  size="sm" 
+                  variant="outline" 
+                  onClick={() => downloadJson(feedbackWorkflowJson, 'feedback-workflow.json')}
+                >
+                  <Download className="h-4 w-4 mr-2" />
+                  Baixar
+                </Button>
+              </div>
+              <CodeBlock 
+                code={feedbackWorkflowJson} 
+                language="json" 
+              />
+            </div>
+          </TabsContent>
+
+          <TabsContent value="installation" className="space-y-6">
+            <div className="prose max-w-none">
+              <h3>Guia de Instalação</h3>
+              {installationGuide.split('\n\n').map((paragraph, index) => {
+                if (paragraph.startsWith('# ')) {
+                  return <h2 key={index}>{paragraph.replace('# ', '')}</h2>;
+                } else if (paragraph.startsWith('## ')) {
+                  return <h3 key={index}>{paragraph.replace('## ', '')}</h3>;
+                } else if (paragraph.startsWith('### ')) {
+                  return <h4 key={index}>{paragraph.replace('### ', '')}</h4>;
+                } else if (paragraph.startsWith('1. ')) {
+                  return (
+                    <ol key={index}>
+                      {paragraph.split('\n').map((line, lineIndex) => (
+                        <li key={lineIndex}>
+                          {line.replace(/^\d+\. /, '')}
+                        </li>
+                      ))}
+                    </ol>
+                  );
+                } else {
+                  return <p key={index}>{paragraph}</p>;
+                }
+              })}
             </div>
           </TabsContent>
         </Tabs>
-        
-        <div className="mt-6 p-4 bg-blue-50 rounded-md border border-blue-200">
-          <h3 className="text-lg font-medium text-blue-800 mb-2">Visão Geral de Integração</h3>
-          <p className="text-sm text-blue-700 mb-2">Para o funcionamento completo da plataforma, configure os seguintes workflows no n8n:</p>
-          <ol className="list-decimal ml-5 space-y-1 text-sm text-blue-700">
-            <li><strong>Notificações de Prévia</strong> - Envia emails com links mágicos para clientes acessarem prévias</li>
-            <li><strong>Processamento de Pagamento</strong> - Processa notificações de pagamento e atualiza status no sistema</li>
-            <li><strong>Feedback de Cliente</strong> - Processa feedback sobre prévias e notifica a equipe</li>
-            <li><strong>Processamento de Briefing</strong> - Gerencia novos briefings e envia confirmações</li>
-            <li><strong>Integração de Chatbot</strong> - Processa mensagens do chatbot e gera respostas personalizadas</li>
-          </ol>
-          <p className="text-sm text-blue-700 mt-4">Após configurar todos os workflows, atualize as URLs dos webhooks na seção de Integrações do painel administrativo.</p>
-        </div>
       </CardContent>
-      <CardFooter className="flex justify-between">
-        <Button 
-          variant="outline"
-          size="sm"
-          onClick={() => openExternalLink('https://docs.n8n.io/integrations/builtin/app-nodes/n8n-nodes-base.webhook/')}
-        >
-          <ExternalLink className="h-4 w-4 mr-2" />
-          Documentação do n8n Webhook
-        </Button>
-        <Button
-          size="sm"
-          className="bg-harmonia-green hover:bg-harmonia-green/90"
-          onClick={() => openExternalLink('/admin-j28s7d1k/integrations')}
-        >
-          <ExternalLink className="h-4 w-4 mr-2" />
-          Configurar Webhooks
-        </Button>
-      </CardFooter>
     </Card>
   );
 };

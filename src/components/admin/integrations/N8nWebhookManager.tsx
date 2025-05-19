@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -46,7 +45,8 @@ const N8nWebhookManager: React.FC<N8nWebhookManagerProps> = ({ defaultTab = 'pre
       const urls: Record<WorkflowType, string> = {} as Record<WorkflowType, string>;
       
       for (const type of types) {
-        urls[type] = await n8nIntegrationService.getWebhookUrl(type);
+        const url = await n8nIntegrationService.getWebhookUrl(type);
+        urls[type] = url || '';
       }
       
       setWebhookUrls(urls);
@@ -119,12 +119,14 @@ const N8nWebhookManager: React.FC<N8nWebhookManagerProps> = ({ defaultTab = 'pre
             { testData: true }
           );
           break;
-        case 'chatbot':
-          success = await n8nIntegrationService.sendChatbotMessage(
+        case 'chatbot': {
+          const chatResponse = await n8nIntegrationService.sendChatbotMessage(
             'Mensagem de teste do webhook',
             { userId: 'test-user' }
           );
+          success = chatResponse.success;
           break;
+        }
         case 'feedback':
           success = await n8nIntegrationService.processFeedbackSubmission(
             'test-project-id',
