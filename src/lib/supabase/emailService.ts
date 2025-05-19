@@ -62,12 +62,17 @@ export const emailService = {
       
       const emailContent = createEmailContent(
         email,
-        'Novas Prévias Disponíveis - harmonIA',
+        'Suas Prévias Musicais - harmonIA',
         `
           <h1>Olá ${name},</h1>
-          <p>Suas prévias já estão disponíveis para avaliação!</p>
-          <p>Acesse o link abaixo para ouvir e dar seu feedback:</p>
-          <p><a href="${previewUrl}" style="padding: 10px 15px; background-color: #4F46E5; color: white; text-decoration: none; border-radius: 5px;">Ver Prévias</a></p>
+          <p>Suas prévias musicais já estão disponíveis para avaliação!</p>
+          <p>Preparamos diferentes versões para você escolher a que melhor atende suas expectativas.</p>
+          <p>Para acessar suas prévias musicais, clique no botão abaixo:</p>
+          <p><a href="${previewUrl}" style="display: inline-block; padding: 10px 16px; background-color: #10b981; color: white; text-decoration: none; border-radius: 4px; font-weight: bold;">Acessar Minhas Prévias Musicais</a></p>
+          <p>Ou copie e cole este endereço no seu navegador:</p>
+          <p style="background: #f1f5f9; padding: 10px; border-radius: 4px; font-family: monospace;">${previewUrl}</p>
+          <p>Este link é exclusivo para você e tem validade limitada.</p>
+          <p>Aguardamos seu feedback!</p>
           <p>Atenciosamente,<br>Equipe harmonIA</p>
         `
       );

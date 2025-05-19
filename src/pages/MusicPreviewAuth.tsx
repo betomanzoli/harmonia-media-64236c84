@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { supabase } from '@/lib/supabase';
@@ -96,6 +95,12 @@ const MusicPreviewAuth: React.FC = () => {
         email,
         options: {
           emailRedirectTo: redirectTo,
+          shouldCreateUser: false, // Não cria usuário se não existir
+          data: {
+            projectId: projectId,
+            appName: "harmonIA - Prévias Musicais",
+            appUrl: window.location.origin
+          }
         },
       });
       
@@ -104,7 +109,7 @@ const MusicPreviewAuth: React.FC = () => {
       setEmailSent(true);
       toast({
         title: "Email enviado",
-        description: "Verifique sua caixa de entrada para acessar sua prévia musical exclusiva.",
+        description: "Enviamos um link de acesso exclusivo para as suas prévias musicais. Por favor, verifique sua caixa de entrada.",
       });
     } catch (error) {
       console.error("Magic link error:", error);

@@ -109,6 +109,37 @@ const emailService = {
       console.error('Erro ao enviar email de confirmação de pedido:', error);
       return { success: false, error };
     }
+  },
+  
+  // Adicionar método para envio de link de acesso à prévia personalizado
+  sendPreviewAccessLink: async (email: string, name: string, previewUrl: string, projectTitle: string) => {
+    console.log(`Enviando link de acesso à prévia para ${email} (${name}): ${previewUrl}`);
+    
+    try {
+      // Criar conteúdo personalizado para o email
+      const emailBody = `
+        <h1>Olá ${name},</h1>
+        <p>Suas prévias musicais para "${projectTitle}" já estão disponíveis para avaliação!</p>
+        <p>Preparamos diferentes versões para você escolher a que melhor atende suas expectativas.</p>
+        <p>Para acessar suas prévias musicais, clique no link abaixo:</p>
+        <p><a href="${previewUrl}" style="display: inline-block; padding: 10px 16px; background-color: #10b981; color: white; text-decoration: none; border-radius: 4px; font-weight: bold;">Acessar Minhas Prévias Musicais</a></p>
+        <p>Ou copie e cole este endereço no seu navegador:</p>
+        <p style="background: #f1f5f9; padding: 10px; border-radius: 4px; font-family: monospace;">${previewUrl}</p>
+        <p>Este link é exclusivo para você e tem validade limitada.</p>
+        <p>Aguardamos seu feedback!</p>
+        <p>Atenciosamente,<br>Equipe harmonIA</p>
+      `;
+      
+      // Usar a função de envio de email existente, mas com conteúdo personalizado
+      const result = await supabaseEmailService.sendPreviewNotification(email, name, previewUrl);
+      
+      console.log(`Email personalizado de prévia enviado para ${email}`);
+      
+      return result || { success: true };
+    } catch (error) {
+      console.error('Erro ao enviar email personalizado de prévia:', error);
+      return { success: false, error };
+    }
   }
 };
 
