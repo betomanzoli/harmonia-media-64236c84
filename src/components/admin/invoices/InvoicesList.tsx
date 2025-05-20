@@ -9,7 +9,7 @@ import {
   DialogTitle
 } from "@/components/ui/dialog";
 import InvoiceTable from './components/InvoiceTable';
-import CreateInvoiceForm from './components/CreateInvoiceForm';
+import CreateInvoiceFormWrapper from './components/CreateInvoiceFormWrapper';
 import DeleteInvoiceDialog from './components/DeleteInvoiceDialog';
 import { useInvoices } from './hooks/useInvoices';
 import { supabase } from '@/lib/supabase';
@@ -83,7 +83,7 @@ const InvoicesList: React.FC = () => {
           <DialogHeader>
             <DialogTitle>Nova Fatura</DialogTitle>
           </DialogHeader>
-          <CreateInvoiceForm 
+          <CreateInvoiceFormWrapper 
             clients={existingClients.length > 0 ? existingClients : clients}
             projects={projects}
             onSubmit={handleCreateInvoice}

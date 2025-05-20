@@ -3,7 +3,7 @@ import { useState, useEffect } from 'react';
 import { supabase } from '@/lib/supabase';
 import { useToast } from '@/hooks/use-toast';
 import { Invoice, Client, Project } from '../types';
-import { FormValues } from '../components/CreateInvoiceForm';
+import { FormValues } from '../types/form';
 
 export function useInvoices() {
   const { toast } = useToast();
