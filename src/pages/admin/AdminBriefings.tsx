@@ -66,22 +66,22 @@ const AdminBriefings: React.FC = () => {
   const [showEditDialog, setShowEditDialog] = useState(false);
   
   // State for client selection dialog and selected client
-  // IMPORTANT: Moved these state declarations to the top level, not inside conditional
   const [showClientSelectionDialog, setShowClientSelectionDialog] = useState(false);
   const [selectedClient, setSelectedClient] = useState<any>(null);
   
   // Refresh briefings when component mounts
   useEffect(() => {
+    console.log("Fetching briefings...");
     fetchBriefings();
   }, [fetchBriefings]);
 
   // Filter briefings based on search term
-  const filteredBriefings = briefings.filter(
+  const filteredBriefings = briefings ? briefings.filter(
     (briefing) =>
-      briefing.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      briefing.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      briefing.id.toLowerCase().includes(searchTerm.toLowerCase())
-  );
+      briefing.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      briefing.email?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      briefing.id?.toLowerCase().includes(searchTerm.toLowerCase())
+  ) : [];
 
   const handleCreateBriefing = async (briefingData: any) => {
     try {

@@ -74,28 +74,32 @@ const RecentActivities: React.FC<RecentActivitiesProps> = ({
       const newActivities: Activity[] = [];
       
       // Adicionar atividades de projetos
-      projects.forEach((project, index) => {
-        if (index < 5) { // Limitar a 5 projetos para não sobrecarregar
-          newActivities.push({
-            id: newActivities.length + 1,
-            timestamp: formatDate(project.lastActivityDate),
-            description: `Projeto atualizado: ${project.packageType || 'Música Personalizada'} - ${project.clientName}`,
-            type: project.status === 'approved' ? 'order_updated' : project.status === 'feedback' ? 'order_received' : 'audio_added'
-          });
-        }
-      });
+      if (projects && projects.length > 0) {
+        projects.forEach((project, index) => {
+          if (index < 5) { // Limitar a 5 projetos para não sobrecarregar
+            newActivities.push({
+              id: newActivities.length + 1,
+              timestamp: formatDate(project.lastActivityDate),
+              description: `Projeto atualizado: ${project.packageType || 'Música Personalizada'} - ${project.clientName}`,
+              type: project.status === 'approved' ? 'order_updated' : project.status === 'feedback' ? 'order_received' : 'audio_added'
+            });
+          }
+        });
+      }
       
       // Adicionar atividades de briefings
-      briefings.forEach((briefing, index) => {
-        if (index < 5) { // Limitar a 5 briefings para não sobrecarregar
-          newActivities.push({
-            id: newActivities.length + 1,
-            timestamp: formatDate(briefing.created_at),
-            description: `Novo briefing recebido: ${briefing.package_type || 'Música Personalizada'}`,
-            type: 'order_received'
-          });
-        }
-      });
+      if (briefings && briefings.length > 0) {
+        briefings.forEach((briefing, index) => {
+          if (index < 5) { // Limitar a 5 briefings para não sobrecarregar
+            newActivities.push({
+              id: newActivities.length + 1,
+              timestamp: formatDate(briefing.createdAt),
+              description: `Novo briefing recebido: ${briefing.packageType || 'Música Personalizada'}`,
+              type: 'order_received'
+            });
+          }
+        });
+      }
       
       // Ordenar por data (mais recente primeiro)
       newActivities.sort((a, b) => {

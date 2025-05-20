@@ -195,7 +195,7 @@ const PreviewPage: React.FC = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gray-100 pt-8 pb-16">
+    <div className="min-h-screen bg-gray-200 pt-8 pb-16">
       <div className="max-w-4xl mx-auto px-4 mb-6">
         <div className="bg-green-50 border border-green-100 rounded-md p-3 flex items-center">
           <Lock className="h-5 w-5 text-green-600 mr-2" />
