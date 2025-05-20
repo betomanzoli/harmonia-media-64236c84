@@ -1,8 +1,11 @@
 
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
 import { cn } from "@/lib/utils";
+import { n8nIntegrationService } from '@/services/webhookIntegrationService';
+import { usePreviewProjects } from '@/hooks/admin/usePreviewProjects';
+import { useBriefings } from '@/hooks/admin/useBriefings';
 
 interface Activity {
   id: number;
@@ -11,45 +14,12 @@ interface Activity {
   type: string;
 }
 
-// Dados das atividades recentes
-const recentActivities: Activity[] = [
-  {
-    id: 1,
-    timestamp: 'Hoje, 14:30',
-    description: 'Novo áudio adicionado: "Aniversário de 15 Anos - Julia"',
-    type: 'audio_added'
-  },
-  {
-    id: 2,
-    timestamp: 'Hoje, 11:15',
-    description: 'Pedido atualizado: #2023-056 "Música Corporativa - Tech Inovação"',
-    type: 'order_updated'
-  },
-  {
-    id: 3,
-    timestamp: 'Ontem, 16:45',
-    description: 'Novo item adicionado ao portfólio: "Casamento - Pedro e Maria"',
-    type: 'portfolio_added'
-  },
-  {
-    id: 4,
-    timestamp: 'Ontem, 10:20',
-    description: 'Novo cliente registrado: João Silva',
-    type: 'client_registered'
-  },
-  {
-    id: 5,
-    timestamp: '02/04/2025, 13:10',
-    description: 'Novo pedido recebido: #2025-023 "Música para Campanha Publicitária"',
-    type: 'order_received'
-  },
-  {
-    id: 6,
-    timestamp: '01/04/2025, 09:45',
-    description: 'Pagamento confirmado: #2025-021 "Trilha para Podcast"',
-    type: 'payment_confirmed'
-  }
-];
+interface RecentActivitiesProps {
+  activities?: Activity[];
+  maxItems?: number;
+  showTitle?: boolean;
+  className?: string;
+}
 
 // Função para determinar a cor do indicador com base no tipo da atividade
 const getActivityColor = (type: string) => {
@@ -89,19 +59,98 @@ const ActivityItem: React.FC<ActivityItemProps> = ({ activity, isLast }) => (
   </React.Fragment>
 );
 
-interface RecentActivitiesProps {
-  activities?: Activity[];
-  maxItems?: number;
-  showTitle?: boolean;
-  className?: string;
-}
-
 const RecentActivities: React.FC<RecentActivitiesProps> = ({ 
-  activities = recentActivities,
   maxItems = 6,
   showTitle = true,
   className
 }) => {
+  const [activities, setActivities] = useState<Activity[]>([]);
+  const { projects } = usePreviewProjects();
+  const { briefings } = useBriefings();
+  
+  // Função para gerar atividades com base nos dados atuais do sistema
+  useEffect(() => {
+    const generateRecentActivities = () => {
+      const newActivities: Activity[] = [];
+      
+      // Adicionar atividades de projetos
+      projects.forEach((project, index) => {
+        if (index < 5) { // Limitar a 5 projetos para não sobrecarregar
+          newActivities.push({
+            id: newActivities.length + 1,
+            timestamp: formatDate(project.lastActivityDate),
+            description: `Projeto atualizado: ${project.packageType || 'Música Personalizada'} - ${project.clientName}`,
+            type: project.status === 'approved' ? 'order_updated' : project.status === 'feedback' ? 'order_received' : 'audio_added'
+          });
+        }
+      });
+      
+      // Adicionar atividades de briefings
+      briefings.forEach((briefing, index) => {
+        if (index < 5) { // Limitar a 5 briefings para não sobrecarregar
+          newActivities.push({
+            id: newActivities.length + 1,
+            timestamp: formatDate(briefing.created_at),
+            description: `Novo briefing recebido: ${briefing.package_type || 'Música Personalizada'}`,
+            type: 'order_received'
+          });
+        }
+      });
+      
+      // Ordenar por data (mais recente primeiro)
+      newActivities.sort((a, b) => {
+        const dateA = new Date(a.timestamp.split(', ')[0].split('/').reverse().join('-'));
+        const dateB = new Date(b.timestamp.split(', ')[0].split('/').reverse().join('-'));
+        return dateB.getTime() - dateA.getTime();
+      });
+      
+      // Adicionar algumas atividades fixas se não tiver o suficiente
+      if (newActivities.length < 3) {
+        newActivities.push(
+          {
+            id: newActivities.length + 1,
+            timestamp: 'Hoje, 14:30',
+            description: 'Novo áudio adicionado: "Aniversário de 15 Anos - Julia"',
+            type: 'audio_added'
+          },
+          {
+            id: newActivities.length + 2,
+            timestamp: 'Ontem, 16:45',
+            description: 'Novo item adicionado ao portfólio: "Casamento - Pedro e Maria"',
+            type: 'portfolio_added'
+          }
+        );
+      }
+      
+      return newActivities.slice(0, maxItems);
+    };
+    
+    setActivities(generateRecentActivities());
+  }, [projects, briefings, maxItems]);
+  
+  // Função para formatar datas
+  const formatDate = (dateString?: string): string => {
+    if (!dateString) return 'Hoje, 12:00';
+    
+    const now = new Date();
+    const date = new Date(dateString);
+    
+    // Verificar se a data é de hoje
+    if (date.toDateString() === now.toDateString()) {
+      return `Hoje, ${date.getHours().toString().padStart(2, '0')}:${date.getMinutes().toString().padStart(2, '0')}`;
+    }
+    
+    // Verificar se a data é de ontem
+    const yesterday = new Date();
+    yesterday.setDate(now.getDate() - 1);
+    if (date.toDateString() === yesterday.toDateString()) {
+      return `Ontem, ${date.getHours().toString().padStart(2, '0')}:${date.getMinutes().toString().padStart(2, '0')}`;
+    }
+    
+    // Outras datas
+    return `${date.toLocaleDateString('pt-BR')}, ${date.getHours().toString().padStart(2, '0')}:${date.getMinutes().toString().padStart(2, '0')}`;
+  };
+
   const displayActivities = activities.slice(0, maxItems);
 
   return (
