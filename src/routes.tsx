@@ -1,4 +1,3 @@
-
 import { createBrowserRouter } from "react-router-dom";
 import { HelmetProvider } from "react-helmet-async";
 import AdminLayout from "./components/admin/layout/AdminLayout";
@@ -38,7 +37,7 @@ const AdminMarketing = () => <div>Admin Marketing Page</div>;
 
 const router = createBrowserRouter([
   {
-    element: <HelmetProvider><MainLayout /></HelmetProvider>,
+    element: <HelmetProvider><MainLayout>Main Layout Content</MainLayout></HelmetProvider>,
     children: [
       {
         path: "/",
@@ -87,7 +86,7 @@ const router = createBrowserRouter([
     ],
   },
   {
-    element: <AuthLayout />,
+    element: <AuthLayout>Auth Layout Content</AuthLayout>,
     children: [
       {
         path: "/auth/login",
@@ -108,7 +107,7 @@ const router = createBrowserRouter([
     ],
   },
   {
-    element: <AdminLayout />,
+    element: <AdminLayout>Admin Layout Content</AdminLayout>,
     children: [
       {
         path: "/admin-j28s7d1k/dashboard",
