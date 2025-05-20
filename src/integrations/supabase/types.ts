@@ -329,54 +329,6 @@ export type Database = {
           },
         ]
       }
-      marketing_leads: {
-        Row: {
-          created_at: string
-          email: string
-          id: string
-          lead_campaign: string | null
-          lead_content: string | null
-          lead_medium: string | null
-          lead_source: string | null
-          lead_term: string | null
-          name: string
-          redirect_page: string | null
-          responses: Json
-          status: Database["public"]["Enums"]["lead_status"]
-          updated_at: string
-        }
-        Insert: {
-          created_at?: string
-          email: string
-          id?: string
-          lead_campaign?: string | null
-          lead_content?: string | null
-          lead_medium?: string | null
-          lead_source?: string | null
-          lead_term?: string | null
-          name: string
-          redirect_page?: string | null
-          responses?: Json
-          status?: Database["public"]["Enums"]["lead_status"]
-          updated_at?: string
-        }
-        Update: {
-          created_at?: string
-          email?: string
-          id?: string
-          lead_campaign?: string | null
-          lead_content?: string | null
-          lead_medium?: string | null
-          lead_source?: string | null
-          lead_term?: string | null
-          name?: string
-          redirect_page?: string | null
-          responses?: Json
-          status?: Database["public"]["Enums"]["lead_status"]
-          updated_at?: string
-        }
-        Relationships: []
-      }
       packages: {
         Row: {
           description: string | null
@@ -740,12 +692,6 @@ export type Database = {
         | "checkbox"
         | "file"
         | "date"
-      lead_status:
-        | "new"
-        | "contacted"
-        | "qualified"
-        | "converted"
-        | "unqualified"
       package_type: "essencial" | "profissional" | "premium" | "qualification"
       section_type:
         | "basic_info"
@@ -895,13 +841,6 @@ export const Constants = {
         "checkbox",
         "file",
         "date",
-      ],
-      lead_status: [
-        "new",
-        "contacted",
-        "qualified",
-        "converted",
-        "unqualified",
       ],
       package_type: ["essencial", "profissional", "premium", "qualification"],
       section_type: [
