@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { usePreviewProject } from '@/hooks/usePreviewProject';
 import { Loader2, Calendar, Music, MessageSquare, ArrowLeft, CheckCircle } from 'lucide-react';
@@ -160,7 +159,7 @@ const MusicPreviewSystem: React.FC<MusicPreviewSystemProps> = ({ projectId }) =>
       <div className="container mx-auto max-w-5xl px-4">
         <div className="flex flex-col items-center justify-center py-12">
           <Loader2 className="h-12 w-12 animate-spin text-harmonia-green mb-6" />
-          <p className="text-lg text-white">Carregando prévia do projeto...</p>
+          <p className="text-lg">Carregando prévia do projeto...</p>
         </div>
       </div>
     );
@@ -185,8 +184,8 @@ const MusicPreviewSystem: React.FC<MusicPreviewSystemProps> = ({ projectId }) =>
   return (
     <div className="container mx-auto max-w-5xl px-4">
       <div className="mb-8">
-        <h1 className="text-2xl md:text-3xl font-bold text-white mb-3">{projectData.projectTitle}</h1>
-        <p className="text-gray-200">
+        <h1 className="text-2xl md:text-3xl font-bold text-black mb-3">{projectData.projectTitle}</h1>
+        <p className="text-gray-600">
           Olá {projectData.clientName}, avalie as versões do seu projeto e envie seu feedback.
         </p>
       </div>

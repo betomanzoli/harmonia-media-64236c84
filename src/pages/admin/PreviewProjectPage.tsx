@@ -12,7 +12,6 @@ import { usePreviewProjects, VersionItem } from '@/hooks/admin/usePreviewProject
 import { useToast } from '@/hooks/use-toast';
 import { Button } from '@/components/ui/button';
 import { ArrowLeft } from 'lucide-react';
-import ClientFeedbackCard from '@/components/admin/previews/ClientFeedbackCard';
 
 const PreviewProjectPage: React.FC = () => {
   const { projectId } = useParams<{ projectId: string }>();
@@ -200,29 +199,6 @@ const PreviewProjectPage: React.FC = () => {
     });
   };
   
-  // Handle feedback updates
-  const handleUpdateFeedback = (feedback: string) => {
-    if (!projectId) return;
-    
-    // Update project
-    updateProject(projectId, {
-      feedback,
-      lastActivityDate: new Date().toLocaleDateString('pt-BR')
-    });
-    
-    // Update local state
-    setProject({
-      ...project,
-      feedback,
-      lastActivityDate: new Date().toLocaleDateString('pt-BR')
-    });
-    
-    toast({
-      title: "Feedback atualizado",
-      description: "O feedback do cliente foi atualizado com sucesso."
-    });
-  };
-  
   // Format package type with capitalized first letter
   const formatPackageType = (packageType: string): string => {
     if (!packageType) return "Projeto de Música Personalizada";
@@ -272,13 +248,6 @@ const PreviewProjectPage: React.FC = () => {
               projectId={projectId}
               onDeleteVersion={handleDeleteVersion}
             />
-            
-            <ClientFeedbackCard 
-              feedback={project.feedback || ""} 
-              status={project.status || "waiting"} 
-              onSaveFeedback={handleUpdateFeedback}
-            />
-            
             <ProjectHistoryList 
               history={project.history || []} 
             />
