@@ -143,12 +143,12 @@ const ProjectsTable: React.FC<ProjectsTableProps> = ({
                         <Eye className="mr-2 h-4 w-4" />
                         Copiar Link
                       </DropdownMenuItem>
-                      <Link to={`/admin-j28s7d1k/previews/${project.id}`} className="w-full">
-                        <DropdownMenuItem>
+                      <DropdownMenuItem asChild>
+                        <Link to={`/admin-j28s7d1k/previews/${project.id}`}>
                           <Edit className="mr-2 h-4 w-4" />
                           Editar
-                        </DropdownMenuItem>
-                      </Link>
+                        </Link>
+                      </DropdownMenuItem>
                       <DropdownMenuItem
                         onClick={() => onSendReminder(project.id)}
                       >
