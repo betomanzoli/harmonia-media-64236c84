@@ -237,7 +237,7 @@ const MarketingLeadsList: React.FC = () => {
               </div>
             </div>
             
-            <Select value={statusFilter || ''} onValueChange={(value) => setStatusFilter(value || null)}>
+            <Select value={statusFilter || undefined} onValueChange={(value) => setStatusFilter(value || null)}>
               <SelectTrigger className="w-[180px]">
                 <div className="flex items-center gap-2">
                   <Filter className="h-4 w-4" />
@@ -245,7 +245,7 @@ const MarketingLeadsList: React.FC = () => {
                 </div>
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="">Todos os status</SelectItem>
+                <SelectItem value="all">Todos os status</SelectItem>
                 <SelectItem value="new">Novos</SelectItem>
                 <SelectItem value="contacted">Contatados</SelectItem>
                 <SelectItem value="qualified">Qualificados</SelectItem>
@@ -255,7 +255,7 @@ const MarketingLeadsList: React.FC = () => {
             </Select>
             
             {uniqueSources.length > 0 && (
-              <Select value={sourceFilter || ''} onValueChange={(value) => setSourceFilter(value || null)}>
+              <Select value={sourceFilter || undefined} onValueChange={(value) => setSourceFilter(value || null)}>
                 <SelectTrigger className="w-[180px]">
                   <div className="flex items-center gap-2">
                     <Filter className="h-4 w-4" />
@@ -263,9 +263,11 @@ const MarketingLeadsList: React.FC = () => {
                   </div>
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="">Todas as origens</SelectItem>
+                  <SelectItem value="all">Todas as origens</SelectItem>
                   {uniqueSources.map(source => (
-                    <SelectItem key={source} value={source || ''}>{source}</SelectItem>
+                    <SelectItem key={source} value={source || ''}>
+                      {source}
+                    </SelectItem>
                   ))}
                 </SelectContent>
               </Select>
