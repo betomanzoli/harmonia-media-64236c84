@@ -1,8 +1,9 @@
-export type NotificationType = 'test_message' | 'new_portfolio_item' | 'feedback_received' | 'new_customer' | 'client_message';
+
+export type NotificationType = 'test_message' | 'new_portfolio_item' | 'feedback_received' | 'new_customer' | 'client_message' | 'preview_approved';
 
 const webhookService = {
   getWebhookUrl: async (): Promise<string> => {
-    return localStorage.getItem('webhook_url') || '';
+    return localStorage.getItem('webhook_url') || 'https://humbrock.app.n8n.cloud/webhook/16ae1112-2469-420d-8fcc-c9569152bd8f/chat';
   },
 
   saveWebhookUrl: async (url: string): Promise<boolean> => {

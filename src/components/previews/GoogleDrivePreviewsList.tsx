@@ -30,7 +30,7 @@ const GoogleDrivePreviewsList: React.FC<GoogleDrivePreviewsListProps> = ({
 
   if (isLoading) {
     return (
-      <Card>
+      <Card className="bg-gray-50">
         <CardHeader>
           <CardTitle>{title}</CardTitle>
         </CardHeader>
@@ -46,7 +46,7 @@ const GoogleDrivePreviewsList: React.FC<GoogleDrivePreviewsListProps> = ({
 
   if (error) {
     return (
-      <Card>
+      <Card className="bg-gray-50">
         <CardHeader>
           <CardTitle>{title}</CardTitle>
         </CardHeader>
@@ -60,7 +60,7 @@ const GoogleDrivePreviewsList: React.FC<GoogleDrivePreviewsListProps> = ({
   }
 
   return (
-    <Card>
+    <Card className="bg-gray-50">
       <CardHeader className="flex flex-row items-center justify-between">
         <CardTitle>{title}</CardTitle>
         <Button 

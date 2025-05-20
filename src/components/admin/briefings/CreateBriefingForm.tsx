@@ -10,14 +10,19 @@ import { supabase } from '@/lib/supabase';
 import { useToast } from '@/hooks/use-toast';
 import { usePreviewProjects } from '@/hooks/admin/usePreviewProjects';
 import { useCustomers } from '@/hooks/admin/useCustomers';
+import webhookService from '@/services/webhookService';
 
 interface CreateBriefingFormProps {
   onClose: () => void;
   onSubmit: (data: BriefingFormValues) => void;
+  initialData?: any;
 }
 
-const CreateBriefingForm: React.FC<CreateBriefingFormProps> = ({ onClose, onSubmit }) => {
-  const { form, isSubmitting, handleSubmit } = useCreateBriefingForm({ onSubmit });
+const CreateBriefingForm: React.FC<CreateBriefingFormProps> = ({ onClose, onSubmit, initialData }) => {
+  const { form, isSubmitting, handleSubmit } = useCreateBriefingForm({ 
+    onSubmit,
+    initialData
+  });
   const { toast } = useToast();
   const { addProject } = usePreviewProjects();
   const { addCustomer, getCustomerByEmail } = useCustomers();
@@ -67,6 +72,14 @@ const CreateBriefingForm: React.FC<CreateBriefingFormProps> = ({ onClose, onSubm
         }
         
         clientId = newClient.id;
+        
+        // Enviar notificação de novo cliente
+        await webhookService.sendItemNotification('new_customer', {
+          name: data.name,
+          email: data.email,
+          phone: data.phone.fullNumber,
+          createdAt: new Date().toISOString()
+        });
       }
       
       // Create the briefing

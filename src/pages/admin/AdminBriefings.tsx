@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import AdminLayout from '@/components/admin/layout/AdminLayout';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -43,11 +44,14 @@ import { useBriefings } from '@/hooks/admin/useBriefings';
 import CreateBriefingForm from '@/components/admin/briefings/CreateBriefingForm';
 import BriefingDetailForm from '@/components/admin/briefings/BriefingDetailForm';
 import { supabase } from '@/lib/supabase';
+import { useCustomers } from '@/hooks/admin/useCustomers';
+import ClientSelectionDialog from '@/components/admin/ClientSelectionDialog';
 
 const AdminBriefings: React.FC = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
   const { briefings, isLoading, error, addBriefing, updateBriefingStatus, deleteBriefing, createProjectFromBriefing, updateBriefing, fetchBriefings } = useBriefings();
+  const { customers, getCustomerByEmail } = useCustomers();
   
   const [searchTerm, setSearchTerm] = useState('');
   const [showCreateDialog, setShowCreateDialog] = useState(false);
@@ -60,6 +64,11 @@ const AdminBriefings: React.FC = () => {
   const [selectedBriefing, setSelectedBriefing] = useState<any>(null);
   const [showViewDialog, setShowViewDialog] = useState(false);
   const [showEditDialog, setShowEditDialog] = useState(false);
+  
+  // State for client selection dialog and selected client
+  // IMPORTANT: Moved these state declarations to the top level, not inside conditional
+  const [showClientSelectionDialog, setShowClientSelectionDialog] = useState(false);
+  const [selectedClient, setSelectedClient] = useState<any>(null);
   
   // Refresh briefings when component mounts
   useEffect(() => {
@@ -171,6 +180,31 @@ const AdminBriefings: React.FC = () => {
     }
   };
 
+  const handleOpenCreateBriefing = () => {
+    setShowClientSelectionDialog(true);
+  };
+  
+  const handleClientSelection = (option: 'new' | 'existing', clientId?: string) => {
+    setShowClientSelectionDialog(false);
+    
+    if (option === 'new') {
+      // Open create briefing dialog with empty client data
+      setShowCreateDialog(true);
+    } else if (option === 'existing' && clientId) {
+      // Find the client and open create briefing dialog with client data
+      const client = customers.find(c => c.id === clientId);
+      if (client) {
+        const initialData = {
+          name: client.name,
+          email: client.email,
+          phone: client.phone || '',
+        };
+        setSelectedClient(client);
+        setShowCreateDialog(true);
+      }
+    }
+  };
+
   if (isLoading) {
     return (
       <AdminLayout>
@@ -223,7 +257,7 @@ const AdminBriefings: React.FC = () => {
       </AdminLayout>
     );
   }
-
+  
   return (
     <AdminLayout>
       <div className="space-y-6 p-6">
@@ -248,7 +282,7 @@ const AdminBriefings: React.FC = () => {
             </Button>
             
             <Button 
-              onClick={() => setShowCreateDialog(true)}
+              onClick={handleOpenCreateBriefing}
               size="sm"
               className="bg-harmonia-green hover:bg-harmonia-green/90"
             >
@@ -391,10 +425,21 @@ const AdminBriefings: React.FC = () => {
         </AlertDialogContent>
       </AlertDialog>
 
+      {/* Client Selection Dialog */}
+      <ClientSelectionDialog 
+        open={showClientSelectionDialog}
+        onClose={() => setShowClientSelectionDialog(false)}
+        onSelectClient={handleClientSelection}
+      />
+
       {/* Create briefing dialog */}
       <Dialog open={showCreateDialog} onOpenChange={setShowCreateDialog}>
         <DialogContent className="sm:max-w-[550px]">
-          <CreateBriefingForm onClose={() => setShowCreateDialog(false)} onSubmit={handleCreateBriefing} />
+          <CreateBriefingForm 
+            onClose={() => setShowCreateDialog(false)} 
+            onSubmit={handleCreateBriefing}
+            initialData={selectedClient}
+          />
         </DialogContent>
       </Dialog>
 
