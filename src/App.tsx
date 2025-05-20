@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { Routes, Route, useLocation } from 'react-router-dom';
 import ScrollToTop from './components/ScrollToTop';
@@ -49,7 +50,10 @@ import AdminGuides from './pages/admin/AdminGuides';
 
 const App: React.FC = () => {
   return (
-    <AppRoutes />
+    <>
+      <ScrollToTop />
+      <AppRoutes />
+    </>
   );
 };
 
@@ -65,7 +69,6 @@ const AppRoutes: React.FC = () => {
   
   return (
     <>
-      <ScrollToTop />
       <Routes>
         <Route path="/" element={<HomePage />} />
         <Route path="/sobre" element={<AboutPage />} />
