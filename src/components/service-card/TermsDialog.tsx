@@ -13,6 +13,7 @@ import {
 } from "@/components/ui/dialog";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { ContractContent } from './ContractContent';
+import { ContractContent as ContractContentUtil } from './ContractDetails';
 
 interface TermsDialogProps {
   open: boolean;
@@ -31,6 +32,19 @@ const TermsDialog: React.FC<TermsDialogProps> = ({
   onAcceptedTermsChange,
   onAccept,
 }) => {
+  // Determinar qual contrato exibir com base no título
+  const getContractContent = () => {
+    if (title.includes('Essencial')) {
+      return <div dangerouslySetInnerHTML={{ __html: ContractContentUtil.getEssencialContract() }} />;
+    } else if (title.includes('Profissional')) {
+      return <div dangerouslySetInnerHTML={{ __html: ContractContentUtil.getProfissionalContract() }} />;
+    } else if (title.includes('Premium')) {
+      return <div dangerouslySetInnerHTML={{ __html: ContractContentUtil.getPremiumContract() }} />;
+    } else {
+      return <ContractContent />;
+    }
+  };
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-3xl max-h-[80vh] flex flex-col">
@@ -41,8 +55,8 @@ const TermsDialog: React.FC<TermsDialogProps> = ({
           </DialogDescription>
         </DialogHeader>
         
-        <ScrollArea className="flex-1 max-h-[50vh] mt-4 rounded-md border p-4">
-          <ContractContent />
+        <ScrollArea className="flex-1 max-h-[50vh] overflow-auto mt-4 rounded-md border p-4">
+          {getContractContent()}
         </ScrollArea>
         
         <div className="flex items-center space-x-2 my-4">

@@ -5,8 +5,14 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { CheckCircle, Music, Package, Heart, ArrowRight } from 'lucide-react';
 import { Link } from 'react-router-dom';
+import ServiceExtras from '@/components/ServiceExtras';
 
 const Services: React.FC = () => {
+  const handleExtraServiceClick = (serviceId: string) => {
+    console.log('Extra service clicked on Services page:', serviceId);
+    // Implementação adicional se necessário
+  };
+  
   return (
     <PublicLayout>
       <div className="pt-24 pb-20 px-6 md:px-10">
@@ -114,8 +120,11 @@ const Services: React.FC = () => {
             </Card>
           </div>
           
+          {/* Serviços extras */}
+          <ServiceExtras onExtraServiceClick={handleExtraServiceClick} />
+          
           {/* Serviços adicionais */}
-          <div className="mb-16">
+          <div className="mb-16 mt-20">
             <h2 className="text-2xl font-bold mb-8 text-center">Serviços Complementares</h2>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
               <Card className="p-6 text-center">

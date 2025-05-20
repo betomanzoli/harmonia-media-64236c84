@@ -56,7 +56,7 @@ export const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children }) => {
     
     // Use Navigate component instead of directly modifying window.location
     // This allows React Router to handle the navigation properly
-    return <Navigate to="/admin-j28s7d1k" state={{ from: location }} replace />;
+    return <Navigate to="/admin-j28s7d1k/login" state={{ from: location }} replace />;
   }
 
   return <>{children}</>;

@@ -55,6 +55,7 @@ const AdminSidebar: React.FC = () => {
         <NavItem href="/admin-j28s7d1k/payments" icon={CreditCard} label="Pagamentos" />
         <NavItem href="/admin-j28s7d1k/storage" icon={FileBox} label="Arquivos" />
         <NavItem href="/admin-j28s7d1k/statistics" icon={LineChart} label="Estatísticas" />
+        <NavItem href="/admin-j28s7d1k/portfolio" icon={Music} label="Portfólio" />
         <NavItem href="/admin-j28s7d1k/integrations" icon={Link2} label="Integrações" />
         <NavItem href="/admin-j28s7d1k/guides" icon={HelpCircle} label="Guias" />
       </div>

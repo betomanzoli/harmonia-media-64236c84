@@ -7,10 +7,11 @@ import AddVersionForm from './AddVersionForm';
 import { VersionItem } from '@/hooks/admin/usePreviewProjects';
 
 interface AddVersionDialogProps {
-  projectId?: string;
+  projectId: string;
   onAddVersion: (newVersion: VersionItem) => void;
+  // Adding isOpen and onClose props to match how it's being used
   isOpen?: boolean;
-  onClose?: () => void;
+  onOpenChange?: (open: boolean) => void;
   onSubmit?: (version: VersionItem) => void;
   isFinalVersion?: boolean;
   packageType?: string;
@@ -20,7 +21,7 @@ const AddVersionDialog: React.FC<AddVersionDialogProps> = ({
   projectId,
   onAddVersion,
   isOpen,
-  onClose,
+  onOpenChange,
   onSubmit,
   isFinalVersion = false,
   packageType
@@ -32,9 +33,9 @@ const AddVersionDialog: React.FC<AddVersionDialogProps> = ({
   const isDialogOpen = isOpen !== undefined ? isOpen : localOpen;
   
   const handleOpenChange = (open: boolean) => {
-    if (isOpen !== undefined && onClose) {
+    if (isOpen !== undefined && onOpenChange) {
       // If controlled from parent
-      if (!open) onClose();
+      onOpenChange(open);
     } else {
       // If controlled locally
       setLocalOpen(open);
@@ -48,8 +49,8 @@ const AddVersionDialog: React.FC<AddVersionDialogProps> = ({
       onAddVersion(version);
     }
     
-    if (isOpen !== undefined && onClose) {
-      onClose();
+    if (isOpen !== undefined && onOpenChange) {
+      onOpenChange(false);
     } else {
       setLocalOpen(false);
     }
@@ -70,10 +71,11 @@ const AddVersionDialog: React.FC<AddVersionDialogProps> = ({
           <DialogTitle>{isFinalVersion ? "Adicionar Versão Final" : "Adicionar Nova Versão"}</DialogTitle>
         </DialogHeader>
         <AddVersionForm 
-          projectId={projectId || ''} 
+          projectId={projectId} 
           onAddVersion={handleAddVersion} 
           onCancel={() => handleOpenChange(false)} 
           isFinalVersion={isFinalVersion} 
+          packageType={packageType}
         />
       </DialogContent>
     </Dialog>

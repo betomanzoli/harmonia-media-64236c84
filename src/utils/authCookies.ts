@@ -1,32 +1,21 @@
+
 // Auth cookie utilities for Supabase authentication
 // This helps with browser private mode compatibility
 
 /**
- * Set authentication cookie with better compatibility for all browser modes
+ * Set authentication cookie
  */
 export const setAuthCookie = (name: string, value: string, days: number = 7) => {
   const date = new Date();
   date.setTime(date.getTime() + (days * 24 * 60 * 60 * 1000));
   const expires = `; expires=${date.toUTCString()}`;
-  
-  // Using SameSite=Lax instead of None for better compatibility with all browsers
-  // NOT using Secure flag to ensure it works on HTTP and HTTPS
-  document.cookie = `${name}=${value}${expires}; path=/; SameSite=Lax`;
-  
-  // Also store in sessionStorage and localStorage as fallback for browsers with strict cookie policies
-  try {
-    localStorage.setItem(name, value);
-    sessionStorage.setItem(name, value);
-  } catch (e) {
-    console.error("Failed to store in storage:", e);
-  }
+  document.cookie = `${name}=${value}${expires}; path=/; SameSite=None; Secure`;
 };
 
 /**
  * Get authentication cookie
  */
 export const getAuthCookie = (name: string): string | null => {
-  // Try cookies first
   const nameEQ = `${name}=`;
   const cookies = document.cookie.split(';');
   for (let i = 0; i < cookies.length; i++) {
@@ -38,22 +27,6 @@ export const getAuthCookie = (name: string): string | null => {
       return cookie.substring(nameEQ.length, cookie.length);
     }
   }
-  
-  // Try sessionStorage as fallback
-  try {
-    const sessionValue = sessionStorage.getItem(name);
-    if (sessionValue) return sessionValue;
-  } catch (e) {
-    console.error("Failed to get from sessionStorage:", e);
-  }
-  
-  // Try localStorage as final fallback
-  try {
-    return localStorage.getItem(name);
-  } catch (e) {
-    console.error("Failed to get from localStorage:", e);
-  }
-  
   return null;
 };
 
@@ -61,15 +34,7 @@ export const getAuthCookie = (name: string): string | null => {
  * Remove authentication cookie
  */
 export const removeAuthCookie = (name: string) => {
-  document.cookie = `${name}=; Path=/; Expires=Thu, 01 Jan 1970 00:00:01 GMT;`;
-  
-  // Also remove from storage
-  try {
-    localStorage.removeItem(name);
-    sessionStorage.removeItem(name);
-  } catch (e) {
-    console.error("Failed to remove from storage:", e);
-  }
+  document.cookie = `${name}=; Path=/; Expires=Thu, 01 Jan 1970 00:00:01 GMT; SameSite=None; Secure`;
 };
 
 /**
@@ -129,22 +94,14 @@ export const getPreviewEmailCookie = (projectId: string): string | null => {
 };
 
 /**
- * Check if an email is authorized for a project
+ * Check if an email is authorized for a specific project
  */
 export const isEmailAuthorizedForProject = (email: string, projectId: string): boolean => {
-  try {
-    // First check if project is authorized
-    if (checkPreviewAccessCookie(projectId)) {
-      // Then validate if the email matches
-      const storedEmail = getPreviewEmailCookie(projectId);
-      return storedEmail === email;
-    }
-    
-    return false;
-  } catch (error) {
-    console.error('Error checking email authorization for project:', error);
-    return false;
-  }
+  const isAuthorized = checkPreviewAccessCookie(projectId);
+  if (!isAuthorized) return false;
+  
+  const storedEmail = getPreviewEmailCookie(projectId);
+  return storedEmail === email;
 };
 
 /**
