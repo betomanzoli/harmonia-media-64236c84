@@ -55,7 +55,7 @@ const MarketingLeadsList: React.FC = () => {
     orderBy: { column: 'created_at', ascending: false }
   });
 
-  const handleStatusChange = async (leadId: string, newStatus: string) => {
+  const handleStatusChange = async (leadId: string, newStatus: 'new' | 'contacted' | 'qualified' | 'converted' | 'unqualified') => {
     try {
       await updateItem(leadId, { status: newStatus });
       toast({
