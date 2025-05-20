@@ -1,133 +1,167 @@
 
-import React, { useState } from 'react';
-import { useForm } from 'react-hook-form';
-import { zodResolver } from '@hookform/resolvers/zod';
-import { 
-  FormValues as QualificationFormData, 
-  formSchema as qualificationFormSchema 
-} from './qualificationFormSchema';
-import BasicInfoSection from './BasicInfoSection';
-import PurposeSection from './PurposeSection';
-import ProjectDescriptionSection from './ProjectDescriptionSection';
-import TimelineSection from './TimelineSection';
-import BudgetSection from './BudgetSection';
-import FeaturesSection from './FeaturesSection';
-import ContractAcceptance from './ContractAcceptance';
-import QualificationFormHeader from './QualificationFormHeader';
-import { Button } from '@/components/ui/button';
-import { supabase } from '@/lib/supabase';
-import { useToast } from '@/hooks/use-toast';
+import React, { useState } from "react";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { useNavigate } from "react-router-dom";
+import { useToast } from "@/hooks/use-toast";
+import { Form } from "@/components/ui/form";
+import { Button } from "@/components/ui/button";
+import { formSchema, FormValues } from "./qualificationFormSchema";
+import QualificationFormHeader from "./QualificationFormHeader";
+import BasicInfoSection from "./BasicInfoSection";
+import PurposeSection from "./PurposeSection";
+import TimelineSection from "./TimelineSection";
+import ProjectDescriptionSection from "./ProjectDescriptionSection";
+import BudgetSection from "./BudgetSection";
+import FeaturesSection from "./FeaturesSection";
+import ContractAcceptance from "./ContractAcceptance";
+import * as z from "zod";
+import { getRecommendedPackage } from "@/utils/packageRecommendation";
+import { supabase } from "@/lib/supabase";
+import emailService from "@/services/emailService";
+import { Loader2 } from "lucide-react";
 
-const QualificationForm: React.FC = () => {
-  const [isSubmitting, setIsSubmitting] = useState(false);
+// Extend the form schema to include terms acceptance
+const extendedFormSchema = formSchema.extend({
+  termsAccepted: z.boolean().refine(val => val === true, {
+    message: "Você precisa aceitar os termos para continuar",
+  })
+});
+
+type ExtendedFormValues = z.infer<typeof extendedFormSchema>;
+
+export function QualificationForm() {
+  const navigate = useNavigate();
   const { toast } = useToast();
+  const [isSubmitting, setIsSubmitting] = useState(false);
   
-  const form = useForm<QualificationFormData>({
-    resolver: zodResolver(qualificationFormSchema),
+  const form = useForm<ExtendedFormValues>({
+    resolver: zodResolver(extendedFormSchema),
     defaultValues: {
-      name: '',
-      email: '',
-      phone: '',
-      referralSource: '',
+      name: "",
+      email: "",
+      phone: "",
+      referralSource: "",
       purpose: [],
-      otherPurpose: '',
-      description: '',
-      timeline: '',
-      budget: '',
+      otherPurpose: "",
+      timeline: "",
+      description: "",
+      budget: "",
       features: [],
       termsAccepted: false,
-    }
+    },
   });
 
-  const onSubmit = async (data: QualificationFormData) => {
+  async function onSubmit(data: ExtendedFormValues) {
+    console.log("Form data:", data);
     setIsSubmitting(true);
     
+    // Remove the termsAccepted field before storing the qualification data
+    const { termsAccepted, ...qualificationData } = data;
+    
     try {
-      // Format data for storage
-      const formattedData = {
-        ...data,
-        features: data.features?.join(',')
-      };
+      let saveSuccess = true;
+      
+      try {
+        // 1. Salvar os dados na tabela do Supabase
+        const { error } = await supabase
+          .from('qualification_submissions')
+          .insert([
+            { 
+              ...qualificationData,
+              status: 'pending', 
+              created_at: new Date().toISOString()
+            }
+          ]);
 
-      // Create or get client
-      let clientId = null;
-      const { data: existingClient } = await supabase
-        .from('clients')
-        .select('id')
-        .eq('email', data.email)
-        .maybeSingle();
-
-      if (existingClient) {
-        clientId = existingClient.id;
-      } else {
-        const { data: newClient, error: clientError } = await supabase
-          .from('clients')
-          .insert([{
-            name: data.name,
-            email: data.email,
-            phone: data.phone // Store full international format phone
-          }])
-          .select('id')
-          .single();
-
-        if (clientError) throw clientError;
-        clientId = newClient.id;
+        if (error) {
+          console.error("Erro ao salvar qualificação:", error);
+          saveSuccess = false;
+        }
+      } catch (err) {
+        console.error("Erro na conexão com o Supabase:", err);
+        saveSuccess = false;
       }
 
-      // Create briefing
-      const { error: briefingError } = await supabase
-        .from('briefings')
-        .insert([{
-          client_id: clientId,
-          package_type: 'qualification',
-          data: formattedData
-        }]);
-
-      if (briefingError) throw briefingError;
-
+      // 2. Enviar email de confirmação para o cliente (assíncrono)
+      if (data.email) {
+        try {
+          emailService.sendBriefingConfirmation(data.email, data.name || "Cliente")
+            .then(result => {
+              if (!result.success) {
+                console.warn("Falha ao enviar email de confirmação");
+              }
+            });
+        } catch (err) {
+          console.warn("Erro ao tentar enviar email:", err);
+        }
+      }
+      
+      // Store form data in localStorage to use it on the payment page
+      localStorage.setItem("qualificationData", JSON.stringify({
+        ...qualificationData,
+        termsAccepted: true // Include termsAccepted to match QualificationData type
+      }));
+      
+      // Show success toast
       toast({
         title: "Formulário enviado com sucesso!",
-        description: "Entraremos em contato em breve.",
+        description: saveSuccess 
+          ? "Você será redirecionado para a página de pagamento."
+          : "Dados salvos localmente. Redirecionando para pagamento.",
       });
-
-      form.reset();
-    } catch (error) {
-      console.error('Error submitting form:', error);
+      
+      // Determinar pacote recomendado
+      const recommendedPackage = getRecommendedPackage({
+        ...qualificationData,
+        termsAccepted: true // Include termsAccepted to match QualificationData type
+      });
+      
+      // Redirect to payment page with recommended package
+      setTimeout(() => {
+        navigate(`/pagamento/${recommendedPackage}`);
+      }, 1500);
+    } catch (err) {
+      console.error("Erro na submissão:", err);
       toast({
-        title: "Erro ao enviar formulário",
-        description: "Ocorreu um erro ao enviar o formulário. Por favor, tente novamente.",
-        variant: "destructive"
+        title: "Erro inesperado",
+        description: "Ocorreu um erro ao processar sua solicitação. Por favor, tente novamente.",
+        variant: "destructive",
       });
-    } finally {
       setIsSubmitting(false);
     }
-  };
+  }
 
   return (
-    <div className="container mx-auto px-4 py-12 max-w-4xl">
+    <div className="w-full max-w-3xl mx-auto bg-card border border-border rounded-lg p-6 shadow-lg">
       <QualificationFormHeader />
-      
-      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8 mt-8">
-        <BasicInfoSection form={form} />
-        <PurposeSection form={form} />
-        <ProjectDescriptionSection form={form} />
-        <TimelineSection form={form} />
-        <BudgetSection form={form} />
-        <FeaturesSection form={form} />
-        <ContractAcceptance form={form} />
-        
-        <div className="flex justify-end">
+
+      <Form {...form}>
+        <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+          <BasicInfoSection form={form} />
+          <PurposeSection form={form} />
+          <TimelineSection form={form} />
+          <ProjectDescriptionSection form={form} />
+          <BudgetSection form={form} />
+          <FeaturesSection form={form} />
+          <ContractAcceptance form={form} />
+
           <Button 
             type="submit" 
+            className="w-full bg-harmonia-green hover:bg-harmonia-green/90"
             disabled={isSubmitting}
-            className="px-8 py-2"
           >
-            {isSubmitting ? "Enviando..." : "Enviar"}
+            {isSubmitting ? (
+              <>
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                Enviando...
+              </>
+            ) : (
+              "Enviar e Prosseguir para Pagamento"
+            )}
           </Button>
-        </div>
-      </form>
+        </form>
+      </Form>
     </div>
   );
 };
-
-export default QualificationForm;

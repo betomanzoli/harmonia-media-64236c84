@@ -24,25 +24,12 @@ import AdminStorage from './pages/admin/AdminStorage';
 import AdminIntegrations from './pages/admin/AdminIntegrations';
 import AdminStatistics from './pages/admin/AdminStatistics';
 import AdminGuides from './pages/admin/AdminGuides';
-import ServicesPage from './pages/ServicesPage';
-import ContactPage from './pages/ContactPage';
-import PreviewProjectPage from './pages/admin/PreviewProjectPage';
-import BriefingComplete from './pages/BriefingComplete';
-import BriefingSuccess from './pages/BriefingSuccess';
 
 // These routes are supplementary to the main routes defined in App.tsx
 const additionalRoutes: RouteObject[] = [
   {
     path: '/briefing',
     element: <Briefing />,
-  },
-  {
-    path: '/briefing-complete',
-    element: <BriefingComplete />,
-  },
-  {
-    path: '/briefing-success',
-    element: <BriefingSuccess />,
   },
   {
     path: '/calculadora',
@@ -93,19 +80,6 @@ const additionalRoutes: RouteObject[] = [
     element: <FeedbackConfirmation />,
   },
   {
-    path: '/servicos',
-    element: <ServicesPage />,
-  },
-  {
-    path: '/contato',
-    element: <ContactPage />,
-  },
-  {
-    path: '/como-funciona',
-    element: <ServicesPage />,
-  },
-  
-  {
     path: '/admin-j28s7d1k/briefings',
     element: <AdminBriefings />,
   },
@@ -116,10 +90,6 @@ const additionalRoutes: RouteObject[] = [
   {
     path: '/admin-j28s7d1k/portfolio',
     element: <AdminPortfolio />,
-  },
-  {
-    path: '/admin-j28s7d1k/previews/:projectId',
-    element: <PreviewProjectPage />,
   },
   {
     path: '/admin-j28s7d1k/clients',

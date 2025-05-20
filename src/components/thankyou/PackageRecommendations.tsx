@@ -25,32 +25,28 @@ const PackageRecommendations: React.FC<PackageRecommendationsProps> = ({
   const packages: Record<string, PackageInfo> = {
     essencial: {
       title: 'Pacote Essencial',
-      subtitle: 'Ideal para presentes emocionais rápidos',
-      price: `R$ 219,00`,
+      subtitle: 'Ideal para uso pessoal',
+      price: `A partir de R$${siteConfig.pricing.basePrice}`,
       features: [
         'Composição musical única',
         'Uma revisão gratuita',
         'Uso exclusivamente pessoal',
         'Entrega digital em até 7 dias',
-        'Suporte por e-mail',
-        'Arquivo digital em alta qualidade (MP3/WAV)',
-        'Certificado digital de autoria'
+        'Suporte por e-mail'
       ],
       highlight: userData?.budget === 'under-200' || userData?.purpose.includes('personal-gift')
     },
     profissional: {
       title: 'Pacote Profissional',
-      subtitle: 'Perfeito para criadores de conteúdo e pequenos negócios',
-      price: `R$ 479,00`,
+      subtitle: 'Para uso em projetos pessoais e profissionais',
+      price: `A partir de R$${siteConfig.pricing.professionalPrice}`,
       features: [
         'Composição musical personalizada',
         'Até três revisões gratuitas',
         'Licença para uso em conteúdo digital próprio',
         'Três versões para escolha',
         'Entrega em até 5 dias',
-        'Suporte prioritário',
-        'Masterização básica IA',
-        'Stems separados (vocais + instrumentação)'
+        'Suporte prioritário'
       ],
       highlight: userData?.budget === '200-500' || 
                 userData?.features?.includes('commercial-use') || 
@@ -58,8 +54,8 @@ const PackageRecommendations: React.FC<PackageRecommendationsProps> = ({
     },
     premium: {
       title: 'Pacote Premium',
-      subtitle: 'Melhor opção para empresas e projetos corporativos',
-      price: `R$ 969,00`,
+      subtitle: 'Total controle e propriedade sobre a obra',
+      price: `A partir de R$${siteConfig.pricing.premiumPrice}`,
       features: [
         'Composição totalmente personalizada',
         'Revisões ilimitadas (até aprovação)',
@@ -69,8 +65,7 @@ const PackageRecommendations: React.FC<PackageRecommendationsProps> = ({
         'Certificado blockchain',
         'Consultoria de 30 minutos',
         'Entrega prioritária',
-        'Suporte VIP por WhatsApp',
-        'Partitura em formato MusicXML'
+        'Suporte VIP por WhatsApp'
       ],
       highlight: userData?.budget === 'above-500' || 
                 userData?.features?.includes('legal-registration') || 

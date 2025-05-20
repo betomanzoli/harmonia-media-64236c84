@@ -60,25 +60,9 @@ export const usePreviewProject = (projectId: string | undefined) => {
         recommended: v.recommended
       })) || [];
       
-      // If no previews but versionsList exists, create from versionsList
-      if (previews.length === 0 && adminProject.versionsList && adminProject.versionsList.length > 0) {
-        for (let i = 0; i < adminProject.versionsList.length; i++) {
-          const version = adminProject.versionsList[i];
-          const fileId = version.fileId || audioFiles[i % audioFiles.length]?.id || '1H62ylCwQYJ23BLpygtvNmCgwTDcHX6Cl';
-          
-          previews.push({
-            id: version.id || `v${i+1}`,
-            title: version.name || `Versão ${i+1}`,
-            description: version.description || 'Versão para aprovação',
-            audioUrl: `https://drive.google.com/uc?export=download&id=${fileId}`,
-            fileId: fileId,
-            recommended: version.recommended || i === 0 // Mark first version as recommended
-          });
-        }
-      }
-      // If still no previews but versions number exists, create fallback previews
-      else if (previews.length === 0 && adminProject.versions && Array.isArray(adminProject.versions) && adminProject.versions.length > 0) {
-        for (let i = 0; i < adminProject.versions.length; i++) {
+      // If no previews but versions exist, create a fallback
+      if (previews.length === 0 && adminProject.versions > 0) {
+        for (let i = 0; i < adminProject.versions; i++) {
           const fallbackFileId = audioFiles[i % audioFiles.length]?.id || '1H62ylCwQYJ23BLpygtvNmCgwTDcHX6Cl';
           previews.push({
             id: `v${i+1}`,
@@ -93,7 +77,7 @@ export const usePreviewProject = (projectId: string | undefined) => {
 
       // Create project data
       setProjectData({
-        clientName: adminProject.clientName || 'Cliente',
+        clientName: adminProject.clientName,
         projectTitle: adminProject.title || adminProject.packageType || 'Música Personalizada',
         packageType: adminProject.packageType || 'Música Personalizada',
         status: adminProject.status as 'waiting' | 'feedback' | 'approved',

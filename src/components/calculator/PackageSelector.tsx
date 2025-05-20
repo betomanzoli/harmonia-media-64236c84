@@ -35,7 +35,7 @@ const PackageSelector: React.FC<PackageSelectorProps> = ({
           <div className="grid gap-1.5">
             <Label htmlFor="essential" className="font-medium">Pacote Essencial - R${packagePrices.essential}</Label>
             <p className="text-sm text-gray-400">
-              Ideal para presentes emocionais rápidos. Inclui composição musical única, uma revisão gratuita, uso exclusivamente pessoal, entrega digital em até 7 dias, suporte por e-mail, arquivo digital em alta qualidade (MP3/WAV), certificado digital de autoria.
+              Ideal para presentes emocionais rápidos. Inclui música gerada por IA com revisão humana, certificado digital e uma revisão gratuita.
             </p>
           </div>
         </div>
@@ -48,7 +48,7 @@ const PackageSelector: React.FC<PackageSelectorProps> = ({
           <div className="grid gap-1.5">
             <Label htmlFor="professional" className="font-medium">Pacote Profissional - R${packagePrices.professional}</Label>
             <p className="text-sm text-gray-400">
-              Perfeito para criadores de conteúdo e pequenos negócios. Inclui composição musical personalizada, até três revisões gratuitas, licença para uso em conteúdo digital próprio, três versões para escolha, entrega em até 5 dias, suporte prioritário, masterização básica IA, stems separados (vocais + instrumentação).
+              Perfeito para criadores de conteúdo e pequenos negócios. Inclui 3 variações, stems separados e 3 revisões gratuitas.
             </p>
           </div>
         </div>
@@ -58,7 +58,7 @@ const PackageSelector: React.FC<PackageSelectorProps> = ({
           <div className="grid gap-1.5">
             <Label htmlFor="premium" className="font-medium">Pacote Premium - R${packagePrices.premium}</Label>
             <p className="text-sm text-gray-400">
-              Melhor opção para empresas e projetos corporativos. Inclui composição totalmente personalizada, revisões ilimitadas (até aprovação), cessão total dos direitos autorais, cinco versões para escolha, registro na Biblioteca Nacional, certificado blockchain, consultoria de 30 minutos, entrega prioritária, suporte VIP por WhatsApp, partitura em formato MusicXML.
+              Melhor opção para empresas e projetos corporativos. Inclui 5 variações, registro BN, partituras MusicXML, suporte pós-venda e revisões ilimitadas.
             </p>
           </div>
         </div>

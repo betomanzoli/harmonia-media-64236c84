@@ -2,7 +2,7 @@
 import React from 'react';
 import { Button } from "@/components/ui/button";
 import { Link } from 'react-router-dom';
-import { FileAudio, Info, ArrowLeft, Plus } from 'lucide-react';
+import { FileAudio, Info, ArrowLeft } from 'lucide-react';
 import {
   Dialog,
   DialogContent,
@@ -11,11 +11,7 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog";
 
-interface PortfolioHeaderProps {
-  onAdd?: () => void;
-}
-
-const PortfolioHeader: React.FC<PortfolioHeaderProps> = ({ onAdd }) => {
+const PortfolioHeader: React.FC = () => {
   return (
     <div className="mb-10 flex flex-col md:flex-row md:items-center md:justify-between">
       <div>
@@ -26,13 +22,6 @@ const PortfolioHeader: React.FC<PortfolioHeaderProps> = ({ onAdd }) => {
       </div>
       
       <div className="mt-4 md:mt-0 flex gap-2">
-        {onAdd && (
-          <Button onClick={onAdd} variant="default" className="flex items-center gap-1">
-            <Plus className="w-4 h-4 mr-1" />
-            Adicionar Item
-          </Button>
-        )}
-        
         <Link to="/admin-j28s7d1k/audio-database">
           <Button variant="outline" className="flex items-center gap-1">
             <FileAudio className="w-4 h-4 mr-1" />

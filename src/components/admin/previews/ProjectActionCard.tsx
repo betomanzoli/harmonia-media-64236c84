@@ -17,7 +17,6 @@ interface ProjectActionCardProps {
   previewUrl: string;
   clientPhone?: string;
   clientEmail?: string;
-  clientName: string;
 }
 
 const ProjectActionCard: React.FC<ProjectActionCardProps> = ({
@@ -28,8 +27,7 @@ const ProjectActionCard: React.FC<ProjectActionCardProps> = ({
   projectStatus,
   packageType,
   clientPhone,
-  clientEmail,
-  clientName
+  clientEmail
 }) => {
   const { toast } = useToast();
   const [showAddVersion, setShowAddVersion] = useState(false);
@@ -91,7 +89,6 @@ const ProjectActionCard: React.FC<ProjectActionCardProps> = ({
         
         {/* Contact client actions */}
         <ContactClientActions 
-          clientName={clientName}
           clientPhone={clientPhone}
           clientEmail={clientEmail}
           projectId={projectId}

@@ -9,86 +9,6 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
-      access_logs: {
-        Row: {
-          access_method: string
-          accessed_at: string
-          id: string
-          ip_address: string | null
-          preview_id: string
-          user_email: string | null
-        }
-        Insert: {
-          access_method: string
-          accessed_at?: string
-          id?: string
-          ip_address?: string | null
-          preview_id: string
-          user_email?: string | null
-        }
-        Update: {
-          access_method?: string
-          accessed_at?: string
-          id?: string
-          ip_address?: string | null
-          preview_id?: string
-          user_email?: string | null
-        }
-        Relationships: []
-      }
-      briefing_fields: {
-        Row: {
-          created_at: string | null
-          field_key: string
-          field_name: string
-          field_type: Database["public"]["Enums"]["field_type"]
-          id: string
-          is_active: boolean | null
-          is_required: boolean | null
-          max_length: number | null
-          options: Json | null
-          order_num: number
-          placeholder: string | null
-          section_id: string
-        }
-        Insert: {
-          created_at?: string | null
-          field_key: string
-          field_name: string
-          field_type: Database["public"]["Enums"]["field_type"]
-          id?: string
-          is_active?: boolean | null
-          is_required?: boolean | null
-          max_length?: number | null
-          options?: Json | null
-          order_num: number
-          placeholder?: string | null
-          section_id: string
-        }
-        Update: {
-          created_at?: string | null
-          field_key?: string
-          field_name?: string
-          field_type?: Database["public"]["Enums"]["field_type"]
-          id?: string
-          is_active?: boolean | null
-          is_required?: boolean | null
-          max_length?: number | null
-          options?: Json | null
-          order_num?: number
-          placeholder?: string | null
-          section_id?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "briefing_fields_section_id_fkey"
-            columns: ["section_id"]
-            isOneToOne: false
-            referencedRelation: "briefing_sections"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
       briefing_questions: {
         Row: {
           id: string
@@ -160,98 +80,6 @@ export type Database = {
           },
         ]
       }
-      briefing_sections: {
-        Row: {
-          created_at: string | null
-          description: string | null
-          id: string
-          is_active: boolean | null
-          order_num: number
-          package_type: Database["public"]["Enums"]["package_type"]
-          section_type: Database["public"]["Enums"]["section_type"]
-          title: string
-        }
-        Insert: {
-          created_at?: string | null
-          description?: string | null
-          id?: string
-          is_active?: boolean | null
-          order_num: number
-          package_type: Database["public"]["Enums"]["package_type"]
-          section_type: Database["public"]["Enums"]["section_type"]
-          title: string
-        }
-        Update: {
-          created_at?: string | null
-          description?: string | null
-          id?: string
-          is_active?: boolean | null
-          order_num?: number
-          package_type?: Database["public"]["Enums"]["package_type"]
-          section_type?: Database["public"]["Enums"]["section_type"]
-          title?: string
-        }
-        Relationships: []
-      }
-      briefings: {
-        Row: {
-          client_id: string | null
-          completed_at: string | null
-          completion_status: string | null
-          created_at: string | null
-          data: Json
-          full_responses: Json | null
-          id: string
-          initial_responses: Json | null
-          is_deleted: boolean | null
-          package_type: Database["public"]["Enums"]["package_type"]
-          payment_status: string | null
-          project_id: string | null
-          status: Database["public"]["Enums"]["briefing_status"] | null
-          updated_at: string | null
-        }
-        Insert: {
-          client_id?: string | null
-          completed_at?: string | null
-          completion_status?: string | null
-          created_at?: string | null
-          data: Json
-          full_responses?: Json | null
-          id?: string
-          initial_responses?: Json | null
-          is_deleted?: boolean | null
-          package_type: Database["public"]["Enums"]["package_type"]
-          payment_status?: string | null
-          project_id?: string | null
-          status?: Database["public"]["Enums"]["briefing_status"] | null
-          updated_at?: string | null
-        }
-        Update: {
-          client_id?: string | null
-          completed_at?: string | null
-          completion_status?: string | null
-          created_at?: string | null
-          data?: Json
-          full_responses?: Json | null
-          id?: string
-          initial_responses?: Json | null
-          is_deleted?: boolean | null
-          package_type?: Database["public"]["Enums"]["package_type"]
-          payment_status?: string | null
-          project_id?: string | null
-          status?: Database["public"]["Enums"]["briefing_status"] | null
-          updated_at?: string | null
-        }
-        Relationships: [
-          {
-            foreignKeyName: "briefings_client_id_fkey"
-            columns: ["client_id"]
-            isOneToOne: false
-            referencedRelation: "clients"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
       clients: {
         Row: {
           company: string | null
@@ -278,56 +106,6 @@ export type Database = {
           phone?: string | null
         }
         Relationships: []
-      }
-      invoices: {
-        Row: {
-          amount: string
-          client: string
-          client_id: string | null
-          created_at: string | null
-          date: string | null
-          description: string | null
-          due_date: string
-          has_receipt: boolean | null
-          id: string
-          invoice_pdf: string | null
-          status: string | null
-        }
-        Insert: {
-          amount: string
-          client: string
-          client_id?: string | null
-          created_at?: string | null
-          date?: string | null
-          description?: string | null
-          due_date: string
-          has_receipt?: boolean | null
-          id?: string
-          invoice_pdf?: string | null
-          status?: string | null
-        }
-        Update: {
-          amount?: string
-          client?: string
-          client_id?: string | null
-          created_at?: string | null
-          date?: string | null
-          description?: string | null
-          due_date?: string
-          has_receipt?: boolean | null
-          id?: string
-          invoice_pdf?: string | null
-          status?: string | null
-        }
-        Relationships: [
-          {
-            foreignKeyName: "invoices_client_id_fkey"
-            columns: ["client_id"]
-            isOneToOne: false
-            referencedRelation: "clients"
-            referencedColumns: ["id"]
-          },
-        ]
       }
       packages: {
         Row: {
@@ -397,105 +175,6 @@ export type Database = {
           },
         ]
       }
-      preview_codes: {
-        Row: {
-          code: string
-          created_at: string
-          expires_at: string | null
-          id: string
-          is_active: boolean | null
-          project_id: string
-        }
-        Insert: {
-          code: string
-          created_at?: string
-          expires_at?: string | null
-          id?: string
-          is_active?: boolean | null
-          project_id: string
-        }
-        Update: {
-          code?: string
-          created_at?: string
-          expires_at?: string | null
-          id?: string
-          is_active?: boolean | null
-          project_id?: string
-        }
-        Relationships: []
-      }
-      preview_projects: {
-        Row: {
-          client_name: string
-          created_at: string | null
-          expiration_date: string | null
-          feedback: string | null
-          id: string
-          last_activity_date: string | null
-          package_type: string | null
-          project_title: string
-          status: string
-        }
-        Insert: {
-          client_name: string
-          created_at?: string | null
-          expiration_date?: string | null
-          feedback?: string | null
-          id: string
-          last_activity_date?: string | null
-          package_type?: string | null
-          project_title: string
-          status: string
-        }
-        Update: {
-          client_name?: string
-          created_at?: string | null
-          expiration_date?: string | null
-          feedback?: string | null
-          id?: string
-          last_activity_date?: string | null
-          package_type?: string | null
-          project_title?: string
-          status?: string
-        }
-        Relationships: []
-      }
-      previews: {
-        Row: {
-          allowed_emails: string[]
-          created_at: string
-          description: string | null
-          expires_at: string | null
-          id: string
-          is_active: boolean | null
-          preview_id: string
-          project_id: string | null
-          title: string
-        }
-        Insert: {
-          allowed_emails: string[]
-          created_at?: string
-          description?: string | null
-          expires_at?: string | null
-          id?: string
-          is_active?: boolean | null
-          preview_id: string
-          project_id?: string | null
-          title: string
-        }
-        Update: {
-          allowed_emails?: string[]
-          created_at?: string
-          description?: string | null
-          expires_at?: string | null
-          id?: string
-          is_active?: boolean | null
-          preview_id?: string
-          project_id?: string | null
-          title?: string
-        }
-        Relationships: []
-      }
       project_files: {
         Row: {
           created_at: string | null
@@ -562,42 +241,6 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
-      }
-      project_versions: {
-        Row: {
-          audio_url: string | null
-          created_at: string | null
-          description: string | null
-          file_id: string | null
-          id: string
-          name: string
-          project_id: string
-          recommended: boolean | null
-          version_id: string
-        }
-        Insert: {
-          audio_url?: string | null
-          created_at?: string | null
-          description?: string | null
-          file_id?: string | null
-          id?: string
-          name: string
-          project_id: string
-          recommended?: boolean | null
-          version_id: string
-        }
-        Update: {
-          audio_url?: string | null
-          created_at?: string | null
-          description?: string | null
-          file_id?: string | null
-          id?: string
-          name?: string
-          project_id?: string
-          recommended?: boolean | null
-          version_id?: string
-        }
-        Relationships: []
       }
       projects: {
         Row: {
@@ -682,40 +325,7 @@ export type Database = {
       [_ in never]: never
     }
     Enums: {
-      briefing_status: "pending" | "completed" | "approved"
-      field_type:
-        | "text"
-        | "textarea"
-        | "select"
-        | "multi_select"
-        | "radio"
-        | "checkbox"
-        | "file"
-        | "date"
-      package_type: "essencial" | "profissional" | "premium" | "qualification"
-      section_type:
-        | "basic_info"
-        | "purpose"
-        | "timeline"
-        | "description"
-        | "budget"
-        | "features"
-        | "story_concept"
-        | "emotions"
-        | "music_preferences"
-        | "specific_elements"
-        | "certificate_info"
-        | "history_concept"
-        | "stylistic_preferences"
-        | "technical_details"
-        | "commercial_requirements"
-        | "call_scheduling"
-        | "strategic_concept"
-        | "emotional_palette"
-        | "aesthetic_preferences"
-        | "technical_specs"
-        | "registration_info"
-        | "consultation_scheduling"
+      [_ in never]: never
     }
     CompositeTypes: {
       [_ in never]: never
@@ -830,43 +440,6 @@ export type CompositeTypes<
 
 export const Constants = {
   public: {
-    Enums: {
-      briefing_status: ["pending", "completed", "approved"],
-      field_type: [
-        "text",
-        "textarea",
-        "select",
-        "multi_select",
-        "radio",
-        "checkbox",
-        "file",
-        "date",
-      ],
-      package_type: ["essencial", "profissional", "premium", "qualification"],
-      section_type: [
-        "basic_info",
-        "purpose",
-        "timeline",
-        "description",
-        "budget",
-        "features",
-        "story_concept",
-        "emotions",
-        "music_preferences",
-        "specific_elements",
-        "certificate_info",
-        "history_concept",
-        "stylistic_preferences",
-        "technical_details",
-        "commercial_requirements",
-        "call_scheduling",
-        "strategic_concept",
-        "emotional_palette",
-        "aesthetic_preferences",
-        "technical_specs",
-        "registration_info",
-        "consultation_scheduling",
-      ],
-    },
+    Enums: {},
   },
 } as const

@@ -1,7 +1,7 @@
 
 import { useState, useEffect } from 'react';
 import { useToast } from '@/hooks/use-toast';
-import webhookService, { NotificationType } from '@/services/webhookService';
+import webhookService from '@/services/webhookService';
 
 export function useWebhookManager(serviceType: string) {
   const [webhookUrl, setWebhookUrl] = useState<string>('');
@@ -19,7 +19,7 @@ export function useWebhookManager(serviceType: string) {
   }, [serviceType]);
 
   // Save the webhook URL
-  const saveWebhookUrl = async () => {
+  const saveWebhookUrl = () => {
     if (!webhookUrl) {
       toast({
         title: "URL não informada",
@@ -29,16 +29,14 @@ export function useWebhookManager(serviceType: string) {
       return false;
     }
     
-    const success = await webhookService.saveWebhookUrl(webhookUrl);
+    webhookService.saveWebhookUrl(webhookUrl);
     
-    if (success) {
-      toast({
-        title: "URL do webhook salva",
-        description: "A URL do webhook foi configurada com sucesso.",
-      });
-    }
+    toast({
+      title: "URL do webhook salva",
+      description: "A URL do webhook foi configurada com sucesso.",
+    });
     
-    return success;
+    return true;
   };
 
   // Send data to the webhook
@@ -53,7 +51,7 @@ export function useWebhookManager(serviceType: string) {
       
       // Create the payload
       const payload = {
-        type: 'test_message' as NotificationType,
+        type: 'test_message' as const,
         data: {
           ...data,
           serviceType,
