@@ -35,6 +35,7 @@ import BriefingSuccess from './pages/BriefingSuccess';
 import BriefingComplete from './pages/BriefingComplete';
 import ClientDashboard from './pages/ClientDashboard';
 import FinalDeliveryPage from './pages/FinalDeliveryPage';
+import Descobrir from './pages/Descobrir';
 
 // Import admin pages
 import AdminBriefings from './pages/admin/AdminBriefings';
@@ -47,6 +48,7 @@ import AdminStorage from './pages/admin/AdminStorage';
 import AdminIntegrations from './pages/admin/AdminIntegrations';
 import AdminStatistics from './pages/admin/AdminStatistics';
 import AdminGuides from './pages/admin/AdminGuides';
+import AdminMarketingLeads from './pages/admin/AdminMarketingLeads';
 
 const App: React.FC = () => {
   return (
@@ -61,10 +63,11 @@ const AppRoutes: React.FC = () => {
   const location = useLocation();
   const [showChatbot, setShowChatbot] = useState(true);
   
-  // Check if current route is an admin route
+  // Check if current route is an admin route or marketing landing page
   useEffect(() => {
     const isAdminRoute = location.pathname.includes('/admin-');
-    setShowChatbot(!isAdminRoute);
+    const isMarketingLandingPage = location.pathname.includes('/descobrir');
+    setShowChatbot(!isAdminRoute && !isMarketingLandingPage);
   }, [location.pathname]);
   
   return (
@@ -87,6 +90,7 @@ const AppRoutes: React.FC = () => {
         <Route path="/acompanhar-pedido" element={<OrderTracking />} />
         <Route path="/privacidade" element={<PrivacyPolicy />} />
         <Route path="/termos" element={<Terms />} />
+        <Route path="/descobrir" element={<Descobrir />} />
         
         {/* Client Dashboard and Delivery Routes */}
         <Route path="/client-dashboard" element={<ClientDashboard />} />
@@ -123,6 +127,7 @@ const AppRoutes: React.FC = () => {
         <Route path="/admin-j28s7d1k/integrations" element={<AdminIntegrations />} />
         <Route path="/admin-j28s7d1k/invoices" element={<AdminInvoices />} />
         <Route path="/admin-j28s7d1k/storage" element={<AdminStorage />} />
+        <Route path="/admin-j28s7d1k/marketing" element={<AdminMarketingLeads />} />
         
         {/* 404 route */}
         <Route path="*" element={<NotFoundPage />} />
