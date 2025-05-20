@@ -140,7 +140,7 @@ const PreviewPage: React.FC = () => {
                   <GoogleDrivePreviewsList projectId={projectId} />
                 ) : (
                   <PreviewPlayerList 
-                    versions={projectData.versions || []}
+                    versions={projectData.previews || []}
                     selectedVersion={selectedPreview}
                     setSelectedVersion={setSelectedPreview}
                     isApproved={projectData.status === 'approved'}
@@ -158,7 +158,7 @@ const PreviewPage: React.FC = () => {
                   onApprove={handleApprove}
                   status={projectData.status}
                   selectedVersion={selectedPreview}
-                  versionTitle={projectData.versions?.find(v => v.id === selectedPreview)?.title}
+                  versionTitle={projectData.previews?.find(v => v.id === selectedPreview)?.title}
                 />
               </div>
             </TabsContent>
