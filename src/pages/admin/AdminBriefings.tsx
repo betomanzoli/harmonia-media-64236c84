@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import AdminLayout from '@/components/admin/layout/AdminLayout';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -64,11 +63,6 @@ const AdminBriefings: React.FC = () => {
   const [selectedBriefing, setSelectedBriefing] = useState<any>(null);
   const [showViewDialog, setShowViewDialog] = useState(false);
   const [showEditDialog, setShowEditDialog] = useState(false);
-  
-  // State for client selection dialog and selected client
-  // IMPORTANT: Moved these state declarations to the top level, not inside conditional
-  const [showClientSelectionDialog, setShowClientSelectionDialog] = useState(false);
-  const [selectedClient, setSelectedClient] = useState<any>(null);
   
   // Refresh briefings when component mounts
   useEffect(() => {
@@ -180,31 +174,6 @@ const AdminBriefings: React.FC = () => {
     }
   };
 
-  const handleOpenCreateBriefing = () => {
-    setShowClientSelectionDialog(true);
-  };
-  
-  const handleClientSelection = (option: 'new' | 'existing', clientId?: string) => {
-    setShowClientSelectionDialog(false);
-    
-    if (option === 'new') {
-      // Open create briefing dialog with empty client data
-      setShowCreateDialog(true);
-    } else if (option === 'existing' && clientId) {
-      // Find the client and open create briefing dialog with client data
-      const client = customers.find(c => c.id === clientId);
-      if (client) {
-        const initialData = {
-          name: client.name,
-          email: client.email,
-          phone: client.phone || '',
-        };
-        setSelectedClient(client);
-        setShowCreateDialog(true);
-      }
-    }
-  };
-
   if (isLoading) {
     return (
       <AdminLayout>
@@ -257,6 +226,35 @@ const AdminBriefings: React.FC = () => {
       </AdminLayout>
     );
   }
+  
+  const [showClientSelectionDialog, setShowClientSelectionDialog] = useState(false);
+
+  const handleOpenCreateBriefing = () => {
+    setShowClientSelectionDialog(true);
+  };
+  
+  const handleClientSelection = (option: 'new' | 'existing', clientId?: string) => {
+    setShowClientSelectionDialog(false);
+    
+    if (option === 'new') {
+      // Open create briefing dialog with empty client data
+      setShowCreateDialog(true);
+    } else if (option === 'existing' && clientId) {
+      // Find the client and open create briefing dialog with client data
+      const client = customers.find(c => c.id === clientId);
+      if (client) {
+        const initialData = {
+          name: client.name,
+          email: client.email,
+          phone: client.phone || '',
+        };
+        setSelectedClient(client);
+        setShowCreateDialog(true);
+      }
+    }
+  };
+  
+  const [selectedClient, setSelectedClient] = useState<any>(null);
   
   return (
     <AdminLayout>
