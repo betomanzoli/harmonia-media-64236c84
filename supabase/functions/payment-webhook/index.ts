@@ -1,111 +1,123 @@
 
-import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
-import { createClient } from "https://esm.sh/@supabase/supabase-js@2.7.1";
+import { serve } from "https://deno.land/std@0.168.0/http/server.ts"
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2.7.1"
 
-const supabaseUrl = Deno.env.get("SUPABASE_URL") || "";
-const supabaseAnonKey = Deno.env.get("SUPABASE_ANON_KEY") || "";
-const supabase = createClient(supabaseUrl, supabaseAnonKey);
+const supabaseUrl = "https://ivueqxyuflxsiecqvmgt.supabase.co"
+const supabaseAnonKey = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Iml2dWVxeHl1Zmx4c2llY3F2bWd0Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDY3MjY0MzEsImV4cCI6MjA2MjMwMjQzMX0.db1UVta6PSPGokJOZozwqZ7AAs2jBljfWCdUR3LjIdM"
+const supabase = createClient(supabaseUrl, supabaseAnonKey)
 
+// CORS headers for browser requests
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
-};
-
-interface PaymentWebhookRequest {
-  payment_id: string;
-  briefing_id: string;
-  client_name: string;
-  client_email: string;
-  package_type: string;
-  amount: number;
-  status: string;
 }
 
 serve(async (req) => {
   // Handle CORS preflight requests
   if (req.method === 'OPTIONS') {
-    return new Response(null, { headers: corsHeaders });
+    return new Response(null, { headers: corsHeaders })
   }
-
+  
   try {
-    // Parse request body
-    const requestData = await req.json();
-    const paymentData: PaymentWebhookRequest = requestData.data;
+    // Parse the request body
+    const { data } = await req.json()
+    const { payment_id, briefing_id } = data
     
-    if (!paymentData.payment_id || !paymentData.briefing_id) {
-      throw new Error("Missing required fields: payment_id and briefing_id are required");
+    console.log(`Payment notification received: payment_id=${payment_id}, briefing_id=${briefing_id}`)
+    
+    // Validate the payment_id and briefing_id
+    if (!payment_id || !briefing_id) {
+      console.error("Missing required parameters")
+      return new Response(
+        JSON.stringify({ success: false, error: "Missing required parameters" }),
+        { headers: { ...corsHeaders, "Content-Type": "application/json" }, status: 400 }
+      )
     }
     
-    console.log(`Processing payment ${paymentData.payment_id} for briefing ${paymentData.briefing_id}`);
+    // TO-DO: Verify payment is valid with Mercado Pago API
+    // This would check the payment status with the Mercado Pago API
+    // For now, we'll trust the incoming webhook data
     
-    // Update briefing with payment information
-    const { data: briefingData, error: briefingError } = await supabase
+    // Get the current briefing data to update it
+    const { data: briefingData, error: fetchError } = await supabase
       .from('briefings')
-      .update({
-        payment_status: 'completed',
-        completion_status: 'ready_for_full',
-        data: supabase.rpc('update_jsonb_field', {
-          table_name: 'briefings',
-          record_id: paymentData.briefing_id,
-          field_name: 'data',
-          nested_field: 'paymentInfo',
-          field_value: JSON.stringify({
-            id: paymentData.payment_id,
-            amount: paymentData.amount,
-            date: new Date().toISOString(),
-            status: paymentData.status
-          })
-        })
-      })
-      .eq('id', paymentData.briefing_id)
-      .select()
+      .select('*')
+      .eq('id', briefing_id)
       .single();
       
-    if (briefingError) {
-      console.error("Error updating briefing:", briefingError);
-      throw briefingError;
+    if (fetchError) {
+      console.error("Error fetching briefing data:", fetchError);
+      return new Response(
+        JSON.stringify({ success: false, error: fetchError.message }), 
+        { headers: { ...corsHeaders, "Content-Type": "application/json" }, status: 500 }
+      );
     }
     
-    // Log payment in project history
-    if (briefingData.project_id) {
-      const { error: historyError } = await supabase
-        .from('project_history')
-        .insert({
-          project_id: briefingData.project_id,
-          action: 'payment_received',
-          details: {
-            paymentId: paymentData.payment_id,
-            amount: paymentData.amount,
-            status: paymentData.status,
+    // Update the workflow data to reflect payment completion
+    let updatedData = briefingData.data || {};
+    updatedData.workflow = {
+      ...(updatedData.workflow || {}),
+      currentStage: 'payment_complete',
+      nextStage: 'full_briefing',
+      completedSteps: [
+        ...(updatedData.workflow?.completedSteps || ['initial_briefing']),
+        'payment'
+      ],
+      paymentInfo: {
+        id: payment_id,
+        date: new Date().toISOString(),
+        status: data.status || 'processed'
+      }
+    };
+    
+    // Update briefing status in database
+    const { error } = await supabase
+      .from('briefings')
+      .update({ 
+        payment_status: 'completed', 
+        completion_status: 'ready_for_full',
+        data: updatedData
+      })
+      .eq('id', briefing_id)
+    
+    if (error) {
+      console.error("Database update error:", error)
+      return new Response(
+        JSON.stringify({ success: false, error: error.message }), 
+        { headers: { ...corsHeaders, "Content-Type": "application/json" }, status: 500 }
+      )
+    }
+    
+    // Trigger n8n workflow to continue the briefing process
+    if (data.status === "approved") {
+      try {
+        // Replace with your actual n8n webhook URL
+        await fetch('https://n8n.harmonia.media/webhook/continuar-briefing', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ 
+            briefing_id,
+            package_type: briefingData.package_type,
+            initial_responses: briefingData.initial_responses,
             timestamp: new Date().toISOString()
-          }
-        });
-        
-      if (historyError) {
-        console.error("Error logging to project history:", historyError);
-        // Continue even if history logging fails
+          })
+        })
+        console.log("N8n webhook triggered successfully for briefing_id:", briefing_id)
+      } catch (fetchError) {
+        console.error("Error calling n8n webhook:", fetchError)
+        // We don't want to fail the whole process if just the n8n part fails
       }
     }
-
+    
     return new Response(
-      JSON.stringify({ 
-        success: true, 
-        message: "Payment processed successfully",
-        briefing_id: paymentData.briefing_id
-      }),
-      { 
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' }, 
-        status: 200 
-      }
-    );
+      JSON.stringify({ success: true, message: "Payment processed and briefing updated" }),
+      { headers: { ...corsHeaders, "Content-Type": "application/json" } }
+    )
   } catch (error) {
-    console.error("Error in payment-webhook function:", error);
+    console.error("Error processing payment webhook:", error)
     return new Response(
-      JSON.stringify({ error: error.message || String(error) }),
-      { 
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' }, 
-        status: 500 
-      }
-    );
+      JSON.stringify({ success: false, error: error.message }), 
+      { headers: { ...corsHeaders, "Content-Type": "application/json" }, status: 500 }
+    )
   }
-});
+})
