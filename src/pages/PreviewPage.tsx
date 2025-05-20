@@ -1,210 +1,175 @@
 
-import React, { useEffect, useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import MusicPreviewSystem from '@/components/previews/MusicPreviewSystem';
-import ProjectAccessForm from '@/components/previews/ProjectAccessForm';
-import { useToast } from '@/hooks/use-toast';
-import { checkPreviewAccessCookie, getPreviewEmailCookie, setPreviewAccessCookie, setPreviewEmailCookie } from '@/utils/authCookies';
-import { supabase } from '@/lib/supabase';
-import { Loader2, Lock } from 'lucide-react';
+import Header from '@/components/Header';
+import Footer from '@/components/Footer';
+import { useToast } from "@/hooks/use-toast";
+import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
+import PreviewFeedbackForm from '@/components/previews/PreviewFeedbackForm';
+import PreviewHeader from '@/components/previews/PreviewHeader';
+import PreviewInstructions from '@/components/previews/PreviewInstructions';
+import PreviewPlayerList from '@/components/previews/player/PreviewPlayerList';
+import PreviewNextSteps from '@/components/previews/PreviewNextSteps';
+import GoogleDrivePreviewsList from '@/components/previews/GoogleDrivePreviewsList';
+import { usePreviewProject } from '@/hooks/previews/usePreviewProject';
+import { notificationService } from '@/services/notificationService';
 
 const PreviewPage: React.FC = () => {
   const { projectId } = useParams<{ projectId: string }>();
   const navigate = useNavigate();
   const { toast } = useToast();
-  const [isAuthorized, setIsAuthorized] = useState(false);
-  const [isLoading, setIsLoading] = useState(true);
-
-  useEffect(() => {
-    // Log access for analytics
-    if (projectId) {
-      console.log(`Acesso à prévia: ${projectId}, Data: ${new Date().toISOString()}`);
-      window.scrollTo(0, 0);
-      
-      const checkAuthorization = async () => {
-        setIsLoading(true);
-        
-        try {
-          // First check if the access is from client dashboard (userEmail in localStorage)
-          const userEmail = localStorage.getItem('userEmail');
-          if (userEmail) {
-            // Set cookie access for future visits
-            setPreviewAccessCookie(projectId);
-            setPreviewEmailCookie(projectId, userEmail);
-            
-            // Log the access in the database
-            try {
-              await supabase.from('access_logs').insert({
-                preview_id: projectId,
-                user_email: userEmail,
-                access_method: 'client_dashboard',
-                ip_address: 'not-tracked'
-              });
-            } catch (logError) {
-              console.error("Error logging access:", logError);
-              // Non-blocking error, continue with access
-            }
-            
-            setIsAuthorized(true);
-            setIsLoading(false);
-            return;
-          }
-          
-          // Then check if we have a cookie-based access
-          const hasCookieAccess = checkPreviewAccessCookie(projectId);
-          if (hasCookieAccess) {
-            // Get the email from the cookie for logging purposes
-            const email = getPreviewEmailCookie(projectId);
-            
-            // Log the access in the database
-            try {
-              await supabase.from('access_logs').insert({
-                preview_id: projectId,
-                user_email: email,
-                access_method: 'cookie',
-                ip_address: 'not-tracked'
-              });
-            } catch (logError) {
-              console.error("Error logging access:", logError);
-              // Non-blocking error, continue with access
-            }
-            
-            setIsAuthorized(true);
-            setIsLoading(false);
-            return;
-          }
-          
-          // Then check if we have an authenticated user
-          const { data: { session } } = await supabase.auth.getSession();
-          
-          if (session?.user?.email) {
-            // Store user email in localStorage for future access
-            localStorage.setItem('userEmail', session.user.email);
-            
-            // Set cookies for future access
-            setPreviewAccessCookie(projectId);
-            setPreviewEmailCookie(projectId, session.user.email);
-            
-            // Check if the email is authorized to view this preview
-            const { data: previewData, error } = await supabase
-              .from('previews')
-              .select('allowed_emails')
-              .eq('preview_id', projectId)
-              .maybeSingle();
-            
-            // Always authorize if authenticated (for simplicity)
-            // In a production environment, you'd check against allowed_emails
-            setIsAuthorized(true);
-            
-            // Log the successful access
-            try {
-              const { error: logError } = await supabase.from('access_logs').insert({
-                preview_id: projectId,
-                user_email: session.user.email,
-                access_method: 'auth',
-                ip_address: 'not-tracked'
-              });
-              
-              if (logError) {
-                console.error("Error logging access:", logError);
-              }
-            } catch (logError) {
-              console.error("Error logging access:", logError);
-              // Non-blocking error, continue with access
-            }
-          } else {
-            // No authenticated user, redirect to auth page
-            navigate(`/auth/preview/${projectId}`);
-          }
-        } catch (error) {
-          console.error("Error during authorization check:", error);
-          setIsAuthorized(false);
-        } finally {
-          setIsLoading(false);
-        }
-      };
-      
-      checkAuthorization();
+  
+  const [selectedPreview, setSelectedPreview] = useState<string | null>(null);
+  const [feedback, setFeedback] = useState('');
+  const { projectData, setProjectData, isLoading } = usePreviewProject(projectId || '');
+  
+  const handleSubmitFeedback = () => {
+    if (!selectedPreview) {
+      toast({
+        title: "Selecione uma versão",
+        description: "Por favor, selecione uma das versões antes de enviar.",
+        variant: "destructive"
+      });
+      return;
     }
-  }, [projectId, navigate, toast]);
-
+    
+    toast({
+      title: "Feedback enviado!",
+      description: "Obrigado pelo seu feedback. Nossa equipe já está trabalhando nas modificações.",
+    });
+    
+    // Notify about feedback
+    notificationService.notify('feedback_received', {
+      projectId: projectId || '',
+      clientName: projectData?.clientName || 'Cliente',
+      message: feedback
+    });
+    
+    setProjectData(prev => prev ? {...prev, status: 'feedback'} : null);
+  };
+  
+  const handleApprove = () => {
+    if (!selectedPreview) {
+      toast({
+        title: "Selecione uma versão",
+        description: "Por favor, selecione uma das versões antes de aprovar.",
+        variant: "destructive"
+      });
+      return;
+    }
+    
+    toast({
+      title: "Música aprovada!",
+      description: "Estamos felizes que você gostou! Vamos finalizar sua música e entregar em breve.",
+    });
+    
+    // Notify about approval
+    notificationService.notify('preview_approved', {
+      projectId: projectId || '',
+      clientName: projectData?.clientName || 'Cliente',
+      versionId: selectedPreview
+    });
+    
+    setProjectData(prev => prev ? {...prev, status: 'approved'} : null);
+  };
+  
   if (isLoading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-800">
-        <div className="bg-white p-8 rounded-lg shadow-sm text-center">
-          <div className="flex flex-col items-center justify-center space-y-4">
-            <Loader2 className="h-10 w-10 animate-spin text-harmonia-green" />
-            <h2 className="text-xl font-medium text-gray-800">Verificando acesso...</h2>
-            <p className="text-gray-500">Estamos verificando suas credenciais para acessar a prévia musical.</p>
+      <div className="min-h-screen bg-white text-gray-900">
+        <Header />
+        <div className="pt-24 pb-20 px-6 md:px-10 flex items-center justify-center">
+          <div className="text-center">
+            <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-harmonia-green"></div>
+            <p className="mt-4 text-gray-500">Carregando prévias...</p>
           </div>
         </div>
+        <Footer />
       </div>
     );
   }
-
-  if (!projectId) {
+  
+  if (!projectData) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-800">
-        <div className="bg-white p-6 rounded-lg shadow-sm text-center">
-          <h2 className="text-2xl font-bold text-black mb-4">ID do projeto não encontrado</h2>
-          <p className="text-gray-600">O link que você acessou não é válido.</p>
+      <div className="min-h-screen bg-white text-gray-900">
+        <Header />
+        <div className="pt-24 pb-20 px-6 md:px-10 flex items-center justify-center">
+          <div className="text-center max-w-md">
+            <h1 className="text-2xl font-bold mb-4">Preview não encontrado</h1>
+            <p className="text-gray-400 mb-6">O código de preview fornecido não é válido ou expirou.</p>
+            <button 
+              onClick={() => navigate('/')}
+              className="bg-harmonia-green hover:bg-harmonia-green/90 text-white px-4 py-2 rounded"
+            >
+              Voltar à página inicial
+            </button>
+          </div>
         </div>
+        <Footer />
       </div>
     );
   }
-
-  // Show authentication form if not authorized yet
-  if (!isAuthorized) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-800">
-        <ProjectAccessForm 
-          projectId={projectId} 
-          onVerify={async (email, code) => {
-            // Set cookies for future access
-            setPreviewAccessCookie(projectId);
-            setPreviewEmailCookie(projectId, email);
-            
-            // Store email in localStorage for client dashboard access
-            localStorage.setItem('userEmail', email);
-            
-            setIsAuthorized(true);
-            toast({
-              title: "Acesso autorizado",
-              description: "Bem-vindo à página de prévia do seu projeto."
-            });
-            
-            // Log the access - Fixed: Need to await the insert operation to properly access error
-            try {
-              const { error } = await supabase.from('access_logs').insert({
-                preview_id: projectId,
-                user_email: email,
-                access_method: 'verification_code',
-                ip_address: 'not-tracked'
-              });
-              
-              if (error) {
-                console.error("Error logging access:", error);
-              }
-            } catch (err) {
-              console.error("Error logging access:", err);
-            }
-          }}
-        />
-      </div>
-    );
-  }
-
+  
   return (
-    <div className="min-h-screen bg-gray-800 pt-8 pb-16">
-      <div className="max-w-4xl mx-auto px-4 mb-6">
-        <div className="bg-green-50 border border-green-100 rounded-md p-3 flex items-center">
-          <Lock className="h-5 w-5 text-green-600 mr-2" />
-          <span className="text-sm text-green-700">
-            Conteúdo exclusivo e protegido - Acesso pessoal
-          </span>
+    <div className="min-h-screen bg-white text-gray-900">
+      <Header />
+      <main className="pt-24 pb-20 px-6 md:px-10">
+        <div className="max-w-4xl mx-auto">
+          <PreviewHeader 
+            projectData={{
+              projectTitle: projectData.projectTitle || projectData.clientName,
+              clientName: projectData.clientName,
+              status: projectData.status
+            }}
+          />
+          
+          <PreviewInstructions status={projectData.status} />
+          
+          <Tabs defaultValue="versions" className="mb-10">
+            <TabsList className="w-full mb-6">
+              <TabsTrigger value="versions" className="flex-1 data-[state=active]:bg-harmonia-green">
+                Versões Propostas
+              </TabsTrigger>
+              <TabsTrigger value="feedback" className="flex-1 data-[state=active]:bg-harmonia-green">
+                Enviar Feedback
+              </TabsTrigger>
+            </TabsList>
+            
+            <TabsContent value="versions">
+              <div className="bg-white p-6 rounded-lg shadow">
+                {projectData.useGoogleDrive ? (
+                  <GoogleDrivePreviewsList projectId={projectId} />
+                ) : (
+                  <PreviewPlayerList 
+                    versions={projectData.versions || []}
+                    selectedVersion={selectedPreview}
+                    setSelectedVersion={setSelectedPreview}
+                    isApproved={projectData.status === 'approved'}
+                  />
+                )}
+              </div>
+            </TabsContent>
+            
+            <TabsContent value="feedback">
+              <div className="bg-white p-6 rounded-lg shadow">
+                <PreviewFeedbackForm 
+                  feedback={feedback}
+                  onFeedbackChange={setFeedback}
+                  onSubmit={handleSubmitFeedback}
+                  onApprove={handleApprove}
+                  status={projectData.status}
+                  selectedVersion={selectedPreview}
+                  versionTitle={projectData.versions?.find(v => v.id === selectedPreview)?.title}
+                />
+              </div>
+            </TabsContent>
+          </Tabs>
+          
+          <div className="bg-white p-6 rounded-lg shadow">
+            <PreviewNextSteps status={projectData.status} />
+          </div>
         </div>
-      </div>
-      <MusicPreviewSystem projectId={projectId} />
+      </main>
+      <Footer />
     </div>
   );
 };
