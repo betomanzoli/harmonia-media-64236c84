@@ -67,8 +67,13 @@ const RecentActivities: React.FC<RecentActivitiesProps> = ({
   showTitle = true,
   className
 }) => {
-  const { projects } = usePreviewProjects();
+  const { projects, loadProjects } = usePreviewProjects();
   const [activities, setActivities] = useState<Activity[]>([]);
+
+  // Reload projects on mount to ensure data is fresh
+  useEffect(() => {
+    loadProjects();
+  }, [loadProjects]);
 
   // Gerar atividades baseadas nos projetos atuais do sistema
   useEffect(() => {

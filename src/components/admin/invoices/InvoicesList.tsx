@@ -1,5 +1,5 @@
 
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { Button } from "@/components/ui/button";
 import { Plus } from 'lucide-react';
 import { 
@@ -12,6 +12,7 @@ import InvoiceTable from './components/InvoiceTable';
 import CreateInvoiceForm from './components/CreateInvoiceForm';
 import DeleteInvoiceDialog from './components/DeleteInvoiceDialog';
 import { useInvoices } from './hooks/useInvoices';
+import { supabase } from '@/lib/supabase';
 
 const InvoicesList: React.FC = () => {
   const {
@@ -30,6 +31,31 @@ const InvoicesList: React.FC = () => {
     handleViewPdf,
     handleDownloadInvoice
   } = useInvoices();
+
+  const [existingClients, setExistingClients] = useState<any[]>([]);
+  const [loadingClients, setLoadingClients] = useState(false);
+
+  // Fetch existing clients from Supabase
+  useEffect(() => {
+    const fetchClients = async () => {
+      setLoadingClients(true);
+      try {
+        const { data, error } = await supabase
+          .from('clients')
+          .select('*')
+          .order('name', { ascending: true });
+        
+        if (error) throw error;
+        setExistingClients(data || []);
+      } catch (error) {
+        console.error('Error fetching clients:', error);
+      } finally {
+        setLoadingClients(false);
+      }
+    };
+
+    fetchClients();
+  }, []);
 
   return (
     <div className="space-y-6">
@@ -58,10 +84,11 @@ const InvoicesList: React.FC = () => {
             <DialogTitle>Nova Fatura</DialogTitle>
           </DialogHeader>
           <CreateInvoiceForm 
-            clients={clients}
+            clients={existingClients.length > 0 ? existingClients : clients}
             projects={projects}
             onSubmit={handleCreateInvoice}
             onCancel={() => setShowCreateDialog(false)}
+            isLoadingClients={loadingClients}
           />
         </DialogContent>
       </Dialog>

@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
@@ -12,7 +11,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { Skeleton } from "@/components/ui/skeleton";
 import { useToast } from "@/hooks/use-toast";
 
@@ -30,6 +29,7 @@ const ProjectsTable: React.FC<ProjectsTableProps> = ({
   onSendReminder
 }) => {
   const { toast } = useToast();
+  const navigate = useNavigate();
   
   // Helper to format dates for better display
   const formatDate = (dateString: string) => {
@@ -72,6 +72,10 @@ const ProjectsTable: React.FC<ProjectsTableProps> = ({
       title: "Link copiado!",
       description: "Link de prévia copiado para a área de transferência."
     });
+  };
+
+  const handleEditProject = (projectId: string) => {
+    navigate(`/admin-j28s7d1k/previews/${projectId}`);
   };
 
   if (isLoading) {
@@ -143,12 +147,12 @@ const ProjectsTable: React.FC<ProjectsTableProps> = ({
                         <Eye className="mr-2 h-4 w-4" />
                         Copiar Link
                       </DropdownMenuItem>
-                      <Link to={`/admin-j28s7d1k/previews/${project.id}`} className="w-full">
-                        <DropdownMenuItem>
-                          <Edit className="mr-2 h-4 w-4" />
-                          Editar
-                        </DropdownMenuItem>
-                      </Link>
+                      <DropdownMenuItem
+                        onClick={() => handleEditProject(project.id)}
+                      >
+                        <Edit className="mr-2 h-4 w-4" />
+                        Editar
+                      </DropdownMenuItem>
                       <DropdownMenuItem
                         onClick={() => onSendReminder(project.id)}
                       >
