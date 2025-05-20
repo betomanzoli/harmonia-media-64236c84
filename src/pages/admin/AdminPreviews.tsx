@@ -1,112 +1,159 @@
-
-import React, { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import React, { useState, useEffect, useNavigate } from 'react';
 import AdminLayout from '@/components/admin/layout/AdminLayout';
-import PreviewsHeader from '@/components/admin/previews/PreviewsHeader';
+import { usePreviewProjects } from '@/hooks/admin/usePreviewProjects';
+import { Button } from "@/components/ui/button";
+import { ArrowLeft, Plus, RefreshCw } from 'lucide-react';
+import { useToast } from '@/hooks/use-toast';
+import { Link } from 'react-router-dom';
 import ProjectsTable from '@/components/admin/previews/ProjectsTable';
 import NewProjectForm from '@/components/admin/previews/NewProjectForm';
-import AdminPreviewGuide from '@/components/admin/guides/AdminPreviewGuide';
-import { usePreviewProjects } from '@/hooks/admin/usePreviewProjects';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Button } from "@/components/ui/button";
-import { ArrowLeft } from 'lucide-react';
-import ClientSelectionDialog from '@/components/admin/ClientSelectionDialog';
-import { Link } from 'react-router-dom';
+import { 
+  Dialog, 
+  DialogContent, 
+  DialogHeader, 
+  DialogTitle,
+  DialogFooter,
+  DialogDescription
+} from "@/components/ui/dialog";
+import { Separator } from '@/components/ui/separator';
 
 const AdminPreviews: React.FC = () => {
+  const { projects, addProject, deleteProject, loadProjects } = usePreviewProjects();
+  const { toast } = useToast();
+  const [isLoading, setIsLoading] = useState(true);
+  const [showAddForm, setShowAddForm] = useState(false);
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [projectToDelete, setProjectToDelete] = useState<string | null>(null);
   const navigate = useNavigate();
-  const { projects, isLoading, loadProjects } = usePreviewProjects();
-  const [activeTab, setActiveTab] = useState<string>("projects");
-  const [isClientDialogOpen, setIsClientDialogOpen] = useState(false);
-
+  
   useEffect(() => {
-    loadProjects();
+    loadProjects().then(() => {
+      setIsLoading(false);
+    });
   }, [loadProjects]);
 
-  const handleClientSelection = (option: 'new' | 'existing', clientId?: string) => {
-    setIsClientDialogOpen(false);
-    
-    if (option === 'new') {
-      // Navigate to create new client flow
-      navigate('/admin-j28s7d1k/clients/new');
-    } else if (option === 'existing' && clientId) {
-      // Navigate to new preview with existing client
-      navigate(`/admin-j28s7d1k/previews/new?clientId=${clientId}`);
+  const handleAddProject = (project: any) => {
+    // Check if project exists to avoid type error
+    if (project) {
+      const newProjectId = addProject(project);
+      toast({
+        title: "Projeto criado",
+        description: `Projeto ${newProjectId} criado com sucesso.`
+      });
+      setShowAddForm(false);
+      return newProjectId;
+    }
+    return null;
+  };
+  
+  const confirmDeleteProject = (projectId: string) => {
+    setProjectToDelete(projectId);
+    setShowDeleteConfirm(true);
+  };
+  
+  const handleDeleteProject = () => {
+    if (projectToDelete) {
+      deleteProject(projectToDelete);
+      toast({
+        title: "Projeto excluído",
+        description: "O projeto foi excluído com sucesso."
+      });
+      setShowDeleteConfirm(false);
+      setProjectToDelete(null);
     }
   };
+  
+  const handleSendReminder = (projectId: string) => {
+    // Em uma implementação real, isso enviaria um email de lembrete
+    toast({
+      title: "Lembrete enviado",
+      description: "Um lembrete foi enviado para o cliente."
+    });
+  };
 
+  const handleRefresh = () => {
+    setIsLoading(true);
+    loadProjects().then(() => {
+      setIsLoading(false);
+      toast({
+        title: "Dados atualizados",
+        description: "Os projetos foram atualizados."
+      });
+    });
+  };
+
+  const handleCreateNewProject = () => {
+    toast({
+      title: "Fluxo correto",
+      description: "Por favor, inicie o fluxo a partir da página de briefings.",
+      variant: "destructive"
+    });
+    
+    setTimeout(() => {
+      navigate('/admin-j28s7d1k/briefings');
+    }, 2000);
+  };
+  
   return (
     <AdminLayout>
-      <div className="p-6 space-y-6">
-        <div className="flex items-center justify-between">
-          <PreviewsHeader />
-          <div className="flex space-x-2">
+      <div className="flex flex-col h-full bg-gray-100">
+        <div className="flex justify-between items-center p-6 border-b bg-white">
+          <div className="flex items-center">
             <Button 
               variant="outline" 
               size="sm" 
               asChild
+              className="mr-4"
             >
               <Link to="/admin-j28s7d1k/dashboard">
-                <ArrowLeft className="mr-2 h-4 w-4" />
-                Voltar ao Dashboard
+                <ArrowLeft className="h-4 w-4 mr-2" />
+                Voltar
               </Link>
+            </Button>
+            <h1 className="text-2xl font-bold text-black">Projetos de Prévias</h1>
+          </div>
+          <div className="flex space-x-2">
+            <Button 
+              variant="outline" 
+              size="sm" 
+              onClick={handleRefresh}
+            >
+              <RefreshCw className={`h-4 w-4 mr-2 ${isLoading ? 'animate-spin' : ''}`} />
+              Atualizar
             </Button>
           </div>
         </div>
-
-        <Tabs defaultValue="projects" value={activeTab} onValueChange={setActiveTab}>
-          <TabsList className="mb-4">
-            <TabsTrigger value="projects">Projetos de Prévias</TabsTrigger>
-            <TabsTrigger value="guide">Guia de Uso</TabsTrigger>
-          </TabsList>
-          
-          <TabsContent value="projects" className="space-y-6">
-            <ProjectsTable 
-              projects={projects} 
-              isLoading={isLoading} 
-              onClientSelect={() => setIsClientDialogOpen(true)}
-            />
-            
-            {activeTab === "projects" && (
-              <div className="mt-8">
-                <h2 className="text-2xl font-semibold mb-4">Criar Novo Projeto de Prévias</h2>
-                <div className="bg-gray-50 p-6 rounded-lg border">
-                  <div className="mb-6 text-center">
-                    <p className="text-gray-500 mb-4">Para criar um novo projeto de prévias, é recomendado seguir o fluxo completo:</p>
-                    <div className="flex flex-col md:flex-row justify-center items-center gap-4">
-                      <Button 
-                        variant="outline" 
-                        onClick={() => setIsClientDialogOpen(true)}
-                      >
-                        Criar Novo Projeto de Prévia
-                      </Button>
-                      <span className="text-gray-400">ou</span>
-                      <Button
-                        variant="default"
-                        asChild
-                      >
-                        <Link to="/admin-j28s7d1k/briefings">
-                          Iniciar pelo Briefing (Recomendado)
-                        </Link>
-                      </Button>
-                    </div>
-                  </div>
-                  <NewProjectForm />
-                </div>
-              </div>
-            )}
-          </TabsContent>
-          
-          <TabsContent value="guide">
-            <AdminPreviewGuide />
-          </TabsContent>
-        </Tabs>
         
-        <ClientSelectionDialog 
-          open={isClientDialogOpen}
-          onClose={() => setIsClientDialogOpen(false)}
-          onSelectClient={handleClientSelection}
-        />
+        <div className="p-6 flex-1 overflow-auto">
+          <div className="bg-white rounded-lg shadow mb-6">
+            <div className="p-6 border-b">
+              <h2 className="text-xl font-medium text-black">Projetos de Prévias</h2>
+              <p className="text-gray-500 text-sm mt-1">Lista de todos os projetos de prévias musicais.</p>
+            </div>
+            
+            <ProjectsTable 
+              projects={projects}
+              isLoading={isLoading}
+              onDelete={confirmDeleteProject}
+              onSendReminder={handleSendReminder}
+            />
+          </div>
+        </div>
+        
+        <Dialog open={showDeleteConfirm} onOpenChange={setShowDeleteConfirm}>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>Confirmar exclusão</DialogTitle>
+              <DialogDescription>
+                Você tem certeza que deseja excluir este projeto de prévia? Esta ação não pode ser desfeita.
+              </DialogDescription>
+            </DialogHeader>
+            <DialogFooter>
+              <Button variant="outline" onClick={() => setShowDeleteConfirm(false)}>Cancelar</Button>
+              <Button variant="destructive" onClick={handleDeleteProject}>Excluir</Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
       </div>
     </AdminLayout>
   );
