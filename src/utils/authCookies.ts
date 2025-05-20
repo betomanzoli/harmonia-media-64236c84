@@ -1,129 +1,114 @@
 
-// Auth cookie utilities for Supabase authentication
-// This helps with browser private mode compatibility
+// Cookie utilities for preview access
 
 /**
- * Set authentication cookie
+ * Set a cookie for preview access
  */
-export const setAuthCookie = (name: string, value: string, days: number = 7) => {
-  const date = new Date();
-  date.setTime(date.getTime() + (days * 24 * 60 * 60 * 1000));
-  const expires = `; expires=${date.toUTCString()}`;
-  document.cookie = `${name}=${value}${expires}; path=/; SameSite=None; Secure`;
+export const setPreviewAccessCookie = (previewId: string, expiryDays = 7): void => {
+  const expiry = new Date();
+  expiry.setDate(expiry.getDate() + expiryDays);
+  
+  const cookieName = `preview_access_${previewId}`;
+  const cookieValue = 'granted';
+  const cookieExpiry = `expires=${expiry.toUTCString()}`;
+  
+  document.cookie = `${cookieName}=${cookieValue}; ${cookieExpiry}; path=/; SameSite=Lax`;
 };
 
 /**
- * Get authentication cookie
+ * Set a cookie for preview email identification
  */
-export const getAuthCookie = (name: string): string | null => {
-  const nameEQ = `${name}=`;
+export const setPreviewEmailCookie = (previewId: string, email: string, expiryDays = 7): void => {
+  const expiry = new Date();
+  expiry.setDate(expiry.getDate() + expiryDays);
+  
+  const cookieName = `preview_email_${previewId}`;
+  const cookieValue = email;
+  const cookieExpiry = `expires=${expiry.toUTCString()}`;
+  
+  document.cookie = `${cookieName}=${cookieValue}; ${cookieExpiry}; path=/; SameSite=Lax`;
+};
+
+/**
+ * Check if preview access cookie exists
+ */
+export const checkPreviewAccessCookie = (previewId: string): boolean => {
+  const cookieName = `preview_access_${previewId}=`;
   const cookies = document.cookie.split(';');
+  
   for (let i = 0; i < cookies.length; i++) {
-    let cookie = cookies[i];
-    while (cookie.charAt(0) === ' ') {
-      cookie = cookie.substring(1, cookie.length);
-    }
-    if (cookie.indexOf(nameEQ) === 0) {
-      return cookie.substring(nameEQ.length, cookie.length);
+    let cookie = cookies[i].trim();
+    if (cookie.indexOf(cookieName) === 0) {
+      return cookie.substring(cookieName.length) === 'granted';
     }
   }
+  
+  return false;
+};
+
+/**
+ * Get preview email cookie
+ */
+export const getPreviewEmailCookie = (previewId: string): string | null => {
+  const cookieName = `preview_email_${previewId}=`;
+  const cookies = document.cookie.split(';');
+  
+  for (let i = 0; i < cookies.length; i++) {
+    let cookie = cookies[i].trim();
+    if (cookie.indexOf(cookieName) === 0) {
+      return cookie.substring(cookieName.length);
+    }
+  }
+  
   return null;
 };
 
 /**
- * Remove authentication cookie
+ * Get any auth cookie by name
  */
-export const removeAuthCookie = (name: string) => {
-  document.cookie = `${name}=; Path=/; Expires=Thu, 01 Jan 1970 00:00:01 GMT; SameSite=None; Secure`;
-};
-
-/**
- * Set Supabase access token cookie
- */
-export const setAccessTokenCookie = (token: string) => {
-  setAuthCookie('sb-access-token', token);
-};
-
-/**
- * Get Supabase access token cookie
- */
-export const getAccessTokenCookie = () => {
-  return getAuthCookie('sb-access-token');
-};
-
-/**
- * Set Supabase refresh token cookie
- */
-export const setRefreshTokenCookie = (token: string) => {
-  setAuthCookie('sb-refresh-token', token);
-};
-
-/**
- * Get Supabase refresh token cookie
- */
-export const getRefreshTokenCookie = () => {
-  return getAuthCookie('sb-refresh-token');
-};
-
-/**
- * Store preview access status in cookie
- */
-export const setPreviewAccessCookie = (projectId: string) => {
-  setAuthCookie(`preview_access_${projectId}`, 'authorized');
-};
-
-/**
- * Check preview access status from cookie
- */
-export const checkPreviewAccessCookie = (projectId: string): boolean => {
-  return getAuthCookie(`preview_access_${projectId}`) === 'authorized';
-};
-
-/**
- * Store project preview email in cookie
- */
-export const setPreviewEmailCookie = (projectId: string, email: string) => {
-  setAuthCookie(`preview_email_${projectId}`, email);
-};
-
-/**
- * Get project preview email from cookie
- */
-export const getPreviewEmailCookie = (projectId: string): string | null => {
-  return getAuthCookie(`preview_email_${projectId}`);
-};
-
-/**
- * Check if an email is authorized for a specific project
- */
-export const isEmailAuthorizedForProject = (email: string, projectId: string): boolean => {
-  const isAuthorized = checkPreviewAccessCookie(projectId);
-  if (!isAuthorized) return false;
-  
-  const storedEmail = getPreviewEmailCookie(projectId);
-  return storedEmail === email;
-};
-
-/**
- * Clean all authentication cookies
- */
-export const cleanAllAuthCookies = () => {
-  // Clean all possible Supabase auth cookies
-  removeAuthCookie('sb-access-token');
-  removeAuthCookie('sb-refresh-token');
-  removeAuthCookie('supabase-auth-token');
-  
-  // Clean all preview auth cookies (we don't know all the project IDs, so this is a best effort)
+export const getAuthCookie = (name: string): string | null => {
+  const cookieName = `${name}=`;
   const cookies = document.cookie.split(';');
+  
+  for (let i = 0; i < cookies.length; i++) {
+    let cookie = cookies[i].trim();
+    if (cookie.indexOf(cookieName) === 0) {
+      return cookie.substring(cookieName.length);
+    }
+  }
+  
+  return null;
+};
+
+/**
+ * Clear a preview access cookie
+ */
+export const clearPreviewAccessCookie = (previewId: string): void => {
+  const cookieName = `preview_access_${previewId}`;
+  document.cookie = `${cookieName}=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/; SameSite=Lax`;
+};
+
+/**
+ * Clear preview email cookie
+ */
+export const clearPreviewEmailCookie = (previewId: string): void => {
+  const cookieName = `preview_email_${previewId}`;
+  document.cookie = `${cookieName}=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/; SameSite=Lax`;
+};
+
+/**
+ * Clear all preview-related cookies
+ */
+export const clearAllPreviewCookies = (): void => {
+  const cookies = document.cookie.split(';');
+  
   for (let i = 0; i < cookies.length; i++) {
     const cookie = cookies[i].trim();
-    if (cookie.indexOf('preview_access_') === 0) {
-      const cookieName = cookie.split('=')[0];
-      removeAuthCookie(cookieName);
-    }
-    if (cookie.indexOf('preview_email_') === 0) {
-      const cookieName = cookie.split('=')[0];
-      removeAuthCookie(cookieName);
+    const cookieParts = cookie.split('=');
+    const cookieName = cookieParts[0];
+    
+    if (cookieName.startsWith('preview_')) {
+      document.cookie = `${cookieName}=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/; SameSite=Lax`;
     }
   }
 };

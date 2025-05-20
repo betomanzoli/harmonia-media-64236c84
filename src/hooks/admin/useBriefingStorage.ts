@@ -4,7 +4,7 @@ import { useToast } from '@/hooks/use-toast';
 import { useFileUpload } from './useFileUpload';
 import { syncStorageData } from '@/services/adminStorageService';
 import { emailService } from '@/lib/supabase';
-import { notificationService } from '@/services/notificationService';
+import webhookService from '@/services/webhookService';
 
 interface BriefingSubmission {
   id: string;
@@ -79,8 +79,8 @@ export function useBriefingStorage() {
           description: "O briefing foi salvo com sucesso no Google Drive.",
         });
         
-        // Updated to use 'feedback_received' which is a valid NotificationType
-        notificationService.notify('feedback_received', {
+        // Notify about the new briefing
+        webhookService.sendItemNotification('feedback_received', {
           id: submissionId,
           clientName,
           clientEmail,

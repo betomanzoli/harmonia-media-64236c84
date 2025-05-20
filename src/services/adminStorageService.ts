@@ -1,179 +1,231 @@
+
 import { useToast } from '@/hooks/use-toast';
-import { STORAGE_FOLDERS } from '@/services/googleDriveService';
 
-// Define storage types with associated folder IDs
-export type StorageType = 'briefings' | 'audio' | 'portfolio' | 'orders' | 
-  'customers' | 'previews' | 'integrations' | 'invoices' | 'final_versions';
+// Define the StorageType type
+export type StorageType = 
+  | 'briefings'
+  | 'audio'
+  | 'portfolio'
+  | 'orders'
+  | 'customers'
+  | 'previews'
+  | 'integrations'
+  | 'invoices'
+  | 'final_versions';
 
-// Map storage types to folder IDs
+// Define folder map with folder IDs
 export const STORAGE_FOLDER_MAP: Record<StorageType, string> = {
-  briefings: "1ChX97c1jpuMg87QIn1uuytVx6r89ONuw", // Updated with correct briefings folder
-  audio: "1zOKfHNA7rAihCmEVKZtL191k8XgUsXMg",
-  portfolio: "1MJk2diD6Bmb9Q6lNVDPnLePAznerOU29",
-  orders: "1brm0ombzUSBzGOdPuj4e0phlU9nKbvbs",
-  customers: "1fQWdtNPx7pHvMwJfhamtdHBJsdpLkIZZ",
-  previews: "1lLw3oBgNhlpUiYbo3wevgUvjA0RTV7tN",
-  integrations: "1uuhCHv0c5eePU9_m-0BdYiuo0-3vUwVJ",
-  invoices: "1VKQ2b-huvEx_0JzxR_Nd5XfyZLwU2fqt", // Updated with correct invoices folder
-  final_versions: "1rUIb3In_y3HrEc-GR4oGPlSCvZ5JT7mx" // Updated with correct final versions folder
+  briefings: 'briefings_folder_id',
+  audio: 'audio_folder_id',
+  portfolio: 'portfolio_folder_id',
+  orders: 'orders_folder_id',
+  customers: 'customers_folder_id',
+  previews: 'previews_folder_id',
+  integrations: 'integrations_folder_id',
+  invoices: 'invoices_folder_id',
+  final_versions: 'final_versions_folder_id'
 };
 
-// Check if app is in offline mode
-export const isOfflineMode = (): boolean => {
-  return sessionStorage.getItem('offline-admin-mode') === 'true';
-};
-
-// Function to create a Google Drive URL for a given folder ID
-export const createGoogleDriveFolderUrl = (folderId: string): string => {
-  return `https://drive.google.com/drive/folders/${folderId}`;
-};
-
-// Function to create a Google Drive file URL
-export const createGoogleDriveFileUrl = (fileId: string): string => {
-  return `https://drive.google.com/file/d/${fileId}/view`;
-};
-
-// Hook for interacting with Drive storage
-export function useAdminStorage() {
-  const { toast } = useToast();
-
-  const openFolder = (storageType: StorageType) => {
-    const folderId = STORAGE_FOLDER_MAP[storageType];
-    const url = createGoogleDriveFolderUrl(folderId);
-    window.open(url, '_blank');
-  };
-
-  const getFolderUrl = (storageType: StorageType): string => {
-    const folderId = STORAGE_FOLDER_MAP[storageType];
-    return createGoogleDriveFolderUrl(folderId);
-  };
-
-  // This function would upload files in a real implementation
-  // Here we simulate the behavior for the offline demo
-  const uploadFile = async (storageType: StorageType, file: File, metadata: Record<string, any> = {}): Promise<{success: boolean, fileUrl?: string, fileId?: string}> => {
-    if (isOfflineMode()) {
-      // In offline mode, we simulate a successful upload
-      const mockFileId = `mock-${Date.now()}-${file.name.replace(/\s+/g, '-')}`;
-      const fileUrl = createGoogleDriveFileUrl(mockFileId);
-      
-      toast({
-        title: "Arquivo salvo",
-        description: `${file.name} foi salvo em modo offline.`,
-      });
-      
-      return { 
-        success: true, 
-        fileUrl,
-        fileId: mockFileId
-      };
-    } else {
-      // In a real implementation, this would use Google Drive API
-      // For now, we'll simulate a successful upload
-      
-      // Mock implementation - in production this would use proper API
-      try {
-        console.log(`Simulando upload para ${storageType}:`, {
-          fileName: file.name,
-          fileType: file.type,
-          fileSize: file.size,
-          metadata
-        });
-        
-        // Create a mock file ID
-        const mockFileId = `real-${Date.now()}-${file.name.replace(/\s+/g, '-')}`;
-        const fileUrl = createGoogleDriveFileUrl(mockFileId);
-        
-        toast({
-          title: "Arquivo salvo",
-          description: `${file.name} foi salvo no Google Drive com sucesso.`,
-        });
-        
-        return { 
-          success: true, 
-          fileUrl,
-          fileId: mockFileId
-        };
-      } catch (error) {
-        console.error("Erro ao fazer upload:", error);
-        
-        toast({
-          title: "Erro ao salvar arquivo",
-          description: "Não foi possível salvar o arquivo. Tente novamente.",
-          variant: "destructive",
-        });
-        
-        return { success: false };
-      }
-    }
-  };
-
-  // Function to store JSON data
-  const storeJsonData = async (storageType: StorageType, data: any, fileName: string): Promise<{success: boolean, fileUrl?: string, fileId?: string}> => {
-    // Convert the data to a JSON string
-    const jsonString = JSON.stringify(data, null, 2);
-    
-    // Create a Blob from the JSON string
-    const blob = new Blob([jsonString], { type: 'application/json' });
-    
-    // Convert the Blob to a File
-    const file = new File([blob], fileName, { type: 'application/json' });
-    
-    // Upload the file
-    return await uploadFile(storageType, file, { contentType: 'application/json' });
-  };
-
-  return {
-    openFolder,
-    getFolderUrl,
-    uploadFile,
-    storeJsonData,
-    isOfflineMode
-  };
-}
-
-// Helper for syncing data between local storage and the service
 export const syncStorageData = async (
-  storageType: StorageType,
-  data: any,
-  fileName: string = `${storageType}_data.json`
-): Promise<{ success: boolean, fileUrl?: string }> => {
+  storageType: string, 
+  data: any, 
+  fileName?: string
+): Promise<{ success: boolean, fileUrl?: string, fileId?: string }> => {
   try {
-    console.log(`Sincronizando dados do tipo ${storageType} com o Google Drive`);
+    console.log(`Syncing ${storageType} data:`, data);
     
-    // Store last sync timestamp in localStorage
-    localStorage.setItem(`${storageType}_lastSync`, new Date().toISOString());
+    // Mock implementation - in real app, this would use the Google Drive API
+    const mockFileId = `file_${Date.now()}_${Math.random().toString(36).substring(2, 15)}`;
+    const mockUrl = `https://drive.google.com/file/d/${mockFileId}/view`;
     
-    // For demo purposes, store data in localStorage as fallback
-    localStorage.setItem(`${storageType}_data`, JSON.stringify(data));
-    
-    // In a real implementation, this would use the Google Drive API
-    // Here we're just simulating the process
-    const mockFileId = `sync-${Date.now()}-${fileName}`;
-    const fileUrl = createGoogleDriveFileUrl(mockFileId);
+    // Simulate successful storage operation
+    console.log(`Data synced successfully to ${storageType}/${fileName || 'data.json'}`);
     
     return {
       success: true,
-      fileUrl
+      fileUrl: mockUrl,
+      fileId: mockFileId
     };
   } catch (error) {
-    console.error(`Erro ao sincronizar dados do tipo ${storageType}:`, error);
-    return {
-      success: false
-    };
+    console.error(`Error syncing ${storageType} data:`, error);
+    return { success: false };
   }
 };
 
-export default {
-  openFolder: (storageType: StorageType) => {
+export const STORAGE_FOLDERS = {
+  PROJECTS_BASE: 'projects_folder_id',
+  MARKETING_ASSETS: 'marketing_assets_folder_id',
+  PREVIEWS_BASE: 'previews_folder_id',
+  DOWNLOADS_BASE: 'downloads_folder_id',
+  INVOICES: 'invoices_folder_id'
+};
+
+// Admin Storage Hook
+export const useAdminStorage = () => {
+  const { toast } = useToast();
+  
+  // Get folder URL based on storage type
+  const getFolderUrl = (storageType: StorageType): string => {
     const folderId = STORAGE_FOLDER_MAP[storageType];
-    const url = createGoogleDriveFolderUrl(folderId);
-    window.open(url, '_blank');
+    return googleDriveService.getFolderUrl(folderId);
+  };
+  
+  // Open folder in Google Drive
+  const openFolder = (storageType: StorageType): void => {
+    const folderUrl = getFolderUrl(storageType);
+    window.open(folderUrl, '_blank');
+  };
+  
+  // Upload a file to a specific storage type
+  const uploadFile = async (
+    storageType: StorageType, 
+    file: File, 
+    metadata?: Record<string, any>
+  ): Promise<{ success: boolean, fileUrl?: string, fileId?: string }> => {
+    try {
+      const folderId = STORAGE_FOLDER_MAP[storageType];
+      
+      // Create a FormData object if we're sending this to an actual API
+      const formData = new FormData();
+      formData.append('file', file);
+      
+      if (metadata) {
+        formData.append('metadata', JSON.stringify(metadata));
+      }
+      
+      // Mock upload implementation
+      console.log(`Uploading ${file.name} to folder ${folderId}`);
+      
+      // Simulate API delay
+      await new Promise(resolve => setTimeout(resolve, 1000));
+      
+      // Generate a mock file ID
+      const fileId = await googleDriveService.uploadFile(folderId, file);
+      const fileUrl = googleDriveService.getFileViewUrl(fileId);
+      
+      toast({
+        title: "Upload bem-sucedido",
+        description: `${file.name} foi enviado para ${storageType}.`,
+      });
+      
+      return {
+        success: true,
+        fileUrl,
+        fileId
+      };
+    } catch (error) {
+      console.error(`Error uploading file to ${storageType}:`, error);
+      
+      toast({
+        title: "Erro no upload",
+        description: "Não foi possível enviar o arquivo. Tente novamente.",
+        variant: "destructive",
+      });
+      
+      return { success: false };
+    }
+  };
+  
+  // Save storage settings
+  const saveStorageSettings = async (
+    storageType: StorageType, 
+    settings: Record<string, any>
+  ): Promise<boolean> => {
+    try {
+      console.log(`Saving settings for ${storageType}:`, settings);
+      
+      // Mock implementation
+      localStorage.setItem(`${storageType}_settings`, JSON.stringify(settings));
+      localStorage.setItem(`${storageType}_lastSync`, new Date().toISOString());
+      
+      toast({
+        title: "Configurações salvas",
+        description: `As configurações de ${storageType} foram atualizadas.`,
+      });
+      
+      return true;
+    } catch (error) {
+      console.error(`Error saving settings for ${storageType}:`, error);
+      
+      toast({
+        title: "Erro ao salvar",
+        description: "Não foi possível salvar as configurações. Tente novamente.",
+        variant: "destructive",
+      });
+      
+      return false;
+    }
+  };
+  
+  // Get storage settings
+  const getStorageSettings = (storageType: StorageType): Record<string, any> | null => {
+    try {
+      const settings = localStorage.getItem(`${storageType}_settings`);
+      return settings ? JSON.parse(settings) : null;
+    } catch (error) {
+      console.error(`Error getting settings for ${storageType}:`, error);
+      return null;
+    }
+  };
+  
+  // Get last sync timestamp
+  const getLastSync = (storageType: StorageType): string | null => {
+    return localStorage.getItem(`${storageType}_lastSync`);
+  };
+  
+  return {
+    getFolderUrl,
+    openFolder,
+    uploadFile,
+    saveStorageSettings,
+    getStorageSettings,
+    getLastSync
+  };
+};
+
+export const googleDriveService = {
+  // Get folder URL from folder ID
+  getFolderUrl: (folderId: string): string => {
+    return `https://drive.google.com/drive/folders/${folderId}`;
   },
-  getFolderUrl: (storageType: StorageType): string => {
-    const folderId = STORAGE_FOLDER_MAP[storageType];
-    return createGoogleDriveFolderUrl(folderId);
+  
+  // Get file view URL from file ID
+  getFileViewUrl: (fileId: string): string => {
+    return `https://drive.google.com/file/d/${fileId}/view`;
   },
-  STORAGE_FOLDER_MAP,
-  isOfflineMode,
-  syncStorageData
+  
+  // Get file download URL from file ID
+  getFileDownloadUrl: (fileId: string): string => {
+    return `https://drive.google.com/uc?export=download&id=${fileId}`;
+  },
+  
+  // Mock function to upload a file to Google Drive
+  uploadFile: async (folderId: string, file: File): Promise<string> => {
+    // In a real implementation, this would use the Google Drive API
+    console.log(`Uploading file ${file.name} to folder ${folderId}`);
+    
+    // Simulate upload delay
+    await new Promise(resolve => setTimeout(resolve, 1000));
+    
+    // Generate a mock file ID
+    const fileId = `file_${Date.now()}_${file.name.replace(/\s+/g, '_')}`;
+    
+    console.log(`File uploaded successfully. File ID: ${fileId}`);
+    return fileId;
+  },
+  
+  // Mock function to create a project folder in Google Drive
+  createProjectFolder: async (projectId: string, projectName: string): Promise<string> => {
+    // In a real implementation, this would use the Google Drive API
+    console.log(`Creating folder for project ${projectId} - ${projectName}`);
+    
+    // Simulate API delay
+    await new Promise(resolve => setTimeout(resolve, 500));
+    
+    // Generate a mock folder ID
+    const folderId = `folder_${projectId}_${Date.now()}`;
+    
+    console.log(`Project folder created successfully. Folder ID: ${folderId}`);
+    return folderId;
+  }
 };

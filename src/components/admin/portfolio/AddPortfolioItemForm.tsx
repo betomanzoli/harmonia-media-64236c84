@@ -1,152 +1,191 @@
 
-import React, { useState } from 'react';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Textarea } from '@/components/ui/textarea';
-import { Label } from '@/components/ui/label';
-import { Switch } from '@/components/ui/switch';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import { useToast } from '@/hooks/use-toast';
-
-interface PortfolioItem {
-  title: string;
-  description: string;
-  audioUrl: string;
-  fileId?: string;
-  type: 'example' | 'comparison' | 'stem';
-  featured?: boolean;
-}
+import React, { useState, useEffect } from 'react';
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
 interface AddPortfolioItemFormProps {
-  onAdd: (item: PortfolioItem) => string | null;
+  onAdd: (item: any) => void;
   onCancel: () => void;
+  initialData?: any;
+  isEditing?: boolean;
 }
 
-const AddPortfolioItemForm: React.FC<AddPortfolioItemFormProps> = ({ onAdd, onCancel }) => {
-  const [title, setTitle] = useState('');
-  const [description, setDescription] = useState('');
-  const [audioUrl, setAudioUrl] = useState('');
-  const [type, setType] = useState<'example' | 'comparison' | 'stem'>('example');
-  const [featured, setFeatured] = useState(false);
-  const [isLoading, setIsLoading] = useState(false);
-  const { toast } = useToast();
+const AddPortfolioItemForm: React.FC<AddPortfolioItemFormProps> = ({ 
+  onAdd, 
+  onCancel, 
+  initialData = null,
+  isEditing = false
+}) => {
+  const [formData, setFormData] = useState({
+    title: '',
+    subtitle: '',
+    description: '',
+    category: '',
+    genre: '',
+    type: '',
+    audioUrl: '',
+    imageUrl: ''
+  });
+
+  useEffect(() => {
+    if (initialData) {
+      setFormData({
+        title: initialData.title || '',
+        subtitle: initialData.subtitle || '',
+        description: initialData.description || '',
+        category: initialData.category || '',
+        genre: initialData.genre || '',
+        type: initialData.type || '',
+        audioUrl: initialData.audioUrl || initialData.audioSrc || '',
+        imageUrl: initialData.imageUrl || ''
+      });
+    }
+  }, [initialData]);
+
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+    const { name, value } = e.target;
+    setFormData(prev => ({ ...prev, [name]: value }));
+  };
+
+  const handleSelectChange = (name: string, value: string) => {
+    setFormData(prev => ({ ...prev, [name]: value }));
+  };
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     
-    // Validate fields
-    if (!title.trim() || !description.trim() || !audioUrl.trim()) {
-      toast({
-        title: "Campos incompletos",
-        description: "Por favor, preencha todos os campos obrigatórios.",
-        variant: "destructive"
-      });
-      return;
-    }
+    const itemData = {
+      ...formData,
+      id: initialData?.id,
+      date: initialData?.date || new Date().toISOString().split('T')[0],
+      audioSrc: formData.audioUrl // Ensure audioSrc is set for compatibility
+    };
     
-    setIsLoading(true);
-    
-    try {
-      // Extract Google Drive file ID if possible
-      const fileIdMatch = audioUrl.match(/[-\w]{25,}/);
-      const fileId = fileIdMatch ? fileIdMatch[0] : '';
-      
-      const newItem: PortfolioItem = {
-        title: title.trim(),
-        description: description.trim(),
-        audioUrl: audioUrl.trim(),
-        fileId,
-        type,
-        featured
-      };
-      
-      onAdd(newItem);
-    } catch (error) {
-      console.error('Erro ao adicionar item:', error);
-      toast({
-        title: "Erro ao adicionar item",
-        description: "Ocorreu um erro ao adicionar o item ao portfólio. Tente novamente.",
-        variant: "destructive"
-      });
-    } finally {
-      setIsLoading(false);
-    }
+    onAdd(itemData);
   };
 
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
-      <div className="space-y-2">
-        <Label htmlFor="title">Título</Label>
-        <Input
-          id="title"
-          value={title}
-          onChange={(e) => setTitle(e.target.value)}
-          placeholder="Ex: Música para Casamento"
-          required
-        />
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div>
+          <label className="block text-sm font-medium mb-1">Título</label>
+          <Input
+            name="title"
+            value={formData.title}
+            onChange={handleChange}
+            placeholder="Título da música"
+            required
+            className="bg-slate-700"
+          />
+        </div>
+        
+        <div>
+          <label className="block text-sm font-medium mb-1">Subtítulo</label>
+          <Input
+            name="subtitle"
+            value={formData.subtitle}
+            onChange={handleChange}
+            placeholder="Subtítulo ou finalidade"
+            className="bg-slate-700"
+          />
+        </div>
       </div>
       
-      <div className="space-y-2">
-        <Label htmlFor="description">Descrição</Label>
+      <div>
+        <label className="block text-sm font-medium mb-1">Descrição</label>
         <Textarea
-          id="description"
-          value={description}
-          onChange={(e) => setDescription(e.target.value)}
-          placeholder="Descrição detalhada do item"
-          rows={3}
-          required
+          name="description"
+          value={formData.description}
+          onChange={handleChange}
+          placeholder="Descrição da música"
+          className="bg-slate-700 min-h-[100px]"
         />
       </div>
       
-      <div className="space-y-2">
-        <Label htmlFor="audioUrl">URL do Google Drive</Label>
-        <Input
-          id="audioUrl"
-          value={audioUrl}
-          onChange={(e) => setAudioUrl(e.target.value)}
-          placeholder="https://drive.google.com/file/d/..."
-          required
-        />
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <div>
+          <label className="block text-sm font-medium mb-1">Categoria</label>
+          <Select 
+            value={formData.category} 
+            onValueChange={(value) => handleSelectChange('category', value)}
+          >
+            <SelectTrigger className="bg-slate-700">
+              <SelectValue placeholder="Selecione uma categoria" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="Publicidade">Publicidade</SelectItem>
+              <SelectItem value="Audiovisual">Audiovisual</SelectItem>
+              <SelectItem value="Podcast">Podcast</SelectItem>
+              <SelectItem value="Presente">Presente</SelectItem>
+              <SelectItem value="Corporativo">Corporativo</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
+        
+        <div>
+          <label className="block text-sm font-medium mb-1">Gênero</label>
+          <Input
+            name="genre"
+            value={formData.genre}
+            onChange={handleChange}
+            placeholder="Pop, Rock, MPB, etc."
+            className="bg-slate-700"
+          />
+        </div>
+        
+        <div>
+          <label className="block text-sm font-medium mb-1">Tipo</label>
+          <Select 
+            value={formData.type} 
+            onValueChange={(value) => handleSelectChange('type', value)}
+          >
+            <SelectTrigger className="bg-slate-700">
+              <SelectValue placeholder="Selecione um tipo" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="instrumental">Instrumental</SelectItem>
+              <SelectItem value="vocal">Com Vocal</SelectItem>
+              <SelectItem value="jingle">Jingle</SelectItem>
+              <SelectItem value="vinheta">Vinheta</SelectItem>
+              <SelectItem value="trilha">Trilha Sonora</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
       </div>
       
-      <div className="space-y-2">
-        <Label htmlFor="type">Tipo de Item</Label>
-        <Select
-          value={type}
-          onValueChange={(value: 'example' | 'comparison' | 'stem') => setType(value)}
-        >
-          <SelectTrigger className="w-full">
-            <SelectValue placeholder="Selecione o tipo" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="example">Exemplo</SelectItem>
-            <SelectItem value="comparison">Comparação (AI vs Final)</SelectItem>
-            <SelectItem value="stem">Stem (Instrumental/Vocal)</SelectItem>
-          </SelectContent>
-        </Select>
-      </div>
-      
-      <div className="flex items-center space-x-2">
-        <Switch 
-          id="featured"
-          checked={featured}
-          onCheckedChange={setFeatured}
-        />
-        <Label htmlFor="featured">Exibir em destaque no portfólio</Label>
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div>
+          <label className="block text-sm font-medium mb-1">URL do Áudio</label>
+          <Input
+            name="audioUrl"
+            value={formData.audioUrl}
+            onChange={handleChange}
+            placeholder="https://example.com/audio.mp3"
+            className="bg-slate-700"
+            required
+          />
+        </div>
+        
+        <div>
+          <label className="block text-sm font-medium mb-1">URL da Imagem (opcional)</label>
+          <Input
+            name="imageUrl"
+            value={formData.imageUrl}
+            onChange={handleChange}
+            placeholder="https://example.com/image.jpg"
+            className="bg-slate-700"
+          />
+        </div>
       </div>
       
       <div className="flex justify-end space-x-2 pt-4">
-        <Button type="button" variant="outline" onClick={onCancel} disabled={isLoading}>
+        <Button variant="outline" type="button" onClick={onCancel}>
           Cancelar
         </Button>
-        <Button type="submit" disabled={isLoading}>
-          {isLoading ? 'Salvando...' : 'Salvar Item'}
+        <Button type="submit" className="bg-green-600 hover:bg-green-700">
+          {isEditing ? 'Atualizar Item' : 'Adicionar Item'}
         </Button>
       </div>
     </form>

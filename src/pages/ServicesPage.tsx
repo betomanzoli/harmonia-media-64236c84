@@ -1,16 +1,13 @@
 
 import React from 'react';
-import Header from '@/components/Header';
-import Footer from '@/components/Footer';
 import Services from './Services';
+import PublicLayout from '@/layouts/PublicLayout';
 
 const ServicesPage: React.FC = () => {
   return (
-    <div className="min-h-screen bg-background">
-      <Header />
+    <PublicLayout>
       <Services />
-      <Footer />
-    </div>
+    </PublicLayout>
   );
 };
 
