@@ -1,127 +1,160 @@
-import React from 'react';
+
+import React, { useState } from 'react';
+import { useForm } from 'react-hook-form';
 import { Button } from "@/components/ui/button";
-import { Plus } from 'lucide-react';
-import PreviewVersionInput from './PreviewVersionInput';
-import { useToast } from "@/hooks/use-toast";
-import { useNewProjectForm } from '@/hooks/admin/useNewProjectForm';
-import ClientInfoForm from './ClientInfoForm';
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
+import { usePreviewProjects } from '@/hooks/admin/usePreviewProjects';
+import { useToast } from '@/hooks/use-toast';
+
 interface NewProjectFormProps {
-  onAddProject: (project: any) => string | null;
+  onAddProject: (projectData: any) => void;
 }
-const NewProjectForm: React.FC<NewProjectFormProps> = ({
-  onAddProject
-}) => {
-  const {
-    formState: {
-      clientName,
-      clientEmail,
-      packageType,
-      versions,
-      isSubmitting
-    },
-    setters: {
-      setClientName,
-      setClientEmail,
-      setPackageType,
-      setIsSubmitting
-    },
-    actions: {
-      addVersion,
-      removeVersion,
-      updateVersion,
-      resetForm
+
+const NewProjectForm: React.FC<NewProjectFormProps> = ({ onAddProject }) => {
+  const { addProject } = usePreviewProjects();
+  const { toast } = useToast();
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  
+  const { register, handleSubmit, reset, formState: { errors } } = useForm({
+    defaultValues: {
+      clientName: '',
+      clientEmail: '',
+      packageType: 'essencial',
+      description: ''
     }
-  } = useNewProjectForm();
-  const {
-    toast
-  } = useToast();
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!clientName.trim() || !clientEmail.trim() || !packageType) {
-      toast({
-        title: "Informações incompletas",
-        description: "Por favor, preencha todos os campos obrigatórios.",
-        variant: "destructive"
-      });
-      return;
-    }
-    const hasEmptyVersions = versions.some(v => !v.title.trim() || !v.description.trim() || !v.audioUrl.trim());
-    if (hasEmptyVersions) {
-      toast({
-        title: "Versões incompletas",
-        description: "Por favor, preencha todas as informações das versões.",
-        variant: "destructive"
-      });
-      return;
-    }
+  });
+  
+  const onSubmit = async (data: any) => {
     setIsSubmitting(true);
     try {
-      const project = {
-        clientName: clientName.trim(),
-        clientEmail: clientEmail.trim(),
-        packageType: packageType,
+      // Calculate expiration date (30 days from now)
+      const expDate = new Date();
+      expDate.setDate(expDate.getDate() + 30);
+      const expirationDate = expDate.toLocaleDateString('pt-BR');
+      
+      // Create project object with properly typed status
+      const projectData = {
+        clientName: data.clientName,
+        clientEmail: data.clientEmail,
+        packageType: data.packageType,
         createdAt: new Date().toLocaleDateString('pt-BR'),
-        status: 'waiting' as const,
-        versions: versions.length,
+        status: 'waiting' as 'waiting', // Type assertion to match the expected type
+        versions: 0,
         previewUrl: '',
-        expirationDate: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toLocaleDateString('pt-BR'),
+        expirationDate: expirationDate,
         lastActivityDate: new Date().toLocaleDateString('pt-BR'),
-        versionsList: versions.map((v, index) => ({
-          id: `v${index + 1}`,
-          name: v.title,
-          description: v.description,
-          audioUrl: v.audioUrl,
-          dateAdded: new Date().toLocaleDateString('pt-BR'),
-          // Extract fileId from Google Drive URL
-          fileId: v.audioUrl.match(/[-\w]{25,}/) ? v.audioUrl.match(/[-\w]{25,}/)![0] : ''
-        }))
+        description: data.description
       };
-      const newProjectId = onAddProject(project);
-      if (newProjectId) {
-        resetForm();
-        toast({
-          title: "Projeto criado com sucesso",
-          description: `O projeto ${newProjectId} foi criado com ${versions.length} versão(ões).`
-        });
-      }
-    } catch (error) {
+      
+      // Add project and get ID
+      const projectId = addProject(projectData);
+      
+      // Notify parent component
+      onAddProject({
+        ...projectData,
+        id: projectId
+      });
+      
+      // Show success message
       toast({
-        title: "Erro ao criar projeto",
-        description: "Ocorreu um erro ao criar o projeto. Tente novamente.",
+        title: "Projeto criado",
+        description: `Projeto para ${data.clientName} criado com sucesso!`
+      });
+      
+      // Reset form
+      reset();
+    } catch (error) {
+      console.error("Error creating project:", error);
+      toast({
+        title: "Erro",
+        description: "Houve um erro ao criar o projeto. Tente novamente.",
         variant: "destructive"
       });
     } finally {
       setIsSubmitting(false);
     }
   };
-  return <form onSubmit={handleSubmit} className="space-y-6">
-      <div className="space-y-4">
-        <h3 className="text-lg font-semibold">Informações do Cliente</h3>
-        
-        <ClientInfoForm clientName={clientName} clientEmail={clientEmail} packageType={packageType} onClientNameChange={setClientName} onClientEmailChange={setClientEmail} onPackageTypeChange={setPackageType} />
-      </div>
-
-      <div className="space-y-4">
-        <div className="flex items-center justify-between">
-          <h3 className="text-lg font-semibold">Versões Musicais</h3>
-          <Button type="button" onClick={addVersion} variant="outline">
-            <Plus className="w-4 h-4 mr-2" />
-            Adicionar Versão
-          </Button>
+  
+  return (
+    <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div>
+          <label htmlFor="clientName" className="block text-sm font-medium text-gray-700 mb-1">
+            Nome do Cliente
+          </label>
+          <Input 
+            id="clientName"
+            placeholder="Nome do cliente"
+            {...register('clientName', { required: "Nome do cliente é obrigatório" })}
+            className={errors.clientName ? "border-red-500" : ""}
+          />
+          {errors.clientName && (
+            <p className="text-red-500 text-xs mt-1">{errors.clientName.message?.toString()}</p>
+          )}
         </div>
-
-        <div className="space-y-4 max-h-[50vh] overflow-y-auto pr-2 pb-4">
-          {versions.map((version, index) => <div key={index} className="version-container">
-              <PreviewVersionInput index={index} title={version.title} description={version.description} audioUrl={version.audioUrl} recommended={false} onTitleChange={(i, value) => updateVersion(i, 'title', value)} onDescriptionChange={(i, value) => updateVersion(i, 'description', value)} onAudioUrlChange={(i, value) => updateVersion(i, 'audioUrl', value)} onRecommendedChange={(i, value) => {}} onRemove={removeVersion} canRemove={versions.length > 1} />
-            </div>)}
+        
+        <div>
+          <label htmlFor="clientEmail" className="block text-sm font-medium text-gray-700 mb-1">
+            Email do Cliente
+          </label>
+          <Input 
+            id="clientEmail"
+            type="email"
+            placeholder="email@exemplo.com"
+            {...register('clientEmail', { 
+              required: "Email do cliente é obrigatório",
+              pattern: {
+                value: /^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}$/i,
+                message: "Email inválido"
+              }
+            })}
+            className={errors.clientEmail ? "border-red-500" : ""}
+          />
+          {errors.clientEmail && (
+            <p className="text-red-500 text-xs mt-1">{errors.clientEmail.message?.toString()}</p>
+          )}
         </div>
       </div>
       
-      <div className="flex justify-end sticky bottom-0 pt-4 mx-[240px] px-[60px] py-0 rounded-sm my-0 bg-neutral-900">
-        <Button type="submit" disabled={isSubmitting}>
-          {isSubmitting ? 'Criando...' : 'Criar Projeto'}
+      <div>
+        <label htmlFor="packageType" className="block text-sm font-medium text-gray-700 mb-1">
+          Tipo de Pacote
+        </label>
+        <select
+          id="packageType"
+          {...register('packageType')}
+          className="w-full p-2 border rounded-md"
+        >
+          <option value="essencial">Essencial</option>
+          <option value="profissional">Profissional</option>
+          <option value="premium">Premium</option>
+        </select>
+      </div>
+      
+      <div>
+        <label htmlFor="description" className="block text-sm font-medium text-gray-700 mb-1">
+          Descrição do Projeto
+        </label>
+        <Textarea 
+          id="description"
+          placeholder="Detalhes adicionais sobre o projeto..."
+          {...register('description')}
+          className="h-24"
+        />
+      </div>
+      
+      <div className="flex justify-end">
+        <Button
+          type="submit"
+          disabled={isSubmitting}
+          className="bg-harmonia-green hover:bg-harmonia-green/90"
+        >
+          {isSubmitting ? "Criando..." : "Criar Projeto"}
         </Button>
       </div>
-    </form>;
+    </form>
+  );
 };
+
 export default NewProjectForm;

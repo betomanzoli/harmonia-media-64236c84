@@ -27,12 +27,22 @@ import AdminGuides from './pages/admin/AdminGuides';
 import ServicesPage from './pages/ServicesPage';
 import ContactPage from './pages/ContactPage';
 import PreviewProjectPage from './pages/admin/PreviewProjectPage';
+import BriefingComplete from './pages/BriefingComplete';
+import BriefingSuccess from './pages/BriefingSuccess';
 
 // These routes are supplementary to the main routes defined in App.tsx
 const additionalRoutes: RouteObject[] = [
   {
     path: '/briefing',
     element: <Briefing />,
+  },
+  {
+    path: '/briefing-complete',
+    element: <BriefingComplete />,
+  },
+  {
+    path: '/briefing-success',
+    element: <BriefingSuccess />,
   },
   {
     path: '/calculadora',

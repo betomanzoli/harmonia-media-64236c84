@@ -7,11 +7,11 @@ import { Button } from "@/components/ui/button";
 import { Eye } from 'lucide-react';
 import { Link } from 'react-router-dom';
 
-interface Project {
+export interface Project {
   id: string;
   clientName: string;
   title: string;
-  status: 'pending' | 'in_progress' | 'completed' | 'feedback';
+  status: string;
   date: string;
 }
 
@@ -23,10 +23,12 @@ const RecentProjectsList: React.FC<RecentProjectsListProps> = ({ projects }) => 
   const getStatusBadge = (status: string) => {
     switch(status) {
       case 'pending':
+      case 'waiting':
         return <Badge className="bg-yellow-500">Pendente</Badge>;
       case 'in_progress':
         return <Badge className="bg-blue-500">Em Progresso</Badge>;
       case 'completed':
+      case 'approved':
         return <Badge className="bg-green-500">Concluído</Badge>;
       case 'feedback':
         return <Badge className="bg-purple-500">Feedback</Badge>;
