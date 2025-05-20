@@ -1,9 +1,7 @@
-
 import React, { useEffect } from 'react';
 import ProcessStep from './ProcessStep';
 import { Card } from "@/components/ui/card";
 import { FileText, Package, CreditCard, MessageSquare, Music, Headphones, FileCheck, Settings } from 'lucide-react';
-
 const Process: React.FC = () => {
   // Make sure the element ID is properly set for the scroll target
   useEffect(() => {
@@ -16,9 +14,7 @@ const Process: React.FC = () => {
       }
     }
   }, []);
-
-  return (
-    <section id="processo" className="py-20 px-6 md:px-10">
+  return <section id="processo" className="py-20 px-6 md:px-10">
       <div className="max-w-7xl mx-auto">
         <div className="text-center mb-12">
           <h2 className="text-3xl font-bold mb-4">Como Funciona</h2>
@@ -29,7 +25,7 @@ const Process: React.FC = () => {
         
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mb-16">
           <ProcessStep icon={<Package className="w-8 h-8 text-harmonia-green" />} title="1. Escolha do Pacote" description="Selecione o plano que melhor atende suas necessidades de uso e orçamento." />
-          <ProcessStep icon={<CreditCard className="w-8 h-8 text-harmonia-green" />} title="2. Pagamento" description="Processo seguro com múltiplas formas de pagamento, com emissão de nota fiscal." />
+          <ProcessStep icon={<CreditCard className="w-8 h-8 text-harmonia-green" />} title="2. Pagamento" description="Processo seguro com múltiplas formas de pagamento e emissão automática de nota fiscal." />
           <ProcessStep icon={<MessageSquare className="w-8 h-8 text-harmonia-green" />} title="3. Briefing Detalhado" description="Após o pagamento, compartilhe sua história em detalhes para orientar a composição." />
         </div>
         
@@ -49,8 +45,6 @@ const Process: React.FC = () => {
           
         </div>
       </div>
-    </section>
-  );
+    </section>;
 };
-
 export default Process;

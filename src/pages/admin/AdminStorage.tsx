@@ -6,7 +6,6 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Progress } from "@/components/ui/progress";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import StorageIntegrationDashboard from '@/components/admin/storage/StorageIntegrationDashboard';
 import { 
   Select, 
   SelectContent, 
@@ -39,10 +38,6 @@ import {
   Calendar 
 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
-import { useFileUpload } from '@/hooks/admin/useFileUpload';
-import { DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, Dialog } from '@/components/ui/dialog';
-import { Label } from '@/components/ui/label';
-import { googleDriveService, STORAGE_FOLDERS } from '@/services/googleDriveService';
 
 // Mock files for demonstration
 const mockFiles = [
@@ -53,8 +48,7 @@ const mockFiles = [
     size: 4.5, // MB
     uploadDate: '15/06/2023',
     projectId: 'P045',
-    lastAccessed: '20/06/2023',
-    driveUrl: `https://drive.google.com/file/d/${STORAGE_FOLDERS.DOWNLOADS_BASE}/view`
+    lastAccessed: '20/06/2023'
   },
   {
     id: 'file2',
@@ -63,8 +57,7 @@ const mockFiles = [
     size: 1.2,
     uploadDate: '12/06/2023',
     projectId: 'P044',
-    lastAccessed: '14/06/2023',
-    driveUrl: `https://drive.google.com/file/d/${STORAGE_FOLDERS.PROJECTS_BASE}/view`
+    lastAccessed: '14/06/2023'
   },
   {
     id: 'file3',
@@ -73,8 +66,7 @@ const mockFiles = [
     size: 2.8,
     uploadDate: '18/06/2023',
     projectId: 'P046',
-    lastAccessed: '19/06/2023',
-    driveUrl: `https://drive.google.com/file/d/${STORAGE_FOLDERS.MARKETING_ASSETS}/view`
+    lastAccessed: '19/06/2023'
   },
   {
     id: 'file4',
@@ -83,8 +75,7 @@ const mockFiles = [
     size: 15.7,
     uploadDate: '10/06/2023',
     projectId: 'P043',
-    lastAccessed: '16/06/2023',
-    driveUrl: `https://drive.google.com/file/d/${STORAGE_FOLDERS.PROJECTS_BASE}/view`
+    lastAccessed: '16/06/2023'
   },
   {
     id: 'file5',
@@ -93,8 +84,7 @@ const mockFiles = [
     size: 6.2,
     uploadDate: '21/06/2023',
     projectId: 'P047',
-    lastAccessed: '21/06/2023',
-    driveUrl: `https://drive.google.com/file/d/${STORAGE_FOLDERS.PREVIEWS_BASE}/view`
+    lastAccessed: '21/06/2023'
   }
 ];
 
@@ -107,11 +97,6 @@ const AdminStorage: React.FC = () => {
   const [storageUsed, setStorageUsed] = useState(29.4); // GB
   const [storageTotal, setStorageTotal] = useState(100); // GB
   const [isUploading, setIsUploading] = useState(false);
-  const [isUploadDialogOpen, setIsUploadDialogOpen] = useState(false);
-  const [uploadFileName, setUploadFileName] = useState('');
-  const [uploadFileType, setUploadFileType] = useState('audio');
-  const [uploadProjectId, setUploadProjectId] = useState('');
-  const [selectedFile, setSelectedFile] = useState<File | null>(null);
   
   useEffect(() => {
     // Simulate API loading
@@ -145,105 +130,44 @@ const AdminStorage: React.FC = () => {
   
   const totalFileSize = files.reduce((acc, file) => acc + file.size, 0);
   
-  const handleUploadButtonClick = () => {
-    setIsUploadDialogOpen(true);
-  };
-  
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (e.target.files && e.target.files[0]) {
-      const file = e.target.files[0];
-      setSelectedFile(file);
-      setUploadFileName(file.name);
-    }
-  };
-  
-  const handleUpload = async () => {
-    if (!selectedFile || !uploadFileName || !uploadFileType || !uploadProjectId) {
-      toast({
-        title: "Informações incompletas",
-        description: "Por favor, preencha todos os campos obrigatórios.",
-        variant: "destructive"
-      });
-      return;
-    }
-    
+  const handleUploadButtonClick = (e: React.MouseEvent) => {
+    // Normally would open file picker, but for demo just show progress
     setIsUploading(true);
-    setIsUploadDialogOpen(false);
-    
     toast({
       title: "Upload iniciado",
-      description: `Enviando ${uploadFileName} para o Google Drive...`
+      description: "Simulação de upload de arquivo iniciada."
     });
     
-    // Determine which Google Drive folder to use based on file type
-    let folderId = STORAGE_FOLDERS.PROJECTS_BASE;
-    if (uploadFileType === 'audio' || uploadFileType === 'preview') {
-      folderId = STORAGE_FOLDERS.PREVIEWS_BASE;
-    } else if (uploadFileType === 'portfolio') {
-      folderId = STORAGE_FOLDERS.MARKETING_ASSETS;
-    } else if (uploadFileType === 'invoice') {
-      folderId = STORAGE_FOLDERS.INVOICES;
-    } else if (uploadFileType === 'final_version') {
-      folderId = STORAGE_FOLDERS.DOWNLOADS_BASE;
-    }
-    
-    try {
-      // Simulate upload to Google Drive
-      setTimeout(() => {
-        const fileId = `file_${Date.now()}_${uploadFileName.replace(/\s+/g, '_')}`;
-        const fileUrl = googleDriveService.getFileViewUrl(fileId);
-        
-        const newFile = {
-          id: fileId,
-          name: uploadFileName,
-          type: uploadFileType,
-          size: selectedFile.size / (1024 * 1024), // Convert to MB
-          uploadDate: new Date().toLocaleDateString('pt-BR'),
-          projectId: uploadProjectId,
-          lastAccessed: new Date().toLocaleDateString('pt-BR'),
-          driveUrl: fileUrl
-        };
-        
-        setFiles([...files, newFile]);
-        setIsUploading(false);
-        
-        toast({
-          title: "Upload concluído",
-          description: `${uploadFileName} foi enviado com sucesso e vinculado ao projeto ${uploadProjectId}.`
-        });
-        
-        // Reset form
-        setSelectedFile(null);
-        setUploadFileName('');
-        setUploadFileType('audio');
-        setUploadProjectId('');
-      }, 2000);
-    } catch (error) {
+    setTimeout(() => {
       setIsUploading(false);
       toast({
-        title: "Erro no upload",
-        description: "Ocorreu um erro ao fazer upload do arquivo. Tente novamente.",
-        variant: "destructive"
+        title: "Upload concluído",
+        description: "Arquivo enviado com sucesso."
       });
-    }
+      
+      // Add a mock file
+      const newFile = {
+        id: `file${files.length + 1}`,
+        name: `Novo Arquivo ${new Date().toISOString().slice(0, 10)}.mp3`,
+        type: 'audio',
+        size: 3.2,
+        uploadDate: new Date().toLocaleDateString('pt-BR'),
+        projectId: 'P050',
+        lastAccessed: new Date().toLocaleDateString('pt-BR')
+      };
+      setFiles([...files, newFile]);
+    }, 3000);
   };
   
   const handleDeleteFile = (fileId: string) => {
     toast({
       title: "Arquivo excluído",
-      description: "O arquivo foi removido com sucesso do sistema."
+      description: "O arquivo foi removido com sucesso."
     });
     setFiles(files.filter(file => file.id !== fileId));
   };
   
-  const handleOpenInDrive = (driveUrl: string) => {
-    window.open(driveUrl, '_blank');
-  };
-  
   const handleDownloadFile = (fileId: string) => {
-    const downloadUrl = googleDriveService.getFileDownloadUrl(fileId);
-    window.open(downloadUrl, '_blank');
-    
     toast({
       title: "Download iniciado",
       description: "O arquivo está sendo baixado."
@@ -259,6 +183,12 @@ const AdminStorage: React.FC = () => {
         <div className="flex justify-between items-center mb-6">
           <h1 className="text-2xl font-bold">Gerenciamento de Armazenamento</h1>
           <div className="flex gap-2">
+            <input
+              type="file"
+              id="file-upload"
+              className="hidden"
+              multiple
+            />
             <Button 
               onClick={handleUploadButtonClick} 
               disabled={isUploading}
@@ -271,16 +201,14 @@ const AdminStorage: React.FC = () => {
               ) : (
                 <>
                   <Upload className="mr-2 h-4 w-4" />
-                  Enviar Arquivos para Google Drive
+                  Enviar Arquivos
                 </>
               )}
             </Button>
           </div>
         </div>
         
-        <StorageIntegrationDashboard />
-        
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6 mt-6">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-sm font-medium">Armazenamento Utilizado</CardTitle>
@@ -349,8 +277,8 @@ const AdminStorage: React.FC = () => {
         
         <Card>
           <CardHeader>
-            <CardTitle>Arquivos e Recursos no Google Drive</CardTitle>
-            <CardDescription>Gerencie músicas, documentos e outros arquivos armazenados no Google Drive do projeto.</CardDescription>
+            <CardTitle>Arquivos e Recursos</CardTitle>
+            <CardDescription>Gerencie músicas, documentos e outros arquivos armazenados.</CardDescription>
           </CardHeader>
           <CardContent>
             <div className="flex flex-col md:flex-row gap-4 items-center justify-between mb-4">
@@ -425,9 +353,13 @@ const AdminStorage: React.FC = () => {
                                   <Download className="mr-2 h-4 w-4" />
                                   Download
                                 </DropdownMenuItem>
-                                <DropdownMenuItem onClick={() => handleOpenInDrive(file.driveUrl)}>
+                                <DropdownMenuItem>
+                                  <Image className="mr-2 h-4 w-4" />
+                                  Visualizar
+                                </DropdownMenuItem>
+                                <DropdownMenuItem>
                                   <FileText className="mr-2 h-4 w-4" />
-                                  Abrir no Google Drive
+                                  Propriedades
                                 </DropdownMenuItem>
                                 <DropdownMenuSeparator />
                                 <DropdownMenuItem 
@@ -471,83 +403,6 @@ const AdminStorage: React.FC = () => {
             )}
           </CardContent>
         </Card>
-        
-        <Dialog open={isUploadDialogOpen} onOpenChange={setIsUploadDialogOpen}>
-          <DialogContent className="sm:max-w-[500px]">
-            <DialogHeader>
-              <DialogTitle>Upload de Arquivo para Google Drive</DialogTitle>
-              <DialogDescription>
-                Envie um arquivo para o Google Drive e vincule-o a um projeto.
-              </DialogDescription>
-            </DialogHeader>
-            
-            <div className="grid gap-4 py-4">
-              <div className="grid grid-cols-4 items-center gap-4">
-                <Label htmlFor="file" className="text-right">
-                  Arquivo
-                </Label>
-                <Input
-                  id="file"
-                  type="file"
-                  className="col-span-3"
-                  onChange={handleFileChange}
-                />
-              </div>
-              
-              <div className="grid grid-cols-4 items-center gap-4">
-                <Label htmlFor="filename" className="text-right">
-                  Nome
-                </Label>
-                <Input
-                  id="filename"
-                  className="col-span-3"
-                  value={uploadFileName}
-                  onChange={(e) => setUploadFileName(e.target.value)}
-                />
-              </div>
-              
-              <div className="grid grid-cols-4 items-center gap-4">
-                <Label htmlFor="filetype" className="text-right">
-                  Tipo
-                </Label>
-                <Select value={uploadFileType} onValueChange={setUploadFileType}>
-                  <SelectTrigger className="col-span-3">
-                    <SelectValue placeholder="Selecione um tipo" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="audio">Áudio</SelectItem>
-                    <SelectItem value="preview">Prévia</SelectItem>
-                    <SelectItem value="document">Documento</SelectItem>
-                    <SelectItem value="image">Imagem</SelectItem>
-                    <SelectItem value="video">Vídeo</SelectItem>
-                    <SelectItem value="portfolio">Portfólio</SelectItem>
-                    <SelectItem value="invoice">Fatura</SelectItem>
-                    <SelectItem value="final_version">Versão Final</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-              
-              <div className="grid grid-cols-4 items-center gap-4">
-                <Label htmlFor="projectid" className="text-right">
-                  ID do Projeto
-                </Label>
-                <Input
-                  id="projectid"
-                  className="col-span-3"
-                  value={uploadProjectId}
-                  onChange={(e) => setUploadProjectId(e.target.value)}
-                  placeholder="Ex: P001"
-                />
-              </div>
-            </div>
-            
-            <DialogFooter>
-              <Button type="submit" onClick={handleUpload}>
-                Enviar para o Google Drive
-              </Button>
-            </DialogFooter>
-          </DialogContent>
-        </Dialog>
       </div>
     </AdminLayout>
   );

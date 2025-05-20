@@ -6,6 +6,7 @@ import Process from '@/components/Process';
 import Services from '@/components/Services';
 import Portfolio from '@/components/Portfolio';
 import Testimonials from '@/components/Testimonials';
+import Partnership from '@/components/Partnership';
 import ServiceExtras from '@/components/ServiceExtras';
 
 const Home: React.FC = () => {
@@ -22,6 +23,7 @@ const Home: React.FC = () => {
       <Portfolio />
       <Testimonials />
       <ServiceExtras onExtraServiceClick={handleExtraServiceClick} />
+      <Partnership />
     </PublicLayout>
   );
 };

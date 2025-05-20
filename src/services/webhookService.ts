@@ -1,62 +1,184 @@
+// Service to manage webhooks
+import { supabase } from '@/lib/supabase';
 
-export type NotificationType = 'test_message' | 'new_portfolio_item' | 'feedback_received' | 'new_customer' | 'client_message' | 'preview_approved';
+// Define acceptable notification types
+export type NotificationType = 
+  | 'new_portfolio_item' 
+  | 'test_message' 
+  | 'feedback_received' 
+  | 'new_audio' 
+  | 'new_customer' 
+  | 'new_order' 
+  | 'new_invoice'
+  | 'briefing_received';
 
-const webhookService = {
-  getWebhookUrl: async (): Promise<string> => {
-    return localStorage.getItem('webhook_url') || 'https://humbrock.app.n8n.cloud/webhook/16ae1112-2469-420d-8fcc-c9569152bd8f/chat';
-  },
+export interface WebhookPayload {
+  type: NotificationType;
+  data: any;
+  timestamp: string;
+}
 
-  saveWebhookUrl: async (url: string): Promise<boolean> => {
-    try {
-      localStorage.setItem('webhook_url', url);
-      return true;
-    } catch (error) {
-      console.error('Error saving webhook URL:', error);
-      return false;
+const WEBHOOK_STORAGE_KEY = 'harmonia_webhook_url';
+const DEFAULT_WEBHOOK_URL = 'https://hooks.zapier.com/hooks/catch/22316385/2031hl7/';
+
+const getWebhookUrl = async (): Promise<string | null> => {
+  try {
+    // First try to get from localStorage
+    const localUrl = localStorage.getItem(WEBHOOK_STORAGE_KEY);
+    if (localUrl) {
+      console.log('URL do webhook recuperada do localStorage:', localUrl);
+      return localUrl;
     }
-  },
-
-  sendToWebhook: async (url: string, payload: any): Promise<boolean> => {
+    
+    // If not in localStorage, try to get from database
     try {
-      console.log(`Sending data to webhook at ${url}`, payload);
-      
-      const response = await fetch(url, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(payload),
-        mode: 'no-cors' // Use no-cors to avoid CORS issues with external webhooks
-      });
-      
-      console.log('Webhook response:', response);
-      return true;
-    } catch (error) {
-      console.error('Error sending data to webhook:', error);
-      return false;
-    }
-  },
-  
-  sendItemNotification: async (type: NotificationType, data: any): Promise<boolean> => {
-    try {
-      const url = await webhookService.getWebhookUrl();
-      if (!url) {
-        console.warn('No webhook URL configured');
-        return false;
+      const { data, error } = await supabase
+        .from('system_settings')
+        .select('value')
+        .eq('key', 'webhook_url')
+        .single();
+        
+      if (error) {
+        console.error('Erro ao buscar URL do webhook:', error);
+        // If error, use default URL and save it
+        localStorage.setItem(WEBHOOK_STORAGE_KEY, DEFAULT_WEBHOOK_URL);
+        return DEFAULT_WEBHOOK_URL;
       }
       
-      const payload = {
-        type,
-        data,
-        timestamp: new Date().toISOString()
-      };
+      const webhookUrl = data?.value || DEFAULT_WEBHOOK_URL;
+      console.log('URL do webhook recuperada:', webhookUrl);
       
-      return await webhookService.sendToWebhook(url, payload);
-    } catch (error) {
-      console.error('Error sending notification:', error);
-      return false;
+      // Save to localStorage for future use
+      localStorage.setItem(WEBHOOK_STORAGE_KEY, webhookUrl);
+      
+      return webhookUrl;
+    } catch (dbErr) {
+      console.error('Erro de banco de dados:', dbErr);
+      // Use default URL in case of database error
+      localStorage.setItem(WEBHOOK_STORAGE_KEY, DEFAULT_WEBHOOK_URL);
+      return DEFAULT_WEBHOOK_URL;
     }
+  } catch (err) {
+    console.error('Erro ao obter URL do webhook:', err);
+    // If error, use default URL and save it
+    localStorage.setItem(WEBHOOK_STORAGE_KEY, DEFAULT_WEBHOOK_URL);
+    return DEFAULT_WEBHOOK_URL;
   }
 };
 
-export default webhookService;
+const saveWebhookUrl = async (url: string): Promise<boolean> => {
+  try {
+    console.log('Salvando URL do webhook:', url);
+    
+    // Always save to localStorage first for persistence
+    localStorage.setItem(WEBHOOK_STORAGE_KEY, url);
+    
+    // Then try to save to database
+    try {
+      const { error } = await supabase
+        .from('system_settings')
+        .upsert({ key: 'webhook_url', value: url }, { onConflict: 'key' });
+        
+      if (error) {
+        console.error('Erro ao salvar URL do webhook no banco:', error);
+        // Return true anyway because we saved to localStorage
+        return true;
+      }
+      
+      console.log('URL do webhook salva com sucesso');
+      return true;
+    } catch (dbErr) {
+      console.error('Erro de banco de dados ao salvar webhook:', dbErr);
+      // Return true if we saved to localStorage
+      return true;
+    }
+  } catch (err) {
+    console.error('Erro ao salvar URL do webhook:', err);
+    // Return true if we saved to localStorage
+    return localStorage.getItem(WEBHOOK_STORAGE_KEY) === url;
+  }
+};
+
+const sendToWebhook = async (webhookUrl: string, payload: WebhookPayload): Promise<boolean> => {
+  try {
+    if (!webhookUrl) {
+      console.error('URL do webhook não fornecida');
+      return false;
+    }
+    
+    console.log('Enviando para webhook:', webhookUrl, payload);
+    
+    // Send data to the configured webhook
+    const response = await fetch(webhookUrl, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(payload),
+      mode: 'no-cors', // Required for some webhook services
+    });
+    
+    // Since we're using no-cors, we can't check the response status
+    // We consider it success if no exception occurred
+    console.log('Webhook enviado com sucesso:', payload);
+    return true;
+  } catch (err) {
+    console.error('Erro ao enviar para webhook:', err);
+    return false;
+  }
+};
+
+// Function to send a notification about a new item in any module
+const sendItemNotification = async (
+  type: NotificationType, 
+  data: any, 
+  customWebhookUrl?: string
+): Promise<boolean> => {
+  try {
+    // Get the webhook URL from the database if not provided
+    const webhookUrl = customWebhookUrl || await getWebhookUrl();
+    
+    if (!webhookUrl) {
+      console.error('URL do webhook não encontrada');
+      return false;
+    }
+    
+    const payload: WebhookPayload = {
+      type,
+      data,
+      timestamp: new Date().toISOString()
+    };
+    
+    return await sendToWebhook(webhookUrl, payload);
+  } catch (err) {
+    console.error(`Erro ao enviar notificação para ${type}:`, err);
+    return false;
+  }
+};
+
+// Initialize default webhook URL on service load
+(async () => {
+  try {
+    // Always initialize with default URL in localStorage to ensure availability
+    if (!localStorage.getItem(WEBHOOK_STORAGE_KEY)) {
+      localStorage.setItem(WEBHOOK_STORAGE_KEY, DEFAULT_WEBHOOK_URL);
+      console.log('URL do webhook inicializada com padrão:', DEFAULT_WEBHOOK_URL);
+    }
+    
+    const url = await getWebhookUrl();
+    if (!url) {
+      await saveWebhookUrl(DEFAULT_WEBHOOK_URL);
+    }
+  } catch (e) {
+    console.error('Erro ao inicializar webhook service:', e);
+    // Ensure we always have a default URL
+    localStorage.setItem(WEBHOOK_STORAGE_KEY, DEFAULT_WEBHOOK_URL);
+  }
+})();
+
+export default {
+  getWebhookUrl,
+  saveWebhookUrl,
+  sendToWebhook,
+  sendItemNotification
+};

@@ -12,7 +12,7 @@ import ContactPage from './pages/ContactPage';
 import NotFoundPage from './pages/NotFoundPage';
 import AdminDashboard from './pages/admin/AdminDashboard';
 import AdminPreviews from './pages/admin/AdminPreviews';
-import PreviewProjectPage from './pages/admin/PreviewProjectPage';
+import PreviewProjectPage from './pages/PreviewProjectPage';
 import AdminLogin from './pages/admin/AdminLogin';
 import ResetPassword from './pages/admin/ResetPassword';
 import PortfolioPage from './pages/Portfolio';
@@ -25,16 +25,9 @@ import OrderTracking from './pages/OrderTracking';
 import PrivacyPolicy from './pages/PrivacyPolicy';
 import Terms from './pages/Terms';
 import PreviewPage from './pages/PreviewPage';
-import MusicPreviewAuth from './pages/MusicPreviewAuth';
-import AuthCallback from './pages/AuthCallback';
-import AuthError from './pages/AuthError';
 import MusicPreviews from './pages/MusicPreviews';
 import FeedbackConfirmation from './pages/FeedbackConfirmation';
 import QualificacaoPage from './pages/Qualificacao';
-import BriefingSuccess from './pages/BriefingSuccess';
-import BriefingComplete from './pages/BriefingComplete';
-import ClientDashboard from './pages/ClientDashboard';
-import FinalDeliveryPage from './pages/FinalDeliveryPage';
 
 // Import admin pages
 import AdminBriefings from './pages/admin/AdminBriefings';
@@ -76,8 +69,6 @@ const AppRoutes: React.FC = () => {
         <Route path="/contato" element={<ContactPage />} />
         <Route path="/portfolio" element={<PortfolioPage />} />
         <Route path="/briefing" element={<Briefing />} />
-        <Route path="/briefing-success" element={<BriefingSuccess />} />
-        <Route path="/briefing-complete" element={<BriefingComplete />} />
         <Route path="/calculadora" element={<Calculator />} />
         <Route path="/qualificacao" element={<QualificacaoPage />} />
         <Route path="/pacotes" element={<Packages />} />
@@ -87,17 +78,6 @@ const AppRoutes: React.FC = () => {
         <Route path="/acompanhar-pedido" element={<OrderTracking />} />
         <Route path="/privacidade" element={<PrivacyPolicy />} />
         <Route path="/termos" element={<Terms />} />
-        
-        {/* Client Dashboard and Delivery Routes */}
-        <Route path="/client-dashboard" element={<ClientDashboard />} />
-        <Route path="/deliveries/:projectId" element={<FinalDeliveryPage />} />
-        
-        {/* Authentication routes */}
-        <Route path="/auth/preview/:projectId" element={<MusicPreviewAuth />} />
-        <Route path="/auth/callback" element={<AuthCallback />} />
-        <Route path="/auth-error" element={<AuthError />} />
-        
-        {/* Preview routes */}
         <Route path="/preview/:projectId" element={<PreviewPage />} />
         <Route path="/preview/:previewId" element={<MusicPreviews />} />
         <Route path="/feedback-confirmacao" element={<FeedbackConfirmation />} />

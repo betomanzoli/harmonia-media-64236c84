@@ -1,9 +1,8 @@
 
-import React, { useEffect, useState } from 'react';
+import React from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
 import { cn } from "@/lib/utils";
-import { usePreviewProjects } from '@/hooks/admin/usePreviewProjects';
 
 interface Activity {
   id: number;
@@ -11,6 +10,66 @@ interface Activity {
   description: string;
   type: string;
 }
+
+// Dados das atividades recentes
+const recentActivities: Activity[] = [
+  {
+    id: 1,
+    timestamp: 'Hoje, 14:30',
+    description: 'Novo áudio adicionado: "Aniversário de 15 Anos - Julia"',
+    type: 'audio_added'
+  },
+  {
+    id: 2,
+    timestamp: 'Hoje, 11:15',
+    description: 'Pedido atualizado: #2023-056 "Música Corporativa - Tech Inovação"',
+    type: 'order_updated'
+  },
+  {
+    id: 3,
+    timestamp: 'Ontem, 16:45',
+    description: 'Novo item adicionado ao portfólio: "Casamento - Pedro e Maria"',
+    type: 'portfolio_added'
+  },
+  {
+    id: 4,
+    timestamp: 'Ontem, 10:20',
+    description: 'Novo cliente registrado: João Silva',
+    type: 'client_registered'
+  },
+  {
+    id: 5,
+    timestamp: '02/04/2025, 13:10',
+    description: 'Novo pedido recebido: #2025-023 "Música para Campanha Publicitária"',
+    type: 'order_received'
+  },
+  {
+    id: 6,
+    timestamp: '01/04/2025, 09:45',
+    description: 'Pagamento confirmado: #2025-021 "Trilha para Podcast"',
+    type: 'payment_confirmed'
+  }
+];
+
+// Função para determinar a cor do indicador com base no tipo da atividade
+const getActivityColor = (type: string) => {
+  switch (type) {
+    case 'audio_added':
+      return 'bg-blue-500';
+    case 'order_updated':
+      return 'bg-yellow-500';
+    case 'portfolio_added':
+      return 'bg-green-500';
+    case 'client_registered':
+      return 'bg-purple-500';
+    case 'order_received':
+      return 'bg-orange-500';
+    case 'payment_confirmed':
+      return 'bg-emerald-500';
+    default:
+      return 'bg-gray-500';
+  }
+};
 
 interface ActivityItemProps {
   activity: Activity;
@@ -30,30 +89,6 @@ const ActivityItem: React.FC<ActivityItemProps> = ({ activity, isLast }) => (
   </React.Fragment>
 );
 
-// Função para determinar a cor do indicador com base no tipo da atividade
-const getActivityColor = (type: string) => {
-  switch (type) {
-    case 'audio_added':
-      return 'bg-blue-500';
-    case 'order_updated':
-      return 'bg-yellow-500';
-    case 'portfolio_added':
-      return 'bg-green-500';
-    case 'client_registered':
-      return 'bg-purple-500';
-    case 'order_received':
-      return 'bg-orange-500';
-    case 'payment_confirmed':
-      return 'bg-emerald-500';
-    case 'project_updated':
-      return 'bg-indigo-500';
-    case 'feedback_received':
-      return 'bg-pink-500';
-    default:
-      return 'bg-gray-500';
-  }
-};
-
 interface RecentActivitiesProps {
   activities?: Activity[];
   maxItems?: number;
@@ -62,131 +97,11 @@ interface RecentActivitiesProps {
 }
 
 const RecentActivities: React.FC<RecentActivitiesProps> = ({ 
-  activities: initialActivities,
+  activities = recentActivities,
   maxItems = 6,
   showTitle = true,
   className
 }) => {
-  const { projects } = usePreviewProjects();
-  const [activities, setActivities] = useState<Activity[]>([]);
-
-  // Gerar atividades baseadas nos projetos atuais do sistema
-  useEffect(() => {
-    if (initialActivities && initialActivities.length > 0) {
-      setActivities(initialActivities);
-      return;
-    }
-
-    const generatedActivities: Activity[] = [];
-    let id = 1;
-
-    // Adicionar atividades baseadas em projetos recentes
-    if (projects && projects.length > 0) {
-      projects.forEach(project => {
-        // Atividade para projeto adicionado
-        const createdAt = project.createdAt ? new Date(project.createdAt) : new Date();
-        const formattedCreationDate = project.createdAt 
-          ? (typeof project.createdAt === 'string' ? project.createdAt : new Date(project.createdAt).toLocaleDateString('pt-BR'))
-          : new Date().toLocaleDateString('pt-BR');
-
-        generatedActivities.push({
-          id: id++,
-          timestamp: formattedCreationDate,
-          description: `Novo projeto criado: "${project.clientName || 'Cliente'}" - ${project.packageType || 'Projeto de Música'}`,
-          type: 'order_received'
-        });
-
-        // Atividade para versões adicionadas
-        if (project.versionsList && project.versionsList.length > 0) {
-          const latestVersion = project.versionsList[project.versionsList.length - 1];
-          const versionDate = new Date(createdAt);
-          versionDate.setDate(versionDate.getDate() + 1);
-          
-          generatedActivities.push({
-            id: id++,
-            timestamp: latestVersion.dateAdded || versionDate.toLocaleDateString('pt-BR'),
-            description: `Nova versão adicionada: "${latestVersion.name}" para o projeto de ${project.clientName || 'Cliente'}`,
-            type: 'audio_added'
-          });
-        }
-
-        // Atividade para feedback recebido
-        if (project.status === 'feedback' && project.feedback) {
-          const feedbackDate = new Date(createdAt);
-          feedbackDate.setDate(feedbackDate.getDate() + 2);
-          
-          generatedActivities.push({
-            id: id++,
-            timestamp: project.lastActivityDate || feedbackDate.toLocaleDateString('pt-BR'),
-            description: `Feedback recebido: ${project.clientName || 'Cliente'} comentou sobre o projeto`,
-            type: 'feedback_received'
-          });
-        }
-
-        // Atividade para projetos aprovados
-        if (project.status === 'approved') {
-          const approvedDate = new Date(createdAt);
-          approvedDate.setDate(approvedDate.getDate() + 3);
-          
-          generatedActivities.push({
-            id: id++,
-            timestamp: project.lastActivityDate || approvedDate.toLocaleDateString('pt-BR'),
-            description: `Projeto aprovado: ${project.clientName || 'Cliente'} aprovou a prévia final`,
-            type: 'project_updated'
-          });
-        }
-      });
-    }
-
-    // Se não tiver atividades suficientes, adicione algumas atividades de exemplo para encher
-    if (generatedActivities.length < maxItems) {
-      const sampleActivities: Activity[] = [
-        {
-          id: 90,
-          timestamp: new Date().toLocaleDateString('pt-BR'),
-          description: 'Novo áudio adicionado: "Aniversário de 15 Anos - Julia"',
-          type: 'audio_added'
-        },
-        {
-          id: 91,
-          timestamp: new Date().toLocaleDateString('pt-BR'),
-          description: 'Pedido atualizado: #2023-056 "Música Corporativa - Tech Inovação"',
-          type: 'order_updated'
-        },
-        {
-          id: 92,
-          timestamp: new Date(Date.now() - 24 * 60 * 60 * 1000).toLocaleDateString('pt-BR'),
-          description: 'Novo item adicionado ao portfólio: "Casamento - Pedro e Maria"',
-          type: 'portfolio_added'
-        },
-        {
-          id: 93,
-          timestamp: new Date(Date.now() - 24 * 60 * 60 * 1000).toLocaleDateString('pt-BR'),
-          description: 'Novo cliente registrado: João Silva',
-          type: 'client_registered'
-        }
-      ];
-
-      // Adicione apenas o número necessário para completar maxItems
-      const needed = Math.max(0, maxItems - generatedActivities.length);
-      generatedActivities.push(...sampleActivities.slice(0, needed));
-    }
-
-    // Ordenar por timestamp (mais recentes primeiro)
-    const sortedActivities = generatedActivities.sort((a, b) => {
-      // Tentar converter para timestamps, se falhar, ordenar por string
-      try {
-        const dateA = new Date(a.timestamp.split(',')[0].split('/').reverse().join('-'));
-        const dateB = new Date(b.timestamp.split(',')[0].split('/').reverse().join('-'));
-        return dateB.getTime() - dateA.getTime();
-      } catch (e) {
-        return 0; // Se não conseguir converter, não alterar a ordem
-      }
-    });
-
-    setActivities(sortedActivities.slice(0, maxItems));
-  }, [projects, initialActivities, maxItems]);
-
   const displayActivities = activities.slice(0, maxItems);
 
   return (

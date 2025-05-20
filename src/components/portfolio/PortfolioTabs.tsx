@@ -20,8 +20,6 @@ const PortfolioTabs: React.FC<PortfolioTabsProps> = ({
   onShowMore
 }) => {
   const filteredExamples = selectedCategory === 'all' ? examples : examples.filter(example => example.category.includes(selectedCategory));
-  return <div className="w-full">
-      
-    </div>;
+  return;
 };
 export default PortfolioTabs;

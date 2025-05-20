@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { RefreshCw, Info, FolderOpen } from "lucide-react";
 import StorageStatusCard from './StorageStatusCard';
 import { StorageType, STORAGE_FOLDER_MAP } from '@/services/adminStorageService';
-import { useToast } from '@/hooks/use-toast';
+import { useToast } from '@/components/ui/use-toast';
 
 const StorageIntegrationDashboard: React.FC = () => {
   const [lastSyncData, setLastSyncData] = useState<Record<StorageType, string | null>>({

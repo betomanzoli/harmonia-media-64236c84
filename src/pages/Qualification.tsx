@@ -2,7 +2,7 @@
 import React from 'react';
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
-import QualificationForm from '@/components/qualification/QualificationForm';
+import { QualificationForm } from '@/components/qualification/QualificationForm';
 
 const Qualification: React.FC = () => {
   return (
