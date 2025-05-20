@@ -1,4 +1,3 @@
-
 export type NotificationType = 'test_message' | 'new_portfolio_item' | 'feedback_received' | 'new_customer' | 'client_message';
 
 const webhookService = {
