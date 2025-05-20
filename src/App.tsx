@@ -12,7 +12,7 @@ import ContactPage from './pages/ContactPage';
 import NotFoundPage from './pages/NotFoundPage';
 import AdminDashboard from './pages/admin/AdminDashboard';
 import AdminPreviews from './pages/admin/AdminPreviews';
-import PreviewProjectPage from './pages/PreviewProjectPage';
+import PreviewProjectPage from './pages/admin/PreviewProjectPage';
 import AdminLogin from './pages/admin/AdminLogin';
 import ResetPassword from './pages/admin/ResetPassword';
 import PortfolioPage from './pages/Portfolio';
