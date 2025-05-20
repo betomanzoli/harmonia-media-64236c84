@@ -1,136 +1,74 @@
 
-import React, { useState, useEffect } from 'react';
-import { Routes, Route, useLocation } from 'react-router-dom';
-import ScrollToTop from './components/ScrollToTop';
-import ChatbotButton from './components/chatbot/ChatbotButton';
+import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 
-// Import pages
-import HomePage from './pages/HomePage';
-import AboutPage from './pages/AboutPage';
-import ServicesPage from './pages/ServicesPage';
-import ContactPage from './pages/ContactPage';
-import NotFoundPage from './pages/NotFoundPage';
-import AdminDashboard from './pages/admin/AdminDashboard';
-import AdminPreviews from './pages/admin/AdminPreviews';
-import PreviewProjectPage from './pages/admin/PreviewProjectPage';
-import AdminLogin from './pages/admin/AdminLogin';
-import ResetPassword from './pages/admin/ResetPassword';
-import PortfolioPage from './pages/Portfolio';
-import Briefing from './pages/Briefing';
-import Calculator from './pages/Calculator';
-import Packages from './pages/Packages';
-import Payment from './pages/Payment';
-import PaymentReturn from './pages/PaymentReturn';
-import OrderTracking from './pages/OrderTracking';
-import PrivacyPolicy from './pages/PrivacyPolicy';
-import Terms from './pages/Terms';
-import PreviewPage from './pages/PreviewPage';
-import MusicPreviewAuth from './pages/MusicPreviewAuth';
-import AuthCallback from './pages/AuthCallback';
-import AuthError from './pages/AuthError';
-import MusicPreviews from './pages/MusicPreviews';
-import FeedbackConfirmation from './pages/FeedbackConfirmation';
-import QualificacaoPage from './pages/Qualificacao';
-import BriefingSuccess from './pages/BriefingSuccess';
-import BriefingComplete from './pages/BriefingComplete';
-import ClientDashboard from './pages/ClientDashboard';
-import FinalDeliveryPage from './pages/FinalDeliveryPage';
+// Pages
+import Home from '@/pages/Home';
+import Portfolio from '@/pages/Portfolio';
+import About from '@/pages/About';
+import Pricing from '@/pages/Pricing';
+import Contact from '@/pages/Contact';
+import Briefing from '@/pages/Briefing';
+import QualificationBriefing from '@/pages/QualificationBriefing';
+import Payment from '@/pages/Payment';
+import Success from '@/pages/Success';
+import MusicPreviewPage from '@/pages/MusicPreviewPage';
+import PreviewPage from '@/pages/PreviewPage';
+import ClientPreviewProjectPage from '@/pages/PreviewProjectPage';
+import AuthPage from '@/pages/AuthPage';
 
-// Import admin pages
-import AdminBriefings from './pages/admin/AdminBriefings';
-import AdminProjects from './pages/admin/AdminProjects';
-import AdminPortfolio from './pages/admin/AdminPortfolio';
-import AdminClients from './pages/admin/AdminClients';
-import AdminSettings from './pages/admin/AdminSettings';
-import AdminInvoices from './pages/admin/AdminInvoices';
-import AdminStorage from './pages/admin/AdminStorage';
-import AdminIntegrations from './pages/admin/AdminIntegrations';
-import AdminStatistics from './pages/admin/AdminStatistics';
-import AdminGuides from './pages/admin/AdminGuides';
+// Admin Pages
+import AdminDashboard from '@/pages/admin/AdminDashboard';
+import AdminPreviews from '@/pages/admin/AdminPreviews';
+import AdminProjects from '@/pages/admin/AdminProjects';
+import AdminBriefings from '@/pages/admin/AdminBriefings';
+import AdminClients from '@/pages/admin/AdminClients';
+import AdminSettings from '@/pages/admin/AdminSettings';
+import AdminPreviewProjectPage from '@/pages/admin/PreviewProjectPage';
 
-const App: React.FC = () => {
+// Client Dashboard
+import ClientDashboard from '@/pages/client/ClientDashboard';
+import ClientProjects from '@/pages/client/ClientProjects';
+import ClientInvoices from '@/pages/client/ClientInvoices';
+import ClientSettings from '@/pages/client/ClientSettings';
+
+function App() {
   return (
-    <>
-      <ScrollToTop />
-      <AppRoutes />
-    </>
-  );
-};
-
-const AppRoutes: React.FC = () => {
-  const location = useLocation();
-  const [showChatbot, setShowChatbot] = useState(true);
-  
-  // Check if current route is an admin route
-  useEffect(() => {
-    const isAdminRoute = location.pathname.includes('/admin-');
-    setShowChatbot(!isAdminRoute);
-  }, [location.pathname]);
-  
-  return (
-    <>
+    <Router>
       <Routes>
-        <Route path="/" element={<HomePage />} />
-        <Route path="/sobre" element={<AboutPage />} />
-        <Route path="/servicos" element={<ServicesPage />} />
-        <Route path="/contato" element={<ContactPage />} />
-        <Route path="/portfolio" element={<PortfolioPage />} />
+        {/* Public routes */}
+        <Route path="/" element={<Home />} />
+        <Route path="/portfolio" element={<Portfolio />} />
+        <Route path="/sobre" element={<About />} />
+        <Route path="/precos" element={<Pricing />} />
+        <Route path="/contato" element={<Contact />} />
         <Route path="/briefing" element={<Briefing />} />
-        <Route path="/briefing-success" element={<BriefingSuccess />} />
-        <Route path="/briefing-complete" element={<BriefingComplete />} />
-        <Route path="/calculadora" element={<Calculator />} />
-        <Route path="/qualificacao" element={<QualificacaoPage />} />
-        <Route path="/pacotes" element={<Packages />} />
-        <Route path="/pagamento" element={<Payment />} />
-        <Route path="/pagamento/:packageId" element={<Payment />} />
-        <Route path="/pagamento-retorno" element={<PaymentReturn />} />
-        <Route path="/acompanhar-pedido" element={<OrderTracking />} />
-        <Route path="/privacidade" element={<PrivacyPolicy />} />
-        <Route path="/termos" element={<Terms />} />
-        
-        {/* Client Dashboard and Delivery Routes */}
-        <Route path="/client-dashboard" element={<ClientDashboard />} />
-        <Route path="/deliveries/:projectId" element={<FinalDeliveryPage />} />
-        
-        {/* Authentication routes */}
-        <Route path="/auth/preview/:projectId" element={<MusicPreviewAuth />} />
-        <Route path="/auth/callback" element={<AuthCallback />} />
-        <Route path="/auth-error" element={<AuthError />} />
+        <Route path="/qualificacao" element={<QualificationBriefing />} />
+        <Route path="/pagamento/:package" element={<Payment />} />
+        <Route path="/sucesso" element={<Success />} />
         
         {/* Preview routes */}
         <Route path="/preview/:projectId" element={<PreviewPage />} />
-        <Route path="/preview/:previewId" element={<MusicPreviews />} />
-        <Route path="/feedback-confirmacao" element={<FeedbackConfirmation />} />
-        <Route path="/como-funciona" element={<ServicesPage />} />
+        <Route path="/music-preview/:projectId" element={<MusicPreviewPage />} />
+        <Route path="/project/:projectId" element={<ClientPreviewProjectPage />} />
+        <Route path="/auth/preview/:projectId" element={<AuthPage />} />
         
         {/* Admin routes */}
-        <Route path="/admin-j28s7d1k/login" element={<AdminLogin />} />
-        <Route path="/admin-j28s7d1k/reset-password" element={<ResetPassword />} />
         <Route path="/admin-j28s7d1k/dashboard" element={<AdminDashboard />} />
         <Route path="/admin-j28s7d1k/previews" element={<AdminPreviews />} />
-        <Route path="/admin-j28s7d1k/previews/:projectId" element={<PreviewProjectPage />} />
-        <Route path="/admin-j28s7d1k/briefings" element={<AdminBriefings />} />
+        <Route path="/admin-j28s7d1k/previews/:projectId" element={<AdminPreviewProjectPage />} />
         <Route path="/admin-j28s7d1k/projects" element={<AdminProjects />} />
-        <Route path="/admin-j28s7d1k/portfolio" element={<AdminPortfolio />} />
+        <Route path="/admin-j28s7d1k/briefings" element={<AdminBriefings />} />
         <Route path="/admin-j28s7d1k/clients" element={<AdminClients />} />
         <Route path="/admin-j28s7d1k/settings" element={<AdminSettings />} />
-        <Route path="/admin-j28s7d1k/orders" element={<AdminProjects />} />
-        <Route path="/admin-j28s7d1k/payments" element={<AdminInvoices />} />
-        <Route path="/admin-j28s7d1k/analytics" element={<AdminStatistics />} />
-        <Route path="/admin-j28s7d1k/statistics" element={<AdminStatistics />} />
-        <Route path="/admin-j28s7d1k/guides" element={<AdminGuides />} />
-        <Route path="/admin-j28s7d1k/documentation" element={<AdminGuides />} />
-        <Route path="/admin-j28s7d1k/integrations" element={<AdminIntegrations />} />
-        <Route path="/admin-j28s7d1k/invoices" element={<AdminInvoices />} />
-        <Route path="/admin-j28s7d1k/storage" element={<AdminStorage />} />
         
-        {/* 404 route */}
-        <Route path="*" element={<NotFoundPage />} />
+        {/* Client dashboard routes */}
+        <Route path="/cliente/dashboard" element={<ClientDashboard />} />
+        <Route path="/cliente/projetos" element={<ClientProjects />} />
+        <Route path="/cliente/faturas" element={<ClientInvoices />} />
+        <Route path="/cliente/configuracoes" element={<ClientSettings />} />
       </Routes>
-      
-      {showChatbot && <ChatbotButton />}
-    </>
+    </Router>
   );
-};
+}
 
 export default App;
