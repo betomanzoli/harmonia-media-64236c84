@@ -19,15 +19,13 @@ interface AddVersionFormProps {
   onAddVersion: (version: VersionItem) => void;
   onCancel: () => void;
   isFinalVersion?: boolean;
-  packageType?: string;  // Added packageType property
 }
 
 const AddVersionForm: React.FC<AddVersionFormProps> = ({ 
   projectId, 
   onAddVersion, 
   onCancel,
-  isFinalVersion = false,
-  packageType
+  isFinalVersion = false
 }) => {
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');

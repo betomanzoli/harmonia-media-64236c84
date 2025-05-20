@@ -61,12 +61,12 @@ const ExtraServiceCard: React.FC<ExtraServiceCardProps> = ({
 
   const showPlagiarismDetailsButton = title.includes("Avaliação de Risco de Plágio");
   
-  // Verifica se é um serviço de contato WhatsApp
+  // Check if this is a WhatsApp contact service
   const isWhatsAppService = 
     title.includes("Composição sem IA (letra + melodia)") || 
     title.includes("Composição sem IA (completa)");
 
-  // Personaliza o texto do botão com base no serviço
+  // Customize button text based on service
   const getButtonText = () => {
     if (isWhatsAppService) {
       return "Entre em contato";
@@ -87,7 +87,7 @@ const ExtraServiceCard: React.FC<ExtraServiceCardProps> = ({
           </div>
           <div className="flex flex-col items-end">
             <span className={`font-bold ${typeof price === 'string' && price.includes('Consultar') ? 'text-amber-400' : 'text-harmonia-green'}`}>
-              {typeof price === 'number' ? `R$${price},00` : price}
+              {typeof price === 'number' ? `R$${price}` : price}
             </span>
             <span className="text-xs text-amber-400 font-medium">Promocional</span>
           </div>

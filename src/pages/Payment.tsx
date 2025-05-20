@@ -17,7 +17,7 @@ const Payment: React.FC = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
   
-  const [selectedPackage, setSelectedPackage] = useState<PackageId>('profissional');
+  const [selectedPackage, setSelectedPackage] = useState<PackageId>('premium');
   const [isTermsDialogOpen, setIsTermsDialogOpen] = useState(false);
   const [acceptedTerms, setAcceptedTerms] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);

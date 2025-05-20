@@ -16,7 +16,7 @@ export const Script: React.FC<ScriptProps> = ({ src, ...props }) => {
     const script = document.createElement('script');
     script.src = src;
     
-    // Adiciona todos os props como atributos
+    // Add all props as attributes
     Object.entries(props).forEach(([key, value]) => {
       if (value !== undefined && value !== null) {
         script.setAttribute(key, value.toString());

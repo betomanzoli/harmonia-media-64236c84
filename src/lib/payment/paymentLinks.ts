@@ -75,33 +75,33 @@ export const extraServicePaymentLinks: Record<string, PaymentLinkData> = {
     preferenceId: '178571987-2be0a4e2-5c8e-4e64-b554-d4068d18d23a'
   },
   'Entrega Expressa': {
-    url: 'https://mpago.la/2bJ7gs5',  // Updated to R$149 payment link
-    preferenceId: '178571987-a6e460f7-4f43-4010-b1ec-fe7789090467'
+    url: 'https://mpago.la/2grZyHu', 
+    preferenceId: '178571987-d2c262a6-0251-40cb-99ed-37415eb90c1d'
   },
   'Partituras MusicXML/PDF': {
-    url: 'https://mpago.la/2bJ7gs5',  // Updated to R$149 payment link
-    preferenceId: '178571987-a6e460f7-4f43-4010-b1ec-fe7789090467'
+    url: 'https://mpago.la/2grZyHu', // Using the 149 price point link
+    preferenceId: '178571987-d2c262a6-0251-40cb-99ed-37415eb90c1d'
   },
   'Composição sem IA (letra)': {
     url: 'https://mpago.la/2grZyHu',
     preferenceId: '178571987-d2c262a6-0251-40cb-99ed-37415eb90c1d'
   },
   'Composição sem IA (letra + melodia)': {
-    url: 'https://mpago.li/1gjwJZY', // Updated to R$1499 payment link
-    preferenceId: '178571987-1b5c6c1a-2c8b-4c9a-b67c-07519f43382f'
-  },
-  'Composição sem IA (letra + melodia + gravação)': {
-    url: 'https://wa.me/5511920585072?text=Olá,%20tenho%20interesse%20no%20serviço%20de%20Composição%20sem%20IA%20completa%20(letra%20+%20melodia%20+%20gravação).%20Poderia%20me%20dar%20mais%20informações?',
+    url: 'https://wa.me/5511999999999?text=Olá,%20tenho%20interesse%20no%20serviço%20de%20Composição%20sem%20IA%20(letra%20+%20melodia).%20Poderia%20me%20dar%20mais%20informações?',
     preferenceId: 'whatsapp-contact'
   },
-  // IDs de serviço legados
+  'Composição sem IA (letra + melodia + gravação)': {
+    url: 'https://wa.me/5511999999999?text=Olá,%20tenho%20interesse%20no%20serviço%20de%20Composição%20sem%20IA%20completa%20(letra%20+%20melodia%20+%20gravação).%20Poderia%20me%20dar%20mais%20informações?',
+    preferenceId: 'whatsapp-contact'
+  },
+  // Legacy service IDs
   'service79': {
     url: 'https://mpago.la/23WDA5a',
     preferenceId: '178571987-5ed445de-ebe1-47d0-aaa8-1bb544bc5c88'
   },
   'service99': {
     url: 'https://mpago.la/113Dotr',
-    preferenceId: '178571987-266f5eb5-3e03-4083-82d9-690fbb1b2951'
+    preferenceId: '178571987-266f5eb5-3e03-4083-82d9-690fbb1b951'
   },
   'service249': {
     url: 'https://mpago.la/1Fyqdcw',
@@ -120,7 +120,7 @@ export const extraServicePaymentLinks: Record<string, PaymentLinkData> = {
     preferenceId: '178571987-d2c262a6-0251-40cb-99ed-37415eb90c1d'
   },
   'service1499': {
-    url: 'https://mpago.li/1gjwJZY',
-    preferenceId: '178571987-1b5c6c1a-2c8b-4c9a-b67c-07519f43382f'
+    url: 'https://wa.me/5511999999999?text=Olá,%20tenho%20interesse%20no%20serviço%20de%20Composição%20sem%20IA.%20Poderia%20me%20dar%20mais%20informações?',
+    preferenceId: 'whatsapp-contact'
   }
 };

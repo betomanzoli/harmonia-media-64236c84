@@ -55,7 +55,7 @@ const Briefing: React.FC = () => {
       case 'essencial':
         details = {
           title: "Pacote Essencial",
-          price: "R$219",
+          price: "R$299",
           description: "Ideal para presentes emocionais rápidos.",
           features: [
             "• 1 composição personalizada",
@@ -69,7 +69,7 @@ const Briefing: React.FC = () => {
       case 'profissional':
         details = {
           title: "Pacote Profissional",
-          price: "R$479",
+          price: "R$699",
           description: "Perfeito para criadores de conteúdo.",
           features: [
             "• 3 versões diferentes para escolha",
@@ -84,7 +84,7 @@ const Briefing: React.FC = () => {
       case 'premium':
         details = {
           title: "Pacote Premium",
-          price: "R$969",
+          price: "R$1299",
           description: "Melhor opção para empresas.",
           features: [
             "• 5 versões diferentes para escolha",
@@ -244,7 +244,7 @@ const Briefing: React.FC = () => {
                 </div>
                 
                 <div className="pt-4">
-                  <Link to="/servicos">
+                  <Link to="/services">
                     <Button variant="outline">
                       <Package className="w-4 h-4 mr-2" />
                       Ver todos os pacotes

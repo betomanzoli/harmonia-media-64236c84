@@ -11,16 +11,32 @@ const setCookie = (name: string, value: string, days = 1) => {
   const date = new Date();
   date.setTime(date.getTime() + (days * 24 * 60 * 60 * 1000));
   const expires = `; expires=${date.toUTCString()}`;
-  document.cookie = `${name}=${value}${expires}; path=/; Secure; SameSite=None`;
+  document.cookie = `${name}=${value}${expires}; path=/; SameSite=Lax`;
+  
+  // Also store in localStorage as a fallback for browsers with strict cookie policies
+  try {
+    localStorage.setItem(name, value);
+  } catch (e) {
+    console.error("Failed to store in localStorage:", e);
+  }
 };
 
 const getCookie = (name: string): string | null => {
+  // Try cookies first
   const value = `; ${document.cookie}`;
   const parts = value.split(`; ${name}=`);
   if (parts.length === 2) {
     const cookieValue = parts.pop()?.split(';').shift();
     return cookieValue || null;
   }
+  
+  // Try localStorage as fallback
+  try {
+    return localStorage.getItem(name);
+  } catch (e) {
+    console.error("Failed to get from localStorage:", e);
+  }
+  
   return null;
 };
 
@@ -47,10 +63,17 @@ export const generatePreviewLink = async (projectId: string): Promise<string> =>
     // Store the mapping locally as a fallback
     previewLinksMap.set(encodedId, projectId);
     
-    // Store in cookie instead of localStorage
+    // Store in cookie and localStorage for better compatibility
     const mappings = JSON.parse(getCookie('previewLinksMappings') || '{}');
     mappings[encodedId] = projectId;
     setCookie('previewLinksMappings', JSON.stringify(mappings));
+    
+    // Also store in localStorage
+    try {
+      localStorage.setItem(`preview_link_${encodedId}`, projectId);
+    } catch (e) {
+      console.error("Failed to store in localStorage:", e);
+    }
     
     return encodedId;
   } catch (error) {
@@ -82,8 +105,18 @@ export const getProjectIdFromPreviewLink = async (encodedId: string): Promise<st
     
     // If not found in memory, check in cookies
     if (!projectId) {
+      // Try in cookies
       const storedMappings = JSON.parse(getCookie('previewLinksMappings') || '{}');
       projectId = storedMappings[encodedId] || null;
+      
+      // If not found in cookies, check localStorage directly
+      if (!projectId) {
+        try {
+          projectId = localStorage.getItem(`preview_link_${encodedId}`);
+        } catch (e) {
+          console.error("Failed to get from localStorage:", e);
+        }
+      }
       
       // Add to in-memory map if found
       if (projectId) {
@@ -106,6 +139,14 @@ export const authorizeEmailForProject = (email: string, projectId: string): void
     
     // Also store email in cookie for validation
     setPreviewEmailCookie(projectId, email);
+    
+    // Store in localStorage as well for better browser compatibility
+    try {
+      localStorage.setItem(`preview_access_${projectId}`, 'authorized');
+      localStorage.setItem(`preview_email_${projectId}`, email);
+    } catch (e) {
+      console.error("Failed to store in localStorage:", e);
+    }
   } catch (error) {
     console.error('Error authorizing email for project:', error);
   }
@@ -118,6 +159,17 @@ export const isEmailAuthorizedForProject = (email: string, projectId: string): b
     if (checkPreviewAccessCookie(projectId)) {
       // Then validate if the email matches
       const storedEmail = getCookie(`preview_email_${projectId}`);
+      
+      // If not found in cookies, try localStorage
+      if (!storedEmail) {
+        try {
+          const localEmail = localStorage.getItem(`preview_email_${projectId}`);
+          return localEmail === email;
+        } catch (e) {
+          console.error("Failed to get from localStorage:", e);
+        }
+      }
+      
       return storedEmail === email;
     }
     
@@ -131,10 +183,27 @@ export const isEmailAuthorizedForProject = (email: string, projectId: string): b
 // Load stored mappings from cookies when the module loads
 const loadStoredData = () => {
   try {
+    // Load from cookies
     const storedMappings = JSON.parse(getCookie('previewLinksMappings') || '{}');
     Object.entries(storedMappings).forEach(([encodedId, projectId]) => {
       previewLinksMap.set(encodedId, projectId as string);
     });
+    
+    // Also try to load from localStorage for each item
+    try {
+      for (let i = 0; i < localStorage.length; i++) {
+        const key = localStorage.key(i);
+        if (key && key.startsWith('preview_link_')) {
+          const encodedId = key.replace('preview_link_', '');
+          const projectId = localStorage.getItem(key);
+          if (projectId) {
+            previewLinksMap.set(encodedId, projectId);
+          }
+        }
+      }
+    } catch (e) {
+      console.error("Failed to load from localStorage:", e);
+    }
   } catch (error) {
     console.error('Error loading stored preview data:', error);
   }

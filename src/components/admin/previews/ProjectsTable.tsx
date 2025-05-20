@@ -11,7 +11,7 @@ import {
 } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Eye, Bell, Trash2 } from 'lucide-react';
+import { Eye, Bell, Trash2, Edit } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { ProjectItem } from '@/hooks/admin/usePreviewProjects';
 
@@ -102,6 +102,18 @@ const ProjectsTable: React.FC<ProjectsTableProps> = ({
             <TableCell className="text-black">{formatDate(project.expirationDate)}</TableCell>
             <TableCell className="text-right">
               <div className="flex justify-end space-x-2">
+                <Button 
+                  variant="outline" 
+                  size="sm"
+                  asChild
+                  title="Editar projeto"
+                >
+                  <Link to={`/admin-j28s7d1k/previews/edit/${project.id}`}>
+                    <Edit className="h-4 w-4" />
+                    <span className="sr-only">Editar</span>
+                  </Link>
+                </Button>
+                
                 <Button 
                   variant="outline" 
                   size="sm"

@@ -1,6 +1,5 @@
 
 import React from 'react';
-import { ContractContent as ContractContentUtil } from './ContractDetails';
 
 export const ContractContent: React.FC = () => {
   return (
