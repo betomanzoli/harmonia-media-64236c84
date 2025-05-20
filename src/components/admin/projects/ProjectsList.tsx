@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
@@ -36,7 +37,11 @@ interface Project {
   packageType?: string;
 }
 
-const ProjectsList: React.FC = () => {
+interface ProjectsListProps {
+  onEditProject?: (projectId: string) => void;
+}
+
+const ProjectsList: React.FC<ProjectsListProps> = ({ onEditProject }) => {
   const [projects, setProjects] = useState<Project[]>([]);
   const [showNewProjectDialog, setShowNewProjectDialog] = useState(false);
   const [showEditDialog, setShowEditDialog] = useState(false);
@@ -238,6 +243,14 @@ const ProjectsList: React.FC = () => {
                           <Edit className="mr-2 h-4 w-4" />
                           Editar
                         </DropdownMenuItem>
+                        {onEditProject && (
+                          <DropdownMenuItem
+                            onClick={() => onEditProject(project.id)}
+                          >
+                            <Eye className="mr-2 h-4 w-4" />
+                            Ver Detalhes
+                          </DropdownMenuItem>
+                        )}
                         <DropdownMenuItem
                           onClick={() => {
                             setSelectedProject(project);
