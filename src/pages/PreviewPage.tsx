@@ -130,7 +130,7 @@ const PreviewPage: React.FC = () => {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-100">
+      <div className="min-h-screen flex items-center justify-center bg-gray-800">
         <div className="bg-white p-8 rounded-lg shadow-sm text-center">
           <div className="flex flex-col items-center justify-center space-y-4">
             <Loader2 className="h-10 w-10 animate-spin text-harmonia-green" />
@@ -144,7 +144,7 @@ const PreviewPage: React.FC = () => {
 
   if (!projectId) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-100">
+      <div className="min-h-screen flex items-center justify-center bg-gray-800">
         <div className="bg-white p-6 rounded-lg shadow-sm text-center">
           <h2 className="text-2xl font-bold text-black mb-4">ID do projeto não encontrado</h2>
           <p className="text-gray-600">O link que você acessou não é válido.</p>
@@ -156,7 +156,7 @@ const PreviewPage: React.FC = () => {
   // Show authentication form if not authorized yet
   if (!isAuthorized) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-100">
+      <div className="min-h-screen flex items-center justify-center bg-gray-800">
         <ProjectAccessForm 
           projectId={projectId} 
           onVerify={async (email, code) => {
@@ -195,7 +195,7 @@ const PreviewPage: React.FC = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gray-100 pt-8 pb-16">
+    <div className="min-h-screen bg-gray-800 pt-8 pb-16">
       <div className="max-w-4xl mx-auto px-4 mb-6">
         <div className="bg-green-50 border border-green-100 rounded-md p-3 flex items-center">
           <Lock className="h-5 w-5 text-green-600 mr-2" />

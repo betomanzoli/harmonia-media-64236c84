@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
@@ -142,12 +143,12 @@ const ProjectsTable: React.FC<ProjectsTableProps> = ({
                         <Eye className="mr-2 h-4 w-4" />
                         Copiar Link
                       </DropdownMenuItem>
-                      <DropdownMenuItem asChild>
-                        <Link to={`/admin-j28s7d1k/previews/${project.id}`}>
+                      <Link to={`/admin-j28s7d1k/previews/${project.id}`} className="w-full">
+                        <DropdownMenuItem>
                           <Edit className="mr-2 h-4 w-4" />
                           Editar
-                        </Link>
-                      </DropdownMenuItem>
+                        </DropdownMenuItem>
+                      </Link>
                       <DropdownMenuItem
                         onClick={() => onSendReminder(project.id)}
                       >

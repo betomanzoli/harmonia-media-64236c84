@@ -8,7 +8,6 @@ import { useToast } from '@/hooks/use-toast';
 import { Textarea } from '@/components/ui/textarea';
 import PreviewPlayerList from '@/components/previews/player/PreviewPlayerList';
 import PreviewProjectDetails from '@/components/previews/PreviewProjectDetails';
-import GoogleDriveAudioPlayer from '@/components/previews/GoogleDriveAudioPlayer';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 
 interface MusicPreviewSystemProps {
@@ -210,22 +209,6 @@ const MusicPreviewSystem: React.FC<MusicPreviewSystemProps> = ({ projectId }) =>
             isApproved={isApproved}
             onPlay={handlePlay}
           />
-          
-          {selectedPreview && selectedPreview.fileId && (
-            <Card className="mb-6">
-              <CardHeader>
-                <CardTitle className="text-lg">Player</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <GoogleDriveAudioPlayer
-                  fileId={selectedPreview.fileId}
-                  title={selectedPreview.title}
-                  subtitle="Clique para ouvir a prévia"
-                  isPreview={true}
-                />
-              </CardContent>
-            </Card>
-          )}
           
           <Card>
             <CardHeader>
