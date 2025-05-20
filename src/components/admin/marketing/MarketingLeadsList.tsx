@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { 
   Table, TableBody, TableCell, TableHead, TableHeader, TableRow 
@@ -310,7 +309,9 @@ const MarketingLeadsList: React.FC = () => {
                       <TableCell>
                         <Select 
                           value={lead.status} 
-                          onValueChange={(value) => handleStatusChange(lead.id, value)}
+                          onValueChange={(value: 'new' | 'contacted' | 'qualified' | 'converted' | 'unqualified') => 
+                            handleStatusChange(lead.id, value)
+                          }
                         >
                           <SelectTrigger className="h-8 w-[130px]">
                             {getStatusBadge(lead.status)}
@@ -341,7 +342,7 @@ const MarketingLeadsList: React.FC = () => {
                           </Button>
                           <Button 
                             variant="ghost" 
-                            size="icon"
+                            size="icon" 
                             onClick={() => handleNotifyN8n(lead)} 
                           >
                             <ExternalLink className="h-4 w-4" />

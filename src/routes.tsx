@@ -1,37 +1,40 @@
+
 import { createBrowserRouter } from "react-router-dom";
-import { MainLayout } from "@/components/layouts/MainLayout";
-import { Home } from "@/pages/Home";
-import { Pricing } from "@/pages/Pricing";
-import { Contact } from "@/pages/Contact";
-import { About } from "@/pages/About";
-import { Terms } from "@/pages/Terms";
-import { Privacy } from "@/pages/Privacy";
-import { NotFound } from "@/pages/NotFound";
-import { Faq } from "@/pages/Faq";
-import { Services } from "@/pages/Services";
-import { Examples } from "@/pages/Examples";
-import AdminLayout from "@/components/admin/layout/AdminLayout";
-import AdminDashboard from "@/pages/admin/AdminDashboard";
-import AdminBriefings from "@/pages/admin/AdminBriefings";
-import AdminProjects from "@/pages/admin/AdminProjects";
-import AdminPortfolio from "@/pages/admin/AdminPortfolio";
-import AdminClients from "@/pages/admin/AdminClients";
-import AdminInvoices from "@/pages/admin/AdminInvoices";
-import AdminStorage from "@/pages/admin/AdminStorage";
-import AdminStatistics from "@/pages/admin/AdminStatistics";
-import AdminSettings from "@/pages/admin/AdminSettings";
-import AdminIntegrations from "@/pages/admin/AdminIntegrations";
-import AdminGuides from "@/pages/admin/AdminGuides";
-import { AuthLayout } from "@/components/layouts/AuthLayout";
-import { Login } from "@/pages/auth/Login";
-import { Register } from "@/pages/auth/Register";
-import { ForgotPassword } from "@/pages/auth/ForgotPassword";
-import { ResetPassword } from "@/pages/auth/ResetPassword";
 import { HelmetProvider } from "react-helmet-async";
-import Descobrir from "./pages/Descobrir";
+import AdminLayout from "./components/admin/layout/AdminLayout";
+import AdminDashboard from "./pages/admin/AdminDashboard";
+import AdminBriefings from "./pages/admin/AdminBriefings";
+import AdminProjects from "./pages/admin/AdminProjects";
+import AdminPortfolio from "./pages/admin/AdminPortfolio";
+import AdminClients from "./pages/admin/AdminClients";
+import AdminInvoices from "./pages/admin/AdminInvoices";
+import AdminStorage from "./pages/admin/AdminStorage";
+import AdminStatistics from "./pages/admin/AdminStatistics";
+import AdminSettings from "./pages/admin/AdminSettings";
+import AdminIntegrations from "./pages/admin/AdminIntegrations";
+import AdminGuides from "./pages/admin/AdminGuides";
 import AdminMarketingLeads from "./pages/admin/AdminMarketingLeads";
-import AdminMarketing from "./pages/admin/AdminMarketing";
 import AdminPreviews from "./pages/admin/AdminPreviews";
+import Descobrir from "./pages/Descobrir";
+import HomePage from "./pages/HomePage";
+
+// Create placeholder components for missing pages until they are implemented
+const MainLayout = ({ children }) => <div>{children}</div>;
+const AuthLayout = ({ children }) => <div>{children}</div>;
+const NotFound = () => <div>Page Not Found</div>;
+const Pricing = () => <div>Pricing Page</div>;
+const Contact = () => <div>Contact Page</div>;
+const About = () => <div>About Page</div>;
+const Terms = () => <div>Terms Page</div>;
+const Privacy = () => <div>Privacy Page</div>;
+const Faq = () => <div>FAQ Page</div>;
+const Services = () => <div>Services Page</div>;
+const Examples = () => <div>Examples Page</div>;
+const Login = () => <div>Login Page</div>;
+const Register = () => <div>Register Page</div>;
+const ForgotPassword = () => <div>Forgot Password Page</div>;
+const ResetPassword = () => <div>Reset Password Page</div>;
+const AdminMarketing = () => <div>Admin Marketing Page</div>;
 
 const router = createBrowserRouter([
   {
@@ -39,7 +42,7 @@ const router = createBrowserRouter([
     children: [
       {
         path: "/",
-        element: <Home />,
+        element: <HomePage />,
       },
       {
         path: "/precos",
