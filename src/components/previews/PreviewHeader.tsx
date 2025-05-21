@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { Button } from "@/components/ui/button";
+import { Button } from "@/components/ui/card";
 import { Share2 } from 'lucide-react';
 
 interface PreviewHeaderProps {
