@@ -25,7 +25,7 @@ const PreviewFeedbackForm: React.FC<PreviewFeedbackFormProps> = ({
   return <Card className="p-6 bg-zinc-400">
       <h2 className="text-xl font-bold text-black mb-4">Envie seu feedback</h2>
       
-      {selectedVersion && versionTitle && <div className="mb-4 p-3 bg-gray-50 rounded-md">
+      {selectedVersion && versionTitle && <div className="mb-4 p-3 rounded-md bg-zinc-400">
           <p className="text-sm">
             <span className="font-medium">Versão selecionada:</span> {versionTitle}
           </p>
