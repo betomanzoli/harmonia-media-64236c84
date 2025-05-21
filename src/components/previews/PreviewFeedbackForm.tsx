@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { Card } from "@/components/ui/card";
 import { Textarea } from "@/components/ui/textarea";
@@ -22,10 +23,10 @@ const PreviewFeedbackForm: React.FC<PreviewFeedbackFormProps> = ({
   versionTitle
 }) => {
   const isApproved = status === 'approved';
-  return <Card className="p-6 bg-zinc-400">
+  return <Card className="p-6 bg-white">
       <h2 className="text-xl font-bold text-black mb-4">Envie seu feedback</h2>
       
-      {selectedVersion && versionTitle && <div className="mb-4 p-3 rounded-md bg-zinc-400">
+      {selectedVersion && versionTitle && <div className="mb-4 p-3 rounded-md bg-gray-100">
           <p className="text-sm">
             <span className="font-medium">Versão selecionada:</span> {versionTitle}
           </p>

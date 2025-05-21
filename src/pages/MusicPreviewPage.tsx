@@ -3,7 +3,7 @@ import React, { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import MusicPreviewSystem from '@/components/previews/MusicPreviewSystem';
 import { useToast } from '@/hooks/use-toast';
-import { checkPreviewAccessCookie } from '@/utils/authCookies';
+import { checkPreviewAccessCookie, debugCookies } from '@/utils/authCookies';
 import { supabase } from '@/lib/supabase';
 import { Loader2 } from 'lucide-react';
 
@@ -27,10 +27,15 @@ const MusicPreviewPage: React.FC = () => {
       try {
         // Log preview access for analytics and monitoring
         console.log(`Cliente acessando prévia: ${projectId}, data: ${new Date().toISOString()}`);
+        console.log(`User agent: ${navigator.userAgent}`);
+        console.log(`Is private/incognito: ${!window.localStorage || localStorage.length === 0}`);
+        
+        // Debug cookies to help troubleshoot
+        debugCookies();
         
         // 1. Verificar se há cookie de acesso
         const hasAccessCookie = checkPreviewAccessCookie(projectId);
-        console.log("Has access cookie:", hasAccessCookie);
+        console.log("Has access cookie or localStorage:", hasAccessCookie);
         
         // 2. Verificar se o usuário está logado no Supabase
         const { data: { session } } = await supabase.auth.getSession();
@@ -46,7 +51,9 @@ const MusicPreviewPage: React.FC = () => {
           // Redirecionar para página de autenticação
           console.log("No authentication found, redirecting to auth page");
           console.log("Navigation to:", `/auth/preview/${projectId}`);
-          navigate(`/auth/preview/${projectId}`);
+          
+          // Use replace instead of navigate to avoid back button issues
+          navigate(`/auth/preview/${projectId}`, { replace: true });
         }
       } catch (error) {
         console.error('Erro ao verificar autenticação:', error);

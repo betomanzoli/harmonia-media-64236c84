@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -50,7 +51,7 @@ const PreviewVersionCard: React.FC<PreviewVersionCardProps> = ({
         ${isSelected ? 'border-2 border-harmonia-green shadow-md' : ''}
         ${isApproved && isSelected ? 'border-green-500' : ''}
       `} onClick={handleSelect}>
-      <CardHeader className="flex flex-row items-start justify-between pb-2 bg-zinc-400">
+      <CardHeader className="flex flex-row items-start justify-between pb-2 bg-white">
         <div className="flex items-center">
           <CardTitle className="text-lg text-black">{version.title}</CardTitle>
           {version.recommended && <span className="ml-2 text-yellow-500 flex items-center text-sm font-medium">
@@ -59,7 +60,7 @@ const PreviewVersionCard: React.FC<PreviewVersionCardProps> = ({
             </span>}
         </div>
       </CardHeader>
-      <CardContent className="bg-zinc-400">
+      <CardContent className="bg-white">
         <p className="text-sm text-black mb-4">{version.description}</p>
         
         <div className="flex justify-between items-center">

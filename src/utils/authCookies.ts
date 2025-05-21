@@ -1,6 +1,10 @@
 
 // Functions to manage preview access cookies
 
+const isSecureContext = () => {
+  return window.location.protocol === 'https:';
+};
+
 /**
  * Sets a cookie for preview access
  */
@@ -14,15 +18,35 @@ export const setPreviewAccessCookie = (projectId: string): void => {
     const expiryDate = new Date();
     expiryDate.setDate(expiryDate.getDate() + 14); // 14 days expiry
     
-    const cookieValue = `true; expires=${expiryDate.toUTCString()}; path=/; SameSite=Lax`;
+    // Build cookie with appropriate security settings based on protocol
+    let cookieValue = `true; expires=${expiryDate.toUTCString()}; path=/`;
+    
+    // Add Secure flag only when in HTTPS
+    if (isSecureContext()) {
+      cookieValue += '; Secure';
+      // Use SameSite=None only with Secure flag (required by modern browsers)
+      cookieValue += '; SameSite=None';
+    } else {
+      // Use SameSite=Lax for HTTP
+      cookieValue += '; SameSite=Lax';
+    }
+    
     document.cookie = `preview_access_${projectId}=${cookieValue}`;
     
-    console.log(`Set preview access cookie for project: ${projectId}, expires: ${expiryDate.toUTCString()}`);
+    console.log(`Set preview access cookie for project: ${projectId}, expires: ${expiryDate.toUTCString()}, secure context: ${isSecureContext()}`);
     
     // Verify cookie was set correctly
     setTimeout(() => {
       const cookieExists = checkPreviewAccessCookie(projectId);
       console.log(`Cookie verification: ${cookieExists ? 'Successfully set' : 'Failed to set'}`);
+      
+      // Also store as a fallback in localStorage for incognito/private browsing
+      try {
+        localStorage.setItem(`preview_access_${projectId}`, 'true');
+        localStorage.setItem(`preview_access_expiry_${projectId}`, expiryDate.toISOString());
+      } catch (e) {
+        console.warn('Could not set localStorage fallback for preview access', e);
+      }
     }, 100);
   } catch (error) {
     console.error('Error setting preview access cookie:', error);
@@ -52,6 +76,23 @@ export const checkPreviewAccessCookie = (projectId: string): boolean => {
       return result;
     });
     
+    // If not found in cookies, check localStorage as fallback
+    if (!hasCookie) {
+      try {
+        const localStorageAccess = localStorage.getItem(`preview_access_${projectId}`);
+        const expiryStr = localStorage.getItem(`preview_access_expiry_${projectId}`);
+        
+        if (localStorageAccess === 'true' && expiryStr) {
+          const expiry = new Date(expiryStr);
+          const isValid = expiry > new Date();
+          console.log(`Checking localStorage fallback: ${isValid ? 'Valid' : 'Expired'}`);
+          return isValid;
+        }
+      } catch (e) {
+        console.warn('Error checking localStorage fallback', e);
+      }
+    }
+    
     console.log(`Checking preview access cookie for ${projectId}: ${hasCookie ? 'Found' : 'Not found'}`);
     return hasCookie;
   } catch (error) {
@@ -73,10 +114,30 @@ export const setPreviewEmailCookie = (projectId: string, email: string): void =>
     const expiryDate = new Date();
     expiryDate.setDate(expiryDate.getDate() + 14); // 14 days expiry
     
-    const cookieValue = `${email}; expires=${expiryDate.toUTCString()}; path=/; SameSite=Lax`;
+    // Build cookie with appropriate security settings based on protocol
+    let cookieValue = `${email}; expires=${expiryDate.toUTCString()}; path=/`;
+    
+    // Add Secure flag only when in HTTPS
+    if (isSecureContext()) {
+      cookieValue += '; Secure';
+      // Use SameSite=None only with Secure flag (required by modern browsers)
+      cookieValue += '; SameSite=None';
+    } else {
+      // Use SameSite=Lax for HTTP
+      cookieValue += '; SameSite=Lax';
+    }
+    
     document.cookie = `preview_email_${projectId}=${cookieValue}`;
     
     console.log(`Set preview email cookie for project: ${projectId}, email: ${email}`);
+    
+    // Also store as a fallback in localStorage for incognito/private browsing
+    try {
+      localStorage.setItem(`preview_email_${projectId}`, email);
+      localStorage.setItem(`preview_email_expiry_${projectId}`, expiryDate.toISOString());
+    } catch (e) {
+      console.warn('Could not set localStorage fallback for preview email', e);
+    }
   } catch (error) {
     console.error('Error setting preview email cookie:', error);
   }
@@ -99,6 +160,23 @@ export const getAuthCookie = (cookieName: string): string | null => {
         return value;
       }
     }
+    
+    // Check localStorage as fallback
+    try {
+      const value = localStorage.getItem(cookieName);
+      const expiryStr = localStorage.getItem(`${cookieName}_expiry`);
+      
+      if (value && expiryStr) {
+        const expiry = new Date(expiryStr);
+        if (expiry > new Date()) {
+          console.log(`Found value in localStorage for ${cookieName}`);
+          return value;
+        }
+      }
+    } catch (e) {
+      console.warn('Error checking localStorage fallback', e);
+    }
+    
     return null;
   } catch (error) {
     console.error('Error getting auth cookie:', error);
@@ -111,7 +189,29 @@ export const getAuthCookie = (cookieName: string): string | null => {
  */
 export const getPreviewEmailCookie = (projectId: string): string | null => {
   if (!projectId) return null;
-  return getAuthCookie(`preview_email_${projectId}`);
+  
+  const cookieName = `preview_email_${projectId}`;
+  const cookieValue = getAuthCookie(cookieName);
+  
+  if (!cookieValue) {
+    // Check localStorage as fallback
+    try {
+      const email = localStorage.getItem(cookieName);
+      const expiryStr = localStorage.getItem(`${cookieName}_expiry`);
+      
+      if (email && expiryStr) {
+        const expiry = new Date(expiryStr);
+        if (expiry > new Date()) {
+          console.log(`Found email in localStorage for ${projectId}`);
+          return email;
+        }
+      }
+    } catch (e) {
+      console.warn('Error checking localStorage fallback', e);
+    }
+  }
+  
+  return cookieValue;
 };
 
 /**
@@ -133,7 +233,19 @@ export const clearPreviewCookies = (): void => {
       }
     }
     
-    console.log(`Cleared ${clearedCount} preview cookies`);
+    // Also clear localStorage fallbacks
+    try {
+      Object.keys(localStorage).forEach(key => {
+        if (key.startsWith('preview_access_') || key.startsWith('preview_email_')) {
+          localStorage.removeItem(key);
+          clearedCount++;
+        }
+      });
+    } catch (e) {
+      console.warn('Error clearing localStorage fallbacks', e);
+    }
+    
+    console.log(`Cleared ${clearedCount} preview cookies/storage items`);
     console.log('Cookies after clearing:', document.cookie);
   } catch (error) {
     console.error('Error clearing preview cookies:', error);
@@ -152,6 +264,23 @@ export const debugCookies = (): void => {
     cookies.forEach((cookie, index) => {
       console.log(`Cookie ${index + 1}: ${cookie.trim()}`);
     });
+  }
+  
+  // Also log localStorage items related to preview access
+  console.log('=== Preview LocalStorage Items ===');
+  try {
+    let foundItems = 0;
+    Object.keys(localStorage).forEach(key => {
+      if (key.startsWith('preview_access_') || key.startsWith('preview_email_')) {
+        console.log(`${key}: ${localStorage.getItem(key)}`);
+        foundItems++;
+      }
+    });
+    if (foundItems === 0) {
+      console.log('No preview items in localStorage');
+    }
+  } catch (e) {
+    console.log('Error reading localStorage:', e);
   }
   console.log('=====================');
 };
