@@ -1,686 +1,242 @@
-import React, { useState, useEffect } from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
+
+import React, { useEffect, useState } from 'react';
+import { useParams, useNavigate } from 'react-router-dom';
 import { useToast } from '@/hooks/use-toast';
-import { ArrowLeft, Plus, Copy, Clock, Mail, Phone } from 'lucide-react';
-import { useNavigate, useParams } from 'react-router-dom';
-import { usePreviewProjects, VersionItem } from '@/hooks/admin/usePreviewProjects';
-import AddVersionDialog from './AddVersionDialog';
-import VersionCard from './VersionCard';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
-import { Textarea } from "@/components/ui/textarea";
+import { usePreviewProjects } from '@/hooks/admin/usePreviewProjects';
+import { ProjectItem, VersionItem } from '@/types/preview.types';
+import ProjectHeader from './ProjectHeader';
+import ProjectActionCard from './ProjectActionCard';
+import ProjectClientInfo from './ProjectClientInfo';
+import ProjectHistoryList from './ProjectHistoryList';
+import ProjectStatusCard from './ProjectStatusCard';
+import PreviewVersionsList from './PreviewVersionsList';
 import { formatProjectId } from '@/utils/project.utils';
 
-const ProjectDetails: React.FC = () => {
+const ProjectDetails = () => {
   const { projectId } = useParams<{ projectId: string }>();
   const navigate = useNavigate();
-  const { projects, getProjectById, updateProject, loadProjects } = usePreviewProjects();
   const { toast } = useToast();
-  
-  const [project, setProject] = useState<any>(null);
-  const [isAddVersionOpen, setIsAddVersionOpen] = useState(false);
-  const [isExtendDeadlineOpen, setIsExtendDeadlineOpen] = useState(false);
-  const [isEmailOpen, setIsEmailOpen] = useState(false);
-  const [emailContent, setEmailContent] = useState('');
   const [isLoading, setIsLoading] = useState(true);
-  const [loadAttempts, setLoadAttempts] = useState(0);
-  const [loadFailed, setLoadFailed] = useState(false);
+  const [project, setProject] = useState<ProjectItem | null>(null);
+  const { getProjectById, updateProject } = usePreviewProjects();
   
   useEffect(() => {
     if (!projectId) {
-      console.log("No project ID provided, returning early");
-      setIsLoading(false);
-      setLoadFailed(true);
+      console.error("No project ID provided");
+      toast({
+        title: "Erro",
+        description: "ID do projeto não encontrado.",
+        variant: "destructive"
+      });
+      navigate('/admin-j28s7d1k/previews');
       return;
     }
     
-    const loadProjectData = async () => {
-      try {
-        setIsLoading(true);
-        console.log("ProjectDetails Component Mounted");
-        console.log("Project ID from URL:", projectId);
-        
-        // Format the ID to ensure consistency
-        const formattedId = formatProjectId(projectId);
-        console.log("Formatted Project ID:", formattedId);
-        
-        // Ensure projects are loaded first
-        await loadProjects();
-        
-        // Log available projects for debugging
-        console.log("Available projects:", projects.map(p => ({ id: p.id, name: p.clientName })));
-        
-        // First try with the exact formatted ID
-        let projectData = getProjectById(formattedId);
-        
-        if (projectData) {
-          console.log("Project found with formatted ID:", projectData);
-          setProject(projectData);
-          setLoadFailed(false);
-        } else {
-          // Try with different cases
-          const caseInsensitiveId = projects.find(p => 
-            p.id.toLowerCase() === formattedId.toLowerCase()
-          )?.id;
-          
-          if (caseInsensitiveId) {
-            console.log("Found project with case-insensitive match:", caseInsensitiveId);
-            projectData = getProjectById(caseInsensitiveId);
-            setProject(projectData);
-            setLoadFailed(false);
-          } else {
-            console.error("Project not found for ID:", formattedId);
-            
-            // Initialize with demo data if ID matches our demo ID
-            if (formattedId === 'P0001' || formattedId.toUpperCase() === 'P0001') {
-              console.log("Initializing demo project for P0001");
-              const demoProject = {
-                id: 'P0001',
-                clientName: 'Humberto Manzoli',
-                clientEmail: 'cliente@exemplo.com',
-                packageType: 'Essencial',
-                createdAt: new Date().toLocaleDateString('pt-BR'),
-                status: 'waiting',
-                versions: 0,
-                previewUrl: `${window.location.origin}/preview/P0001`,
-                expirationDate: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toLocaleDateString('pt-BR'),
-                lastActivityDate: new Date().toLocaleDateString('pt-BR'),
-                versionsList: []
-              };
-              
-              setProject(demoProject);
-              setLoadFailed(false);
-            } else {
-              setLoadFailed(true);
-              
-              // If this is not our first attempt, show error toast
-              if (loadAttempts > 0) {
-                toast({
-                  title: "Projeto não encontrado",
-                  description: `Não foi possível encontrar o projeto com ID: ${formattedId}`,
-                  variant: "destructive"
-                });
-              }
-            }
-          }
-        }
-      } catch (error) {
-        console.error("Error loading project:", error);
-        setLoadFailed(true);
-        
-        if (loadAttempts > 0) {
-          toast({
-            title: "Erro ao carregar projeto",
-            description: "Ocorreu um erro ao carregar os dados do projeto.",
-            variant: "destructive"
-          });
-        }
-      } finally {
-        setIsLoading(false);
-        setLoadAttempts(prev => prev + 1);
-      }
-    };
+    console.log(`Loading project details for ID: ${projectId}`);
     
-    loadProjectData();
-  }, [projectId, projects, loadProjects, toast, loadAttempts]);
-  
-  // Handle project not found scenario with retry option
-  const handleRetry = () => {
-    if (!projectId) return;
-    
-    setIsLoading(true);
-    // Reset load attempts to force a retry
-    setLoadAttempts(0);
-  };
-  
-  // Show loading state
-  if (isLoading) {
-    return (
-      <div className="p-6">
-        <Button 
-          variant="ghost" 
-          onClick={() => navigate('/admin-j28s7d1k/previews')}
-        >
-          <ArrowLeft className="mr-2 h-4 w-4" />
-          Voltar
-        </Button>
-        <div className="flex flex-col items-center justify-center mt-16">
-          <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-green-500"></div>
-          <h2 className="text-xl font-semibold mt-4">Carregando projeto...</h2>
-          <p className="text-sm text-gray-500 mt-2">ID do Projeto: {projectId}</p>
-        </div>
-      </div>
-    );
-  }
-  
-  // Show error state with retry button and improved diagnostic info
-  if (!project || loadFailed) {
-    return (
-      <div className="p-6">
-        <Button 
-          variant="ghost" 
-          onClick={() => navigate('/admin-j28s7d1k/previews')}
-        >
-          <ArrowLeft className="mr-2 h-4 w-4" />
-          Voltar
-        </Button>
-        <div className="text-center mt-16">
-          <h2 className="text-2xl font-semibold mb-4">Projeto não encontrado</h2>
-          <p className="mb-6 text-gray-500">
-            Não foi possível carregar os dados do projeto. Verifique se o projeto existe ou tente novamente.
-          </p>
-          <div className="space-y-4">
-            <Button onClick={handleRetry}>
-              Tentar novamente
-            </Button>
-            <Button 
-              variant="outline" 
-              onClick={() => navigate('/admin-j28s7d1k/previews')}
-              className="ml-2"
-            >
-              Voltar para prévias
-            </Button>
-          </div>
-          <div className="mt-8 p-4 bg-gray-100 rounded-lg text-left">
-            <h3 className="font-medium mb-2">Informações de diagnóstico:</h3>
-            <p>ID do Projeto solicitado: {projectId}</p>
-            <p>ID do Projeto formatado: {projectId ? formatProjectId(projectId) : 'N/A'}</p>
-            <p>Projetos disponíveis: {projects.length}</p>
-            <p>IDs disponíveis: {projects.map(p => p.id).join(', ')}</p>
-          </div>
-        </div>
-      </div>
-    );
-  }
-  
-  const isApproved = project.status === 'approved';
-  
-  const handleAddVersion = (newVersion: VersionItem) => {
-    if (!projectId) return;
-    
-    const currentVersions = project.versionsList || [];
-    
-    // Se a nova versão for marcada como final, adiciona um indicador
-    const isFinalVersion = newVersion.final === true;
-    const versionTitle = isFinalVersion ? `FINAL - ${newVersion.name}` : newVersion.name;
-    
-    const versionToAdd = {
-      ...newVersion,
-      name: versionTitle
-    };
-    
-    // If the new version is marked as recommended, remove recommended from others
-    let updatedVersions = currentVersions;
-    if (newVersion.recommended) {
-      updatedVersions = currentVersions.map(v => ({
-        ...v,
-        recommended: false
-      }));
-    }
-    
-    // Add the new version
-    updatedVersions = [...updatedVersions, versionToAdd];
-    
-    // Update history
-    const historyAction = isFinalVersion 
-      ? `Versão final adicionada: ${versionTitle}` 
-      : `Nova versão adicionada: ${versionTitle}`;
+    try {
+      // Format the project ID consistently
+      const formattedId = formatProjectId(projectId);
+      console.log(`Formatted project ID: ${formattedId}`);
       
-    const historyEntry = {
-      action: historyAction,
-      timestamp: new Date().toLocaleString('pt-BR'),
-      data: {
-        message: newVersion.description || 'Sem descrição'
+      // Try to get the project with various ID formats
+      let projectData = getProjectById(formattedId);
+      
+      if (!projectData) {
+        console.log(`Project not found with ID ${formattedId}, trying original ID...`);
+        projectData = getProjectById(projectId);
       }
-    };
+      
+      if (!projectData) {
+        console.log(`Project not found with ID ${projectId}, trying uppercase...`);
+        projectData = getProjectById(projectId.toUpperCase());
+      }
+      
+      if (!projectData) {
+        console.log(`Project not found with ID ${projectId.toUpperCase()}, trying lowercase...`);
+        projectData = getProjectById(projectId.toLowerCase());
+      }
+      
+      if (projectData) {
+        console.log("Project found:", projectData);
+        setProject(projectData);
+      } else {
+        console.error(`Project with ID ${projectId} not found after multiple attempts`);
+        toast({
+          title: "Projeto não encontrado",
+          description: `Não foi possível encontrar o projeto com ID ${projectId}.`,
+          variant: "destructive"
+        });
+        navigate('/admin-j28s7d1k/previews');
+      }
+    } catch (error) {
+      console.error("Error loading project:", error);
+      toast({
+        title: "Erro ao carregar projeto",
+        description: "Ocorreu um erro ao carregar os detalhes do projeto.",
+        variant: "destructive"
+      });
+    } finally {
+      setIsLoading(false);
+    }
+  }, [projectId, getProjectById, toast, navigate]);
+  
+  const handleAddVersion = (version: VersionItem) => {
+    if (!project) return;
     
-    const history = [...(project.history || []), historyEntry];
-    
-    // Update project
-    updateProject(projectId, {
-      versionsList: updatedVersions,
-      versions: updatedVersions.length,
-      history,
-      lastActivityDate: new Date().toLocaleDateString('pt-BR')
-    });
-    
-    // Update local state
-    setProject({
-      ...project,
-      versionsList: updatedVersions,
-      versions: updatedVersions.length,
-      history,
-      lastActivityDate: new Date().toLocaleDateString('pt-BR')
-    });
-    
-    toast({
-      title: isFinalVersion ? "Versão final adicionada" : "Versão adicionada",
-      description: `${versionTitle} foi adicionada ao projeto com sucesso.`
-    });
-    
-    setIsAddVersionOpen(false);
+    try {
+      // Create a new versions list with the new version
+      const currentVersions = project.versionsList || [];
+      const updatedVersions = [...currentVersions, version];
+      
+      // Update the project with the new version
+      updateProject(project.id, {
+        versionsList: updatedVersions,
+        versions: updatedVersions.length,
+        lastActivityDate: new Date().toLocaleDateString('pt-BR'),
+        history: [{
+          action: `Versão ${version.name} adicionada`,
+          timestamp: new Date().toLocaleString('pt-BR'),
+          data: { versionId: version.id }
+        }]
+      });
+      
+      // Update local state
+      setProject({
+        ...project,
+        versionsList: updatedVersions,
+        versions: updatedVersions.length,
+        lastActivityDate: new Date().toLocaleDateString('pt-BR')
+      });
+      
+      toast({
+        title: "Versão adicionada",
+        description: `A versão "${version.name}" foi adicionada com sucesso.`
+      });
+    } catch (error) {
+      console.error("Error adding version:", error);
+      toast({
+        title: "Erro ao adicionar versão",
+        description: "Ocorreu um erro ao adicionar a versão. Tente novamente.",
+        variant: "destructive"
+      });
+    }
   };
   
   const handleExtendDeadline = () => {
-    if (!projectId) return;
+    if (!project) return;
     
-    // Calculate new expiration date (current + 7 days)
-    const currentDate = project.expirationDate 
-      ? new Date(project.expirationDate.split('/').reverse().join('-')) 
-      : new Date();
+    try {
+      // Add 15 days to the current expiration date
+      const currentDate = project.expirationDate 
+        ? new Date(project.expirationDate.split('/').reverse().join('-')) 
+        : new Date();
+        
+      currentDate.setDate(currentDate.getDate() + 15);
+      const newExpirationDate = currentDate.toLocaleDateString('pt-BR');
       
-    currentDate.setDate(currentDate.getDate() + 7);
-    const newExpirationDate = currentDate.toLocaleDateString('pt-BR');
-    
-    // Add history entry
-    const historyEntry = {
-      action: "Prazo estendido",
-      timestamp: new Date().toLocaleString('pt-BR'),
-      data: {
-        message: `Prazo estendido por +7 dias. Nova data de expiração: ${newExpirationDate}`
-      }
-    };
-    
-    const history = [...(project.history || []), historyEntry];
-    
-    // Update project
-    updateProject(projectId, {
-      expirationDate: newExpirationDate,
-      history,
-      lastActivityDate: new Date().toLocaleDateString('pt-BR')
-    });
-    
-    // Update local state
-    setProject({
-      ...project,
-      expirationDate: newExpirationDate,
-      history,
-      lastActivityDate: new Date().toLocaleDateString('pt-BR')
-    });
-    
-    toast({
-      title: "Prazo estendido",
-      description: `O prazo foi estendido por +7 dias. Nova data: ${newExpirationDate}`
-    });
-    
-    setIsExtendDeadlineOpen(false);
+      // Update the project with the new expiration date
+      updateProject(project.id, {
+        expirationDate: newExpirationDate,
+        history: [{
+          action: "Prazo estendido",
+          timestamp: new Date().toLocaleString('pt-BR'),
+          data: { 
+            oldDate: project.expirationDate,
+            newDate: newExpirationDate
+          }
+        }]
+      });
+      
+      // Update local state
+      setProject({
+        ...project,
+        expirationDate: newExpirationDate
+      });
+      
+      toast({
+        title: "Prazo estendido",
+        description: "O prazo de expiração foi estendido por mais 15 dias."
+      });
+    } catch (error) {
+      console.error("Error extending deadline:", error);
+      toast({
+        title: "Erro ao estender prazo",
+        description: "Ocorreu um erro ao estender o prazo. Tente novamente.",
+        variant: "destructive"
+      });
+    }
   };
 
-  const handleDeleteVersion = (versionId: string) => {
-    if (!projectId) return;
-    
-    const currentVersions = project.versionsList || [];
-    const versionToDelete = currentVersions.find(v => v.id === versionId);
-    
-    if (!versionToDelete) return;
-    
-    const updatedVersions = currentVersions.filter(v => v.id !== versionId);
-    
-    // Add history entry
-    const historyEntry = {
-      action: `Versão removida: ${versionToDelete.name}`,
-      timestamp: new Date().toLocaleString('pt-BR'),
-      data: {
-        message: `A versão "${versionToDelete.name}" foi removida do projeto.`
-      }
-    };
-    
-    const history = [...(project.history || []), historyEntry];
-    
-    // Update project
-    updateProject(projectId, {
-      versionsList: updatedVersions,
-      versions: updatedVersions.length,
-      history,
-      lastActivityDate: new Date().toLocaleDateString('pt-BR')
-    });
-    
-    // Update local state
-    setProject({
-      ...project,
-      versionsList: updatedVersions,
-      versions: updatedVersions.length,
-      history,
-      lastActivityDate: new Date().toLocaleDateString('pt-BR')
-    });
-    
-    toast({
-      title: "Versão removida",
-      description: `${versionToDelete.name} foi removida com sucesso.`
-    });
-  };
+  if (isLoading) {
+    return <div className="p-4 text-center">Carregando detalhes do projeto...</div>;
+  }
   
-  const handleCopyLink = () => {
-    const previewUrl = `${window.location.origin}/preview/${projectId}`;
-    
-    navigator.clipboard.writeText(previewUrl)
-      .then(() => {
-        toast({
-          title: "Link copiado",
-          description: "O link de prévia foi copiado para a área de transferência."
-        });
-      })
-      .catch(err => {
-        console.error('Falha ao copiar link:', err);
-        toast({
-          title: "Erro ao copiar",
-          description: "Não foi possível copiar o link. Por favor, tente novamente.",
-          variant: "destructive"
-        });
-      });
-  };
-  
-  const handleSendEmail = () => {
-    if (!project.clientEmail) {
-      toast({
-        title: "Email não disponível",
-        description: "Não há email cadastrado para este cliente."
-      });
-      return;
-    }
-    
-    if (!emailContent.trim()) {
-      toast({
-        title: "Mensagem vazia",
-        description: "Por favor, digite uma mensagem antes de enviar."
-      });
-      return;
-    }
-    
-    // Here you would actually send the email to the client
-    toast({
-      title: "Email enviado",
-      description: `Email enviado para ${project.clientEmail}`
-    });
-    
-    setIsEmailOpen(false);
-    setEmailContent('');
-  };
-  
-  const handleWhatsAppContact = () => {
-    if (!project.clientPhone) {
-      toast({
-        title: "Telefone não disponível",
-        description: "Não há número de telefone cadastrado para este cliente."
-      });
-      return;
-    }
-    
-    // Format phone number (remove non-numeric characters)
-    const formattedPhone = project.clientPhone.replace(/\D/g, '');
-    
-    // Open WhatsApp with the client's phone number
-    window.open(`https://wa.me/${formattedPhone}`, '_blank');
-  };
-  
-  return (
-    <div className="p-6 space-y-6">
-      <div className="flex items-center justify-between">
-        <Button 
-          variant="ghost" 
+  if (!project) {
+    return (
+      <div className="p-4 text-center">
+        <h2 className="text-xl font-semibold mb-2">Projeto não encontrado</h2>
+        <p>Não foi possível encontrar o projeto com o ID especificado.</p>
+        <button
+          className="mt-4 px-4 py-2 bg-primary text-white rounded hover:bg-primary/80"
           onClick={() => navigate('/admin-j28s7d1k/previews')}
         >
-          <ArrowLeft className="mr-2 h-4 w-4" />
-          Voltar
-        </Button>
+          Voltar para Prévias
+        </button>
       </div>
-      
-      {/* Show loading state */}
-      {isLoading && (
-        <div className="flex flex-col items-center justify-center mt-16">
-          <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-green-500"></div>
-          <h2 className="text-xl font-semibold mt-4">Carregando projeto...</h2>
-          <p className="text-sm text-gray-500 mt-2">ID do Projeto: {projectId}</p>
-        </div>
-      )}
-      
-      {/* Show error state with retry button and improved diagnostic info */}
-      {!isLoading && (!project || loadFailed) && (
-        <div className="text-center mt-16">
-          <h2 className="text-2xl font-semibold mb-4">Projeto não encontrado</h2>
-          <p className="mb-6 text-gray-500">
-            Não foi possível carregar os dados do projeto. Verifique se o projeto existe ou tente novamente.
-          </p>
-          <div className="space-y-4">
-            <Button onClick={handleRetry}>
-              Tentar novamente
-            </Button>
-            <Button 
-              variant="outline" 
-              onClick={() => navigate('/admin-j28s7d1k/previews')}
-              className="ml-2"
-            >
-              Voltar para prévias
-            </Button>
-          </div>
-          <div className="mt-8 p-4 bg-gray-100 rounded-lg text-left">
-            <h3 className="font-medium mb-2">Informações de diagnóstico:</h3>
-            <p>ID do Projeto solicitado: {projectId}</p>
-            <p>ID do Projeto formatado: {projectId ? formatProjectId(projectId) : 'N/A'}</p>
-            <p>Projetos disponíveis: {projects.length}</p>
-            <p>IDs disponíveis: {projects.map(p => p.id).join(', ')}</p>
-          </div>
-        </div>
-      )}
-      
-      {/* Show project content when loaded successfully */}
-      {!isLoading && project && !loadFailed && (
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          <div className="md:col-span-2 space-y-6">
-            <Card>
-              <CardHeader className="pb-2">
-                <CardTitle>Cliente: {project.clientName}</CardTitle>
-                <div className="text-sm text-gray-500">{project.packageType || "Pacote padrão"}</div>
-              </CardHeader>
-            </Card>
-            
-            <Card>
-              <CardHeader className="border-b">
-                <CardTitle>Versões ({project.versionsList?.length || 0})</CardTitle>
-              </CardHeader>
-              <CardContent className="p-4 space-y-4">
-                {project.versionsList && project.versionsList.length > 0 ? (
-                  project.versionsList.map((version: VersionItem) => (
-                    <VersionCard 
-                      key={version.id} 
-                      version={version} 
-                      projectId={projectId || ''} 
-                      onDeleteVersion={handleDeleteVersion} 
-                    />
-                  ))
-                ) : (
-                  <div className="text-center py-8 text-gray-500">
-                    Nenhuma versão adicionada ainda.
-                  </div>
-                )}
-              </CardContent>
-            </Card>
-            
-            <Card>
-              <CardHeader className="border-b">
-                <CardTitle>Histórico do Projeto</CardTitle>
-              </CardHeader>
-              <CardContent className="p-0">
-                {project.history && project.history.length > 0 ? (
-                  <ul className="divide-y">
-                    {project.history.map((entry: any, index: number) => (
-                      <li key={index} className="p-4">
-                        <div className="flex flex-col md:flex-row md:justify-between mb-1">
-                          <span className="font-medium">{entry.action}</span>
-                          <span className="text-gray-500 text-sm">{entry.timestamp}</span>
-                        </div>
-                        {entry.data?.message && (
-                          <p className="text-gray-600 text-sm">{entry.data.message}</p>
-                        )}
-                      </li>
-                    ))}
-                  </ul>
-                ) : (
-                  <div className="text-center py-8 text-gray-500">
-                    Nenhum registro de atividade ainda.
-                  </div>
-                )}
-              </CardContent>
-            </Card>
-          </div>
-          
-          <div className="space-y-6">
-            <Card>
-              <CardHeader>
-                <CardTitle>Informações do Cliente</CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div>
-                  <h3 className="text-sm font-medium text-gray-500">Nome</h3>
-                  <p>{project.clientName}</p>
-                </div>
-                
-                <div>
-                  <h3 className="text-sm font-medium text-gray-500">Email</h3>
-                  <p>{project.clientEmail || "Não informado"}</p>
-                </div>
-                
-                <div>
-                  <h3 className="text-sm font-medium text-gray-500">Telefone</h3>
-                  <p>{project.clientPhone || "Não informado"}</p>
-                </div>
-                
-                <div>
-                  <h3 className="text-sm font-medium text-gray-500">Pacote</h3>
-                  <p>{project.packageType || "Pacote padrão"}</p>
-                </div>
-                
-                <div>
-                  <h3 className="text-sm font-medium text-gray-500">Data de Criação</h3>
-                  <p>{project.createdAt || "N/A"}</p>
-                </div>
-                
-                <div>
-                  <h3 className="text-sm font-medium text-gray-500">Data de Expiração</h3>
-                  <p>{project.expirationDate || "N/A"}</p>
-                </div>
-                
-                <div>
-                  <h3 className="text-sm font-medium text-gray-500">Última Atividade</h3>
-                  <p>{project.lastActivityDate || new Date().toLocaleDateString('pt-BR')}</p>
-                </div>
-              </CardContent>
-            </Card>
-            
-            <Card className="bg-slate-900 text-white">
-              <CardHeader>
-                <CardTitle>Ações do Projeto</CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <Button 
-                  onClick={() => setIsAddVersionOpen(true)} 
-                  className="w-full bg-green-500 hover:bg-green-600"
-                >
-                  <Plus className="mr-2 h-4 w-4" />
-                  {isApproved ? "Adicionar Versão Final" : "Adicionar Versão"}
-                </Button>
-                
-                <Button 
-                  onClick={handleCopyLink} 
-                  variant="outline" 
-                  className="w-full text-gray-300 border-gray-700"
-                >
-                  <Copy className="mr-2 h-4 w-4" />
-                  Copiar Link de Prévia
-                </Button>
-                
-                <Button 
-                  onClick={() => setIsExtendDeadlineOpen(true)} 
-                  variant="outline" 
-                  className="w-full text-gray-300 border-gray-700"
-                >
-                  <Clock className="mr-2 h-4 w-4" />
-                  Estender Prazo
-                </Button>
-                
-                <div className="pt-4 border-t border-gray-700">
-                  <h3 className="text-sm font-medium mb-3">Contatar Cliente</h3>
-                  <div className="grid grid-cols-2 gap-2">
-                    <Button 
-                      onClick={handleWhatsAppContact} 
-                      variant="outline" 
-                      className="text-gray-300 border-gray-700"
-                    >
-                      <Phone className="mr-2 h-4 w-4" />
-                      WhatsApp
-                    </Button>
-                    
-                    <Button 
-                      onClick={() => setIsEmailOpen(true)} 
-                      variant="outline" 
-                      className="text-gray-300 border-gray-700"
-                    >
-                      <Mail className="mr-2 h-4 w-4" />
-                      Email
-                    </Button>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-          </div>
-        </div>
-      )}
-      
-      {/* Add Version Dialog */}
-      <AddVersionDialog 
-        isOpen={isAddVersionOpen}
-        onOpenChange={setIsAddVersionOpen}
-        projectId={projectId || ''}
-        onAddVersion={handleAddVersion}
-        isFinalVersion={isApproved}
-        packageType={project?.packageType}
+    );
+  }
+
+  return (
+    <div className="space-y-6">
+      <ProjectHeader 
+        clientName={project.clientName}
+        projectId={project.id}
+        status={project.status}
+        projectType={project.packageType || 'Música Personalizada'}
       />
       
-      {/* Extend Deadline Dialog */}
-      <Dialog open={isExtendDeadlineOpen} onOpenChange={setIsExtendDeadlineOpen}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Estender Prazo</DialogTitle>
-            <DialogDescription>
-              Tem certeza que deseja estender o prazo da prévia por mais 7 dias?
-            </DialogDescription>
-          </DialogHeader>
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setIsExtendDeadlineOpen(false)}>
-              Cancelar
-            </Button>
-            <Button onClick={handleExtendDeadline}>
-              Confirmar Extensão
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
-      
-      {/* Email Dialog */}
-      <Dialog open={isEmailOpen} onOpenChange={setIsEmailOpen}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Enviar Email para {project.clientName}</DialogTitle>
-          </DialogHeader>
-          <div className="space-y-4 my-4">
-            <p className="text-sm text-gray-500">
-              Digite a mensagem que deseja enviar para {project.clientEmail}
-            </p>
-            <Textarea
-              placeholder="Escreva sua mensagem aqui..."
-              value={emailContent}
-              onChange={(e) => setEmailContent(e.target.value)}
-              className="min-h-[150px]"
-            />
-          </div>
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setIsEmailOpen(false)}>
-              Cancelar
-            </Button>
-            <Button onClick={handleSendEmail}>Enviar</Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <div className="md:col-span-2 space-y-6">
+          <PreviewVersionsList 
+            versions={project.versionsList || []}
+            projectId={project.id}
+          />
+          
+          <ProjectHistoryList 
+            history={project.history || []}
+          />
+        </div>
+        
+        <div className="space-y-6">
+          <ProjectActionCard 
+            projectId={project.id}
+            onAddVersion={handleAddVersion}
+            onExtendDeadline={handleExtendDeadline}
+            previewUrl={project.previewUrl || `/preview/${project.id}`}
+            projectStatus={project.status}
+            packageType={project.packageType}
+            clientPhone={project.clientPhone}
+            clientEmail={project.clientEmail}
+            clientName={project.clientName}
+          />
+          
+          <ProjectClientInfo 
+            clientName={project.clientName}
+            clientEmail={project.clientEmail}
+            clientPhone={project.clientPhone}
+          />
+          
+          <ProjectStatusCard 
+            status={project.status}
+            createdAt={project.createdAt}
+            expirationDate={project.expirationDate}
+            lastActivityDate={project.lastActivityDate}
+            projectId={project.id}
+            feedback={project.feedback}
+          />
+        </div>
+      </div>
     </div>
   );
 };

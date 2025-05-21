@@ -1,5 +1,5 @@
 
-import { ProjectItem } from '@/hooks/admin/usePreviewProjects';
+import { ProjectItem, VersionItem } from '@/types/preview.types';
 
 export const generateMockPreviews = (): ProjectItem[] => {
   const today = new Date();
