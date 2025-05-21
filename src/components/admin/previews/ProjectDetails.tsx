@@ -9,6 +9,7 @@ import AddVersionDialog from './AddVersionDialog';
 import VersionCard from './VersionCard';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
 import { Textarea } from "@/components/ui/textarea";
+import { formatProjectId } from '@/utils/project.utils';
 
 const ProjectDetails: React.FC = () => {
   const { projectId } = useParams<{ projectId: string }>();
@@ -22,6 +23,7 @@ const ProjectDetails: React.FC = () => {
   const [isEmailOpen, setIsEmailOpen] = useState(false);
   const [emailContent, setEmailContent] = useState('');
   const [isLoading, setIsLoading] = useState(true);
+  const [loadAttempts, setLoadAttempts] = useState(0);
   const [loadFailed, setLoadFailed] = useState(false);
   
   useEffect(() => {
@@ -38,120 +40,97 @@ const ProjectDetails: React.FC = () => {
         console.log("ProjectDetails Component Mounted");
         console.log("Project ID from URL:", projectId);
         
+        // Format the ID to ensure consistency
+        const formattedId = formatProjectId(projectId);
+        console.log("Formatted Project ID:", formattedId);
+        
         // Ensure projects are loaded first
         await loadProjects();
         
-        // Get all available project IDs for debugging
-        const availableIds = projects.map(p => p.id);
-        console.log("All available project IDs:", availableIds.join(', '));
+        // Log available projects for debugging
+        console.log("Available projects:", projects.map(p => ({ id: p.id, name: p.clientName })));
         
-        // Try multiple matching strategies
-        let projectData = null;
+        // First try with the exact formatted ID
+        let projectData = getProjectById(formattedId);
         
-        // Try exact match first
-        projectData = projects.find(p => p.id === projectId);
         if (projectData) {
-          console.log("Found project with exact ID match");
-        }
-        
-        // If not found, try case-insensitive match
-        if (!projectData) {
-          projectData = projects.find(p => 
-            p.id.toLowerCase() === projectId.toLowerCase()
-          );
-          if (projectData) {
-            console.log("Found project with case-insensitive match");
-          }
-        }
-        
-        // If not found, try trimmed match (in case of whitespace issues)
-        if (!projectData) {
-          projectData = projects.find(p => 
-            p.id.trim() === projectId.trim()
-          );
-          if (projectData) {
-            console.log("Found project with trimmed match");
-          }
-        }
-        
-        // If found, set the project data
-        if (projectData) {
-          console.log("Project found:", projectData);
+          console.log("Project found with formatted ID:", projectData);
           setProject(projectData);
           setLoadFailed(false);
         } else {
-          console.error("Project not found for ID:", projectId);
+          // Try with different cases
+          const caseInsensitiveId = projects.find(p => 
+            p.id.toLowerCase() === formattedId.toLowerCase()
+          )?.id;
           
-          // Try to initialize with demo data if ID matches our demo ID
-          if (projectId === 'P0001') {
-            console.log("Initializing demo project for P0001");
-            const demoProject = {
-              id: 'P0001',
-              clientName: 'Humberto Manzoli',
-              clientEmail: 'cliente@exemplo.com',
-              packageType: 'Essencial',
-              createdAt: new Date().toLocaleDateString('pt-BR'),
-              status: 'waiting',
-              versions: 0,
-              previewUrl: `${window.location.origin}/preview/P0001`,
-              expirationDate: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toLocaleDateString('pt-BR'),
-              lastActivityDate: new Date().toLocaleDateString('pt-BR'),
-              versionsList: []
-            };
-            
-            setProject(demoProject);
+          if (caseInsensitiveId) {
+            console.log("Found project with case-insensitive match:", caseInsensitiveId);
+            projectData = getProjectById(caseInsensitiveId);
+            setProject(projectData);
             setLoadFailed(false);
           } else {
-            setLoadFailed(true);
-            toast({
-              title: "Projeto não encontrado",
-              description: `Não foi possível encontrar o projeto com ID: ${projectId}`,
-              variant: "destructive"
-            });
+            console.error("Project not found for ID:", formattedId);
+            
+            // Initialize with demo data if ID matches our demo ID
+            if (formattedId === 'P0001' || formattedId.toUpperCase() === 'P0001') {
+              console.log("Initializing demo project for P0001");
+              const demoProject = {
+                id: 'P0001',
+                clientName: 'Humberto Manzoli',
+                clientEmail: 'cliente@exemplo.com',
+                packageType: 'Essencial',
+                createdAt: new Date().toLocaleDateString('pt-BR'),
+                status: 'waiting',
+                versions: 0,
+                previewUrl: `${window.location.origin}/preview/P0001`,
+                expirationDate: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toLocaleDateString('pt-BR'),
+                lastActivityDate: new Date().toLocaleDateString('pt-BR'),
+                versionsList: []
+              };
+              
+              setProject(demoProject);
+              setLoadFailed(false);
+            } else {
+              setLoadFailed(true);
+              
+              // If this is not our first attempt, show error toast
+              if (loadAttempts > 0) {
+                toast({
+                  title: "Projeto não encontrado",
+                  description: `Não foi possível encontrar o projeto com ID: ${formattedId}`,
+                  variant: "destructive"
+                });
+              }
+            }
           }
         }
       } catch (error) {
         console.error("Error loading project:", error);
         setLoadFailed(true);
-        toast({
-          title: "Erro ao carregar projeto",
-          description: "Ocorreu um erro ao carregar os dados do projeto.",
-          variant: "destructive"
-        });
+        
+        if (loadAttempts > 0) {
+          toast({
+            title: "Erro ao carregar projeto",
+            description: "Ocorreu um erro ao carregar os dados do projeto.",
+            variant: "destructive"
+          });
+        }
       } finally {
         setIsLoading(false);
+        setLoadAttempts(prev => prev + 1);
       }
     };
     
     loadProjectData();
-  }, [projectId, projects, loadProjects, toast]);
+  }, [projectId, projects, loadProjects, toast, loadAttempts]);
   
   // Handle project not found scenario with retry option
   const handleRetry = () => {
     if (!projectId) return;
     
     setIsLoading(true);
-    // Reload projects and try again
-    loadProjects().then(() => {
-      const projectData = getProjectById(projectId);
-      
-      if (projectData) {
-        setProject(projectData);
-        setLoadFailed(false);
-        toast({
-          title: "Projeto carregado",
-          description: "Os dados do projeto foram carregados com sucesso."
-        });
-      } else {
-        setLoadFailed(true);
-        toast({
-          title: "Projeto não encontrado",
-          description: "Não foi possível encontrar o projeto."
-        });
-      }
-      
-      setIsLoading(false);
-    });
+    // Reset load attempts to force a retry
+    setLoadAttempts(0);
   };
   
   // Show loading state
@@ -205,6 +184,7 @@ const ProjectDetails: React.FC = () => {
           <div className="mt-8 p-4 bg-gray-100 rounded-lg text-left">
             <h3 className="font-medium mb-2">Informações de diagnóstico:</h3>
             <p>ID do Projeto solicitado: {projectId}</p>
+            <p>ID do Projeto formatado: {projectId ? formatProjectId(projectId) : 'N/A'}</p>
             <p>Projetos disponíveis: {projects.length}</p>
             <p>IDs disponíveis: {projects.map(p => p.id).join(', ')}</p>
           </div>
@@ -476,6 +456,7 @@ const ProjectDetails: React.FC = () => {
           <div className="mt-8 p-4 bg-gray-100 rounded-lg text-left">
             <h3 className="font-medium mb-2">Informações de diagnóstico:</h3>
             <p>ID do Projeto solicitado: {projectId}</p>
+            <p>ID do Projeto formatado: {projectId ? formatProjectId(projectId) : 'N/A'}</p>
             <p>Projetos disponíveis: {projects.length}</p>
             <p>IDs disponíveis: {projects.map(p => p.id).join(', ')}</p>
           </div>

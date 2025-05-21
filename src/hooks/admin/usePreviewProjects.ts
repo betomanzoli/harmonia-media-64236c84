@@ -1,40 +1,10 @@
 
-// Create this file if it doesn't exist already or update it if it does
 import { useState, useCallback, useEffect } from 'react';
-import { v4 as uuidv4 } from 'uuid';
+import { ProjectItem, VersionItem } from '@/types/preview.types';
+import { loadProjectsFromStorage, saveProjectsToStorage } from '@/utils/storage.utils';
+import { getProjectById as findProjectById, createDefaultProject, formatProjectId } from '@/utils/project.utils';
 
-export interface VersionItem {
-  id: string;
-  name: string;
-  description?: string;
-  fileId?: string;
-  recommended?: boolean;
-  final?: boolean;
-  // Add missing properties
-  dateAdded?: string;
-  url?: string;
-  audioUrl?: string;
-  additionalLinks?: Array<{ label: string; url: string }>;
-}
-
-export interface ProjectItem {
-  id: string;
-  clientName: string;
-  clientEmail: string;
-  clientPhone?: string;
-  packageType?: string;
-  createdAt: string;
-  status: 'waiting' | 'feedback' | 'approved';
-  versions: number;
-  previewUrl?: string;
-  expirationDate?: string;
-  lastActivityDate?: string;
-  versionsList?: VersionItem[];
-  briefingId?: string;
-  history?: any[];
-  feedback?: string;
-  [key: string]: any; // Allow for additional properties
-}
+export { ProjectItem, VersionItem };
 
 export const usePreviewProjects = () => {
   const [projects, setProjects] = useState<ProjectItem[]>([]);
@@ -45,52 +15,22 @@ export const usePreviewProjects = () => {
     console.log("==== LOADING PROJECTS ====");
     setIsLoading(true);
     try {
-      // Check if localStorage is available
-      const isLocalStorageAvailable = typeof localStorage !== 'undefined';
-      console.log("Is localStorage available:", isLocalStorageAvailable);
+      const storedProjects = loadProjectsFromStorage();
       
-      if (isLocalStorageAvailable) {
-        const stored = localStorage.getItem('harmonIA_projects');
-        console.log("Retrieved from localStorage:", stored ? 'Data found' : 'No data');
-        
-        if (stored) {
-          try {
-            const parsedProjects = JSON.parse(stored);
-            console.log("Successfully parsed projects:", parsedProjects);
-            setProjects(parsedProjects);
-            console.log("Projects count:", parsedProjects.length);
-            setIsLoading(false);
-            return parsedProjects;
-          } catch (parseError) {
-            console.error('Error parsing stored projects:', parseError);
-          }
-        }
+      if (storedProjects) {
+        setProjects(storedProjects);
+        setIsLoading(false);
+        return storedProjects;
       }
       
-      // Fallback to default data if no stored data or error
-      const defaultProjects = [
-        {
-          id: 'P0001',
-          clientName: 'Humberto Manzoli',
-          clientEmail: 'cliente@exemplo.com',
-          packageType: 'Essencial',
-          createdAt: new Date().toLocaleDateString('pt-BR'),
-          status: 'waiting' as const,
-          versions: 0,
-          previewUrl: `${window.location.origin}/preview/P0001`,
-          expirationDate: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toLocaleDateString('pt-BR'),
-          lastActivityDate: new Date().toLocaleDateString('pt-BR'),
-          versionsList: []
-        }
-      ];
+      // Fallback to default data if no stored data
+      const defaultProjects = [createDefaultProject()];
       
       setProjects(defaultProjects);
       console.log("Using default projects");
       
       // Save default data to localStorage
-      if (isLocalStorageAvailable) {
-        localStorage.setItem('harmonIA_projects', JSON.stringify(defaultProjects));
-      }
+      saveProjectsToStorage(defaultProjects);
       
       setIsLoading(false);
       return defaultProjects;
@@ -108,39 +48,18 @@ export const usePreviewProjects = () => {
   
   // Save projects to localStorage whenever they change
   useEffect(() => {
-    if (projects.length > 0) {
-      localStorage.setItem('harmonIA_projects', JSON.stringify(projects));
-    }
+    saveProjectsToStorage(projects);
   }, [projects]);
   
   // Get a specific project by ID
   const getProjectById = useCallback((id: string) => {
-    if (!id) return null;
-    
-    // Try to find with exact match first
-    let project = projects.find(p => p.id === id);
-    
-    // If not found, try with case-insensitive comparison
-    if (!project) {
-      project = projects.find(p => 
-        p.id.toLowerCase() === id.toLowerCase()
-      );
-    }
-    
-    // If still not found, try with trimmed strings
-    if (!project) {
-      project = projects.find(p => 
-        p.id.trim() === id.trim()
-      );
-    }
-    
-    return project || null;
+    return findProjectById(projects, id);
   }, [projects]);
   
   // Add a new project
   const addProject = useCallback((project: Omit<ProjectItem, 'id'> & { id?: string }) => {
     // If an ID is provided, use it; otherwise generate a new one
-    const projectId = project.id || `P${String(projects.length + 1).padStart(4, '0')}`;
+    const projectId = formatProjectId(project.id || `P${String(projects.length + 1).padStart(4, '0')}`);
     
     const newProject: ProjectItem = {
       ...project,
@@ -170,11 +89,13 @@ export const usePreviewProjects = () => {
   const updateProject = useCallback((id: string, updates: Partial<ProjectItem>) => {
     if (!id) return false;
     
+    const formattedId = formatProjectId(id);
+    
     // Find the project by ID, case-insensitive
-    let foundIndex = projects.findIndex(p => p.id.toLowerCase() === id.toLowerCase());
+    let foundIndex = projects.findIndex(p => p.id.toLowerCase() === formattedId.toLowerCase());
     
     if (foundIndex === -1) {
-      console.log(`Project with ID ${id} not found, cannot update.`);
+      console.log(`Project with ID ${formattedId} not found, cannot update.`);
       return false;
     }
     

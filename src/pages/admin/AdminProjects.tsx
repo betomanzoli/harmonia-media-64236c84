@@ -3,6 +3,7 @@ import React from 'react';
 import AdminLayout from '@/components/admin/layout/AdminLayout';
 import ProjectsList from '@/components/admin/projects/ProjectsList';
 import { useNavigate } from 'react-router-dom';
+import { formatProjectId } from '@/utils/project.utils';
 
 const AdminProjects: React.FC = () => {
   const navigate = useNavigate();
@@ -14,7 +15,7 @@ const AdminProjects: React.FC = () => {
       return;
     }
     
-    const formattedId = projectId.trim();
+    const formattedId = formatProjectId(projectId);
     console.log(`Navigating to project details: ${formattedId}`);
     navigate(`/admin-j28s7d1k/previews/${formattedId}`);
   };
