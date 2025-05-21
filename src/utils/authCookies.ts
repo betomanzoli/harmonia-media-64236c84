@@ -19,12 +19,26 @@ export const isPrivateBrowsing = async (): Promise<boolean> => {
     
     // Safari on iOS private mode has specific localStorage behavior
     if (isIOS && isSafari) {
-      // Additional Safari-specific private mode detection
+      // Alternative approach for detecting Safari private mode
+      // without using the non-standard openDatabase method
       try {
-        window.openDatabase(null, null, null, null);
-        // If we got here, Safari is not in private mode
+        // In Safari private mode, localStorage can be written to but not persisted
+        localStorage.setItem(testKey, '2');
+        const testValue = localStorage.getItem(testKey);
+        localStorage.removeItem(testKey);
+        
+        // Additional check: In private mode, the value might not be properly stored
+        if (testValue !== '2') {
+          console.log("Detected Safari private mode (localStorage inconsistency)");
+          return true;
+        }
+        
+        // Create a 1MB test file in localStorage
+        const bigString = new Array(1024 * 1024).join('x');
+        localStorage.setItem('bigTest', bigString);
+        localStorage.removeItem('bigTest');
       } catch (e) {
-        console.log("Detected Safari private mode");
+        console.log("Detected Safari private mode (localStorage quota error)");
         return true;
       }
     }
