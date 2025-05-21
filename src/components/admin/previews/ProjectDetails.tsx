@@ -25,9 +25,6 @@ const ProjectDetails: React.FC = () => {
   const [loadFailed, setLoadFailed] = useState(false);
   
   useEffect(() => {
-    console.log("ProjectDetails Component Mounted");
-    console.log("Project ID from URL:", projectId);
-    
     if (!projectId) {
       console.log("No project ID provided, returning early");
       setIsLoading(false);
@@ -38,25 +35,46 @@ const ProjectDetails: React.FC = () => {
     const loadProjectData = async () => {
       try {
         setIsLoading(true);
-        console.log("Loading project data for ID:", projectId);
+        console.log("ProjectDetails Component Mounted");
+        console.log("Project ID from URL:", projectId);
         
         // Ensure projects are loaded first
         await loadProjects();
         
-        // Log all available projects for debugging
-        console.log("All available projects:", projects);
+        // Get all available project IDs for debugging
+        const availableIds = projects.map(p => p.id);
+        console.log("All available project IDs:", availableIds.join(', '));
         
-        // Try to find the project by exact ID first
-        let projectData = projects.find(p => p.id === projectId);
+        // Try multiple matching strategies
+        let projectData = null;
         
-        // If not found, try case-insensitive comparison
+        // Try exact match first
+        projectData = projects.find(p => p.id === projectId);
+        if (projectData) {
+          console.log("Found project with exact ID match");
+        }
+        
+        // If not found, try case-insensitive match
         if (!projectData) {
           projectData = projects.find(p => 
             p.id.toLowerCase() === projectId.toLowerCase()
           );
-          console.log("Found project with case-insensitive match:", projectData);
+          if (projectData) {
+            console.log("Found project with case-insensitive match");
+          }
         }
         
+        // If not found, try trimmed match (in case of whitespace issues)
+        if (!projectData) {
+          projectData = projects.find(p => 
+            p.id.trim() === projectId.trim()
+          );
+          if (projectData) {
+            console.log("Found project with trimmed match");
+          }
+        }
+        
+        // If found, set the project data
         if (projectData) {
           console.log("Project found:", projectData);
           setProject(projectData);
@@ -156,7 +174,7 @@ const ProjectDetails: React.FC = () => {
     );
   }
   
-  // Show error state with retry button
+  // Show error state with retry button and improved diagnostic info
   if (!project || loadFailed) {
     return (
       <div className="p-6">
@@ -186,7 +204,7 @@ const ProjectDetails: React.FC = () => {
           </div>
           <div className="mt-8 p-4 bg-gray-100 rounded-lg text-left">
             <h3 className="font-medium mb-2">Informações de diagnóstico:</h3>
-            <p>Project ID: {projectId}</p>
+            <p>ID do Projeto solicitado: {projectId}</p>
             <p>Projetos disponíveis: {projects.length}</p>
             <p>IDs disponíveis: {projects.map(p => p.id).join(', ')}</p>
           </div>
@@ -436,7 +454,7 @@ const ProjectDetails: React.FC = () => {
         </div>
       )}
       
-      {/* Show error state with retry button */}
+      {/* Show error state with retry button and improved diagnostic info */}
       {!isLoading && (!project || loadFailed) && (
         <div className="text-center mt-16">
           <h2 className="text-2xl font-semibold mb-4">Projeto não encontrado</h2>
@@ -444,19 +462,7 @@ const ProjectDetails: React.FC = () => {
             Não foi possível carregar os dados do projeto. Verifique se o projeto existe ou tente novamente.
           </p>
           <div className="space-y-4">
-            <Button onClick={() => {
-              setIsLoading(true);
-              loadProjects().then(() => {
-                const projectData = getProjectById(projectId || '');
-                if (projectData) {
-                  setProject(projectData);
-                  setLoadFailed(false);
-                } else {
-                  setLoadFailed(true);
-                }
-                setIsLoading(false);
-              });
-            }}>
+            <Button onClick={handleRetry}>
               Tentar novamente
             </Button>
             <Button 
@@ -469,7 +475,7 @@ const ProjectDetails: React.FC = () => {
           </div>
           <div className="mt-8 p-4 bg-gray-100 rounded-lg text-left">
             <h3 className="font-medium mb-2">Informações de diagnóstico:</h3>
-            <p>Project ID: {projectId}</p>
+            <p>ID do Projeto solicitado: {projectId}</p>
             <p>Projetos disponíveis: {projects.length}</p>
             <p>IDs disponíveis: {projects.map(p => p.id).join(', ')}</p>
           </div>
@@ -646,7 +652,7 @@ const ProjectDetails: React.FC = () => {
         projectId={projectId || ''}
         onAddVersion={handleAddVersion}
         isFinalVersion={isApproved}
-        packageType={project.packageType}
+        packageType={project?.packageType}
       />
       
       {/* Extend Deadline Dialog */}

@@ -95,7 +95,6 @@ const CreateBriefingForm: React.FC<CreateBriefingFormProps> = ({ onClose, onSubm
               name: data.name,
               email: data.email,
               phone: data.phone.fullNumber,
-              // Incluir todos os campos importantes para garantir consistência
               packageType: data.packageType,
               createdAt: new Date().toISOString(),
             }
@@ -109,7 +108,6 @@ const CreateBriefingForm: React.FC<CreateBriefingFormProps> = ({ onClose, onSubm
       }
       
       // Also add or update customer in the local storage system
-      // This ensures the customer is also available in the preview system
       let existingCustomer = getCustomerByEmail(data.email);
       if (!existingCustomer) {
         addCustomer({
@@ -120,16 +118,18 @@ const CreateBriefingForm: React.FC<CreateBriefingFormProps> = ({ onClose, onSubm
           projects: 1,
           createdAt: new Date().toISOString()
         });
-      } else {
-        // Update projects count for existing customer
-        // This is handled in the addCustomer function itself
       }
+      
+      // Generate a consistent project ID based on the briefing ID
+      // Use the Supabase briefing ID directly to ensure consistency
+      const projectId = newBriefing.id;
       
       // Create a preview project automatically linked to this briefing
       const expirationDate = new Date();
       expirationDate.setDate(expirationDate.getDate() + 30); // 30-day expiration
       
       const previewProject = {
+        id: projectId, // Use the same ID as the briefing
         clientName: data.name,
         clientEmail: data.email,
         clientPhone: data.phone.fullNumber,
@@ -137,15 +137,16 @@ const CreateBriefingForm: React.FC<CreateBriefingFormProps> = ({ onClose, onSubm
         createdAt: new Date().toLocaleDateString('pt-BR'),
         status: 'waiting' as const,
         versions: 0,
-        previewUrl: `/preview/${newBriefing.id}`,
+        previewUrl: `/preview/${projectId}`,
         expirationDate: expirationDate.toLocaleDateString('pt-BR'),
         lastActivityDate: new Date().toLocaleDateString('pt-BR'),
         briefingId: newBriefing.id,
         versionsList: []
       };
       
-      const previewProjectId = addProject(previewProject);
-      console.log(`Created preview project ${previewProjectId} for briefing ${newBriefing.id}`);
+      // Add the project with a specific ID instead of generating a new one
+      addProject(previewProject);
+      console.log(`Created project ${projectId} for briefing ${newBriefing.id}`);
       
       // Call the passed onSubmit to update the UI
       onSubmit(data);
