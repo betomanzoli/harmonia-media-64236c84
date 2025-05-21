@@ -1,3 +1,4 @@
+
 import { useState, useEffect, useCallback } from 'react';
 
 export interface VersionItem {
@@ -47,20 +48,38 @@ export const usePreviewProjects = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   
+  const LOCAL_STORAGE_KEY = 'harmonIA_preview_projects';
+  
   // Load projects from local storage
   const loadProjects = useCallback(async () => {
     setIsLoading(true);
     try {
       // Try to load from localStorage
-      const storedProjects = localStorage.getItem('harmonIA_preview_projects');
+      const storedProjects = localStorage.getItem(LOCAL_STORAGE_KEY);
+      console.log('Attempting to load projects from localStorage, key exists:', storedProjects !== null);
+      
       if (storedProjects) {
-        const parsedProjects = JSON.parse(storedProjects);
-        console.log('Projects loaded from localStorage:', parsedProjects);
-        setProjects(parsedProjects);
+        try {
+          const parsedProjects = JSON.parse(storedProjects);
+          console.log('Projects loaded from localStorage:', parsedProjects);
+          setProjects(parsedProjects);
+        } catch (parseError) {
+          console.error('Error parsing projects from localStorage:', parseError);
+          setProjects([]);
+          // If there's a parse error, remove the corrupted data
+          localStorage.removeItem(LOCAL_STORAGE_KEY);
+        }
       } else {
         // Initialize with empty array if nothing found
+        console.log('No projects found in localStorage, initializing with empty array');
         setProjects([]);
-        console.log('No projects found, initialized with empty array');
+        
+        // Save empty array to ensure the key exists
+        try {
+          localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify([]));
+        } catch (e) {
+          console.error('Failed to initialize empty projects array in localStorage:', e);
+        }
       }
     } catch (err: any) {
       console.error('Error loading projects:', err);
@@ -73,12 +92,21 @@ export const usePreviewProjects = () => {
 
   // Save projects to local storage
   const saveProjects = useCallback(async (updatedProjects: ProjectItem[]) => {
+    console.log('Attempting to save projects to localStorage:', updatedProjects);
     try {
       // Save to localStorage
-      localStorage.setItem('harmonIA_preview_projects', JSON.stringify(updatedProjects));
-      console.log('Projects saved to localStorage:', updatedProjects);
+      localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(updatedProjects));
+      console.log('Projects saved to localStorage successfully, key:', LOCAL_STORAGE_KEY);
+      
+      // Verify the data was saved correctly
+      const savedData = localStorage.getItem(LOCAL_STORAGE_KEY);
+      if (!savedData) {
+        console.error('Verification failed: Projects not found in localStorage after saving');
+      } else {
+        console.log('Verification passed: Projects found in localStorage after saving');
+      }
     } catch (error) {
-      console.error('Error saving projects:', error);
+      console.error('Error saving projects to localStorage:', error);
     }
   }, []);
 
@@ -109,6 +137,13 @@ export const usePreviewProjects = () => {
   const getProjectById = useCallback((id: string) => {
     console.log("Getting project by ID:", id);
     console.log("Available projects:", projects);
+    console.log("Projects array length:", projects.length);
+    console.log("Projects array type:", Array.isArray(projects) ? "Array" : typeof projects);
+    
+    if (!Array.isArray(projects)) {
+      console.error("Projects is not an array:", projects);
+      return null;
+    }
     
     const project = projects.find(project => project.id === id);
     console.log("Found project:", project);
@@ -116,6 +151,8 @@ export const usePreviewProjects = () => {
     // Format package type if project exists
     if (project) {
       project.packageType = formatPackageType(project.packageType);
+    } else {
+      console.warn(`Project with ID ${id} not found in localStorage`);
     }
     
     return project || null;
@@ -147,8 +184,10 @@ export const usePreviewProjects = () => {
         new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toLocaleDateString('pt-BR')
     };
     
-    const updatedProjects = [...projects, newProject];
     console.log("Adding new project:", newProject);
+    
+    // Make a copy of the projects array to avoid reference issues
+    const updatedProjects = [...projects, newProject];
     console.log("Updated projects list:", updatedProjects);
     
     setProjects(updatedProjects);
@@ -246,11 +285,12 @@ export const usePreviewProjects = () => {
       lastActivityDate: updates.lastActivityDate || new Date().toLocaleDateString('pt-BR')
     };
     
+    // Create a copy of the projects array to avoid reference issues
     const updatedProjects = [...projects];
     updatedProjects[projectIndex] = updatedProject;
     
     console.log("Updated project:", updatedProject);
-    console.log("Updated project list:", updatedProjects);
+    console.log("Updated project list (in RAM):", updatedProjects);
     
     setProjects(updatedProjects);
     saveProjects(updatedProjects);

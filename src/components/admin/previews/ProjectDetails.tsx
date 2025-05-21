@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -14,7 +13,7 @@ import { Textarea } from "@/components/ui/textarea";
 const ProjectDetails: React.FC = () => {
   const { projectId } = useParams<{ projectId: string }>();
   const navigate = useNavigate();
-  const { getProjectById, updateProject } = usePreviewProjects();
+  const { getProjectById, updateProject, loadProjects } = usePreviewProjects();
   const { toast } = useToast();
   
   const [project, setProject] = useState<any>(null);
@@ -22,27 +21,159 @@ const ProjectDetails: React.FC = () => {
   const [isExtendDeadlineOpen, setIsExtendDeadlineOpen] = useState(false);
   const [isEmailOpen, setIsEmailOpen] = useState(false);
   const [emailContent, setEmailContent] = useState('');
+  const [isLoading, setIsLoading] = useState(true);
+  const [loadFailed, setLoadFailed] = useState(false);
+  
+  // Check localStorage directly to diagnose issues
+  useEffect(() => {
+    const checkLocalStorage = () => {
+      try {
+        const keys = Object.keys(localStorage);
+        console.log('All localStorage keys:', keys);
+        const projectsData = localStorage.getItem('harmonIA_preview_projects');
+        console.log('Raw projects data from localStorage:', projectsData);
+        
+        if (projectsData) {
+          try {
+            const parsed = JSON.parse(projectsData);
+            console.log('Parsed projects from localStorage:', parsed);
+            console.log('Is array?', Array.isArray(parsed));
+            console.log('Length:', Array.isArray(parsed) ? parsed.length : 'N/A');
+          } catch (e) {
+            console.error('Failed to parse projects data:', e);
+          }
+        } else {
+          console.warn('harmonIA_preview_projects not found in localStorage');
+          
+          // Initialize with empty array if not found
+          try {
+            localStorage.setItem('harmonIA_preview_projects', JSON.stringify([]));
+            console.log('Initialized harmonIA_preview_projects with empty array');
+          } catch (e) {
+            console.error('Failed to initialize projects in localStorage:', e);
+          }
+          
+          // Force reload projects
+          loadProjects();
+        }
+      } catch (e) {
+        console.error('Error accessing localStorage:', e);
+      }
+    };
+    
+    checkLocalStorage();
+  }, [loadProjects]);
   
   useEffect(() => {
     if (projectId) {
-      const projectData = getProjectById(projectId);
-      if (projectData) {
-        setProject(projectData);
-      } else {
-        toast({
-          title: "Projeto não encontrado",
-          description: `Não foi possível encontrar o projeto com ID: ${projectId}`,
-          variant: "destructive"
-        });
-        navigate('/admin-j28s7d1k/previews');
-      }
+      setIsLoading(true);
+      
+      // Force a reload of projects before getting the specific project
+      loadProjects().then(() => {
+        console.log('Projects reloaded, now getting project by ID:', projectId);
+        const projectData = getProjectById(projectId);
+        
+        if (projectData) {
+          console.log('Project found:', projectData);
+          setProject(projectData);
+          setLoadFailed(false);
+        } else {
+          console.error(`Project with ID: ${projectId} not found after reload`);
+          setLoadFailed(true);
+          toast({
+            title: "Projeto não encontrado",
+            description: `Não foi possível encontrar o projeto com ID: ${projectId}`,
+            variant: "destructive"
+          });
+        }
+        
+        setIsLoading(false);
+      });
     }
-  }, [projectId, getProjectById, navigate, toast]);
+  }, [projectId, getProjectById, navigate, toast, loadProjects]);
   
-  if (!project) {
+  // Handle project not found scenario with retry option
+  const handleRetry = () => {
+    loadProjects();
+    
+    if (projectId) {
+      setIsLoading(true);
+      setTimeout(() => {
+        const projectData = getProjectById(projectId);
+        
+        if (projectData) {
+          setProject(projectData);
+          setLoadFailed(false);
+          toast({
+            title: "Projeto carregado",
+            description: "Os dados do projeto foram carregados com sucesso."
+          });
+        } else {
+          setLoadFailed(true);
+          toast({
+            title: "Projeto não encontrado",
+            description: "Não foi possível encontrar o projeto mesmo após a tentativa de recarregamento."
+          });
+        }
+        
+        setIsLoading(false);
+      }, 500);
+    }
+  };
+  
+  // Show loading state
+  if (isLoading) {
     return (
       <div className="p-6">
-        <h2 className="text-2xl font-semibold mb-2">Carregando projeto...</h2>
+        <Button 
+          variant="ghost" 
+          onClick={() => navigate('/admin-j28s7d1k/previews')}
+        >
+          <ArrowLeft className="mr-2 h-4 w-4" />
+          Voltar
+        </Button>
+        <div className="flex flex-col items-center justify-center mt-16">
+          <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-green-500"></div>
+          <h2 className="text-xl font-semibold mt-4">Carregando projeto...</h2>
+        </div>
+      </div>
+    );
+  }
+  
+  // Show error state with retry button
+  if (!project || loadFailed) {
+    return (
+      <div className="p-6">
+        <Button 
+          variant="ghost" 
+          onClick={() => navigate('/admin-j28s7d1k/previews')}
+        >
+          <ArrowLeft className="mr-2 h-4 w-4" />
+          Voltar
+        </Button>
+        <div className="text-center mt-16">
+          <h2 className="text-2xl font-semibold mb-4">Projeto não encontrado</h2>
+          <p className="mb-6 text-gray-500">
+            Não foi possível carregar os dados do projeto. Verifique se o projeto existe ou tente novamente.
+          </p>
+          <div className="space-y-4">
+            <Button onClick={handleRetry}>
+              Tentar novamente
+            </Button>
+            <Button 
+              variant="outline" 
+              onClick={() => navigate('/admin-j28s7d1k/previews')}
+              className="ml-2"
+            >
+              Voltar para prévias
+            </Button>
+          </div>
+          <div className="mt-8 p-4 bg-gray-100 rounded-lg text-left">
+            <h3 className="font-medium mb-2">Informações de diagnóstico:</h3>
+            <p>Project ID: {projectId}</p>
+            <p>Erro: Dados do projeto não encontrados no armazenamento local</p>
+          </div>
+        </div>
       </div>
     );
   }
