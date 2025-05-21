@@ -1,12 +1,11 @@
 
-import React, { useState, useEffect } from 'react';
+import React from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Loader2, Clipboard, ExternalLink, Send } from 'lucide-react';
-import { useToast } from '@/hooks/use-toast';
-import webhookService, { NotificationType } from '@/services/webhookService';
+import { Loader2, Clipboard, ExternalLink, Send, AlertTriangle } from 'lucide-react';
+import { useIntegrationConfig } from '@/hooks/admin/useIntegrationConfig';
 
 interface WebhookUrlManagerProps {
   title: string;
@@ -21,118 +20,17 @@ const WebhookUrlManager: React.FC<WebhookUrlManagerProps> = ({
   serviceType,
   storageUrl
 }) => {
-  const [webhookUrl, setWebhookUrl] = useState<string>('');
-  const [isLoading, setIsLoading] = useState<boolean>(false);
-  const [isTesting, setIsTesting] = useState<boolean>(false);
-  const [isConfigured, setIsConfigured] = useState<boolean>(false);
-  const { toast } = useToast();
-  
-  useEffect(() => {
-    const loadSavedUrl = async () => {
-      setIsLoading(true);
-      const savedUrl = await webhookService.getWebhookUrl();
-      if (savedUrl) {
-        setWebhookUrl(savedUrl);
-        setIsConfigured(true);
-      }
-      setIsLoading(false);
-    };
-    
-    loadSavedUrl();
-  }, []);
-  
-  const saveWebhookUrl = async () => {
-    if (!webhookUrl.trim()) {
-      toast({
-        title: "URL não pode ser vazia",
-        description: "Por favor, insira uma URL válida para o webhook.",
-        variant: "destructive"
-      });
-      return;
-    }
-    
-    setIsLoading(true);
-    
-    try {
-      const success = await webhookService.saveWebhookUrl(webhookUrl);
-      
-      if (success) {
-        setIsConfigured(true);
-        toast({
-          title: "Configuração salva",
-          description: "URL do webhook foi salva com sucesso.",
-        });
-      } else {
-        toast({
-          title: "Erro ao salvar",
-          description: "Não foi possível salvar a URL do webhook.",
-          variant: "destructive"
-        });
-      }
-    } catch (error) {
-      console.error('Erro ao salvar webhook:', error);
-      toast({
-        title: "Erro",
-        description: "Ocorreu um erro ao salvar a configuração.",
-        variant: "destructive"
-      });
-    } finally {
-      setIsLoading(false);
-    }
-  };
-  
-  const sendTestWebhook = async () => {
-    if (!webhookUrl.trim()) {
-      toast({
-        title: "URL não configurada",
-        description: "Configure uma URL de webhook antes de enviar um teste.",
-        variant: "destructive"
-      });
-      return;
-    }
-    
-    setIsTesting(true);
-    
-    try {
-      const testPayload = {
-        type: 'test_message' as NotificationType,
-        data: { message: "Teste de configuração do webhook da harmonIA" },
-        timestamp: new Date().toISOString()
-      };
-      
-      const success = await webhookService.sendToWebhook(webhookUrl, testPayload);
-      
-      if (success) {
-        toast({
-          title: "Teste enviado",
-          description: "Ping de teste enviado com sucesso para o webhook.",
-        });
-      } else {
-        toast({
-          title: "Erro ao testar",
-          description: "Não foi possível enviar o teste para o webhook.",
-          variant: "destructive"
-        });
-      }
-    } catch (error) {
-      console.error('Erro ao testar webhook:', error);
-      toast({
-        title: "Erro",
-        description: "Ocorreu um erro ao testar o webhook.",
-        variant: "destructive"
-      });
-    } finally {
-      setIsTesting(false);
-    }
-  };
-  
-  const copyToClipboard = (text: string) => {
-    navigator.clipboard.writeText(text);
-    toast({
-      title: "Copiado!",
-      description: "Texto copiado para a área de transferência.",
-    });
-  };
+  const {
+    webhookUrl,
+    setWebhookUrl,
+    saveWebhookUrl,
+    sendTestPing,
+    isLoading,
+    isTesting,
+    isUrlSaved,
+    testResult,
+    copyToClipboard
+  } = useIntegrationConfig(serviceType);
   
   const openExternalUrl = (url: string) => {
     if (url) {
@@ -145,7 +43,7 @@ const WebhookUrlManager: React.FC<WebhookUrlManagerProps> = ({
       <CardHeader className="pb-3">
         <CardTitle className="text-md font-medium flex items-center justify-between">
           {title}
-          {isConfigured && <Badge className="bg-harmonia-green text-white">Configurado</Badge>}
+          {isUrlSaved && <Badge className="bg-harmonia-green text-white">Configurado</Badge>}
         </CardTitle>
         {description && <CardDescription>{description}</CardDescription>}
       </CardHeader>
@@ -174,7 +72,7 @@ const WebhookUrlManager: React.FC<WebhookUrlManagerProps> = ({
                 variant="outline" 
                 size="sm"
                 disabled={!webhookUrl || isTesting} 
-                onClick={sendTestWebhook}
+                onClick={sendTestPing}
                 className="text-xs"
               >
                 {isTesting ? <Loader2 className="h-3 w-3 animate-spin mr-1" /> : <Send className="h-3 w-3 mr-1" />}
@@ -189,7 +87,7 @@ const WebhookUrlManager: React.FC<WebhookUrlManagerProps> = ({
                   onClick={() => openExternalUrl(storageUrl)}
                 >
                   <ExternalLink className="h-3 w-3 mr-1" />
-                  Abrir pasta
+                  Abrir no n8n
                 </Button>
               )}
               
@@ -197,15 +95,32 @@ const WebhookUrlManager: React.FC<WebhookUrlManagerProps> = ({
                 variant="outline" 
                 size="sm" 
                 className="text-xs"
-                onClick={() => copyToClipboard("Integração de webhook configurada com sucesso!")}
+                onClick={() => copyToClipboard(webhookUrl)}
               >
                 <Clipboard className="h-3 w-3 mr-1" />
-                Copiar status
+                Copiar URL
               </Button>
             </div>
           </div>
           
-          {isConfigured && (
+          {testResult && (
+            <div className={`p-2 rounded-md text-xs ${
+              testResult.includes('sucesso') 
+                ? 'bg-green-50 text-green-700 border border-green-200' 
+                : 'bg-amber-50 text-amber-700 border border-amber-200'
+            }`}>
+              <div className="flex items-start">
+                {testResult.includes('sucesso') ? (
+                  <Send className="h-3 w-3 mr-1 mt-0.5" />
+                ) : (
+                  <AlertTriangle className="h-3 w-3 mr-1 mt-0.5" />
+                )}
+                <span>{testResult}</span>
+              </div>
+            </div>
+          )}
+          
+          {isUrlSaved && (
             <div className="text-xs text-gray-500">
               Última atualização: {new Date().toLocaleDateString('pt-BR', { 
                 day: '2-digit', 
@@ -216,6 +131,21 @@ const WebhookUrlManager: React.FC<WebhookUrlManagerProps> = ({
               })}
             </div>
           )}
+          
+          <div className="mt-2 p-3 bg-blue-50 border border-blue-100 rounded text-xs text-blue-700">
+            <p className="font-semibold mb-1">Formato esperado pelo n8n:</p>
+            <pre className="overflow-auto text-[10px] bg-blue-100/50 p-1 rounded">
+              {`{
+  "type": "event_type",
+  "data": {
+    "key1": "value1",
+    "key2": "value2"
+  },
+  "timestamp": "2025-05-21T12:34:56.789Z"
+}`}
+            </pre>
+            <p className="mt-1">Configure o nó HTTP Request no n8n para receber este formato JSON.</p>
+          </div>
         </div>
       </CardContent>
     </Card>

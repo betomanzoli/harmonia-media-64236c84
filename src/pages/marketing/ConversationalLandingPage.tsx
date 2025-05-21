@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -7,6 +6,7 @@ import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { supabase } from '@/lib/supabase';
+import webhookService from '@/services/webhookService';
 
 type QuestionStep = {
   question: string;
@@ -119,33 +119,19 @@ const ConversationalLandingPage: React.FC = () => {
     }
   };
 
-  const sendToN8n = async (data: any) => {
+  const sendLeadToN8n = async (leadData: any): Promise<boolean> => {
     try {
-      // Get webhook URL from settings
-      const { data: settingsData } = await supabase
-        .from('system_settings')
-        .select('value')
-        .eq('key', 'marketing_webhook_url')
-        .single();
-        
-      const webhookUrl = settingsData?.value?.url;
+      // Use the webhookService to send the lead data
+      const result = await webhookService.sendItemNotification(
+        'new_customer',
+        leadData
+      );
       
-      if (!webhookUrl) {
-        console.error('Marketing webhook URL not configured');
-        return;
-      }
-      
-      // Send data to n8n webhook
-      await fetch(webhookUrl, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(data),
-        mode: 'no-cors'
-      });
-      
-      console.log('Data sent to n8n webhook');
+      console.log('Lead notification result:', result);
+      return result;
     } catch (error) {
-      console.error('Error sending data to n8n:', error);
+      console.error('Error sending lead data to n8n:', error);
+      return false;
     }
   };
 
@@ -190,7 +176,7 @@ const ConversationalLandingPage: React.FC = () => {
       if (error) throw error;
 
       // Send to n8n webhook
-      await sendToN8n(leadData);
+      await sendLeadToN8n(leadData);
 
       // Set cookie for tracking
       document.cookie = `harmonia_lead=${formData.email}; path=/; max-age=${60*60*24*30}; SameSite=Lax`;

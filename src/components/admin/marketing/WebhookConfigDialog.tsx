@@ -18,6 +18,7 @@ const WebhookConfigDialog: React.FC<WebhookConfigDialogProps> = ({
 }) => {
   const [webhookUrl, setWebhookUrl] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+  const [testResponse, setTestResponse] = useState<string | null>(null);
   const { toast } = useToast();
   
   useEffect(() => {
@@ -33,7 +34,7 @@ const WebhookConfigDialog: React.FC<WebhookConfigDialogProps> = ({
         .from('system_settings')
         .select('value')
         .eq('key', 'marketing_webhook_url')
-        .single();
+        .maybeSingle();
       
       if (error && error.code !== 'PGRST116') {
         throw error;
@@ -50,6 +51,15 @@ const WebhookConfigDialog: React.FC<WebhookConfigDialogProps> = ({
   };
 
   const saveWebhookConfig = async () => {
+    if (!webhookUrl.trim()) {
+      toast({
+        title: "URL inválida",
+        description: "Por favor, insira uma URL válida para o webhook.",
+        variant: "destructive"
+      });
+      return;
+    }
+    
     setIsLoading(true);
     
     try {
@@ -88,17 +98,72 @@ const WebhookConfigDialog: React.FC<WebhookConfigDialogProps> = ({
       }
       
       toast({
-        title: 'Webhook configurado',
-        description: 'A URL do webhook foi salva com sucesso'
+        title: "Webhook configurado",
+        description: "A URL do webhook foi salva com sucesso"
       });
+      
+      // Also save to localStorage as fallback
+      localStorage.setItem('marketing_webhook_url', webhookUrl);
       
       onOpenChange(false);
     } catch (error) {
       console.error('Error saving webhook config:', error);
       toast({
-        title: 'Erro',
-        description: 'Não foi possível salvar a configuração do webhook',
-        variant: 'destructive'
+        title: "Erro",
+        description: "Não foi possível salvar a configuração do webhook",
+        variant: "destructive"
+      });
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const testWebhook = async () => {
+    if (!webhookUrl.trim()) {
+      toast({
+        title: "URL não configurada",
+        description: "Configure uma URL de webhook antes de testar.",
+        variant: "destructive"
+      });
+      return;
+    }
+    
+    setIsLoading(true);
+    setTestResponse(null);
+    
+    try {
+      const testPayload = {
+        type: 'test_message',
+        data: { 
+          message: "Teste de conexão do harmonIA",
+          timestamp: new Date().toISOString()
+        }
+      };
+      
+      // Use no-cors to handle CORS issues
+      const response = await fetch(webhookUrl, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(testPayload),
+        mode: 'no-cors'
+      });
+      
+      setTestResponse('Solicitação enviada. Verifique os logs do n8n para confirmar recebimento.');
+      
+      toast({
+        title: "Teste enviado",
+        description: "Teste enviado para o webhook configurado"
+      });
+    } catch (error) {
+      console.error('Error testing webhook:', error);
+      setTestResponse(`Erro ao testar: ${error instanceof Error ? error.message : 'Erro desconhecido'}`);
+      
+      toast({
+        title: "Erro no teste",
+        description: "Não foi possível testar o webhook",
+        variant: "destructive"
       });
     } finally {
       setIsLoading(false);
@@ -111,7 +176,7 @@ const WebhookConfigDialog: React.FC<WebhookConfigDialogProps> = ({
         <DialogHeader>
           <DialogTitle>Configurar Webhook</DialogTitle>
           <DialogDescription>
-            Insira a URL do webhook do n8n para envio dos leads capturados.
+            Configure a URL do webhook do n8n para integração com leads e notificações.
           </DialogDescription>
         </DialogHeader>
         
@@ -129,26 +194,44 @@ const WebhookConfigDialog: React.FC<WebhookConfigDialogProps> = ({
           <div className="text-sm text-gray-500">
             <p>
               Esta URL será usada para enviar os dados de leads capturados nas landing pages
-              conversacionais para automação no n8n.
+              conversacionais e outras notificações para automação no n8n.
             </p>
           </div>
+          
+          {testResponse && (
+            <div className="text-sm p-3 bg-slate-100 rounded-md">
+              <p className="font-medium">Resultado do teste:</p>
+              <p className="mt-1">{testResponse}</p>
+            </div>
+          )}
         </div>
         
-        <DialogFooter>
+        <DialogFooter className="flex-col sm:flex-row gap-2">
           <Button
             variant="outline"
-            onClick={() => onOpenChange(false)}
-            disabled={isLoading}
-          >
-            Cancelar
-          </Button>
-          <Button
-            type="submit"
-            onClick={saveWebhookConfig}
+            onClick={testWebhook}
             disabled={isLoading || !webhookUrl.trim()}
+            type="button"
           >
-            {isLoading ? 'Salvando...' : 'Salvar'}
+            {isLoading ? 'Testando...' : 'Testar Webhook'}
           </Button>
+          
+          <div className="flex gap-2">
+            <Button
+              variant="outline"
+              onClick={() => onOpenChange(false)}
+              disabled={isLoading}
+            >
+              Cancelar
+            </Button>
+            <Button
+              type="submit"
+              onClick={saveWebhookConfig}
+              disabled={isLoading || !webhookUrl.trim()}
+            >
+              {isLoading ? 'Salvando...' : 'Salvar'}
+            </Button>
+          </div>
         </DialogFooter>
       </DialogContent>
     </Dialog>
