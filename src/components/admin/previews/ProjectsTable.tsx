@@ -1,180 +1,202 @@
 
-import React from 'react';
+import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
-import { MoreHorizontal, Eye, Edit, Trash, Bell } from 'lucide-react';
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuLabel,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
-import { Link } from 'react-router-dom';
-import { Skeleton } from "@/components/ui/skeleton";
-import { useToast } from "@/hooks/use-toast";
+import { MoreHorizontal, User, Calendar, MailIcon, AlarmClock, Bell, Trash2, Eye } from 'lucide-react';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { ProjectItem } from '@/types/preview.types';
+import { StatusBadge } from '@/components/ui/status-badge';
+import { Input } from '@/components/ui/input';
 
-interface ProjectsTableProps {
-  projects: any[];
+export interface ProjectsTableProps {
+  projects: ProjectItem[];
   isLoading: boolean;
   onDelete: (id: string) => void;
   onSendReminder: (id: string) => void;
 }
 
-const ProjectsTable: React.FC<ProjectsTableProps> = ({
-  projects,
+const ProjectsTable: React.FC<ProjectsTableProps> = ({ 
+  projects, 
   isLoading,
   onDelete,
   onSendReminder
 }) => {
-  const { toast } = useToast();
+  const [filter, setFilter] = useState('');
+  const [selectedStatus, setSelectedStatus] = useState<string>('all');
+  const navigate = useNavigate();
   
-  // Helper to format dates for better display
-  const formatDate = (dateString: string) => {
-    if (!dateString) return 'N/A';
-    
-    // If it's already in DD/MM/YYYY format, return as is
-    if (/^\d{2}\/\d{2}\/\d{4}$/.test(dateString)) {
-      return dateString;
-    }
-    
-    try {
-      // Try to parse the date string
-      const date = new Date(dateString);
-      return date.toLocaleDateString('pt-BR');
-    } catch {
-      return dateString;
+  const filteredProjects = projects
+    .filter(project => 
+      (project.clientName.toLowerCase().includes(filter.toLowerCase()) || 
+       project.id.toLowerCase().includes(filter.toLowerCase()) ||
+       (project.clientEmail && project.clientEmail.toLowerCase().includes(filter.toLowerCase()))) &&
+      (selectedStatus === 'all' || project.status === selectedStatus)
+    )
+    .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+  
+  const handleRowClick = (projectId: string) => {
+    navigate(`/admin-j28s7d1k/previews/${projectId}`);
+  };
+  
+  const handleDeleteClick = (e: React.MouseEvent, id: string) => {
+    e.stopPropagation();
+    if (window.confirm('Tem certeza que deseja excluir este projeto?')) {
+      onDelete(id);
     }
   };
-
+  
+  const handleSendReminderClick = (e: React.MouseEvent, id: string) => {
+    e.stopPropagation();
+    onSendReminder(id);
+  };
+  
   const getStatusBadge = (status: string) => {
-    switch(status?.toLowerCase()) {
-      case 'waiting':
-      case 'em_andamento':
-        return <Badge className="bg-blue-500">Em Análise</Badge>;
-      case 'feedback':
-        return <Badge className="bg-yellow-500">Com Feedback</Badge>;
+    switch(status) {
       case 'approved':
-        return <Badge className="bg-green-500">Aprovado</Badge>;
-      case 'expired':
-        return <Badge variant="outline" className="text-red-600 border-red-600">Expirado</Badge>;
+        return <StatusBadge status="approved" customLabel="Aprovado" />;
+      case 'feedback':
+        return <StatusBadge status="in_progress" customLabel="Feedback" />;
+      case 'waiting':
       default:
-        return <Badge variant="outline">Aguardando</Badge>;
+        return <StatusBadge status="pending" customLabel="Aguardando" />;
     }
   };
-
-  const copyPreviewLink = (projectId: string) => {
-    const link = `${window.location.origin}/preview/${projectId}`;
-    navigator.clipboard.writeText(link);
-    toast({
-      title: "Link copiado!",
-      description: "Link de prévia copiado para a área de transferência."
-    });
-  };
-
+  
   if (isLoading) {
     return (
-      <div className="p-4">
-        <div className="space-y-2">
-          {Array.from({ length: 5 }).map((_, index) => (
-            <div key={index} className="flex items-center space-x-4">
-              <Skeleton className="h-12 w-full" />
-            </div>
-          ))}
-        </div>
-      </div>
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-xl">Projetos de Prévia</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="text-center py-8">Carregando projetos...</div>
+        </CardContent>
+      </Card>
     );
   }
 
   return (
-    <div className="border rounded-md overflow-hidden">
-      <Table>
-        <TableHeader>
-          <TableRow>
-            <TableHead>ID</TableHead>
-            <TableHead>Cliente</TableHead>
-            <TableHead>Pacote</TableHead>
-            <TableHead>Status</TableHead>
-            <TableHead>Versões</TableHead>
-            <TableHead>Atualizado</TableHead>
-            <TableHead>Expira</TableHead>
-            <TableHead className="text-right">Ações</TableHead>
-          </TableRow>
-        </TableHeader>
-        <TableBody>
-          {projects.length === 0 ? (
-            <TableRow>
-              <TableCell colSpan={8} className="h-24 text-center">
-                Nenhum projeto de prévia encontrado.
-              </TableCell>
-            </TableRow>
-          ) : (
-            projects.map((project) => (
-              <TableRow key={project.id}>
-                <TableCell className="font-medium">
-                  {project.id}
-                </TableCell>
-                <TableCell className="font-medium">
-                  {project.clientName || "Cliente sem nome"}
-                </TableCell>
-                <TableCell>
-                  {project.packageType ? (
-                    <span className="capitalize">{project.packageType}</span>
-                  ) : (
-                    "Padrão"
-                  )}
-                </TableCell>
-                <TableCell>{getStatusBadge(project.status)}</TableCell>
-                <TableCell>{project.versions || 0}</TableCell>
-                <TableCell>{formatDate(project.lastActivityDate)}</TableCell>
-                <TableCell>{formatDate(project.expirationDate)}</TableCell>
-                <TableCell className="text-right">
-                  <DropdownMenu>
-                    <DropdownMenuTrigger asChild>
-                      <Button variant="ghost" size="icon">
-                        <MoreHorizontal className="h-4 w-4" />
-                        <span className="sr-only">Abrir menu</span>
-                      </Button>
-                    </DropdownMenuTrigger>
-                    <DropdownMenuContent align="end">
-                      <DropdownMenuLabel>Ações</DropdownMenuLabel>
-                      <DropdownMenuSeparator />
-                      <DropdownMenuItem
-                        onClick={() => copyPreviewLink(project.id)}
-                      >
-                        <Eye className="mr-2 h-4 w-4" />
-                        Copiar Link
-                      </DropdownMenuItem>
-                      <Link to={`/admin-j28s7d1k/previews/${project.id}`} className="w-full">
-                        <DropdownMenuItem>
-                          <Edit className="mr-2 h-4 w-4" />
-                          Editar
-                        </DropdownMenuItem>
-                      </Link>
-                      <DropdownMenuItem
-                        onClick={() => onSendReminder(project.id)}
-                      >
-                        <Bell className="mr-2 h-4 w-4" />
-                        Enviar Lembrete
-                      </DropdownMenuItem>
-                      <DropdownMenuItem
-                        onClick={() => onDelete(project.id)}
-                        className="text-red-600 focus:text-red-600"
-                      >
-                        <Trash className="mr-2 h-4 w-4" />
-                        Excluir
-                      </DropdownMenuItem>
-                    </DropdownMenuContent>
-                  </DropdownMenu>
-                </TableCell>
+    <Card>
+      <CardHeader>
+        <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+          <CardTitle className="text-xl">Projetos de Prévia ({filteredProjects.length})</CardTitle>
+          <div className="flex items-center gap-2">
+            <Input
+              placeholder="Filtrar projetos..."
+              value={filter}
+              onChange={(e) => setFilter(e.target.value)}
+              className="max-w-[200px]"
+            />
+            <select
+              value={selectedStatus}
+              onChange={(e) => setSelectedStatus(e.target.value)}
+              className="border rounded px-2 py-1 text-sm"
+            >
+              <option value="all">Todos</option>
+              <option value="waiting">Aguardando</option>
+              <option value="feedback">Feedback</option>
+              <option value="approved">Aprovados</option>
+            </select>
+          </div>
+        </div>
+      </CardHeader>
+      <CardContent>
+        <div className="overflow-x-auto">
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead>ID</TableHead>
+                <TableHead>Cliente</TableHead>
+                <TableHead>Status</TableHead>
+                <TableHead>Versões</TableHead>
+                <TableHead className="hidden md:table-cell">Criado em</TableHead>
+                <TableHead className="hidden md:table-cell">Atividade</TableHead>
+                <TableHead className="text-right">Ações</TableHead>
               </TableRow>
-            ))
-          )}
-        </TableBody>
-      </Table>
-    </div>
+            </TableHeader>
+            <TableBody>
+              {filteredProjects.length > 0 ? (
+                filteredProjects.map((project) => (
+                  <TableRow 
+                    key={project.id} 
+                    className="cursor-pointer"
+                    onClick={() => handleRowClick(project.id)}
+                  >
+                    <TableCell className="font-medium">{project.id}</TableCell>
+                    <TableCell>
+                      <div className="flex flex-col">
+                        <span className="font-medium">{project.clientName}</span>
+                        <span className="text-xs text-gray-500 flex items-center">
+                          <MailIcon className="h-3 w-3 mr-1" />
+                          {project.clientEmail}
+                        </span>
+                      </div>
+                    </TableCell>
+                    <TableCell>{getStatusBadge(project.status)}</TableCell>
+                    <TableCell>{project.versions || 0}</TableCell>
+                    <TableCell className="hidden md:table-cell">
+                      <div className="flex items-center">
+                        <Calendar className="h-4 w-4 mr-2" />
+                        <span>{project.createdAt}</span>
+                      </div>
+                    </TableCell>
+                    <TableCell className="hidden md:table-cell">
+                      {project.lastActivityDate ? (
+                        <div className="flex items-center">
+                          <AlarmClock className="h-4 w-4 mr-2" />
+                          <span>{project.lastActivityDate}</span>
+                        </div>
+                      ) : (
+                        <span className="text-gray-400">-</span>
+                      )}
+                    </TableCell>
+                    <TableCell className="text-right">
+                      <div className="flex justify-end gap-2">
+                        {project.status === 'waiting' && (
+                          <Button 
+                            variant="outline" 
+                            size="icon"
+                            onClick={(e) => handleSendReminderClick(e, project.id)}
+                          >
+                            <Bell className="h-4 w-4" />
+                          </Button>
+                        )}
+                        <Button 
+                          variant="ghost" 
+                          size="icon"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            navigate(`/admin-j28s7d1k/previews/${project.id}`);
+                          }}
+                        >
+                          <Eye className="h-4 w-4" />
+                        </Button>
+                        <Button 
+                          variant="ghost" 
+                          size="icon"
+                          className="text-red-500 hover:text-red-700"
+                          onClick={(e) => handleDeleteClick(e, project.id)}
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </Button>
+                      </div>
+                    </TableCell>
+                  </TableRow>
+                ))
+              ) : (
+                <TableRow>
+                  <TableCell colSpan={7} className="text-center py-8">
+                    {filter ? 'Nenhum projeto encontrado com o filtro aplicado.' : 'Nenhum projeto disponível.'}
+                  </TableCell>
+                </TableRow>
+              )}
+            </TableBody>
+          </Table>
+        </div>
+      </CardContent>
+    </Card>
   );
 };
 

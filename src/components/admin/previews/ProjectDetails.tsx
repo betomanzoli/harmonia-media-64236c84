@@ -168,6 +168,80 @@ const ProjectDetails = () => {
     }
   };
 
+  const handleStatusUpdate = (newStatus: 'waiting' | 'feedback' | 'approved') => {
+    if (!project) return;
+    
+    try {
+      // Update project status
+      updateProject(project.id, {
+        status: newStatus,
+        lastActivityDate: new Date().toLocaleDateString('pt-BR'),
+        history: [{
+          action: `Status alterado para ${
+            newStatus === 'waiting' ? 'Aguardando Avaliação' : 
+            newStatus === 'feedback' ? 'Feedback Recebido' : 'Aprovado'
+          }`,
+          timestamp: new Date().toLocaleString('pt-BR')
+        }]
+      });
+      
+      // Update local state
+      setProject({
+        ...project,
+        status: newStatus,
+        lastActivityDate: new Date().toLocaleDateString('pt-BR')
+      });
+    } catch (error) {
+      console.error("Error updating status:", error);
+      toast({
+        title: "Erro ao atualizar status",
+        description: "Ocorreu um erro ao atualizar o status do projeto. Tente novamente.",
+        variant: "destructive"
+      });
+    }
+  };
+
+  const handleDeleteVersion = (versionId: string) => {
+    if (!project) return;
+    
+    try {
+      // Filter out the deleted version
+      const updatedVersions = (project.versionsList || []).filter(v => v.id !== versionId);
+      
+      // Update the project
+      updateProject(project.id, {
+        versionsList: updatedVersions,
+        versions: updatedVersions.length,
+        lastActivityDate: new Date().toLocaleDateString('pt-BR'),
+        history: [{
+          action: `Versão removida`,
+          timestamp: new Date().toLocaleString('pt-BR'),
+          data: { versionId }
+        }]
+      });
+      
+      // Update local state
+      setProject({
+        ...project,
+        versionsList: updatedVersions,
+        versions: updatedVersions.length,
+        lastActivityDate: new Date().toLocaleDateString('pt-BR')
+      });
+      
+      toast({
+        title: "Versão removida",
+        description: "A versão foi removida com sucesso."
+      });
+    } catch (error) {
+      console.error("Error deleting version:", error);
+      toast({
+        title: "Erro ao remover versão",
+        description: "Ocorreu um erro ao remover a versão. Tente novamente.",
+        variant: "destructive"
+      });
+    }
+  };
+
   if (isLoading) {
     return <div className="p-4 text-center">Carregando detalhes do projeto...</div>;
   }
@@ -191,9 +265,9 @@ const ProjectDetails = () => {
     <div className="space-y-6">
       <ProjectHeader 
         clientName={project.clientName}
-        projectId={project.id}
+        projectTitle={`Projeto ${project.id}`}
+        packageType={project.packageType || 'Música Personalizada'}
         status={project.status}
-        projectType={project.packageType || 'Música Personalizada'}
       />
       
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
@@ -201,6 +275,7 @@ const ProjectDetails = () => {
           <PreviewVersionsList 
             versions={project.versionsList || []}
             projectId={project.id}
+            onDeleteVersion={handleDeleteVersion}
           />
           
           <ProjectHistoryList 
@@ -234,6 +309,7 @@ const ProjectDetails = () => {
             lastActivityDate={project.lastActivityDate}
             projectId={project.id}
             feedback={project.feedback}
+            onStatusUpdate={handleStatusUpdate}
           />
         </div>
       </div>

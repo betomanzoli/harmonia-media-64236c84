@@ -1,7 +1,7 @@
 
 import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { VersionItem } from '@/hooks/admin/usePreviewProjects';
+import { VersionItem } from '@/types/preview.types';
 import VersionCard from './VersionCard';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
@@ -9,7 +9,7 @@ import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 interface PreviewVersionsListProps {
   versions: VersionItem[];
   projectId: string;
-  onDeleteVersion: (versionId: string) => void;
+  onDeleteVersion?: (versionId: string) => void;
 }
 
 const PreviewVersionsList: React.FC<PreviewVersionsListProps> = ({ 
@@ -27,6 +27,15 @@ const PreviewVersionsList: React.FC<PreviewVersionsListProps> = ({
     : activeTab === 'final' 
       ? finalVersions 
       : regularVersions;
+
+  // Handle version delete if onDeleteVersion is provided
+  const handleDeleteVersion = (versionId: string) => {
+    if (onDeleteVersion) {
+      onDeleteVersion(versionId);
+    } else {
+      console.warn('onDeleteVersion not provided to PreviewVersionsList');
+    }
+  };
 
   return (
     <Card className="bg-gray-100 text-gray-900">
@@ -61,7 +70,7 @@ const PreviewVersionsList: React.FC<PreviewVersionsListProps> = ({
                   key={version.id}
                   version={version}
                   projectId={projectId}
-                  onDeleteVersion={onDeleteVersion}
+                  onDeleteVersion={onDeleteVersion ? handleDeleteVersion : undefined}
                 />
               ))}
             </div>
