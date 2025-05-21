@@ -8,7 +8,10 @@ const AdminProjects: React.FC = () => {
   const navigate = useNavigate();
   
   const handleEditProject = (projectId: string) => {
-    navigate(`/admin-j28s7d1k/previews/${projectId}`);
+    // Ensure consistent ID format by trimming and checking case
+    const formattedId = projectId.trim();
+    console.log(`Navigating to project details: ${formattedId}`);
+    navigate(`/admin-j28s7d1k/previews/${formattedId}`);
   };
   
   return <AdminLayout>

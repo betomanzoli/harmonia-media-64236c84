@@ -13,7 +13,7 @@ import { Textarea } from "@/components/ui/textarea";
 const ProjectDetails: React.FC = () => {
   const { projectId } = useParams<{ projectId: string }>();
   const navigate = useNavigate();
-  const { getProjectById, updateProject, loadProjects } = usePreviewProjects();
+  const { projects, getProjectById, updateProject, loadProjects } = usePreviewProjects();
   const { toast } = useToast();
   
   const [project, setProject] = useState<any>(null);
@@ -40,14 +40,25 @@ const ProjectDetails: React.FC = () => {
         setIsLoading(true);
         console.log("Loading project data for ID:", projectId);
         
-        // First, ensure projects are loaded
+        // Ensure projects are loaded first
         await loadProjects();
         
-        // Try to get project
-        const projectData = getProjectById(projectId);
-        console.log("Project data retrieved:", projectData);
+        // Log all available projects for debugging
+        console.log("All available projects:", projects);
+        
+        // Try to find the project by exact ID first
+        let projectData = projects.find(p => p.id === projectId);
+        
+        // If not found, try case-insensitive comparison
+        if (!projectData) {
+          projectData = projects.find(p => 
+            p.id.toLowerCase() === projectId.toLowerCase()
+          );
+          console.log("Found project with case-insensitive match:", projectData);
+        }
         
         if (projectData) {
+          console.log("Project found:", projectData);
           setProject(projectData);
           setLoadFailed(false);
         } else {
@@ -95,7 +106,7 @@ const ProjectDetails: React.FC = () => {
     };
     
     loadProjectData();
-  }, [projectId, getProjectById, loadProjects, toast]);
+  }, [projectId, projects, loadProjects, toast]);
   
   // Handle project not found scenario with retry option
   const handleRetry = () => {
@@ -176,7 +187,8 @@ const ProjectDetails: React.FC = () => {
           <div className="mt-8 p-4 bg-gray-100 rounded-lg text-left">
             <h3 className="font-medium mb-2">Informações de diagnóstico:</h3>
             <p>Project ID: {projectId}</p>
-            <p>Erro: Dados do projeto não encontrados no armazenamento local</p>
+            <p>Projetos disponíveis: {projects.length}</p>
+            <p>IDs disponíveis: {projects.map(p => p.id).join(', ')}</p>
           </div>
         </div>
       </div>
@@ -415,165 +427,217 @@ const ProjectDetails: React.FC = () => {
         </Button>
       </div>
       
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        <div className="md:col-span-2 space-y-6">
-          <Card>
-            <CardHeader className="pb-2">
-              <CardTitle>Cliente: {project.clientName}</CardTitle>
-              <div className="text-sm text-gray-500">{project.packageType || "Pacote padrão"}</div>
-            </CardHeader>
-          </Card>
-          
-          <Card>
-            <CardHeader className="border-b">
-              <CardTitle>Versões ({project.versionsList?.length || 0})</CardTitle>
-            </CardHeader>
-            <CardContent className="p-4 space-y-4">
-              {project.versionsList && project.versionsList.length > 0 ? (
-                project.versionsList.map((version: VersionItem) => (
-                  <VersionCard 
-                    key={version.id} 
-                    version={version} 
-                    projectId={projectId || ''} 
-                    onDeleteVersion={handleDeleteVersion} 
-                  />
-                ))
-              ) : (
-                <div className="text-center py-8 text-gray-500">
-                  Nenhuma versão adicionada ainda.
-                </div>
-              )}
-            </CardContent>
-          </Card>
-          
-          <Card>
-            <CardHeader className="border-b">
-              <CardTitle>Histórico do Projeto</CardTitle>
-            </CardHeader>
-            <CardContent className="p-0">
-              {project.history && project.history.length > 0 ? (
-                <ul className="divide-y">
-                  {project.history.map((entry: any, index: number) => (
-                    <li key={index} className="p-4">
-                      <div className="flex flex-col md:flex-row md:justify-between mb-1">
-                        <span className="font-medium">{entry.action}</span>
-                        <span className="text-gray-500 text-sm">{entry.timestamp}</span>
-                      </div>
-                      {entry.data?.message && (
-                        <p className="text-gray-600 text-sm">{entry.data.message}</p>
-                      )}
-                    </li>
-                  ))}
-                </ul>
-              ) : (
-                <div className="text-center py-8 text-gray-500">
-                  Nenhum registro de atividade ainda.
-                </div>
-              )}
-            </CardContent>
-          </Card>
+      {/* Show loading state */}
+      {isLoading && (
+        <div className="flex flex-col items-center justify-center mt-16">
+          <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-green-500"></div>
+          <h2 className="text-xl font-semibold mt-4">Carregando projeto...</h2>
+          <p className="text-sm text-gray-500 mt-2">ID do Projeto: {projectId}</p>
         </div>
-        
-        <div className="space-y-6">
-          <Card>
-            <CardHeader>
-              <CardTitle>Informações do Cliente</CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div>
-                <h3 className="text-sm font-medium text-gray-500">Nome</h3>
-                <p>{project.clientName}</p>
-              </div>
-              
-              <div>
-                <h3 className="text-sm font-medium text-gray-500">Email</h3>
-                <p>{project.clientEmail || "Não informado"}</p>
-              </div>
-              
-              <div>
-                <h3 className="text-sm font-medium text-gray-500">Telefone</h3>
-                <p>{project.clientPhone || "Não informado"}</p>
-              </div>
-              
-              <div>
-                <h3 className="text-sm font-medium text-gray-500">Pacote</h3>
-                <p>{project.packageType || "Pacote padrão"}</p>
-              </div>
-              
-              <div>
-                <h3 className="text-sm font-medium text-gray-500">Data de Criação</h3>
-                <p>{project.createdAt || "N/A"}</p>
-              </div>
-              
-              <div>
-                <h3 className="text-sm font-medium text-gray-500">Data de Expiração</h3>
-                <p>{project.expirationDate || "N/A"}</p>
-              </div>
-              
-              <div>
-                <h3 className="text-sm font-medium text-gray-500">Última Atividade</h3>
-                <p>{project.lastActivityDate || new Date().toLocaleDateString('pt-BR')}</p>
-              </div>
-            </CardContent>
-          </Card>
-          
-          <Card className="bg-slate-900 text-white">
-            <CardHeader>
-              <CardTitle>Ações do Projeto</CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <Button 
-                onClick={() => setIsAddVersionOpen(true)} 
-                className="w-full bg-green-500 hover:bg-green-600"
-              >
-                <Plus className="mr-2 h-4 w-4" />
-                {isApproved ? "Adicionar Versão Final" : "Adicionar Versão"}
-              </Button>
-              
-              <Button 
-                onClick={handleCopyLink} 
-                variant="outline" 
-                className="w-full text-gray-300 border-gray-700"
-              >
-                <Copy className="mr-2 h-4 w-4" />
-                Copiar Link de Prévia
-              </Button>
-              
-              <Button 
-                onClick={() => setIsExtendDeadlineOpen(true)} 
-                variant="outline" 
-                className="w-full text-gray-300 border-gray-700"
-              >
-                <Clock className="mr-2 h-4 w-4" />
-                Estender Prazo
-              </Button>
-              
-              <div className="pt-4 border-t border-gray-700">
-                <h3 className="text-sm font-medium mb-3">Contatar Cliente</h3>
-                <div className="grid grid-cols-2 gap-2">
-                  <Button 
-                    onClick={handleWhatsAppContact} 
-                    variant="outline" 
-                    className="text-gray-300 border-gray-700"
-                  >
-                    <Phone className="mr-2 h-4 w-4" />
-                    WhatsApp
-                  </Button>
-                  
-                  <Button 
-                    onClick={() => setIsEmailOpen(true)} 
-                    variant="outline" 
-                    className="text-gray-300 border-gray-700"
-                  >
-                    <Mail className="mr-2 h-4 w-4" />
-                    Email
-                  </Button>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
+      )}
+      
+      {/* Show error state with retry button */}
+      {!isLoading && (!project || loadFailed) && (
+        <div className="text-center mt-16">
+          <h2 className="text-2xl font-semibold mb-4">Projeto não encontrado</h2>
+          <p className="mb-6 text-gray-500">
+            Não foi possível carregar os dados do projeto. Verifique se o projeto existe ou tente novamente.
+          </p>
+          <div className="space-y-4">
+            <Button onClick={() => {
+              setIsLoading(true);
+              loadProjects().then(() => {
+                const projectData = getProjectById(projectId || '');
+                if (projectData) {
+                  setProject(projectData);
+                  setLoadFailed(false);
+                } else {
+                  setLoadFailed(true);
+                }
+                setIsLoading(false);
+              });
+            }}>
+              Tentar novamente
+            </Button>
+            <Button 
+              variant="outline" 
+              onClick={() => navigate('/admin-j28s7d1k/previews')}
+              className="ml-2"
+            >
+              Voltar para prévias
+            </Button>
+          </div>
+          <div className="mt-8 p-4 bg-gray-100 rounded-lg text-left">
+            <h3 className="font-medium mb-2">Informações de diagnóstico:</h3>
+            <p>Project ID: {projectId}</p>
+            <p>Projetos disponíveis: {projects.length}</p>
+            <p>IDs disponíveis: {projects.map(p => p.id).join(', ')}</p>
+          </div>
         </div>
-      </div>
+      )}
+      
+      {/* Show project content when loaded successfully */}
+      {!isLoading && project && !loadFailed && (
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          <div className="md:col-span-2 space-y-6">
+            <Card>
+              <CardHeader className="pb-2">
+                <CardTitle>Cliente: {project.clientName}</CardTitle>
+                <div className="text-sm text-gray-500">{project.packageType || "Pacote padrão"}</div>
+              </CardHeader>
+            </Card>
+            
+            <Card>
+              <CardHeader className="border-b">
+                <CardTitle>Versões ({project.versionsList?.length || 0})</CardTitle>
+              </CardHeader>
+              <CardContent className="p-4 space-y-4">
+                {project.versionsList && project.versionsList.length > 0 ? (
+                  project.versionsList.map((version: VersionItem) => (
+                    <VersionCard 
+                      key={version.id} 
+                      version={version} 
+                      projectId={projectId || ''} 
+                      onDeleteVersion={handleDeleteVersion} 
+                    />
+                  ))
+                ) : (
+                  <div className="text-center py-8 text-gray-500">
+                    Nenhuma versão adicionada ainda.
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+            
+            <Card>
+              <CardHeader className="border-b">
+                <CardTitle>Histórico do Projeto</CardTitle>
+              </CardHeader>
+              <CardContent className="p-0">
+                {project.history && project.history.length > 0 ? (
+                  <ul className="divide-y">
+                    {project.history.map((entry: any, index: number) => (
+                      <li key={index} className="p-4">
+                        <div className="flex flex-col md:flex-row md:justify-between mb-1">
+                          <span className="font-medium">{entry.action}</span>
+                          <span className="text-gray-500 text-sm">{entry.timestamp}</span>
+                        </div>
+                        {entry.data?.message && (
+                          <p className="text-gray-600 text-sm">{entry.data.message}</p>
+                        )}
+                      </li>
+                    ))}
+                  </ul>
+                ) : (
+                  <div className="text-center py-8 text-gray-500">
+                    Nenhum registro de atividade ainda.
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+          </div>
+          
+          <div className="space-y-6">
+            <Card>
+              <CardHeader>
+                <CardTitle>Informações do Cliente</CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div>
+                  <h3 className="text-sm font-medium text-gray-500">Nome</h3>
+                  <p>{project.clientName}</p>
+                </div>
+                
+                <div>
+                  <h3 className="text-sm font-medium text-gray-500">Email</h3>
+                  <p>{project.clientEmail || "Não informado"}</p>
+                </div>
+                
+                <div>
+                  <h3 className="text-sm font-medium text-gray-500">Telefone</h3>
+                  <p>{project.clientPhone || "Não informado"}</p>
+                </div>
+                
+                <div>
+                  <h3 className="text-sm font-medium text-gray-500">Pacote</h3>
+                  <p>{project.packageType || "Pacote padrão"}</p>
+                </div>
+                
+                <div>
+                  <h3 className="text-sm font-medium text-gray-500">Data de Criação</h3>
+                  <p>{project.createdAt || "N/A"}</p>
+                </div>
+                
+                <div>
+                  <h3 className="text-sm font-medium text-gray-500">Data de Expiração</h3>
+                  <p>{project.expirationDate || "N/A"}</p>
+                </div>
+                
+                <div>
+                  <h3 className="text-sm font-medium text-gray-500">Última Atividade</h3>
+                  <p>{project.lastActivityDate || new Date().toLocaleDateString('pt-BR')}</p>
+                </div>
+              </CardContent>
+            </Card>
+            
+            <Card className="bg-slate-900 text-white">
+              <CardHeader>
+                <CardTitle>Ações do Projeto</CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <Button 
+                  onClick={() => setIsAddVersionOpen(true)} 
+                  className="w-full bg-green-500 hover:bg-green-600"
+                >
+                  <Plus className="mr-2 h-4 w-4" />
+                  {isApproved ? "Adicionar Versão Final" : "Adicionar Versão"}
+                </Button>
+                
+                <Button 
+                  onClick={handleCopyLink} 
+                  variant="outline" 
+                  className="w-full text-gray-300 border-gray-700"
+                >
+                  <Copy className="mr-2 h-4 w-4" />
+                  Copiar Link de Prévia
+                </Button>
+                
+                <Button 
+                  onClick={() => setIsExtendDeadlineOpen(true)} 
+                  variant="outline" 
+                  className="w-full text-gray-300 border-gray-700"
+                >
+                  <Clock className="mr-2 h-4 w-4" />
+                  Estender Prazo
+                </Button>
+                
+                <div className="pt-4 border-t border-gray-700">
+                  <h3 className="text-sm font-medium mb-3">Contatar Cliente</h3>
+                  <div className="grid grid-cols-2 gap-2">
+                    <Button 
+                      onClick={handleWhatsAppContact} 
+                      variant="outline" 
+                      className="text-gray-300 border-gray-700"
+                    >
+                      <Phone className="mr-2 h-4 w-4" />
+                      WhatsApp
+                    </Button>
+                    
+                    <Button 
+                      onClick={() => setIsEmailOpen(true)} 
+                      variant="outline" 
+                      className="text-gray-300 border-gray-700"
+                    >
+                      <Mail className="mr-2 h-4 w-4" />
+                      Email
+                    </Button>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+        </div>
+      )}
       
       {/* Add Version Dialog */}
       <AddVersionDialog 
