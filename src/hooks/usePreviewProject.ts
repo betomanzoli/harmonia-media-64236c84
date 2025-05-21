@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { useToast } from '@/hooks/use-toast';
 import { useGoogleDriveAudio } from '@/hooks/audio/useGoogleDriveAudio';
@@ -163,7 +162,7 @@ export const usePreviewProject = (projectId: string | undefined) => {
           toast({
             title: "Aviso de prévia",
             description: "Você está acessando uma versão de demonstração. Contate o administrador.",
-            variant: "warning"
+            variant: "default"
           });
         }
       }
