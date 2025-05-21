@@ -1,5 +1,5 @@
 
-import { useState, useCallback, useEffect } from 'react';
+import { useState, useCallback, useEffect, useRef } from 'react';
 
 export interface VersionItem {
   id: string;
@@ -36,11 +36,21 @@ export interface ProjectItem {
 export const usePreviewProjects = () => {
   const [projects, setProjects] = useState<ProjectItem[]>([]);
   const [isLoading, setIsLoading] = useState(false);
+  const loadingRef = useRef(false);
+  const hasInitializedRef = useRef(false);
   
   // Load projects from localStorage on mount
   const loadProjects = useCallback(async () => {
+    // Avoid multiple simultaneous loading operations
+    if (loadingRef.current) {
+      console.log("Already loading projects, skipping duplicate call");
+      return projects;
+    }
+    
     console.log("==== LOADING PROJECTS ====");
+    loadingRef.current = true;
     setIsLoading(true);
+    
     try {
       // Check if localStorage is available
       const isLocalStorageAvailable = typeof localStorage !== 'undefined';
@@ -56,6 +66,8 @@ export const usePreviewProjects = () => {
             console.log("Successfully parsed projects:", parsedProjects);
             setProjects(parsedProjects);
             console.log("Projects count:", parsedProjects.length);
+            hasInitializedRef.current = true;
+            loadingRef.current = false;
             setIsLoading(false);
             return parsedProjects;
           } catch (parseError) {
@@ -89,30 +101,40 @@ export const usePreviewProjects = () => {
         localStorage.setItem('harmonIA_projects', JSON.stringify(defaultProjects));
       }
       
+      hasInitializedRef.current = true;
+      loadingRef.current = false;
       setIsLoading(false);
       return defaultProjects;
     } catch (error) {
       console.error('Error loading projects:', error);
+      loadingRef.current = false;
       setIsLoading(false);
       return [];
     }
-  }, []);
+  }, [projects]);
   
-  // Load projects on component mount
+  // Load projects on component mount (but only once)
   useEffect(() => {
-    loadProjects();
+    if (!hasInitializedRef.current) {
+      loadProjects();
+    }
   }, [loadProjects]);
   
   // Save projects to localStorage whenever they change
   useEffect(() => {
-    if (projects.length > 0) {
+    if (projects.length > 0 && !isLoading) {
       localStorage.setItem('harmonIA_projects', JSON.stringify(projects));
     }
-  }, [projects]);
+  }, [projects, isLoading]);
   
-  // Get a specific project by ID
+  // Get a specific project by ID - optimized to do less work
   const getProjectById = useCallback((id: string) => {
     if (!id) return null;
+    
+    if (projects.length === 0 && !hasInitializedRef.current) {
+      console.log("No projects loaded yet, can't find project:", id);
+      return null;
+    }
     
     // Debug the search process
     console.log(`Looking for project with ID: ${id} among ${projects.length} projects`);

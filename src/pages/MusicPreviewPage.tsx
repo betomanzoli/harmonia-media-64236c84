@@ -13,12 +13,14 @@ const MusicPreviewPage: React.FC = () => {
   const navigate = useNavigate();
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
+  const [checkComplete, setCheckComplete] = useState(false);
 
   useEffect(() => {
     // Verificar autenticação
     const checkAuth = async () => {
       if (!projectId) {
         setIsLoading(false);
+        setCheckComplete(true);
         return;
       }
 
@@ -37,11 +39,13 @@ const MusicPreviewPage: React.FC = () => {
         
         // Se tiver cookie de acesso ou sessão ativa, permitir acesso
         if (hasAccessCookie || hasActiveSession) {
+          console.log("Authentication successful, allowing access");
           setIsAuthenticated(true);
           window.scrollTo(0, 0);
         } else {
           // Redirecionar para página de autenticação
-          console.log("Redirecting to auth page");
+          console.log("No authentication found, redirecting to auth page");
+          console.log("Navigation to:", `/auth/preview/${projectId}`);
           navigate(`/auth/preview/${projectId}`);
         }
       } catch (error) {
@@ -53,13 +57,16 @@ const MusicPreviewPage: React.FC = () => {
         });
       } finally {
         setIsLoading(false);
+        setCheckComplete(true);
       }
     };
 
     checkAuth();
   }, [projectId, navigate, toast]);
 
-  if (isLoading) {
+  // The component should only render content once the check is complete
+  // This prevents flash of content before redirect
+  if (!checkComplete || isLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gray-100">
         <div className="flex flex-col items-center">
@@ -82,7 +89,7 @@ const MusicPreviewPage: React.FC = () => {
   }
 
   if (!isAuthenticated) {
-    // Esse caso não deveria acontecer pois já redirecionamos para a página de autenticação
+    // Este caso não deveria acontecer pois já redirecionamos para a página de autenticação
     // mas mantemos como fallback
     return (
       <div className="min-h-screen flex items-center justify-center bg-gray-100">

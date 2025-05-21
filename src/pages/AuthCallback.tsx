@@ -1,13 +1,17 @@
 
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { supabase } from '@/lib/supabase';
 import { Loader2 } from 'lucide-react';
-import { setPreviewAccessCookie } from '@/utils/authCookies';
+import { setPreviewAccessCookie, setPreviewEmailCookie } from '@/utils/authCookies';
+import { useToast } from '@/hooks/use-toast';
 
 const AuthCallback: React.FC = () => {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
+  const { toast } = useToast();
+  const [error, setError] = useState<string | null>(null);
+  const [processing, setProcessing] = useState(true);
 
   useEffect(() => {
     const handleAuthCallback = async () => {
@@ -15,11 +19,12 @@ const AuthCallback: React.FC = () => {
       
       try {
         // Handle the magic link callback
-        const { data, error } = await supabase.auth.getSession();
+        const { data, error: sessionError } = await supabase.auth.getSession();
         
-        if (error) {
-          console.error('Auth callback error:', error);
-          navigate('/auth-error');
+        if (sessionError) {
+          console.error('Auth callback error:', sessionError);
+          setError('Erro de autenticação: ' + sessionError.message);
+          setProcessing(false);
           return;
         }
         
@@ -34,23 +39,61 @@ const AuthCallback: React.FC = () => {
           if (redirectTo.startsWith('/preview/')) {
             const projectId = redirectTo.replace('/preview/', '');
             console.log("Setting access cookie for project:", projectId);
+            
+            // Set cookies for access
             setPreviewAccessCookie(projectId);
+            
+            // Also set email cookie if we have it
+            if (data.session.user.email) {
+              setPreviewEmailCookie(projectId, data.session.user.email);
+            }
+            
+            // Show success toast
+            toast({
+              title: "Acesso autorizado",
+              description: "Você foi autenticado com sucesso para acessar esta prévia.",
+            });
           }
           
           // Navigate to the redirect URL
+          setProcessing(false);
           navigate(redirectTo);
         } else {
           console.error('No session found in auth callback');
-          navigate('/auth-error');
+          setError('Nenhuma sessão de autenticação encontrada');
+          setProcessing(false);
         }
-      } catch (error) {
+      } catch (error: any) {
         console.error('Error in auth callback:', error);
-        navigate('/auth-error');
+        setError('Erro durante autenticação: ' + error.message);
+        setProcessing(false);
       }
     };
     
     handleAuthCallback();
-  }, [navigate, searchParams]);
+  }, [navigate, searchParams, toast]);
+
+  if (error) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-b from-gray-100 to-white">
+        <div className="flex flex-col items-center space-y-4">
+          <div className="rounded-full bg-red-100 p-3">
+            <svg className="h-6 w-6 text-red-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+            </svg>
+          </div>
+          <h2 className="text-xl font-medium text-gray-800">Erro de autenticação</h2>
+          <p className="text-gray-500 text-center max-w-md">{error}</p>
+          <button 
+            onClick={() => navigate('/')}
+            className="mt-4 px-4 py-2 bg-harmonia-green text-white rounded hover:bg-harmonia-green/90"
+          >
+            Voltar para o início
+          </button>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-b from-gray-100 to-white">

@@ -1,5 +1,4 @@
-
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { useToast } from '@/hooks/use-toast';
@@ -12,7 +11,7 @@ import { Textarea } from "@/components/ui/textarea";
 import ProjectHeader from './ProjectHeader';
 import PreviewVersionsList from './PreviewVersionsList';
 import ProjectClientInfo from './ProjectClientInfo';
-import { emailService } from '@/lib/supabase/emailService';
+import { emailService } from '@/lib/supabase';
 
 const ProjectDetails: React.FC = () => {
   const { projectId } = useParams<{ projectId: string }>();
@@ -28,10 +27,28 @@ const ProjectDetails: React.FC = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [loadFailed, setLoadFailed] = useState(false);
   
+  // Add loading flag ref to prevent multiple simultaneous loads
+  const isLoadingRef = useRef(false);
+  // Add loaded flag to prevent unnecessary reloads
+  const hasLoadedRef = useRef(false);
+  
   // Debug the issue
   console.log("Current projectId:", projectId);
   
-  useEffect(() => {
+  // Memoize the loadProjectData function to prevent recreating it on each render
+  const loadProjectData = useCallback(async (forceReload = false) => {
+    // Skip if already loading
+    if (isLoadingRef.current) {
+      console.log("Loading already in progress, skipping");
+      return;
+    }
+    
+    // Skip if already loaded and not forced to reload
+    if (hasLoadedRef.current && !forceReload && project) {
+      console.log("Project already loaded, skipping");
+      return;
+    }
+    
     if (!projectId) {
       console.log("No project ID provided, returning early");
       setIsLoading(false);
@@ -39,12 +56,22 @@ const ProjectDetails: React.FC = () => {
       return;
     }
     
-    const loadProjectData = async () => {
-      try {
-        setIsLoading(true);
-        console.log("ProjectDetails Component - Loading project:", projectId);
-        
-        // Load projects first to ensure data is available
+    try {
+      isLoadingRef.current = true;
+      setIsLoading(true);
+      console.log("ProjectDetails Component - Loading project:", projectId);
+      
+      // Try direct project lookup first without reloading all projects
+      const existingProject = getProjectById(projectId);
+      
+      if (existingProject) {
+        console.log("Project found in cache:", existingProject);
+        setProject(existingProject);
+        setLoadFailed(false);
+        hasLoadedRef.current = true;
+      } else {
+        console.log("Project not found in cache, loading projects...");
+        // Only load projects if direct lookup fails
         const projects = await loadProjects();
         console.log("Projects loaded:", projects ? projects.length : 0);
         
@@ -52,13 +79,14 @@ const ProjectDetails: React.FC = () => {
         const availableIds = projects?.map(p => p.id) || [];
         console.log("Available project IDs:", availableIds.join(', '));
         
-        // Try direct project lookup
+        // Try project lookup again after loading
         const projectData = getProjectById(projectId);
         
         if (projectData) {
-          console.log("Project found:", projectData);
+          console.log("Project found after loading:", projectData);
           setProject(projectData);
           setLoadFailed(false);
+          hasLoadedRef.current = true;
         } else {
           console.error(`Project with ID ${projectId} not found`);
           
@@ -81,6 +109,7 @@ const ProjectDetails: React.FC = () => {
             
             setProject(demoProject);
             setLoadFailed(false);
+            hasLoadedRef.current = true;
           } else {
             setLoadFailed(true);
             toast({
@@ -90,48 +119,42 @@ const ProjectDetails: React.FC = () => {
             });
           }
         }
-      } catch (error) {
-        console.error("Error loading project:", error);
-        setLoadFailed(true);
-        toast({
-          title: "Erro ao carregar projeto",
-          description: "Ocorreu um erro ao carregar os dados do projeto.",
-          variant: "destructive"
-        });
-      } finally {
-        setIsLoading(false);
       }
-    };
+    } catch (error) {
+      console.error("Error loading project:", error);
+      setLoadFailed(true);
+      toast({
+        title: "Erro ao carregar projeto",
+        description: "Ocorreu um erro ao carregar os dados do projeto.",
+        variant: "destructive"
+      });
+    } finally {
+      setIsLoading(false);
+      isLoadingRef.current = false;
+    }
+  }, [projectId, getProjectById, loadProjects, toast, project]);
+  
+  // Load project data only once on component mount
+  useEffect(() => {
+    // Reset state when projectId changes
+    hasLoadedRef.current = false;
     
     loadProjectData();
-  }, [projectId, loadProjects, toast, getProjectById]);
+    
+    // Cleanup function
+    return () => {
+      // Clear loading flag on unmount
+      isLoadingRef.current = false;
+    };
+  }, [projectId, loadProjectData]);
   
   // Handle project not found scenario with retry option
   const handleRetry = () => {
     if (!projectId) return;
     
-    setIsLoading(true);
-    // Reload projects and try again
-    loadProjects().then(() => {
-      const projectData = getProjectById(projectId);
-      
-      if (projectData) {
-        setProject(projectData);
-        setLoadFailed(false);
-        toast({
-          title: "Projeto carregado",
-          description: "Os dados do projeto foram carregados com sucesso."
-        });
-      } else {
-        setLoadFailed(true);
-        toast({
-          title: "Projeto não encontrado",
-          description: "Não foi possível encontrar o projeto."
-        });
-      }
-      
-      setIsLoading(false);
-    });
+    // Force reload data
+    hasLoadedRef.current = false;
+    loadProjectData(true);
   };
   
   // Show loading state
