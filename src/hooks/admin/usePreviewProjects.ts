@@ -10,6 +10,11 @@ export interface VersionItem {
   fileId?: string;
   recommended?: boolean;
   final?: boolean;
+  // Add missing properties
+  dateAdded?: string;
+  url?: string;
+  audioUrl?: string;
+  additionalLinks?: Array<{ label: string; url: string }>;
 }
 
 export interface ProjectItem {
@@ -33,10 +38,12 @@ export interface ProjectItem {
 
 export const usePreviewProjects = () => {
   const [projects, setProjects] = useState<ProjectItem[]>([]);
+  const [isLoading, setIsLoading] = useState(false);
   
   // Load projects from localStorage on mount
   const loadProjects = useCallback(async () => {
     console.log("==== LOADING PROJECTS ====");
+    setIsLoading(true);
     try {
       // Check if localStorage is available
       const isLocalStorageAvailable = typeof localStorage !== 'undefined';
@@ -52,6 +59,7 @@ export const usePreviewProjects = () => {
             console.log("Successfully parsed projects:", parsedProjects);
             setProjects(parsedProjects);
             console.log("Projects count:", parsedProjects.length);
+            setIsLoading(false);
             return parsedProjects;
           } catch (parseError) {
             console.error('Error parsing stored projects:', parseError);
@@ -84,9 +92,11 @@ export const usePreviewProjects = () => {
         localStorage.setItem('harmonIA_projects', JSON.stringify(defaultProjects));
       }
       
+      setIsLoading(false);
       return defaultProjects;
     } catch (error) {
       console.error('Error loading projects:', error);
+      setIsLoading(false);
       return [];
     }
   }, []);
@@ -134,7 +144,12 @@ export const usePreviewProjects = () => {
     
     const newProject: ProjectItem = {
       ...project,
-      id: projectId
+      id: projectId,
+      clientName: project.clientName || 'Unknown Client',
+      clientEmail: project.clientEmail || 'unknown@example.com',
+      createdAt: project.createdAt || new Date().toLocaleDateString('pt-BR'),
+      status: project.status || 'waiting',
+      versions: project.versions || 0
     };
     
     setProjects(prev => {
@@ -199,12 +214,22 @@ export const usePreviewProjects = () => {
     return true;
   }, [projects]);
   
+  // Delete a project
+  const deleteProject = useCallback((id: string) => {
+    if (!id) return false;
+    
+    setProjects(prev => prev.filter(p => p.id !== id));
+    return true;
+  }, []);
+  
   return {
     projects,
+    isLoading,
     loadProjects,
     getProjectById,
     addProject,
-    updateProject
+    updateProject,
+    deleteProject
   };
 };
 
