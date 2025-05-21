@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { Menu, X } from 'lucide-react';
@@ -40,12 +41,13 @@ const Header: React.FC = () => {
   return (
     <header className="fixed w-full top-0 z-50 bg-slate-900 border-b border-slate-800">
       <div className="container mx-auto flex justify-between items-center py-3 px-4">
-        <div className="flex items-center justify-between">
-          <Link to="/" className="text-white">
-            <Logo />
-          </Link>
+        {/* Logo on the left */}
+        <Link to="/" className="text-white">
+          <Logo />
+        </Link>
 
-          {/* Desktop Navigation */}
+        {/* Desktop Navigation moved to the right */}
+        <div className="flex items-center">
           <nav className="hidden md:flex items-center space-x-6">
             <Link 
               to="/" 
