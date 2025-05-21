@@ -24,101 +24,105 @@ const ProjectDetails: React.FC = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [loadFailed, setLoadFailed] = useState(false);
   
-  // Check localStorage directly to diagnose issues
   useEffect(() => {
-    const checkLocalStorage = () => {
+    console.log("ProjectDetails Component Mounted");
+    console.log("Project ID from URL:", projectId);
+    
+    if (!projectId) {
+      console.log("No project ID provided, returning early");
+      setIsLoading(false);
+      setLoadFailed(true);
+      return;
+    }
+    
+    const loadProjectData = async () => {
       try {
-        const keys = Object.keys(localStorage);
-        console.log('All localStorage keys:', keys);
-        const projectsData = localStorage.getItem('harmonIA_preview_projects');
-        console.log('Raw projects data from localStorage:', projectsData);
+        setIsLoading(true);
+        console.log("Loading project data for ID:", projectId);
         
-        if (projectsData) {
-          try {
-            const parsed = JSON.parse(projectsData);
-            console.log('Parsed projects from localStorage:', parsed);
-            console.log('Is array?', Array.isArray(parsed));
-            console.log('Length:', Array.isArray(parsed) ? parsed.length : 'N/A');
-          } catch (e) {
-            console.error('Failed to parse projects data:', e);
-          }
+        // First, ensure projects are loaded
+        await loadProjects();
+        
+        // Try to get project
+        const projectData = getProjectById(projectId);
+        console.log("Project data retrieved:", projectData);
+        
+        if (projectData) {
+          setProject(projectData);
+          setLoadFailed(false);
         } else {
-          console.warn('harmonIA_preview_projects not found in localStorage');
+          console.error("Project not found for ID:", projectId);
           
-          // Initialize with empty array if not found
-          try {
-            localStorage.setItem('harmonIA_preview_projects', JSON.stringify([]));
-            console.log('Initialized harmonIA_preview_projects with empty array');
-          } catch (e) {
-            console.error('Failed to initialize projects in localStorage:', e);
+          // Try to initialize with demo data if ID matches our demo ID
+          if (projectId === 'P0001') {
+            console.log("Initializing demo project for P0001");
+            const demoProject = {
+              id: 'P0001',
+              clientName: 'Humberto Manzoli',
+              clientEmail: 'cliente@exemplo.com',
+              packageType: 'Essencial',
+              createdAt: new Date().toLocaleDateString('pt-BR'),
+              status: 'waiting',
+              versions: 0,
+              previewUrl: `${window.location.origin}/preview/P0001`,
+              expirationDate: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toLocaleDateString('pt-BR'),
+              lastActivityDate: new Date().toLocaleDateString('pt-BR'),
+              versionsList: []
+            };
+            
+            setProject(demoProject);
+            setLoadFailed(false);
+          } else {
+            setLoadFailed(true);
+            toast({
+              title: "Projeto não encontrado",
+              description: `Não foi possível encontrar o projeto com ID: ${projectId}`,
+              variant: "destructive"
+            });
           }
-          
-          // Force reload projects
-          loadProjects();
         }
-      } catch (e) {
-        console.error('Error accessing localStorage:', e);
+      } catch (error) {
+        console.error("Error loading project:", error);
+        setLoadFailed(true);
+        toast({
+          title: "Erro ao carregar projeto",
+          description: "Ocorreu um erro ao carregar os dados do projeto.",
+          variant: "destructive"
+        });
+      } finally {
+        setIsLoading(false);
       }
     };
     
-    checkLocalStorage();
-  }, [loadProjects]);
-  
-  useEffect(() => {
-    if (projectId) {
-      setIsLoading(true);
-      
-      // Force a reload of projects before getting the specific project
-      loadProjects().then(() => {
-        console.log('Projects reloaded, now getting project by ID:', projectId);
-        const projectData = getProjectById(projectId);
-        
-        if (projectData) {
-          console.log('Project found:', projectData);
-          setProject(projectData);
-          setLoadFailed(false);
-        } else {
-          console.error(`Project with ID: ${projectId} not found after reload`);
-          setLoadFailed(true);
-          toast({
-            title: "Projeto não encontrado",
-            description: `Não foi possível encontrar o projeto com ID: ${projectId}`,
-            variant: "destructive"
-          });
-        }
-        
-        setIsLoading(false);
-      });
-    }
-  }, [projectId, getProjectById, navigate, toast, loadProjects]);
+    loadProjectData();
+  }, [projectId, getProjectById, loadProjects, toast]);
   
   // Handle project not found scenario with retry option
   const handleRetry = () => {
-    loadProjects();
+    if (!projectId) return;
     
-    if (projectId) {
-      setIsLoading(true);
-      setTimeout(() => {
-        const projectData = getProjectById(projectId);
-        
-        if (projectData) {
-          setProject(projectData);
-          setLoadFailed(false);
-          toast({
-            title: "Projeto carregado",
-            description: "Os dados do projeto foram carregados com sucesso."
-          });
-        } else {
-          setLoadFailed(true);
-          toast({
-            title: "Projeto não encontrado",
-            description: "Não foi possível encontrar o projeto mesmo após a tentativa de recarregamento."
-          });
-        }
-        
-        setIsLoading(false);
-      }, 500);
-    }
+    setIsLoading(true);
+    // Reload projects and try again
+    loadProjects().then(() => {
+      const projectData = getProjectById(projectId);
+      
+      if (projectData) {
+        setProject(projectData);
+        setLoadFailed(false);
+        toast({
+          title: "Projeto carregado",
+          description: "Os dados do projeto foram carregados com sucesso."
+        });
+      } else {
+        setLoadFailed(true);
+        toast({
+          title: "Projeto não encontrado",
+          description: "Não foi possível encontrar o projeto."
+        });
+      }
+      
+      setIsLoading(false);
+    });
   };
   
   // Show loading state
@@ -135,6 +139,7 @@ const ProjectDetails: React.FC = () => {
         <div className="flex flex-col items-center justify-center mt-16">
           <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-green-500"></div>
           <h2 className="text-xl font-semibold mt-4">Carregando projeto...</h2>
+          <p className="text-sm text-gray-500 mt-2">ID do Projeto: {projectId}</p>
         </div>
       </div>
     );
