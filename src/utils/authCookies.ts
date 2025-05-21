@@ -1,114 +1,90 @@
 
-// Cookie utilities for preview access
+// Functions to manage preview access cookies
 
 /**
- * Set a cookie for preview access
+ * Sets a cookie for preview access
  */
-export const setPreviewAccessCookie = (previewId: string, expiryDays = 7): void => {
-  const expiry = new Date();
-  expiry.setDate(expiry.getDate() + expiryDays);
-  
-  const cookieName = `preview_access_${previewId}`;
-  const cookieValue = 'granted';
-  const cookieExpiry = `expires=${expiry.toUTCString()}`;
-  
-  document.cookie = `${cookieName}=${cookieValue}; ${cookieExpiry}; path=/; SameSite=Lax`;
-};
-
-/**
- * Set a cookie for preview email identification
- */
-export const setPreviewEmailCookie = (previewId: string, email: string, expiryDays = 7): void => {
-  const expiry = new Date();
-  expiry.setDate(expiry.getDate() + expiryDays);
-  
-  const cookieName = `preview_email_${previewId}`;
-  const cookieValue = email;
-  const cookieExpiry = `expires=${expiry.toUTCString()}`;
-  
-  document.cookie = `${cookieName}=${cookieValue}; ${cookieExpiry}; path=/; SameSite=Lax`;
-};
-
-/**
- * Check if preview access cookie exists
- */
-export const checkPreviewAccessCookie = (previewId: string): boolean => {
-  const cookieName = `preview_access_${previewId}=`;
-  const cookies = document.cookie.split(';');
-  
-  for (let i = 0; i < cookies.length; i++) {
-    let cookie = cookies[i].trim();
-    if (cookie.indexOf(cookieName) === 0) {
-      return cookie.substring(cookieName.length) === 'granted';
-    }
-  }
-  
-  return false;
-};
-
-/**
- * Get preview email cookie
- */
-export const getPreviewEmailCookie = (previewId: string): string | null => {
-  const cookieName = `preview_email_${previewId}=`;
-  const cookies = document.cookie.split(';');
-  
-  for (let i = 0; i < cookies.length; i++) {
-    let cookie = cookies[i].trim();
-    if (cookie.indexOf(cookieName) === 0) {
-      return cookie.substring(cookieName.length);
-    }
-  }
-  
-  return null;
-};
-
-/**
- * Get any auth cookie by name
- */
-export const getAuthCookie = (name: string): string | null => {
-  const cookieName = `${name}=`;
-  const cookies = document.cookie.split(';');
-  
-  for (let i = 0; i < cookies.length; i++) {
-    let cookie = cookies[i].trim();
-    if (cookie.indexOf(cookieName) === 0) {
-      return cookie.substring(cookieName.length);
-    }
-  }
-  
-  return null;
-};
-
-/**
- * Clear a preview access cookie
- */
-export const clearPreviewAccessCookie = (previewId: string): void => {
-  const cookieName = `preview_access_${previewId}`;
-  document.cookie = `${cookieName}=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/; SameSite=Lax`;
-};
-
-/**
- * Clear preview email cookie
- */
-export const clearPreviewEmailCookie = (previewId: string): void => {
-  const cookieName = `preview_email_${previewId}`;
-  document.cookie = `${cookieName}=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/; SameSite=Lax`;
-};
-
-/**
- * Clear all preview-related cookies
- */
-export const clearAllPreviewCookies = (): void => {
-  const cookies = document.cookie.split(';');
-  
-  for (let i = 0; i < cookies.length; i++) {
-    const cookie = cookies[i].trim();
-    const cookieParts = cookie.split('=');
-    const cookieName = cookieParts[0];
+export const setPreviewAccessCookie = (projectId: string): void => {
+  try {
+    const expiryDate = new Date();
+    expiryDate.setDate(expiryDate.getDate() + 14); // 14 days expiry
     
-    if (cookieName.startsWith('preview_')) {
-      document.cookie = `${cookieName}=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/; SameSite=Lax`;
+    document.cookie = `preview_access_${projectId}=true; expires=${expiryDate.toUTCString()}; path=/; SameSite=Lax`;
+    console.log(`Set preview access cookie for project: ${projectId}`);
+  } catch (error) {
+    console.error('Error setting preview access cookie:', error);
+  }
+};
+
+/**
+ * Checks if there's an access cookie for the project
+ */
+export const checkPreviewAccessCookie = (projectId: string): boolean => {
+  try {
+    const cookies = document.cookie.split(';');
+    const cookieName = `preview_access_${projectId}=`;
+    
+    const hasCookie = cookies.some(cookie => 
+      cookie.trim().startsWith(cookieName)
+    );
+    
+    console.log(`Checking preview access cookie for ${projectId}: ${hasCookie ? 'Found' : 'Not found'}`);
+    return hasCookie;
+  } catch (error) {
+    console.error('Error checking preview access cookie:', error);
+    return false;
+  }
+};
+
+/**
+ * Sets a cookie storing the email used to access a preview
+ */
+export const setPreviewEmailCookie = (projectId: string, email: string): void => {
+  try {
+    const expiryDate = new Date();
+    expiryDate.setDate(expiryDate.getDate() + 14); // 14 days expiry
+    
+    document.cookie = `preview_email_${projectId}=${email}; expires=${expiryDate.toUTCString()}; path=/; SameSite=Lax`;
+  } catch (error) {
+    console.error('Error setting preview email cookie:', error);
+  }
+};
+
+/**
+ * Gets the email from the auth cookie if present
+ */
+export const getAuthCookie = (cookieName: string): string | null => {
+  try {
+    const cookies = document.cookie.split(';');
+    for (let cookie of cookies) {
+      const [name, value] = cookie.trim().split('=');
+      if (name === cookieName) {
+        return value;
+      }
     }
+    return null;
+  } catch (error) {
+    console.error('Error getting auth cookie:', error);
+    return null;
+  }
+};
+
+/**
+ * Clears all preview access cookies
+ */
+export const clearPreviewCookies = (): void => {
+  try {
+    const cookies = document.cookie.split(';');
+    
+    for (let cookie of cookies) {
+      const cookieName = cookie.split('=')[0].trim();
+      if (cookieName.startsWith('preview_access_') || cookieName.startsWith('preview_email_')) {
+        document.cookie = `${cookieName}=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;`;
+      }
+    }
+    
+    console.log('All preview cookies cleared');
+  } catch (error) {
+    console.error('Error clearing preview cookies:', error);
   }
 };

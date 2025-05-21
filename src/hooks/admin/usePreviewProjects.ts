@@ -1,7 +1,5 @@
 
-// Create this file if it doesn't exist already or update it if it does
 import { useState, useCallback, useEffect } from 'react';
-import { v4 as uuidv4 } from 'uuid';
 
 export interface VersionItem {
   id: string;
@@ -10,7 +8,6 @@ export interface VersionItem {
   fileId?: string;
   recommended?: boolean;
   final?: boolean;
-  // Add missing properties
   dateAdded?: string;
   url?: string;
   audioUrl?: string;
@@ -117,24 +114,36 @@ export const usePreviewProjects = () => {
   const getProjectById = useCallback((id: string) => {
     if (!id) return null;
     
+    // Debug the search process
+    console.log(`Looking for project with ID: ${id} among ${projects.length} projects`);
+    
     // Try to find with exact match first
     let project = projects.find(p => p.id === id);
+    if (project) {
+      console.log("Project found with exact match");
+      return project;
+    }
     
     // If not found, try with case-insensitive comparison
-    if (!project) {
-      project = projects.find(p => 
-        p.id.toLowerCase() === id.toLowerCase()
-      );
+    project = projects.find(p => 
+      p.id.toLowerCase() === id.toLowerCase()
+    );
+    if (project) {
+      console.log("Project found with case-insensitive match");
+      return project;
     }
     
     // If still not found, try with trimmed strings
-    if (!project) {
-      project = projects.find(p => 
-        p.id.trim() === id.trim()
-      );
+    project = projects.find(p => 
+      p.id.trim() === id.trim()
+    );
+    if (project) {
+      console.log("Project found with trimmed match");
+      return project;
     }
     
-    return project || null;
+    console.log(`No project found with ID: ${id}`);
+    return null;
   }, [projects]);
   
   // Add a new project
@@ -169,6 +178,8 @@ export const usePreviewProjects = () => {
   // Update an existing project
   const updateProject = useCallback((id: string, updates: Partial<ProjectItem>) => {
     if (!id) return false;
+    
+    console.log(`Updating project with ID: ${id}`, updates);
     
     // Find the project by ID, case-insensitive
     let foundIndex = projects.findIndex(p => p.id.toLowerCase() === id.toLowerCase());
@@ -211,6 +222,7 @@ export const usePreviewProjects = () => {
       )
     );
     
+    console.log("Project updated successfully");
     return true;
   }, [projects]);
   

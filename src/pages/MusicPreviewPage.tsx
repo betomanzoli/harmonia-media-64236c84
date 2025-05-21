@@ -28,10 +28,12 @@ const MusicPreviewPage: React.FC = () => {
         
         // 1. Verificar se há cookie de acesso
         const hasAccessCookie = checkPreviewAccessCookie(projectId);
+        console.log("Has access cookie:", hasAccessCookie);
         
         // 2. Verificar se o usuário está logado no Supabase
         const { data: { session } } = await supabase.auth.getSession();
         const hasActiveSession = !!session;
+        console.log("Has active session:", hasActiveSession);
         
         // Se tiver cookie de acesso ou sessão ativa, permitir acesso
         if (hasAccessCookie || hasActiveSession) {
@@ -39,6 +41,7 @@ const MusicPreviewPage: React.FC = () => {
           window.scrollTo(0, 0);
         } else {
           // Redirecionar para página de autenticação
+          console.log("Redirecting to auth page");
           navigate(`/auth/preview/${projectId}`);
         }
       } catch (error) {

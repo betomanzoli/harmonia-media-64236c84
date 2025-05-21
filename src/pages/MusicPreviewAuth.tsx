@@ -1,122 +1,130 @@
 
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/lib/supabase';
-import { getProjectIdFromPreviewLink } from '@/utils/previewLinkUtils';
-import { checkPreviewAccessCookie, setPreviewAccessCookie, setPreviewEmailCookie } from '@/utils/authCookies';
-import { Loader2, Mail, ArrowRight } from 'lucide-react';
-import MusicNoteIcon from '@/components/icons/MusicNoteIcon';
+import { setPreviewAccessCookie } from '@/utils/authCookies';
+import { Loader2 } from 'lucide-react';
 
 const MusicPreviewAuth: React.FC = () => {
   const { previewId } = useParams<{ previewId: string }>();
-  const { toast } = useToast();
   const navigate = useNavigate();
+  const { toast } = useToast();
   const [email, setEmail] = useState('');
-  const [loading, setLoading] = useState(false);
-  const [isChecking, setIsChecking] = useState(true);
-  const [projectId, setProjectId] = useState<string | null>(null);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isCheckingAuth, setIsCheckingAuth] = useState(true);
 
-  // Verificar se já existe um cookie de acesso
+  // Check if user is already authenticated
   useEffect(() => {
-    if (!previewId) return;
+    const checkAuth = async () => {
+      if (!previewId) {
+        setIsCheckingAuth(false);
+        return;
+      }
 
-    const checkAccess = async () => {
-      setIsChecking(true);
       try {
-        // Tenta obter o ID do projeto a partir do ID da prévia
-        const actualProjectId = await getProjectIdFromPreviewLink(previewId);
-
-        if (actualProjectId) {
-          setProjectId(actualProjectId);
-          
-          // Verificar se já existe um cookie de acesso
-          if (checkPreviewAccessCookie(actualProjectId)) {
-            console.log('Acesso autorizado por cookie');
-            navigate(`/preview/${previewId}`);
-            return;
-          }
+        // Check for existing auth
+        const { data: { session } } = await supabase.auth.getSession();
+        
+        if (session) {
+          console.log("User already authenticated:", session.user.email);
+          // Set cookie for this preview and redirect
+          setPreviewAccessCookie(previewId);
+          navigate(`/preview/${previewId}`);
         }
       } catch (error) {
-        console.error('Erro ao verificar acesso:', error);
+        console.error("Error checking auth:", error);
       } finally {
-        setIsChecking(false);
+        setIsCheckingAuth(false);
       }
     };
 
-    checkAccess();
+    checkAuth();
   }, [previewId, navigate]);
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleMagicLinkLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    if (!email || !email.includes('@')) {
+    if (!email || !email.trim()) {
       toast({
-        title: "Email inválido",
-        description: "Por favor, insira um endereço de email válido",
+        title: "Email necessário",
+        description: "Por favor, digite seu email para acessar a prévia.",
         variant: "destructive"
       });
       return;
     }
 
-    if (!previewId) {
-      toast({
-        title: "ID da prévia não encontrado",
-        description: "O link da prévia é inválido",
-        variant: "destructive"
-      });
-      return;
-    }
-
-    setLoading(true);
+    setIsSubmitting(true);
 
     try {
-      // 1. Enviar email de login mágico para o cliente
-      const { error } = await supabase.auth.signInWithOtp({
+      // Set up redirect URL with the current preview ID
+      const redirectTo = `${window.location.origin}/auth/callback?redirect=/preview/${previewId}`;
+      
+      console.log("Sending magic link with redirect:", redirectTo);
+      
+      // Send magic link email
+      const { error } = await supabase.auth.signInWithOtp({ 
         email,
         options: {
-          emailRedirectTo: `${window.location.origin}/auth/callback?redirect=/preview/${previewId}`,
+          emailRedirectTo: redirectTo
         }
       });
 
-      if (error) throw error;
-
-      // 2. Armazenar email e conceder acesso provisório
-      if (projectId) {
-        setPreviewAccessCookie(projectId);
-        setPreviewEmailCookie(projectId, email);
+      if (error) {
+        throw error;
       }
 
-      // 3. Mostrar mensagem de sucesso
+      // Show success message
       toast({
-        title: "Email enviado",
-        description: "Verifique sua caixa de entrada para acessar a prévia musical",
+        title: "Link enviado",
+        description: `Enviamos um link de acesso para ${email}. Por favor, verifique sua caixa de entrada.`,
       });
-
-      // 4. Redirecionar para a página de prévia (já terá cookie de acesso, mas ainda precisará confirmar o link no email para acesso futuro)
-      navigate(`/preview/${previewId}`);
+      
+      // We don't redirect here because user needs to click the magic link in email
     } catch (error: any) {
-      console.error('Erro ao enviar email:', error);
+      console.error("Magic link error:", error);
       toast({
-        title: "Erro ao enviar email",
-        description: error.message || "Não foi possível enviar o email de verificação",
+        title: "Erro",
+        description: error.message || "Houve um problema ao enviar o link. Tente novamente.",
         variant: "destructive"
       });
     } finally {
-      setLoading(false);
+      setIsSubmitting(false);
     }
   };
 
-  if (isChecking) {
+  if (isCheckingAuth) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-100 p-4">
+      <div className="min-h-screen flex items-center justify-center bg-gray-100">
         <div className="flex flex-col items-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-harmonia-green"></div>
-          <p className="mt-4 text-gray-600">Verificando acesso...</p>
+          <Loader2 className="h-10 w-10 animate-spin text-harmonia-green" />
+          <p className="mt-4 text-gray-600">Verificando autenticação...</p>
         </div>
+      </div>
+    );
+  }
+
+  if (!previewId) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gray-100">
+        <Card className="max-w-md w-full">
+          <CardHeader>
+            <CardTitle>Acesso não disponível</CardTitle>
+            <CardDescription>O código de prévia não foi encontrado.</CardDescription>
+          </CardHeader>
+          <CardFooter>
+            <Button 
+              className="w-full" 
+              onClick={() => navigate('/')}
+            >
+              Voltar para o início
+            </Button>
+          </CardFooter>
+        </Card>
       </div>
     );
   }
@@ -124,56 +132,42 @@ const MusicPreviewAuth: React.FC = () => {
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-100 p-4">
       <Card className="max-w-md w-full">
-        <CardHeader className="text-center">
-          <div className="mx-auto bg-harmonia-green/10 w-16 h-16 rounded-full flex items-center justify-center mb-4">
-            <MusicNoteIcon className="h-8 w-8 text-harmonia-green" />
-          </div>
-          <CardTitle className="text-2xl">Acesso à Prévia Musical</CardTitle>
+        <CardHeader>
+          <CardTitle className="text-xl">Acesso à Prévia</CardTitle>
           <CardDescription>
-            Por favor, verifique seu email para acessar sua prévia personalizada
+            Por favor, insira seu email para acessar a prévia musical.
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <form onSubmit={handleSubmit} className="space-y-4">
-            <div className="space-y-2">
-              <label htmlFor="email" className="text-sm font-medium text-gray-700">
-                Email
-              </label>
-              <div className="relative">
-                <Mail className="absolute left-3 top-3 h-5 w-5 text-gray-400" />
+          <form onSubmit={handleMagicLinkLogin}>
+            <div className="grid gap-4">
+              <div className="grid gap-2">
+                <Label htmlFor="email">Email</Label>
                 <Input
                   id="email"
                   type="email"
                   placeholder="seu@email.com"
-                  className="pl-10"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
+                  disabled={isSubmitting}
                   required
                 />
               </div>
-              <p className="text-xs text-gray-500">
-                Digite o email onde você recebeu a notificação sobre esta prévia musical.
-              </p>
+              <Button type="submit" className="w-full" disabled={isSubmitting}>
+                {isSubmitting ? (
+                  <>
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    Enviando...
+                  </>
+                ) : (
+                  "Acessar Prévia"
+                )}
+              </Button>
             </div>
-            
-            <Button
-              type="submit"
-              className="w-full bg-harmonia-green hover:bg-harmonia-green/90"
-              disabled={loading}
-            >
-              {loading ? (
-                <>
-                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  Enviando...
-                </>
-              ) : (
-                <>
-                  Acessar prévia
-                  <ArrowRight className="ml-2 h-4 w-4" />
-                </>
-              )}
-            </Button>
           </form>
+          <p className="text-xs text-gray-500 mt-4 text-center">
+            Enviaremos um link de acesso para o email cadastrado.
+          </p>
         </CardContent>
       </Card>
     </div>

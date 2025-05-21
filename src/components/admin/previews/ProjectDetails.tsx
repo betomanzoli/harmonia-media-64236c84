@@ -7,7 +7,6 @@ import { ArrowLeft, Plus, Copy, Clock, Mail, Phone } from 'lucide-react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { usePreviewProjects, VersionItem } from '@/hooks/admin/usePreviewProjects';
 import AddVersionDialog from './AddVersionDialog';
-import VersionCard from './VersionCard';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
 import { Textarea } from "@/components/ui/textarea";
 import ProjectHeader from './ProjectHeader';
@@ -18,7 +17,7 @@ import { emailService } from '@/lib/supabase/emailService';
 const ProjectDetails: React.FC = () => {
   const { projectId } = useParams<{ projectId: string }>();
   const navigate = useNavigate();
-  const { projects, getProjectById, updateProject, loadProjects } = usePreviewProjects();
+  const { getProjectById, updateProject, loadProjects } = usePreviewProjects();
   const { toast } = useToast();
   
   const [project, setProject] = useState<any>(null);
@@ -28,6 +27,9 @@ const ProjectDetails: React.FC = () => {
   const [emailContent, setEmailContent] = useState('');
   const [isLoading, setIsLoading] = useState(true);
   const [loadFailed, setLoadFailed] = useState(false);
+  
+  // Debug the issue
+  console.log("Current projectId:", projectId);
   
   useEffect(() => {
     if (!projectId) {
@@ -40,54 +42,27 @@ const ProjectDetails: React.FC = () => {
     const loadProjectData = async () => {
       try {
         setIsLoading(true);
-        console.log("ProjectDetails Component Mounted");
-        console.log("Project ID from URL:", projectId);
+        console.log("ProjectDetails Component - Loading project:", projectId);
         
-        // Ensure projects are loaded first
-        await loadProjects();
+        // Load projects first to ensure data is available
+        const projects = await loadProjects();
+        console.log("Projects loaded:", projects ? projects.length : 0);
         
         // Get all available project IDs for debugging
-        const availableIds = projects.map(p => p.id);
-        console.log("All available project IDs:", availableIds.join(', '));
+        const availableIds = projects?.map(p => p.id) || [];
+        console.log("Available project IDs:", availableIds.join(', '));
         
-        // Try multiple matching strategies
-        let projectData = null;
+        // Try direct project lookup
+        const projectData = getProjectById(projectId);
         
-        // Try exact match first
-        projectData = projects.find(p => p.id === projectId);
-        if (projectData) {
-          console.log("Found project with exact ID match");
-        }
-        
-        // If not found, try case-insensitive match
-        if (!projectData) {
-          projectData = projects.find(p => 
-            p.id.toLowerCase() === projectId.toLowerCase()
-          );
-          if (projectData) {
-            console.log("Found project with case-insensitive match");
-          }
-        }
-        
-        // If not found, try trimmed match (in case of whitespace issues)
-        if (!projectData) {
-          projectData = projects.find(p => 
-            p.id.trim() === projectId.trim()
-          );
-          if (projectData) {
-            console.log("Found project with trimmed match");
-          }
-        }
-        
-        // If found, set the project data
         if (projectData) {
           console.log("Project found:", projectData);
           setProject(projectData);
           setLoadFailed(false);
         } else {
-          console.error("Project not found for ID:", projectId);
+          console.error(`Project with ID ${projectId} not found`);
           
-          // Try to initialize with demo data if ID matches our demo ID
+          // Initialize fallback for demo project
           if (projectId === 'P0001') {
             console.log("Initializing demo project for P0001");
             const demoProject = {
@@ -129,7 +104,7 @@ const ProjectDetails: React.FC = () => {
     };
     
     loadProjectData();
-  }, [projectId, projects, loadProjects, toast]);
+  }, [projectId, loadProjects, toast, getProjectById]);
   
   // Handle project not found scenario with retry option
   const handleRetry = () => {
@@ -210,8 +185,6 @@ const ProjectDetails: React.FC = () => {
           <div className="mt-8 p-4 bg-gray-100 rounded-lg text-left">
             <h3 className="font-medium mb-2">Informações de diagnóstico:</h3>
             <p>ID do Projeto solicitado: {projectId}</p>
-            <p>Projetos disponíveis: {projects.length}</p>
-            <p>IDs disponíveis: {projects.map(p => p.id).join(', ')}</p>
           </div>
         </div>
       </div>
