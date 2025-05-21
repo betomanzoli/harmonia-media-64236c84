@@ -3,7 +3,7 @@ import React, { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import MusicPreviewSystem from '@/components/previews/MusicPreviewSystem';
 import { useToast } from '@/hooks/use-toast';
-import { checkPreviewAccessCookie, debugCookies } from '@/utils/authCookies';
+import { checkPreviewAccessCookie, debugCookies, isPrivateBrowsing } from '@/utils/authCookies';
 import { supabase } from '@/lib/supabase';
 import { Loader2 } from 'lucide-react';
 
@@ -14,6 +14,7 @@ const MusicPreviewPage: React.FC = () => {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [checkComplete, setCheckComplete] = useState(false);
+  const [isPrivateMode, setIsPrivateMode] = useState(false);
 
   useEffect(() => {
     // Verificar autenticação
@@ -25,15 +26,19 @@ const MusicPreviewPage: React.FC = () => {
       }
 
       try {
+        // Check if in private browsing mode
+        const privateModeDetected = await isPrivateBrowsing();
+        setIsPrivateMode(privateModeDetected);
+        console.log(`Navegador em modo privado: ${privateModeDetected}`);
+        
         // Log preview access for analytics and monitoring
         console.log(`Cliente acessando prévia: ${projectId}, data: ${new Date().toISOString()}`);
         console.log(`User agent: ${navigator.userAgent}`);
-        console.log(`Is private/incognito: ${!window.localStorage || localStorage.length === 0}`);
         
         // Debug cookies to help troubleshoot
         debugCookies();
         
-        // 1. Verificar se há cookie de acesso
+        // 1. Verificar se há cookie de acesso (agora com suporte melhorado para modo privado)
         const hasAccessCookie = checkPreviewAccessCookie(projectId);
         console.log("Has access cookie or localStorage:", hasAccessCookie);
         
@@ -116,6 +121,13 @@ const MusicPreviewPage: React.FC = () => {
 
   return (
     <div className="min-h-screen bg-gray-100 pt-8 pb-16">
+      {isPrivateMode && (
+        <div className="max-w-4xl mx-auto mb-4 p-3 bg-yellow-50 border border-yellow-200 rounded-md">
+          <p className="text-sm text-yellow-800">
+            Você está usando o navegador em modo privado. Suas preferências e feedback podem ser perdidos ao fechar esta janela.
+          </p>
+        </div>
+      )}
       <MusicPreviewSystem projectId={projectId} />
     </div>
   );

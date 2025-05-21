@@ -197,7 +197,7 @@ export const usePreviewProjects = () => {
     return projectId;
   }, [projects]);
   
-  // Update an existing project
+  // Update an existing project - FIXED to properly handle history entries
   const updateProject = useCallback((id: string, updates: Partial<ProjectItem>) => {
     if (!id) return false;
     
@@ -214,7 +214,7 @@ export const usePreviewProjects = () => {
     // Get the existing project
     const existingProject = projects[foundIndex];
     
-    // Handle history entries - append new to existing
+    // Handle history entries - append new to existing instead of replacing
     const updatedHistory = (() => {
       if (!updates.history) return existingProject.history || [];
       
@@ -244,7 +244,16 @@ export const usePreviewProjects = () => {
       )
     );
     
-    console.log("Project updated successfully");
+    // Also update in localStorage for persistence between page reloads
+    try {
+      const allProjects = [...projects];
+      allProjects[foundIndex] = updatedProject;
+      localStorage.setItem('harmonIA_projects', JSON.stringify(allProjects));
+      console.log("Project updated successfully in localStorage");
+    } catch (error) {
+      console.error("Failed to update project in localStorage:", error);
+    }
+    
     return true;
   }, [projects]);
   

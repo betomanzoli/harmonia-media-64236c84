@@ -1,12 +1,50 @@
 
 // Functions to manage preview access cookies
 
+/**
+ * Detects if the browser is likely in private/incognito mode
+ */
+export const isPrivateBrowsing = async (): Promise<boolean> => {
+  try {
+    // Method 1: Try to use localStorage (most reliable method)
+    const testKey = 'preview-test-key';
+    localStorage.setItem(testKey, '1');
+    localStorage.removeItem(testKey);
+    
+    // Method 2: Check for specific private mode characteristics
+    // This helps with some browsers where localStorage appears to work but doesn't persist
+    const ua = navigator.userAgent;
+    const isIOS = /iPad|iPhone|iPod/.test(ua);
+    const isSafari = /Safari/.test(ua) && !/Chrome/.test(ua);
+    
+    // Safari on iOS private mode has specific localStorage behavior
+    if (isIOS && isSafari) {
+      // Additional Safari-specific private mode detection
+      try {
+        window.openDatabase(null, null, null, null);
+        // If we got here, Safari is not in private mode
+      } catch (e) {
+        console.log("Detected Safari private mode");
+        return true;
+      }
+    }
+    
+    // If we get here, localStorage is working normally
+    console.log("Browser appears to be in standard mode");
+    return false;
+  } catch (e) {
+    // localStorage failed, likely in private browsing
+    console.log("Detected private browsing mode (localStorage unavailable)");
+    return true;
+  }
+};
+
 const isSecureContext = () => {
   return window.location.protocol === 'https:';
 };
 
 /**
- * Sets a cookie for preview access
+ * Sets a cookie for preview access with improved private browsing support
  */
 export const setPreviewAccessCookie = (projectId: string): void => {
   try {
@@ -21,32 +59,32 @@ export const setPreviewAccessCookie = (projectId: string): void => {
     // Build cookie with appropriate security settings based on protocol
     let cookieValue = `true; expires=${expiryDate.toUTCString()}; path=/`;
     
-    // Add Secure flag only when in HTTPS
-    if (isSecureContext()) {
-      cookieValue += '; Secure';
-      // Use SameSite=None only with Secure flag (required by modern browsers)
-      cookieValue += '; SameSite=None';
+    const isSecure = isSecureContext();
+    
+    // In secure contexts, use SameSite=None with Secure flag
+    if (isSecure) {
+      cookieValue += '; Secure; SameSite=None';
     } else {
-      // Use SameSite=Lax for HTTP
+      // In non-secure contexts (HTTP), use SameSite=Lax
       cookieValue += '; SameSite=Lax';
     }
     
     document.cookie = `preview_access_${projectId}=${cookieValue}`;
     
-    console.log(`Set preview access cookie for project: ${projectId}, expires: ${expiryDate.toUTCString()}, secure context: ${isSecureContext()}`);
+    console.log(`Set preview access cookie for project: ${projectId}, expires: ${expiryDate.toUTCString()}, secure context: ${isSecure}`);
+    
+    // Also store as a reliable fallback in localStorage for incognito/private browsing
+    try {
+      localStorage.setItem(`preview_access_${projectId}`, 'true');
+      localStorage.setItem(`preview_access_expiry_${projectId}`, expiryDate.toISOString());
+    } catch (e) {
+      console.warn('Could not set localStorage fallback for preview access', e);
+    }
     
     // Verify cookie was set correctly
     setTimeout(() => {
       const cookieExists = checkPreviewAccessCookie(projectId);
       console.log(`Cookie verification: ${cookieExists ? 'Successfully set' : 'Failed to set'}`);
-      
-      // Also store as a fallback in localStorage for incognito/private browsing
-      try {
-        localStorage.setItem(`preview_access_${projectId}`, 'true');
-        localStorage.setItem(`preview_access_expiry_${projectId}`, expiryDate.toISOString());
-      } catch (e) {
-        console.warn('Could not set localStorage fallback for preview access', e);
-      }
     }, 100);
   } catch (error) {
     console.error('Error setting preview access cookie:', error);
@@ -54,7 +92,7 @@ export const setPreviewAccessCookie = (projectId: string): void => {
 };
 
 /**
- * Checks if there's an access cookie for the project
+ * Checks if there's an access cookie for the project, with improved private browsing support
  */
 export const checkPreviewAccessCookie = (projectId: string): boolean => {
   try {
@@ -71,30 +109,31 @@ export const checkPreviewAccessCookie = (projectId: string): boolean => {
     
     const hasCookie = cookies.some(cookie => {
       const trimmedCookie = cookie.trim();
-      const result = trimmedCookie.startsWith(`${cookieName}=`);
-      console.log(`Checking cookie: ${trimmedCookie}, match: ${result}`);
-      return result;
+      return trimmedCookie.startsWith(`${cookieName}=`);
     });
     
-    // If not found in cookies, check localStorage as fallback
-    if (!hasCookie) {
-      try {
-        const localStorageAccess = localStorage.getItem(`preview_access_${projectId}`);
-        const expiryStr = localStorage.getItem(`preview_access_expiry_${projectId}`);
-        
-        if (localStorageAccess === 'true' && expiryStr) {
-          const expiry = new Date(expiryStr);
-          const isValid = expiry > new Date();
-          console.log(`Checking localStorage fallback: ${isValid ? 'Valid' : 'Expired'}`);
-          return isValid;
-        }
-      } catch (e) {
-        console.warn('Error checking localStorage fallback', e);
-      }
+    if (hasCookie) {
+      console.log(`Found valid cookie for project: ${projectId}`);
+      return true;
     }
     
-    console.log(`Checking preview access cookie for ${projectId}: ${hasCookie ? 'Found' : 'Not found'}`);
-    return hasCookie;
+    // If not found in cookies, check localStorage as fallback (crucial for private browsing)
+    try {
+      const localStorageAccess = localStorage.getItem(`preview_access_${projectId}`);
+      const expiryStr = localStorage.getItem(`preview_access_expiry_${projectId}`);
+      
+      if (localStorageAccess === 'true' && expiryStr) {
+        const expiry = new Date(expiryStr);
+        const isValid = expiry > new Date();
+        console.log(`Checking localStorage fallback: ${isValid ? 'Valid' : 'Expired'}`);
+        return isValid;
+      }
+    } catch (e) {
+      console.warn('Error checking localStorage fallback', e);
+    }
+    
+    console.log(`No valid access found for project ${projectId}`);
+    return false;
   } catch (error) {
     console.error('Error checking preview access cookie:', error);
     return false;
@@ -102,7 +141,7 @@ export const checkPreviewAccessCookie = (projectId: string): boolean => {
 };
 
 /**
- * Sets a cookie storing the email used to access a preview
+ * Sets a cookie storing the email used to access a preview, with improved private browsing support
  */
 export const setPreviewEmailCookie = (projectId: string, email: string): void => {
   try {
@@ -117,13 +156,13 @@ export const setPreviewEmailCookie = (projectId: string, email: string): void =>
     // Build cookie with appropriate security settings based on protocol
     let cookieValue = `${email}; expires=${expiryDate.toUTCString()}; path=/`;
     
-    // Add Secure flag only when in HTTPS
-    if (isSecureContext()) {
-      cookieValue += '; Secure';
-      // Use SameSite=None only with Secure flag (required by modern browsers)
-      cookieValue += '; SameSite=None';
+    const isSecure = isSecureContext();
+    
+    // In secure contexts, use SameSite=None with Secure flag
+    if (isSecure) {
+      cookieValue += '; Secure; SameSite=None';
     } else {
-      // Use SameSite=Lax for HTTP
+      // In non-secure contexts (HTTP), use SameSite=Lax
       cookieValue += '; SameSite=Lax';
     }
     
@@ -131,7 +170,7 @@ export const setPreviewEmailCookie = (projectId: string, email: string): void =>
     
     console.log(`Set preview email cookie for project: ${projectId}, email: ${email}`);
     
-    // Also store as a fallback in localStorage for incognito/private browsing
+    // Also store as a reliable fallback in localStorage for incognito/private browsing
     try {
       localStorage.setItem(`preview_email_${projectId}`, email);
       localStorage.setItem(`preview_email_expiry_${projectId}`, expiryDate.toISOString());
