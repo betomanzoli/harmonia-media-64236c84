@@ -1,12 +1,13 @@
 
 import React, { useState } from 'react';
-import { VersionItem } from '@/types/preview.types';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Textarea } from '@/components/ui/textarea';
+import { Label } from '@/components/ui/label';
+import { Switch } from '@/components/ui/switch';
+import { Plus, Trash } from 'lucide-react';
+import { VersionItem } from '@/hooks/admin/usePreviewProjects';
 import { useToast } from '@/hooks/use-toast';
-import FormHeader from './VersionForm/FormHeader';
-import AudioUrlInput from './VersionForm/AudioUrlInput';
-import AdditionalLinks from './VersionForm/AdditionalLinks';
-import RecommendedSwitch from './VersionForm/RecommendedSwitch';
-import FormFooter from './VersionForm/FormFooter';
 
 interface AdditionalLink {
   label: string;
@@ -18,7 +19,7 @@ interface AddVersionFormProps {
   onAddVersion: (version: VersionItem) => void;
   onCancel: () => void;
   isFinalVersion?: boolean;
-  packageType?: string;
+  packageType?: string;  // Added packageType property
 }
 
 const AddVersionForm: React.FC<AddVersionFormProps> = ({ 
@@ -133,40 +134,103 @@ const AddVersionForm: React.FC<AddVersionFormProps> = ({
 
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
-      <FormHeader 
-        title={title}
-        setTitle={setTitle}
-        description={description}
-        setDescription={setDescription}
-        isFinalVersion={isFinalVersion}
-      />
+      <div className="space-y-2">
+        <Label htmlFor="title">Título da Versão</Label>
+        <Input
+          id="title"
+          value={title}
+          onChange={(e) => setTitle(e.target.value)}
+          placeholder={isFinalVersion ? "Ex: Versão Final" : "Ex: Versão Acústica"}
+          required
+        />
+      </div>
       
-      <AudioUrlInput 
-        audioUrl={audioUrl}
-        setAudioUrl={setAudioUrl}
-      />
+      <div className="space-y-2">
+        <Label htmlFor="description">Descrição</Label>
+        <Textarea
+          id="description"
+          value={description}
+          onChange={(e) => setDescription(e.target.value)}
+          placeholder={isFinalVersion ? "Detalhes sobre a versão final" : "Detalhes sobre esta versão"}
+          rows={3}
+        />
+      </div>
+      
+      <div className="space-y-2">
+        <Label htmlFor="audioUrl">URL do Google Drive (principal)</Label>
+        <Input
+          id="audioUrl"
+          value={audioUrl}
+          onChange={(e) => setAudioUrl(e.target.value)}
+          placeholder="https://drive.google.com/file/d/..."
+          required
+        />
+      </div>
       
       {isFinalVersion && (
-        <AdditionalLinks 
-          links={additionalLinks}
-          onAddLink={handleAddLink}
-          onRemoveLink={handleRemoveLink}
-          onUpdateLinkLabel={updateLinkLabel}
-          onUpdateLinkUrl={updateLinkUrl}
-        />
+        <div className="space-y-3">
+          <div className="flex items-center justify-between">
+            <Label>Links Adicionais (Stems, etc)</Label>
+            <Button 
+              type="button" 
+              variant="outline" 
+              size="sm"
+              onClick={handleAddLink}
+            >
+              <Plus className="w-4 h-4 mr-1" /> Adicionar Link
+            </Button>
+          </div>
+          
+          {additionalLinks.map((link, index) => (
+            <div key={index} className="grid grid-cols-12 gap-2 items-center">
+              <div className="col-span-4">
+                <Input
+                  value={link.label}
+                  onChange={(e) => updateLinkLabel(index, e.target.value)}
+                  placeholder="Tipo (Ex: Vocal Stem)"
+                />
+              </div>
+              <div className="col-span-7">
+                <Input
+                  value={link.url}
+                  onChange={(e) => updateLinkUrl(index, e.target.value)}
+                  placeholder="https://drive.google.com/file/d/..."
+                />
+              </div>
+              <div className="col-span-1">
+                <Button 
+                  type="button" 
+                  variant="ghost" 
+                  size="icon"
+                  onClick={() => handleRemoveLink(index)}
+                >
+                  <Trash className="w-4 h-4 text-gray-500" />
+                </Button>
+              </div>
+            </div>
+          ))}
+        </div>
       )}
 
       {!isFinalVersion && (
-        <RecommendedSwitch 
-          recommended={recommended}
-          setRecommended={setRecommended}
-        />
+        <div className="flex items-center space-x-2">
+          <Switch 
+            id="recommended"
+            checked={recommended}
+            onCheckedChange={setRecommended}
+          />
+          <Label htmlFor="recommended">Marcar como recomendada</Label>
+        </div>
       )}
       
-      <FormFooter 
-        isLoading={isLoading}
-        onCancel={onCancel}
-      />
+      <div className="flex justify-end space-x-2 pt-4">
+        <Button type="button" variant="outline" onClick={onCancel}>
+          Cancelar
+        </Button>
+        <Button type="submit" disabled={isLoading}>
+          {isLoading ? 'Salvando...' : 'Salvar Versão'}
+        </Button>
+      </div>
     </form>
   );
 };

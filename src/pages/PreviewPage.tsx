@@ -13,9 +13,6 @@ import PreviewNextSteps from '@/components/previews/PreviewNextSteps';
 import GoogleDrivePreviewsList from '@/components/previews/GoogleDrivePreviewsList';
 import { usePreviewProject } from '@/hooks/previews/usePreviewProject';
 import { notificationService } from '@/services/notificationService';
-import { usePreviewAccess } from '@/hooks/usePreviewAccess';
-import EmailAccessCheck from '@/components/previews/EmailAccessCheck';
-import { Loader2 } from 'lucide-react';
 
 const PreviewPage: React.FC = () => {
   const { projectId } = useParams<{ projectId: string }>();
@@ -25,7 +22,6 @@ const PreviewPage: React.FC = () => {
   const [selectedPreview, setSelectedPreview] = useState<string | null>(null);
   const [feedback, setFeedback] = useState('');
   const { projectData, setProjectData, isLoading } = usePreviewProject(projectId || '');
-  const { isAuthorized, isCheckingAuth, setIsAuthorized } = usePreviewAccess(projectId || '');
   
   const handleSubmitFeedback = () => {
     if (!selectedPreview) {
@@ -76,60 +72,6 @@ const PreviewPage: React.FC = () => {
     
     setProjectData(prev => prev ? {...prev, status: 'approved'} : null);
   };
-  
-  // Check authentication status
-  if (!projectId) {
-    return (
-      <div className="min-h-screen bg-white text-gray-900">
-        <Header />
-        <div className="pt-24 pb-20 px-6 md:px-10 flex items-center justify-center">
-          <div className="text-center max-w-md">
-            <h1 className="text-2xl font-bold mb-4">Preview não encontrado</h1>
-            <p className="text-gray-400 mb-6">O código de preview fornecido não é válido.</p>
-            <button 
-              onClick={() => navigate('/')}
-              className="bg-harmonia-green hover:bg-harmonia-green/90 text-white px-4 py-2 rounded"
-            >
-              Voltar à página inicial
-            </button>
-          </div>
-        </div>
-        <Footer />
-      </div>
-    );
-  }
-  
-  // Show loading spinner while checking auth
-  if (isCheckingAuth) {
-    return (
-      <div className="min-h-screen bg-white text-gray-900">
-        <Header />
-        <div className="pt-24 pb-20 px-6 md:px-10 flex items-center justify-center">
-          <div className="text-center">
-            <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-harmonia-green"></div>
-            <p className="mt-4 text-gray-500">Verificando seu acesso...</p>
-          </div>
-        </div>
-        <Footer />
-      </div>
-    );
-  }
-  
-  // If not authorized, show email verification form
-  if (!isAuthorized) {
-    return (
-      <div className="min-h-screen bg-white text-gray-900">
-        <Header />
-        <div className="pt-24 pb-20 px-6 md:px-10 flex items-center justify-center">
-          <EmailAccessCheck 
-            projectId={projectId} 
-            onAccess={() => setIsAuthorized(true)} 
-          />
-        </div>
-        <Footer />
-      </div>
-    );
-  }
   
   if (isLoading) {
     return (
