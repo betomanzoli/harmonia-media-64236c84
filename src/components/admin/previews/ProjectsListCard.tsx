@@ -83,3 +83,6 @@ export const ProjectsListCard: React.FC<ProjectsListCardProps> = ({
     </Card>
   );
 };
+
+// Add a default export
+export default ProjectsListCard;

@@ -4,7 +4,7 @@ import { useLocation, useNavigate } from 'react-router-dom';
 import { ProjectItem } from '@/types/preview.types';
 import { usePreviewProjects } from '@/hooks/admin/usePreviewProjects';
 import AdminLayout from '@/components/admin/layout/AdminLayout';
-import { ProjectsListCard } from '@/components/admin/previews/ProjectsListCard';
+import ProjectsListCard from '@/components/admin/previews/ProjectsListCard';
 import ProjectsTable from '@/components/admin/previews/ProjectsTable';
 import PreviewsHeader from '@/components/admin/previews/PreviewsHeader';
 import NewProjectForm from '@/components/admin/previews/NewProjectForm';
