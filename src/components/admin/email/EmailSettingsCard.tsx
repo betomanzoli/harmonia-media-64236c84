@@ -13,24 +13,24 @@ const EmailSettingsCard: React.FC = () => {
   const { settings, isLoading, saveSetting } = useSystemSettings();
   const { toast } = useToast();
   const [adminEmail, setAdminEmail] = useState(settings.admin_email || '');
-  const [emailEnabled, setEmailEnabled] = useState(
-    // Properly convert value to boolean to avoid type comparison issues
-    settings.email_notifications_enabled === true || 
-    settings.email_notifications_enabled === 'true' ||
-    false
-  );
+  const [emailEnabled, setEmailEnabled] = useState(() => {
+    // Convert value to boolean safely
+    if (settings.email_notifications_enabled === true) return true;
+    if (String(settings.email_notifications_enabled) === 'true') return true;
+    return false;
+  });
   const [isSaving, setIsSaving] = useState(false);
 
-  // Atualizar os estados quando as configurações carregarem
+  // Update states when settings load
   useEffect(() => {
     if (settings) {
       setAdminEmail(settings.admin_email || '');
-      setEmailEnabled(
-        // Properly convert value to boolean to avoid type comparison issues
-        settings.email_notifications_enabled === true ||
-        String(settings.email_notifications_enabled) === 'true' ||
-        false
-      );
+      setEmailEnabled(() => {
+        // Convert value to boolean safely
+        if (settings.email_notifications_enabled === true) return true;
+        if (String(settings.email_notifications_enabled) === 'true') return true;
+        return false;
+      });
     }
   }, [settings]);
 
@@ -38,7 +38,7 @@ const EmailSettingsCard: React.FC = () => {
     setIsSaving(true);
     
     try {
-      // Salvar ambas as configurações
+      // Save both settings
       const result1 = await saveSetting('admin_email', adminEmail);
       const result2 = await saveSetting('email_notifications_enabled', emailEnabled.toString());
       
