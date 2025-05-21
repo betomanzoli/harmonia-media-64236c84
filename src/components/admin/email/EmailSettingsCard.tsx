@@ -14,9 +14,10 @@ const EmailSettingsCard: React.FC = () => {
   const { toast } = useToast();
   const [adminEmail, setAdminEmail] = useState(settings.admin_email || '');
   const [emailEnabled, setEmailEnabled] = useState(
-    // Convert to boolean explicitly to avoid type comparison issues
+    // Properly convert value to boolean to avoid type comparison issues
     settings.email_notifications_enabled === true || 
-    settings.email_notifications_enabled === 'true'
+    settings.email_notifications_enabled === 'true' ||
+    false
   );
   const [isSaving, setIsSaving] = useState(false);
 
@@ -25,9 +26,10 @@ const EmailSettingsCard: React.FC = () => {
     if (settings) {
       setAdminEmail(settings.admin_email || '');
       setEmailEnabled(
-        // Convert to boolean explicitly to avoid type comparison issues
+        // Properly convert value to boolean to avoid type comparison issues
         settings.email_notifications_enabled === true ||
-        settings.email_notifications_enabled === 'true'
+        String(settings.email_notifications_enabled) === 'true' ||
+        false
       );
     }
   }, [settings]);
