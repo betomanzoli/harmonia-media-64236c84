@@ -3,7 +3,7 @@ import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Calendar, Mail, Package, Calendar as CalendarIcon, Clock } from 'lucide-react';
 
-interface ProjectClientInfoProps {
+export interface ProjectClientInfoProps {
   clientName: string;
   clientEmail: string;
   packageType: string;

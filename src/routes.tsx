@@ -34,6 +34,9 @@ import AdminMarketing from './pages/admin/AdminMarketing';
 import AdminLayout from './components/admin/layout/AdminLayout';
 import AdminProjectManagement from './pages/admin/AdminProjectManagement';
 import ConversationalLandingPage from './pages/marketing/ConversationalLandingPage';
+import MusicPreviewAuth from './pages/MusicPreviewAuth';
+import MusicPreviewPage from './pages/MusicPreviewPage';
+import AuthCallback from './pages/AuthCallback';
 
 // These routes are supplementary to the main routes defined in App.tsx
 const additionalRoutes: RouteObject[] = [
@@ -87,11 +90,15 @@ const additionalRoutes: RouteObject[] = [
   },
   {
     path: '/preview/:projectId',
-    element: <PreviewPage />,
+    element: <MusicPreviewPage />,
   },
   {
-    path: '/preview/:previewId',
-    element: <MusicPreviews />,
+    path: '/auth/preview/:previewId',
+    element: <MusicPreviewAuth />,
+  },
+  {
+    path: '/auth/callback',
+    element: <AuthCallback />,
   },
   {
     path: '/feedback-confirmacao',
