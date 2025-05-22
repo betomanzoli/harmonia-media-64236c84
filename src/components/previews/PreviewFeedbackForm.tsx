@@ -3,6 +3,10 @@ import { Card } from "@/components/ui/card";
 import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
 import { ThumbsUp, SendHorizonal } from 'lucide-react';
+import { useToast } from '@/hooks/use-toast';
+import { useSearchParams } from 'react-router-dom';
+import { supabase } from '@/lib/supabase';
+
 interface PreviewFeedbackFormProps {
   feedback: string;
   onFeedbackChange: (value: string) => void;
@@ -11,7 +15,9 @@ interface PreviewFeedbackFormProps {
   status?: 'waiting' | 'feedback' | 'approved';
   selectedVersion?: string | null;
   versionTitle?: string;
+  projectId?: string;
 }
+
 const PreviewFeedbackForm: React.FC<PreviewFeedbackFormProps> = ({
   feedback,
   onFeedbackChange,
@@ -19,10 +25,15 @@ const PreviewFeedbackForm: React.FC<PreviewFeedbackFormProps> = ({
   onApprove,
   status = 'waiting',
   selectedVersion,
-  versionTitle
+  versionTitle,
+  projectId
 }) => {
   const isApproved = status === 'approved';
   const [localFeedback, setLocalFeedback] = useState(feedback);
+  const [searchParams] = useSearchParams();
+  const token = searchParams.get('token');
+  const { toast } = useToast();
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   // Store feedback in localStorage when it changes to persist between reloads
   useEffect(() => {
@@ -54,11 +65,127 @@ const PreviewFeedbackForm: React.FC<PreviewFeedbackFormProps> = ({
       }
     }
   }, [selectedVersion, onFeedbackChange]);
+
   const handleLocalFeedbackChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
     const newValue = e.target.value;
     setLocalFeedback(newValue);
     onFeedbackChange(newValue);
   };
+
+  // Enhanced submit handler that works with both token and cookie authentication
+  const handleSubmit = async () => {
+    if (!projectId) {
+      toast({
+        title: "Erro",
+        description: "ID do projeto não encontrado.",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    setIsSubmitting(true);
+
+    try {
+      // If we have a token, use the edge function for submission
+      if (token) {
+        const response = await fetch(`https://ivueqxyuflxsiecqvmgt.supabase.co/functions/v1/submit-preview-feedback`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            // No authorization header needed as function is public
+          },
+          body: JSON.stringify({
+            preview_id: projectId,
+            feedback: localFeedback,
+            status: 'feedback',
+            token: token,
+            selected_version: selectedVersion
+          })
+        });
+
+        const result = await response.json();
+        
+        if (!result.success) {
+          throw new Error(result.error || "Falha ao enviar feedback");
+        }
+      } else {
+        // Otherwise use the regular method
+        onSubmit(localFeedback);
+      }
+
+      toast({
+        title: "Feedback enviado",
+        description: "Seu feedback foi registrado com sucesso.",
+      });
+    } catch (error: any) {
+      console.error("Error submitting feedback:", error);
+      toast({
+        title: "Erro ao enviar feedback",
+        description: error.message || "Ocorreu um erro ao enviar seu feedback.",
+        variant: "destructive"
+      });
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  // Enhanced approve handler that works with both token and cookie authentication
+  const handleApprove = async () => {
+    if (!projectId) {
+      toast({
+        title: "Erro",
+        description: "ID do projeto não encontrado.",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    setIsSubmitting(true);
+
+    try {
+      // If we have a token, use the edge function for submission
+      if (token) {
+        const response = await fetch(`https://ivueqxyuflxsiecqvmgt.supabase.co/functions/v1/submit-preview-feedback`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            // No authorization header needed as function is public
+          },
+          body: JSON.stringify({
+            preview_id: projectId,
+            feedback: localFeedback,
+            status: 'approved',
+            token: token,
+            selected_version: selectedVersion
+          })
+        });
+
+        const result = await response.json();
+        
+        if (!result.success) {
+          throw new Error(result.error || "Falha ao aprovar versão");
+        }
+      } else {
+        // Otherwise use the regular method
+        onApprove(localFeedback);
+      }
+
+      toast({
+        title: "Versão aprovada",
+        description: "A aprovação foi registrada com sucesso.",
+      });
+    } catch (error: any) {
+      console.error("Error approving version:", error);
+      toast({
+        title: "Erro ao aprovar versão",
+        description: error.message || "Ocorreu um erro ao aprovar a versão.",
+        variant: "destructive"
+      });
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
   return <Card className="p-6 bg-white">
       <h2 className="text-xl font-bold text-black mb-4">Envie seu feedback</h2>
       
@@ -72,18 +199,26 @@ const PreviewFeedbackForm: React.FC<PreviewFeedbackFormProps> = ({
         <label htmlFor="feedback" className="block text-sm font-medium text-gray-700 mb-1">
           Comentários ou ajustes desejados:
         </label>
-        <Textarea id="feedback" placeholder="Escreva aqui suas observações, sugestões ou pedidos de ajustes..." value={localFeedback} onChange={handleLocalFeedbackChange} rows={5} className="w-full resize-none" disabled={isApproved} />
+        <Textarea id="feedback" placeholder="Escreva aqui suas observações, sugestões ou pedidos de ajustes..." value={localFeedback} onChange={handleLocalFeedbackChange} rows={5} className="w-full resize-none" disabled={isApproved || isSubmitting} />
       </div>
       
       <div className="flex flex-col sm:flex-row gap-3">
-        <Button onClick={() => onSubmit(localFeedback)} disabled={isApproved} className="flex-1 bg-blue-600 hover:bg-blue-700 text-white">
+        <Button 
+          onClick={handleSubmit} 
+          disabled={isApproved || isSubmitting} 
+          className="flex-1 bg-blue-600 hover:bg-blue-700 text-white"
+        >
           <SendHorizonal className="w-4 h-4 mr-2" />
-          Enviar Feedback
+          {isSubmitting ? 'Enviando...' : 'Enviar Feedback'}
         </Button>
         
-        <Button onClick={() => onApprove(localFeedback)} disabled={isApproved} className="flex-1 bg-green-600 hover:bg-green-700 text-white">
+        <Button 
+          onClick={handleApprove} 
+          disabled={isApproved || isSubmitting} 
+          className="flex-1 bg-green-600 hover:bg-green-700 text-white"
+        >
           <ThumbsUp className="w-4 h-4 mr-2" />
-          Aprovar esta versão
+          {isSubmitting ? 'Aprovando...' : 'Aprovar esta versão'}
         </Button>
       </div>
       
@@ -94,4 +229,5 @@ const PreviewFeedbackForm: React.FC<PreviewFeedbackFormProps> = ({
         </div>}
     </Card>;
 };
+
 export default PreviewFeedbackForm;
