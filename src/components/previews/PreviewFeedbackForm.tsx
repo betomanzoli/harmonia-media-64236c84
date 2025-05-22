@@ -5,7 +5,6 @@ import { Button } from "@/components/ui/button";
 import { ThumbsUp, SendHorizonal } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { useSearchParams } from 'react-router-dom';
-import { supabase } from '@/lib/supabase';
 
 interface PreviewFeedbackFormProps {
   feedback: string;
@@ -100,6 +99,7 @@ const PreviewFeedbackForm: React.FC<PreviewFeedbackFormProps> = ({
     try {
       // If we have a token, use the edge function for submission
       if (token) {
+        console.log("Enviando feedback via token para o projeto:", projectId);
         const response = await fetch(`https://ivueqxyuflxsiecqvmgt.supabase.co/functions/v1/submit-preview-feedback`, {
           method: 'POST',
           headers: {
@@ -114,18 +114,23 @@ const PreviewFeedbackForm: React.FC<PreviewFeedbackFormProps> = ({
           })
         });
 
+        console.log("Resposta da API (status):", response.status);
+        
         if (!response.ok) {
           const errorData = await response.json();
+          console.error("Erro na resposta da API:", errorData);
           throw new Error(errorData.error || "Falha ao enviar feedback");
         }
 
         const result = await response.json();
+        console.log("Resultado da API:", result);
         
         if (!result.success) {
           throw new Error(result.error || "Falha ao enviar feedback");
         }
       } else {
         // Otherwise use the regular method
+        console.log("Enviando feedback via método padrão");
         onSubmit(localFeedback);
       }
 
@@ -175,6 +180,7 @@ const PreviewFeedbackForm: React.FC<PreviewFeedbackFormProps> = ({
     try {
       // If we have a token, use the edge function for submission
       if (token) {
+        console.log("Enviando aprovação via token para o projeto:", projectId);
         const response = await fetch(`https://ivueqxyuflxsiecqvmgt.supabase.co/functions/v1/submit-preview-feedback`, {
           method: 'POST',
           headers: {
@@ -189,18 +195,23 @@ const PreviewFeedbackForm: React.FC<PreviewFeedbackFormProps> = ({
           })
         });
 
+        console.log("Resposta da API (status):", response.status);
+
         if (!response.ok) {
           const errorData = await response.json();
+          console.error("Erro na resposta da API:", errorData);
           throw new Error(errorData.error || "Falha ao aprovar versão");
         }
 
         const result = await response.json();
+        console.log("Resultado da API:", result);
         
         if (!result.success) {
           throw new Error(result.error || "Falha ao aprovar versão");
         }
       } else {
         // Otherwise use the regular method
+        console.log("Enviando aprovação via método padrão");
         onApprove(localFeedback);
       }
 

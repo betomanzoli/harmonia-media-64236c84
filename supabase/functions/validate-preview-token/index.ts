@@ -29,6 +29,7 @@ serve(async (req) => {
 
     // Validate inputs
     if (!token || !preview_id) {
+      console.error("Erro de validação: token ou preview_id ausentes");
       return new Response(
         JSON.stringify({ 
           valid: false, 
@@ -44,7 +45,7 @@ serve(async (req) => {
       );
     }
 
-    console.log(`Validating token for preview: ${preview_id}`);
+    console.log(`Validando token para prévia: ${preview_id}`);
 
     // Check if token exists and is valid
     const { data: tokenData, error: tokenError } = await supabase
@@ -56,7 +57,7 @@ serve(async (req) => {
       .maybeSingle();
 
     if (tokenError) {
-      console.error("Error validating token:", tokenError);
+      console.error("Erro validando token:", tokenError);
       return new Response(
         JSON.stringify({ 
           valid: false, 
@@ -73,7 +74,7 @@ serve(async (req) => {
     }
 
     if (!tokenData) {
-      console.log("Invalid or expired token");
+      console.log("Token inválido ou expirado");
       return new Response(
         JSON.stringify({ 
           valid: false, 
@@ -90,6 +91,9 @@ serve(async (req) => {
     }
 
     // Token is valid, fetch project data
+    console.log("Token válido, buscando dados do projeto");
+    
+    // Fetch from preview_projects table
     const { data: projectData, error: projectError } = await supabase
       .from("preview_projects")
       .select("*")
@@ -97,7 +101,7 @@ serve(async (req) => {
       .maybeSingle();
 
     if (projectError || !projectData) {
-      console.error("Error fetching project data:", projectError);
+      console.error("Erro buscando dados do projeto:", projectError);
       return new Response(
         JSON.stringify({ 
           valid: false, 
@@ -113,12 +117,20 @@ serve(async (req) => {
       );
     }
 
+    console.log("Projeto encontrado:", projectData.id);
+
     // Log access for analytics
-    await supabase.from("access_logs").insert({
-      preview_id: preview_id,
-      access_method: "token",
-      user_email: null // Anonymous access
-    });
+    try {
+      await supabase.from("access_logs").insert({
+        preview_id: preview_id,
+        access_method: "token",
+        user_email: null // Anonymous access
+      });
+      console.log("Acesso registrado no log");
+    } catch (logError) {
+      console.error("Erro ao registrar acesso:", logError);
+      // Continue mesmo se o log falhar
+    }
 
     return new Response(
       JSON.stringify({ 
@@ -134,7 +146,7 @@ serve(async (req) => {
       }
     );
   } catch (error) {
-    console.error("Unexpected error:", error);
+    console.error("Erro inesperado:", error);
     return new Response(
       JSON.stringify({ 
         valid: false, 

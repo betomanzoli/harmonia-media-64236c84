@@ -32,8 +32,9 @@ serve(async (req) => {
     
     try {
       requestData = await req.json();
+      console.log("Dados recebidos:", JSON.stringify(requestData));
     } catch (parseError) {
-      console.error("Error parsing request JSON:", parseError);
+      console.error("Erro ao analisar JSON da requisição:", parseError);
       return new Response(
         JSON.stringify({ 
           success: false, 
@@ -53,6 +54,7 @@ serve(async (req) => {
 
     // Validate inputs
     if (!preview_id || !status) {
+      console.error("Campos obrigatórios faltando:", { preview_id, status });
       return new Response(
         JSON.stringify({ 
           success: false, 
@@ -68,7 +70,7 @@ serve(async (req) => {
       );
     }
 
-    console.log(`Processing feedback for preview: ${preview_id}, status: ${status}`);
+    console.log(`Processando feedback para prévia: ${preview_id}, status: ${status}`);
     
     // Check access permissions - either via token or session
     let accessGranted = false;
@@ -76,6 +78,7 @@ serve(async (req) => {
 
     // First try token if provided
     if (token) {
+      console.log("Validando acesso via token");
       const { data: tokenData, error: tokenError } = await supabase
         .from("preview_tokens")
         .select("*")
@@ -85,12 +88,16 @@ serve(async (req) => {
         .maybeSingle();
 
       if (!tokenError && tokenData) {
+        console.log("Token válido encontrado");
         accessGranted = true;
+      } else {
+        console.error("Erro ou token inválido:", tokenError);
       }
     }
     
     // If token access fails, check if there's a valid session
     if (!accessGranted) {
+      console.log("Tentando validar acesso via logs");
       // Get the access log to see if there's a valid session
       const { data: accessData, error: accessError } = await supabase
         .from("access_logs")
@@ -101,11 +108,15 @@ serve(async (req) => {
         .maybeSingle();
 
       if (!accessError && accessData) {
+        console.log("Registro de acesso encontrado");
         accessGranted = true;
+      } else {
+        console.error("Sem registros de acesso válidos:", accessError);
       }
     }
 
     if (!accessGranted) {
+      console.error("Acesso não autorizado");
       return new Response(
         JSON.stringify({ 
           success: false, 
@@ -122,6 +133,7 @@ serve(async (req) => {
     }
 
     // Fetch current project data
+    console.log("Buscando dados do projeto");
     const { data: projectResult, error: projectError } = await supabase
       .from("preview_projects")
       .select("*")
@@ -129,7 +141,7 @@ serve(async (req) => {
       .maybeSingle();
 
     if (projectError || !projectResult) {
-      console.error("Error fetching project:", projectError);
+      console.error("Erro buscando projeto:", projectError);
       return new Response(
         JSON.stringify({ 
           success: false, 
@@ -146,6 +158,7 @@ serve(async (req) => {
     }
 
     projectData = projectResult;
+    console.log("Projeto encontrado:", projectData.id);
     
     // Create history entry
     const actionType = status === 'approved' 
@@ -162,6 +175,7 @@ serve(async (req) => {
     };
 
     // Update project with new status and feedback
+    console.log("Atualizando status do projeto para:", status);
     const { data: updateData, error: updateError } = await supabase
       .from("preview_projects")
       .update({
@@ -174,7 +188,7 @@ serve(async (req) => {
       .single();
 
     if (updateError) {
-      console.error("Error updating project status:", updateError);
+      console.error("Erro ao atualizar status do projeto:", updateError);
       return new Response(
         JSON.stringify({ 
           success: false, 
@@ -190,18 +204,24 @@ serve(async (req) => {
       );
     }
 
-    // Add history entry - Note: we cast preview_id (which is text) to UUID for project_history table
-    // This helps avoid the type mismatch error
+    // Add history entry
     try {
-      await supabase
+      console.log("Adicionando entrada no histórico");
+      const { data: historyData, error: historyError } = await supabase
         .from("project_history")
         .insert({
-          project_id: preview_id, // This will be properly handled with our new policy
+          project_id: preview_id,
           action: historyEntry.action,
           details: historyEntry.data
         });
+        
+      if (historyError) {
+        console.error("Erro ao adicionar histórico:", historyError);
+      } else {
+        console.log("Histórico adicionado com sucesso");
+      }
     } catch (historyError) {
-      console.error("Failed to add history entry:", historyError);
+      console.error("Falha ao adicionar entrada no histórico:", historyError);
       // Not returning error here as the main update was successful
     }
 
@@ -219,7 +239,7 @@ serve(async (req) => {
       }
     );
   } catch (error) {
-    console.error("Unexpected error:", error);
+    console.error("Erro inesperado:", error);
     return new Response(
       JSON.stringify({ 
         success: false, 
