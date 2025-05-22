@@ -7,32 +7,35 @@ export interface VersionItem {
   name: string;
   description?: string;
   fileId?: string;
-  audioUrl?: string;
-  dateAdded: string;
   recommended?: boolean;
-  final?: boolean;
-  additionalLinks?: Array<{ label: string; url: string }>;
+  audioUrl?: string;
+  url?: string;
+  additionalLinks?: string[];
+  createdAt?: string;
 }
 
 export interface ProjectItem {
   id: string;
   clientName: string;
-  status: string;
-  packageType?: string;
-  createdAt?: string;
-  versions: number;
-  lastActivityDate?: string;
-  versionsList?: VersionItem[];
-  feedback?: string;
-  expirationDate?: string;
-  history?: Array<{
-    action: string;
-    timestamp: string;
-    data?: { message?: string; [key: string]: any };
-  }>;
-  previewUrl?: string;
   clientEmail?: string;
-  clientPhone?: string;
+  packageType?: string;
+  status: 'waiting' | 'feedback' | 'approved' | 'pending';
+  createdAt: string;
+  versions: number;
+  previewUrl?: string;
+  expirationDate?: string;
+  lastActivityDate?: string;
+  feedback?: string;
+  versionsList?: VersionItem[];
+  history?: HistoryItem[];
+  description?: string;
+  title?: string;
+}
+
+export interface HistoryItem {
+  action: string;
+  timestamp: string;
+  data?: any;
 }
 
 export const usePreviewProjects = () => {
@@ -96,9 +99,10 @@ export const usePreviewProjects = () => {
           description: v.description || '',
           fileId: v.file_id,
           audioUrl: v.audio_url,
+          url: v.url,
+          additionalLinks: v.additional_links || [],
           dateAdded: new Date(v.created_at).toLocaleDateString('pt-BR'),
-          recommended: v.recommended || false,
-          additionalLinks: v.additional_links || []
+          recommended: v.recommended || false
         })) || [];
         
         // If version list is empty, create a default empty array

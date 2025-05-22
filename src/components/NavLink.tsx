@@ -1,5 +1,5 @@
 
-import React, { useEffect } from 'react';
+import React from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { cn } from '@/lib/utils';
 
@@ -32,7 +32,7 @@ const NavLink: React.FC<NavLinkProps> = ({ href, children, className, onClick, e
     }
   };
   
-  // Se o link começar com # ou for para a página atual com uma âncora
+  // If the link starts with # or is for the current page with an anchor
   if (href.startsWith('#')) {
     return (
       <a 
@@ -48,7 +48,7 @@ const NavLink: React.FC<NavLinkProps> = ({ href, children, className, onClick, e
     );
   }
   
-  // Se for um link externo
+  // If it's an external link
   if (external || href.startsWith('http')) {
     return (
       <a 
@@ -66,7 +66,7 @@ const NavLink: React.FC<NavLinkProps> = ({ href, children, className, onClick, e
     );
   }
   
-  // Para navegação interna
+  // For internal navigation, use Link from react-router-dom
   return (
     <Link 
       to={href} 
