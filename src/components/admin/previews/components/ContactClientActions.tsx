@@ -36,6 +36,7 @@ const ContactClientActions: React.FC<ContactClientActionsProps> = ({
     }
     
     // Format the phone number for WhatsApp if needed
+    // Ensure phone is in international format (it should already be stored that way)
     const phone = clientPhone.replace(/\D/g, '');
     window.open(`https://wa.me/${phone}`, '_blank');
   };
