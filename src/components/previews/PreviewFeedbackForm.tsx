@@ -1,9 +1,9 @@
+
 import React from 'react';
 import { Card } from "@/components/ui/card";
 import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
 import { ThumbsUp, SendHorizonal } from 'lucide-react';
-
 interface PreviewFeedbackFormProps {
   feedback: string;
   onFeedbackChange: (value: string) => void;
@@ -12,9 +12,7 @@ interface PreviewFeedbackFormProps {
   status?: 'waiting' | 'feedback' | 'approved';
   selectedVersion?: string | null;
   versionTitle?: string;
-  projectId?: string;  // Added projectId
 }
-
 const PreviewFeedbackForm: React.FC<PreviewFeedbackFormProps> = ({
   feedback,
   onFeedbackChange,
@@ -22,8 +20,7 @@ const PreviewFeedbackForm: React.FC<PreviewFeedbackFormProps> = ({
   onApprove,
   status = 'waiting',
   selectedVersion,
-  versionTitle,
-  projectId
+  versionTitle
 }) => {
   const isApproved = status === 'approved';
   return <Card className="p-6 bg-white">

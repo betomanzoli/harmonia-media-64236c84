@@ -6,7 +6,6 @@ import { useToast } from '@/hooks/use-toast';
 import { checkPreviewAccessCookie, debugCookies } from '@/utils/authCookies';
 import { supabase } from '@/lib/supabase';
 import { Loader2 } from 'lucide-react';
-import { notificationService } from '@/services/notificationService';
 
 const MusicPreviewPage: React.FC = () => {
   const { projectId } = useParams<{ projectId: string }>();
@@ -112,56 +111,6 @@ const MusicPreviewPage: React.FC = () => {
     checkAuth();
   }, [projectId, navigate, toast]);
 
-  // Handle feedback notifications to sync with admin panels
-  const handleFeedbackSubmitted = (status: 'feedback' | 'approved', comments: string) => {
-    console.log(`Feedback submitted: ${status}, comments: ${comments}`);
-    
-    // Notify the system about the feedback/approval
-    if (status === 'feedback') {
-      notificationService.notify('feedback_received', {
-        projectId,
-        message: comments,
-        timestamp: new Date().toISOString()
-      });
-    } else if (status === 'approved') {
-      notificationService.notify('preview_approved', {
-        projectId,
-        versionId: 'latest', // We don't have the version ID here
-        message: comments,
-        timestamp: new Date().toISOString()
-      });
-    }
-    
-    // Update the project status in the database directly
-    supabase
-      .from('preview_projects')
-      .update({
-        status: status,
-        feedback: comments,
-        last_activity_date: new Date().toISOString()
-      })
-      .eq('id', projectId)
-      .then(({ error }) => {
-        if (error) {
-          console.error('Error updating project status:', error);
-        }
-      });
-      
-    // Also update the main projects table
-    supabase
-      .from('projects')
-      .update({
-        status: status,
-        updated_at: new Date().toISOString()
-      })
-      .eq('id', projectId)
-      .then(({ error }) => {
-        if (error) {
-          console.error('Error updating main project status:', error);
-        }
-      });
-  };
-
   // The component should only render content once the check is complete
   // This prevents flash of content before redirect
   if (!checkComplete || isLoading) {
@@ -207,10 +156,7 @@ const MusicPreviewPage: React.FC = () => {
 
   return (
     <div className="min-h-screen bg-gray-100 pt-8 pb-16">
-      <MusicPreviewSystem 
-        projectId={projectId} 
-        onFeedbackSubmitted={handleFeedbackSubmitted}
-      />
+      <MusicPreviewSystem projectId={projectId} />
     </div>
   );
 };

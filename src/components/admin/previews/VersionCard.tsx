@@ -1,7 +1,6 @@
-
 import React, { useState } from "react";
 import { Card, CardContent } from "@/components/ui/card";
-import { VersionItem, AdditionalLink } from '@/hooks/admin/usePreviewProjects';
+import { VersionItem } from '@/hooks/admin/usePreviewProjects';
 import { Button } from "@/components/ui/button";
 import { Play, Pause, Trash2, CheckCircle, Copy, ExternalLink } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
