@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
@@ -9,9 +8,11 @@ import { ProjectItem } from '@/hooks/admin/usePreviewProjects';
 
 interface NewProjectFormProps {
   onSubmit: (project: ProjectItem) => void;
+  // Add the alternative prop name to support both implementations
+  onAddProject?: (project: ProjectItem) => void;
 }
 
-const NewProjectForm: React.FC<NewProjectFormProps> = ({ onSubmit }) => {
+const NewProjectForm: React.FC<NewProjectFormProps> = ({ onSubmit, onAddProject }) => {
   const [formData, setFormData] = useState({
     clientName: '',
     clientEmail: '',
@@ -57,7 +58,13 @@ const NewProjectForm: React.FC<NewProjectFormProps> = ({ onSubmit }) => {
       description: formData.description
     };
     
-    onSubmit(newProject);
+    // Call the appropriate callback function - use onAddProject if provided, otherwise use onSubmit
+    if (onAddProject) {
+      onAddProject(newProject);
+    } else {
+      onSubmit(newProject);
+    }
+    
     resetForm();
   };
 
