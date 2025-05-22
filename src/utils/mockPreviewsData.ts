@@ -1,5 +1,5 @@
 
-import { ProjectItem } from '@/hooks/admin/usePreviewProjects';
+import { ProjectItem, AdditionalLink } from '@/hooks/admin/usePreviewProjects';
 
 export const generateMockPreviews = (): ProjectItem[] => {
   const today = new Date();
@@ -31,7 +31,8 @@ export const generateMockPreviews = (): ProjectItem[] => {
           description: "Versão com violão e voz, arranjo minimalista",
           audioUrl: "https://samplelib.com/lib/preview/mp3/sample-3s.mp3",
           dateAdded: "10/04/2025",
-          recommended: false
+          recommended: false,
+          final: false
         },
         {
           id: "v2",
@@ -39,7 +40,8 @@ export const generateMockPreviews = (): ProjectItem[] => {
           description: "Versão com banda completa, arranjo final sugerido",
           audioUrl: "https://samplelib.com/lib/preview/mp3/sample-6s.mp3",
           dateAdded: "12/04/2025",
-          recommended: true
+          recommended: true,
+          final: false
         }
       ]
     },
@@ -61,7 +63,8 @@ export const generateMockPreviews = (): ProjectItem[] => {
           description: "Primeira versão para avaliação",
           audioUrl: "https://samplelib.com/lib/preview/mp3/sample-9s.mp3",
           dateAdded: "05/04/2025",
-          recommended: true
+          recommended: true,
+          final: false
         }
       ],
       feedback: "Gostei muito da melodia, mas gostaria que o ritmo fosse um pouco mais rápido e que os vocais estivessem mais presentes na mixagem."
@@ -84,7 +87,8 @@ export const generateMockPreviews = (): ProjectItem[] => {
           description: "Primeiro conceito da música",
           audioUrl: "https://samplelib.com/lib/preview/mp3/sample-12s.mp3",
           dateAdded: "01/04/2025",
-          recommended: false
+          recommended: false,
+          final: false
         },
         {
           id: "v2",
@@ -92,7 +96,8 @@ export const generateMockPreviews = (): ProjectItem[] => {
           description: "Ajustes após primeiro feedback",
           audioUrl: "https://samplelib.com/lib/preview/mp3/sample-15s.mp3",
           dateAdded: "02/04/2025",
-          recommended: false
+          recommended: false,
+          final: false
         },
         {
           id: "v3",
@@ -100,7 +105,8 @@ export const generateMockPreviews = (): ProjectItem[] => {
           description: "Versão aprovada pelo cliente",
           audioUrl: "https://samplelib.com/lib/preview/mp3/sample-9s.mp3",
           dateAdded: "03/04/2025",
-          recommended: true
+          recommended: true,
+          final: true
         }
       ]
     }

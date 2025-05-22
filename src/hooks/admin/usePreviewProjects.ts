@@ -1,6 +1,12 @@
+
 import { useState, useCallback, useEffect } from 'react';
 import { supabase } from '@/lib/supabase';
 import { useToast } from '@/hooks/use-toast';
+
+export interface AdditionalLink {
+  label: string;
+  url: string;
+}
 
 export interface VersionItem {
   id: string;
@@ -10,8 +16,10 @@ export interface VersionItem {
   recommended?: boolean;
   audioUrl?: string;
   url?: string;
-  additionalLinks?: string[];
+  additionalLinks?: AdditionalLink[];
   createdAt?: string;
+  dateAdded?: string;
+  final?: boolean;
 }
 
 export interface ProjectItem {

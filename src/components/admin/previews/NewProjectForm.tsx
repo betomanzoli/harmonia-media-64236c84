@@ -1,13 +1,14 @@
+
 import React, { useState } from 'react';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
-import { v4 as uuidv4 } from 'uuid'; // Make sure uuid is installed
+import { ProjectItem } from '@/hooks/admin/usePreviewProjects';
 
 interface NewProjectFormProps {
-  onSubmit: (project: any) => void;
+  onSubmit: (project: ProjectItem) => void;
 }
 
 const NewProjectForm: React.FC<NewProjectFormProps> = ({ onSubmit }) => {
@@ -42,13 +43,13 @@ const NewProjectForm: React.FC<NewProjectFormProps> = ({ onSubmit }) => {
     // Generate a unique ID for the project
     const projectId = `P${Math.floor(1000 + Math.random() * 9000)}`; // Or use uuidv4()
     
-    const newProject = {
-      id: projectId, // Add this line to include an ID
+    const newProject: ProjectItem = {
+      id: projectId,
       clientName: formData.clientName,
       clientEmail: formData.clientEmail,
       packageType: formData.packageType,
       createdAt: new Date().toISOString(),
-      status: 'waiting' as const,
+      status: 'waiting',
       versions: 0,
       previewUrl: `${window.location.origin}/preview/${projectId}`,
       expirationDate: new Date(Date.now() + 14 * 24 * 60 * 60 * 1000).toISOString(),

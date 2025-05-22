@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -6,20 +5,15 @@ import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
 import { Plus, Trash } from 'lucide-react';
-import { VersionItem } from '@/hooks/admin/usePreviewProjects';
+import { VersionItem, AdditionalLink } from '@/hooks/admin/usePreviewProjects';
 import { useToast } from '@/hooks/use-toast';
-
-interface AdditionalLink {
-  label: string;
-  url: string;
-}
 
 interface AddVersionFormProps {
   projectId: string;
   onAddVersion: (version: VersionItem) => void;
   onCancel: () => void;
   isFinalVersion?: boolean;
-  packageType?: string;  // Added packageType property
+  packageType?: string;
 }
 
 const AddVersionForm: React.FC<AddVersionFormProps> = ({ 
@@ -107,7 +101,7 @@ const AddVersionForm: React.FC<AddVersionFormProps> = ({
         id: `v${Date.now()}`,
         name: title,
         description,
-        audioUrl: audioUrl,  // Using the correct property name
+        audioUrl: audioUrl,
         fileId,
         dateAdded: new Date().toLocaleDateString('pt-BR'),
         recommended,
