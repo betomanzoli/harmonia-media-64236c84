@@ -1,111 +1,167 @@
 
-import { OrderData, OrderProgressStatus, OrderProgressStep } from './types';
+import { OrderData } from './types';
 
 export const mockOrderData: OrderData[] = [
   {
-    orderId: "HAR-2025-1001",
-    clientName: "João Silva",
-    packageType: "profissional",
-    status: "Em Produção",
+    orderId: 'HAR-2025-1001',
+    clientName: 'Roberto Silva',
+    packageType: 'Premium',
+    status: 'Em Andamento',
     currentStep: 3,
-    orderDate: "01/03/2025",
-    expectedDelivery: "20/05/2025",
-    previewLink: "/previews/HAR-2025-1001",
+    orderDate: '10/05/2025',
+    expectedDelivery: '24/05/2025',
+    previewLink: '/preview/HAR-2025-1001',
     progress: [
       {
         step: 1,
-        title: "Briefing Recebido",
-        description: "Seu briefing foi recebido e está sendo analisado pela nossa equipe.",
-        date: "01/03/2025",
-        status: "completed" as OrderProgressStatus,
-        icon: "FileText"
+        status: 'completed',
+        title: 'Briefing',
+        description: 'Seu briefing foi recebido e aprovado',
+        icon: 'FileText',
+        date: '10/05/2025'
       },
       {
         step: 2,
-        title: "Análise Inicial",
-        description: "Nossa equipe analisou seu briefing e definiu a abordagem criativa.",
-        date: "05/03/2025",
-        status: "completed" as OrderProgressStatus,
-        icon: "Package"
+        status: 'completed',
+        title: 'Análise Musical',
+        description: 'Definição do conceito e direção da música',
+        icon: 'BookOpen',
+        date: '12/05/2025'
       },
       {
         step: 3,
-        title: "Composição",
-        description: "Nossos compositores estão trabalhando na sua música personalizada.",
-        date: "10/03/2025",
-        status: "current" as OrderProgressStatus,
-        icon: "Music"
+        status: 'current',
+        title: 'Composição',
+        description: 'Criação da melodia e estrutura musical',
+        icon: 'Music',
+        date: null
       },
       {
         step: 4,
-        title: "Produção",
-        description: "Fase de arranjo e produção musical da sua composição.",
-        date: null,
-        status: "pending" as OrderProgressStatus,
-        icon: "Settings"
+        status: 'pending',
+        title: 'Produção',
+        description: 'Arranjo e produção musical',
+        icon: 'Settings',
+        date: null
       },
       {
         step: 5,
-        title: "Apresentação",
-        description: "Prévias da sua música estão prontas para sua avaliação.",
-        date: null,
-        status: "pending" as OrderProgressStatus,
-        icon: "Headphones"
+        status: 'pending',
+        title: 'Finalização',
+        description: 'Mixagem e masterização final',
+        icon: 'Check',
+        date: null
       }
-    ]
+    ],
+    hasPreview: false,
+    pendingAction: null
   },
   {
-    orderId: "HAR-2025-1002",
-    clientName: "Maria Oliveira",
-    packageType: "premium",
-    status: "Aguardando Feedback",
-    currentStep: 5,
-    orderDate: "15/02/2025",
-    expectedDelivery: "15/05/2025",
-    previewLink: "/previews/HAR-2025-1002",
-    hasPreview: true,
-    pendingAction: "feedback",
+    orderId: 'HAR-2025-1002',
+    clientName: 'Ana Oliveira',
+    packageType: 'Profissional',
+    status: 'Aguardando Avaliação',
+    currentStep: 4,
+    orderDate: '05/05/2025',
+    expectedDelivery: '19/05/2025',
+    previewLink: '/preview/HAR-2025-1002',
     progress: [
       {
         step: 1,
-        title: "Briefing Recebido",
-        description: "Seu briefing foi recebido e está sendo analisado pela nossa equipe.",
-        date: "15/02/2025",
-        status: "completed" as OrderProgressStatus,
-        icon: "FileText"
+        status: 'completed',
+        title: 'Briefing',
+        description: 'Seu briefing foi recebido e aprovado',
+        icon: 'FileText',
+        date: '05/05/2025'
       },
       {
         step: 2,
-        title: "Análise Inicial",
-        description: "Nossa equipe analisou seu briefing e definiu a abordagem criativa.",
-        date: "18/02/2025",
-        status: "completed" as OrderProgressStatus,
-        icon: "Package"
+        status: 'completed',
+        title: 'Análise Musical',
+        description: 'Definição do conceito e direção da música',
+        icon: 'BookOpen',
+        date: '07/05/2025'
       },
       {
         step: 3,
-        title: "Composição",
-        description: "Nossos compositores trabalharam na sua música personalizada.",
-        date: "25/02/2025",
-        status: "completed" as OrderProgressStatus,
-        icon: "Music"
+        status: 'completed',
+        title: 'Composição',
+        description: 'Criação da melodia e estrutura musical',
+        icon: 'Music',
+        date: '10/05/2025'
       },
       {
         step: 4,
-        title: "Produção",
-        description: "Fase de arranjo e produção musical da sua composição.",
-        date: "05/03/2025",
-        status: "completed" as OrderProgressStatus,
-        icon: "Settings"
+        status: 'current',
+        title: 'Prévias',
+        description: 'Versões para sua avaliação estão prontas',
+        icon: 'Headphones',
+        date: '15/05/2025'
       },
       {
         step: 5,
-        title: "Apresentação",
-        description: "Prévias da sua música estão prontas para sua avaliação.",
-        date: "10/03/2025",
-        status: "current" as OrderProgressStatus,
-        icon: "Headphones"
+        status: 'pending',
+        title: 'Finalização',
+        description: 'Mixagem e masterização final',
+        icon: 'Check',
+        date: null
       }
-    ]
+    ],
+    hasPreview: true,
+    pendingAction: 'feedback'
+  },
+  {
+    orderId: 'HAR-2025-1003',
+    clientName: 'Carlos Santos',
+    packageType: 'Essencial',
+    status: 'Concluído',
+    currentStep: 5,
+    orderDate: '01/05/2025',
+    expectedDelivery: '15/05/2025',
+    previewLink: '/preview/HAR-2025-1003',
+    progress: [
+      {
+        step: 1,
+        status: 'completed',
+        title: 'Briefing',
+        description: 'Seu briefing foi recebido e aprovado',
+        icon: 'FileText',
+        date: '01/05/2025'
+      },
+      {
+        step: 2,
+        status: 'completed',
+        title: 'Análise Musical',
+        description: 'Definição do conceito e direção da música',
+        icon: 'BookOpen',
+        date: '03/05/2025'
+      },
+      {
+        step: 3,
+        status: 'completed',
+        title: 'Composição',
+        description: 'Criação da melodia e estrutura musical',
+        icon: 'Music',
+        date: '07/05/2025'
+      },
+      {
+        step: 4,
+        status: 'completed',
+        title: 'Prévias',
+        description: 'Versões para sua avaliação foram aprovadas',
+        icon: 'Headphones',
+        date: '10/05/2025'
+      },
+      {
+        step: 5,
+        status: 'completed',
+        title: 'Finalização',
+        description: 'Entrega final realizada',
+        icon: 'Check',
+        date: '14/05/2025'
+      }
+    ],
+    hasPreview: true,
+    pendingAction: null
   }
 ];

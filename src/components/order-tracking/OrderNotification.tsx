@@ -1,58 +1,70 @@
 
 import React from 'react';
-import { Card } from "@/components/ui/card";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
-import { AlertCircle, Clock, ExternalLink } from 'lucide-react';
-import { Link } from 'react-router-dom';
+import { AlertCircle, X } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 
-interface OrderNotificationProps {
+export interface OrderNotificationProps {
   orderId: string;
-  hasPreview?: boolean;
   previewLink: string | null;
   pendingAction: 'feedback' | null;
+  onClose: () => void;
 }
 
 const OrderNotification: React.FC<OrderNotificationProps> = ({ 
   orderId, 
-  hasPreview = false, 
   previewLink, 
-  pendingAction 
+  pendingAction,
+  onClose 
 }) => {
+  const navigate = useNavigate();
+  
+  const handleAction = () => {
+    if (previewLink) {
+      navigate(previewLink);
+    } else {
+      // Fallback to preview by ID if direct link is not available
+      navigate(`/preview/${orderId}`);
+    }
+  };
+  
   return (
-    <Card className={`mb-8 p-6 border-l-4 ${pendingAction ? 'border-l-amber-500' : 'border-l-harmonia-green'}`}>
-      <div className="flex items-start gap-3">
-        {pendingAction ? (
-          <AlertCircle className="w-6 h-6 text-amber-500 flex-shrink-0 mt-1" />
-        ) : (
-          <Clock className="w-6 h-6 text-harmonia-green flex-shrink-0 mt-1" />
-        )}
-        
+    <Alert variant="default" className="mb-6 bg-amber-50 border-amber-200">
+      <div className="flex items-start">
+        <AlertCircle className="h-4 w-4 text-amber-600 mt-1 mr-2" />
         <div className="flex-grow">
-          <h3 className="font-bold text-lg mb-2">
-            {pendingAction 
-              ? "Ação necessária: Sua avaliação é importante" 
-              : "Atualização do seu projeto musical"}
-          </h3>
+          <AlertTitle className="text-amber-800">Ação pendente</AlertTitle>
+          <AlertDescription className="text-amber-700">
+            {pendingAction === 'feedback' ? (
+              <span>
+                Seu pedido <strong>{orderId}</strong> está aguardando seu feedback sobre as prévias enviadas.
+              </span>
+            ) : (
+              <span>
+                Existe uma ação pendente para seu pedido <strong>{orderId}</strong>.
+              </span>
+            )}
+          </AlertDescription>
           
-          <p className="text-gray-600 mb-4">
-            {pendingAction 
-              ? "Temos novidades em seu projeto! Prévias musicais estão disponíveis para sua avaliação. Por favor, ouça cada versão e compartilhe sua opinião para que possamos ajustar conforme suas preferências."
-              : "Fizemos progresso em sua música personalizada! Confira as atualizações e próximos passos abaixo."}
-          </p>
-          
-          {hasPreview && previewLink && (
-            <Link to={previewLink}>
-              <Button className="bg-harmonia-green hover:bg-harmonia-green/90 flex items-center gap-2">
-                {pendingAction 
-                  ? "Avaliar prévias musicais" 
-                  : "Ver prévias disponíveis"}
-                <ExternalLink className="w-4 h-4" />
-              </Button>
-            </Link>
-          )}
+          <Button 
+            onClick={handleAction}
+            className="mt-2 bg-amber-600 hover:bg-amber-700 text-white"
+            size="sm"
+          >
+            Ver prévias
+          </Button>
         </div>
+        
+        <button 
+          onClick={onClose}
+          className="text-amber-600 hover:text-amber-800"
+          aria-label="Fechar notificação"
+        >
+          <X className="h-4 w-4" />
+        </button>
       </div>
-    </Card>
+    </Alert>
   );
 };
 
