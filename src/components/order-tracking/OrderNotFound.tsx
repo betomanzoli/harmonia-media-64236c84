@@ -2,11 +2,7 @@
 import React from 'react';
 import { Button } from "@/components/ui/button";
 import { MessageSquare, ArrowRight } from 'lucide-react';
-import { siteConfig } from '@/config/site';
-
-interface OrderNotFoundProps {
-  onChatAssistant: () => void;
-}
+import { OrderNotFoundProps } from './types';
 
 const OrderNotFound: React.FC<OrderNotFoundProps> = ({ onChatAssistant }) => {
   return (

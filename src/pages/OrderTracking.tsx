@@ -1,3 +1,4 @@
+
 import React, { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import OrderDetails from '@/components/order-tracking/OrderDetails';
@@ -6,18 +7,19 @@ import OrderSearch from '@/components/order-tracking/OrderSearch';
 import ChatbotHelper from '@/components/order-tracking/ChatbotHelper';
 import OrderNotification from '@/components/order-tracking/OrderNotification';
 import { mockOrderData } from '@/components/order-tracking/mockOrderData';
-import { OrderDetails as OrderDetailsType } from '@/components/order-tracking/types';
-import { usePreviewProjects, PreviewProject } from '@/hooks/admin/usePreviewProjects'; // Alterado de ProjectItem para PreviewProject
+import { OrderData } from '@/components/order-tracking/types';
+import { openChatAssistant } from '@/components/order-tracking/ChatbotHelper';
+import { PreviewProject } from '@/hooks/admin/usePreviewProjects';
 
 const OrderTracking: React.FC = () => {
   const { orderId } = useParams<{ orderId: string }>();
   const navigate = useNavigate();
-  const [order, setOrder] = useState<OrderDetailsType | undefined>(undefined);
+  const [order, setOrder] = useState<OrderData | undefined>(undefined);
 
   useEffect(() => {
     if (orderId) {
       // Simulate fetching order data
-      const fetchedOrder = mockOrderData.find(o => o.orderNumber === orderId);
+      const fetchedOrder = mockOrderData.find(o => o.orderId === orderId);
       setOrder(fetchedOrder);
     }
   }, [orderId]);
@@ -35,11 +37,16 @@ const OrderTracking: React.FC = () => {
           {order ? (
             <>
               <OrderDetails order={order} />
-              <OrderNotification />
+              <OrderNotification 
+                orderId={order.orderId}
+                hasPreview={order.hasPreview}
+                previewLink={order.previewLink}
+                pendingAction={order.pendingAction || null}
+              />
               <ChatbotHelper />
             </>
           ) : orderId ? (
-            <OrderNotFound orderId={orderId} />
+            <OrderNotFound onChatAssistant={openChatAssistant} />
           ) : null}
         </div>
       </div>
