@@ -2,7 +2,7 @@
 import React from 'react';
 import { Button } from "@/components/ui/button";
 import { MessageSquare } from 'lucide-react';
-import { openChatAssistant } from '@/components/order-tracking/ChatbotHelper';
+import { openChatAssistant } from '@/components/order-tracking/ChatbotHelperFunctions';
 
 // Componente de botão de ajuda do chatbot
 const ChatbotHelper: React.FC = () => {
