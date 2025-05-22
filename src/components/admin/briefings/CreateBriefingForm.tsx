@@ -1,191 +1,200 @@
 
 import React from 'react';
-import { DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
-import { Form } from "@/components/ui/form";
-import { useCreateBriefingForm, BriefingFormValues } from '@/hooks/useCreateBriefingForm';
-import ClientInfoSection from './FormSections/ClientInfoSection';
-import PackageInfoSection from './FormSections/PackageInfoSection';
-import FormFooter from './FormSections/FormFooter';
+import { useForm } from 'react-hook-form';
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Textarea } from "@/components/ui/textarea";
 import { supabase } from '@/lib/supabase';
-import { useToast } from '@/hooks/use-toast';
-import { usePreviewProjects } from '@/hooks/admin/usePreviewProjects';
-import { useCustomers } from '@/hooks/admin/useCustomers';
-import webhookService from '@/services/webhookService';
 
 interface CreateBriefingFormProps {
   onClose: () => void;
-  onSubmit: (data: BriefingFormValues) => void;
-  initialData?: any;
+  onSubmit: (data: any) => void;
+  initialData?: {
+    name?: string;
+    email?: string;
+    phone?: string;
+    id?: string;
+  };
 }
 
-const CreateBriefingForm: React.FC<CreateBriefingFormProps> = ({ onClose, onSubmit, initialData }) => {
-  const { form, isSubmitting, handleSubmit } = useCreateBriefingForm({ 
-    onSubmit,
-    initialData
+const CreateBriefingForm: React.FC<CreateBriefingFormProps> = ({ 
+  onClose, 
+  onSubmit,
+  initialData 
+}) => {
+  const { register, handleSubmit, formState: { errors }, setValue } = useForm({
+    defaultValues: {
+      name: initialData?.name || '',
+      email: initialData?.email || '',
+      phone: initialData?.phone || '',
+      packageType: '',
+      description: ''
+    }
   });
-  const { toast } = useToast();
-  const { addProject } = usePreviewProjects();
-  const { addCustomer, getCustomerByEmail } = useCustomers();
 
-  const processFormSubmit = async (data: BriefingFormValues) => {
+  // Set initial values if provided
+  React.useEffect(() => {
+    if (initialData) {
+      setValue('name', initialData.name || '');
+      setValue('email', initialData.email || '');
+      setValue('phone', initialData.phone || '');
+    }
+  }, [initialData, setValue]);
+
+  const handleFormSubmit = async (data: any) => {
     try {
-      // First, check if client exists or create a new one
-      let clientId: string | null = null;
+      console.log("Form data to submit:", data);
       
-      const { data: existingClients, error: clientError } = await supabase
-        .from('clients')
-        .select('id')
-        .eq('email', data.email)
-        .limit(1);
+      // Check if this is an existing client or a new one
+      let clientId = initialData?.id;
       
-      if (clientError) {
-        throw clientError;
-      }
-      
-      if (existingClients && existingClients.length > 0) {
-        clientId = existingClients[0].id;
-        
-        // Atualizar informações do cliente caso tenha mudado
-        await supabase
+      if (!clientId) {
+        // Create a new client record
+        const { data: newClient, error: clientError } = await supabase
           .from('clients')
-          .update({
+          .insert({
             name: data.name,
-            phone: data.phone.fullNumber // Armazenar no formato internacional
+            email: data.email,
+            phone: data.phone || null
           })
-          .eq('id', clientId);
-      } else {
-        // Create a new client
-        const { data: newClient, error: newClientError } = await supabase
-          .from('clients')
-          .insert([
-            {
-              name: data.name,
-              email: data.email,
-              phone: data.phone.fullNumber // Armazenar no formato internacional
-            }
-          ])
-          .select()
+          .select('id')
           .single();
         
-        if (newClientError) {
-          throw newClientError;
+        if (clientError) {
+          throw clientError;
         }
         
         clientId = newClient.id;
-        
-        // Enviar notificação de novo cliente
-        await webhookService.sendItemNotification('new_customer', {
-          name: data.name,
-          email: data.email,
-          phone: data.phone.fullNumber,
-          createdAt: new Date().toISOString()
-        });
+        console.log("Created new client with ID:", clientId);
       }
       
-      // Create the briefing
+      // Create the briefing record
       const { data: newBriefing, error: briefingError } = await supabase
         .from('briefings')
-        .insert([
-          {
-            client_id: clientId,
-            package_type: data.packageType as 'essencial' | 'profissional' | 'premium' | 'qualification',
-            status: 'pending',
-            data: {
-              description: data.description || 'Novo briefing',
-              name: data.name,
-              email: data.email,
-              phone: data.phone.fullNumber,
-              packageType: data.packageType,
-              createdAt: new Date().toISOString(),
-            }
+        .insert({
+          client_id: clientId,
+          package_type: data.packageType,
+          status: 'pending',
+          data: {
+            description: data.description,
+            clientName: data.name,
+            clientEmail: data.email,
+            packageType: data.packageType
           }
-        ])
-        .select()
+        })
+        .select('id')
         .single();
       
       if (briefingError) {
         throw briefingError;
       }
       
-      // Also add or update customer in the local storage system
-      let existingCustomer = getCustomerByEmail(data.email);
-      if (!existingCustomer) {
-        addCustomer({
-          name: data.name,
-          email: data.email,
-          phone: data.phone.fullNumber,
-          status: 'active',
-          projects: 1,
-          createdAt: new Date().toISOString()
-        });
-      }
+      console.log("Created new briefing with ID:", newBriefing.id);
       
-      // Generate a consistent project ID based on the briefing ID
-      // Use the Supabase briefing ID directly to ensure consistency
-      const projectId = newBriefing.id;
-      
-      // Create a preview project automatically linked to this briefing
-      const expirationDate = new Date();
-      expirationDate.setDate(expirationDate.getDate() + 30); // 30-day expiration
-      
-      const previewProject = {
-        id: projectId, // Use the same ID as the briefing
-        clientName: data.name,
-        clientEmail: data.email,
-        clientPhone: data.phone.fullNumber,
+      // Pass the data to the parent component
+      onSubmit({
+        id: newBriefing.id,
+        name: data.name,
+        email: data.email,
+        phone: data.phone,
         packageType: data.packageType,
-        createdAt: new Date().toLocaleDateString('pt-BR'),
-        status: 'waiting' as const,
-        versions: 0,
-        previewUrl: `/preview/${projectId}`,
-        expirationDate: expirationDate.toLocaleDateString('pt-BR'),
-        lastActivityDate: new Date().toLocaleDateString('pt-BR'),
-        briefingId: newBriefing.id,
-        versionsList: []
-      };
-      
-      // Add the project with a specific ID instead of generating a new one
-      addProject(previewProject);
-      console.log(`Created project ${projectId} for briefing ${newBriefing.id}`);
-      
-      // Call the passed onSubmit to update the UI
-      onSubmit(data);
-      
-      toast({
-        title: "Briefing criado",
-        description: `O briefing foi criado com sucesso e o projeto de prévia foi iniciado automaticamente.`
+        description: data.description,
+        clientId: clientId
       });
-      
-    } catch (error: any) {
-      console.error('Error creating briefing:', error);
-      toast({
-        title: "Erro ao criar briefing",
-        description: error.message || "Não foi possível criar o briefing",
-        variant: "destructive"
-      });
-      
-      // Re-throw so the form stays in error state
+    } catch (error) {
+      console.error("Error creating briefing:", error);
       throw error;
     }
   };
 
   return (
-    <div className="space-y-4">
+    <>
       <DialogHeader>
         <DialogTitle>Criar Novo Briefing</DialogTitle>
-        <DialogDescription>
-          Preencha os detalhes abaixo para adicionar um novo briefing.
-        </DialogDescription>
       </DialogHeader>
-
-      <Form {...form}>
-        <form onSubmit={form.handleSubmit(data => handleSubmit(data, processFormSubmit))} className="space-y-4">
-          <ClientInfoSection form={form} />
-          <PackageInfoSection form={form} />
-          <FormFooter isSubmitting={isSubmitting} onClose={onClose} />
-        </form>
-      </Form>
-    </div>
+      
+      <form onSubmit={handleSubmit(handleFormSubmit)} className="space-y-4 mt-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div className="space-y-2">
+            <Label htmlFor="name">Nome do Cliente</Label>
+            <Input
+              id="name"
+              placeholder="Nome completo"
+              {...register("name", { required: "Nome é obrigatório" })}
+            />
+            {errors.name && (
+              <p className="text-sm text-red-500">{errors.name.message as string}</p>
+            )}
+          </div>
+          
+          <div className="space-y-2">
+            <Label htmlFor="email">Email</Label>
+            <Input
+              id="email"
+              type="email"
+              placeholder="cliente@exemplo.com"
+              {...register("email", { required: "Email é obrigatório" })}
+            />
+            {errors.email && (
+              <p className="text-sm text-red-500">{errors.email.message as string}</p>
+            )}
+          </div>
+        </div>
+        
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div className="space-y-2">
+            <Label htmlFor="phone">Telefone</Label>
+            <Input
+              id="phone"
+              placeholder="(00) 00000-0000"
+              {...register("phone")}
+            />
+          </div>
+          
+          <div className="space-y-2">
+            <Label htmlFor="packageType">Pacote</Label>
+            <Select onValueChange={(value) => setValue("packageType", value)}>
+              <SelectTrigger>
+                <SelectValue placeholder="Selecione um pacote" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="essencial">Essencial</SelectItem>
+                <SelectItem value="personalizado">Personalizado</SelectItem>
+                <SelectItem value="premium">Premium</SelectItem>
+                <SelectItem value="arquivo">Arquivo</SelectItem>
+                <SelectItem value="outro">Outro</SelectItem>
+              </SelectContent>
+            </Select>
+            {errors.packageType && (
+              <p className="text-sm text-red-500">{errors.packageType.message as string}</p>
+            )}
+          </div>
+        </div>
+        
+        <div className="space-y-2">
+          <Label htmlFor="description">Descrição do Projeto</Label>
+          <Textarea
+            id="description"
+            placeholder="Detalhes sobre o projeto..."
+            className="min-h-[100px]"
+            {...register("description", { required: "Descrição é obrigatória" })}
+          />
+          {errors.description && (
+            <p className="text-sm text-red-500">{errors.description.message as string}</p>
+          )}
+        </div>
+        
+        <DialogFooter>
+          <Button type="button" variant="outline" onClick={onClose}>
+            Cancelar
+          </Button>
+          <Button type="submit">Criar Briefing</Button>
+        </DialogFooter>
+      </form>
+    </>
   );
 };
 

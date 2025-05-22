@@ -1,79 +1,75 @@
 
-import React from 'react';
+type EventCallback = (data: any) => void;
+type EventName = 'preview_approved' | 'feedback_received' | 'project_updated' | 'project_created' | string;
 
-// Tipos de notificações que o sistema pode enviar
-export type NotificationType = 
-  | 'project_created' 
-  | 'project_updated' 
-  | 'preview_added' 
-  | 'preview_approved' 
-  | 'feedback_received'
-  | 'briefing_submitted'
-  | 'client_created';
+export type NotificationType = 'success' | 'error' | 'warning' | 'info';
 
-// Interface para os ouvintes de notificação
-interface NotificationListener {
-  type: NotificationType;
-  callback: (data: any) => void;
+interface NotificationOptions {
+  autoClose?: boolean;
+  duration?: number;
 }
 
-// Classe para gerenciar as notificações do sistema
 class NotificationService {
-  private listeners: NotificationListener[] = [];
-
-  // Adiciona um ouvinte para um tipo específico de notificação
-  public subscribe(type: NotificationType, callback: (data: any) => void) {
-    this.listeners.push({ type, callback });
+  private subscribers: Map<EventName, EventCallback[]> = new Map();
+  
+  /**
+   * Subscribe to an event
+   * @param eventName The name of the event to subscribe to
+   * @param callback The callback to execute when the event is triggered
+   * @returns A function to unsubscribe
+   */
+  subscribe(eventName: EventName, callback: EventCallback): () => void {
+    if (!this.subscribers.has(eventName)) {
+      this.subscribers.set(eventName, []);
+    }
     
-    // Retorna uma função para cancelar a inscrição
+    this.subscribers.get(eventName)!.push(callback);
+    
+    // Return unsubscribe function
     return () => {
-      this.listeners = this.listeners.filter(
-        listener => !(listener.type === type && listener.callback === callback)
-      );
+      const callbacks = this.subscribers.get(eventName) || [];
+      const index = callbacks.indexOf(callback);
+      if (index !== -1) {
+        callbacks.splice(index, 1);
+      }
     };
-  }
-
-  // Notifica todos os ouvintes que estão escutando um tipo específico de notificação
-  public notify(type: NotificationType, data: any) {
-    console.log(`Notificação enviada: ${type}`, data);
-    
-    this.listeners
-      .filter(listener => listener.type === type)
-      .forEach(listener => {
-        try {
-          listener.callback(data);
-        } catch (error) {
-          console.error(`Erro ao processar notificação ${type}:`, error);
-        }
-      });
   }
   
-  // Função para mostrar as estatísticas de notificação
-  public getStats() {
-    const countByType = this.listeners.reduce((acc, listener) => {
-      acc[listener.type] = (acc[listener.type] || 0) + 1;
-      return acc;
-    }, {} as Record<string, number>);
+  /**
+   * Notify all subscribers of an event
+   * @param eventName The name of the event
+   * @param data The data to pass to subscribers
+   */
+  notify(eventName: EventName, data: any): void {
+    if (!this.subscribers.has(eventName)) {
+      return;
+    }
     
-    return {
-      total: this.listeners.length,
-      byType: countByType
-    };
+    const callbacks = this.subscribers.get(eventName)!;
+    callbacks.forEach(callback => {
+      try {
+        callback(data);
+      } catch (error) {
+        console.error(`Error executing callback for event ${eventName}:`, error);
+      }
+    });
+  }
+  
+  /**
+   * Clear all subscribers for a specific event
+   * @param eventName The event name to clear
+   */
+  clearEvent(eventName: EventName): void {
+    this.subscribers.delete(eventName);
+  }
+  
+  /**
+   * Clear all subscribers
+   */
+  clearAll(): void {
+    this.subscribers.clear();
   }
 }
 
-// Exporta uma única instância do serviço de notificação
+// Create and export a singleton instance
 export const notificationService = new NotificationService();
-
-// Hooks de utilidade para usar o sistema de notificação
-export const useNotificationSubscription = (type: NotificationType, callback: (data: any) => void) => {
-  React.useEffect(() => {
-    const unsubscribe = notificationService.subscribe(type, callback);
-    return unsubscribe;
-  }, [type, callback]);
-};
-
-// Função para enviar notificações de forma mais simples
-export const sendNotification = (type: NotificationType, data: any) => {
-  notificationService.notify(type, data);
-};

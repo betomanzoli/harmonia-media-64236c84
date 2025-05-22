@@ -1,6 +1,5 @@
 
 import { useState, useCallback, useEffect } from 'react';
-import { createId } from '@paralleldrive/cuid2';
 import { supabase } from '@/lib/supabase';
 import { useToast } from '@/hooks/use-toast';
 
@@ -15,6 +14,8 @@ export interface Briefing {
   description?: string;
   projectCreated: boolean;
   formData?: any;
+  projectId?: string;
+  clientId?: string;
 }
 
 export const useBriefings = () => {
@@ -28,6 +29,7 @@ export const useBriefings = () => {
     setIsLoading(true);
     
     try {
+      console.log("Fetching briefings from Supabase...");
       const { data, error } = await supabase
         .from('briefings')
         .select(`
@@ -39,6 +41,7 @@ export const useBriefings = () => {
           updated_at,
           completed_at,
           project_id,
+          client_id,
           clients (
             id,
             name,
@@ -53,6 +56,8 @@ export const useBriefings = () => {
         throw error;
       }
       
+      console.log("Received briefings:", data);
+      
       // Transform data to match the Briefing interface
       const transformedBriefings: Briefing[] = data.map((item: any) => ({
         id: item.id,
@@ -64,10 +69,13 @@ export const useBriefings = () => {
         status: item.status,
         description: item.data?.description || 'Sem descrição',
         projectCreated: !!item.project_id,
+        projectId: item.project_id,
+        clientId: item.client_id,
         formData: item.data || {}
       }));
       
       setBriefings(transformedBriefings);
+      console.log("Transformed briefings:", transformedBriefings);
     } catch (err: any) {
       console.error('Error fetching briefings:', err);
       setError(err.message);
@@ -86,19 +94,72 @@ export const useBriefings = () => {
     fetchBriefings();
   }, [fetchBriefings]);
 
-  const addBriefing = useCallback((briefing: Omit<Briefing, 'id'>) => {
-    const id = `B${String(briefings.length + 1).padStart(3, '0')}`;
-    const newBriefing = { ...briefing, id };
-    
-    // Store in local state
-    setBriefings(prev => [...prev, newBriefing as Briefing]);
-    
-    // Save to localStorage for persistence
-    const allBriefings = [...briefings, newBriefing as Briefing];
-    localStorage.setItem('harmonIA_briefings', JSON.stringify(allBriefings));
-    
-    return id;
-  }, [briefings]);
+  const addBriefing = useCallback(async (briefing: Omit<Briefing, 'id'>) => {
+    try {
+      // Create a briefing in Supabase
+      const { data, error } = await supabase
+        .from('briefings')
+        .insert({
+          client_id: briefing.clientId,
+          package_type: briefing.packageType,
+          status: 'pending',
+          data: {
+            description: briefing.description,
+            clientName: briefing.name,
+            clientEmail: briefing.email,
+            packageType: briefing.packageType
+          }
+        })
+        .select()
+        .single();
+      
+      if (error) {
+        throw error;
+      }
+      
+      // Add the new briefing to state
+      const newBriefing: Briefing = {
+        id: data.id,
+        name: briefing.name,
+        email: briefing.email,
+        phone: briefing.phone || '',
+        packageType: briefing.packageType,
+        createdAt: new Date().toLocaleDateString('pt-BR'),
+        status: 'pending',
+        description: briefing.description,
+        projectCreated: false,
+        clientId: briefing.clientId,
+        formData: {
+          description: briefing.description,
+          clientName: briefing.name,
+          clientEmail: briefing.email,
+          packageType: briefing.packageType
+        }
+      };
+      
+      setBriefings(prev => [newBriefing, ...prev]);
+      
+      return data.id;
+    } catch (err: any) {
+      console.error('Error adding briefing:', err);
+      toast({
+        title: "Erro ao adicionar briefing",
+        description: err.message || "Não foi possível adicionar o briefing",
+        variant: "destructive"
+      });
+      
+      // Fallback to localStorage if Supabase fails
+      const id = `B${String(briefings.length + 1).padStart(3, '0')}`;
+      const newBriefing = { ...briefing, id, projectCreated: false } as Briefing;
+      setBriefings(prev => [newBriefing, ...prev]);
+      
+      // Save to localStorage for persistence
+      const allBriefings = [newBriefing, ...briefings];
+      localStorage.setItem('harmonIA_briefings', JSON.stringify(allBriefings));
+      
+      return id;
+    }
+  }, [briefings, toast]);
 
   const updateBriefingStatus = useCallback(async (id: string, status: Briefing['status']) => {
     try {
@@ -235,13 +296,19 @@ export const useBriefings = () => {
 
   const createProjectFromBriefing = useCallback(async (briefing: Briefing) => {
     try {
+      console.log("Creating project from briefing:", briefing);
+      
+      // Generate a custom project ID if needed (for consistency in previews)
+      const projectId = `P${Date.now().toString().slice(-6)}`;
+      
       // Create a project in Supabase
       const { data: project, error } = await supabase
         .from('projects')
         .insert([
           {
+            id: projectId, // Use our custom ID
             title: briefing.description || `Projeto para ${briefing.name}`,
-            client_id: briefing.formData?.client_id,
+            client_id: briefing.clientId,
             status: 'waiting',
             description: briefing.description
           }
@@ -253,10 +320,39 @@ export const useBriefings = () => {
         throw error;
       }
       
+      console.log("Created project:", project);
+      
+      // Also create preview_projects entry
+      const { data: previewProject, error: previewError } = await supabase
+        .from('preview_projects')
+        .insert([
+          {
+            id: project.id,
+            client_name: briefing.name,
+            project_title: briefing.description || `Projeto para ${briefing.name}`,
+            package_type: briefing.packageType,
+            status: 'waiting',
+            created_at: new Date().toISOString(),
+            expiration_date: new Date(Date.now() + 14 * 24 * 60 * 60 * 1000).toISOString(),
+            last_activity_date: new Date().toISOString()
+          }
+        ])
+        .select()
+        .single();
+        
+      if (previewError) {
+        console.error("Error creating preview project:", previewError);
+      } else {
+        console.log("Created preview project:", previewProject);
+      }
+      
       // Update the briefing to link it to the project
       const { error: updateError } = await supabase
         .from('briefings')
-        .update({ project_id: project.id })
+        .update({ 
+          project_id: project.id,
+          status: 'completed'
+        })
         .eq('id', briefing.id);
       
       if (updateError) {
@@ -266,13 +362,23 @@ export const useBriefings = () => {
       // Update local state
       setBriefings(prev => 
         prev.map(b => 
-          b.id === briefing.id ? { ...b, projectCreated: true } : b
+          b.id === briefing.id ? { 
+            ...b, 
+            projectCreated: true,
+            status: 'completed',
+            projectId: project.id
+          } : b
         )
       );
       
       // Save updated briefings
       const updatedBriefings = briefings.map(b => 
-        b.id === briefing.id ? { ...b, projectCreated: true } : b
+        b.id === briefing.id ? { 
+          ...b, 
+          projectCreated: true,
+          status: 'completed',
+          projectId: project.id
+        } : b
       );
       localStorage.setItem('harmonIA_briefings', JSON.stringify(updatedBriefings));
       
@@ -309,7 +415,7 @@ export const useBriefings = () => {
       // Update local state
       setBriefings(prev => 
         prev.map(b => 
-          b.id === briefing.id ? { ...b, projectCreated: true } : b
+          b.id === briefing.id ? { ...b, projectCreated: true, projectId } : b
         )
       );
       
