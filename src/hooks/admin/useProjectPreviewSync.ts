@@ -30,7 +30,7 @@ export const useProjectPreviewSync = () => {
         
         // Make sure we persist to localStorage immediately
         const updatedData = { 
-          status: 'approved' as 'waiting' | 'feedback' | 'approved',
+          status: 'approved',
           lastActivityDate: new Date().toLocaleDateString('pt-BR'),
           history: [...currentHistory, historyEntry],
           feedback: data.comments || ''
@@ -84,7 +84,7 @@ export const useProjectPreviewSync = () => {
         
         // Make sure we persist to localStorage immediately
         const updatedData = { 
-          status: 'feedback' as 'waiting' | 'feedback' | 'approved',
+          status: 'feedback',
           feedback: data.message,
           lastActivityDate: new Date().toLocaleDateString('pt-BR'),
           history: [...currentHistory, historyEntry]
