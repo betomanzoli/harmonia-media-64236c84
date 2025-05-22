@@ -88,7 +88,7 @@ const MusicPreviewPage: React.FC = () => {
           setIsAuthenticated(true);
           window.scrollTo(0, 0);
         } else {
-          // Redirecionar para página de autenticação
+          // Redirecionar para página de autenticação - ENSURE AUTH PAGES ARE ACCESSED FIRST
           console.log("No authentication found, redirecting to auth page");
           console.log("Navigation to:", `/auth/preview/${projectId}`);
           
