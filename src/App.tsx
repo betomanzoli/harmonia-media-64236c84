@@ -93,13 +93,12 @@ const AppRoutes: React.FC = () => {
         <Route path="/deliveries/:projectId" element={<FinalDeliveryPage />} />
         
         {/* Authentication routes */}
-        <Route path="/auth/preview/:projectId" element={<MusicPreviewAuth />} />
+        <Route path="/auth/preview/:previewId" element={<MusicPreviewAuth />} />
         <Route path="/auth/callback" element={<AuthCallback />} />
         <Route path="/auth-error" element={<AuthError />} />
         
         {/* Preview routes */}
         <Route path="/preview/:projectId" element={<PreviewPage />} />
-        <Route path="/preview/:previewId" element={<MusicPreviews />} />
         <Route path="/feedback-confirmacao" element={<FeedbackConfirmation />} />
         <Route path="/como-funciona" element={<ServicesPage />} />
         

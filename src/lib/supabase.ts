@@ -77,7 +77,21 @@ const createQueryBuilder = (tableName: string) => {
             ...queryChain
           };
         },
-        limit: async (limit: number) => createMockQueryResponse()
+        limit: async (limit: number) => createMockQueryResponse(),
+        gt: (column: string, value: any) => {
+          console.log(`Simulando filtro WHERE ${column} > ${value}`);
+          return {
+            ...baseQueryResponse,
+            ...queryChain
+          };
+        },
+        lt: (column: string, value: any) => {
+          console.log(`Simulando filtro WHERE ${column} < ${value}`);
+          return {
+            ...baseQueryResponse,
+            ...queryChain
+          };
+        }
       };
     },
     insert: async (data: any, options?: any) => {
@@ -125,8 +139,11 @@ export const emailService = {
     return { success: true };
   },
   
-  sendPreviewNotification: async (email: string, name: string, previewUrl: string) => {
+  sendPreviewNotification: async (email: string, name: string, previewUrl: string, message?: string) => {
     console.log(`Simulando envio de notificação de prévia para ${email} (${name}): ${previewUrl}`);
+    if (message) {
+      console.log(`Mensagem personalizada: ${message}`);
+    }
     console.log('Em produção, um email seria enviado com o link para as prévias');
     return { success: true };
   },
@@ -137,5 +154,32 @@ export const emailService = {
     return { success: true };
   }
 };
+
+// Initialize missing tables that may not exist
+(async () => {
+  // Initialize preview_tokens table for magic links authentication
+  const { error: tokensError } = await supabase.rpc('check_if_table_exists', { table_name: 'preview_tokens' });
+  
+  if (tokensError) {
+    console.log('Creating preview_tokens table for magic link authentication');
+    await supabase.rpc('create_preview_tokens_table');
+  }
+  
+  // Initialize access_logs table for tracking preview accesses
+  const { error: logsError } = await supabase.rpc('check_if_table_exists', { table_name: 'access_logs' });
+  
+  if (logsError) {
+    console.log('Creating access_logs table for tracking preview accesses');
+    await supabase.rpc('create_access_logs_table');
+  }
+  
+  // Initialize project_files table for final deliveries
+  const { error: filesError } = await supabase.rpc('check_if_table_exists', { table_name: 'project_files' });
+  
+  if (filesError) {
+    console.log('Creating project_files table for final deliveries');
+    await supabase.rpc('create_project_files_table');
+  }
+})();
 
 export default supabase;
