@@ -53,6 +53,18 @@ export const usePreviewProject = (projectId: string | undefined) => {
       if (adminProject) {
         console.log('[usePreviewProject] Project found in admin system:', adminProject);
         
+        // Check localStorage for saved status
+        let projectStatus = adminProject.status as 'waiting' | 'feedback' | 'approved';
+        try {
+          const savedStatus = localStorage.getItem(`preview_status_${projectId}`);
+          if (savedStatus && (savedStatus === 'approved' || savedStatus === 'feedback')) {
+            projectStatus = savedStatus as 'waiting' | 'feedback' | 'approved';
+            console.log(`[usePreviewProject] Loaded saved status from localStorage: ${savedStatus}`);
+          }
+        } catch (err) {
+          console.error("Error loading status from localStorage:", err);
+        }
+        
         // Create previews from project versions list
         const previews: MusicPreview[] = adminProject.versionsList?.map(v => ({
           id: v.id,
@@ -81,7 +93,6 @@ export const usePreviewProject = (projectId: string | undefined) => {
         }
         
         // If there are no versions yet, create fallback previews only for demo purposes
-        // In the future, you would remove this when your backend integration is complete
         const fallbackPreviews = [
           {
             id: 'v1',
@@ -111,7 +122,7 @@ export const usePreviewProject = (projectId: string | undefined) => {
           clientName: adminProject.clientName || 'Cliente',
           projectTitle: adminProject.title || adminProject.packageType || 'Música Personalizada',
           packageType: adminProject.packageType || 'Música Personalizada',
-          status: adminProject.status as 'waiting' | 'feedback' | 'approved',
+          status: projectStatus,
           expiresAt: adminProject.expirationDate,
           createdAt: adminProject.createdAt,
           previews: previews.length > 0 ? previews : (adminProject.id === 'P0001' ? [] : fallbackPreviews)
@@ -179,12 +190,21 @@ export const usePreviewProject = (projectId: string | undefined) => {
     }
   }, [projectId, getProjectById, audioFiles, toast]);
   
-  // Update project status function
+  // Update project status function with persistent storage
   const updateProjectStatus = (newStatus: 'approved' | 'feedback', comments: string) => {
     if (!projectId || !projectData) return false;
 
     console.log(`Atualizando status do projeto ${projectId} para ${newStatus}`);
     console.log(`Feedback do cliente: ${comments}`);
+    
+    // Save to localStorage for persistence between page refreshes
+    try {
+      localStorage.setItem(`preview_status_${projectId}`, newStatus);
+      localStorage.setItem(`preview_feedback_${projectId}`, comments || '');
+      console.log(`Saved status ${newStatus} to localStorage for project ${projectId}`);
+    } catch (err) {
+      console.error("Error saving to localStorage:", err);
+    }
     
     // Update the project in the admin system
     if (projectId) {

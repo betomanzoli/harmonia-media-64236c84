@@ -27,19 +27,47 @@ const PreviewFeedbackForm: React.FC<PreviewFeedbackFormProps> = ({
   versionTitle,
   projectId
 }) => {
-  const isApproved = status === 'approved';
   const [localStatus, setLocalStatus] = useState(status);
+  const [isSending, setIsSending] = useState(false);
   
-  // Sincronizar o estado quando as props mudam
+  // Synchronize the state when props change
   useEffect(() => {
     setLocalStatus(status);
   }, [status]);
+
+  // Persist status to localStorage to maintain state between page refreshes
+  useEffect(() => {
+    if (projectId && localStatus !== 'waiting') {
+      try {
+        localStorage.setItem(`preview_status_${projectId}`, localStatus);
+        console.log(`Saved status ${localStatus} for project ${projectId} to localStorage`);
+      } catch (err) {
+        console.error("Error saving preview status to localStorage:", err);
+      }
+    }
+  }, [localStatus, projectId]);
+
+  // Load saved status on component mount
+  useEffect(() => {
+    if (projectId) {
+      try {
+        const savedStatus = localStorage.getItem(`preview_status_${projectId}`);
+        if (savedStatus && (savedStatus === 'approved' || savedStatus === 'feedback')) {
+          setLocalStatus(savedStatus);
+          console.log(`Loaded saved status ${savedStatus} for project ${projectId} from localStorage`);
+        }
+      } catch (err) {
+        console.error("Error loading preview status from localStorage:", err);
+      }
+    }
+  }, [projectId]);
   
   const handleSubmitFeedback = () => {
-    onSubmit(feedback);
-    setLocalStatus('feedback');
+    if (!selectedVersion) return;
     
-    // Notificar o sistema sobre o feedback recebido
+    setIsSending(true);
+    
+    // Notify the system about the feedback received
     if (projectId && selectedVersion) {
       notificationService.notify(
         'feedback_received',
@@ -51,13 +79,33 @@ const PreviewFeedbackForm: React.FC<PreviewFeedbackFormProps> = ({
         }
       );
     }
+
+    // Save feedback to localStorage for persistence
+    if (projectId) {
+      try {
+        localStorage.setItem(`preview_feedback_${projectId}`, feedback);
+      } catch (err) {
+        console.error("Error saving feedback to localStorage:", err);
+      }
+    }
+
+    // Update local state
+    setLocalStatus('feedback');
+    
+    // Call the parent component's callback
+    onSubmit(feedback);
+    
+    setTimeout(() => {
+      setIsSending(false);
+    }, 500);
   };
   
   const handleApprove = () => {
-    onApprove(feedback);
-    setLocalStatus('approved');
+    if (!selectedVersion) return;
     
-    // Notificar o sistema sobre a aprovação recebida
+    setIsSending(true);
+    
+    // Notify the system about the approval received
     if (projectId && selectedVersion) {
       notificationService.notify(
         'preview_approved',
@@ -69,6 +117,26 @@ const PreviewFeedbackForm: React.FC<PreviewFeedbackFormProps> = ({
         }
       );
     }
+
+    // Save approval status to localStorage for persistence
+    if (projectId) {
+      try {
+        localStorage.setItem(`preview_status_${projectId}`, 'approved');
+        localStorage.setItem(`preview_feedback_${projectId}`, feedback);
+      } catch (err) {
+        console.error("Error saving approval to localStorage:", err);
+      }
+    }
+
+    // Update local state
+    setLocalStatus('approved');
+    
+    // Call the parent component's callback
+    onApprove(feedback);
+    
+    setTimeout(() => {
+      setIsSending(false);
+    }, 500);
   };
 
   return (
@@ -101,7 +169,7 @@ const PreviewFeedbackForm: React.FC<PreviewFeedbackFormProps> = ({
       <div className="flex flex-col sm:flex-row gap-3">
         <Button 
           onClick={handleSubmitFeedback} 
-          disabled={localStatus === 'approved'} 
+          disabled={localStatus === 'approved' || isSending || !selectedVersion}
           className="flex-1 bg-blue-600 hover:bg-blue-700 text-white"
         >
           <SendHorizonal className="w-4 h-4 mr-2" />
@@ -110,7 +178,7 @@ const PreviewFeedbackForm: React.FC<PreviewFeedbackFormProps> = ({
         
         <Button 
           onClick={handleApprove} 
-          disabled={localStatus === 'approved'} 
+          disabled={localStatus === 'approved' || isSending || !selectedVersion}
           className="flex-1 bg-green-600 hover:bg-green-700 text-white"
         >
           <ThumbsUp className="w-4 h-4 mr-2" />

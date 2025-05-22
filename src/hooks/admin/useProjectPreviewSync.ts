@@ -24,16 +24,42 @@ export const useProjectPreviewSync = () => {
           }
         };
         
-        // Encontrar o projeto atual para poder adicionar ao histórico existente
+        // Find current project to add to existing history
         const currentProject = projects.find(p => p.id === data.projectId);
         const currentHistory = currentProject?.history || [];
         
-        updateProject(data.projectId, { 
+        // Make sure we persist to localStorage immediately
+        const updatedData = { 
           status: 'approved',
           lastActivityDate: new Date().toLocaleDateString('pt-BR'),
           history: [...currentHistory, historyEntry],
           feedback: data.comments || ''
-        });
+        };
+        
+        // Update project with new data
+        updateProject(data.projectId, updatedData);
+        
+        // Save to localStorage for persistence
+        try {
+          // Get existing preview projects from localStorage
+          const storedData = localStorage.getItem('adminPreviewProjects');
+          if (storedData) {
+            const storedProjects = JSON.parse(storedData);
+            
+            // Find and update the specific project
+            const updatedProjects = storedProjects.map((p: any) => 
+              p.id === data.projectId 
+                ? { ...p, ...updatedData } 
+                : p
+            );
+            
+            // Save back to localStorage
+            localStorage.setItem('adminPreviewProjects', JSON.stringify(updatedProjects));
+            console.log('Project approval status saved to localStorage');
+          }
+        } catch (error) {
+          console.error('Error saving project approval to localStorage:', error);
+        }
       }
     );
     
@@ -52,16 +78,42 @@ export const useProjectPreviewSync = () => {
           }
         };
         
-        // Encontrar o projeto atual para poder adicionar ao histórico existente
+        // Find current project to add to existing history
         const currentProject = projects.find(p => p.id === data.projectId);
         const currentHistory = currentProject?.history || [];
         
-        updateProject(data.projectId, { 
+        // Make sure we persist to localStorage immediately
+        const updatedData = { 
           status: 'feedback',
           feedback: data.message,
           lastActivityDate: new Date().toLocaleDateString('pt-BR'),
           history: [...currentHistory, historyEntry]
-        });
+        };
+        
+        // Update project with new data
+        updateProject(data.projectId, updatedData);
+        
+        // Save to localStorage for persistence
+        try {
+          // Get existing preview projects from localStorage
+          const storedData = localStorage.getItem('adminPreviewProjects');
+          if (storedData) {
+            const storedProjects = JSON.parse(storedData);
+            
+            // Find and update the specific project
+            const updatedProjects = storedProjects.map((p: any) => 
+              p.id === data.projectId 
+                ? { ...p, ...updatedData } 
+                : p
+            );
+            
+            // Save back to localStorage
+            localStorage.setItem('adminPreviewProjects', JSON.stringify(updatedProjects));
+            console.log('Project feedback status saved to localStorage');
+          }
+        } catch (error) {
+          console.error('Error saving project feedback to localStorage:', error);
+        }
       }
     );
     

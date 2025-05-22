@@ -35,15 +35,25 @@ const ContactClientActions: React.FC<ContactClientActionsProps> = ({
       return;
     }
     
-    // Garante que o telefone esteja no formato internacional
-    // Remove todos os caracteres não numéricos
-    const phone = clientPhone.replace(/\D/g, '');
+    // Format the phone number for WhatsApp
+    // Remove any non-numeric characters except the + sign at the beginning
+    let formattedPhone = clientPhone.replace(/[^\d+]/g, '');
     
-    // Verificar se o número já começa com "+" para formato internacional
-    const formattedPhone = phone.startsWith('+') ? phone : phone;
+    // Ensure the number has the international format with + prefix
+    if (!formattedPhone.startsWith('+')) {
+      // If no country code is provided, assume Brazil (+55)
+      if (!formattedPhone.startsWith('55')) {
+        formattedPhone = '+55' + formattedPhone;
+      } else {
+        formattedPhone = '+' + formattedPhone;
+      }
+    }
     
-    // Abre o WhatsApp com o número formatado
-    window.open(`https://wa.me/${formattedPhone}`, '_blank');
+    console.log("Opening WhatsApp with phone number:", formattedPhone);
+    
+    // For WhatsApp API, we need to remove the + sign
+    const whatsappPhone = formattedPhone.replace('+', '');
+    window.open(`https://wa.me/${whatsappPhone}`, '_blank');
   };
 
   const handleSendEmail = async () => {
