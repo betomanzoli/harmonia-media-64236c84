@@ -107,7 +107,7 @@ const AddVersionForm: React.FC<AddVersionFormProps> = ({
         id: `v${Date.now()}`,
         name: title,
         description,
-        audioUrl,
+        audioUrl: audioUrl,  // Using the correct property name
         fileId,
         dateAdded: new Date().toLocaleDateString('pt-BR'),
         recommended,

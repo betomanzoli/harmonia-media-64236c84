@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
@@ -77,7 +76,7 @@ const AddVersionDialog: React.FC<AddVersionDialogProps> = ({
         id: `v${Date.now()}-${index}`,
         name: versionData.name,
         description: versionData.description || '',
-        url: versionData.url,
+        audioUrl: versionData.url,
         recommended: versionData.recommended,
         dateAdded: new Date().toLocaleDateString('pt-BR'),
         final: isFinalVersion

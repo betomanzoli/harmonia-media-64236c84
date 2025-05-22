@@ -7,9 +7,11 @@ export interface VersionItem {
   name: string;
   description?: string;
   fileId?: string;
+  audioUrl?: string;
   dateAdded: string;
   recommended?: boolean;
   final?: boolean;
+  additionalLinks?: Array<{ label: string; url: string }>;
 }
 
 export interface ProjectItem {
@@ -93,8 +95,10 @@ export const usePreviewProjects = () => {
           name: v.name,
           description: v.description || '',
           fileId: v.file_id,
+          audioUrl: v.audio_url,
           dateAdded: new Date(v.created_at).toLocaleDateString('pt-BR'),
-          recommended: v.recommended || false
+          recommended: v.recommended || false,
+          additionalLinks: v.additional_links || []
         })) || [];
         
         // If version list is empty, create a default empty array

@@ -3,7 +3,9 @@ import React from 'react';
 import { Button } from "@/components/ui/button";
 import { Share2 } from 'lucide-react';
 
-interface PreviewHeaderProps {
+export interface PreviewHeaderProps {
+  clientName?: string;  // Added clientName
+  projectTitle?: string;  // Added projectTitle
   projectData?: {
     projectTitle: string;
     clientName: string;
@@ -16,10 +18,13 @@ interface PreviewHeaderProps {
 
 const PreviewHeader: React.FC<PreviewHeaderProps> = ({ 
   projectData,
+  clientName,
+  projectTitle,
   onShareClick
 }) => {
-  const title = projectData?.projectTitle || 'Prévia Musical';
-  const client = projectData?.clientName || 'Cliente';
+  // Use projectData if provided, otherwise use direct props
+  const title = projectData?.projectTitle || projectTitle || 'Prévia Musical';
+  const client = projectData?.clientName || clientName || 'Cliente';
   const currentStatus = projectData?.status || 'waiting';
   const packageType = projectData?.packageType;
   const createdAt = projectData?.createdAt;

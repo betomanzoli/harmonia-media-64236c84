@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { Button } from "@/components/ui/button";
@@ -6,6 +5,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { usePreviewProjects } from '@/hooks/admin/usePreviewProjects';
 import { useToast } from '@/hooks/use-toast';
+import { createId } from '@paralleldrive/cuid2';
 
 interface NewProjectFormProps {
   onAddProject: (projectData: any) => void;
@@ -33,13 +33,17 @@ const NewProjectForm: React.FC<NewProjectFormProps> = ({ onAddProject }) => {
       expDate.setDate(expDate.getDate() + 30);
       const expirationDate = expDate.toLocaleDateString('pt-BR');
       
-      // Create project object with properly typed status
+      // Generate a unique ID for the project
+      const projectId = `P${createId().slice(0, 8).toUpperCase()}`;
+      
+      // Create project object with properly typed status and ID
       const projectData = {
+        id: projectId,  // Ensure ID is included
         clientName: data.clientName,
         clientEmail: data.clientEmail,
         packageType: data.packageType,
         createdAt: new Date().toLocaleDateString('pt-BR'),
-        status: 'waiting' as 'waiting', // Type assertion to match the expected type
+        status: 'waiting' as 'waiting',
         versions: 0,
         previewUrl: '',
         expirationDate: expirationDate,
@@ -48,12 +52,11 @@ const NewProjectForm: React.FC<NewProjectFormProps> = ({ onAddProject }) => {
       };
       
       // Add project and get ID
-      const projectId = addProject(projectData);
+      addProject(projectData);
       
       // Notify parent component
       onAddProject({
-        ...projectData,
-        id: projectId
+        ...projectData
       });
       
       // Show success message

@@ -41,6 +41,8 @@ class NotificationService {
    * @param data The data to pass to subscribers
    */
   notify(eventName: EventName, data: any): void {
+    console.log(`Notification sent: ${eventName}`, data);
+    
     if (!this.subscribers.has(eventName)) {
       return;
     }

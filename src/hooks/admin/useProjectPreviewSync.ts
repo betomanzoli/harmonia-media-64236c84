@@ -7,15 +7,15 @@ import { supabase } from '@/lib/supabase';
 export const useProjectPreviewSync = () => {
   const { projects, updateProject, loadProjects } = usePreviewProjects();
 
-  // Escutar por alterações de status de prévias
+  // Listen for changes in preview status
   useEffect(() => {
     console.log("Setting up preview sync listeners");
     
-    // Quando uma prévia é aprovada ou recebe feedback, atualiza o projeto correspondente
+    // When a preview is approved or receives feedback, update the corresponding project
     const unsubscribeApproved = notificationService.subscribe(
       'preview_approved',
       async (data: { projectId: string, versionId: string }) => {
-        console.log('Prévia aprovada, atualizando projeto:', data);
+        console.log('Preview approved, updating project:', data);
         
         // Update in memory state
         updateProject(data.projectId, { 
@@ -49,7 +49,7 @@ export const useProjectPreviewSync = () => {
     const unsubscribeFeedback = notificationService.subscribe(
       'feedback_received',
       async (data: { projectId: string, message: string }) => {
-        console.log('Feedback recebido, atualizando projeto:', data);
+        console.log('Feedback received, updating project:', data);
         
         // Update in memory state
         updateProject(data.projectId, { 
@@ -85,7 +85,7 @@ export const useProjectPreviewSync = () => {
     const unsubscribeCreated = notificationService.subscribe(
       'project_created',
       (data: { projectId: string }) => {
-        console.log('Projeto criado:', data);
+        console.log('Project created:', data);
         
         // Refresh the projects list to include the newly created project
         loadProjects();
@@ -115,15 +115,15 @@ export const useProjectPreviewSync = () => {
   }, [updateProject, loadProjects]);
 
   return {
-    // Função para sincronizar status entre projetos e prévias
+    // Function to synchronize status between projects and previews
     syncProjectStatus: async (projectId: string, status: 'waiting' | 'feedback' | 'approved') => {
-      // Atualiza o projeto com o novo status
+      // Update the project with the new status
       updateProject(projectId, { 
         status, 
         lastActivityDate: new Date().toLocaleDateString('pt-BR') 
       });
       
-      // Atualizar também no banco de dados
+      // Update in the database as well
       try {
         await supabase
           .from('preview_projects')
@@ -144,7 +144,7 @@ export const useProjectPreviewSync = () => {
         console.error('Error updating project status in database:', error);
       }
       
-      // Notifica sobre a mudança de status
+      // Notify about the status change
       notificationService.notify('project_updated', {
         projectId,
         status,
@@ -152,10 +152,10 @@ export const useProjectPreviewSync = () => {
       });
     },
     
-    // Função para iniciar um novo projeto a partir de um briefing
+    // Function to create a new project from a briefing
     createProjectFromBriefing: async (briefingId: string) => {
-      // Esta função seria implementada para criar um projeto a partir 
-      // de um briefing e notificar os componentes interessados
+      // This function would be implemented to create a project from a briefing
+      // and notify interested components
       notificationService.notify('project_created', {
         briefingId,
         timestamp: new Date().toISOString()
