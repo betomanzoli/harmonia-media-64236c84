@@ -93,6 +93,7 @@ const ProjectsTable: React.FC<ProjectsTableProps> = ({
       <Table>
         <TableHeader>
           <TableRow>
+            <TableHead>ID</TableHead>
             <TableHead>Cliente</TableHead>
             <TableHead>Pacote</TableHead>
             <TableHead>Status</TableHead>
@@ -105,13 +106,16 @@ const ProjectsTable: React.FC<ProjectsTableProps> = ({
         <TableBody>
           {projects.length === 0 ? (
             <TableRow>
-              <TableCell colSpan={7} className="h-24 text-center">
+              <TableCell colSpan={8} className="h-24 text-center">
                 Nenhum projeto de prévia encontrado.
               </TableCell>
             </TableRow>
           ) : (
             projects.map((project) => (
               <TableRow key={project.id}>
+                <TableCell className="font-medium">
+                  {project.id}
+                </TableCell>
                 <TableCell className="font-medium">
                   {project.clientName || "Cliente sem nome"}
                 </TableCell>

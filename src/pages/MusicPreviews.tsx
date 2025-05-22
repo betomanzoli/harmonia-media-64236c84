@@ -123,7 +123,7 @@ const MusicPreviews: React.FC = () => {
   }
   
   return (
-    <div className="min-h-screen bg-background text-foreground">
+    <div className="min-h-screen bg-white text-gray-900">
       <Header />
       <main className="pt-24 pb-20 px-6 md:px-10">
         <div className="max-w-4xl mx-auto">
@@ -148,31 +148,37 @@ const MusicPreviews: React.FC = () => {
             </TabsList>
             
             <TabsContent value="versions">
-              <PreviewPlayerList 
-                versions={projectData.previews.map(preview => ({
-                  ...preview,
-                  description: preview.description || `Versão musical para ${projectData.clientName}`
-                }))}
-                selectedVersion={selectedPreview}
-                setSelectedVersion={setSelectedPreview}
-                isApproved={projectData.status === 'approved'}
-              />
+              <div className="bg-white p-6 rounded-lg shadow">
+                <PreviewPlayerList 
+                  versions={projectData.previews.map(preview => ({
+                    ...preview,
+                    description: preview.description || `Versão musical para ${projectData.clientName}`
+                  }))}
+                  selectedVersion={selectedPreview}
+                  setSelectedVersion={setSelectedPreview}
+                  isApproved={projectData.status === 'approved'}
+                />
+              </div>
             </TabsContent>
             
             <TabsContent value="feedback">
-              <PreviewFeedbackForm 
-                feedback={feedback}
-                onFeedbackChange={setFeedback}
-                onSubmit={handleSubmitFeedback}
-                onApprove={handleApprove}
-                status={projectData.status}
-                selectedVersion={selectedPreview}
-                versionTitle={projectData.previews.find(p => p.id === selectedPreview)?.title}
-              />
+              <div className="bg-white p-6 rounded-lg shadow">
+                <PreviewFeedbackForm 
+                  feedback={feedback}
+                  onFeedbackChange={setFeedback}
+                  onSubmit={handleSubmitFeedback}
+                  onApprove={handleApprove}
+                  status={projectData.status}
+                  selectedVersion={selectedPreview}
+                  versionTitle={projectData.previews.find(p => p.id === selectedPreview)?.title}
+                />
+              </div>
             </TabsContent>
           </Tabs>
           
-          <PreviewNextSteps status={projectData.status} />
+          <div className="bg-white p-6 rounded-lg shadow">
+            <PreviewNextSteps status={projectData.status} />
+          </div>
         </div>
       </main>
       <Footer />

@@ -6,13 +6,16 @@ import { createClient } from '@supabase/supabase-js';
 const supabaseUrl = 'https://ivueqxyuflxsiecqvmgt.supabase.co';
 const supabaseAnonKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Iml2dWVxeHl1Zmx4c2llY3F2bWd0Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDY3MjY0MzEsImV4cCI6MjA2MjMwMjQzMX0.db1UVta6PSPGokJOZozwqZ7AAs2jBljfWCdUR3LjIdM';
 
-// Initialize the Supabase client with error handling
+// Use a dedicated storage key for preview authentication
+const PREVIEW_AUTH_STORAGE_KEY = 'harmonia-preview-auth';
+
+// Initialize the Supabase client with improved error handling and configuration for incognito mode
 export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
   auth: {
     persistSession: true,
     autoRefreshToken: true,
     detectSessionInUrl: true,
-    storageKey: 'harmonia-admin-auth', // Dedicated key for admin session
+    storageKey: PREVIEW_AUTH_STORAGE_KEY,
   },
   global: {
     fetch: (...args: Parameters<typeof fetch>) => {
@@ -23,6 +26,22 @@ export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
     }
   }
 });
+
+// Helper to check if we're in private/incognito mode
+export const checkPrivateBrowsing = async (): Promise<boolean> => {
+  try {
+    // Try to write to local storage
+    const testKey = 'test-private-browsing';
+    localStorage.setItem(testKey, '1');
+    localStorage.removeItem(testKey);
+    
+    // If we're here, localStorage worked
+    return false;
+  } catch (e) {
+    // localStorage failed, probably in private browsing
+    return true;
+  }
+};
 
 const createMockQueryResponse = () => {
   return {

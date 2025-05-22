@@ -1,19 +1,17 @@
-import { useState, useEffect, useCallback } from 'react';
+
+import { useState, useCallback, useEffect, useRef } from 'react';
 
 export interface VersionItem {
   id: string;
   name: string;
   description?: string;
   fileId?: string;
-  audioUrl?: string;
-  url?: string; // Added the url property for backward compatibility
-  dateAdded: string;
   recommended?: boolean;
   final?: boolean;
-  additionalLinks?: {
-    label: string;
-    url: string;
-  }[];
+  dateAdded?: string;
+  url?: string;
+  audioUrl?: string;
+  additionalLinks?: Array<{ label: string; url: string }>;
 }
 
 export interface ProjectItem {
@@ -21,251 +19,252 @@ export interface ProjectItem {
   clientName: string;
   clientEmail: string;
   clientPhone?: string;
-  packageType: string;
+  packageType?: string;
   createdAt: string;
   status: 'waiting' | 'feedback' | 'approved';
   versions: number;
-  previewUrl: string;
-  expirationDate: string;
-  lastActivityDate: string;
-  briefingId?: string;
+  previewUrl?: string;
+  expirationDate?: string;
+  lastActivityDate?: string;
   versionsList?: VersionItem[];
+  briefingId?: string;
+  history?: any[];
   feedback?: string;
-  history?: {
-    action: string;
-    timestamp: string;
-    data?: {
-      message?: string;
-      status?: string;
-      version?: string;
-    };
-  }[];
+  [key: string]: any; // Allow for additional properties
 }
 
 export const usePreviewProjects = () => {
   const [projects, setProjects] = useState<ProjectItem[]>([]);
   const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  const loadingRef = useRef(false);
+  const hasInitializedRef = useRef(false);
   
-  // Load projects from local storage
+  // Load projects from localStorage on mount
   const loadProjects = useCallback(async () => {
+    // Avoid multiple simultaneous loading operations
+    if (loadingRef.current) {
+      console.log("Already loading projects, skipping duplicate call");
+      return projects;
+    }
+    
+    console.log("==== LOADING PROJECTS ====");
+    loadingRef.current = true;
     setIsLoading(true);
-    try {
-      // Try to load from localStorage
-      const storedProjects = localStorage.getItem('harmonIA_preview_projects');
-      if (storedProjects) {
-        const parsedProjects = JSON.parse(storedProjects);
-        console.log('Projects loaded from localStorage:', parsedProjects);
-        setProjects(parsedProjects);
-      } else {
-        // Initialize with empty array if nothing found
-        setProjects([]);
-        console.log('No projects found, initialized with empty array');
-      }
-    } catch (err: any) {
-      console.error('Error loading projects:', err);
-      setError(err.message || 'Failed to load projects');
-      setProjects([]);
-    } finally {
-      setIsLoading(false);
-    }
-  }, []);
-
-  // Save projects to local storage
-  const saveProjects = useCallback(async (updatedProjects: ProjectItem[]) => {
-    try {
-      // Save to localStorage
-      localStorage.setItem('harmonIA_preview_projects', JSON.stringify(updatedProjects));
-      console.log('Projects saved to localStorage:', updatedProjects);
-    } catch (error) {
-      console.error('Error saving projects:', error);
-    }
-  }, []);
-
-  // Load projects on component mount
-  useEffect(() => {
-    loadProjects();
-  }, [loadProjects]);
-
-  // Format package type with capitalized first letter
-  const formatPackageType = (packageType: string): string => {
-    if (!packageType) return "Projeto de Música Personalizada";
     
-    // Split by spaces and capitalize first letter of each word
-    return packageType
-      .split(' ')
-      .map(word => {
-        if (word.toLowerCase() === 'essencial' || 
-            word.toLowerCase() === 'premium' || 
-            word.toLowerCase() === 'profissional') {
-          return word.charAt(0).toUpperCase() + word.slice(1).toLowerCase();
+    try {
+      // Check if localStorage is available
+      const isLocalStorageAvailable = typeof localStorage !== 'undefined';
+      console.log("Is localStorage available:", isLocalStorageAvailable);
+      
+      if (isLocalStorageAvailable) {
+        const stored = localStorage.getItem('harmonIA_projects');
+        console.log("Retrieved from localStorage:", stored ? 'Data found' : 'No data');
+        
+        if (stored) {
+          try {
+            const parsedProjects = JSON.parse(stored);
+            console.log("Successfully parsed projects:", parsedProjects);
+            setProjects(parsedProjects);
+            console.log("Projects count:", parsedProjects.length);
+            hasInitializedRef.current = true;
+            loadingRef.current = false;
+            setIsLoading(false);
+            return parsedProjects;
+          } catch (parseError) {
+            console.error('Error parsing stored projects:', parseError);
+          }
         }
-        return word;
-      })
-      .join(' ');
-  };
-
-  // Get project by ID
-  const getProjectById = useCallback((id: string) => {
-    console.log("Getting project by ID:", id);
-    console.log("Available projects:", projects);
-    
-    const project = projects.find(project => project.id === id);
-    console.log("Found project:", project);
-    
-    // Format package type if project exists
-    if (project) {
-      project.packageType = formatPackageType(project.packageType);
+      }
+      
+      // Fallback to default data if no stored data or error
+      const defaultProjects = [
+        {
+          id: 'P0001',
+          clientName: 'Humberto Manzoli',
+          clientEmail: 'cliente@exemplo.com',
+          packageType: 'Essencial',
+          createdAt: new Date().toLocaleDateString('pt-BR'),
+          status: 'waiting' as const,
+          versions: 0,
+          previewUrl: `${window.location.origin}/preview/P0001`,
+          expirationDate: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toLocaleDateString('pt-BR'),
+          lastActivityDate: new Date().toLocaleDateString('pt-BR'),
+          versionsList: []
+        }
+      ];
+      
+      setProjects(defaultProjects);
+      console.log("Using default projects");
+      
+      // Save default data to localStorage
+      if (isLocalStorageAvailable) {
+        localStorage.setItem('harmonIA_projects', JSON.stringify(defaultProjects));
+      }
+      
+      hasInitializedRef.current = true;
+      loadingRef.current = false;
+      setIsLoading(false);
+      return defaultProjects;
+    } catch (error) {
+      console.error('Error loading projects:', error);
+      loadingRef.current = false;
+      setIsLoading(false);
+      return [];
     }
-    
-    return project || null;
   }, [projects]);
-
-  // Generate unique project ID
-  const generateProjectId = useCallback(() => {
-    // Get the highest existing project number
-    const highestId = projects.reduce((max, project) => {
-      const idNum = parseInt(project.id.replace('P', ''));
-      return isNaN(idNum) ? max : Math.max(max, idNum);
-    }, 0);
+  
+  // Load projects on component mount (but only once)
+  useEffect(() => {
+    if (!hasInitializedRef.current) {
+      loadProjects();
+    }
+  }, [loadProjects]);
+  
+  // Save projects to localStorage whenever they change
+  useEffect(() => {
+    if (projects.length > 0 && !isLoading) {
+      localStorage.setItem('harmonIA_projects', JSON.stringify(projects));
+    }
+  }, [projects, isLoading]);
+  
+  // Get a specific project by ID - optimized to do less work
+  const getProjectById = useCallback((id: string) => {
+    if (!id) return null;
     
-    return `P${(highestId + 1).toString().padStart(4, '0')}`;
-  }, [projects]);
-
-  // Add new project
-  const addProject = useCallback((project: Omit<ProjectItem, "id">) => {
-    // Generate ID based on highest existing ID
-    const newId = generateProjectId();
-    
-    // Create the new project with the briefing ID if available
-    const newProject: ProjectItem = {
-      ...project,
-      id: newId,
-      packageType: formatPackageType(project.packageType || ""),
-      // Set default expiration date to 30 days from now if not provided
-      expirationDate: project.expirationDate || 
-        new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toLocaleDateString('pt-BR')
-    };
-    
-    const updatedProjects = [...projects, newProject];
-    console.log("Adding new project:", newProject);
-    console.log("Updated projects list:", updatedProjects);
-    
-    setProjects(updatedProjects);
-    
-    // Save to storage
-    saveProjects(updatedProjects);
-    
-    return newId;
-  }, [projects, generateProjectId, saveProjects]);
-
-  // Delete project
-  const deleteProject = useCallback((id: string) => {
-    const updatedProjects = projects.filter(project => project.id !== id);
-    console.log(`Deleting project ${id}`);
-    console.log("Updated project list:", updatedProjects);
-    
-    setProjects(updatedProjects);
-    saveProjects(updatedProjects);
-  }, [projects, saveProjects]);
-
-  // Update project
-  const updateProject = useCallback((id: string, updates: Partial<ProjectItem>) => {
-    console.log(`Updating project ${id} with:`, updates);
-    
-    const projectIndex = projects.findIndex(p => p.id === id);
-    if (projectIndex === -1) {
-      console.error(`Project ${id} not found for updating`);
+    if (projects.length === 0 && !hasInitializedRef.current) {
+      console.log("No projects loaded yet, can't find project:", id);
       return null;
     }
     
-    // Format package type if provided
-    const formattedUpdates = { ...updates };
-    if (updates.packageType) {
-      formattedUpdates.packageType = formatPackageType(updates.packageType);
+    // Debug the search process
+    console.log(`Looking for project with ID: ${id} among ${projects.length} projects`);
+    
+    // Try to find with exact match first
+    let project = projects.find(p => p.id === id);
+    if (project) {
+      console.log("Project found with exact match");
+      return project;
     }
     
-    // Add history entry if feedback is provided
-    if (updates.status === 'feedback' && updates.feedback) {
-      const feedbackEntry = {
-        action: "Cliente enviou feedback",
-        timestamp: new Date().toLocaleString('pt-BR'),
-        data: { 
-          message: updates.feedback,
-          status: 'feedback'
-        }
-      };
-      
-      if (!formattedUpdates.history) {
-        formattedUpdates.history = [...(projects[projectIndex].history || []), feedbackEntry];
-      } else {
-        formattedUpdates.history = [...formattedUpdates.history, feedbackEntry];
-      }
+    // If not found, try with case-insensitive comparison
+    project = projects.find(p => 
+      p.id.toLowerCase() === id.toLowerCase()
+    );
+    if (project) {
+      console.log("Project found with case-insensitive match");
+      return project;
     }
     
-    // Add history entry if status changed to approved
-    if (updates.status === 'approved' && projects[projectIndex].status !== 'approved') {
-      const approvalEntry = {
-        action: "Cliente aprovou o projeto",
-        timestamp: new Date().toLocaleString('pt-BR'),
-        data: { 
-          message: "O cliente aprovou uma das versões propostas.",
-          status: 'approved' 
-        }
-      };
-      
-      if (!formattedUpdates.history) {
-        formattedUpdates.history = [...(projects[projectIndex].history || []), approvalEntry];
-      } else {
-        formattedUpdates.history = [...formattedUpdates.history, approvalEntry];
-      }
+    // If still not found, try with trimmed strings
+    project = projects.find(p => 
+      p.id.trim() === id.trim()
+    );
+    if (project) {
+      console.log("Project found with trimmed match");
+      return project;
     }
     
-    // Add history entry if deadline extended
-    if (updates.expirationDate && 
-        updates.expirationDate !== projects[projectIndex].expirationDate && 
-        !updates.history?.some(h => h.action.includes("Prazo estendido"))) {
-      const deadlineEntry = {
-        action: "Prazo estendido",
-        timestamp: new Date().toLocaleString('pt-BR'),
-        data: { 
-          message: `Prazo estendido para ${updates.expirationDate}` 
-        }
-      };
-      
-      if (!formattedUpdates.history) {
-        formattedUpdates.history = [...(projects[projectIndex].history || []), deadlineEntry];
-      } else {
-        formattedUpdates.history = [...formattedUpdates.history, deadlineEntry];
-      }
-    }
+    console.log(`No project found with ID: ${id}`);
+    return null;
+  }, [projects]);
+  
+  // Add a new project
+  const addProject = useCallback((project: Omit<ProjectItem, 'id'> & { id?: string }) => {
+    // If an ID is provided, use it; otherwise generate a new one
+    const projectId = project.id || `P${String(projects.length + 1).padStart(4, '0')}`;
     
-    const updatedProject = {
-      ...projects[projectIndex],
-      ...formattedUpdates,
-      lastActivityDate: updates.lastActivityDate || new Date().toLocaleDateString('pt-BR')
+    const newProject: ProjectItem = {
+      ...project,
+      id: projectId,
+      clientName: project.clientName || 'Unknown Client',
+      clientEmail: project.clientEmail || 'unknown@example.com',
+      createdAt: project.createdAt || new Date().toLocaleDateString('pt-BR'),
+      status: project.status || 'waiting',
+      versions: project.versions || 0
     };
     
-    const updatedProjects = [...projects];
-    updatedProjects[projectIndex] = updatedProject;
+    setProjects(prev => {
+      // Make sure we're not adding a duplicate
+      const projectExists = prev.some(p => p.id === projectId);
+      if (projectExists) {
+        console.log(`Project with ID ${projectId} already exists, updating instead of adding`);
+        return prev.map(p => p.id === projectId ? { ...p, ...newProject } : p);
+      }
+      
+      return [...prev, newProject];
+    });
     
-    console.log("Updated project:", updatedProject);
-    console.log("Updated project list:", updatedProjects);
+    return projectId;
+  }, [projects]);
+  
+  // Update an existing project
+  const updateProject = useCallback((id: string, updates: Partial<ProjectItem>) => {
+    if (!id) return false;
     
-    setProjects(updatedProjects);
-    saveProjects(updatedProjects);
+    console.log(`Updating project with ID: ${id}`, updates);
     
-    return updatedProject;
-  }, [projects, saveProjects]);
-
+    // Find the project by ID, case-insensitive
+    let foundIndex = projects.findIndex(p => p.id.toLowerCase() === id.toLowerCase());
+    
+    if (foundIndex === -1) {
+      console.log(`Project with ID ${id} not found, cannot update.`);
+      return false;
+    }
+    
+    // Get the existing project
+    const existingProject = projects[foundIndex];
+    
+    // Handle history entries - append new to existing
+    const updatedHistory = (() => {
+      if (!updates.history) return existingProject.history || [];
+      
+      const currentHistory = existingProject.history || [];
+      return [...currentHistory, ...updates.history];
+    })();
+    
+    // Handle versionsList - special logic for adding/updating versions
+    const updatedVersionsList = (() => {
+      if (!updates.versionsList) return existingProject.versionsList || [];
+      
+      return updates.versionsList;
+    })();
+    
+    // Create the updated project
+    const updatedProject = {
+      ...existingProject,
+      ...updates,
+      history: updatedHistory,
+      versionsList: updatedVersionsList
+    };
+    
+    // Update the projects array
+    setProjects(prev => 
+      prev.map((p, index) => 
+        index === foundIndex ? updatedProject : p
+      )
+    );
+    
+    console.log("Project updated successfully");
+    return true;
+  }, [projects]);
+  
+  // Delete a project
+  const deleteProject = useCallback((id: string) => {
+    if (!id) return false;
+    
+    setProjects(prev => prev.filter(p => p.id !== id));
+    return true;
+  }, []);
+  
   return {
     projects,
     isLoading,
-    error,
     loadProjects,
     getProjectById,
     addProject,
-    deleteProject,
-    updateProject
+    updateProject,
+    deleteProject
   };
 };
+
+export default usePreviewProjects;

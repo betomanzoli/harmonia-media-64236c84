@@ -39,16 +39,15 @@ const Header: React.FC = () => {
   }
 
   return (
-    <header className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${
-      isScrolled ? 'bg-black/80 backdrop-blur-sm shadow-lg' : 'bg-transparent'
-    }`}>
-      <div className="container mx-auto px-4 py-4">
-        <div className="flex items-center justify-between">
-          <Link to="/" className="text-white">
-            <Logo />
-          </Link>
+    <header className="fixed w-full top-0 z-50 bg-slate-900 border-b border-slate-800">
+      <div className="container mx-auto flex justify-between items-center py-3 px-4">
+        {/* Logo on the left */}
+        <Link to="/" className="text-white">
+          <Logo />
+        </Link>
 
-          {/* Desktop Navigation */}
+        {/* Desktop Navigation moved to the right */}
+        <div className="flex items-center">
           <nav className="hidden md:flex items-center space-x-6">
             <Link 
               to="/" 

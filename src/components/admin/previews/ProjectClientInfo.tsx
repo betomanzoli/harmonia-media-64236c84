@@ -1,9 +1,7 @@
-
 import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Calendar, Mail, Package, Calendar as CalendarIcon, Clock } from 'lucide-react';
-
-interface ProjectClientInfoProps {
+export interface ProjectClientInfoProps {
   clientName: string;
   clientEmail: string;
   packageType: string;
@@ -11,7 +9,6 @@ interface ProjectClientInfoProps {
   expirationDate: string;
   lastActivityDate: string;
 }
-
 const ProjectClientInfo: React.FC<ProjectClientInfoProps> = ({
   clientName,
   clientEmail,
@@ -20,12 +17,11 @@ const ProjectClientInfo: React.FC<ProjectClientInfoProps> = ({
   expirationDate,
   lastActivityDate
 }) => {
-  return (
-    <Card className="bg-gray-50">
-      <CardHeader>
+  return <Card className="bg-zinc-500">
+      <CardHeader className="bg-zinc-500">
         <CardTitle className="text-lg">Detalhes do Projeto</CardTitle>
       </CardHeader>
-      <CardContent className="space-y-4">
+      <CardContent className="space-y-4 bg-gray-500">
         {/* Cliente */}
         <div className="space-y-2">
           <div className="flex items-center text-sm text-muted-foreground">
@@ -78,8 +74,6 @@ const ProjectClientInfo: React.FC<ProjectClientInfoProps> = ({
           </div>
         </div>
       </CardContent>
-    </Card>
-  );
+    </Card>;
 };
-
 export default ProjectClientInfo;
