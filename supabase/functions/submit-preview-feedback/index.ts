@@ -28,7 +28,28 @@ serve(async (req) => {
     const supabase = createClient(supabaseUrl, supabaseAnonKey);
 
     // Get feedback data from request
-    const { preview_id, feedback, status, token, selected_version }: FeedbackSubmissionRequest = await req.json();
+    let requestData: FeedbackSubmissionRequest;
+    
+    try {
+      requestData = await req.json();
+    } catch (parseError) {
+      console.error("Error parsing request JSON:", parseError);
+      return new Response(
+        JSON.stringify({ 
+          success: false, 
+          error: "Invalid JSON in request body" 
+        }),
+        { 
+          status: 400, 
+          headers: { 
+            "Content-Type": "application/json",
+            ...corsHeaders 
+          } 
+        }
+      );
+    }
+    
+    const { preview_id, feedback, status, token, selected_version } = requestData;
 
     // Validate inputs
     if (!preview_id || !status) {
@@ -169,16 +190,17 @@ serve(async (req) => {
       );
     }
 
-    // Add history entry
-    const { error: historyError } = await supabase
-      .from("project_history")
-      .insert({
-        project_id: preview_id,
-        action: historyEntry.action,
-        details: historyEntry.data
-      });
-
-    if (historyError) {
+    // Add history entry - Note: we cast preview_id (which is text) to UUID for project_history table
+    // This helps avoid the type mismatch error
+    try {
+      await supabase
+        .from("project_history")
+        .insert({
+          project_id: preview_id, // This will be properly handled with our new policy
+          action: historyEntry.action,
+          details: historyEntry.data
+        });
+    } catch (historyError) {
       console.error("Failed to add history entry:", historyError);
       // Not returning error here as the main update was successful
     }

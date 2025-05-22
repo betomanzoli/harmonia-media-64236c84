@@ -117,7 +117,7 @@ serve(async (req) => {
     await supabase.from("access_logs").insert({
       preview_id: preview_id,
       access_method: "token",
-      user_email: null // Anonymous access via token
+      user_email: null // Anonymous access
     });
 
     return new Response(

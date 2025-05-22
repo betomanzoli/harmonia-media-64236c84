@@ -58,6 +58,10 @@ const MusicPreviewPage: React.FC = () => {
               })
             });
 
+            if (!response.ok) {
+              throw new Error(`Token validation failed with status: ${response.status}`);
+            }
+
             const result = await response.json();
             
             if (result.valid) {
