@@ -6,23 +6,13 @@ import webhookService, { NotificationType } from '@/services/webhookService';
 export function useWebhookManager(serviceType: string) {
   const [webhookUrl, setWebhookUrl] = useState<string>('');
   const [isSending, setIsSending] = useState(false);
-  const [isLoading, setIsLoading] = useState(false);
-  const [isConfigured, setIsConfigured] = useState(false);
   const { toast } = useToast();
 
   useEffect(() => {
     // Load the webhook URL when the component mounts
     const loadUrl = async () => {
-      setIsLoading(true);
-      try {
-        const url = await webhookService.getWebhookUrl() || '';
-        setWebhookUrl(url);
-        setIsConfigured(!!url);
-      } catch (error) {
-        console.error('Error loading webhook URL:', error);
-      } finally {
-        setIsLoading(false);
-      }
+      const url = await webhookService.getWebhookUrl() || '';
+      setWebhookUrl(url);
     };
     
     loadUrl();
@@ -39,55 +29,30 @@ export function useWebhookManager(serviceType: string) {
       return false;
     }
     
-    setIsLoading(true);
+    const success = await webhookService.saveWebhookUrl(webhookUrl);
     
-    try {
-      const success = await webhookService.saveWebhookUrl(webhookUrl);
-      
-      if (success) {
-        setIsConfigured(true);
-        toast({
-          title: "URL do webhook salva",
-          description: "A URL do webhook foi configurada com sucesso.",
-        });
-      } else {
-        toast({
-          title: "Erro ao salvar",
-          description: "Não foi possível salvar a URL do webhook.",
-          variant: "destructive",
-        });
-      }
-      
-      return success;
-    } catch (error) {
+    if (success) {
       toast({
-        title: "Erro",
-        description: "Ocorreu um erro ao salvar a configuração.",
-        variant: "destructive",
+        title: "URL do webhook salva",
+        description: "A URL do webhook foi configurada com sucesso.",
       });
-      console.error('Erro ao salvar webhook:', error);
-      return false;
-    } finally {
-      setIsLoading(false);
     }
+    
+    return success;
   };
 
-  // Function to send a test ping to the webhook
+  // Send data to the webhook
   const sendToWebhook = async (data: any): Promise<boolean> => {
     try {
       if (!webhookUrl) {
-        toast({
-          title: "URL do webhook não configurada",
-          description: "Configure uma URL de webhook antes de enviar dados.",
-          variant: "destructive",
-        });
+        console.error("URL do webhook não configurada");
         return false;
       }
       
       setIsSending(true);
       
-      // Create the payload with proper validation
-      const testPayload = {
+      // Create the payload
+      const payload = {
         type: 'test_message' as NotificationType,
         data: {
           ...data,
@@ -99,19 +64,13 @@ export function useWebhookManager(serviceType: string) {
       
       console.log(`Enviando dados para webhook ${serviceType}:`, webhookUrl);
       
-      // Send data to the webhook using the service
-      const result = await webhookService.sendToWebhook(webhookUrl, testPayload);
+      // Send data to the webhook
+      const result = await webhookService.sendToWebhook(webhookUrl, payload);
       
       if (result) {
         toast({
           title: "Dados enviados",
           description: "Os dados foram enviados para o serviço externo.",
-        });
-      } else {
-        toast({
-          title: "Erro no envio",
-          description: "Não foi possível enviar os dados para o serviço externo.",
-          variant: "destructive",
         });
       }
       
@@ -135,8 +94,6 @@ export function useWebhookManager(serviceType: string) {
     webhookUrl,
     setWebhookUrl,
     isSending,
-    isLoading,
-    isConfigured,
     saveWebhookUrl,
     sendToWebhook
   };

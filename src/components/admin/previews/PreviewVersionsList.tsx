@@ -6,7 +6,7 @@ import VersionCard from './VersionCard';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 
-export interface PreviewVersionsListProps {
+interface PreviewVersionsListProps {
   versions: VersionItem[];
   projectId: string;
   onDeleteVersion: (versionId: string) => void;

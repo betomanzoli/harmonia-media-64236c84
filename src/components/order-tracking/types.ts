@@ -1,4 +1,3 @@
-
 export type OrderProgressStatus = 'pending' | 'current' | 'completed';
 
 export interface OrderProgressStep {
@@ -7,7 +6,7 @@ export interface OrderProgressStep {
   title: string;
   description: string;
   icon: string;
-  date?: string | null;
+  date?: string;
 }
 
 export interface OrderData {
@@ -30,15 +29,4 @@ export interface OrderSearchProps {
 
 export interface OrderDetailsProps {
   order: OrderData;
-}
-
-export interface OrderNotificationProps {
-  orderId: string;
-  previewLink: string | null;
-  pendingAction: 'feedback' | null;
-  onClose: () => void;
-}
-
-export interface OrderNotFoundProps {
-  onChatAssistant: () => void;
 }

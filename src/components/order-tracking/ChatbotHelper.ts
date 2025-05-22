@@ -27,7 +27,3 @@ export const openChatAssistant = () => {
     window.open(`https://wa.me/${siteConfig.contact.whatsapp}?text=Olá,%20preciso%20de%20ajuda%20para%20localizar%20meu%20pedido`, '_blank');
   }
 };
-
-// Add default export to fix import issue
-const ChatbotHelper = { openChatAssistant };
-export default ChatbotHelper;

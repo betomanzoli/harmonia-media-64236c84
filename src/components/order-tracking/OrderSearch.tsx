@@ -39,12 +39,10 @@ const OrderSearch: React.FC<OrderSearchProps> = ({ onSearch }) => {
             packageType: parsedData.packageType,
             status: 'Em Análise',
             currentStep: 1,
-            orderDate: today,
+            orderDate: today, // Adding the missing orderDate property
             expectedDelivery: getExpectedDeliveryDate(),
             previewLink: null,
             progress: generateProgressSteps(),
-            hasPreview: false,
-            pendingAction: null
           };
           onSearch(formattedOrder);
           return;

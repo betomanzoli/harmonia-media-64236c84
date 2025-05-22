@@ -6,7 +6,6 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import WebhookUrlManager from '@/components/admin/integrations/WebhookUrlManager';
 import N8nWorkflowGuide from '@/components/admin/guides/N8nWorkflowGuide';
-import N8nIntegrationGuide from '@/components/admin/guides/N8nIntegrationGuide';
 import { ArrowLeft } from 'lucide-react';
 import { Link } from 'react-router-dom';
 
@@ -38,30 +37,26 @@ const AdminIntegrations: React.FC = () => {
         <Tabs defaultValue="webhooks" value={activeTab} onValueChange={setActiveTab}>
           <TabsList className="mb-6">
             <TabsTrigger value="webhooks">Webhooks</TabsTrigger>
-            <TabsTrigger value="n8n">n8n Workflows</TabsTrigger>
             <TabsTrigger value="email">Email</TabsTrigger>
+            <TabsTrigger value="n8n">n8n Workflows</TabsTrigger>
             <TabsTrigger value="api">APIs</TabsTrigger>
           </TabsList>
 
           <TabsContent value="webhooks" className="space-y-6">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <WebhookUrlManager 
-                title="Webhook de Leads"
-                description="Configure o endpoint para receber leads capturados em landing pages"
-                serviceType="leads"
-                storageUrl="https://humbrock.app.n8n.cloud/workflow/144"
+                title="Webhook de Notificações"
+                description="Configure o endpoint para receber notificações do sistema"
+                serviceType="notifications"
               />
               
               <WebhookUrlManager 
-                title="Webhook de Notificações"
-                description="Configure o endpoint para notificações de sistema"
-                serviceType="notifications"
+                title="Webhook do Chatbot"
+                description="Configure o endpoint para integração com o chatbot"
+                serviceType="chatbot"
+                storageUrl="https://humbrock.app.n8n.cloud/workflow/144"
               />
             </div>
-          </TabsContent>
-
-          <TabsContent value="n8n" className="space-y-6">
-            <N8nIntegrationGuide />
           </TabsContent>
 
           <TabsContent value="email" className="space-y-6">
@@ -78,6 +73,10 @@ const AdminIntegrations: React.FC = () => {
                 </p>
               </CardContent>
             </Card>
+          </TabsContent>
+
+          <TabsContent value="n8n" className="space-y-6">
+            <N8nWorkflowGuide />
           </TabsContent>
 
           <TabsContent value="api" className="space-y-6">

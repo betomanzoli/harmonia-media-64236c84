@@ -29,14 +29,6 @@ import ContactPage from './pages/ContactPage';
 import PreviewProjectPage from './pages/admin/PreviewProjectPage';
 import BriefingComplete from './pages/BriefingComplete';
 import BriefingSuccess from './pages/BriefingSuccess';
-import AdminPreviews from './pages/admin/AdminPreviews';
-import AdminMarketing from './pages/admin/AdminMarketing';
-import AdminLayout from './components/admin/layout/AdminLayout';
-import AdminProjectManagement from './pages/admin/AdminProjectManagement';
-import ConversationalLandingPage from './pages/marketing/ConversationalLandingPage';
-import MusicPreviewAuth from './pages/MusicPreviewAuth';
-import MusicPreviewPage from './pages/MusicPreviewPage';
-import AuthCallback from './pages/AuthCallback';
 
 // These routes are supplementary to the main routes defined in App.tsx
 const additionalRoutes: RouteObject[] = [
@@ -90,15 +82,11 @@ const additionalRoutes: RouteObject[] = [
   },
   {
     path: '/preview/:projectId',
-    element: <MusicPreviewPage />,
+    element: <PreviewPage />,
   },
   {
-    path: '/auth/preview/:previewId',
-    element: <MusicPreviewAuth />,
-  },
-  {
-    path: '/auth/callback',
-    element: <AuthCallback />,
+    path: '/preview/:previewId',
+    element: <MusicPreviews />,
   },
   {
     path: '/feedback-confirmacao',
@@ -116,83 +104,66 @@ const additionalRoutes: RouteObject[] = [
     path: '/como-funciona',
     element: <ServicesPage />,
   },
-  {
-    path: '/descobrir',
-    element: <ConversationalLandingPage />,
-  },
   
-  // Admin routes
   {
     path: '/admin-j28s7d1k/briefings',
-    element: <AdminLayout><AdminBriefings /></AdminLayout>,
+    element: <AdminBriefings />,
   },
   {
     path: '/admin-j28s7d1k/projects',
-    element: <AdminLayout><AdminProjects /></AdminLayout>,
-  },
-  {
-    path: '/admin-j28s7d1k/projects/:projectId',
-    element: <AdminLayout><AdminProjectManagement /></AdminLayout>,
+    element: <AdminProjects />,
   },
   {
     path: '/admin-j28s7d1k/portfolio',
-    element: <AdminLayout><AdminPortfolio /></AdminLayout>,
-  },
-  {
-    path: '/admin-j28s7d1k/previews',
-    element: <AdminLayout><AdminPreviews /></AdminLayout>,
+    element: <AdminPortfolio />,
   },
   {
     path: '/admin-j28s7d1k/previews/:projectId',
-    element: <AdminLayout><PreviewProjectPage /></AdminLayout>,
+    element: <PreviewProjectPage />,
   },
   {
     path: '/admin-j28s7d1k/clients',
-    element: <AdminLayout><AdminClients /></AdminLayout>,
-  },
-  {
-    path: '/admin-j28s7d1k/marketing',
-    element: <AdminLayout><AdminMarketing /></AdminLayout>,
+    element: <AdminClients />,
   },
   {
     path: '/admin-j28s7d1k/settings',
-    element: <AdminLayout><AdminSettings /></AdminLayout>,
+    element: <AdminSettings />,
   },
   {
     path: '/admin-j28s7d1k/orders',
-    element: <AdminLayout><AdminProjects /></AdminLayout>,
+    element: <AdminProjects />,
   },
   {
     path: '/admin-j28s7d1k/payments',
-    element: <AdminLayout><AdminInvoices /></AdminLayout>,
+    element: <AdminInvoices />,
   },
   {
     path: '/admin-j28s7d1k/analytics',
-    element: <AdminLayout><AdminStatistics /></AdminLayout>,
+    element: <AdminStatistics />,
   },
   {
     path: '/admin-j28s7d1k/statistics',
-    element: <AdminLayout><AdminStatistics /></AdminLayout>,
+    element: <AdminStatistics />,
   },
   {
     path: '/admin-j28s7d1k/guides',
-    element: <AdminLayout><AdminGuides /></AdminLayout>,
+    element: <AdminGuides />,
   },
   {
     path: '/admin-j28s7d1k/documentation',
-    element: <AdminLayout><AdminGuides /></AdminLayout>,
+    element: <AdminGuides />,
   },
   {
     path: '/admin-j28s7d1k/integrations',
-    element: <AdminLayout><AdminIntegrations /></AdminLayout>,
+    element: <AdminIntegrations />,
   },
   {
     path: '/admin-j28s7d1k/invoices',
-    element: <AdminLayout><AdminInvoices /></AdminLayout>,
+    element: <AdminInvoices />,
   },
   {
     path: '/admin-j28s7d1k/storage',
-    element: <AdminLayout><AdminStorage /></AdminLayout>,
+    element: <AdminStorage />,
   },
 ];
 
