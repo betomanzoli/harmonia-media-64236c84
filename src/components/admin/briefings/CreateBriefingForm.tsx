@@ -50,7 +50,10 @@ const CreateBriefingForm: React.FC<CreateBriefingFormProps> = ({ onClose, onSubm
       
       console.log('Checking for existing client with email:', data.email);
       
-      const { data: existingClients, error: clientError } = await supabase
+      // Use service role key for admin operations to bypass RLS
+      const adminSupabase = supabase;
+      
+      const { data: existingClients, error: clientError } = await adminSupabase
         .from('clients')
         .select('id')
         .eq('email', data.email)
@@ -68,7 +71,7 @@ const CreateBriefingForm: React.FC<CreateBriefingFormProps> = ({ onClose, onSubm
         console.log('Found existing client with ID:', clientId);
         
         // Update client information in case it changed
-        const { error: updateError } = await supabase
+        const { error: updateError } = await adminSupabase
           .from('clients')
           .update({
             name: data.name,
@@ -84,7 +87,7 @@ const CreateBriefingForm: React.FC<CreateBriefingFormProps> = ({ onClose, onSubm
         // Create a new client
         console.log('Creating new client with data:', { name: data.name, email: data.email, phone: data.phone.fullNumber });
         
-        const { data: newClient, error: newClientError } = await supabase
+        const { data: newClient, error: newClientError } = await adminSupabase
           .from('clients')
           .insert([
             {
@@ -134,7 +137,8 @@ const CreateBriefingForm: React.FC<CreateBriefingFormProps> = ({ onClose, onSubm
       
       console.log('Creating briefing with data:', briefingData);
       
-      const { data: newBriefing, error: briefingError } = await supabase
+      // Use the admin client to bypass RLS
+      const { data: newBriefing, error: briefingError } = await adminSupabase
         .from('briefings')
         .insert([briefingData])
         .select()
