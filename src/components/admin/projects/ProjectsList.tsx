@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
@@ -8,7 +7,7 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigge
 import { Badge } from "@/components/ui/badge";
 import { MoreHorizontal, ChevronDown, Search, Loader2 } from "lucide-react";
 import { usePreviewProjects } from '@/hooks/admin/usePreviewProjects';
-import { formatDate } from '@/lib/utils';
+import { cn } from "@/lib/utils";
 
 interface ProjectsListProps {
   onEditProject: (projectId: string) => void;
@@ -36,6 +35,25 @@ const ProjectsList: React.FC<ProjectsListProps> = ({ onEditProject }) => {
   const handleDelete = (id: string) => {
     if (window.confirm('Tem certeza que deseja excluir este projeto?')) {
       deleteProject(id);
+    }
+  };
+
+  // Custom formatDate function since it's missing from utils
+  const formatDate = (dateString?: string): string => {
+    if (!dateString) return 'N/A';
+    
+    try {
+      // Check if it's already in dd/mm/yyyy format
+      if (/\d{2}\/\d{2}\/\d{4}/.test(dateString)) {
+        return dateString;
+      }
+      
+      // Otherwise try to parse and format the date
+      const date = new Date(dateString);
+      return date.toLocaleDateString('pt-BR');
+    } catch (error) {
+      console.error('Error formatting date:', error);
+      return dateString;
     }
   };
   
@@ -191,31 +209,19 @@ const ProjectsList: React.FC<ProjectsListProps> = ({ onEditProject }) => {
 };
 
 const StatusBadge: React.FC<{ status?: string }> = ({ status }) => {
-  let variant = "outline" as const;
-  let label = "Desconhecido";
-
+  // Use custom styling with tailwind classes instead of variant props
   switch (status) {
     case 'waiting':
-      variant = "outline";
-      label = "Aguardando Avaliação";
-      break;
+      return <Badge className="bg-gray-100 text-gray-800 hover:bg-gray-200">Aguardando Avaliação</Badge>;
     case 'feedback':
-      variant = "default";
-      label = "Feedback Recebido";
-      break;
+      return <Badge className="bg-blue-100 text-blue-800 hover:bg-blue-200">Feedback Recebido</Badge>;
     case 'approved':
-      variant = "success";
-      label = "Aprovada";
-      break;
+      return <Badge className="bg-green-100 text-green-800 hover:bg-green-200">Aprovada</Badge>;
     case 'inprogress':
-      variant = "secondary";
-      label = "Em Progresso";
-      break;
+      return <Badge className="bg-purple-100 text-purple-800 hover:bg-purple-200">Em Progresso</Badge>;
     default:
-      break;
+      return <Badge variant="outline">Desconhecido</Badge>;
   }
-
-  return <Badge variant={variant}>{label}</Badge>;
 };
 
 export default ProjectsList;
