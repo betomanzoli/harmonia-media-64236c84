@@ -28,6 +28,8 @@ const CreateBriefingForm: React.FC<CreateBriefingFormProps> = ({ onClose, onSubm
   const { addCustomer, getCustomerByEmail } = useCustomers();
 
   const processFormSubmit = async (data: BriefingFormValues) => {
+    console.log('Submitting form with data:', data);
+    
     try {
       // First, check if client exists or create a new one
       let clientId: string | null = null;
@@ -82,6 +84,10 @@ const CreateBriefingForm: React.FC<CreateBriefingFormProps> = ({ onClose, onSubm
         });
       }
       
+      // Capitalizar primeira letra do tipo de pacote
+      const packageType = data.packageType;
+      const capitalizedPackageType = packageType.charAt(0).toUpperCase() + packageType.slice(1);
+      
       // Create the briefing
       const { data: newBriefing, error: briefingError } = await supabase
         .from('briefings')
@@ -92,10 +98,10 @@ const CreateBriefingForm: React.FC<CreateBriefingFormProps> = ({ onClose, onSubm
             status: 'pending',
             data: {
               description: data.description || 'Novo briefing',
-              name: data.name,
-              email: data.email,
+              name: data.name, // Garantir que nome do cliente é salvo corretamente
+              email: data.email, // Garantir que email do cliente é salvo corretamente
               phone: data.phone.fullNumber,
-              packageType: data.packageType,
+              packageType: capitalizedPackageType, // Usar versão capitalizada
               createdAt: new Date().toISOString(),
             }
           }
@@ -121,7 +127,6 @@ const CreateBriefingForm: React.FC<CreateBriefingFormProps> = ({ onClose, onSubm
       }
       
       // Generate a consistent project ID based on the briefing ID
-      // Use the Supabase briefing ID directly to ensure consistency
       const projectId = newBriefing.id;
       
       // Create a preview project automatically linked to this briefing
@@ -133,7 +138,7 @@ const CreateBriefingForm: React.FC<CreateBriefingFormProps> = ({ onClose, onSubm
         clientName: data.name,
         clientEmail: data.email,
         clientPhone: data.phone.fullNumber,
-        packageType: data.packageType,
+        packageType: capitalizedPackageType, // Usar versão capitalizada
         createdAt: new Date().toLocaleDateString('pt-BR'),
         status: 'waiting' as const,
         versions: 0,

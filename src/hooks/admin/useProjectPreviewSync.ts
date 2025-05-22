@@ -24,10 +24,15 @@ export const useProjectPreviewSync = () => {
           }
         };
         
+        // Encontrar o projeto atual para poder adicionar ao histórico existente
+        const currentProject = projects.find(p => p.id === data.projectId);
+        const currentHistory = currentProject?.history || [];
+        
         updateProject(data.projectId, { 
           status: 'approved',
           lastActivityDate: new Date().toLocaleDateString('pt-BR'),
-          history: [historyEntry]
+          history: [...currentHistory, historyEntry],
+          feedback: data.comments || ''
         });
       }
     );
@@ -47,11 +52,15 @@ export const useProjectPreviewSync = () => {
           }
         };
         
+        // Encontrar o projeto atual para poder adicionar ao histórico existente
+        const currentProject = projects.find(p => p.id === data.projectId);
+        const currentHistory = currentProject?.history || [];
+        
         updateProject(data.projectId, { 
           status: 'feedback',
           feedback: data.message,
           lastActivityDate: new Date().toLocaleDateString('pt-BR'),
-          history: [historyEntry]
+          history: [...currentHistory, historyEntry]
         });
       }
     );
@@ -69,7 +78,7 @@ export const useProjectPreviewSync = () => {
       unsubscribeFeedback();
       unsubscribeCreated();
     };
-  }, [updateProject]);
+  }, [projects, updateProject]);
 
   return {
     // Function to synchronize status between projects and previews
