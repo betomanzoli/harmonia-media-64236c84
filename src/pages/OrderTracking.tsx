@@ -9,7 +9,6 @@ import OrderNotification from '@/components/order-tracking/OrderNotification';
 import { mockOrderData } from '@/components/order-tracking/mockOrderData';
 import { OrderData } from '@/components/order-tracking/types';
 import { openChatAssistant } from '@/components/order-tracking/ChatbotHelperFunctions';
-import { PreviewProject } from '@/hooks/admin/usePreviewProjects';
 
 const OrderTracking: React.FC = () => {
   const { orderId } = useParams<{ orderId: string }>();
