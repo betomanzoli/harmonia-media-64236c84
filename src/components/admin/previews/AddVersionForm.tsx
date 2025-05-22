@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -106,7 +107,7 @@ const AddVersionForm: React.FC<AddVersionFormProps> = ({
         id: `v${Date.now()}`,
         name: title,
         description,
-        audioUrl, // Agora corresponde à propriedade na interface
+        audioUrl,
         fileId,
         dateAdded: new Date().toLocaleDateString('pt-BR'),
         recommended,

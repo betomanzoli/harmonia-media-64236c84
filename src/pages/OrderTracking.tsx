@@ -1,54 +1,185 @@
 
-import React, { useEffect, useState } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
-import OrderDetails from '@/components/order-tracking/OrderDetails';
-import OrderNotFound from '@/components/order-tracking/OrderNotFound';
-import OrderSearch from '@/components/order-tracking/OrderSearch';
-import ChatbotHelper from '@/components/order-tracking/ChatbotHelper';
-import OrderNotification from '@/components/order-tracking/OrderNotification';
-import { mockOrderData } from '@/components/order-tracking/mockOrderData';
-import { OrderData } from '@/components/order-tracking/types';
-import { openChatAssistant } from '@/components/order-tracking/ChatbotHelperFunctions';
+import React, { useState } from 'react';
+import Header from '@/components/Header';
+import Footer from '@/components/Footer';
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { useToast } from "@/hooks/use-toast";
+import { useNavigate } from 'react-router-dom';
+import { Search, Clock, Calendar, Loader2 } from 'lucide-react';
+import { usePreviewProjects, ProjectItem } from '@/hooks/admin/usePreviewProjects';
 
 const OrderTracking: React.FC = () => {
-  const { orderId } = useParams<{ orderId: string }>();
+  const [orderId, setOrderId] = useState('');
+  const [email, setEmail] = useState('');
+  const [isSearching, setIsSearching] = useState(false);
+  const [orderDetails, setOrderDetails] = useState<ProjectItem | null>(null);
+  const { toast } = useToast();
   const navigate = useNavigate();
-  const [order, setOrder] = useState<OrderData | undefined>(undefined);
-
-  useEffect(() => {
-    if (orderId) {
-      // Simulate fetching order data
-      const fetchedOrder = mockOrderData.find(o => o.orderId === orderId);
-      setOrder(fetchedOrder);
+  const { projects } = usePreviewProjects();
+  
+  const handleSearch = () => {
+    if (!orderId.trim()) {
+      toast({
+        title: "Código obrigatório",
+        description: "Por favor, informe o código do pedido.",
+        variant: "destructive"
+      });
+      return;
     }
-  }, [orderId]);
-
-  const handleSearch = (searchId: string) => {
-    navigate(`/order-tracking/${searchId}`);
+    
+    setIsSearching(true);
+    
+    // Simular busca de pedido
+    setTimeout(() => {
+      const foundProject = projects.find(p => 
+        p.id.toLowerCase() === orderId.toLowerCase() && 
+        p.clientEmail.toLowerCase() === email.toLowerCase()
+      );
+      
+      if (foundProject) {
+        setOrderDetails(foundProject);
+      } else {
+        toast({
+          title: "Pedido não encontrado",
+          description: "Verifique o código e email informados e tente novamente.",
+          variant: "destructive"
+        });
+      }
+      
+      setIsSearching(false);
+    }, 1000);
   };
-
+  
+  const getStatusText = (status: string) => {
+    switch(status) {
+      case 'waiting':
+        return 'Aguardando sua avaliação';
+      case 'feedback':
+        return 'Em ajustes conforme seu feedback';
+      case 'approved':
+        return 'Projeto aprovado - Finalização em andamento';
+      default:
+        return 'Em processamento';
+    }
+  };
+  
   return (
-    <div className="min-h-screen bg-gray-50 py-6 flex flex-col justify-center sm:py-12">
-      <div className="relative py-3 sm:max-w-xl sm:mx-auto">
-        <div className="absolute inset-0 bg-gradient-to-r from-harmonia-blue to-harmonia-purple shadow-lg transform -skew-y-6 sm:skew-y-0 sm:-rotate-6 sm:rounded-3xl"></div>
-        <div className="relative bg-white shadow-lg sm:rounded-3xl p-8">
-          <OrderSearch onSearch={handleSearch} />
-          {order ? (
-            <>
-              <OrderDetails order={order} />
-              <OrderNotification 
-                orderId={order.orderId}
-                hasPreview={order.hasPreview}
-                previewLink={order.previewLink}
-                pendingAction={order.pendingAction || null}
-              />
-              <ChatbotHelper />
-            </>
-          ) : orderId ? (
-            <OrderNotFound onChatAssistant={openChatAssistant} />
-          ) : null}
+    <div className="min-h-screen bg-background">
+      <Header />
+      <main className="pt-24 pb-20 px-6 md:px-10">
+        <div className="max-w-3xl mx-auto">
+          <h1 className="text-3xl font-bold mb-8 text-center">Acompanhar Pedido</h1>
+          
+          <Card className="mb-8">
+            <CardHeader>
+              <CardTitle>Buscar Pedido</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-4">
+                <div>
+                  <Label htmlFor="order-id">Código do Pedido</Label>
+                  <Input 
+                    id="order-id" 
+                    placeholder="Ex: P0001" 
+                    value={orderId}
+                    onChange={(e) => setOrderId(e.target.value)}
+                  />
+                </div>
+                
+                <div>
+                  <Label htmlFor="email">Email</Label>
+                  <Input 
+                    id="email" 
+                    type="email" 
+                    placeholder="Seu email cadastrado no pedido" 
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                  />
+                </div>
+                
+                <Button 
+                  onClick={handleSearch} 
+                  disabled={isSearching} 
+                  className="w-full"
+                >
+                  {isSearching ? (
+                    <>
+                      <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                      Buscando...
+                    </>
+                  ) : (
+                    <>
+                      <Search className="h-4 w-4 mr-2" />
+                      Buscar Pedido
+                    </>
+                  )}
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
+          
+          {orderDetails && (
+            <Card>
+              <CardHeader>
+                <CardTitle>Detalhes do Pedido {orderDetails.id}</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-6">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                      <h3 className="text-sm font-medium text-gray-500">Cliente</h3>
+                      <p className="font-medium">{orderDetails.clientName}</p>
+                    </div>
+                    
+                    <div>
+                      <h3 className="text-sm font-medium text-gray-500">Email</h3>
+                      <p className="font-medium">{orderDetails.clientEmail}</p>
+                    </div>
+                  </div>
+                  
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                      <h3 className="text-sm font-medium text-gray-500">Pacote</h3>
+                      <p className="font-medium">{orderDetails.packageType}</p>
+                    </div>
+                    
+                    <div>
+                      <h3 className="text-sm font-medium text-gray-500">Data do Pedido</h3>
+                      <p className="flex items-center">
+                        <Calendar className="h-4 w-4 mr-2 text-gray-400" />
+                        {orderDetails.createdAt}
+                      </p>
+                    </div>
+                  </div>
+                  
+                  <div>
+                    <h3 className="text-sm font-medium text-gray-500">Status do Pedido</h3>
+                    <div className="flex items-center mt-1">
+                      <Clock className="h-4 w-4 mr-2 text-harmonia-green" />
+                      <span className="font-medium">{getStatusText(orderDetails.status)}</span>
+                    </div>
+                  </div>
+                  
+                  {orderDetails.status !== 'waiting' && (
+                    <div className="pt-4 border-t">
+                      <Button 
+                        onClick={() => navigate(`/preview/${orderDetails.id}`)} 
+                        className="w-full bg-harmonia-green hover:bg-harmonia-green/90"
+                      >
+                        Ver Prévias da Música
+                      </Button>
+                    </div>
+                  )}
+                </div>
+              </CardContent>
+            </Card>
+          )}
         </div>
-      </div>
+      </main>
+      <Footer />
     </div>
   );
 };

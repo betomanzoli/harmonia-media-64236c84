@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -5,7 +6,11 @@ import { Card } from "@/components/ui/card";
 import { Search, AlertCircle } from 'lucide-react';
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { mockOrderData } from './mockOrderData';
-import { OrderSearchProps, OrderData, OrderProgressStatus } from './types';
+import { OrderData, OrderProgressStatus } from './types';
+
+interface OrderSearchProps {
+  onSearch: (order: OrderData) => void;
+}
 
 const OrderSearch: React.FC<OrderSearchProps> = ({ onSearch }) => {
   const [orderId, setOrderId] = useState('');
@@ -20,17 +25,43 @@ const OrderSearch: React.FC<OrderSearchProps> = ({ onSearch }) => {
       return;
     }
     
-    // Buscar no mockData ou localStorage
+    // Procurar no localStorage primeiro
+    const localOrderData = localStorage.getItem('orderData');
+    if (localOrderData) {
+      try {
+        const parsedData = JSON.parse(localOrderData);
+        if (parsedData.orderId === orderId.trim()) {
+          // Converter dados locais para o formato OrderData
+          const today = new Date().toLocaleDateString('pt-BR');
+          const formattedOrder: OrderData = {
+            orderId: parsedData.orderId,
+            clientName: parsedData.clientName,
+            packageType: parsedData.packageType,
+            status: 'Em Análise',
+            currentStep: 1,
+            orderDate: today, // Adding the missing orderDate property
+            expectedDelivery: getExpectedDeliveryDate(),
+            previewLink: null,
+            progress: generateProgressSteps(),
+          };
+          onSearch(formattedOrder);
+          return;
+        }
+      } catch (e) {
+        console.error('Erro ao processar dados do pedido local:', e);
+      }
+    }
+    
+    // Se não encontrar localmente, procurar nos dados de exemplo
     const foundOrder = mockOrderData.find(order => order.orderId === orderId.trim());
     
     if (foundOrder) {
-      // Encontrou o pedido, navegue para a página
-      onSearch(orderId.trim());
+      onSearch(foundOrder);
     } else {
       setError('Pedido não encontrado. Verifique o número e tente novamente.');
     }
   };
-
+  
   // Função auxiliar para gerar data de entrega esperada (2 semanas a partir de hoje)
   const getExpectedDeliveryDate = () => {
     const date = new Date();

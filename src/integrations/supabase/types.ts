@@ -508,30 +508,6 @@ export type Database = {
         }
         Relationships: []
       }
-      preview_tokens: {
-        Row: {
-          created_at: string | null
-          expires_at: string
-          id: string
-          preview_id: string
-          token: string
-        }
-        Insert: {
-          created_at?: string | null
-          expires_at: string
-          id?: string
-          preview_id: string
-          token: string
-        }
-        Update: {
-          created_at?: string | null
-          expires_at?: string
-          id?: string
-          preview_id?: string
-          token?: string
-        }
-        Relationships: []
-      }
       previews: {
         Row: {
           allowed_emails: string[]

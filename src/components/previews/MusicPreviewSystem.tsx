@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { usePreviewProject } from '@/hooks/usePreviewProject';
 import { Loader2, Calendar, Music, MessageSquare, ArrowLeft, CheckCircle } from 'lucide-react';
@@ -10,37 +9,18 @@ import { Textarea } from '@/components/ui/textarea';
 import PreviewPlayerList from '@/components/previews/player/PreviewPlayerList';
 import PreviewProjectDetails from '@/components/previews/PreviewProjectDetails';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
-import PreviewFeedbackForm from '@/components/previews/PreviewFeedbackForm';
-import { supabase } from '@/lib/supabase';
 
 interface MusicPreviewSystemProps {
   projectId: string;
-  projectData?: any;
-  token?: string | null;
 }
 
-const MusicPreviewSystem: React.FC<MusicPreviewSystemProps> = ({ projectId, projectData: initialProjectData, token }) => {
-  const { projectData: hookProjectData, isLoading: hookLoading, updateProjectStatus } = usePreviewProject(projectId);
-  const [projectData, setProjectData] = useState<any>(initialProjectData || null);
+const MusicPreviewSystem: React.FC<MusicPreviewSystemProps> = ({ projectId }) => {
+  const { projectData, isLoading, updateProjectStatus } = usePreviewProject(projectId);
   const [selectedVersion, setSelectedVersion] = useState<string | null>(null);
   const [feedback, setFeedback] = useState('');
   const [submitting, setSubmitting] = useState(false);
   const [playingAudio, setPlayingAudio] = useState<HTMLAudioElement | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
   const { toast } = useToast();
-  
-  // Use either the directly passed project data (from token validation) or data from the hook
-  useEffect(() => {
-    if (initialProjectData) {
-      setProjectData(initialProjectData);
-      setIsLoading(false);
-    } else if (hookProjectData) {
-      setProjectData(hookProjectData);
-      setIsLoading(hookLoading);
-    } else {
-      setIsLoading(hookLoading);
-    }
-  }, [initialProjectData, hookProjectData, hookLoading]);
   
   useEffect(() => {
     // If project data is loaded and there are previews, select the first one
@@ -95,7 +75,7 @@ const MusicPreviewSystem: React.FC<MusicPreviewSystemProps> = ({ projectId, proj
     setSelectedVersion(id);
   };
   
-  const handleFeedbackSubmit = async (feedbackText: string) => {
+  const handleFeedbackSubmit = () => {
     if (!selectedVersion) {
       toast({
         title: 'Versão não selecionada',
@@ -105,7 +85,7 @@ const MusicPreviewSystem: React.FC<MusicPreviewSystemProps> = ({ projectId, proj
       return;
     }
     
-    if (!feedbackText.trim()) {
+    if (!feedback.trim()) {
       toast({
         title: 'Feedback vazio',
         description: 'Por favor, escreva seu feedback antes de enviar.',
@@ -116,69 +96,30 @@ const MusicPreviewSystem: React.FC<MusicPreviewSystemProps> = ({ projectId, proj
     
     setSubmitting(true);
     
-    try {
-      // If we have a token, use the edge function
-      if (token) {
-        const response = await fetch(`https://ivueqxyuflxsiecqvmgt.supabase.co/functions/v1/submit-preview-feedback`, {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({
-            preview_id: projectId,
-            feedback: feedbackText,
-            status: 'feedback',
-            token: token,
-            selected_version: selectedVersion
-          })
-        });
-
-        const result = await response.json();
-        
-        if (!result.success) {
-          throw new Error(result.error || "Failed to submit feedback");
-        }
-        
-        // Update local state
-        setProjectData(prevData => ({
-          ...prevData,
-          status: 'feedback'
-        }));
-        
+    // Update project status
+    const success = updateProjectStatus('feedback', feedback);
+    
+    setTimeout(() => {
+      setSubmitting(false);
+      
+      if (success) {
         toast({
           title: 'Feedback enviado',
           description: 'Seu feedback foi enviado com sucesso.',
           variant: 'default'
         });
+        setFeedback('');
       } else {
-        // Use the regular update method
-        const success = updateProjectStatus('feedback', feedbackText);
-        
-        if (success) {
-          toast({
-            title: 'Feedback enviado',
-            description: 'Seu feedback foi enviado com sucesso.',
-            variant: 'default'
-          });
-        } else {
-          throw new Error("Failed to update project status");
-        }
+        toast({
+          title: 'Erro ao enviar feedback',
+          description: 'Não foi possível enviar seu feedback. Tente novamente mais tarde.',
+          variant: 'destructive'
+        });
       }
-      
-      setFeedback('');
-    } catch (error: any) {
-      console.error('Error submitting feedback:', error);
-      toast({
-        title: 'Erro ao enviar feedback',
-        description: error.message || 'Não foi possível enviar seu feedback. Tente novamente mais tarde.',
-        variant: 'destructive'
-      });
-    } finally {
-      setSubmitting(false);
-    }
+    }, 1000); // Simulating API call delay
   };
   
-  const handleApproveVersion = async (feedbackText?: string) => {
+  const handleApproveVersion = () => {
     if (!selectedVersion) {
       toast({
         title: 'Versão não selecionada',
@@ -190,66 +131,27 @@ const MusicPreviewSystem: React.FC<MusicPreviewSystemProps> = ({ projectId, proj
     
     setSubmitting(true);
     
-    try {
-      // If we have a token, use the edge function
-      if (token) {
-        const response = await fetch(`https://ivueqxyuflxsiecqvmgt.supabase.co/functions/v1/submit-preview-feedback`, {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({
-            preview_id: projectId,
-            feedback: feedbackText || 'Cliente aprovou a versão sem comentários adicionais.',
-            status: 'approved',
-            token: token,
-            selected_version: selectedVersion
-          })
-        });
-
-        const result = await response.json();
-        
-        if (!result.success) {
-          throw new Error(result.error || "Failed to approve version");
-        }
-        
-        // Update local state
-        setProjectData(prevData => ({
-          ...prevData,
-          status: 'approved'
-        }));
-        
+    // Update project status
+    const success = updateProjectStatus('approved', feedback || 'Cliente aprovou a versão sem comentários adicionais.');
+    
+    setTimeout(() => {
+      setSubmitting(false);
+      
+      if (success) {
         toast({
           title: 'Versão aprovada',
           description: 'Sua aprovação foi registrada com sucesso.',
           variant: 'default'
         });
+        setFeedback('');
       } else {
-        // Use the regular update method
-        const success = updateProjectStatus('approved', feedbackText || 'Cliente aprovou a versão sem comentários adicionais.');
-        
-        if (success) {
-          toast({
-            title: 'Versão aprovada',
-            description: 'Sua aprovação foi registrada com sucesso.',
-            variant: 'default'
-          });
-        } else {
-          throw new Error("Failed to update project status");
-        }
+        toast({
+          title: 'Erro ao aprovar versão',
+          description: 'Não foi possível registrar sua aprovação. Tente novamente mais tarde.',
+          variant: 'destructive'
+        });
       }
-      
-      setFeedback('');
-    } catch (error: any) {
-      console.error('Error approving version:', error);
-      toast({
-        title: 'Erro ao aprovar versão',
-        description: error.message || 'Não foi possível registrar sua aprovação. Tente novamente mais tarde.',
-        variant: 'destructive'
-      });
-    } finally {
-      setSubmitting(false);
-    }
+    }, 1000); // Simulating API call delay
   };
   
   if (isLoading) {
@@ -276,13 +178,13 @@ const MusicPreviewSystem: React.FC<MusicPreviewSystemProps> = ({ projectId, proj
     );
   }
   
-  const selectedPreview = projectData.previews && projectData.previews.find(p => p.id === selectedVersion);
+  const selectedPreview = projectData.previews.find(p => p.id === selectedVersion);
   const isApproved = projectData.status === 'approved';
   
   return (
     <div className="container mx-auto max-w-5xl px-4">
       <div className="mb-8">
-        <h1 className="text-2xl md:text-3xl font-bold text-black mb-3">{projectData.projectTitle || projectData.title}</h1>
+        <h1 className="text-2xl md:text-3xl font-bold text-black mb-3">{projectData.projectTitle}</h1>
         <p className="text-gray-600">
           Olá {projectData.clientName}, avalie as versões do seu projeto e envie seu feedback.
         </p>
@@ -301,7 +203,7 @@ const MusicPreviewSystem: React.FC<MusicPreviewSystemProps> = ({ projectId, proj
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         <div className="md:col-span-2">
           <PreviewPlayerList
-            versions={projectData.previews || []}
+            versions={projectData.previews}
             selectedVersion={selectedVersion}
             setSelectedVersion={handleVersionSelect}
             isApproved={isApproved}
@@ -316,16 +218,50 @@ const MusicPreviewSystem: React.FC<MusicPreviewSystemProps> = ({ projectId, proj
               </CardTitle>
             </CardHeader>
             <CardContent>
-              <PreviewFeedbackForm
-                feedback={feedback}
-                onFeedbackChange={setFeedback}
-                onSubmit={handleFeedbackSubmit}
-                onApprove={handleApproveVersion}
-                status={projectData.status}
-                selectedVersion={selectedVersion}
-                versionTitle={selectedPreview?.title}
-                projectId={projectId}
-              />
+              {isApproved ? (
+                <div className="bg-green-50 p-4 rounded-md">
+                  <p className="text-green-700">
+                    Obrigado pelo seu feedback! Seu projeto foi aprovado e estamos finalizando os detalhes.
+                  </p>
+                </div>
+              ) : (
+                <div className="space-y-4">
+                  <div className="bg-gray-50 p-4 rounded-md">
+                    <p className="text-sm text-gray-600 mb-2">
+                      {selectedVersion 
+                        ? `Versão selecionada: ${projectData.previews.find(p => p.id === selectedVersion)?.title || 'Versão selecionada'}` 
+                        : 'Nenhuma versão selecionada. Por favor, escolha uma opção acima.'}
+                    </p>
+                    
+                    <Textarea
+                      placeholder="Conte-nos o que você achou da versão selecionada. O que você gostou? Há algo que você gostaria de mudar?"
+                      className="min-h-[150px]"
+                      value={feedback}
+                      onChange={(e) => setFeedback(e.target.value)}
+                      disabled={isApproved || submitting}
+                    />
+                  </div>
+                  
+                  <div className="flex justify-end space-x-3">
+                    <Button
+                      variant="outline"
+                      onClick={handleApproveVersion}
+                      disabled={isApproved || submitting || !selectedVersion}
+                    >
+                      <CheckCircle className="h-4 w-4 mr-2" />
+                      Aprovar versão
+                    </Button>
+                    <Button
+                      className="bg-harmonia-green hover:bg-harmonia-green/90"
+                      onClick={handleFeedbackSubmit}
+                      disabled={isApproved || submitting || !selectedVersion || !feedback.trim()}
+                    >
+                      <MessageSquare className="h-4 w-4 mr-2" />
+                      Enviar feedback
+                    </Button>
+                  </div>
+                </div>
+              )}
             </CardContent>
           </Card>
         </div>
@@ -333,7 +269,7 @@ const MusicPreviewSystem: React.FC<MusicPreviewSystemProps> = ({ projectId, proj
         <div>
           <PreviewProjectDetails 
             projectData={{
-              projectTitle: projectData.projectTitle || projectData.title,
+              projectTitle: projectData.projectTitle,
               clientName: projectData.clientName,
               status: projectData.status,
               packageType: projectData.packageType,
