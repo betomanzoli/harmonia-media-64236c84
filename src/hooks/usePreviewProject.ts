@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { useToast } from '@/hooks/use-toast';
 import { useGoogleDriveAudio } from '@/hooks/audio/useGoogleDriveAudio';
@@ -37,26 +36,6 @@ export const usePreviewProject = (projectId: string | undefined) => {
   const [isLoading, setIsLoading] = useState(true);
   const [accessTokenValid, setAccessTokenValid] = useState(true);
   const [originalProjectId] = useState(projectId);
-  
-  // Log key information for debugging
-  useEffect(() => {
-    if (projectId) {
-      console.log(`[usePreviewProject] Initializing with projectId: ${projectId}`);
-      
-      // Check for existing feedback in localStorage
-      try {
-        const feedbackKeys = Object.keys(localStorage).filter(key => 
-          key.startsWith(`preview_feedback_`)
-        );
-        
-        if (feedbackKeys.length > 0) {
-          console.log(`Found ${feedbackKeys.length} saved feedback entries`);
-        }
-      } catch (e) {
-        console.warn('Unable to check localStorage for feedback', e);
-      }
-    }
-  }, [projectId]);
   
   useEffect(() => {
     if (!projectId) {
@@ -200,22 +179,12 @@ export const usePreviewProject = (projectId: string | undefined) => {
     }
   }, [projectId, getProjectById, audioFiles, toast]);
   
-  // Update project status function - enhanced with better history handling
+  // Update project status function
   const updateProjectStatus = (newStatus: 'approved' | 'feedback', comments: string) => {
     if (!projectId || !projectData) return false;
 
     console.log(`Atualizando status do projeto ${projectId} para ${newStatus}`);
     console.log(`Feedback do cliente: ${comments}`);
-    
-    // Save feedback to localStorage for persistence between page reloads
-    try {
-      // Store global status
-      localStorage.setItem(`preview_status_${projectId}`, newStatus);
-      // Store last feedback
-      localStorage.setItem(`preview_last_feedback_${projectId}`, comments || '');
-    } catch (e) {
-      console.warn('Error saving feedback state to localStorage', e);
-    }
     
     // Update the project in the admin system
     if (projectId) {
@@ -239,26 +208,20 @@ export const usePreviewProject = (projectId: string | undefined) => {
         history: [historyEntry]
       };
       
-      // Use setTimeout to ensure this runs asynchronously and doesn't block UI
-      setTimeout(() => {
-        try {
-          const updated = updateProject(projectId, updates);
-          console.log(`Project update result: ${updated ? 'Success' : 'Failed'}`);
-        } catch (error) {
-          console.error('Error updating project status:', error);
-        }
-      }, 0);
+      const updated = updateProject(projectId, updates);
       
-      // Update local state immediately for responsive UI
-      setProjectData(prev => {
-        if (!prev) return null;
-        return {
-          ...prev,
-          status: newStatus
-        };
-      });
-      
-      return true;
+      if (updated) {
+        // Update local state
+        setProjectData(prev => {
+          if (!prev) return null;
+          return {
+            ...prev,
+            status: newStatus
+          };
+        });
+        
+        return true;
+      }
     }
     
     return false;

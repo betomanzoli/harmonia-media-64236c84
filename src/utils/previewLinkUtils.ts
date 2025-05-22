@@ -1,7 +1,7 @@
 
 import { v4 as uuidv4 } from 'uuid';
 import { setPreviewAccessCookie, checkPreviewAccessCookie, setPreviewEmailCookie, getAuthCookie } from './authCookies';
-import { supabase } from '@/lib/supabase';
+import { supabase } from '@/integrations/supabase/client';
 
 // Create a more secure mapping between encoded IDs and project IDs
 const previewLinksMap = new Map<string, string>();
@@ -24,40 +24,11 @@ const getCookie = (name: string): string | null => {
   return null;
 };
 
-// Generate a random token
-const generateToken = () => {
-  return Array(32)
-    .fill(0)
-    .map(() => Math.random().toString(36).charAt(2))
-    .join('');
-};
-
-// Generate a preview link with a unique encoded ID and access token
+// Generate a preview link with a unique encoded ID
 export const generatePreviewLink = async (projectId: string): Promise<string> => {
   try {
     // Generate a unique encoded ID that's harder to guess
     const encodedId = uuidv4().replace(/-/g, ''); 
-    
-    // Generate a random access token
-    const token = generateToken();
-    
-    // Set the expiration date (14 days from now)
-    const expirationDate = new Date();
-    expirationDate.setDate(expirationDate.getDate() + 14);
-    
-    // Store the token in the database
-    const { error: tokenError } = await supabase
-      .from('preview_tokens')
-      .insert({
-        preview_id: projectId,
-        token: token,
-        expires_at: expirationDate.toISOString()
-      });
-    
-    if (tokenError) {
-      console.error('Failed to store preview token:', tokenError);
-      // Continue without token if there's an error
-    }
     
     // Update the project record with the preview code
     const { error } = await supabase
@@ -81,8 +52,7 @@ export const generatePreviewLink = async (projectId: string): Promise<string> =>
     mappings[encodedId] = projectId;
     setCookie('previewLinksMappings', JSON.stringify(mappings));
     
-    // Return link with token
-    return `${encodedId}?token=${token}`;
+    return encodedId;
   } catch (error) {
     console.error('Error generating preview link:', error);
     return '';
@@ -92,14 +62,11 @@ export const generatePreviewLink = async (projectId: string): Promise<string> =>
 // Get project ID from preview link (encoded ID)
 export const getProjectIdFromPreviewLink = async (encodedId: string): Promise<string | null> => {
   try {
-    // Extract the project ID from the encoded ID (remove any query params)
-    const cleanEncodedId = encodedId.split('?')[0];
-    
     // Try to get project ID from database first
     const { data, error } = await supabase
       .from('projects')
       .select('id')
-      .eq('preview_code', cleanEncodedId)
+      .eq('preview_code', encodedId)
       .single();
       
     if (data && data.id) {
@@ -111,16 +78,16 @@ export const getProjectIdFromPreviewLink = async (encodedId: string): Promise<st
     }
     
     // Fall back to in-memory map
-    let projectId = previewLinksMap.get(cleanEncodedId);
+    let projectId = previewLinksMap.get(encodedId);
     
     // If not found in memory, check in cookies
     if (!projectId) {
       const storedMappings = JSON.parse(getCookie('previewLinksMappings') || '{}');
-      projectId = storedMappings[cleanEncodedId] || null;
+      projectId = storedMappings[encodedId] || null;
       
       // Add to in-memory map if found
       if (projectId) {
-        previewLinksMap.set(cleanEncodedId, projectId);
+        previewLinksMap.set(encodedId, projectId);
       }
     }
     
