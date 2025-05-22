@@ -1,4 +1,3 @@
-
 import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '@/lib/supabase';
 import { useToast } from '@/hooks/use-toast';
@@ -12,6 +11,12 @@ export interface VersionItem {
   fileId?: string;
   recommended?: boolean;
   final?: boolean;
+  audioUrl?: string;  // Adicionando propriedade audioUrl
+  url?: string;      // Adicionando propriedade url para compatibilidade
+  additionalLinks?: {
+    label: string;
+    url: string;
+  }[];
 }
 
 // Interface para armazenar dados de um projeto de prévia
@@ -30,7 +35,11 @@ export interface PreviewProject {
   versionsList?: VersionItem[];
   feedback?: string;
   history?: any[];
+  useGoogleDrive?: boolean;
 }
+
+// Alias do tipo PreviewProject para manter compatibilidade
+export type ProjectItem = PreviewProject;
 
 // Mapear projetos baseado nos dados recebidos
 const mapToProjects = (data: any[]): PreviewProject[] => {
@@ -48,7 +57,8 @@ const mapToProjects = (data: any[]): PreviewProject[] => {
     lastActivityDate: item.last_activity_date ? new Date(item.last_activity_date).toLocaleDateString('pt-BR') : undefined,
     versionsList: item.versions_list || [],
     feedback: item.feedback,
-    history: item.history || []
+    history: item.history || [],
+    useGoogleDrive: item.use_google_drive || false
   }));
 };
 

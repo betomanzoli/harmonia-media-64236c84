@@ -5,10 +5,10 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Link } from 'react-router-dom';
 import { Eye, Send, Clock, FileCheck, MessageSquare, Loader2 } from 'lucide-react';
-import { ProjectItem } from '@/hooks/admin/usePreviewProjects';
+import { PreviewProject } from '@/hooks/admin/usePreviewProjects'; // Alterado de ProjectItem para PreviewProject
 
 interface ProjectsListCardProps {
-  projects: ProjectItem[];
+  projects: PreviewProject[];
   isLoading?: boolean;
 }
 

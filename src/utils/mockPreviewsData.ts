@@ -1,7 +1,7 @@
+import { v4 as uuidv4 } from 'uuid';
+import { PreviewProject } from '@/hooks/admin/usePreviewProjects';
 
-import { ProjectItem } from '@/hooks/admin/usePreviewProjects';
-
-export const generateMockPreviews = (): ProjectItem[] => {
+export const generateMockPreviews = (): PreviewProject[] => {
   const today = new Date();
   
   // Generate expiration date (30 days from now)
@@ -14,7 +14,7 @@ export const generateMockPreviews = (): ProjectItem[] => {
   
   return [
     {
-      id: "P0001",
+      id: uuidv4(),
       clientName: "João Silva",
       clientEmail: "joao.silva@email.com",
       packageType: "Premium",
@@ -44,7 +44,7 @@ export const generateMockPreviews = (): ProjectItem[] => {
       ]
     },
     {
-      id: "P0002",
+      id: uuidv4(),
       clientName: "Maria Oliveira",
       clientEmail: "maria.oliveira@email.com",
       packageType: "Essencial",
@@ -67,7 +67,7 @@ export const generateMockPreviews = (): ProjectItem[] => {
       feedback: "Gostei muito da melodia, mas gostaria que o ritmo fosse um pouco mais rápido e que os vocais estivessem mais presentes na mixagem."
     },
     {
-      id: "P0003",
+      id: uuidv4(),
       clientName: "Carlos Santos",
       clientEmail: "carlos.santos@email.com",
       packageType: "Profissional",

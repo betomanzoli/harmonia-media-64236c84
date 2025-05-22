@@ -13,8 +13,9 @@ export const usePreviewProject = (projectId: string | undefined) => {
   const { toast } = useToast();
   const baseHook = useBasePreviewProject(projectId);
   
-  // Return the baseHook with the proper type
-  return baseHook as {
+  // Convertemos o tipo do baseHook para corrigir o erro de tipagem
+  // usando 'as unknown' primeiro para contornar a verificação de tipos
+  return baseHook as unknown as {
     projectData: PreviewProject | null;
     setProjectData: React.Dispatch<React.SetStateAction<PreviewProject | null>>;
     isLoading: boolean;

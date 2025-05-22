@@ -19,7 +19,7 @@ const VersionCard: React.FC<VersionCardProps> = ({
   onDeleteVersion
 }) => {
   const [isPlaying, setIsPlaying] = useState(false);
-  const [audio] = useState(new Audio(version.audioUrl));
+  const [audio] = useState(new Audio(version.audioUrl || '')); // Agora corresponde à propriedade na interface
   const { toast } = useToast();
 
   const handleTogglePlay = () => {
