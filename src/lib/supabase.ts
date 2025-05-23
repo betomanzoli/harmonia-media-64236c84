@@ -9,7 +9,7 @@ const supabaseAnonKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYm
 // Use a dedicated storage key for preview authentication
 const PREVIEW_AUTH_STORAGE_KEY = 'harmonia-preview-auth';
 
-// Initialize the Supabase client with improved error handling and configuration for incognito mode
+// Initialize the Supabase client with improved error handling and configuration
 export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
   auth: {
     persistSession: true,
@@ -19,10 +19,28 @@ export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
   },
   global: {
     fetch: (...args: Parameters<typeof fetch>) => {
-      return fetch(...args).catch(error => {
-        console.error('Supabase fetch error:', error);
-        throw error;
-      });
+      return fetch(...args)
+        .then(response => {
+          // Additional handling for successful responses if needed
+          return response;
+        })
+        .catch(error => {
+          // If we're offline, suppress network errors
+          if (!navigator.onLine) {
+            console.warn('Network request failed while offline:', error);
+            // Return mock response for offline mode
+            return new Response(JSON.stringify({ 
+              data: [], 
+              error: { message: 'Application is in offline mode' } 
+            }), { 
+              status: 200, 
+              headers: { 'Content-Type': 'application/json' } 
+            });
+          }
+          
+          console.error('Supabase fetch error:', error);
+          throw error;
+        });
     }
   }
 });
@@ -40,6 +58,34 @@ export const checkPrivateBrowsing = async (): Promise<boolean> => {
   } catch (e) {
     // localStorage failed, probably in private browsing
     return true;
+  }
+};
+
+// Clean up Supabase auth state - helps fix auth issues
+export const cleanupAuthState = () => {
+  try {
+    // Remove standard auth tokens
+    localStorage.removeItem('supabase.auth.token');
+    
+    // Remove all Supabase auth keys from localStorage
+    Object.keys(localStorage).forEach((key) => {
+      if (key.startsWith('supabase.auth.') || key.includes('sb-')) {
+        localStorage.removeItem(key);
+      }
+    });
+    
+    // Remove from sessionStorage if in use
+    Object.keys(sessionStorage || {}).forEach((key) => {
+      if (key.startsWith('supabase.auth.') || key.includes('sb-')) {
+        sessionStorage.removeItem(key);
+      }
+    });
+    
+    console.log('Auth state cleaned up successfully');
+    return true;
+  } catch (error) {
+    console.error('Error cleaning up auth state:', error);
+    return false;
   }
 };
 
@@ -74,54 +120,5 @@ export const emailService = {
     return { success: true };
   }
 };
-
-// Verificação inicial das tabelas necessárias apenas se estiver online
-(async () => {
-  try {
-    // Verificar se estamos online antes de tentar acessar o Supabase
-    if (!navigator.onLine) {
-      console.log('Aplicação está offline. Pulando verificação de tabelas.');
-      return;
-    }
-    
-    // Verificar se as tabelas existem de maneira segura
-    const checkTable = async (tableName: string) => {
-      try {
-        const { data, error } = await supabase
-          .from(tableName)
-          .select('count(*)', { count: 'exact', head: true });
-        
-        // Se não ocorreu erro, a tabela existe
-        return !error;
-      } catch (err) {
-        // Em caso de erro, consideramos que a tabela não existe
-        return false;
-      }
-    };
-    
-    // Verificar tabelas comuns
-    const tableChecks = [
-      { name: 'preview_tokens', rpcName: 'create_preview_tokens_table' },
-      { name: 'access_logs', rpcName: 'create_access_logs_table' },
-      { name: 'project_files', rpcName: 'create_project_files_table' },
-      { name: 'preview_projects', rpcName: 'create_preview_projects_table' }
-    ];
-    
-    for (const table of tableChecks) {
-      const exists = await checkTable(table.name);
-      if (!exists) {
-        console.log(`Tabela ${table.name} não encontrada. Tentando criar...`);
-        try {
-          await supabase.rpc(table.rpcName);
-          console.log(`Tabela ${table.name} criada com sucesso.`);
-        } catch (err) {
-          console.error(`Erro ao criar tabela ${table.name}:`, err);
-        }
-      }
-    }
-  } catch (err) {
-    console.error('Erro ao verificar tabelas do banco de dados:', err);
-  }
-})();
 
 export default supabase;

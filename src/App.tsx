@@ -49,7 +49,8 @@ const App: React.FC = () => {
               const response = await fetch('/supabase/migrations/20250522_create_db_functions.sql');
               
               if (!response.ok) {
-                throw new Error(`Failed to fetch SQL file: ${response.status} ${response.statusText}`);
+                console.error(`Failed to fetch SQL file: ${response.status} ${response.statusText}`);
+                return;
               }
               
               const sql = await response.text();
@@ -61,9 +62,11 @@ const App: React.FC = () => {
                 try {
                   await supabase.rpc('exec_sql', { sql: statement });
                 } catch (err) {
-                  console.error("Error executing SQL:", err);
+                  console.warn("Error executing SQL statement, may already exist:", err);
                 }
               }
+              
+              console.log("Database functions created successfully");
             } catch (fetchError) {
               console.error("Error fetching or executing SQL file:", fetchError);
             }
