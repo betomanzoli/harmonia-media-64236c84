@@ -11,6 +11,7 @@ import { useToast } from '@/hooks/use-toast';
 import { usePreviewProjects } from '@/hooks/admin/usePreviewProjects';
 import { useCustomers } from '@/hooks/admin/useCustomers';
 import webhookService from '@/services/webhookService';
+import { notificationService } from '@/services/notificationService';
 
 interface CreateBriefingFormProps {
   onClose: () => void;
@@ -190,6 +191,35 @@ const CreateBriefingForm: React.FC<CreateBriefingFormProps> = ({ onClose, onSubm
       // Add the project with a specific ID instead of generating a new one
       addProject(previewProject);
       console.log(`Created project ${projectId} for briefing ${newBriefing.id}`);
+      
+      // Also save to Supabase for persistence
+      try {
+        const { error } = await adminSupabase
+          .from('preview_projects')
+          .insert({
+            id: projectId,
+            client_name: data.name,
+            project_title: data.description || 'Novo projeto',
+            package_type: capitalizedPackageType,
+            status: 'waiting',
+            created_at: new Date().toISOString(),
+            expiration_date: expirationDate.toISOString(),
+            last_activity_date: new Date().toISOString()
+          });
+          
+        if (error) {
+          console.error('Error saving preview project to database:', error);
+        }
+      } catch (dbError) {
+        console.error('Exception saving preview project to database:', dbError);
+      }
+      
+      // Notify system about new project
+      notificationService.notify('project_created', {
+        projectId: projectId,
+        clientName: data.name,
+        packageType: capitalizedPackageType
+      });
       
       // Call the passed onSubmit to update the UI
       onSubmit(data);

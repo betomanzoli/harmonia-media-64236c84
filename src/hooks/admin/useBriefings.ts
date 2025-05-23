@@ -3,6 +3,7 @@ import { useState, useCallback, useEffect } from 'react';
 import { createId } from '@paralleldrive/cuid2';
 import { supabase } from '@/lib/supabase';
 import { useToast } from '@/hooks/use-toast';
+import { useDatabaseSetup } from './useDatabaseSetup';
 
 export interface Briefing {
   id: string;
@@ -22,6 +23,9 @@ export const useBriefings = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const { toast } = useToast();
+  
+  // Initialize database tables if necessary
+  useDatabaseSetup();
 
   // Load briefings from Supabase
   const fetchBriefings = useCallback(async () => {

@@ -5,6 +5,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
 import { ThumbsUp, SendHorizonal } from 'lucide-react';
 import { notificationService } from '@/services/notificationService';
+import { supabase } from '@/lib/supabase';
 
 interface PreviewFeedbackFormProps {
   feedback: string;
@@ -41,6 +42,23 @@ const PreviewFeedbackForm: React.FC<PreviewFeedbackFormProps> = ({
       try {
         localStorage.setItem(`preview_status_${projectId}`, localStatus);
         console.log(`Saved status ${localStatus} for project ${projectId} to localStorage`);
+        
+        // Also persist to database if possible
+        if (supabase) {
+          supabase.from('preview_projects')
+            .upsert({
+              id: projectId,
+              status: localStatus,
+              last_activity_date: new Date().toISOString()
+            }, { onConflict: 'id' })
+            .then(({ error }) => {
+              if (error) {
+                console.error("Error saving preview status to database:", error);
+              } else {
+                console.log("Saved preview status to database");
+              }
+            });
+        }
       } catch (err) {
         console.error("Error saving preview status to localStorage:", err);
       }
@@ -53,8 +71,23 @@ const PreviewFeedbackForm: React.FC<PreviewFeedbackFormProps> = ({
       try {
         const savedStatus = localStorage.getItem(`preview_status_${projectId}`);
         if (savedStatus && (savedStatus === 'approved' || savedStatus === 'feedback')) {
-          setLocalStatus(savedStatus);
+          setLocalStatus(savedStatus as 'waiting' | 'feedback' | 'approved');
           console.log(`Loaded saved status ${savedStatus} for project ${projectId} from localStorage`);
+        }
+        
+        // Try to load from database as well
+        if (supabase) {
+          supabase.from('preview_projects')
+            .select('status')
+            .eq('id', projectId)
+            .single()
+            .then(({ data, error }) => {
+              if (!error && data && data.status) {
+                const dbStatus = data.status as 'waiting' | 'feedback' | 'approved';
+                setLocalStatus(dbStatus);
+                console.log(`Loaded status ${dbStatus} for project ${projectId} from database`);
+              }
+            });
         }
       } catch (err) {
         console.error("Error loading preview status from localStorage:", err);
@@ -84,6 +117,25 @@ const PreviewFeedbackForm: React.FC<PreviewFeedbackFormProps> = ({
     if (projectId) {
       try {
         localStorage.setItem(`preview_feedback_${projectId}`, feedback);
+        localStorage.setItem(`preview_status_${projectId}`, 'feedback');
+        
+        // Also persist to database
+        if (supabase) {
+          supabase.from('preview_projects')
+            .upsert({
+              id: projectId,
+              status: 'feedback',
+              feedback: feedback,
+              last_activity_date: new Date().toISOString()
+            }, { onConflict: 'id' })
+            .then(({ error }) => {
+              if (error) {
+                console.error("Error saving feedback to database:", error);
+              } else {
+                console.log("Saved feedback to database");
+              }
+            });
+        }
       } catch (err) {
         console.error("Error saving feedback to localStorage:", err);
       }
@@ -123,6 +175,24 @@ const PreviewFeedbackForm: React.FC<PreviewFeedbackFormProps> = ({
       try {
         localStorage.setItem(`preview_status_${projectId}`, 'approved');
         localStorage.setItem(`preview_feedback_${projectId}`, feedback);
+        
+        // Also persist to database
+        if (supabase) {
+          supabase.from('preview_projects')
+            .upsert({
+              id: projectId,
+              status: 'approved',
+              feedback: feedback,
+              last_activity_date: new Date().toISOString()
+            }, { onConflict: 'id' })
+            .then(({ error }) => {
+              if (error) {
+                console.error("Error saving approval to database:", error);
+              } else {
+                console.log("Saved approval to database");
+              }
+            });
+        }
       } catch (err) {
         console.error("Error saving approval to localStorage:", err);
       }
@@ -145,7 +215,7 @@ const PreviewFeedbackForm: React.FC<PreviewFeedbackFormProps> = ({
       
       {selectedVersion && versionTitle && (
         <div className="mb-4 p-3 rounded-md bg-green-500">
-          <p className="text-sm">
+          <p className="text-sm text-white">
             <span className="font-medium">Versão selecionada:</span> {versionTitle}
           </p>
         </div>
