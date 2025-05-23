@@ -1,3 +1,7 @@
-// ✅ RE-EXPORT DO ARQUIVO PRINCIPAL (resolver referência circular)
-export { supabase, emailService, dbHelpers } from './supabase/index';
-export default supabase;
+
+/**
+ * Re-export all Supabase functionality from the supabase directory
+ */
+
+export * from './supabase/index';
+export { default } from './supabase/index';
