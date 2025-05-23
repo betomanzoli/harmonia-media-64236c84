@@ -1,6 +1,6 @@
 
 import { useState, useEffect } from 'react';
-import supabaseClient from '@/lib/supabase';
+import supabase from '@/lib/supabase';
 import { createId } from '@paralleldrive/cuid2';
 
 export interface Briefing {
@@ -23,7 +23,7 @@ export const useBriefings = () => {
     setError(null);
     
     try {
-      const { data, error: supabaseError } = await supabaseClient
+      const { data, error: supabaseError } = await supabase
         .from('briefings')
         .select(`
           id,
