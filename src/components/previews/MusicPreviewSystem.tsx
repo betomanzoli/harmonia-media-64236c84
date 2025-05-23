@@ -9,6 +9,13 @@ import { Textarea } from '@/components/ui/textarea';
 import PreviewPlayerList from '@/components/previews/player/PreviewPlayerList';
 import PreviewProjectDetails from '@/components/previews/PreviewProjectDetails';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
+import { createClient } from '@supabase/supabase-js';
+
+// Inicializar cliente Supabase
+const supabase = createClient(
+  process.env.NEXT_PUBLIC_SUPABASE_URL!,
+  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+);
 
 interface MusicPreviewSystemProps {
   projectId: string;
@@ -20,7 +27,33 @@ const MusicPreviewSystem: React.FC<MusicPreviewSystemProps> = ({ projectId }) =>
   const [feedback, setFeedback] = useState('');
   const [submitting, setSubmitting] = useState(false);
   const [playingAudio, setPlayingAudio] = useState<HTMLAudioElement | null>(null);
+  const [currentFeedback, setCurrentFeedback] = useState<any>(null);
   const { toast } = useToast();
+  
+  // Carregar feedback existente
+  useEffect(() => {
+    const loadExistingFeedback = async () => {
+      if (!projectId || !projectData?.clientEmail) return;
+
+      try {
+        const { data } = await supabase
+          .from('feedbacks')
+          .select('*')
+          .eq('project_id', projectId)
+          .eq('user_email', projectData.clientEmail)
+          .single();
+
+        if (data) {
+          setCurrentFeedback(data);
+          setFeedback(data.comments || '');
+        }
+      } catch (error) {
+        console.error('Erro ao carregar feedback:', error);
+      }
+    };
+
+    loadExistingFeedback();
+  }, [projectId, projectData?.clientEmail]);
   
   useEffect(() => {
     // If project data is loaded and there are previews, select the first one
@@ -75,7 +108,8 @@ const MusicPreviewSystem: React.FC<MusicPreviewSystemProps> = ({ projectId }) =>
     setSelectedVersion(id);
   };
   
-  const handleFeedbackSubmit = () => {
+  // ✅ FUNÇÃO CORRIGIDA - Salva no Supabase
+  const handleFeedbackSubmit = async () => {
     if (!selectedVersion) {
       toast({
         title: 'Versão não selecionada',
@@ -96,30 +130,55 @@ const MusicPreviewSystem: React.FC<MusicPreviewSystemProps> = ({ projectId }) =>
     
     setSubmitting(true);
     
-    // Update project status
-    const success = updateProjectStatus('feedback', feedback);
-    
-    setTimeout(() => {
-      setSubmitting(false);
-      
-      if (success) {
-        toast({
-          title: 'Feedback enviado',
-          description: 'Seu feedback foi enviado com sucesso.',
-          variant: 'default'
-        });
-        setFeedback('');
-      } else {
-        toast({
-          title: 'Erro ao enviar feedback',
-          description: 'Não foi possível enviar seu feedback. Tente novamente mais tarde.',
-          variant: 'destructive'
-        });
+    try {
+      // ✅ SALVAR NO BANCO DE DADOS SUPABASE
+      const { data, error } = await supabase
+        .from('feedbacks')
+        .upsert(
+          {
+            project_id: projectId,
+            user_email: projectData?.clientEmail || 'unknown@email.com',
+            status: 'feedback',
+            comments: feedback,
+            updated_at: new Date().toISOString()
+          },
+          {
+            onConflict: 'project_id,user_email'
+          }
+        )
+        .select()
+        .single();
+
+      if (error) {
+        throw error;
       }
-    }, 1000); // Simulating API call delay
+
+      // ✅ ATUALIZAR ESTADO LOCAL TAMBÉM
+      setCurrentFeedback(data);
+      updateProjectStatus('feedback', feedback);
+      
+      toast({
+        title: 'Feedback enviado',
+        description: 'Seu feedback foi enviado e salvo com sucesso.',
+        variant: 'default'
+      });
+      
+      // Não limpar o feedback para manter na tela
+      
+    } catch (error) {
+      console.error('Erro ao salvar feedback:', error);
+      toast({
+        title: 'Erro ao enviar feedback',
+        description: 'Não foi possível salvar seu feedback. Tente novamente.',
+        variant: 'destructive'
+      });
+    } finally {
+      setSubmitting(false);
+    }
   };
   
-  const handleApproveVersion = () => {
+  // ✅ FUNÇÃO CORRIGIDA - Salva no Supabase
+  const handleApproveVersion = async () => {
     if (!selectedVersion) {
       toast({
         title: 'Versão não selecionada',
@@ -131,27 +190,56 @@ const MusicPreviewSystem: React.FC<MusicPreviewSystemProps> = ({ projectId }) =>
     
     setSubmitting(true);
     
-    // Update project status
-    const success = updateProjectStatus('approved', feedback || 'Cliente aprovou a versão sem comentários adicionais.');
-    
-    setTimeout(() => {
-      setSubmitting(false);
+    try {
+      const approvalComment = feedback || 'Cliente aprovou a versão sem comentários adicionais.';
       
-      if (success) {
-        toast({
-          title: 'Versão aprovada',
-          description: 'Sua aprovação foi registrada com sucesso.',
-          variant: 'default'
-        });
-        setFeedback('');
-      } else {
-        toast({
-          title: 'Erro ao aprovar versão',
-          description: 'Não foi possível registrar sua aprovação. Tente novamente mais tarde.',
-          variant: 'destructive'
-        });
+      // ✅ SALVAR NO BANCO DE DADOS SUPABASE
+      const { data, error } = await supabase
+        .from('feedbacks')
+        .upsert(
+          {
+            project_id: projectId,
+            user_email: projectData?.clientEmail || 'unknown@email.com',
+            status: 'approved',
+            comments: approvalComment,
+            updated_at: new Date().toISOString()
+          },
+          {
+            onConflict: 'project_id,user_email'
+          }
+        )
+        .select()
+        .single();
+
+      if (error) {
+        throw error;
       }
-    }, 1000); // Simulating API call delay
+
+      // ✅ ATUALIZAR ESTADO LOCAL TAMBÉM
+      setCurrentFeedback(data);
+      updateProjectStatus('approved', approvalComment);
+      
+      toast({
+        title: 'Versão aprovada',
+        description: 'Sua aprovação foi registrada e salva com sucesso.',
+        variant: 'default'
+      });
+      
+      // Redirecionar para página de confirmação após 2 segundos
+      setTimeout(() => {
+        window.location.href = '/approval-confirmation';
+      }, 2000);
+      
+    } catch (error) {
+      console.error('Erro ao salvar aprovação:', error);
+      toast({
+        title: 'Erro ao aprovar versão',
+        description: 'Não foi possível salvar sua aprovação. Tente novamente.',
+        variant: 'destructive'
+      });
+    } finally {
+      setSubmitting(false);
+    }
   };
   
   if (isLoading) {
@@ -179,7 +267,7 @@ const MusicPreviewSystem: React.FC<MusicPreviewSystemProps> = ({ projectId }) =>
   }
   
   const selectedPreview = projectData.previews.find(p => p.id === selectedVersion);
-  const isApproved = projectData.status === 'approved';
+  const isApproved = currentFeedback?.status === 'approved' || projectData.status === 'approved';
   
   return (
     <div className="container mx-auto max-w-5xl px-4">
@@ -223,6 +311,12 @@ const MusicPreviewSystem: React.FC<MusicPreviewSystemProps> = ({ projectId }) =>
                   <p className="text-green-700">
                     Obrigado pelo seu feedback! Seu projeto foi aprovado e estamos finalizando os detalhes.
                   </p>
+                  {currentFeedback?.comments && (
+                    <div className="mt-3 p-3 bg-white rounded border">
+                      <p className="text-sm text-gray-600 mb-1">Seu feedback:</p>
+                      <p className="text-gray-800">{currentFeedback.comments}</p>
+                    </div>
+                  )}
                 </div>
               ) : (
                 <div className="space-y-4">
@@ -249,7 +343,7 @@ const MusicPreviewSystem: React.FC<MusicPreviewSystemProps> = ({ projectId }) =>
                       disabled={isApproved || submitting || !selectedVersion}
                     >
                       <CheckCircle className="h-4 w-4 mr-2" />
-                      Aprovar versão
+                      {submitting ? 'Aprovando...' : 'Aprovar versão'}
                     </Button>
                     <Button
                       className="bg-harmonia-green hover:bg-harmonia-green/90"
@@ -257,7 +351,7 @@ const MusicPreviewSystem: React.FC<MusicPreviewSystemProps> = ({ projectId }) =>
                       disabled={isApproved || submitting || !selectedVersion || !feedback.trim()}
                     >
                       <MessageSquare className="h-4 w-4 mr-2" />
-                      Enviar feedback
+                      {submitting ? 'Enviando...' : 'Enviar feedback'}
                     </Button>
                   </div>
                 </div>
@@ -271,7 +365,7 @@ const MusicPreviewSystem: React.FC<MusicPreviewSystemProps> = ({ projectId }) =>
             projectData={{
               projectTitle: projectData.projectTitle,
               clientName: projectData.clientName,
-              status: projectData.status,
+              status: currentFeedback?.status || projectData.status,
               packageType: projectData.packageType,
               creationDate: projectData.createdAt ? new Date(projectData.createdAt).toLocaleDateString('pt-BR') : undefined
             }}
