@@ -46,9 +46,45 @@ export const sendTestEmail = async (email: string) => {
   });
 };
 
+/**
+ * Send briefing confirmation email
+ */
+export const sendBriefingConfirmation = async (email: string, name: string) => {
+  return sendEmail({
+    to: email,
+    subject: 'Confirmação de Briefing - Harmonia',
+    body: `Olá ${name},\n\nAgradecemos pelo preenchimento do briefing. Em breve entraremos em contato para prosseguir com seu projeto.\n\nAtenciosamente,\nEquipe Harmonia`
+  });
+};
+
+/**
+ * Send preview notification email
+ */
+export const sendPreviewNotification = async (email: string, name: string, previewUrl: string) => {
+  return sendEmail({
+    to: email,
+    subject: 'Novas Prévias Disponíveis - Harmonia',
+    body: `Olá ${name},\n\nTemos o prazer de informar que novas prévias do seu projeto estão disponíveis para visualização.\n\nAcesse: ${previewUrl}\n\nAtenciosamente,\nEquipe Harmonia`
+  });
+};
+
+/**
+ * Send payment confirmation email
+ */
+export const sendPaymentConfirmation = async (email: string, name: string, packageName: string) => {
+  return sendEmail({
+    to: email,
+    subject: 'Confirmação de Pagamento - Harmonia',
+    body: `Olá ${name},\n\nConfirmamos o recebimento do pagamento para o pacote ${packageName}. Estamos preparando tudo para começar seu projeto.\n\nAtenciosamente,\nEquipe Harmonia`
+  });
+};
+
 const emailService = {
   sendEmail,
-  sendTestEmail
+  sendTestEmail,
+  sendBriefingConfirmation,
+  sendPreviewNotification,
+  sendPaymentConfirmation
 };
 
 export default emailService;

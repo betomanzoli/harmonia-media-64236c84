@@ -15,9 +15,6 @@ if (!supabaseUrl || !supabaseKey) {
 
 export const supabaseClient = createClient(supabaseUrl, supabaseKey);
 
-// Export services
-export { default as emailService } from './emailService';
-
 // Auth functions
 export const signIn = async (email: string, password: string) => {
   return supabaseClient.auth.signInWithPassword({ email, password });
@@ -40,4 +37,9 @@ export const getUser = async () => {
   return data.user;
 };
 
+// Export emailService
+export { default as emailService } from './emailService';
+
+// Export the client as default and also as named export
+export { supabaseClient as supabase };
 export default supabaseClient;
