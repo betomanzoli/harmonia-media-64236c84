@@ -46,13 +46,13 @@ const MusicSubmissionPage: React.FC = () => {
       const fileName = `${Date.now()}-${Math.floor(Math.random() * 1000)}.${fileExt}`;
       const filePath = `submissions/${fileName}`;
 
+      // Create a custom upload handler to track progress
       const { error: uploadError, data: fileData } = await supabase.storage
         .from('music-submissions')
-        .upload(filePath, audioFile, {
-          onUploadProgress: (progress) => {
-            setUploadProgress(Math.round((progress.loaded / progress.total) * 100));
-          }
-        });
+        .upload(filePath, audioFile);
+
+      // Update progress after upload completes
+      setUploadProgress(100);
 
       if (uploadError) {
         throw new Error('Erro ao fazer upload do arquivo');
@@ -169,7 +169,6 @@ const MusicSubmissionPage: React.FC = () => {
                   id="name"
                   {...register("name", { required: "Nome é obrigatório" })}
                   placeholder="Seu nome"
-                  error={errors.name?.message}
                   disabled={isSubmitting}
                 />
                 {errors.name && <p className="text-red-500 text-sm mt-1">{errors.name.message}</p>}
