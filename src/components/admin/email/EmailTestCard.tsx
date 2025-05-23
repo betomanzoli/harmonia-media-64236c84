@@ -1,80 +1,82 @@
 
 import React, { useState } from 'react';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Label } from "@/components/ui/label";
+import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { toast } from "@/hooks/use-toast";
-import { Loader2 } from 'lucide-react';
-import { emailService } from '@/lib/supabase';
-import { Alert, AlertDescription } from "@/components/ui/alert";
+import { Select, SelectItem } from "@/components/ui/select";
+import { toast } from '@/hooks/use-toast';
 
-const EmailTestCard: React.FC = () => {
-  const [testEmail, setTestEmail] = useState('');
-  const [testName, setTestName] = useState('');
-  const [emailType, setEmailType] = useState('briefing');
+interface EmailTestCardProps {
+  emailService?: {
+    sendEmail: (to: string, subject: string, content: string) => Promise<{ success: boolean; message: string }>;
+  };
+}
+
+const EmailTestCard: React.FC<EmailTestCardProps> = ({ emailService }) => {
+  const [recipient, setRecipient] = useState('');
+  const [subject, setSubject] = useState('Teste de Email - Harmonia');
+  const [templateType, setTemplateType] = useState('welcome');
   const [isSending, setIsSending] = useState(false);
-  const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
-  const handleSendTestEmail = async () => {
-    if (!testEmail) {
+  const templates = {
+    welcome: {
+      subject: "Bem-vindo à Harmonia",
+      content: "Olá! Seja bem-vindo aos nossos serviços de música personalizada."
+    },
+    preview: {
+      subject: "Sua prévia musical está disponível",
+      content: "Sua prévia musical foi finalizada e está disponível para avaliação."
+    },
+    delivery: {
+      subject: "Sua música está pronta!",
+      content: "Sua música personalizada está pronta para download. Aproveite sua criação!"
+    }
+  };
+
+  const handleTemplateChange = (value: string) => {
+    setTemplateType(value);
+    setSubject(templates[value as keyof typeof templates].subject);
+  };
+
+  const handleSendTest = async () => {
+    if (!recipient) {
       toast({
-        title: "Email necessário",
-        description: "Por favor, insira um email para enviar o teste.",
-        variant: "destructive",
+        title: "Erro",
+        description: "Por favor, informe um email válido",
+        variant: "destructive"
       });
       return;
     }
 
     setIsSending(true);
-    setErrorMessage(null);
-    
+
     try {
-      let result;
-      
-      switch (emailType) {
-        case 'briefing':
-          result = await emailService.sendBriefingConfirmation(testEmail, testName || 'Cliente Teste');
-          break;
-        case 'preview':
-          result = await emailService.sendPreviewNotification(
-            testEmail, 
-            testName || 'Cliente Teste',
-            `${window.location.origin}/cliente/previews/test-12345`
-          );
-          break;
-        case 'payment':
-          result = await emailService.sendPaymentConfirmation(
-            testEmail,
-            testName || 'Cliente Teste',
-            'Pacote Premium (Teste)'
-          );
-          break;
-        default:
-          throw new Error('Tipo de email não reconhecido');
+      // Check if emailService exists before trying to send an email
+      if (!emailService?.sendEmail) {
+        throw new Error("Email service not available");
       }
-      
+
+      const content = templates[templateType as keyof typeof templates].content;
+      const result = await emailService.sendEmail(recipient, subject, content);
+
       if (result.success) {
         toast({
-          title: "Email enviado",
-          description: "O email de teste foi enviado com sucesso.",
+          title: "Email Enviado",
+          description: "Email de teste enviado com sucesso!"
         });
       } else {
-        setErrorMessage("Falha na edge function. Verifique as configurações do Supabase.");
         toast({
-          title: "Falha no envio",
-          description: "Não foi possível enviar o email de teste. Veja os detalhes abaixo.",
-          variant: "destructive",
+          title: "Erro",
+          description: result.message || "Falha ao enviar email de teste",
+          variant: "destructive"
         });
       }
-    } catch (error: any) {
-      console.error("Erro ao enviar email de teste:", error);
-      setErrorMessage(error.message || "Ocorreu um erro ao enviar o email.");
+    } catch (error) {
+      console.error("Email test error:", error);
       toast({
         title: "Erro",
-        description: "Ocorreu um erro ao enviar o email.",
-        variant: "destructive",
+        description: "Ocorreu um erro ao enviar o email de teste",
+        variant: "destructive"
       });
     } finally {
       setIsSending(false);
@@ -82,81 +84,46 @@ const EmailTestCard: React.FC = () => {
   };
 
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle>Teste de Email</CardTitle>
-        <CardDescription>
-          Envie emails de teste para verificar a configuração
-        </CardDescription>
-      </CardHeader>
-      <CardContent className="space-y-4">
-        {errorMessage && (
-          <Alert variant="destructive" className="mb-4">
-            <AlertDescription className="text-xs">
-              <p className="font-medium mb-1">Erro ao enviar email:</p>
-              <p>{errorMessage}</p>
-              <p className="mt-2 text-xs">Nota: Este erro pode ocorrer porque a Edge Function no Supabase não está configurada. Para resolver, acesse o Supabase Dashboard e certifique-se de que a função "send-email" está criada e configurada corretamente.</p>
-            </AlertDescription>
-          </Alert>
-        )}
-        
-        <div className="space-y-2">
-          <Label htmlFor="test-email">Email para Teste</Label>
-          <Input
-            id="test-email"
+    <Card className="p-6 bg-white mb-6">
+      <h2 className="text-xl font-bold mb-4">Testar Envio de Email</h2>
+      <p className="text-gray-600 mb-4">Envie um email de teste para verificar a configuração.</p>
+      
+      <div className="space-y-4">
+        <div>
+          <label className="block text-sm font-medium mb-1">Destinatário</label>
+          <Input 
             type="email"
-            placeholder="seuemail@exemplo.com"
-            value={testEmail}
-            onChange={(e) => setTestEmail(e.target.value)}
+            value={recipient}
+            onChange={(e) => setRecipient(e.target.value)}
+            placeholder="email@exemplo.com"
           />
         </div>
         
-        <div className="space-y-2">
-          <Label htmlFor="test-name">Nome para Teste</Label>
-          <Input
-            id="test-name"
-            placeholder="Nome do Cliente"
-            value={testName}
-            onChange={(e) => setTestName(e.target.value)}
-          />
-        </div>
-        
-        <div className="space-y-2">
-          <Label htmlFor="email-type">Tipo de Email</Label>
-          <Select
-            value={emailType}
-            onValueChange={setEmailType}
-          >
-            <SelectTrigger id="email-type">
-              <SelectValue placeholder="Selecione o tipo de email" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="briefing">Confirmação de Briefing</SelectItem>
-              <SelectItem value="preview">Notificação de Prévias</SelectItem>
-              <SelectItem value="payment">Confirmação de Pagamento</SelectItem>
-            </SelectContent>
+        <div>
+          <label className="block text-sm font-medium mb-1">Template</label>
+          <Select value={templateType} onValueChange={handleTemplateChange}>
+            <SelectItem value="welcome">Boas-vindas</SelectItem>
+            <SelectItem value="preview">Notificação de Prévia</SelectItem>
+            <SelectItem value="delivery">Entrega Final</SelectItem>
           </Select>
         </div>
         
-        <Button
-          onClick={handleSendTestEmail}
-          disabled={isSending}
-          className="w-full mt-4"
-        >
-          {isSending ? (
-            <>
-              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-              Enviando...
-            </>
-          ) : (
-            'Enviar Email de Teste'
-          )}
-        </Button>
+        <div>
+          <label className="block text-sm font-medium mb-1">Assunto</label>
+          <Input 
+            value={subject}
+            onChange={(e) => setSubject(e.target.value)}
+          />
+        </div>
         
-        <p className="text-xs text-muted-foreground mt-2">
-          Nota: Para utilizar este recurso, é necessário ter uma Edge Function "send-email" configurada no Supabase. Consulte o arquivo de exemplo em src/services/edgeFunctionExample.js.
-        </p>
-      </CardContent>
+        <Button 
+          onClick={handleSendTest}
+          disabled={isSending}
+          className="w-full"
+        >
+          {isSending ? "Enviando..." : "Enviar Email de Teste"}
+        </Button>
+      </div>
     </Card>
   );
 };
