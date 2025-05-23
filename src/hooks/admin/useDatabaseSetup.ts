@@ -1,3 +1,4 @@
+
 import { useEffect } from 'react';
 import { supabase } from '@/lib/supabase';
 
@@ -14,9 +15,24 @@ export const useDatabaseSetup = () => {
       }
       
       try {
+        // Check if the exec_sql function exists (required for other functions)
+        const { data: funcExists, error: funcCheckError } = await supabase.rpc(
+          'check_if_table_exists',
+          { table_name: 'not_real_table_just_checking_function' }
+        );
+        
+        if (funcCheckError && funcCheckError.message && 
+            funcCheckError.message.includes('function') && 
+            funcCheckError.message.includes('does not exist')) {
+          console.log("Database functions don't exist or aren't accessible.");
+          // The user will need to manually run the SQL migrations first
+          return;
+        }
+        
         // Improved approach to verify table existence and create if needed
         const checkAndCreateTable = async (tableName: string, createFunctionName: string) => {
           try {
+            console.log(`Checking if table ${tableName} exists...`);
             // Check if table exists with improved error handling
             const { error: checkError } = await supabase
               .from(tableName)
@@ -24,7 +40,10 @@ export const useDatabaseSetup = () => {
             
             if (checkError) {
               // If error indicates table doesn't exist, create it
-              if (checkError.code === '42P01' || checkError.message?.includes('does not exist')) {
+              if (checkError.code === '42P01' || 
+                  checkError.message?.includes('does not exist') ||
+                  checkError.message?.toLowerCase().includes('relation') && 
+                  checkError.message?.toLowerCase().includes('not')) {
                 console.log(`Table ${tableName} doesn't exist. Creating...`);
                 
                 try {
@@ -50,18 +69,43 @@ export const useDatabaseSetup = () => {
           }
         };
         
-        // Check and create the necessary tables
-        await checkAndCreateTable('preview_tokens', 'create_preview_tokens_table');
-        await checkAndCreateTable('access_logs', 'create_access_logs_table');
-        await checkAndCreateTable('project_files', 'create_project_files_table');
-        await checkAndCreateTable('preview_projects', 'create_preview_projects_table');
+        // Check and create the necessary tables with defensive retry logic
+        const tables = [
+          { name: 'preview_tokens', func: 'create_preview_tokens_table' },
+          { name: 'access_logs', func: 'create_access_logs_table' },
+          { name: 'project_files', func: 'create_project_files_table' },
+          { name: 'preview_projects', func: 'create_preview_projects_table' }
+        ];
+        
+        for (const table of tables) {
+          await checkAndCreateTable(table.name, table.func);
+        }
         
       } catch (err) {
         console.error("Error initializing database tables:", err);
       }
     };
     
-    initializeDatabase();
+    // Only run when online
+    if (navigator.onLine) {
+      initializeDatabase();
+    } else {
+      console.log('Application is offline. Database initialization skipped.');
+    }
+    
+    // Add listener for online status changes
+    const handleOnlineStatus = () => {
+      if (navigator.onLine) {
+        console.log('App is back online. Initializing database...');
+        initializeDatabase();
+      }
+    };
+    
+    window.addEventListener('online', handleOnlineStatus);
+    
+    return () => {
+      window.removeEventListener('online', handleOnlineStatus);
+    };
   }, []);
   
   return null;

@@ -1,6 +1,6 @@
 
 import React, { createContext, useContext, useState, useCallback, useEffect } from 'react';
-import { supabase } from '@/integrations/supabase/client';
+import { supabase, cleanupAuthState } from '@/lib/supabase';
 
 // Update AuthStatus type to match the actual string literals used in the code
 type AuthStatus = 'loading' | 'authenticated' | 'unauthenticated';
@@ -22,22 +22,33 @@ const AuthContext = createContext<AuthContextType>({
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [authStatus, setAuthStatus] = useState<AuthStatus>('loading');
 
-  // Check auth status on mount
+  // Check auth status on mount with improved error handling
   useEffect(() => {
     checkAuthStatus();
   }, []);
 
   const checkAuthStatus = useCallback(() => {
-    // This is a simplified mock implementation
-    // In a real app, you'd check tokens in localStorage or cookies
-    const storedToken = localStorage.getItem('admin-auth-token');
-    const storedUser = localStorage.getItem('admin-auth-user');
-    
-    if (storedToken && storedUser) {
-      console.log('Auth token found, setting status to authenticated');
-      setAuthStatus('authenticated');
-    } else {
-      console.log('No auth token found, setting status to unauthenticated');
+    try {
+      // Clean up any stale auth state first to avoid conflicts
+      if (localStorage.getItem('auth-status-checked') !== 'true') {
+        cleanupAuthState();
+        localStorage.setItem('auth-status-checked', 'true');
+      }
+      
+      // This is a simplified mock implementation
+      // In a real app, you'd check tokens in localStorage or cookies
+      const storedToken = localStorage.getItem('admin-auth-token');
+      const storedUser = localStorage.getItem('admin-auth-user');
+      
+      if (storedToken && storedUser) {
+        console.log('Auth token found, setting status to authenticated');
+        setAuthStatus('authenticated');
+      } else {
+        console.log('No auth token found, setting status to unauthenticated');
+        setAuthStatus('unauthenticated');
+      }
+    } catch (error) {
+      console.error('Error checking auth status:', error);
       setAuthStatus('unauthenticated');
     }
   }, []);
@@ -46,6 +57,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     console.log('Login attempt with:', username);
     
     try {
+      // Clear any existing auth state to prevent conflicts
+      cleanupAuthState();
+      
       // This is a simplified mock implementation
       // In a real app, you'd make an API call to validate credentials
       if ((username === 'admin@harmonia.com' && password === 'admin123456') || 
@@ -74,6 +88,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const logout = () => {
     console.log('Logging out, removing auth token');
+    // Clean up auth state completely
+    cleanupAuthState();
     localStorage.removeItem('admin-auth-token');
     localStorage.removeItem('admin-auth-user');
     setAuthStatus('unauthenticated');
