@@ -11,7 +11,7 @@ export function Badge({ children, className = '', variant = 'default' }: BadgePr
   
   const variantClasses = {
     default: 'bg-blue-100 text-blue-800',
-    outline: 'border border-gray-300 text-gray-700'
+    outline: 'border border-gray-300 text-gray-700 bg-white'
   };
 
   return (
