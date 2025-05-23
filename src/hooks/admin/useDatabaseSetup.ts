@@ -9,60 +9,40 @@ export const useDatabaseSetup = () => {
       console.log("Checking and initializing database tables if needed...");
       
       try {
-        // Check preview_tokens table
-        const { error: previewTokensError } = await supabase
-          .from('preview_tokens')
-          .select('id')
-          .limit(1);
-          
-        if (previewTokensError && previewTokensError.code === '42P01') {
-          console.log("Creating preview_tokens table");
-          
-          // Create the preview_tokens table
-          const { error } = await supabase.rpc('create_preview_tokens_table');
-          if (error) console.error("Error creating preview_tokens table:", error);
-        }
+        // Verificar existência das tabelas com tratamento de erro aprimorado
+        const checkTableExists = async (tableName: string, createFunction: string) => {
+          try {
+            const { data, error } = await supabase
+              .from(tableName)
+              .select('id')
+              .limit(1);
+            
+            // Se ocorrer um erro do tipo "tabela não existe" (código 42P01)
+            if (error && error.code === '42P01') {
+              console.log(`Creating ${tableName} table`);
+              
+              try {
+                const { error: createError } = await supabase.rpc(createFunction);
+                if (createError) {
+                  console.error(`Error creating ${tableName} table:`, createError);
+                } else {
+                  console.log(`Successfully created ${tableName} table`);
+                }
+              } catch (rpcError) {
+                console.error(`Failed to call ${createFunction}:`, rpcError);
+              }
+            }
+          } catch (err) {
+            console.error(`Error checking ${tableName} table:`, err);
+          }
+        };
         
-        // Check access_logs table
-        const { error: accessLogsError } = await supabase
-          .from('access_logs')
-          .select('id')
-          .limit(1);
-          
-        if (accessLogsError && accessLogsError.code === '42P01') {
-          console.log("Creating access_logs table");
-          
-          // Create the access_logs table
-          const { error } = await supabase.rpc('create_access_logs_table');
-          if (error) console.error("Error creating access_logs table:", error);
-        }
+        // Verificar cada tabela
+        await checkTableExists('preview_tokens', 'create_preview_tokens_table');
+        await checkTableExists('access_logs', 'create_access_logs_table');
+        await checkTableExists('project_files', 'create_project_files_table');
+        await checkTableExists('preview_projects', 'create_preview_projects_table');
         
-        // Check project_files table
-        const { error: projectFilesError } = await supabase
-          .from('project_files')
-          .select('id')
-          .limit(1);
-          
-        if (projectFilesError && projectFilesError.code === '42P01') {
-          console.log("Creating project_files table");
-          
-          // Create the project_files table
-          const { error } = await supabase.rpc('create_project_files_table');
-          if (error) console.error("Error creating project_files table:", error);
-        }
-        
-        // Check preview_projects table
-        const { error: previewProjectsError } = await supabase
-          .from('preview_projects')
-          .select('id')
-          .limit(1);
-          
-        if (previewProjectsError && previewProjectsError.code === '42P01') {
-          console.log("Creating preview_projects table");
-          
-          // Create the preview_projects table directly
-          await supabase.rpc('create_preview_projects_table');
-        }
       } catch (err) {
         console.error("Error initializing database tables:", err);
       }

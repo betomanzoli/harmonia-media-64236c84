@@ -43,86 +43,6 @@ export const checkPrivateBrowsing = async (): Promise<boolean> => {
   }
 };
 
-const createMockQueryResponse = () => {
-  return {
-    data: null,
-    error: null,
-    count: 0
-  };
-};
-
-// Função auxiliar para criar métodos de consulta consistentes
-const createQueryBuilder = (tableName: string) => {
-  console.log(`Acessando tabela: ${tableName}`);
-  
-  // Criando um objeto que mantém as propriedades data e error em toda a cadeia
-  const baseQueryResponse = createMockQueryResponse();
-  
-  const queryChain = {
-    select: (columns: string) => {
-      console.log(`Simulando seleção de colunas: ${columns}`);
-      return {
-        ...baseQueryResponse,
-        eq: (column: string, value: any) => {
-          console.log(`Simulando filtro WHERE ${column} = ${value}`);
-          return {
-            ...baseQueryResponse,
-            single: async () => createMockQueryResponse()
-          };
-        },
-        order: (column: string, options: any) => {
-          console.log(`Simulando ordenação por ${column}`);
-          return {
-            ...baseQueryResponse,
-            ...queryChain
-          };
-        },
-        limit: async (limit: number) => createMockQueryResponse(),
-        gt: (column: string, value: any) => {
-          console.log(`Simulando filtro WHERE ${column} > ${value}`);
-          return {
-            ...baseQueryResponse,
-            ...queryChain
-          };
-        },
-        lt: (column: string, value: any) => {
-          console.log(`Simulando filtro WHERE ${column} < ${value}`);
-          return {
-            ...baseQueryResponse,
-            ...queryChain
-          };
-        }
-      };
-    },
-    insert: async (data: any, options?: any) => {
-      console.log('Simulando inserção de dados:', data);
-      return createMockQueryResponse();
-    },
-    upsert: async (data: any, options?: any) => {
-      console.log('Simulando upsert de dados:', data);
-      console.log('Opções:', options);
-      return createMockQueryResponse();
-    },
-    update: async (data: any) => {
-      console.log('Simulando atualização de dados:', data);
-      return createMockQueryResponse();
-    },
-    delete: async () => {
-      console.log(`Simulando exclusão na tabela ${tableName}`);
-      return createMockQueryResponse();
-    },
-    count: async () => {
-      console.log(`Simulando contagem na tabela ${tableName}`);
-      return createMockQueryResponse();
-    }
-  };
-
-  return {
-    ...baseQueryResponse,
-    ...queryChain
-  };
-};
-
 // Funções auxiliares
 export const getSupabaseUrl = () => supabaseUrl;
 export const testSupabaseConnection = async () => ({ success: true, message: 'Conexão com Supabase ativa' });
@@ -155,30 +75,52 @@ export const emailService = {
   }
 };
 
-// Initialize missing tables that may not exist
+// Verificação inicial das tabelas necessárias apenas se estiver online
 (async () => {
-  // Initialize preview_tokens table for magic links authentication
-  const { error: tokensError } = await supabase.rpc('check_if_table_exists', { table_name: 'preview_tokens' });
-  
-  if (tokensError) {
-    console.log('Creating preview_tokens table for magic link authentication');
-    await supabase.rpc('create_preview_tokens_table');
-  }
-  
-  // Initialize access_logs table for tracking preview accesses
-  const { error: logsError } = await supabase.rpc('check_if_table_exists', { table_name: 'access_logs' });
-  
-  if (logsError) {
-    console.log('Creating access_logs table for tracking preview accesses');
-    await supabase.rpc('create_access_logs_table');
-  }
-  
-  // Initialize project_files table for final deliveries
-  const { error: filesError } = await supabase.rpc('check_if_table_exists', { table_name: 'project_files' });
-  
-  if (filesError) {
-    console.log('Creating project_files table for final deliveries');
-    await supabase.rpc('create_project_files_table');
+  try {
+    // Verificar se estamos online antes de tentar acessar o Supabase
+    if (!navigator.onLine) {
+      console.log('Aplicação está offline. Pulando verificação de tabelas.');
+      return;
+    }
+    
+    // Verificar se as tabelas existem de maneira segura
+    const checkTable = async (tableName: string) => {
+      try {
+        const { data, error } = await supabase
+          .from(tableName)
+          .select('count(*)', { count: 'exact', head: true });
+        
+        // Se não ocorreu erro, a tabela existe
+        return !error;
+      } catch (err) {
+        // Em caso de erro, consideramos que a tabela não existe
+        return false;
+      }
+    };
+    
+    // Verificar tabelas comuns
+    const tableChecks = [
+      { name: 'preview_tokens', rpcName: 'create_preview_tokens_table' },
+      { name: 'access_logs', rpcName: 'create_access_logs_table' },
+      { name: 'project_files', rpcName: 'create_project_files_table' },
+      { name: 'preview_projects', rpcName: 'create_preview_projects_table' }
+    ];
+    
+    for (const table of tableChecks) {
+      const exists = await checkTable(table.name);
+      if (!exists) {
+        console.log(`Tabela ${table.name} não encontrada. Tentando criar...`);
+        try {
+          await supabase.rpc(table.rpcName);
+          console.log(`Tabela ${table.name} criada com sucesso.`);
+        } catch (err) {
+          console.error(`Erro ao criar tabela ${table.name}:`, err);
+        }
+      }
+    }
+  } catch (err) {
+    console.error('Erro ao verificar tabelas do banco de dados:', err);
   }
 })();
 
