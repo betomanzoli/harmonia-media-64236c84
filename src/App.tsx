@@ -1,6 +1,5 @@
-
 import React, { useEffect } from 'react';
-import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
+import { Routes, Route } from 'react-router-dom';
 import Home from './pages/Home';
 import ServicesPage from './pages/ServicesPage';
 import AboutPage from './pages/AboutPage';
@@ -60,62 +59,60 @@ const App: React.FC = () => {
   }, []);
 
   return (
-    <Router>
-      <Routes>
-        {/* Public Routes */}
-        <Route path="/" element={<Home />} />
-        <Route path="/services" element={<ServicesPage />} />
-        <Route path="/about" element={<AboutPage />} />
-        <Route path="/contact" element={<ContactPage />} />
-        <Route path="/portfolio" element={<PortfolioPage />} />
-        <Route path="/questions" element={<QuestionsPage />} />
-        <Route path="/auth/callback" element={<AuthCallback />} />
-        
-        {/* Public Preview Routes */}
-        <Route path="/preview/:projectId" element={<PreviewPage />} />
-        <Route path="/music-preview/:previewId" element={<MusicPreviews />} />
-        <Route path="/view-preview/:projectId" element={<MusicPreviewPage />} />
-        <Route path="/auth/preview/:projectId" element={<AuthPreviewPage />} />
-        
-        {/* Music Submission */}
-        <Route path="/submit-music" element={<MusicSubmissionPage />} />
-        
-        {/* Admin Routes */}
-        <Route path="/admin-login" element={<AdminLoginPage />} />
-        <Route 
-          path="/admin-j28s7d1k" 
-          element={
-            <ProtectedRoute>
-              <AdminDashboard />
-            </ProtectedRoute>
-          } 
-        />
-        <Route 
-          path="/admin-j28s7d1k/projects" 
-          element={
-            <ProtectedRoute>
-              <AdminProjects />
-            </ProtectedRoute>
-          } 
-        />
-        <Route 
-          path="/admin-j28s7d1k/projects/:projectId" 
-          element={
-            <ProtectedRoute>
-              <PreviewProjectPage />
-            </ProtectedRoute>
-          } 
-        />
-        <Route 
-          path="/admin-j28s7d1k/briefings" 
-          element={
-            <ProtectedRoute>
-              <AdminBriefings />
-            </ProtectedRoute>
-          } 
-        />
-      </Routes>
-    </Router>
+    <Routes>
+      {/* Public Routes */}
+      <Route path="/" element={<Home />} />
+      <Route path="/services" element={<ServicesPage />} />
+      <Route path="/about" element={<AboutPage />} />
+      <Route path="/contact" element={<ContactPage />} />
+      <Route path="/portfolio" element={<PortfolioPage />} />
+      <Route path="/questions" element={<QuestionsPage />} />
+      <Route path="/auth/callback" element={<AuthCallback />} />
+      
+      {/* Public Preview Routes */}
+      <Route path="/preview/:projectId" element={<PreviewPage />} />
+      <Route path="/music-preview/:previewId" element={<MusicPreviews />} />
+      <Route path="/view-preview/:projectId" element={<MusicPreviewPage />} />
+      <Route path="/auth/preview/:projectId" element={<AuthPreviewPage />} />
+      
+      {/* Music Submission */}
+      <Route path="/submit-music" element={<MusicSubmissionPage />} />
+      
+      {/* Admin Routes */}
+      <Route path="/admin-login" element={<AdminLoginPage />} />
+      <Route 
+        path="/admin-j28s7d1k" 
+        element={
+          <ProtectedRoute>
+            <AdminDashboard />
+          </ProtectedRoute>
+        } 
+      />
+      <Route 
+        path="/admin-j28s7d1k/projects" 
+        element={
+          <ProtectedRoute>
+            <AdminProjects />
+          </ProtectedRoute>
+        } 
+      />
+      <Route 
+        path="/admin-j28s7d1k/projects/:projectId" 
+        element={
+          <ProtectedRoute>
+            <PreviewProjectPage />
+          </ProtectedRoute>
+        } 
+      />
+      <Route 
+        path="/admin-j28s7d1k/briefings" 
+        element={
+          <ProtectedRoute>
+            <AdminBriefings />
+          </ProtectedRoute>
+        } 
+      />
+    </Routes>
   );
 };
 
