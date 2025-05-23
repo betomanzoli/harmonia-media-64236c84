@@ -26,7 +26,11 @@ export default defineConfig(({ mode }) => ({
       output: {
         manualChunks: {
           vendor: ['react', 'react-dom'],
-          supabase: ['@supabase/supabase-js']
+          supabase: ['@supabase/supabase-js'],
+          forms: ['react-hook-form', '@hookform/resolvers', 'zod'],
+          charts: ['recharts'],
+          animations: ['framer-motion'],
+          dates: ['date-fns']
         }
       }
     }
