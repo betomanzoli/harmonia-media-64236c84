@@ -44,10 +44,10 @@ import ContractPremium from './pages/contract/premium';
 import PaymentSuccess from './pages/payment/success';
 import PaymentCancel from './pages/payment/cancel';
 
-// ✅ NOVOS IMPORTS - Briefings Específicos (para implementar depois)
-// import BriefingEssencial from './pages/briefing/essencial';
-// import BriefingProfissional from './pages/briefing/profissional';
-// import BriefingPremium from './pages/briefing/premium';
+// ✅ NOVOS IMPORTS - Briefings Específicos (DESCOMENTADOS)
+import BriefingEssencial from './pages/briefing/essencial';
+import BriefingProfissional from './pages/briefing/profissional';
+import BriefingPremium from './pages/briefing/premium';
 
 // Import admin pages
 import AdminBriefings from './pages/admin/AdminBriefings';
@@ -79,9 +79,10 @@ const AppRoutes: React.FC = () => {
     const isAdminRoute = location.pathname.includes('/admin-');
     const isContractRoute = location.pathname.includes('/contract');
     const isPaymentRoute = location.pathname.includes('/payment');
+    const isBriefingDetailRoute = location.pathname.includes('/briefing/');
     
-    // Hide chatbot on admin, contract and payment pages
-    setShowChatbot(!isAdminRoute && !isContractRoute && !isPaymentRoute);
+    // Hide chatbot on admin, contract, payment and detailed briefing pages
+    setShowChatbot(!isAdminRoute && !isContractRoute && !isPaymentRoute && !isBriefingDetailRoute);
   }, [location.pathname]);
   
   return (
@@ -114,10 +115,10 @@ const AppRoutes: React.FC = () => {
         <Route path="/payment/success" element={<PaymentSuccess />} />
         <Route path="/payment/cancel" element={<PaymentCancel />} />
         
-        {/* ✅ FUTURAS ROTAS - Briefings Específicos (comentadas até implementar) */}
-        {/* <Route path="/briefing/essencial" element={<BriefingEssencial />} />
+        {/* ✅ NOVAS ROTAS - Briefings Específicos (ATIVADAS) */}
+        <Route path="/briefing/essencial" element={<BriefingEssencial />} />
         <Route path="/briefing/profissional" element={<BriefingProfissional />} />
-        <Route path="/briefing/premium" element={<BriefingPremium />} /> */}
+        <Route path="/briefing/premium" element={<BriefingPremium />} />
         
         {/* Client Dashboard and Delivery Routes */}
         <Route path="/client-dashboard" element={<ClientDashboard />} />
