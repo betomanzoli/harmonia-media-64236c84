@@ -1,4 +1,3 @@
-
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import Header from '@/components/Header';
@@ -27,16 +26,42 @@ const Briefing: React.FC = () => {
     }
   }, []);
 
-  // Handle completion of initial briefing and selection of package
+  // ✅ FUNÇÃO CORRIGIDA - Handle completion of initial briefing and selection of package
   const handleBriefingComplete = async (briefingId: string, packageType: 'essencial' | 'profissional' | 'premium') => {
     console.log('Briefing complete with ID:', briefingId);
     console.log('Selected package:', packageType);
     
-    // Save briefingId to localStorage for later use
-    localStorage.setItem('currentBriefingId', briefingId);
-    
-    // Redirect to payment page with briefingId parameter
-    navigate(`/pagamento/${packageType}?briefingId=${briefingId}`);
+    try {
+      // ✅ ATUALIZAR BRIEFING COM PACOTE SELECIONADO NO SUPABASE
+      const { error } = await supabase
+        .from('briefings')
+        .update({
+          selected_package: packageType,
+          payment_status: 'pending',
+          updated_at: new Date().toISOString()
+        })
+        .eq('id', briefingId);
+
+      if (error) {
+        console.error('Erro ao atualizar briefing:', error);
+        throw error;
+      }
+
+      console.log('✅ Briefing atualizado com sucesso no Supabase');
+
+      // ✅ SALVAR PARA REFERÊNCIA FUTURA
+      localStorage.setItem('currentBriefingId', briefingId);
+      
+      // ✅ REDIRECIONAR PARA CONTRATO EM VEZ DE PAGAMENTO DIRETO
+      navigate(`/contract/${packageType}?briefing=${briefingId}`);
+      
+    } catch (error) {
+      console.error('❌ Erro ao processar briefing:', error);
+      
+      // ✅ FALLBACK - Se der erro, mostrar alerta e tentar redirecionar mesmo assim
+      alert('Houve um problema ao salvar os dados. Você será redirecionado para continuar o processo.');
+      navigate(`/contract/${packageType}?briefing=${briefingId}`);
+    }
   };
 
   return (
