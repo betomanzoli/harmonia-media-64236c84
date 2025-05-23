@@ -11,6 +11,12 @@ export interface Briefing {
   status: 'pending' | 'completed' | 'in-progress';
   responses: Record<string, any>;
   created_at: string;
+  // Add these properties to match what's used in BriefingDetailForm
+  name?: string;
+  email?: string;
+  phone?: string;
+  description?: string;
+  packageType?: string; // Alias for package_type for backward compatibility
 }
 
 export const useBriefings = () => {
@@ -41,15 +47,27 @@ export const useBriefings = () => {
       }
       
       // Transform the data
-      const formattedBriefings: Briefing[] = data?.map((item: any) => ({
-        id: item.id,
-        client_name: item.clients?.name || 'Unknown Client',
-        client_email: item.clients?.email || 'no-email',
-        package_type: item.package_type || 'unknown',
-        status: item.status || 'pending',
-        responses: item.data || {},
-        created_at: item.created_at,
-      })) || [];
+      const formattedBriefings: Briefing[] = data?.map((item: any) => {
+        const briefing: Briefing = {
+          id: item.id,
+          client_name: item.clients?.name || 'Unknown Client',
+          client_email: item.clients?.email || 'no-email',
+          package_type: item.package_type || 'unknown',
+          status: item.status || 'pending',
+          responses: item.data || {},
+          created_at: item.created_at,
+          // Add these properties to match what's used in BriefingDetailForm
+          name: item.clients?.name,
+          email: item.clients?.email,
+          phone: item.data?.phone || '',
+          description: item.data?.description || '',
+        };
+        
+        // Add packageType as an alias for package_type
+        briefing.packageType = briefing.package_type;
+        
+        return briefing;
+      }) || [];
       
       setBriefings(formattedBriefings);
     } catch (err: any) {
@@ -63,6 +81,11 @@ export const useBriefings = () => {
           client_name: 'Demo Client',
           client_email: 'demo@example.com',
           package_type: 'essencial',
+          packageType: 'essencial', // Add alias
+          name: 'Demo Client', // Add name
+          email: 'demo@example.com', // Add email
+          phone: '123-456-7890', // Add phone
+          description: 'Demo briefing description', // Add description
           status: 'pending',
           responses: { question1: 'Demo response' },
           created_at: new Date().toISOString(),

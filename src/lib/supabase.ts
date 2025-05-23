@@ -101,6 +101,67 @@ export const emailService = {
       console.error('❌ Error in sendWelcomeEmail:', error);
       return { success: false, error };
     }
+  },
+  
+  // Add missing email methods
+  async sendBriefingConfirmation(email: string, briefingData: any) {
+    try {
+      console.log('📧 Sending briefing confirmation to:', email);
+      
+      const emailData = {
+        to: email,
+        briefing: briefingData,
+        timestamp: new Date().toISOString(),
+        type: 'briefing_confirmation'
+      };
+      
+      console.log('✅ Briefing confirmation email logged:', emailData);
+      
+      return { success: true, data: emailData };
+    } catch (error) {
+      console.error('❌ Error in sendBriefingConfirmation:', error);
+      return { success: false, error };
+    }
+  },
+  
+  async sendPreviewNotification(email: string, previewData: any) {
+    try {
+      console.log('📧 Sending preview notification to:', email);
+      
+      const emailData = {
+        to: email,
+        preview: previewData,
+        timestamp: new Date().toISOString(),
+        type: 'preview_notification'
+      };
+      
+      console.log('✅ Preview notification email logged:', emailData);
+      
+      return { success: true, data: emailData };
+    } catch (error) {
+      console.error('❌ Error in sendPreviewNotification:', error);
+      return { success: false, error };
+    }
+  },
+  
+  async sendPaymentConfirmation(email: string, paymentData: any) {
+    try {
+      console.log('📧 Sending payment confirmation to:', email);
+      
+      const emailData = {
+        to: email,
+        payment: paymentData,
+        timestamp: new Date().toISOString(),
+        type: 'payment_confirmation'
+      };
+      
+      console.log('✅ Payment confirmation email logged:', emailData);
+      
+      return { success: true, data: emailData };
+    } catch (error) {
+      console.error('❌ Error in sendPaymentConfirmation:', error);
+      return { success: false, error };
+    }
   }
 };
 
