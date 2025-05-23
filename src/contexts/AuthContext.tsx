@@ -1,5 +1,5 @@
 
-import { createContext, useState, useEffect, useMemo, ReactNode } from 'react';
+import { createContext, useState, useEffect, useMemo, ReactNode, useContext } from 'react';
 import { User, Session } from '@supabase/supabase-js';
 import supabaseClient from '@/integrations/supabase/client'; // Updated import statement
 
@@ -21,6 +21,14 @@ export const AuthContext = createContext<AuthContextType>({
   signIn: async () => ({ error: null, data: { user: null, session: null } }),
   signOut: async () => ({ error: null }),
 });
+
+export const useAuth = () => {
+  const context = useContext(AuthContext);
+  if (!context) {
+    throw new Error('useAuth must be used within an AuthProvider');
+  }
+  return context;
+};
 
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [user, setUser] = useState<User | null>(null);

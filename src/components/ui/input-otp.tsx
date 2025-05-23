@@ -1,6 +1,6 @@
 
 import * as React from "react"
-import { OTPInput, OTPInputContext } from "input-otp"
+import { OTPInput, OTPInputContext, OTPInputContextValue } from "input-otp"
 import { Dot } from "lucide-react"
 
 import { cn } from "@/lib/utils"
@@ -34,8 +34,8 @@ const InputOTPSlot = React.forwardRef<
   React.ComponentPropsWithoutRef<"div"> & { index: number }
 >(({ index, className, ...props }, ref) => {
   const inputOTPContext = React.useContext(OTPInputContext)
-  // Fix the type error by adding a type assertion to inputOTPContext.slots
-  const { char, hasFakeCaret, isActive } = (inputOTPContext.slots as any)[index]
+  // Fixed typing issue - properly cast the context to OTPInputContextValue
+  const { char, hasFakeCaret, isActive } = (inputOTPContext as OTPInputContextValue).slots[index]
 
   return (
     <div

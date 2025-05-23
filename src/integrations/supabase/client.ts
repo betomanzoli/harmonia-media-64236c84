@@ -1,18 +1,11 @@
 
-/**
- * Supabase client configuration
- */
-
 import { createClient } from '@supabase/supabase-js';
 
-// Initialize the Supabase client
-const supabaseUrl = import.meta.env.VITE_SUPABASE_URL || '';
-const supabaseKey = import.meta.env.VITE_SUPABASE_KEY || '';
+// Get Supabase URLs and keys from environment variables
+const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
+const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
 
-if (!supabaseUrl || !supabaseKey) {
-  console.error('Supabase URL and key must be defined in environment variables');
-}
-
-export const supabaseClient = createClient(supabaseUrl, supabaseKey);
+// Create a Supabase client
+const supabaseClient = createClient(supabaseUrl, supabaseAnonKey);
 
 export default supabaseClient;
