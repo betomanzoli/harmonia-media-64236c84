@@ -1,54 +1,27 @@
 import { createClient } from '@supabase/supabase-js';
 
-// ✅ USAR VARIÁVEIS DE AMBIENTE CORRETAS PARA VITE
+// ✅ VARIÁVEIS DE AMBIENTE PARA VITE (baseado nos search results)
 const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
 const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
 
-// ✅ FALLBACK PARA DESENVOLVIMENTO (remover em produção)
-const fallbackUrl = 'https://ivueqxyuflxsiecqvmgt.supabase.co';
-const fallbackKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Iml2dWVxeHl1Zmx4c2llY3F2bWd0Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDY3MjY0MzEsImV4cCI6MjA2MjMwMjQzMX0.db1UVta6PSPGokJOZozwqZ7AAs2jBljfWCdUR3LjIdM';
-
-// ✅ VERIFICAÇÃO E FALLBACK
-const finalUrl = supabaseUrl || fallbackUrl;
-const finalKey = supabaseAnonKey || fallbackKey;
-
-// ✅ VERIFICAR SE AS VARIÁVEIS ESTÃO DISPONÍVEIS
-if (!finalUrl || !finalKey) {
-  console.error('❌ Erro: Variáveis do Supabase não encontradas');
-  console.error('URL:', finalUrl);
-  console.error('Key disponível:', !!finalKey);
+// ✅ VALIDAÇÃO DAS VARIÁVEIS
+if (!supabaseUrl || !supabaseAnonKey) {
+  throw new Error('Faltam variáveis de ambiente do Supabase. Verifique VITE_SUPABASE_URL e VITE_SUPABASE_ANON_KEY');
 }
 
-// ✅ CRIAR CLIENTE COM CONFIGURAÇÃO OTIMIZADA
-export const supabase = createClient(finalUrl, finalKey, {
+// ✅ CRIAR CLIENTE SUPABASE (configuração otimizada)
+export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
   auth: {
     autoRefreshToken: true,
     persistSession: true,
-    detectSessionInUrl: true,
-    flowType: 'pkce'
-  },
-  global: {
-    headers: {
-      'X-Client-Info': 'harmonia-media@1.0.0'
-    }
-  },
-  db: {
-    schema: 'public'
+    detectSessionInUrl: true
   }
 });
-
-// ✅ LOG PARA DEBUG (apenas em desenvolvimento)
-if (import.meta.env.DEV) {
-  console.log('✅ Supabase client inicializado:', {
-    url: finalUrl,
-    hasKey: !!finalKey,
-    mode: import.meta.env.MODE
-  });
-}
 
 // ✅ EXPORT DEFAULT PARA COMPATIBILIDADE
 export default supabase;
 
-// ✅ TYPES PARA TYPESCRIPT
-export type Database = any; // Definir types específicos depois
-export type Tables<T extends keyof Database['public']['Tables']> = Database['public']['Tables'][T]['Row'];
+// ✅ LOG APENAS EM DESENVOLVIMENTO
+if (import.meta.env.DEV) {
+  console.log('✅ Supabase inicializado:', supabaseUrl);
+}
