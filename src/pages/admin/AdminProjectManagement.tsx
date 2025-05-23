@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import AdminLayout from '@/components/admin/layout/AdminLayout';
 import ProjectPhases from '@/components/admin/projects/ProjectPhases';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -19,6 +19,13 @@ import { Link, useParams } from 'react-router-dom';
 import { useToast } from '@/hooks/use-toast';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { createClient } from '@supabase/supabase-js';
+
+// Inicializar cliente Supabase
+const supabase = createClient(
+  process.env.NEXT_PUBLIC_SUPABASE_URL!,
+  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+);
 
 const getProjectData = (projectId: string) => {
   return {
@@ -40,6 +47,85 @@ const getProjectData = (projectId: string) => {
       { id: '2', date: '06/04/2025', type: 'feedback', description: 'Cliente confirmou recebimento do email de boas-vindas' }
     ]
   };
+};
+
+// Componente WhatsApp corrigido
+const WhatsAppButton: React.FC<{ projectData: any }> = ({ projectData }) => {
+  const [clientPhone, setClientPhone] = useState<string>('');
+  const [isLoading, setIsLoading] = useState(true);
+  const { toast } = useToast();
+
+  useEffect(() => {
+    const fetchClientPhone = async () => {
+      try {
+        // Buscar telefone do cliente pela tabela clients usando o email
+        const { data: client, error } = await supabase
+          .from('clients')
+          .select('phone, name')
+          .eq('email', projectData.clientEmail)
+          .single();
+
+        if (error) {
+          console.error('Erro ao buscar cliente:', error);
+        } else if (client?.phone) {
+          setClientPhone(client.phone);
+        }
+      } catch (error) {
+        console.error('Erro ao buscar telefone do cliente:', error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    if (projectData.clientEmail) {
+      fetchClientPhone();
+    }
+  }, [projectData.clientEmail]);
+
+  if (isLoading) {
+    return (
+      <Button variant="ghost" size="sm" className="h-7 px-2 text-xs" disabled>
+        <RefreshCw className="h-3 w-3 mr-1 animate-spin" />
+        Carregando...
+      </Button>
+    );
+  }
+
+  if (!clientPhone) {
+    return (
+      <Button 
+        variant="ghost" 
+        size="sm" 
+        className="h-7 px-2 text-xs text-yellow-600 hover:text-yellow-700" 
+        onClick={() => toast({
+          title: "Telefone não encontrado",
+          description: "Este cliente não possui telefone cadastrado.",
+          variant: "destructive"
+        })}
+      >
+        <AlertCircle className="h-3 w-3 mr-1" />
+        Sem telefone
+      </Button>
+    );
+  }
+
+  const cleanPhone = clientPhone.replace(/[^\d]/g, '');
+  const formattedPhone = cleanPhone.startsWith('55') ? cleanPhone : `55${cleanPhone}`;
+  const message = `Olá ${projectData.clientName}! Sobre seu projeto ${projectData.orderId} no Harmonia Media...`;
+  const whatsappUrl = `https://wa.me/${formattedPhone}?text=${encodeURIComponent(message)}`;
+
+  return (
+    <a
+      href={whatsappUrl}
+      target="_blank"
+      rel="noopener noreferrer"
+    >
+      <Button variant="ghost" size="sm" className="h-7 px-2 text-xs text-green-600 hover:text-green-700">
+        <MessageSquare className="h-3 w-3 mr-1" />
+        WhatsApp
+      </Button>
+    </a>
+  );
 };
 
 const ProjectGuideDialog: React.FC = () => {
@@ -291,10 +377,7 @@ const AdminProjectManagement: React.FC = () => {
                   <p className="text-sm text-gray-500">Cliente</p>
                   <div className="flex items-center justify-between">
                     <p className="font-medium">{projectData.clientName}</p>
-                    <Button variant="ghost" size="sm" className="h-7 px-2 text-xs">
-                      <MessageSquare className="h-3 w-3 mr-1" />
-                      Contatar
-                    </Button>
+                    <WhatsAppButton projectData={projectData} />
                   </div>
                   <p className="text-sm text-gray-500">{projectData.clientEmail}</p>
                 </div>
