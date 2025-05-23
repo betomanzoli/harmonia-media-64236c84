@@ -1,7 +1,6 @@
-
 import { useState, useEffect } from 'react';
 import { useToast } from '@/hooks/use-toast';
-import { supabase } from '@/lib/supabase';
+import { supabase } from '@/lib/supabase'; // ✅ Cliente existente
 
 interface MusicPreview {
   id: string;
@@ -136,13 +135,11 @@ export const usePreviewProject = (projectId: string | undefined) => {
     loadProjectData();
   }, [projectId, toast]);
   
-  // ✅ FUNÇÃO DE UPDATE CORRIGIDA (já implementamos no MusicPreviewSystem)
   const updateProjectStatus = (newStatus: 'approved' | 'feedback', comments: string) => {
     if (!projectId || !projectData) return false;
 
     console.log(`Atualizando status do projeto ${projectId} para ${newStatus}`);
     
-    // Atualizar estado local
     setProjectData(prev => {
       if (!prev) return null;
       return {
