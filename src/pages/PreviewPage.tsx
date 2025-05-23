@@ -13,9 +13,6 @@ import PreviewNextSteps from '@/components/previews/PreviewNextSteps';
 import GoogleDrivePreviewsList from '@/components/previews/GoogleDrivePreviewsList';
 import { usePreviewProject } from '@/hooks/previews/usePreviewProject';
 import { notificationService } from '@/services/notificationService';
-import { supabase } from '@/lib/supabase';
-import { checkPreviewAccessCookie } from '@/utils/authCookies';
-import { Loader2 } from 'lucide-react';
 
 const PreviewPage: React.FC = () => {
   const { projectId } = useParams<{ projectId: string }>();
@@ -25,46 +22,6 @@ const PreviewPage: React.FC = () => {
   const [selectedPreview, setSelectedPreview] = useState<string | null>(null);
   const [feedback, setFeedback] = useState('');
   const { projectData, setProjectData, isLoading } = usePreviewProject(projectId || '');
-  const [isChecking, setIsChecking] = useState(true);
-  
-  // Check authentication before showing content
-  useEffect(() => {
-    const checkAuth = async () => {
-      if (!projectId) {
-        setIsChecking(false);
-        return;
-      }
-      
-      try {
-        // Check for access cookie
-        const hasAccessCookie = checkPreviewAccessCookie(projectId);
-        
-        // Check for active session
-        const { data: { session } } = await supabase.auth.getSession();
-        const hasActiveSession = !!session;
-        
-        console.log("Auth check for preview page:", { hasAccessCookie, hasActiveSession });
-        
-        if (!hasAccessCookie && !hasActiveSession) {
-          console.log("Redirecting to auth page");
-          navigate(`/auth/preview/${projectId}`, { replace: true });
-          return;
-        }
-        
-        // Try to load saved feedback and status
-        const savedFeedback = localStorage.getItem(`preview_feedback_${projectId}`);
-        if (savedFeedback) {
-          setFeedback(savedFeedback);
-        }
-      } catch (error) {
-        console.error("Error checking authentication:", error);
-      } finally {
-        setIsChecking(false);
-      }
-    };
-    
-    checkAuth();
-  }, [projectId, navigate]);
   
   const handleSubmitFeedback = () => {
     if (!selectedPreview) {
@@ -85,30 +42,10 @@ const PreviewPage: React.FC = () => {
     notificationService.notify('feedback_received', {
       projectId: projectId || '',
       clientName: projectData?.clientName || 'Cliente',
-      message: feedback,
-      versionId: selectedPreview
+      message: feedback
     });
     
-    // Update project data
     setProjectData(prev => prev ? {...prev, status: 'feedback'} : null);
-    
-    // Save to database if possible
-    if (projectId && supabase) {
-      supabase.from('preview_projects')
-        .upsert({
-          id: projectId,
-          status: 'feedback',
-          feedback: feedback,
-          last_activity_date: new Date().toISOString()
-        }, { onConflict: 'id' })
-        .then(({ error }) => {
-          if (error) {
-            console.error("Error saving feedback to database:", error);
-          } else {
-            console.log("Saved feedback to database");
-          }
-        });
-    }
   };
   
   const handleApprove = () => {
@@ -130,41 +67,19 @@ const PreviewPage: React.FC = () => {
     notificationService.notify('preview_approved', {
       projectId: projectId || '',
       clientName: projectData?.clientName || 'Cliente',
-      versionId: selectedPreview,
-      comments: feedback
+      versionId: selectedPreview
     });
     
-    // Update project data
     setProjectData(prev => prev ? {...prev, status: 'approved'} : null);
-    
-    // Save to database if possible
-    if (projectId && supabase) {
-      supabase.from('preview_projects')
-        .upsert({
-          id: projectId,
-          status: 'approved',
-          feedback: feedback,
-          last_activity_date: new Date().toISOString()
-        }, { onConflict: 'id' })
-        .then(({ error }) => {
-          if (error) {
-            console.error("Error saving approval to database:", error);
-          } else {
-            console.log("Saved approval to database");
-          }
-        });
-    }
   };
   
-  if (isChecking || isLoading) {
+  if (isLoading) {
     return (
       <div className="min-h-screen bg-white text-gray-900">
         <Header />
         <div className="pt-24 pb-20 px-6 md:px-10 flex items-center justify-center">
           <div className="text-center">
-            <div className="inline-flex items-center justify-center">
-              <Loader2 className="h-8 w-8 animate-spin text-harmonia-green" />
-            </div>
+            <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-harmonia-green"></div>
             <p className="mt-4 text-gray-500">Carregando prévias...</p>
           </div>
         </div>
@@ -244,7 +159,6 @@ const PreviewPage: React.FC = () => {
                   status={projectData.status}
                   selectedVersion={selectedPreview}
                   versionTitle={projectData.previews?.find(v => v.id === selectedPreview)?.title}
-                  projectId={projectId}
                 />
               </div>
             </TabsContent>
