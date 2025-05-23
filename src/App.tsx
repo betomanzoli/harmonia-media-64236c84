@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Routes, Route, useLocation } from 'react-router-dom';
 import ScrollToTop from './components/ScrollToTop';
@@ -36,6 +35,20 @@ import BriefingComplete from './pages/BriefingComplete';
 import ClientDashboard from './pages/ClientDashboard';
 import FinalDeliveryPage from './pages/FinalDeliveryPage';
 
+// ✅ NOVOS IMPORTS - Páginas de Contrato
+import ContractEssencial from './pages/contract/essencial';
+import ContractProfissional from './pages/contract/profissional';
+import ContractPremium from './pages/contract/premium';
+
+// ✅ NOVOS IMPORTS - Páginas de Pagamento
+import PaymentSuccess from './pages/payment/success';
+import PaymentCancel from './pages/payment/cancel';
+
+// ✅ NOVOS IMPORTS - Briefings Específicos (para implementar depois)
+// import BriefingEssencial from './pages/briefing/essencial';
+// import BriefingProfissional from './pages/briefing/profissional';
+// import BriefingPremium from './pages/briefing/premium';
+
 // Import admin pages
 import AdminBriefings from './pages/admin/AdminBriefings';
 import AdminProjects from './pages/admin/AdminProjects';
@@ -64,7 +77,11 @@ const AppRoutes: React.FC = () => {
   // Check if current route is an admin route
   useEffect(() => {
     const isAdminRoute = location.pathname.includes('/admin-');
-    setShowChatbot(!isAdminRoute);
+    const isContractRoute = location.pathname.includes('/contract');
+    const isPaymentRoute = location.pathname.includes('/payment');
+    
+    // Hide chatbot on admin, contract and payment pages
+    setShowChatbot(!isAdminRoute && !isContractRoute && !isPaymentRoute);
   }, [location.pathname]);
   
   return (
@@ -87,6 +104,20 @@ const AppRoutes: React.FC = () => {
         <Route path="/acompanhar-pedido" element={<OrderTracking />} />
         <Route path="/privacidade" element={<PrivacyPolicy />} />
         <Route path="/termos" element={<Terms />} />
+        
+        {/* ✅ NOVAS ROTAS - Contratos dos Pacotes */}
+        <Route path="/contract/essencial" element={<ContractEssencial />} />
+        <Route path="/contract/profissional" element={<ContractProfissional />} />
+        <Route path="/contract/premium" element={<ContractPremium />} />
+        
+        {/* ✅ NOVAS ROTAS - Páginas de Pagamento */}
+        <Route path="/payment/success" element={<PaymentSuccess />} />
+        <Route path="/payment/cancel" element={<PaymentCancel />} />
+        
+        {/* ✅ FUTURAS ROTAS - Briefings Específicos (comentadas até implementar) */}
+        {/* <Route path="/briefing/essencial" element={<BriefingEssencial />} />
+        <Route path="/briefing/profissional" element={<BriefingProfissional />} />
+        <Route path="/briefing/premium" element={<BriefingPremium />} /> */}
         
         {/* Client Dashboard and Delivery Routes */}
         <Route path="/client-dashboard" element={<ClientDashboard />} />
