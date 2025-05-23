@@ -9,13 +9,7 @@ import { Textarea } from '@/components/ui/textarea';
 import PreviewPlayerList from '@/components/previews/player/PreviewPlayerList';
 import PreviewProjectDetails from '@/components/previews/PreviewProjectDetails';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
-import { createClient } from '@supabase/supabase-js';
-
-// Inicializar cliente Supabase
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-);
+import { supabase } from '@/lib/supabase';
 
 interface MusicPreviewSystemProps {
   projectId: string;

@@ -1,4 +1,3 @@
-
 // Biblioteca de compatibilidade para uso offline e online
 import { createClient } from '@supabase/supabase-js';
 
@@ -155,7 +154,7 @@ export const emailService = {
   }
 };
 
-// Initialize missing tables that may not exist
+// Initialize missing tables that may not exist (if needed)
 (async () => {
   // Initialize preview_tokens table for magic links authentication
   const { error: tokensError } = await supabase.rpc('check_if_table_exists', { table_name: 'preview_tokens' });
