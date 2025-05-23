@@ -1,118 +1,134 @@
-import React, { useEffect } from 'react';
-import { Routes, Route } from 'react-router-dom';
-import Home from './pages/Home';
-import ServicesPage from './pages/ServicesPage';
+
+import React, { useState, useEffect } from 'react';
+import { Routes, Route, useLocation } from 'react-router-dom';
+import ScrollToTop from './components/ScrollToTop';
+import ChatbotButton from './components/chatbot/ChatbotButton';
+
+// Import pages
+import HomePage from './pages/HomePage';
 import AboutPage from './pages/AboutPage';
+import ServicesPage from './pages/ServicesPage';
 import ContactPage from './pages/ContactPage';
-import PortfolioPage from './pages/PortfolioPage';
-import QuestionsPage from './pages/QuestionsPage';
-import AdminLoginPage from './pages/AdminLoginPage';
+import NotFoundPage from './pages/NotFoundPage';
 import AdminDashboard from './pages/admin/AdminDashboard';
-import AdminProjects from './pages/admin/AdminProjects';
-import AdminBriefings from './pages/admin/AdminBriefings';
+import AdminPreviews from './pages/admin/AdminPreviews';
 import PreviewProjectPage from './pages/admin/PreviewProjectPage';
-import MusicSubmissionPage from './pages/MusicSubmissionPage';
+import AdminLogin from './pages/admin/AdminLogin';
+import ResetPassword from './pages/admin/ResetPassword';
+import PortfolioPage from './pages/Portfolio';
+import Briefing from './pages/Briefing';
+import Calculator from './pages/Calculator';
+import Packages from './pages/Packages';
+import Payment from './pages/Payment';
+import PaymentReturn from './pages/PaymentReturn';
+import OrderTracking from './pages/OrderTracking';
+import PrivacyPolicy from './pages/PrivacyPolicy';
+import Terms from './pages/Terms';
 import PreviewPage from './pages/PreviewPage';
-import MusicPreviews from './pages/MusicPreviews';
-import MusicPreviewPage from './pages/MusicPreviewPage';
+import MusicPreviewAuth from './pages/MusicPreviewAuth';
 import AuthCallback from './pages/AuthCallback';
-import AuthPreviewPage from './pages/AuthPreviewPage';
-import ProtectedRoute from './components/auth/ProtectedRoute';
-import { useDatabaseSetup } from './hooks/admin/useDatabaseSetup';
-import { supabase } from './lib/supabase';
+import AuthError from './pages/AuthError';
+import MusicPreviews from './pages/MusicPreviews';
+import FeedbackConfirmation from './pages/FeedbackConfirmation';
+import QualificacaoPage from './pages/Qualificacao';
+import BriefingSuccess from './pages/BriefingSuccess';
+import BriefingComplete from './pages/BriefingComplete';
+import ClientDashboard from './pages/ClientDashboard';
+import FinalDeliveryPage from './pages/FinalDeliveryPage';
+
+// Import admin pages
+import AdminBriefings from './pages/admin/AdminBriefings';
+import AdminProjects from './pages/admin/AdminProjects';
+import AdminPortfolio from './pages/admin/AdminPortfolio';
+import AdminClients from './pages/admin/AdminClients';
+import AdminSettings from './pages/admin/AdminSettings';
+import AdminInvoices from './pages/admin/AdminInvoices';
+import AdminStorage from './pages/admin/AdminStorage';
+import AdminIntegrations from './pages/admin/AdminIntegrations';
+import AdminStatistics from './pages/admin/AdminStatistics';
+import AdminGuides from './pages/admin/AdminGuides';
 
 const App: React.FC = () => {
-  // Initialize database tables
-  useDatabaseSetup();
-
-  // Create database functions if they don't exist
-  useEffect(() => {
-    const initializeDatabaseFunctions = async () => {
-      try {
-        // Check if functions exist first
-        const { error } = await supabase.rpc('check_if_table_exists', { table_name: 'not_real_table' });
-        
-        if (error && error.message.includes('Could not find the function')) {
-          console.log("Database functions don't exist, creating them...");
-          
-          // Execute SQL file to create functions
-          const response = await fetch('/supabase/migrations/20250522_create_db_functions.sql');
-          const sql = await response.text();
-          
-          // Split into individual statements and execute them
-          const statements = sql.split(';').filter(stmt => stmt.trim().length > 0);
-          
-          for (const statement of statements) {
-            try {
-              await supabase.rpc('exec_sql', { sql: statement });
-            } catch (err) {
-              console.error("Error executing SQL:", err);
-            }
-          }
-        }
-      } catch (error) {
-        console.error("Error initializing database functions:", error);
-      }
-    };
-    
-    initializeDatabaseFunctions();
-  }, []);
-
   return (
-    <Routes>
-      {/* Public Routes */}
-      <Route path="/" element={<Home />} />
-      <Route path="/services" element={<ServicesPage />} />
-      <Route path="/about" element={<AboutPage />} />
-      <Route path="/contact" element={<ContactPage />} />
-      <Route path="/portfolio" element={<PortfolioPage />} />
-      <Route path="/questions" element={<QuestionsPage />} />
-      <Route path="/auth/callback" element={<AuthCallback />} />
+    <>
+      <ScrollToTop />
+      <AppRoutes />
+    </>
+  );
+};
+
+const AppRoutes: React.FC = () => {
+  const location = useLocation();
+  const [showChatbot, setShowChatbot] = useState(true);
+  
+  // Check if current route is an admin route
+  useEffect(() => {
+    const isAdminRoute = location.pathname.includes('/admin-');
+    setShowChatbot(!isAdminRoute);
+  }, [location.pathname]);
+  
+  return (
+    <>
+      <Routes>
+        <Route path="/" element={<HomePage />} />
+        <Route path="/sobre" element={<AboutPage />} />
+        <Route path="/servicos" element={<ServicesPage />} />
+        <Route path="/contato" element={<ContactPage />} />
+        <Route path="/portfolio" element={<PortfolioPage />} />
+        <Route path="/briefing" element={<Briefing />} />
+        <Route path="/briefing-success" element={<BriefingSuccess />} />
+        <Route path="/briefing-complete" element={<BriefingComplete />} />
+        <Route path="/calculadora" element={<Calculator />} />
+        <Route path="/qualificacao" element={<QualificacaoPage />} />
+        <Route path="/pacotes" element={<Packages />} />
+        <Route path="/pagamento" element={<Payment />} />
+        <Route path="/pagamento/:packageId" element={<Payment />} />
+        <Route path="/pagamento-retorno" element={<PaymentReturn />} />
+        <Route path="/acompanhar-pedido" element={<OrderTracking />} />
+        <Route path="/privacidade" element={<PrivacyPolicy />} />
+        <Route path="/termos" element={<Terms />} />
+        
+        {/* Client Dashboard and Delivery Routes */}
+        <Route path="/client-dashboard" element={<ClientDashboard />} />
+        <Route path="/deliveries/:projectId" element={<FinalDeliveryPage />} />
+        
+        {/* Authentication routes */}
+        <Route path="/auth/preview/:previewId" element={<MusicPreviewAuth />} />
+        <Route path="/auth/callback" element={<AuthCallback />} />
+        <Route path="/auth-error" element={<AuthError />} />
+        
+        {/* Preview routes */}
+        <Route path="/preview/:projectId" element={<PreviewPage />} />
+        <Route path="/feedback-confirmacao" element={<FeedbackConfirmation />} />
+        <Route path="/como-funciona" element={<ServicesPage />} />
+        
+        {/* Admin routes */}
+        <Route path="/admin-j28s7d1k/login" element={<AdminLogin />} />
+        <Route path="/admin-j28s7d1k/reset-password" element={<ResetPassword />} />
+        <Route path="/admin-j28s7d1k/dashboard" element={<AdminDashboard />} />
+        <Route path="/admin-j28s7d1k/previews" element={<AdminPreviews />} />
+        <Route path="/admin-j28s7d1k/previews/:projectId" element={<PreviewProjectPage />} />
+        <Route path="/admin-j28s7d1k/briefings" element={<AdminBriefings />} />
+        <Route path="/admin-j28s7d1k/projects" element={<AdminProjects />} />
+        <Route path="/admin-j28s7d1k/portfolio" element={<AdminPortfolio />} />
+        <Route path="/admin-j28s7d1k/clients" element={<AdminClients />} />
+        <Route path="/admin-j28s7d1k/settings" element={<AdminSettings />} />
+        <Route path="/admin-j28s7d1k/orders" element={<AdminProjects />} />
+        <Route path="/admin-j28s7d1k/payments" element={<AdminInvoices />} />
+        <Route path="/admin-j28s7d1k/analytics" element={<AdminStatistics />} />
+        <Route path="/admin-j28s7d1k/statistics" element={<AdminStatistics />} />
+        <Route path="/admin-j28s7d1k/guides" element={<AdminGuides />} />
+        <Route path="/admin-j28s7d1k/documentation" element={<AdminGuides />} />
+        <Route path="/admin-j28s7d1k/integrations" element={<AdminIntegrations />} />
+        <Route path="/admin-j28s7d1k/invoices" element={<AdminInvoices />} />
+        <Route path="/admin-j28s7d1k/storage" element={<AdminStorage />} />
+        
+        {/* 404 route */}
+        <Route path="*" element={<NotFoundPage />} />
+      </Routes>
       
-      {/* Public Preview Routes */}
-      <Route path="/preview/:projectId" element={<PreviewPage />} />
-      <Route path="/music-preview/:previewId" element={<MusicPreviews />} />
-      <Route path="/view-preview/:projectId" element={<MusicPreviewPage />} />
-      <Route path="/auth/preview/:projectId" element={<AuthPreviewPage />} />
-      
-      {/* Music Submission */}
-      <Route path="/submit-music" element={<MusicSubmissionPage />} />
-      
-      {/* Admin Routes */}
-      <Route path="/admin-login" element={<AdminLoginPage />} />
-      <Route 
-        path="/admin-j28s7d1k" 
-        element={
-          <ProtectedRoute>
-            <AdminDashboard />
-          </ProtectedRoute>
-        } 
-      />
-      <Route 
-        path="/admin-j28s7d1k/projects" 
-        element={
-          <ProtectedRoute>
-            <AdminProjects />
-          </ProtectedRoute>
-        } 
-      />
-      <Route 
-        path="/admin-j28s7d1k/projects/:projectId" 
-        element={
-          <ProtectedRoute>
-            <PreviewProjectPage />
-          </ProtectedRoute>
-        } 
-      />
-      <Route 
-        path="/admin-j28s7d1k/briefings" 
-        element={
-          <ProtectedRoute>
-            <AdminBriefings />
-          </ProtectedRoute>
-        } 
-      />
-    </Routes>
+      {showChatbot && <ChatbotButton />}
+    </>
   );
 };
 
