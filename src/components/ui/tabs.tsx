@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { cn } from '@/lib/utils';
 
 interface TabsProps {
   defaultValue?: string;
@@ -17,6 +18,7 @@ interface TabsTriggerProps {
   value: string;
   children: React.ReactNode;
   className?: string;
+  disabled?: boolean;
 }
 
 interface TabsContentProps {
@@ -35,7 +37,13 @@ const TabsContext = React.createContext<{
 });
 
 // ✅ COMPONENTE PRINCIPAL TABS
-export function Tabs({ defaultValue = '', value, onValueChange, children, className = '' }: TabsProps) {
+export function Tabs({ 
+  defaultValue = '', 
+  value, 
+  onValueChange, 
+  children, 
+  className = '' 
+}: TabsProps) {
   const [internalActiveTab, setInternalActiveTab] = useState(defaultValue);
   
   const activeTab = value !== undefined ? value : internalActiveTab;
@@ -49,7 +57,7 @@ export function Tabs({ defaultValue = '', value, onValueChange, children, classN
 
   return (
     <TabsContext.Provider value={{ activeTab, setActiveTab }}>
-      <div className={className}>
+      <div className={cn('w-full', className)}>
         {children}
       </div>
     </TabsContext.Provider>
@@ -59,14 +67,22 @@ export function Tabs({ defaultValue = '', value, onValueChange, children, classN
 // ✅ LISTA DE TRIGGERS
 export function TabsList({ children, className = '' }: TabsListProps) {
   return (
-    <div className={`flex border-b border-gray-200 ${className}`}>
+    <div className={cn(
+      'inline-flex h-9 items-center justify-center rounded-lg bg-gray-100 p-1 text-gray-500',
+      className
+    )}>
       {children}
     </div>
   );
 }
 
 // ✅ TRIGGER INDIVIDUAL
-export function TabsTrigger({ value, children, className = '' }: TabsTriggerProps) {
+export function TabsTrigger({ 
+  value, 
+  children, 
+  className = '',
+  disabled = false 
+}: TabsTriggerProps) {
   const { activeTab, setActiveTab } = React.useContext(TabsContext);
   
   const isActive = activeTab === value;
@@ -74,12 +90,17 @@ export function TabsTrigger({ value, children, className = '' }: TabsTriggerProp
   return (
     <button
       type="button"
-      className={`px-4 py-2 text-sm font-medium transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 ${
+      disabled={disabled}
+      className={cn(
+        'inline-flex items-center justify-center whitespace-nowrap rounded-md px-3 py-1 text-sm font-medium ring-offset-white transition-all',
+        'focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2',
+        'disabled:pointer-events-none disabled:opacity-50',
         isActive 
-          ? 'border-b-2 border-blue-500 text-blue-600 bg-blue-50' 
-          : 'text-gray-500 hover:text-gray-700 hover:bg-gray-50'
-      } ${className}`}
-      onClick={() => setActiveTab(value)}
+          ? 'bg-white text-gray-950 shadow' 
+          : 'text-gray-500 hover:text-gray-900',
+        className
+      )}
+      onClick={() => !disabled && setActiveTab(value)}
     >
       {children}
     </button>
@@ -87,7 +108,11 @@ export function TabsTrigger({ value, children, className = '' }: TabsTriggerProp
 }
 
 // ✅ CONTEÚDO DO TAB
-export function TabsContent({ value, children, className = '' }: TabsContentProps) {
+export function TabsContent({ 
+  value, 
+  children, 
+  className = '' 
+}: TabsContentProps) {
   const { activeTab } = React.useContext(TabsContext);
   
   if (activeTab !== value) {
@@ -95,7 +120,12 @@ export function TabsContent({ value, children, className = '' }: TabsContentProp
   }
   
   return (
-    <div className={`mt-4 ${className}`}>
+    <div 
+      className={cn(
+        'mt-2 ring-offset-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2',
+        className
+      )}
+    >
       {children}
     </div>
   );
