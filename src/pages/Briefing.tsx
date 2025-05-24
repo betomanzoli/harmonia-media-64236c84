@@ -8,6 +8,30 @@ import { ArrowLeft } from 'lucide-react';
 import ConversationalBriefing from '@/components/briefing/ConversationalBriefing';
 import { supabase } from '@/lib/supabase';
 
+const handlePackageSelect = async (packageType: 'essencial' | 'profissional' | 'premium') => {
+  try {
+    // ✅ SALVAR PACOTE NO BRIEFING
+    const { data, error } = await supabase
+      .from('briefings')
+      .update({ 
+        selected_package: packageType,
+        status: 'awaiting_contract'
+      })
+      .eq('id', briefingId)
+      .select()
+      .single();
+
+    if (error) throw error;
+
+    // ✅ REDIRECIONAR PARA CONTRATO
+    navigate(`/contract/${packageType}?briefing=${data.id}`);
+    
+  } catch (error) {
+    console.error('[ERROR] Falha ao selecionar pacote:', error);
+    toast({ title: 'Erro', description: 'Não foi possível processar sua seleção' });
+  }
+};
+
 const Briefing: React.FC = () => {
   const navigate = useNavigate();
   const [hasPurchased, setHasPurchased] = useState(false);
