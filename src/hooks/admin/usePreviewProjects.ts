@@ -30,5 +30,28 @@ export function usePreviewProjects() {
     }
   ]);
 
-  return { projects };
+  const [isLoading, setIsLoading] = useState(false);
+
+  const loadProjects = () => {
+    setIsLoading(true);
+    // In a real app, this would be an API call to load projects
+    setTimeout(() => {
+      setIsLoading(false);
+    }, 500);
+  };
+
+  const deleteProject = (id: string) => {
+    setProjects(projects.filter(project => project.id !== id));
+  };
+
+  useEffect(() => {
+    loadProjects();
+  }, []);
+
+  return { 
+    projects,
+    isLoading,
+    loadProjects,
+    deleteProject
+  };
 }

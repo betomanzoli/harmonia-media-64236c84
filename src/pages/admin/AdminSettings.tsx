@@ -16,6 +16,12 @@ import { Link } from 'react-router-dom';
 const AdminSettings: React.FC = () => {
   const { toast } = useToast();
   const [isLoading, setIsLoading] = useState(false);
+  const [maintenanceMode, setMaintenanceMode] = useState(false);
+  const [debugMode, setDebugMode] = useState(false);
+  const [allowRegistration, setAllowRegistration] = useState(true);
+  const [emailSubscription, setEmailSubscription] = useState(true);
+  const [smsNotifications, setSmsNotifications] = useState(true);
+  const [whatsappNotifications, setWhatsappNotifications] = useState(true);
 
   const handleSaveSettings = () => {
     setIsLoading(true);
@@ -108,7 +114,11 @@ const AdminSettings: React.FC = () => {
                           <Label htmlFor="maintenance-mode" className="text-base">Modo de Manutenção</Label>
                           <p className="text-sm text-gray-500">Ativa o modo de manutenção no site</p>
                         </div>
-                        <Switch id="maintenance-mode" />
+                        <Switch 
+                          id="maintenance-mode"
+                          checked={maintenanceMode}
+                          onCheckedChange={setMaintenanceMode}
+                        />
                       </div>
                       
                       <div className="flex items-center justify-between">
@@ -116,7 +126,11 @@ const AdminSettings: React.FC = () => {
                           <Label htmlFor="debug-mode" className="text-base">Modo de Depuração</Label>
                           <p className="text-sm text-gray-500">Ativa logs detalhados para depuração</p>
                         </div>
-                        <Switch id="debug-mode" />
+                        <Switch 
+                          id="debug-mode" 
+                          checked={debugMode}
+                          onCheckedChange={setDebugMode}
+                        />
                       </div>
                       
                       <div className="flex items-center justify-between">
@@ -124,7 +138,11 @@ const AdminSettings: React.FC = () => {
                           <Label htmlFor="allow-registration" className="text-base">Permitir Novos Cadastros</Label>
                           <p className="text-sm text-gray-500">Permite que novos clientes se cadastrem no site</p>
                         </div>
-                        <Switch id="allow-registration" defaultChecked />
+                        <Switch 
+                          id="allow-registration" 
+                          checked={allowRegistration}
+                          onCheckedChange={setAllowRegistration}
+                        />
                       </div>
                     </div>
                   </div>
@@ -170,30 +188,18 @@ const AdminSettings: React.FC = () => {
                   <Separator />
                   
                   <div className="space-y-4">
-                    <h3 className="text-lg font-medium">Modelos de Email</h3>
+                    <h3 className="text-lg font-medium">Configurações de Notificações</h3>
                     <div className="space-y-4">
                       <div className="flex items-center justify-between">
                         <div>
-                          <Label className="text-base">Email de Boas-vindas</Label>
-                          <p className="text-sm text-gray-500">Enviado quando um cliente se cadastra</p>
+                          <Label htmlFor="email-subscription" className="text-base">Emails Automáticos</Label>
+                          <p className="text-sm text-gray-500">Envio de emails automáticos para clientes</p>
                         </div>
-                        <Button variant="outline" size="sm">Editar</Button>
-                      </div>
-                      
-                      <div className="flex items-center justify-between">
-                        <div>
-                          <Label className="text-base">Notificação de Prévia</Label>
-                          <p className="text-sm text-gray-500">Enviado quando uma nova prévia é disponibilizada</p>
-                        </div>
-                        <Button variant="outline" size="sm">Editar</Button>
-                      </div>
-                      
-                      <div className="flex items-center justify-between">
-                        <div>
-                          <Label className="text-base">Confirmação de Pagamento</Label>
-                          <p className="text-sm text-gray-500">Enviado após confirmação de pagamento</p>
-                        </div>
-                        <Button variant="outline" size="sm">Editar</Button>
+                        <Switch 
+                          id="email-subscription" 
+                          checked={emailSubscription}
+                          onCheckedChange={setEmailSubscription}
+                        />
                       </div>
                     </div>
                   </div>
@@ -206,7 +212,7 @@ const AdminSettings: React.FC = () => {
               </Card>
             </TabsContent>
             
-            {/* Outras abas (conteúdo simplificado para este exemplo) */}
+            {/* Configurações de Notificações */}
             <TabsContent value="notifications">
               <Card>
                 <CardHeader>
@@ -214,33 +220,35 @@ const AdminSettings: React.FC = () => {
                     <BellRing className="h-5 w-5 mr-2" />
                     Configurações de Notificações
                   </CardTitle>
-                  <CardDescription>Gerenciar notificações do sistema.</CardDescription>
+                  <CardDescription>Configure como as notificações são enviadas.</CardDescription>
                 </CardHeader>
-                <CardContent>
-                  {/* Conteúdo aqui */}
+                <CardContent className="space-y-6">
                   <div className="space-y-4">
-                    <div className="flex items-center justify-between">
-                      <div>
-                        <Label htmlFor="notify-new-order" className="text-base">Novos Pedidos</Label>
-                        <p className="text-sm text-gray-500">Notificar quando um novo pedido for realizado</p>
+                    <h3 className="text-lg font-medium">Canais de Notificação</h3>
+                    <div className="space-y-4">
+                      <div className="flex items-center justify-between">
+                        <div>
+                          <Label htmlFor="sms-notifications" className="text-base">SMS</Label>
+                          <p className="text-sm text-gray-500">Ativar envio de notificações por SMS</p>
+                        </div>
+                        <Switch 
+                          id="sms-notifications" 
+                          checked={smsNotifications}
+                          onCheckedChange={setSmsNotifications}
+                        />
                       </div>
-                      <Switch id="notify-new-order" defaultChecked />
-                    </div>
-                    
-                    <div className="flex items-center justify-between">
-                      <div>
-                        <Label htmlFor="notify-feedback" className="text-base">Feedback de Clientes</Label>
-                        <p className="text-sm text-gray-500">Notificar quando um cliente enviar feedback</p>
+                      
+                      <div className="flex items-center justify-between">
+                        <div>
+                          <Label htmlFor="whatsapp-notifications" className="text-base">WhatsApp</Label>
+                          <p className="text-sm text-gray-500">Ativar envio de notificações via WhatsApp</p>
+                        </div>
+                        <Switch 
+                          id="whatsapp-notifications" 
+                          checked={whatsappNotifications}
+                          onCheckedChange={setWhatsappNotifications}
+                        />
                       </div>
-                      <Switch id="notify-feedback" defaultChecked />
-                    </div>
-                    
-                    <div className="flex items-center justify-between">
-                      <div>
-                        <Label htmlFor="notify-payment" className="text-base">Pagamentos</Label>
-                        <p className="text-sm text-gray-500">Notificar sobre novos pagamentos</p>
-                      </div>
-                      <Switch id="notify-payment" defaultChecked />
                     </div>
                   </div>
                 </CardContent>
@@ -252,90 +260,43 @@ const AdminSettings: React.FC = () => {
               </Card>
             </TabsContent>
             
+            {/* Configurações de Armazenamento */}
             <TabsContent value="storage">
               <Card>
                 <CardHeader>
                   <CardTitle className="flex items-center">
                     <Cloud className="h-5 w-5 mr-2" />
-                    Configurações de Armazenamento
+                    Armazenamento
                   </CardTitle>
-                  <CardDescription>Gerenciar o armazenamento de arquivos.</CardDescription>
+                  <CardDescription>Configure o armazenamento de arquivos.</CardDescription>
                 </CardHeader>
                 <CardContent>
-                  {/* Conteúdo simplificado */}
-                  <div className="space-y-4">
-                    <div className="space-y-2">
-                      <Label htmlFor="google-api-key">Google Drive API Key</Label>
-                      <Input id="google-api-key" defaultValue="***********************" type="password" />
-                    </div>
-                    
-                    <div className="space-y-2">
-                      <Label htmlFor="default-folder">Pasta Padrão</Label>
-                      <Input id="default-folder" defaultValue="HarmonIA/Projetos" />
-                    </div>
-                  </div>
+                  <p className="text-muted-foreground">
+                    Configurações de armazenamento em desenvolvimento. Em breve estará disponível.
+                  </p>
                 </CardContent>
-                <CardFooter className="flex justify-end">
-                  <Button onClick={handleSaveSettings} disabled={isLoading}>
-                    {isLoading ? "Salvando..." : "Salvar Configurações"}
-                  </Button>
-                </CardFooter>
               </Card>
             </TabsContent>
             
+            {/* Configurações de Contratos */}
             <TabsContent value="contracts">
               <Card>
                 <CardHeader>
                   <CardTitle className="flex items-center">
                     <FileText className="h-5 w-5 mr-2" />
-                    Contratos e Termos
+                    Contratos
                   </CardTitle>
-                  <CardDescription>Gerenciar os contratos e termos do sistema.</CardDescription>
+                  <CardDescription>Configure os modelos de contrato.</CardDescription>
                 </CardHeader>
                 <CardContent>
-                  {/* Conteúdo simplificado */}
-                  <div className="space-y-4">
-                    <div className="flex items-center justify-between">
-                      <div>
-                        <Label className="text-base">Contrato Padrão</Label>
-                        <p className="text-sm text-gray-500">Contrato base usado em todos os pacotes</p>
-                      </div>
-                      <Button variant="outline" size="sm">Editar</Button>
-                    </div>
-                    
-                    <div className="flex items-center justify-between">
-                      <div>
-                        <Label className="text-base">Termos do Pacote Essencial</Label>
-                        <p className="text-sm text-gray-500">Termos específicos para o pacote Essencial</p>
-                      </div>
-                      <Button variant="outline" size="sm">Editar</Button>
-                    </div>
-                    
-                    <div className="flex items-center justify-between">
-                      <div>
-                        <Label className="text-base">Termos do Pacote Premium</Label>
-                        <p className="text-sm text-gray-500">Termos específicos para o pacote Premium</p>
-                      </div>
-                      <Button variant="outline" size="sm">Editar</Button>
-                    </div>
-                    
-                    <div className="flex items-center justify-between">
-                      <div>
-                        <Label className="text-base">Termos do Pacote Profissional</Label>
-                        <p className="text-sm text-gray-500">Termos específicos para o pacote Profissional</p>
-                      </div>
-                      <Button variant="outline" size="sm">Editar</Button>
-                    </div>
-                  </div>
+                  <p className="text-muted-foreground">
+                    Editor de modelos de contrato em desenvolvimento. Em breve estará disponível.
+                  </p>
                 </CardContent>
-                <CardFooter className="flex justify-end">
-                  <Button onClick={handleSaveSettings} disabled={isLoading}>
-                    {isLoading ? "Salvando..." : "Salvar Configurações"}
-                  </Button>
-                </CardFooter>
               </Card>
             </TabsContent>
             
+            {/* Configurações de Segurança */}
             <TabsContent value="security">
               <Card>
                 <CardHeader>
@@ -343,52 +304,13 @@ const AdminSettings: React.FC = () => {
                     <Shield className="h-5 w-5 mr-2" />
                     Segurança
                   </CardTitle>
-                  <CardDescription>Configurações de segurança do sistema.</CardDescription>
+                  <CardDescription>Configure as opções de segurança.</CardDescription>
                 </CardHeader>
                 <CardContent>
-                  {/* Conteúdo simplificado */}
-                  <div className="space-y-4">
-                    <div className="flex items-center justify-between">
-                      <div>
-                        <Label htmlFor="two-factor" className="text-base">Autenticação de Dois Fatores</Label>
-                        <p className="text-sm text-gray-500">Exigir 2FA para administradores</p>
-                      </div>
-                      <Switch id="two-factor" />
-                    </div>
-                    
-                    <div className="space-y-2">
-                      <Label htmlFor="password-policy">Política de Senhas</Label>
-                      <div className="grid grid-cols-2 gap-4">
-                        <div className="flex items-center space-x-2">
-                          <Switch id="require-uppercase" />
-                          <Label htmlFor="require-uppercase">Exigir maiúsculas</Label>
-                        </div>
-                        <div className="flex items-center space-x-2">
-                          <Switch id="require-number" />
-                          <Label htmlFor="require-number">Exigir números</Label>
-                        </div>
-                        <div className="flex items-center space-x-2">
-                          <Switch id="require-symbol" />
-                          <Label htmlFor="require-symbol">Exigir símbolos</Label>
-                        </div>
-                        <div className="flex items-center space-x-2">
-                          <Switch id="min-length" />
-                          <Label htmlFor="min-length">Mínimo de 8 caracteres</Label>
-                        </div>
-                      </div>
-                    </div>
-                    
-                    <div className="space-y-2">
-                      <Label htmlFor="session-timeout">Tempo de Sessão (minutos)</Label>
-                      <Input id="session-timeout" defaultValue="60" type="number" />
-                    </div>
-                  </div>
+                  <p className="text-muted-foreground">
+                    Configurações de segurança em desenvolvimento. Em breve estará disponível.
+                  </p>
                 </CardContent>
-                <CardFooter className="flex justify-end">
-                  <Button onClick={handleSaveSettings} disabled={isLoading}>
-                    {isLoading ? "Salvando..." : "Salvar Configurações"}
-                  </Button>
-                </CardFooter>
               </Card>
             </TabsContent>
           </Tabs>
