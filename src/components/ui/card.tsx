@@ -36,3 +36,19 @@ export function CardTitle({ children, className = '' }: CardProps) {
     </h3>
   );
 }
+
+export function CardDescription({ children, className = '' }: CardProps) {
+  return (
+    <p className={`text-sm text-gray-600 ${className}`}>
+      {children}
+    </p>
+  );
+}
+
+export function CardFooter({ children, className = '' }: CardProps) {
+  return (
+    <div className={`px-6 py-4 border-t border-gray-200 ${className}`}>
+      {children}
+    </div>
+  );
+}
