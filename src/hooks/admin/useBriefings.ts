@@ -16,6 +16,17 @@ export interface BriefingItem {
   projectCreated?: boolean;
 }
 
+interface BriefingDataType {
+  clientName?: string;
+  email?: string;
+  projectDescription?: string;
+  budget?: string;
+  timeline?: string;
+  phone?: string;
+  company?: string;
+  [key: string]: any;
+}
+
 export const useBriefings = () => {
   const [briefings, setBriefings] = useState<BriefingItem[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -29,6 +40,7 @@ export const useBriefings = () => {
       const { data, error } = await supabase
         .from('briefings')
         .select('*')
+        .eq('is_deleted', false)
         .order('created_at', { ascending: false });
 
       if (error) {
@@ -43,17 +55,17 @@ export const useBriefings = () => {
       }
 
       const formattedBriefings: BriefingItem[] = data.map(briefing => {
-        const briefingData = briefing.data as any;
+        const briefingData = (briefing.data as BriefingDataType) || {};
         return {
           id: briefing.id,
-          clientName: briefingData?.clientName || 'Cliente sem nome',
-          email: briefingData?.email || 'Email não informado',
-          projectDescription: briefingData?.projectDescription || 'Descrição não informada',
+          clientName: briefingData.clientName || 'Cliente sem nome',
+          email: briefingData.email || 'Email não informado',
+          projectDescription: briefingData.projectDescription || 'Descrição não informada',
           packageType: briefing.package_type || 'Não definido',
           status: (briefing.status as 'pending' | 'completed' | 'approved') || 'pending',
           createdAt: new Date(briefing.created_at).toLocaleDateString('pt-BR'),
-          budget: briefingData?.budget,
-          timeline: briefingData?.timeline,
+          budget: briefingData.budget,
+          timeline: briefingData.timeline,
           projectCreated: briefing.project_id ? true : false
         };
       });
@@ -214,11 +226,7 @@ export const useBriefings = () => {
     error,
     createBriefing,
     deleteBriefing,
-    loadBriefings: loadBriefings,
-    fetchBriefings: loadBriefings,
-    updateBriefing,
-    addBriefing: createBriefing,
-    updateBriefingStatus: updateBriefing,
-    createProjectFromBriefing: (briefing: BriefingItem) => `proj_${Date.now()}`
+    loadBriefings,
+    updateBriefing
   };
 };

@@ -120,19 +120,6 @@ export const usePreviewAuth = (projectId: string | undefined) => {
     try {
       setAuthState(prev => ({ ...prev, isLoading: true }));
 
-      // Try to authenticate with Supabase magic link
-      const { error } = await supabase.auth.signInWithOtp({
-        email,
-        options: {
-          emailRedirectTo: `${window.location.origin}/preview/${projectId}`,
-          shouldCreateUser: false
-        }
-      });
-
-      if (error) {
-        console.warn('Supabase auth failed, using local auth:', error.message);
-      }
-
       // Always set local access regardless of Supabase success
       setPreviewAccess(projectId, email);
 
@@ -152,7 +139,7 @@ export const usePreviewAuth = (projectId: string | undefined) => {
     } catch (error) {
       console.error('Erro na autenticação:', error);
       
-      // Even if Supabase fails, try local auth
+      // Even if there's an error, try local auth
       setPreviewAccess(projectId, email);
       
       setAuthState(prev => ({
@@ -181,23 +168,6 @@ export const usePreviewAuth = (projectId: string | undefined) => {
       const isPrivate = await detectPrivateMode();
       
       setAuthState(prev => ({ ...prev, isPrivateMode: isPrivate }));
-
-      // Check Supabase session first
-      try {
-        const { data: { session } } = await supabase.auth.getSession();
-        if (session?.user?.email) {
-          setPreviewAccess(projectId, session.user.email);
-          setAuthState(prev => ({
-            ...prev,
-            isAuthenticated: true,
-            email: session.user.email,
-            isLoading: false
-          }));
-          return;
-        }
-      } catch (error) {
-        console.warn('Erro ao verificar sessão Supabase:', error);
-      }
 
       // Check local access
       const { hasAccess, email } = checkPreviewAccess(projectId);

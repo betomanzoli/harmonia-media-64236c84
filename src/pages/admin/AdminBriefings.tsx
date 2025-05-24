@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import AdminLayout from '@/components/admin/layout/AdminLayout';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -42,7 +43,6 @@ import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { useBriefings } from '@/hooks/admin/useBriefings';
 import CreateBriefingForm from '@/components/admin/briefings/CreateBriefingForm';
 import BriefingDetailForm from '@/components/admin/briefings/BriefingDetailForm';
-import { supabase } from '@/lib/supabase';
 import { useCustomers } from '@/hooks/admin/useCustomers';
 import ClientSelectionDialog from '@/components/admin/ClientSelectionDialog';
 
@@ -50,7 +50,7 @@ const AdminBriefings: React.FC = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
   const { briefings, isLoading, error, createBriefing, deleteBriefing, updateBriefing, loadBriefings } = useBriefings();
-  const { customers, getCustomerByEmail } = useCustomers();
+  const { customers } = useCustomers();
   
   const [searchTerm, setSearchTerm] = useState('');
   const [showCreateDialog, setShowCreateDialog] = useState(false);
@@ -81,30 +81,15 @@ const AdminBriefings: React.FC = () => {
       briefing.id.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
-  const handleCreateBriefing = async (briefingData: any) => {
-    try {
-      console.log("Creating briefing with data:", briefingData);
-      
-      // The actual database operation is now handled in the CreateBriefingForm component
-      // This function is now mainly for UI state management
-      
-      setShowCreateDialog(false);
-      toast({
-        title: "Briefing criado",
-        description: `O briefing foi criado com sucesso.`
-      });
-      
-      // Refresh briefings
-      loadBriefings();
-      
-    } catch (error: any) {
-      console.error('Error creating briefing:', error);
-      toast({
-        title: "Erro ao criar briefing",
-        description: error.message || "Não foi possível criar o briefing",
-        variant: "destructive"
-      });
-    }
+  const handleCreateBriefing = async () => {
+    setShowCreateDialog(false);
+    toast({
+      title: "Briefing criado",
+      description: `O briefing foi criado com sucesso.`
+    });
+    
+    // Refresh briefings
+    loadBriefings();
   };
 
   const handleViewBriefing = (briefing: any) => {
@@ -187,17 +172,18 @@ const AdminBriefings: React.FC = () => {
     
     if (option === 'new') {
       // Open create briefing dialog with empty client data
+      setSelectedClient(null);
       setShowCreateDialog(true);
     } else if (option === 'existing' && clientId) {
       // Find the client and open create briefing dialog with client data
       const client = customers.find(c => c.id === clientId);
       if (client) {
-        const initialData = {
+        setSelectedClient({
           name: client.name,
           email: client.email,
           phone: client.phone || '',
-        };
-        setSelectedClient(client);
+          company: client.company || ''
+        });
         setShowCreateDialog(true);
       }
     }
@@ -434,7 +420,7 @@ const AdminBriefings: React.FC = () => {
       <Dialog open={showCreateDialog} onOpenChange={setShowCreateDialog}>
         <DialogContent className="sm:max-w-[550px]">
           <CreateBriefingForm 
-            onSuccess={() => setShowCreateDialog(false)} 
+            onSuccess={handleCreateBriefing} 
             initialData={selectedClient}
           />
         </DialogContent>
