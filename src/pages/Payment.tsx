@@ -3,9 +3,10 @@ import { useSearchParams, useNavigate } from 'react-router-dom';
 import { supabase } from '@/lib/supabase';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { useToast } from '@/hooks/use-toast';
-import { ArrowLeft, CreditCard, Smartphone, CheckCircle, Clock, Shield } from 'lucide-react';
+import { ArrowLeft, CreditCard, Smartphone, CheckCircle, Clock, Shield, Tag } from 'lucide-react';
 
 interface BriefingData {
   id: string;
@@ -23,18 +24,15 @@ const Payment: React.FC = () => {
   const packageType = searchParams.get('package');
   const [briefingData, setBriefingData] = useState<BriefingData | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [cupomCode, setCupomCode] = useState('');
+  const [cupomApplicado, setCupomApplicado] = useState(false);
 
-  // ✅ LINKS MERCADOPAGO REAIS (substitua pelos seus)
-  const mercadoPagoLinks = {
-    essencial: 'https://www.mercadopago.com.br/checkout/v1/redirect?pref_id=1308986966-essencial-219-harmonia-2024',
-    profissional: 'https://www.mercadopago.com.br/checkout/v1/redirect?pref_id=1308986966-profissional-479-harmonia-2024',
-    premium: 'https://www.mercadopago.com.br/checkout/v1/redirect?pref_id=1308986966-premium-969-harmonia-2024'
-  };
-
+  // ✅ CONFIGURAÇÃO DE PACOTES COM CUPONS
   const packageDetails = {
     essencial: {
       name: 'Essencial',
-      price: 'R$ 219,00',
+      price: import.meta.env.VITE_PRICE_ESSENCIAL,
+      priceFormatted: `R$ ${import.meta.env.VITE_PRICE_ESSENCIAL},00`,
       description: 'Música personalizada para uso pessoal',
       features: [
         '1 música personalizada',
@@ -43,11 +41,15 @@ const Payment: React.FC = () => {
         'Entrega em 5 dias úteis',
         'Uso pessoal'
       ],
-      color: 'bg-green-500'
+      color: 'bg-green-500',
+      mercadoPagoLink: import.meta.env.VITE_MERCADOPAGO_ESSENCIAL,
+      mercadoPagoLinkCupom: import.meta.env.VITE_MERCADOPAGO_ESSENCIAL_CUPOM,
+      cupomValido: import.meta.env.VITE_CUPOM_ESSENCIAL
     },
     profissional: {
       name: 'Profissional',
-      price: 'R$ 479,00',
+      price: import.meta.env.VITE_PRICE_PROFISSIONAL,
+      priceFormatted: `R$ ${import.meta.env.VITE_PRICE_PROFISSIONAL},00`,
       description: 'Música para uso comercial',
       features: [
         '1 música personalizada',
@@ -57,11 +59,15 @@ const Payment: React.FC = () => {
         'Entrega em 7 dias úteis',
         'Formatos MP3 + WAV'
       ],
-      color: 'bg-blue-500'
+      color: 'bg-blue-500',
+      mercadoPagoLink: import.meta.env.VITE_MERCADOPAGO_PROFISSIONAL,
+      mercadoPagoLinkCupom: import.meta.env.VITE_MERCADOPAGO_PROFISSIONAL_CUPOM,
+      cupomValido: import.meta.env.VITE_CUPOM_PROFISSIONAL
     },
     premium: {
       name: 'Premium',
-      price: 'R$ 969,00',
+      price: import.meta.env.VITE_PRICE_PREMIUM,
+      priceFormatted: `R$ ${import.meta.env.VITE_PRICE_PREMIUM},00`,
       description: 'Registro legal + propriedade total',
       features: [
         '1 música personalizada',
@@ -72,7 +78,10 @@ const Payment: React.FC = () => {
         'Entrega em 10 dias úteis',
         'Todos os formatos'
       ],
-      color: 'bg-purple-500'
+      color: 'bg-purple-500',
+      mercadoPagoLink: import.meta.env.VITE_MERCADOPAGO_PREMIUM,
+      mercadoPagoLinkCupom: import.meta.env.VITE_MERCADOPAGO_PREMIUM_CUPOM,
+      cupomValido: import.meta.env.VITE_CUPOM_PREMIUM
     }
   };
 
@@ -93,18 +102,6 @@ const Payment: React.FC = () => {
         .single();
 
       if (error) throw error;
-
-      // Verificar se contrato foi aceito
-      if (!data.contract_accepted) {
-        toast({
-          title: 'Contrato não aceito',
-          description: 'Você precisa aceitar o contrato antes do pagamento.',
-          variant: 'destructive'
-        });
-        navigate(`/contract/${packageType}?briefing=${briefingId}`);
-        return;
-      }
-
       setBriefingData(data);
     } catch (error) {
       console.error('Erro ao carregar briefing:', error);
@@ -119,9 +116,27 @@ const Payment: React.FC = () => {
     }
   };
 
+  const handleCupomApply = () => {
+    const selectedPackage = packageDetails[packageType as keyof typeof packageDetails];
+    
+    if (cupomCode.toUpperCase() === selectedPackage.cupomValido) {
+      setCupomApplicado(true);
+      toast({
+        title: 'Cupom aplicado!',
+        description: 'Desconto de 5% aplicado com sucesso.',
+      });
+    } else {
+      toast({
+        title: 'Cupom inválido',
+        description: 'Este cupom não é válido para este pacote.',
+        variant: 'destructive'
+      });
+    }
+  };
+
   const handlePayment = async (paymentMethod: 'pix' | 'card') => {
     try {
-      console.log('[DEBUG] Iniciando pagamento:', { briefingId, packageType, paymentMethod });
+      console.log('[DEBUG] Iniciando pagamento:', { briefingId, packageType, paymentMethod, cupomApplicado });
 
       // Atualizar status para pagamento iniciado
       await supabase
@@ -130,12 +145,14 @@ const Payment: React.FC = () => {
           payment_method: paymentMethod,
           payment_status: 'pending',
           status: 'payment_pending',
+          coupon_applied: cupomApplicado ? cupomCode : null,
           updated_at: new Date().toISOString()
         })
         .eq('id', briefingId);
 
-      // Redirecionar para MercadoPago
-      const paymentUrl = mercadoPagoLinks[packageType as keyof typeof mercadoPagoLinks];
+      // ✅ ESCOLHER LINK COM OU SEM CUPOM
+      const selectedPackage = packageDetails[packageType as keyof typeof packageDetails];
+      const paymentUrl = cupomApplicado ? selectedPackage.mercadoPagoLinkCupom : selectedPackage.mercadoPagoLink;
       
       if (paymentUrl) {
         // Adicionar parâmetros de retorno
@@ -179,11 +196,11 @@ const Payment: React.FC = () => {
       <div className="container mx-auto max-w-4xl px-4">
         <Button 
           variant="outline" 
-          onClick={() => navigate(`/contract/${packageType}?briefing=${briefingId}`)}
+          onClick={() => navigate('/briefing')}
           className="mb-6"
         >
           <ArrowLeft className="h-4 w-4 mr-2" />
-          Voltar ao Contrato
+          Voltar ao Briefing
         </Button>
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
@@ -211,9 +228,50 @@ const Payment: React.FC = () => {
                     {selectedPackage.name}
                   </Badge>
                 </div>
-                <div className="flex items-center justify-between text-lg font-bold">
+                
+                {/* ✅ CAMPO DE CUPOM */}
+                <div className="border-t pt-4">
+                  <div className="flex items-center gap-2 mb-3">
+                    <Tag className="h-4 w-4 text-gray-500" />
+                    <span className="font-medium">Cupom de Desconto</span>
+                  </div>
+                  <div className="flex gap-2">
+                    <Input
+                      value={cupomCode}
+                      onChange={(e) => setCupomCode(e.target.value)}
+                      placeholder={`Digite ${selectedPackage.cupomValido} para 5% de desconto`}
+                      disabled={cupomApplicado}
+                    />
+                    <Button 
+                      onClick={handleCupomApply}
+                      variant="outline"
+                      disabled={cupomApplicado || !cupomCode}
+                    >
+                      {cupomApplicado ? '✓ Aplicado' : 'Aplicar'}
+                    </Button>
+                  </div>
+                  {cupomApplicado && (
+                    <p className="text-sm text-green-600 mt-2">
+                      ✓ Desconto de 5% aplicado com sucesso!
+                    </p>
+                  )}
+                </div>
+
+                <div className="flex items-center justify-between text-lg font-bold border-t pt-4">
                   <span>Total:</span>
-                  <span className="text-green-600">{selectedPackage.price}</span>
+                  <div className="text-right">
+                    {cupomApplicado && (
+                      <div className="text-sm text-gray-500 line-through">
+                        {selectedPackage.priceFormatted}
+                      </div>
+                    )}
+                    <span className="text-green-600">
+                      {cupomApplicado 
+                        ? `R$ ${Math.round(selectedPackage.price * 0.95)},00` 
+                        : selectedPackage.priceFormatted
+                      }
+                    </span>
+                  </div>
                 </div>
               </CardContent>
             </Card>
@@ -278,8 +336,16 @@ const Payment: React.FC = () => {
                   Pacote {selectedPackage.name}
                 </CardTitle>
                 <div className="text-center text-2xl font-bold text-green-600">
-                  {selectedPackage.price}
+                  {cupomApplicado 
+                    ? `R$ ${Math.round(selectedPackage.price * 0.95)},00` 
+                    : selectedPackage.priceFormatted
+                  }
                 </div>
+                {cupomApplicado && (
+                  <div className="text-center text-sm text-gray-500 line-through">
+                    De: {selectedPackage.priceFormatted}
+                  </div>
+                )}
                 <p className="text-center text-gray-600">
                   {selectedPackage.description}
                 </p>
@@ -287,44 +353,4 @@ const Payment: React.FC = () => {
               <CardContent>
                 <ul className="space-y-2">
                   {selectedPackage.features.map((feature, index) => (
-                    <li key={index} className="flex items-center gap-2">
-                      <CheckCircle className="h-4 w-4 text-green-500" />
-                      <span className="text-sm">{feature}</span>
-                    </li>
-                  ))}
-                </ul>
-              </CardContent>
-            </Card>
-
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <Clock className="h-5 w-5" />
-                  Próximos Passos
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <ol className="space-y-2 text-sm">
-                  <li className="flex items-start gap-2">
-                    <span className="flex-shrink-0 w-5 h-5 bg-green-100 text-green-600 rounded-full flex items-center justify-center text-xs font-bold">1</span>
-                    <span>Efetue o pagamento</span>
-                  </li>
-                  <li className="flex items-start gap-2">
-                    <span className="flex-shrink-0 w-5 h-5 bg-green-100 text-green-600 rounded-full flex items-center justify-center text-xs font-bold">2</span>
-                    <span>Complete o briefing detalhado</span>
-                  </li>
-                  <li className="flex items-start gap-2">
-                    <span className="flex-shrink-0 w-5 h-5 bg-green-100 text-green-600 rounded-full flex items-center justify-center text-xs font-bold">3</span>
-                    <span>Aguarde sua música personalizada</span>
-                  </li>
-                </ol>
-              </CardContent>
-            </Card>
-          </div>
-        </div>
-      </div>
-    </div>
-  );
-};
-
-export default Payment;
+                    <li key={index} className="flex
