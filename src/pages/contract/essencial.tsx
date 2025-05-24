@@ -268,7 +268,7 @@ const ContractEssencial: React.FC = () => {
 
             <div className="text-center text-xs text-gray-500">
               <p>harmonIA - Música Personalizada com Inteligência Artificial</p>
-              <p>contato@harmonia.media</p>
+              <p>contato@harmonia.media | +55 11 92058-5072</p>
             </div>
           </CardContent>
         </Card>
