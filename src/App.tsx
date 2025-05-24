@@ -1,46 +1,3 @@
-import React, { useState, useEffect } from 'react';
-import { Routes, Route, useLocation } from 'react-router-dom';
-import ScrollToTop from './components/ScrollToTop';
-import ChatbotButton from './components/chatbot/ChatbotButton';
-
-// Novas importações
-import SessionTransfer from './pages/SessionTransfer';
-import SecureAuthCallback from './pages/SecureAuthCallback';
-
-// ... (mantenha todas as outras importações existentes)
-
-const AppRoutes: React.FC = () => {
-  const location = useLocation();
-  const [showChatbot, setShowChatbot] = useState(true);
-  
-  useEffect(() => {
-    const isAdminRoute = location.pathname.includes('/admin-');
-    setShowChatbot(!isAdminRoute);
-  }, [location.pathname]);
-  
-  return (
-    <>
-      <Routes>
-        {/* ... (mantenha todas as rotas existentes) */}
-
-        {/* Novas rotas de autenticação segura */}
-        <Route path="/session-transfer" element={<SessionTransfer />} />
-        <Route path="/secure-auth-callback" element={<SecureAuthCallback />} />
-
-        {/* Mantenha estas rotas originais */}
-        <Route path="/auth/preview/:projectId" element={<MusicPreviewAuth />} />
-        <Route path="/auth/callback" element={<AuthCallback />} />
-        <Route path="/auth-error" element={<AuthError />} />
-
-        {/* ... (demais rotas permanecem inalteradas) */}
-      </Routes>
-      
-      {showChatbot && <ChatbotButton />}
-    </>
-  );
-};
-
-// ... (mantenha o restante do código inalterado)
 
 import React, { useState, useEffect } from 'react';
 import { Routes, Route, useLocation } from 'react-router-dom';
@@ -91,6 +48,10 @@ import AdminIntegrations from './pages/admin/AdminIntegrations';
 import AdminStatistics from './pages/admin/AdminStatistics';
 import AdminGuides from './pages/admin/AdminGuides';
 
+// New session transfer pages
+import SessionTransfer from './pages/SessionTransfer';
+import SecureAuthCallback from './pages/SecureAuthCallback';
+
 const App: React.FC = () => {
   return (
     <>
@@ -134,6 +95,10 @@ const AppRoutes: React.FC = () => {
         {/* Client Dashboard and Delivery Routes */}
         <Route path="/client-dashboard" element={<ClientDashboard />} />
         <Route path="/deliveries/:projectId" element={<FinalDeliveryPage />} />
+        
+        {/* Session Transfer Routes */}
+        <Route path="/session-transfer" element={<SessionTransfer />} />
+        <Route path="/secure-auth-callback" element={<SecureAuthCallback />} />
         
         {/* Authentication routes */}
         <Route path="/auth/preview/:projectId" element={<MusicPreviewAuth />} />
