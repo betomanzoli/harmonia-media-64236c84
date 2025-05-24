@@ -1,3 +1,38 @@
+// Adicione esta lógica no início do useEffect do AuthCallback.tsx
+useEffect(() => {
+  const params = new URLSearchParams(window.location.search);
+  const isPrivate = params.get('is_private') === 'true';
+  const previewId = params.get('preview_id');
+
+  const handleAuth = async () => {
+    const { data, error } = await supabase.auth.getUser();
+
+    if (error || !data.user) {
+      navigate('/auth-error');
+      return;
+    }
+
+    if (isPrivate && previewId) {
+      // Para navegadores privados, usar sistema de transferência de sessão
+      const sessionData = {
+        access_token: data.session?.access_token,
+        refresh_token: data.session?.refresh_token,
+        expires_at: data.session?.expires_at,
+        preview_id: previewId
+      };
+
+      const encoded = btoa(JSON.stringify(sessionData));
+      document.cookie = `temp_session=${encoded}; Path=/; SameSite=None; Secure; Max-Age=300`;
+      
+      navigate('/session-transfer');
+    } else {
+      // Fluxo normal
+      navigate(`/preview/${previewId}`);
+    }
+  };
+
+  handleAuth();
+}, []);
 
 import React, { useEffect, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
