@@ -150,7 +150,8 @@ const ProjectPreviewDetails: React.FC<ProjectPreviewDetailsProps> = ({ project, 
     // Notify about approval using the notification service
     notificationService.notify('preview_approved', {
       projectId: project.id,
-      versionId: selectedVersion
+      versionId: selectedVersion,
+      comments: feedback
     });
 
     setTimeout(() => {

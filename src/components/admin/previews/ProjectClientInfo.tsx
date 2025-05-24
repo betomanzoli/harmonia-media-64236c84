@@ -1,6 +1,8 @@
+
 import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Calendar, Mail, Package, Calendar as CalendarIcon, Clock } from 'lucide-react';
+
 export interface ProjectClientInfoProps {
   clientName: string;
   clientEmail: string;
@@ -9,6 +11,7 @@ export interface ProjectClientInfoProps {
   expirationDate: string;
   lastActivityDate: string;
 }
+
 const ProjectClientInfo: React.FC<ProjectClientInfoProps> = ({
   clientName,
   clientEmail,
@@ -17,7 +20,11 @@ const ProjectClientInfo: React.FC<ProjectClientInfoProps> = ({
   expirationDate,
   lastActivityDate
 }) => {
-  return <Card className="bg-zinc-500">
+  // Capitaliza a primeira letra do tipo de pacote
+  const capitalizedPackageType = packageType.charAt(0).toUpperCase() + packageType.slice(1);
+
+  return (
+    <Card className="bg-zinc-500">
       <CardHeader className="bg-zinc-500">
         <CardTitle className="text-lg">Detalhes do Projeto</CardTitle>
       </CardHeader>
@@ -40,7 +47,7 @@ const ProjectClientInfo: React.FC<ProjectClientInfoProps> = ({
             <Package className="mr-2 h-4 w-4" />
             Pacote
           </div>
-          <div className="font-medium">{packageType}</div>
+          <div className="font-medium">{capitalizedPackageType}</div>
         </div>
         
         {/* Data de criação */}
@@ -74,6 +81,8 @@ const ProjectClientInfo: React.FC<ProjectClientInfoProps> = ({
           </div>
         </div>
       </CardContent>
-    </Card>;
+    </Card>
+  );
 };
+
 export default ProjectClientInfo;

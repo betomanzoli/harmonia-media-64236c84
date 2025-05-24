@@ -1,480 +1,227 @@
-
 import React, { useState, useEffect } from 'react';
+import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { Badge } from "@/components/ui/badge";
-import { 
-  DropdownMenu, 
-  DropdownMenuContent, 
-  DropdownMenuItem, 
-  DropdownMenuLabel, 
-  DropdownMenuSeparator, 
-  DropdownMenuTrigger 
-} from "@/components/ui/dropdown-menu";
-import { Plus, MoreHorizontal, Calendar, Edit, Trash2, Eye } from 'lucide-react';
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { 
-  AlertDialog, 
-  AlertDialogAction, 
-  AlertDialogCancel, 
-  AlertDialogContent, 
-  AlertDialogDescription, 
-  AlertDialogFooter, 
-  AlertDialogHeader, 
-  AlertDialogTitle 
-} from "@/components/ui/alert-dialog";
-import { format } from "date-fns";
-import { ptBR } from "date-fns/locale";
-import { useToast } from '@/hooks/use-toast';
-
-interface Project {
-  id: string;
-  title: string;
-  clientName: string;
-  status: string;
-  deadline: string;
-  createdAt: string;
-  packageType?: string;
-}
+import { MoreHorizontal, ChevronDown, Search, Loader2 } from "lucide-react";
+import { usePreviewProjects } from '@/hooks/admin/usePreviewProjects';
+import { cn } from "@/lib/utils";
 
 interface ProjectsListProps {
-  onEditProject?: (projectId: string) => void;
+  onEditProject: (projectId: string) => void;
 }
 
 const ProjectsList: React.FC<ProjectsListProps> = ({ onEditProject }) => {
-  const [projects, setProjects] = useState<Project[]>([]);
-  const [showNewProjectDialog, setShowNewProjectDialog] = useState(false);
-  const [showEditDialog, setShowEditDialog] = useState(false);
-  const [showDeleteDialog, setShowDeleteDialog] = useState(false);
-  const [selectedProject, setSelectedProject] = useState<Project | null>(null);
-  const [formData, setFormData] = useState({
-    title: '',
-    clientName: '',
-    status: 'em_andamento',
-    deadline: '',
-    packageType: ''
-  });
-  const { toast } = useToast();
-
+  const { projects, isLoading, loadProjects, deleteProject } = usePreviewProjects();
+  const [searchTerm, setSearchTerm] = useState('');
+  const [sortField, setSortField] = useState<string>('lastActivityDate');
+  const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('desc');
+  
   useEffect(() => {
-    // Load projects from localStorage
-    const storedProjects = localStorage.getItem('harmonIA_projects');
-    if (storedProjects) {
-      try {
-        setProjects(JSON.parse(storedProjects));
-      } catch (error) {
-        console.error('Error loading projects:', error);
-      }
+    loadProjects();
+  }, [loadProjects]);
+  
+  const handleSort = (field: string) => {
+    if (sortField === field) {
+      setSortDirection(sortDirection === 'asc' ? 'desc' : 'asc');
+    } else {
+      setSortField(field);
+      setSortDirection('asc');
     }
-  }, []);
-
-  useEffect(() => {
-    if (selectedProject && showEditDialog) {
-      setFormData({
-        title: selectedProject.title,
-        clientName: selectedProject.clientName,
-        status: selectedProject.status,
-        deadline: selectedProject.deadline,
-        packageType: selectedProject.packageType || ''
-      });
+  };
+  
+  const handleDelete = (id: string) => {
+    if (window.confirm('Tem certeza que deseja excluir este projeto?')) {
+      deleteProject(id);
     }
-  }, [selectedProject, showEditDialog]);
-
-  const saveProjects = (updatedProjects: Project[]) => {
-    localStorage.setItem('harmonIA_projects', JSON.stringify(updatedProjects));
-    setProjects(updatedProjects);
   };
 
-  const handleAddProject = () => {
-    const newProject = {
-      id: `P${String(Math.floor(Math.random() * 1000)).padStart(4, '0')}`,
-      title: formData.title,
-      clientName: formData.clientName,
-      status: formData.status,
-      deadline: formData.deadline,
-      createdAt: new Date().toISOString().split('T')[0],
-      packageType: formData.packageType
-    };
-
-    const updatedProjects = [...projects, newProject];
-    saveProjects(updatedProjects);
+  // Custom formatDate function since it's missing from utils
+  const formatDate = (dateString?: string): string => {
+    if (!dateString) return 'N/A';
     
-    toast({
-      title: "Projeto criado",
-      description: `O projeto "${newProject.title}" foi adicionado com sucesso.`
-    });
-    
-    setShowNewProjectDialog(false);
-    // Reset form data
-    setFormData({
-      title: '',
-      clientName: '',
-      status: 'em_andamento',
-      deadline: '',
-      packageType: ''
-    });
-  };
-
-  const handleEditProject = () => {
-    if (!selectedProject) return;
-
-    const updatedProjects = projects.map(project => 
-      project.id === selectedProject.id 
-        ? { ...project, ...formData }
-        : project
-    );
-    
-    saveProjects(updatedProjects);
-    
-    toast({
-      title: "Projeto atualizado",
-      description: `O projeto "${formData.title}" foi atualizado com sucesso.`
-    });
-    
-    setShowEditDialog(false);
-    setSelectedProject(null);
-  };
-
-  const handleDeleteProject = () => {
-    if (!selectedProject) return;
-
-    const updatedProjects = projects.filter(project => project.id !== selectedProject.id);
-    saveProjects(updatedProjects);
-    
-    toast({
-      title: "Projeto excluído",
-      description: `O projeto "${selectedProject.title}" foi excluído com sucesso.`,
-      variant: "destructive"
-    });
-    
-    setShowDeleteDialog(false);
-    setSelectedProject(null);
-  };
-
-  const formatDate = (dateString: string) => {
     try {
-      return format(new Date(dateString), "dd/MM/yyyy", { locale: ptBR });
-    } catch (e) {
+      // Check if it's already in dd/mm/yyyy format
+      if (/\d{2}\/\d{2}\/\d{4}/.test(dateString)) {
+        return dateString;
+      }
+      
+      // Otherwise try to parse and format the date
+      const date = new Date(dateString);
+      return date.toLocaleDateString('pt-BR');
+    } catch (error) {
+      console.error('Error formatting date:', error);
       return dateString;
     }
   };
-
-  const getStatusBadge = (status: string) => {
-    switch (status) {
-      case 'em_andamento':
-        return <Badge className="bg-blue-500">Em Andamento</Badge>;
-      case 'concluido':
-        return <Badge className="bg-green-500">Concluído</Badge>;
-      case 'atrasado':
-        return <Badge className="bg-red-500">Atrasado</Badge>;
-      case 'pausado':
-        return <Badge className="bg-yellow-500">Pausado</Badge>;
-      default:
-        return <Badge>{status}</Badge>;
+  
+  const filteredProjects = projects.filter(project => {
+    const searchLower = searchTerm.toLowerCase();
+    return (
+      (project.id && project.id.toLowerCase().includes(searchLower)) ||
+      (project.clientName && project.clientName.toLowerCase().includes(searchLower)) ||
+      (project.packageType && project.packageType.toLowerCase().includes(searchLower))
+    );
+  });
+  
+  const sortedProjects = [...filteredProjects].sort((a, b) => {
+    let valueA: any = a[sortField as keyof typeof a];
+    let valueB: any = b[sortField as keyof typeof b];
+    
+    // Handle dates
+    if (sortField.includes('Date')) {
+      valueA = valueA ? new Date(valueA.split('/').reverse().join('-')).getTime() : 0;
+      valueB = valueB ? new Date(valueB.split('/').reverse().join('-')).getTime() : 0;
     }
-  };
-
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
-    const { name, value } = e.target;
-    setFormData(prev => ({ ...prev, [name]: value }));
-  };
+    
+    // Handle string comparisons
+    if (typeof valueA === 'string' && typeof valueB === 'string') {
+      if (sortDirection === 'asc') {
+        return valueA.localeCompare(valueB);
+      } else {
+        return valueB.localeCompare(valueA);
+      }
+    }
+    
+    // Handle number comparisons
+    if (sortDirection === 'asc') {
+      return valueA - valueB;
+    } else {
+      return valueB - valueA;
+    }
+  });
 
   return (
-    <div className="space-y-4">
-      <div className="flex justify-between items-center">
-        <h2 className="text-2xl font-bold">Projetos</h2>
-        <Button onClick={() => setShowNewProjectDialog(true)}>
-          <Plus className="mr-2 h-4 w-4" />
-          Novo Projeto
-        </Button>
-      </div>
-      
-      <div className="rounded-md border overflow-hidden">
-        <Table>
-          <TableHeader>
-            <TableRow>
-              <TableHead>ID</TableHead>
-              <TableHead>Projeto</TableHead>
-              <TableHead>Cliente</TableHead>
-              <TableHead>Status</TableHead>
-              <TableHead>Data Limite</TableHead>
-              <TableHead>Pacote</TableHead>
-              <TableHead className="text-right">Ações</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {projects.length === 0 ? (
-              <TableRow>
-                <TableCell colSpan={7} className="h-24 text-center">
-                  Nenhum projeto encontrado.
-                </TableCell>
-              </TableRow>
-            ) : (
-              projects.map((project) => (
-                <TableRow key={project.id}>
-                  <TableCell className="font-medium">{project.id}</TableCell>
-                  <TableCell>{project.title}</TableCell>
-                  <TableCell>{project.clientName}</TableCell>
-                  <TableCell>{getStatusBadge(project.status)}</TableCell>
-                  <TableCell>
-                    <div className="flex items-center">
-                      <Calendar className="mr-2 h-4 w-4 text-gray-500" />
-                      {formatDate(project.deadline)}
-                    </div>
-                  </TableCell>
-                  <TableCell>{project.packageType || "Não especificado"}</TableCell>
-                  <TableCell className="text-right">
-                    <DropdownMenu>
-                      <DropdownMenuTrigger asChild>
-                        <Button variant="ghost" className="h-8 w-8 p-0">
-                          <span className="sr-only">Abrir menu</span>
-                          <MoreHorizontal className="h-4 w-4" />
-                        </Button>
-                      </DropdownMenuTrigger>
-                      <DropdownMenuContent align="end">
-                        <DropdownMenuLabel>Ações</DropdownMenuLabel>
-                        <DropdownMenuSeparator />
-                        <DropdownMenuItem
-                          onClick={() => {
-                            setSelectedProject(project);
-                            setShowEditDialog(true);
-                          }}
-                        >
-                          <Edit className="mr-2 h-4 w-4" />
-                          Editar
-                        </DropdownMenuItem>
-                        {onEditProject && (
-                          <DropdownMenuItem
-                            onClick={() => onEditProject(project.id)}
-                          >
-                            <Eye className="mr-2 h-4 w-4" />
-                            Ver Detalhes
-                          </DropdownMenuItem>
-                        )}
-                        <DropdownMenuItem
-                          onClick={() => {
-                            setSelectedProject(project);
-                            setShowDeleteDialog(true);
-                          }}
-                          className="text-red-600"
-                        >
-                          <Trash2 className="mr-2 h-4 w-4" />
-                          Excluir
-                        </DropdownMenuItem>
-                      </DropdownMenuContent>
-                    </DropdownMenu>
-                  </TableCell>
+    <Card>
+      <CardHeader className="pb-4">
+        <div className="flex items-center justify-between">
+          <CardTitle>Projetos em Andamento</CardTitle>
+          <div className="relative w-64">
+            <Search className="absolute left-2 top-2.5 h-4 w-4 text-gray-400" />
+            <Input
+              placeholder="Buscar projetos..."
+              className="pl-8"
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+            />
+          </div>
+        </div>
+      </CardHeader>
+      <CardContent>
+        {isLoading ? (
+          <div className="flex justify-center items-center h-64">
+            <div className="flex flex-col items-center">
+              <Loader2 className="h-10 w-10 animate-spin text-gray-400" />
+              <p className="mt-4 text-gray-500">Carregando projetos...</p>
+            </div>
+          </div>
+        ) : sortedProjects.length > 0 ? (
+          <div className="overflow-x-auto">
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead className="cursor-pointer" onClick={() => handleSort('id')}>
+                    ID {sortField === 'id' && (
+                      <ChevronDown className={`inline ml-1 h-4 w-4 transform ${sortDirection === 'desc' ? 'rotate-180' : ''}`} />
+                    )}
+                  </TableHead>
+                  <TableHead className="cursor-pointer" onClick={() => handleSort('clientName')}>
+                    Cliente {sortField === 'clientName' && (
+                      <ChevronDown className={`inline ml-1 h-4 w-4 transform ${sortDirection === 'desc' ? 'rotate-180' : ''}`} />
+                    )}
+                  </TableHead>
+                  <TableHead className="cursor-pointer" onClick={() => handleSort('packageType')}>
+                    Pacote {sortField === 'packageType' && (
+                      <ChevronDown className={`inline ml-1 h-4 w-4 transform ${sortDirection === 'desc' ? 'rotate-180' : ''}`} />
+                    )}
+                  </TableHead>
+                  <TableHead className="cursor-pointer" onClick={() => handleSort('status')}>
+                    Status {sortField === 'status' && (
+                      <ChevronDown className={`inline ml-1 h-4 w-4 transform ${sortDirection === 'desc' ? 'rotate-180' : ''}`} />
+                    )}
+                  </TableHead>
+                  <TableHead className="cursor-pointer" onClick={() => handleSort('versions')}>
+                    Versões {sortField === 'versions' && (
+                      <ChevronDown className={`inline ml-1 h-4 w-4 transform ${sortDirection === 'desc' ? 'rotate-180' : ''}`} />
+                    )}
+                  </TableHead>
+                  <TableHead className="cursor-pointer" onClick={() => handleSort('lastActivityDate')}>
+                    Última Atividade {sortField === 'lastActivityDate' && (
+                      <ChevronDown className={`inline ml-1 h-4 w-4 transform ${sortDirection === 'desc' ? 'rotate-180' : ''}`} />
+                    )}
+                  </TableHead>
+                  <TableHead>Ações</TableHead>
                 </TableRow>
-              ))
-            )}
-          </TableBody>
-        </Table>
-      </div>
-
-      {/* New Project Dialog */}
-      <Dialog open={showNewProjectDialog} onOpenChange={setShowNewProjectDialog}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Criar Novo Projeto</DialogTitle>
-          </DialogHeader>
-          <div className="space-y-4 pt-4">
-            <div>
-              <label className="text-sm font-medium" htmlFor="title">
-                Título do Projeto
-              </label>
-              <input
-                id="title"
-                name="title"
-                className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background"
-                placeholder="Digite o título do projeto"
-                value={formData.title}
-                onChange={handleChange}
-              />
-            </div>
-            <div>
-              <label className="text-sm font-medium" htmlFor="clientName">
-                Nome do Cliente
-              </label>
-              <input
-                id="clientName"
-                name="clientName"
-                className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background"
-                placeholder="Nome do cliente"
-                value={formData.clientName}
-                onChange={handleChange}
-              />
-            </div>
-            <div>
-              <label className="text-sm font-medium" htmlFor="packageType">
-                Pacote
-              </label>
-              <select
-                id="packageType"
-                name="packageType"
-                className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background"
-                value={formData.packageType}
-                onChange={handleChange}
-              >
-                <option value="">Selecione um pacote</option>
-                <option value="Essencial">Essencial</option>
-                <option value="Profissional">Profissional</option>
-                <option value="Premium">Premium</option>
-                <option value="Outros">Outros</option>
-              </select>
-            </div>
-            <div>
-              <label className="text-sm font-medium" htmlFor="status">
-                Status
-              </label>
-              <select
-                id="status"
-                name="status"
-                className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background"
-                value={formData.status}
-                onChange={handleChange}
-              >
-                <option value="em_andamento">Em Andamento</option>
-                <option value="concluido">Concluído</option>
-                <option value="atrasado">Atrasado</option>
-                <option value="pausado">Pausado</option>
-              </select>
-            </div>
-            <div>
-              <label className="text-sm font-medium" htmlFor="deadline">
-                Data Limite
-              </label>
-              <input
-                id="deadline"
-                name="deadline"
-                type="date"
-                className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background"
-                value={formData.deadline}
-                onChange={handleChange}
-              />
-            </div>
-            <div className="flex justify-end space-x-2 pt-4">
-              <Button variant="outline" onClick={() => setShowNewProjectDialog(false)}>
-                Cancelar
-              </Button>
-              <Button onClick={handleAddProject}>Criar Projeto</Button>
-            </div>
+              </TableHeader>
+              <TableBody>
+                {sortedProjects.map(project => (
+                  <TableRow key={project.id}>
+                    <TableCell className="font-medium">{project.id || 'N/A'}</TableCell>
+                    <TableCell>{project.clientName || 'N/A'}</TableCell>
+                    <TableCell>{project.packageType || 'N/A'}</TableCell>
+                    <TableCell>
+                      <StatusBadge status={project.status} />
+                    </TableCell>
+                    <TableCell>{project.versions || 0}</TableCell>
+                    <TableCell>{formatDate(project.lastActivityDate) || 'N/A'}</TableCell>
+                    <TableCell>
+                      <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                          <Button variant="ghost" size="icon">
+                            <MoreHorizontal className="h-4 w-4" />
+                            <span className="sr-only">Abrir menu</span>
+                          </Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="end">
+                          <DropdownMenuItem onClick={() => onEditProject(project.id)}>
+                            Ver detalhes
+                          </DropdownMenuItem>
+                          <DropdownMenuItem onClick={() => window.open(`/preview/${project.id}`, '_blank')}>
+                            Visualizar prévia
+                          </DropdownMenuItem>
+                          <DropdownMenuItem onClick={() => handleDelete(project.id)}>
+                            Excluir projeto
+                          </DropdownMenuItem>
+                        </DropdownMenuContent>
+                      </DropdownMenu>
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
           </div>
-        </DialogContent>
-      </Dialog>
-
-      {/* Edit Project Dialog */}
-      <Dialog open={showEditDialog} onOpenChange={setShowEditDialog}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Editar Projeto</DialogTitle>
-          </DialogHeader>
-          <div className="space-y-4 pt-4">
-            <div>
-              <label className="text-sm font-medium" htmlFor="edit-title">
-                Título do Projeto
-              </label>
-              <input
-                id="edit-title"
-                name="title"
-                className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background"
-                placeholder="Digite o título do projeto"
-                value={formData.title}
-                onChange={handleChange}
-              />
+        ) : (
+          <div className="text-center py-12">
+            <div className="rounded-full bg-gray-100 p-3 mx-auto w-fit mb-4">
+              <Search className="h-6 w-6 text-gray-400" />
             </div>
-            <div>
-              <label className="text-sm font-medium" htmlFor="edit-clientName">
-                Nome do Cliente
-              </label>
-              <input
-                id="edit-clientName"
-                name="clientName"
-                className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background"
-                placeholder="Nome do cliente"
-                value={formData.clientName}
-                onChange={handleChange}
-              />
-            </div>
-            <div>
-              <label className="text-sm font-medium" htmlFor="edit-packageType">
-                Pacote
-              </label>
-              <select
-                id="edit-packageType"
-                name="packageType"
-                className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background"
-                value={formData.packageType}
-                onChange={handleChange}
-              >
-                <option value="">Selecione um pacote</option>
-                <option value="Essencial">Essencial</option>
-                <option value="Profissional">Profissional</option>
-                <option value="Premium">Premium</option>
-                <option value="Outros">Outros</option>
-              </select>
-            </div>
-            <div>
-              <label className="text-sm font-medium" htmlFor="edit-status">
-                Status
-              </label>
-              <select
-                id="edit-status"
-                name="status"
-                className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background"
-                value={formData.status}
-                onChange={handleChange}
-              >
-                <option value="em_andamento">Em Andamento</option>
-                <option value="concluido">Concluído</option>
-                <option value="atrasado">Atrasado</option>
-                <option value="pausado">Pausado</option>
-              </select>
-            </div>
-            <div>
-              <label className="text-sm font-medium" htmlFor="edit-deadline">
-                Data Limite
-              </label>
-              <input
-                id="edit-deadline"
-                name="deadline"
-                type="date"
-                className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background"
-                value={formData.deadline}
-                onChange={handleChange}
-              />
-            </div>
-            <div className="flex justify-end space-x-2 pt-4">
-              <Button variant="outline" onClick={() => setShowEditDialog(false)}>
-                Cancelar
-              </Button>
-              <Button onClick={handleEditProject}>Salvar Alterações</Button>
-            </div>
+            <h3 className="text-lg font-medium mb-1">Nenhum projeto encontrado</h3>
+            <p className="text-gray-500">
+              {searchTerm ? "Tente alterar sua busca." : "Crie seu primeiro projeto abaixo."}
+            </p>
           </div>
-        </DialogContent>
-      </Dialog>
-
-      {/* Delete Confirmation */}
-      <AlertDialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>Confirmar exclusão</AlertDialogTitle>
-            <AlertDialogDescription>
-              Tem certeza que deseja excluir o projeto "{selectedProject?.title}"? Esta ação não pode ser desfeita.
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel onClick={() => setShowDeleteDialog(false)}>Cancelar</AlertDialogCancel>
-            <AlertDialogAction
-              className="bg-red-500 hover:bg-red-600"
-              onClick={handleDeleteProject}
-            >
-              Excluir
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
-    </div>
+        )}
+      </CardContent>
+    </Card>
   );
+};
+
+const StatusBadge: React.FC<{ status?: string }> = ({ status }) => {
+  // Use custom styling with tailwind classes instead of variant props
+  switch (status) {
+    case 'waiting':
+      return <Badge className="bg-gray-100 text-gray-800 hover:bg-gray-200">Aguardando Avaliação</Badge>;
+    case 'feedback':
+      return <Badge className="bg-blue-100 text-blue-800 hover:bg-blue-200">Feedback Recebido</Badge>;
+    case 'approved':
+      return <Badge className="bg-green-100 text-green-800 hover:bg-green-200">Aprovada</Badge>;
+    case 'inprogress':
+      return <Badge className="bg-purple-100 text-purple-800 hover:bg-purple-200">Em Progresso</Badge>;
+    default:
+      return <Badge variant="outline">Desconhecido</Badge>;
+  }
 };
 
 export default ProjectsList;

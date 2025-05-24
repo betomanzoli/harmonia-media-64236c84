@@ -28,7 +28,47 @@ const MusicPreviewPage: React.FC = () => {
         // Log preview access for analytics and monitoring
         console.log(`Cliente acessando prévia: ${projectId}, data: ${new Date().toISOString()}`);
         console.log(`User agent: ${navigator.userAgent}`);
-        console.log(`Is private/incognito: ${!window.localStorage || localStorage.length === 0}`);
+        
+        // Check for token in URL query parameter (magic link)
+        const urlParams = new URLSearchParams(window.location.search);
+        const token = urlParams.get('token');
+        
+        let hasValidToken = false;
+        
+        if (token) {
+          console.log('Token found in URL, verifying...');
+          // Validate token against database
+          const { data, error } = await supabase
+            .from('preview_tokens')
+            .select('*')
+            .eq('preview_id', projectId)
+            .eq('token', token)
+            .gt('expires_at', new Date().toISOString())
+            .single();
+          
+          if (data && !error) {
+            console.log('Valid token found, granting access');
+            hasValidToken = true;
+            
+            // Set access cookie for future visits
+            const { setPreviewAccessCookie } = await import('@/utils/authCookies');
+            setPreviewAccessCookie(projectId);
+            
+            // Log access with token
+            try {
+              await supabase.from('access_logs').insert({
+                preview_id: projectId,
+                access_method: 'token',
+                token_id: data.id
+              });
+            } catch (logError) {
+              console.error('Failed to log token access:', logError);
+              // Non-critical, continue anyway
+            }
+          } else {
+            console.log('Invalid or expired token');
+          }
+        }
         
         // Debug cookies to help troubleshoot
         debugCookies();
@@ -42,13 +82,13 @@ const MusicPreviewPage: React.FC = () => {
         const hasActiveSession = !!session;
         console.log("Has active session:", hasActiveSession);
         
-        // Se tiver cookie de acesso ou sessão ativa, permitir acesso
-        if (hasAccessCookie || hasActiveSession) {
+        // Se tiver cookie de acesso, sessão ativa ou token válido, permitir acesso
+        if (hasAccessCookie || hasActiveSession || hasValidToken) {
           console.log("Authentication successful, allowing access");
           setIsAuthenticated(true);
           window.scrollTo(0, 0);
         } else {
-          // Redirecionar para página de autenticação
+          // Redirecionar para página de autenticação - ENSURE AUTH PAGES ARE ACCESSED FIRST
           console.log("No authentication found, redirecting to auth page");
           console.log("Navigation to:", `/auth/preview/${projectId}`);
           

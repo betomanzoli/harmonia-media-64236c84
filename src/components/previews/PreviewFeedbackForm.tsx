@@ -1,9 +1,12 @@
 
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { Card } from "@/components/ui/card";
 import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
 import { ThumbsUp, SendHorizonal } from 'lucide-react';
+import { notificationService } from '@/services/notificationService';
+import { supabase } from '@/lib/supabase';
+
 interface PreviewFeedbackFormProps {
   feedback: string;
   onFeedbackChange: (value: string) => void;
@@ -12,7 +15,9 @@ interface PreviewFeedbackFormProps {
   status?: 'waiting' | 'feedback' | 'approved';
   selectedVersion?: string | null;
   versionTitle?: string;
+  projectId?: string;
 }
+
 const PreviewFeedbackForm: React.FC<PreviewFeedbackFormProps> = ({
   feedback,
   onFeedbackChange,
@@ -20,42 +25,246 @@ const PreviewFeedbackForm: React.FC<PreviewFeedbackFormProps> = ({
   onApprove,
   status = 'waiting',
   selectedVersion,
-  versionTitle
+  versionTitle,
+  projectId
 }) => {
-  const isApproved = status === 'approved';
-  return <Card className="p-6 bg-white">
+  const [localStatus, setLocalStatus] = useState(status);
+  const [isSending, setIsSending] = useState(false);
+  
+  // Synchronize the state when props change
+  useEffect(() => {
+    setLocalStatus(status);
+  }, [status]);
+
+  // Persist status to localStorage to maintain state between page refreshes
+  useEffect(() => {
+    if (projectId && localStatus !== 'waiting') {
+      try {
+        localStorage.setItem(`preview_status_${projectId}`, localStatus);
+        console.log(`Saved status ${localStatus} for project ${projectId} to localStorage`);
+        
+        // Also persist to database if possible
+        if (supabase) {
+          supabase.from('preview_projects')
+            .upsert({
+              id: projectId,
+              status: localStatus,
+              last_activity_date: new Date().toISOString()
+            }, { onConflict: 'id' })
+            .then(({ error }) => {
+              if (error) {
+                console.error("Error saving preview status to database:", error);
+              } else {
+                console.log("Saved preview status to database");
+              }
+            });
+        }
+      } catch (err) {
+        console.error("Error saving preview status to localStorage:", err);
+      }
+    }
+  }, [localStatus, projectId]);
+
+  // Load saved status on component mount
+  useEffect(() => {
+    if (projectId) {
+      try {
+        const savedStatus = localStorage.getItem(`preview_status_${projectId}`);
+        if (savedStatus && (savedStatus === 'approved' || savedStatus === 'feedback')) {
+          setLocalStatus(savedStatus as 'waiting' | 'feedback' | 'approved');
+          console.log(`Loaded saved status ${savedStatus} for project ${projectId} from localStorage`);
+        }
+        
+        // Try to load from database as well
+        if (supabase) {
+          supabase.from('preview_projects')
+            .select('status')
+            .eq('id', projectId)
+            .single()
+            .then(({ data, error }) => {
+              if (!error && data && data.status) {
+                const dbStatus = data.status as 'waiting' | 'feedback' | 'approved';
+                setLocalStatus(dbStatus);
+                console.log(`Loaded status ${dbStatus} for project ${projectId} from database`);
+              }
+            });
+        }
+      } catch (err) {
+        console.error("Error loading preview status from localStorage:", err);
+      }
+    }
+  }, [projectId]);
+  
+  const handleSubmitFeedback = () => {
+    if (!selectedVersion) return;
+    
+    setIsSending(true);
+    
+    // Notify the system about the feedback received
+    if (projectId && selectedVersion) {
+      notificationService.notify(
+        'feedback_received',
+        {
+          projectId,
+          message: feedback,
+          versionId: selectedVersion,
+          timestamp: new Date().toISOString()
+        }
+      );
+    }
+
+    // Save feedback to localStorage for persistence
+    if (projectId) {
+      try {
+        localStorage.setItem(`preview_feedback_${projectId}`, feedback);
+        localStorage.setItem(`preview_status_${projectId}`, 'feedback');
+        
+        // Also persist to database
+        if (supabase) {
+          supabase.from('preview_projects')
+            .upsert({
+              id: projectId,
+              status: 'feedback',
+              feedback: feedback,
+              last_activity_date: new Date().toISOString()
+            }, { onConflict: 'id' })
+            .then(({ error }) => {
+              if (error) {
+                console.error("Error saving feedback to database:", error);
+              } else {
+                console.log("Saved feedback to database");
+              }
+            });
+        }
+      } catch (err) {
+        console.error("Error saving feedback to localStorage:", err);
+      }
+    }
+
+    // Update local state
+    setLocalStatus('feedback');
+    
+    // Call the parent component's callback
+    onSubmit(feedback);
+    
+    setTimeout(() => {
+      setIsSending(false);
+    }, 500);
+  };
+  
+  const handleApprove = () => {
+    if (!selectedVersion) return;
+    
+    setIsSending(true);
+    
+    // Notify the system about the approval received
+    if (projectId && selectedVersion) {
+      notificationService.notify(
+        'preview_approved',
+        {
+          projectId,
+          versionId: selectedVersion,
+          comments: feedback,
+          timestamp: new Date().toISOString()
+        }
+      );
+    }
+
+    // Save approval status to localStorage for persistence
+    if (projectId) {
+      try {
+        localStorage.setItem(`preview_status_${projectId}`, 'approved');
+        localStorage.setItem(`preview_feedback_${projectId}`, feedback);
+        
+        // Also persist to database
+        if (supabase) {
+          supabase.from('preview_projects')
+            .upsert({
+              id: projectId,
+              status: 'approved',
+              feedback: feedback,
+              last_activity_date: new Date().toISOString()
+            }, { onConflict: 'id' })
+            .then(({ error }) => {
+              if (error) {
+                console.error("Error saving approval to database:", error);
+              } else {
+                console.log("Saved approval to database");
+              }
+            });
+        }
+      } catch (err) {
+        console.error("Error saving approval to localStorage:", err);
+      }
+    }
+
+    // Update local state
+    setLocalStatus('approved');
+    
+    // Call the parent component's callback
+    onApprove(feedback);
+    
+    setTimeout(() => {
+      setIsSending(false);
+    }, 500);
+  };
+
+  return (
+    <Card className="p-6 bg-white">
       <h2 className="text-xl font-bold text-black mb-4">Envie seu feedback</h2>
       
-      {selectedVersion && versionTitle && <div className="mb-4 p-3 rounded-md bg-gray-100">
-          <p className="text-sm">
+      {selectedVersion && versionTitle && (
+        <div className="mb-4 p-3 rounded-md bg-green-500">
+          <p className="text-sm text-white">
             <span className="font-medium">Versão selecionada:</span> {versionTitle}
           </p>
-        </div>}
+        </div>
+      )}
       
       <div className="mb-6">
         <label htmlFor="feedback" className="block text-sm font-medium text-gray-700 mb-1">
           Comentários ou ajustes desejados:
         </label>
-        <Textarea id="feedback" placeholder="Escreva aqui suas observações, sugestões ou pedidos de ajustes..." value={feedback} onChange={e => onFeedbackChange(e.target.value)} rows={5} className="w-full resize-none" disabled={isApproved} />
+        <Textarea 
+          id="feedback" 
+          placeholder="Escreva aqui suas observações, sugestões ou pedidos de ajustes..." 
+          value={feedback} 
+          onChange={e => onFeedbackChange(e.target.value)} 
+          rows={5} 
+          className="w-full resize-none" 
+          disabled={localStatus === 'approved'} 
+        />
       </div>
       
       <div className="flex flex-col sm:flex-row gap-3">
-        <Button onClick={() => onSubmit(feedback)} disabled={isApproved} className="flex-1 bg-blue-600 hover:bg-blue-700 text-white">
+        <Button 
+          onClick={handleSubmitFeedback} 
+          disabled={localStatus === 'approved' || isSending || !selectedVersion}
+          className="flex-1 bg-blue-600 hover:bg-blue-700 text-white"
+        >
           <SendHorizonal className="w-4 h-4 mr-2" />
           Enviar Feedback
         </Button>
         
-        <Button onClick={() => onApprove(feedback)} disabled={isApproved} className="flex-1 bg-green-600 hover:bg-green-700 text-white">
+        <Button 
+          onClick={handleApprove} 
+          disabled={localStatus === 'approved' || isSending || !selectedVersion}
+          className="flex-1 bg-green-600 hover:bg-green-700 text-white"
+        >
           <ThumbsUp className="w-4 h-4 mr-2" />
           Aprovar esta versão
         </Button>
       </div>
       
-      {isApproved && <div className="mt-4 p-3 bg-green-50 border border-green-100 rounded-md">
+      {localStatus === 'approved' && (
+        <div className="mt-4 p-3 bg-green-50 border border-green-100 rounded-md">
           <p className="text-sm text-green-800">
             Esta prévia já foi aprovada. Obrigado pelo seu feedback!
           </p>
-        </div>}
-    </Card>;
+        </div>
+      )}
+    </Card>
+  );
 };
+
 export default PreviewFeedbackForm;
