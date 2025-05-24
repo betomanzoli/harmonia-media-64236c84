@@ -830,7 +830,7 @@ export type Database = {
     }
     Functions: {
       append_feedback: {
-        Args: { project_id: string; feedback_data: Json }
+        Args: { project_id: string; new_entry: Json }
         Returns: undefined
       }
     }

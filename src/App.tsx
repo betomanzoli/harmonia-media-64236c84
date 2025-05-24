@@ -48,7 +48,7 @@ import AdminIntegrations from './pages/admin/AdminIntegrations';
 import AdminStatistics from './pages/admin/AdminStatistics';
 import AdminGuides from './pages/admin/AdminGuides';
 
-// New session transfer pages
+// Session transfer pages
 import SessionTransfer from './pages/SessionTransfer';
 import SecureAuthCallback from './pages/SecureAuthCallback';
 
