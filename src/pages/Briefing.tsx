@@ -82,7 +82,6 @@ const Briefing: React.FC = () => {
       <main className="pt-20">
         <ConversationalBriefing 
           onComplete={handleBriefingComplete}
-          isLoading={isLoading}
           briefingId={currentBriefingId}
         />
       </main>
