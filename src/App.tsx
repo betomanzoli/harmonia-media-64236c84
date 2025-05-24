@@ -1,23 +1,15 @@
-
 import React, { useState, useEffect } from 'react';
 import { Routes, Route, useLocation } from 'react-router-dom';
 import ScrollToTop from './components/ScrollToTop';
-import ChatbotButton from './components/chatbot/ChatbotButton';
 
-// Import pages
+// ✅ IMPORTS DE PÁGINAS EXISTENTES APENAS
 import HomePage from './pages/HomePage';
 import AboutPage from './pages/AboutPage';
 import ServicesPage from './pages/ServicesPage';
 import ContactPage from './pages/ContactPage';
 import NotFoundPage from './pages/NotFoundPage';
-import AdminDashboard from './pages/admin/AdminDashboard';
-import AdminPreviews from './pages/admin/AdminPreviews';
-import PreviewProjectPage from './pages/admin/PreviewProjectPage';
-import AdminLogin from './pages/admin/AdminLogin';
-import ResetPassword from './pages/admin/ResetPassword';
 import PortfolioPage from './pages/Portfolio';
 import Briefing from './pages/Briefing';
-import Calculator from './pages/Calculator';
 import Packages from './pages/Packages';
 import Payment from './pages/Payment';
 import PaymentReturn from './pages/PaymentReturn';
@@ -25,42 +17,26 @@ import OrderTracking from './pages/OrderTracking';
 import PrivacyPolicy from './pages/PrivacyPolicy';
 import Terms from './pages/Terms';
 import PreviewPage from './pages/PreviewPage';
-import MusicPreviewAuth from './pages/MusicPreviewAuth';
-import AuthCallback from './pages/AuthCallback';
-import AuthError from './pages/AuthError';
-import MusicPreviews from './pages/MusicPreviews';
-import FeedbackConfirmation from './pages/FeedbackConfirmation';
-import QualificacaoPage from './pages/Qualificacao';
 import BriefingSuccess from './pages/BriefingSuccess';
-import BriefingComplete from './pages/BriefingComplete';
-import ClientDashboard from './pages/ClientDashboard';
-import FinalDeliveryPage from './pages/FinalDeliveryPage';
 
-// ✅ NOVOS IMPORTS - Páginas de Contrato
-import ContractEssencial from './pages/contract/essencial';
-import ContractProfissional from './pages/contract/profissional';
-import ContractPremium from './pages/contract/premium';
-
-// ✅ NOVOS IMPORTS - Páginas de Pagamento
-import PaymentSuccess from './pages/payment/success';
-import PaymentCancel from './pages/payment/cancel';
-
-// ✅ NOVOS IMPORTS - Briefings Específicos (DESCOMENTADOS)
+// ✅ BRIEFINGS ESPECÍFICOS
 import BriefingEssencial from './pages/briefing/essencial';
 import BriefingProfissional from './pages/briefing/profissional';
 import BriefingPremium from './pages/briefing/premium';
 
-// Import admin pages
-import AdminBriefings from './pages/admin/AdminBriefings';
-import AdminProjects from './pages/admin/AdminProjects';
-import AdminPortfolio from './pages/admin/AdminPortfolio';
-import AdminClients from './pages/admin/AdminClients';
-import AdminSettings from './pages/admin/AdminSettings';
-import AdminInvoices from './pages/admin/AdminInvoices';
-import AdminStorage from './pages/admin/AdminStorage';
-import AdminIntegrations from './pages/admin/AdminIntegrations';
-import AdminStatistics from './pages/admin/AdminStatistics';
-import AdminGuides from './pages/admin/AdminGuides';
+// ✅ CONTRATOS
+import ContractEssencial from './pages/contract/essencial';
+import ContractProfissional from './pages/contract/profissional';
+import ContractPremium from './pages/contract/premium';
+
+// ✅ PAYMENT
+import PaymentSuccess from './pages/payment/success';
+import PaymentCancel from './pages/payment/cancel';
+
+// ✅ ADMIN (apenas os que existem)
+import AdminDashboard from './pages/admin/AdminDashboard';
+import AdminLogin from './pages/admin/AdminLogin';
+import ResetPassword from './pages/admin/ResetPassword';
 
 const App: React.FC = () => {
   return (
@@ -75,93 +51,58 @@ const AppRoutes: React.FC = () => {
   const location = useLocation();
   const [showChatbot, setShowChatbot] = useState(true);
   
-  // Check if current route is an admin route
   useEffect(() => {
     const isAdminRoute = location.pathname.includes('/admin-');
     const isContractRoute = location.pathname.includes('/contract');
     const isPaymentRoute = location.pathname.includes('/payment');
     const isBriefingDetailRoute = location.pathname.includes('/briefing/');
     
-    // Hide chatbot on admin, contract, payment and detailed briefing pages
     setShowChatbot(!isAdminRoute && !isContractRoute && !isPaymentRoute && !isBriefingDetailRoute);
   }, [location.pathname]);
   
   return (
-    <>
-      <Routes>
-        <Route path="/" element={<HomePage />} />
-        <Route path="/sobre" element={<AboutPage />} />
-        <Route path="/servicos" element={<ServicesPage />} />
-        <Route path="/contato" element={<ContactPage />} />
-        <Route path="/portfolio" element={<PortfolioPage />} />
-        <Route path="/briefing" element={<Briefing />} />
-        <Route path="/briefing-success" element={<BriefingSuccess />} />
-        <Route path="/briefing-complete" element={<BriefingComplete />} />
-        <Route path="/calculadora" element={<Calculator />} />
-        <Route path="/qualificacao" element={<QualificacaoPage />} />
-        <Route path="/pacotes" element={<Packages />} />
-        <Route path="/pagamento" element={<Payment />} />
-        <Route path="/pagamento/:packageId" element={<Payment />} />
-        <Route path="/pagamento-retorno" element={<PaymentReturn />} />
-        <Route path="/acompanhar-pedido" element={<OrderTracking />} />
-        <Route path="/privacidade" element={<PrivacyPolicy />} />
-        <Route path="/termos" element={<Terms />} />
-        
-        {/* ✅ NOVAS ROTAS - Contratos dos Pacotes */}
-        <Route path="/contract/essencial" element={<ContractEssencial />} />
-        <Route path="/contract/profissional" element={<ContractProfissional />} />
-        <Route path="/contract/premium" element={<ContractPremium />} />
-        
-        {/* ✅ NOVAS ROTAS - Páginas de Pagamento */}
-        <Route path="/payment/success" element={<PaymentSuccess />} />
-        <Route path="/payment/cancel" element={<PaymentCancel />} />
-        
-        {/* ✅ NOVAS ROTAS - Briefings Específicos (ATIVADAS) */}
-        <Route path="/briefing/essencial" element={<BriefingEssencial />} />
-        <Route path="/briefing/profissional" element={<BriefingProfissional />} />
-        <Route path="/briefing/premium" element={<BriefingPremium />} />
-        
-        {/* Client Dashboard and Delivery Routes */}
-        <Route path="/client-dashboard" element={<ClientDashboard />} />
-        <Route path="/deliveries/:projectId" element={<FinalDeliveryPage />} />
-        
-        {/* Authentication routes */}
-        <Route path="/auth/preview/:previewId" element={<MusicPreviewAuth />} />
-        <Route path="/auth/callback" element={<AuthCallback />} />
-        <Route path="/auth-error" element={<AuthError />} />
-        
-        {/* Preview routes */}
-        <Route path="/preview/:projectId" element={<PreviewPage />} />
-        <Route path="/feedback-confirmacao" element={<FeedbackConfirmation />} />
-        <Route path="/como-funciona" element={<ServicesPage />} />
-        
-        {/* Admin routes */}
-        <Route path="/admin-j28s7d1k/login" element={<AdminLogin />} />
-        <Route path="/admin-j28s7d1k/reset-password" element={<ResetPassword />} />
-        <Route path="/admin-j28s7d1k/dashboard" element={<AdminDashboard />} />
-        <Route path="/admin-j28s7d1k/previews" element={<AdminPreviews />} />
-        <Route path="/admin-j28s7d1k/previews/:projectId" element={<PreviewProjectPage />} />
-        <Route path="/admin-j28s7d1k/briefings" element={<AdminBriefings />} />
-        <Route path="/admin-j28s7d1k/projects" element={<AdminProjects />} />
-        <Route path="/admin-j28s7d1k/portfolio" element={<AdminPortfolio />} />
-        <Route path="/admin-j28s7d1k/clients" element={<AdminClients />} />
-        <Route path="/admin-j28s7d1k/settings" element={<AdminSettings />} />
-        <Route path="/admin-j28s7d1k/orders" element={<AdminProjects />} />
-        <Route path="/admin-j28s7d1k/payments" element={<AdminInvoices />} />
-        <Route path="/admin-j28s7d1k/analytics" element={<AdminStatistics />} />
-        <Route path="/admin-j28s7d1k/statistics" element={<AdminStatistics />} />
-        <Route path="/admin-j28s7d1k/guides" element={<AdminGuides />} />
-        <Route path="/admin-j28s7d1k/documentation" element={<AdminGuides />} />
-        <Route path="/admin-j28s7d1k/integrations" element={<AdminIntegrations />} />
-        <Route path="/admin-j28s7d1k/invoices" element={<AdminInvoices />} />
-        <Route path="/admin-j28s7d1k/storage" element={<AdminStorage />} />
-        
-        {/* 404 route */}
-        <Route path="*" element={<NotFoundPage />} />
-      </Routes>
+    <Routes>
+      {/* ✅ ROTAS PRINCIPAIS */}
+      <Route path="/" element={<HomePage />} />
+      <Route path="/sobre" element={<AboutPage />} />
+      <Route path="/servicos" element={<ServicesPage />} />
+      <Route path="/contato" element={<ContactPage />} />
+      <Route path="/portfolio" element={<PortfolioPage />} />
+      <Route path="/briefing" element={<Briefing />} />
+      <Route path="/briefing-success" element={<BriefingSuccess />} />
+      <Route path="/pacotes" element={<Packages />} />
+      <Route path="/pagamento" element={<Payment />} />
+      <Route path="/pagamento/:packageId" element={<Payment />} />
+      <Route path="/pagamento-retorno" element={<PaymentReturn />} />
+      <Route path="/acompanhar-pedido" element={<OrderTracking />} />
+      <Route path="/privacidade" element={<PrivacyPolicy />} />
+      <Route path="/termos" element={<Terms />} />
       
-      {showChatbot && <ChatbotButton />}
-    </>
+      {/* ✅ CONTRATOS */}
+      <Route path="/contract/essencial" element={<ContractEssencial />} />
+      <Route path="/contract/profissional" element={<ContractProfissional />} />
+      <Route path="/contract/premium" element={<ContractPremium />} />
+      
+      {/* ✅ PAYMENT */}
+      <Route path="/payment/success" element={<PaymentSuccess />} />
+      <Route path="/payment/cancel" element={<PaymentCancel />} />
+      
+      {/* ✅ BRIEFINGS ESPECÍFICOS */}
+      <Route path="/briefing/essencial" element={<BriefingEssencial />} />
+      <Route path="/briefing/profissional" element={<BriefingProfissional />} />
+      <Route path="/briefing/premium" element={<BriefingPremium />} />
+      
+      {/* ✅ PREVIEW */}
+      <Route path="/preview/:projectId" element={<PreviewPage />} />
+      
+      {/* ✅ ADMIN */}
+      <Route path="/admin-j28s7d1k/login" element={<AdminLogin />} />
+      <Route path="/admin-j28s7d1k/reset-password" element={<ResetPassword />} />
+      <Route path="/admin-j28s7d1k/dashboard" element={<AdminDashboard />} />
+      
+      {/* ✅ 404 */}
+      <Route path="*" element={<NotFoundPage />} />
+    </Routes>
   );
 };
 
