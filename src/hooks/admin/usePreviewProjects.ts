@@ -8,6 +8,13 @@ export interface ProjectItem {
   packageType: string;
   createdAt: string;
   status: 'waiting' | 'feedback' | 'approved' | 'processing';
+  versions?: Array<{
+    id: string;
+    name: string;
+    url: string;
+    feedback?: string;
+    isApproved?: boolean;
+  }>;
 }
 
 export function usePreviewProjects() {
@@ -18,7 +25,8 @@ export function usePreviewProjects() {
       clientEmail: 'joao@example.com',
       packageType: 'Profissional',
       createdAt: '10/05/2023',
-      status: 'waiting'
+      status: 'waiting',
+      versions: []
     },
     {
       id: 'P0002',
@@ -26,7 +34,8 @@ export function usePreviewProjects() {
       clientEmail: 'maria@example.com',
       packageType: 'Premium',
       createdAt: '15/05/2023',
-      status: 'feedback'
+      status: 'feedback',
+      versions: []
     }
   ]);
 

@@ -1,17 +1,16 @@
 
 import { useState, useEffect } from 'react';
 
-interface Briefing {
+export interface Briefing {
   id: string;
   name: string;
   email: string;
   phoneNumber?: string;
-  packageType: string; // 'essencial', 'profissional', 'premium'
+  packageType: string;
   description: string;
-  musicStyle?: string;
   references?: string[];
+  musicStyle?: string;
   createdAt: string;
-  projectCreated: boolean;
   status: 'pending' | 'completed' | 'approved';
   notes?: string;
 }
@@ -19,108 +18,72 @@ interface Briefing {
 export function useBriefings() {
   const [briefings, setBriefings] = useState<Briefing[]>([
     {
-      id: 'brief_001',
+      id: 'BR001',
       name: 'João Silva',
       email: 'joao@example.com',
       phoneNumber: '(11) 99999-9999',
-      packageType: 'Premium',
-      description: 'Música para casamento com temática romântica',
-      musicStyle: 'Pop/Romântico',
-      references: ['A Thousand Years - Christina Perri', 'Perfect - Ed Sheeran'],
-      createdAt: '15/05/2023',
-      projectCreated: false,
+      packageType: 'Profissional',
+      description: 'Música para aniversário de casamento de 10 anos com estilo romântico.',
+      references: ['Música 1 - Artista X', 'Música 2 - Artista Y'],
+      musicStyle: 'Romântico',
+      createdAt: '10/05/2023',
       status: 'pending'
     },
     {
-      id: 'brief_002',
+      id: 'BR002',
       name: 'Maria Santos',
       email: 'maria@example.com',
-      phoneNumber: '(21) 98888-8888',
-      packageType: 'Essencial',
-      description: 'Música para vídeo institucional de empresa de tecnologia',
-      musicStyle: 'Eletrônica/Corporativa',
-      createdAt: '20/05/2023',
-      projectCreated: true,
-      status: 'completed'
+      packageType: 'Premium',
+      description: 'Composição para vídeo institucional de empresa de tecnologia.',
+      references: ['Música corporativa exemplo'],
+      musicStyle: 'Corporativo',
+      createdAt: '15/05/2023',
+      status: 'completed',
+      notes: 'Cliente solicitou estilo mais moderno'
     }
   ]);
 
   const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
 
-  const fetchBriefings = async () => {
+  const loadBriefings = () => {
     setIsLoading(true);
-    setError(null);
-    try {
-      // In a real app, this would be an API call
-      // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 500));
-      // If data was fetched from API, we would set it here
+    // In a real app, this would be an API call to load briefings
+    setTimeout(() => {
       setIsLoading(false);
-    } catch (err) {
-      setError('Erro ao carregar briefings');
-      setIsLoading(false);
-    }
+    }, 500);
   };
 
-  const addBriefing = (briefingData: Partial<Briefing>) => {
-    const newBriefing: Briefing = {
-      id: `brief_${Date.now()}`,
-      name: briefingData.name || '',
-      email: briefingData.email || '',
-      phoneNumber: briefingData.phoneNumber,
-      packageType: briefingData.packageType || 'Essencial',
-      description: briefingData.description || '',
-      musicStyle: briefingData.musicStyle,
-      references: briefingData.references,
-      createdAt: new Date().toLocaleDateString('pt-BR'),
-      projectCreated: false,
-      status: 'pending',
-      notes: briefingData.notes
+  const createBriefing = (newBriefing: Omit<Briefing, 'id' | 'createdAt' | 'status'>) => {
+    const briefing: Briefing = {
+      ...newBriefing,
+      id: `BR${Math.floor(Math.random() * 1000).toString().padStart(3, '0')}`,
+      createdAt: new Date().toLocaleDateString(),
+      status: 'pending'
     };
-
-    setBriefings([...briefings, newBriefing]);
-    return newBriefing;
+    setBriefings([briefing, ...briefings]);
+    return briefing;
   };
 
-  const updateBriefing = (id: string, updatedData: Partial<Briefing>) => {
-    setBriefings(
-      briefings.map(briefing => 
-        briefing.id === id ? { ...briefing, ...updatedData } : briefing
-      )
-    );
-  };
-
-  const updateBriefingStatus = (id: string, status: 'pending' | 'completed' | 'approved') => {
-    updateBriefing(id, { status });
+  const updateBriefing = (id: string, updates: Partial<Briefing>) => {
+    setBriefings(briefings.map(briefing => 
+      briefing.id === id ? { ...briefing, ...updates } : briefing
+    ));
   };
 
   const deleteBriefing = (id: string) => {
     setBriefings(briefings.filter(briefing => briefing.id !== id));
   };
 
-  const createProjectFromBriefing = (briefing: Briefing) => {
-    // Mark briefing as having a project
-    updateBriefing(briefing.id, { projectCreated: true });
-    
-    // In a real app, this would create a project in the database
-    // and return the project ID
-    return `proj_${Date.now()}`;
-  };
-
   useEffect(() => {
-    fetchBriefings();
+    loadBriefings();
   }, []);
 
   return {
     briefings,
     isLoading,
-    error,
-    addBriefing,
+    loadBriefings,
+    createBriefing,
     updateBriefing,
-    updateBriefingStatus,
-    deleteBriefing,
-    createProjectFromBriefing,
-    fetchBriefings
+    deleteBriefing
   };
 }
