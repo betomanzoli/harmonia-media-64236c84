@@ -9,7 +9,7 @@ const supabaseAnonKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYm
 // Use a dedicated storage key for preview authentication
 const PREVIEW_AUTH_STORAGE_KEY = 'harmonia-preview-auth';
 
-// Initialize the Supabase client with improved error handling and configuration
+// Initialize the Supabase client with improved error handling and configuration for incognito mode
 export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
   auth: {
     persistSession: true,
@@ -19,28 +19,10 @@ export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
   },
   global: {
     fetch: (...args: Parameters<typeof fetch>) => {
-      return fetch(...args)
-        .then(response => {
-          // Additional handling for successful responses if needed
-          return response;
-        })
-        .catch(error => {
-          // If we're offline, suppress network errors
-          if (!navigator.onLine) {
-            console.warn('Network request failed while offline:', error);
-            // Return mock response for offline mode
-            return new Response(JSON.stringify({ 
-              data: [], 
-              error: { message: 'Application is in offline mode' } 
-            }), { 
-              status: 200, 
-              headers: { 'Content-Type': 'application/json' } 
-            });
-          }
-          
-          console.error('Supabase fetch error:', error);
-          throw error;
-        });
+      return fetch(...args).catch(error => {
+        console.error('Supabase fetch error:', error);
+        throw error;
+      });
     }
   }
 });
@@ -61,32 +43,84 @@ export const checkPrivateBrowsing = async (): Promise<boolean> => {
   }
 };
 
-// Clean up Supabase auth state - helps fix auth issues
-export const cleanupAuthState = () => {
-  try {
-    // Remove standard auth tokens
-    localStorage.removeItem('supabase.auth.token');
-    
-    // Remove all Supabase auth keys from localStorage
-    Object.keys(localStorage).forEach((key) => {
-      if (key.startsWith('supabase.auth.') || key.includes('sb-')) {
-        localStorage.removeItem(key);
-      }
-    });
-    
-    // Remove from sessionStorage if in use
-    Object.keys(sessionStorage || {}).forEach((key) => {
-      if (key.startsWith('supabase.auth.') || key.includes('sb-')) {
-        sessionStorage.removeItem(key);
-      }
-    });
-    
-    console.log('Auth state cleaned up successfully');
-    return true;
-  } catch (error) {
-    console.error('Error cleaning up auth state:', error);
-    return false;
-  }
+const createMockQueryResponse = () => {
+  return {
+    data: null,
+    error: null,
+    count: 0
+  };
+};
+
+// Função auxiliar para criar métodos de consulta consistentes
+const createQueryBuilder = (tableName: string) => {
+  console.log(`Acessando tabela: ${tableName}`);
+  
+  // Criando um objeto que mantém as propriedades data e error em toda a cadeia
+  const baseQueryResponse = createMockQueryResponse();
+  
+  const queryChain = {
+    select: (columns: string) => {
+      console.log(`Simulando seleção de colunas: ${columns}`);
+      return {
+        ...baseQueryResponse,
+        eq: (column: string, value: any) => {
+          console.log(`Simulando filtro WHERE ${column} = ${value}`);
+          return {
+            ...baseQueryResponse,
+            single: async () => createMockQueryResponse()
+          };
+        },
+        order: (column: string, options: any) => {
+          console.log(`Simulando ordenação por ${column}`);
+          return {
+            ...baseQueryResponse,
+            ...queryChain
+          };
+        },
+        limit: async (limit: number) => createMockQueryResponse(),
+        gt: (column: string, value: any) => {
+          console.log(`Simulando filtro WHERE ${column} > ${value}`);
+          return {
+            ...baseQueryResponse,
+            ...queryChain
+          };
+        },
+        lt: (column: string, value: any) => {
+          console.log(`Simulando filtro WHERE ${column} < ${value}`);
+          return {
+            ...baseQueryResponse,
+            ...queryChain
+          };
+        }
+      };
+    },
+    insert: async (data: any, options?: any) => {
+      console.log('Simulando inserção de dados:', data);
+      return createMockQueryResponse();
+    },
+    upsert: async (data: any, options?: any) => {
+      console.log('Simulando upsert de dados:', data);
+      console.log('Opções:', options);
+      return createMockQueryResponse();
+    },
+    update: async (data: any) => {
+      console.log('Simulando atualização de dados:', data);
+      return createMockQueryResponse();
+    },
+    delete: async () => {
+      console.log(`Simulando exclusão na tabela ${tableName}`);
+      return createMockQueryResponse();
+    },
+    count: async () => {
+      console.log(`Simulando contagem na tabela ${tableName}`);
+      return createMockQueryResponse();
+    }
+  };
+
+  return {
+    ...baseQueryResponse,
+    ...queryChain
+  };
 };
 
 // Funções auxiliares
@@ -120,5 +154,32 @@ export const emailService = {
     return { success: true };
   }
 };
+
+// Initialize missing tables that may not exist
+(async () => {
+  // Initialize preview_tokens table for magic links authentication
+  const { error: tokensError } = await supabase.rpc('check_if_table_exists', { table_name: 'preview_tokens' });
+  
+  if (tokensError) {
+    console.log('Creating preview_tokens table for magic link authentication');
+    await supabase.rpc('create_preview_tokens_table');
+  }
+  
+  // Initialize access_logs table for tracking preview accesses
+  const { error: logsError } = await supabase.rpc('check_if_table_exists', { table_name: 'access_logs' });
+  
+  if (logsError) {
+    console.log('Creating access_logs table for tracking preview accesses');
+    await supabase.rpc('create_access_logs_table');
+  }
+  
+  // Initialize project_files table for final deliveries
+  const { error: filesError } = await supabase.rpc('check_if_table_exists', { table_name: 'project_files' });
+  
+  if (filesError) {
+    console.log('Creating project_files table for final deliveries');
+    await supabase.rpc('create_project_files_table');
+  }
+})();
 
 export default supabase;

@@ -30,54 +30,26 @@ const App: React.FC = () => {
   useEffect(() => {
     const initializeDatabaseFunctions = async () => {
       try {
-        // Verificar se estamos online antes de prosseguir
-        if (!navigator.onLine) {
-          console.log('Aplicação está offline. Pulando verificação de funções.');
-          return;
-        }
+        // Check if functions exist first
+        const { error } = await supabase.rpc('check_if_table_exists', { table_name: 'not_real_table' });
         
-        // Verificar se as funções existem de maneira segura
-        try {
-          // Tentar chamar uma função para testar
-          const { error } = await supabase.rpc('check_if_table_exists', { table_name: 'not_real_table' });
+        if (error && error.message.includes('Could not find the function')) {
+          console.log("Database functions don't exist, creating them...");
           
-          if (error && error.message && error.message.includes('Could not find the function')) {
-            console.log("Database functions don't exist, creating them...");
-            
+          // Execute SQL file to create functions
+          const response = await fetch('/supabase/migrations/20250522_create_db_functions.sql');
+          const sql = await response.text();
+          
+          // Split into individual statements and execute them
+          const statements = sql.split(';').filter(stmt => stmt.trim().length > 0);
+          
+          for (const statement of statements) {
             try {
-              // Execute SQL file to create functions
-              const response = await fetch('/supabase/migrations/20250522_create_db_functions.sql');
-              
-              if (!response.ok) {
-                console.error(`Failed to fetch SQL file: ${response.status} ${response.statusText}`);
-                return;
-              }
-              
-              const sql = await response.text();
-              
-              // Split into individual statements and execute them
-              const statements = sql.split(';').filter(stmt => stmt.trim().length > 0);
-              
-              for (const statement of statements) {
-                try {
-                  await supabase.rpc('exec_sql', { sql: statement });
-                } catch (err) {
-                  console.warn("Error executing SQL statement, may already exist:", err);
-                }
-              }
-              
-              console.log("Database functions created successfully");
-            } catch (fetchError) {
-              console.error("Error fetching or executing SQL file:", fetchError);
+              await supabase.rpc('exec_sql', { sql: statement });
+            } catch (err) {
+              console.error("Error executing SQL:", err);
             }
-          } else if (error) {
-            // Se o erro não for "função não encontrada", pode ser outro problema
-            console.log("Outro erro ao verificar funções:", error);
-          } else {
-            console.log("Database functions already exist.");
           }
-        } catch (rpcError) {
-          console.error("Error calling RPC function:", rpcError);
         }
       } catch (error) {
         console.error("Error initializing database functions:", error);
