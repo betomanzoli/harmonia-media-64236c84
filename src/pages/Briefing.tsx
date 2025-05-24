@@ -27,42 +27,19 @@ const Briefing: React.FC = () => {
     }
   }, [searchParams]);
 
-  const handleBriefingComplete = async (formData: any, selectedPackage: string) => {
-    if (!currentBriefingId) return;
+  const handleBriefingComplete = async (briefingId: string, packageType: 'essencial' | 'profissional' | 'premium') => {
+    if (!briefingId) return;
     
     setIsLoading(true);
     
     try {
-      // Preparar dados do briefing
-      const briefingData: Partial<BriefingData> = {
-        id: currentBriefingId,
-        packageType: selectedPackage as 'essencial' | 'profissional' | 'premium',
-        clientName: formData.name || '',
-        email: formData.email || '',
-        phone: formData.phone || '',
-        company: formData.company || '',
-        projectDescription: formData.projectDescription || '',
-        budget: formData.budget || '',
-        timeline: formData.timeline || '',
-        musicStyle: formData.musicStyle || '',
-        emotionalTone: formData.emotionalTone || '',
-        references: formData.references || [],
-        additionalInfo: formData.additionalInfo || '',
-        createdAt: new Date().toISOString(),
-        contractAccepted: false,
-        paymentStatus: 'pending'
-      };
-
-      // Salvar dados localmente
-      briefingStorage.saveBriefingData(currentBriefingId, briefingData);
-
       toast({
         title: "Briefing salvo",
         description: "Suas informações foram salvas. Redirecionando para o contrato...",
       });
 
       // Redirecionar para página de contrato específica
-      navigate(`/contract/${selectedPackage}?briefing=${currentBriefingId}`);
+      navigate(`/contract/${packageType}?briefing=${briefingId}`);
       
     } catch (error) {
       console.error('Erro ao salvar briefing:', error);
@@ -82,7 +59,6 @@ const Briefing: React.FC = () => {
       <main className="pt-20">
         <ConversationalBriefing 
           onComplete={handleBriefingComplete}
-          briefingId={currentBriefingId}
         />
       </main>
       <Footer />
