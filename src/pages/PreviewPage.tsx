@@ -3,7 +3,6 @@ import { useParams, useNavigate } from 'react-router-dom';
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
 import { useToast } from "@/hooks/use-toast";
-import { supabase } from '@/lib/supabase';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import PreviewFeedbackForm from '@/components/previews/PreviewFeedbackForm';
 import PreviewHeader from '@/components/previews/PreviewHeader';
@@ -11,7 +10,7 @@ import PreviewInstructions from '@/components/previews/PreviewInstructions';
 import PreviewPlayerList from '@/components/previews/player/PreviewPlayerList';
 import PreviewNextSteps from '@/components/previews/PreviewNextSteps';
 import GoogleDrivePreviewsList from '@/components/previews/GoogleDrivePreviewsList';
-import { usePreviewProject } from '@/hooks/previews/usePreviewProject';
+import { usePreviewProject, MusicPreview, PreviewProject } from '@/hooks/previews/usePreviewProject';
 import { notificationService } from '@/services/notificationService';
 
 const PreviewPage: React.FC = () => {
@@ -21,48 +20,10 @@ const PreviewPage: React.FC = () => {
   
   const [selectedPreview, setSelectedPreview] = useState<string | null>(null);
   const [feedback, setFeedback] = useState('');
-  const { projectData, setProjectData, isLoading } = usePreviewProject(projectId || '');
+  const { projectData, setProjectData, isLoading } = usePreviewProject(projectId);
 
-  // Sistema de persistência híbrida
-  useEffect(() => {
-    const restoreState = () => {
-      try {
-        const savedState = localStorage.getItem(`previewState_${projectId}`);
-        if (savedState) {
-          const { selected, feedback: savedFeedback } = JSON.parse(savedState);
-          setSelectedPreview(selected);
-          setFeedback(savedFeedback);
-        }
-      } catch {
-        const cookieState = document.cookie
-          .split('; ')
-          .find(row => row.startsWith(`previewState_${projectId}=`))
-          ?.split('=')[1];
-        if (cookieState) {
-          const { selected, feedback: savedFeedback } = JSON.parse(decodeURIComponent(cookieState));
-          setSelectedPreview(selected);
-          setFeedback(savedFeedback);
-        }
-      }
-    };
-
-    if (projectId) restoreState();
-  }, [projectId]);
-
-  // Auto-save do estado
-  useEffect(() => {
-    if (projectId && (selectedPreview || feedback)) {
-      const state = JSON.stringify({ selected: selectedPreview, feedback });
-      try {
-        localStorage.setItem(`previewState_${projectId}`, state);
-      } catch {
-        document.cookie = `previewState_${projectId}=${encodeURIComponent(state)}; Path=/; Max-Age=604800; Secure; SameSite=None; Partitioned`;
-      }
-    }
-  }, [selectedPreview, feedback, projectId]);
-  
   const handleSubmitFeedback = async () => {
-    if (!selectedPreview) {
+    if (!selectedPreview || !projectId) {
       toast({
         title: "Selecione uma versão",
         description: "Por favor, selecione uma das versões antes de enviar.",
@@ -70,9 +31,8 @@ const PreviewPage: React.FC = () => {
       });
       return;
     }
-    
+
     try {
-      // Salvar no Supabase
       await supabase.rpc('append_feedback', {
         project_id: projectId,
         new_entry: {
@@ -87,26 +47,21 @@ const PreviewPage: React.FC = () => {
         title: "Feedback enviado!",
         description: "Obrigado pelo seu feedback. Nossa equipe já está trabalhando nas modificações.",
       });
-      
-      notificationService.notify('feedback_received', {
-        projectId: projectId || '',
-        clientName: projectData?.clientName || 'Cliente',
-        message: feedback
-      });
-      
-      setProjectData(prev => prev ? {...prev, status: 'feedback'} : null);
+
+      setProjectData(prev => prev ? { ...prev, status: 'feedback' } : null);
+
     } catch (error) {
-      console.error('Erro ao enviar feedback:', error);
+      console.error('Error submitting feedback:', error);
       toast({
         title: "Erro",
-        description: "Não foi possível enviar o feedback. Tente novamente.",
+        description: "Não foi possível enviar o feedback",
         variant: "destructive"
       });
     }
   };
-  
+
   const handleApprove = async () => {
-    if (!selectedPreview) {
+    if (!selectedPreview || !projectId) {
       toast({
         title: "Selecione uma versão",
         description: "Por favor, selecione uma das versões antes de aprovar.",
@@ -114,13 +69,12 @@ const PreviewPage: React.FC = () => {
       });
       return;
     }
-    
+
     try {
-      // Salvar aprovação no Supabase
       await supabase.rpc('append_feedback', {
         project_id: projectId,
         new_entry: {
-          feedback: 'Música aprovada!',
+          feedback: 'Aprovado pelo cliente',
           version: selectedPreview,
           timestamp: new Date().toISOString(),
           approved: true
@@ -131,24 +85,19 @@ const PreviewPage: React.FC = () => {
         title: "Música aprovada!",
         description: "Estamos felizes que você gostou! Vamos finalizar sua música e entregar em breve.",
       });
-      
-      notificationService.notify('preview_approved', {
-        projectId: projectId || '',
-        clientName: projectData?.clientName || 'Cliente',
-        versionId: selectedPreview
-      });
-      
-      setProjectData(prev => prev ? {...prev, status: 'approved'} : null);
+
+      setProjectData(prev => prev ? { ...prev, status: 'approved' } : null);
+
     } catch (error) {
-      console.error('Erro ao aprovar:', error);
+      console.error('Error approving:', error);
       toast({
         title: "Erro",
-        description: "Não foi possível salvar a aprovação. Tente novamente.",
+        description: "Não foi possível registrar a aprovação",
         variant: "destructive"
       });
     }
   };
-  
+
   if (isLoading) {
     return (
       <div className="min-h-screen bg-white text-gray-900">
@@ -163,7 +112,7 @@ const PreviewPage: React.FC = () => {
       </div>
     );
   }
-  
+
   if (!projectData) {
     return (
       <div className="min-h-screen bg-white text-gray-900">
@@ -184,7 +133,7 @@ const PreviewPage: React.FC = () => {
       </div>
     );
   }
-  
+
   return (
     <div className="min-h-screen bg-white text-gray-900">
       <Header />
@@ -192,7 +141,7 @@ const PreviewPage: React.FC = () => {
         <div className="max-w-4xl mx-auto">
           <PreviewHeader 
             projectData={{
-              projectTitle: projectData.projectTitle || projectData.clientName,
+              projectTitle: projectData.projectTitle,
               clientName: projectData.clientName,
               status: projectData.status
             }}
@@ -216,7 +165,7 @@ const PreviewPage: React.FC = () => {
                   <GoogleDrivePreviewsList projectId={projectId} />
                 ) : (
                   <PreviewPlayerList 
-                    versions={projectData.previews || []}
+                    versions={projectData.previews}
                     selectedVersion={selectedPreview}
                     setSelectedVersion={setSelectedPreview}
                     isApproved={projectData.status === 'approved'}
@@ -234,7 +183,7 @@ const PreviewPage: React.FC = () => {
                   onApprove={handleApprove}
                   status={projectData.status}
                   selectedVersion={selectedPreview}
-                  versionTitle={projectData.previews?.find(v => v.id === selectedPreview)?.title}
+                  versionTitle={projectData.previews.find(v => v.id === selectedPreview)?.title}
                 />
               </div>
             </TabsContent>
