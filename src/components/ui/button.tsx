@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { cn } from "@/lib/utils";
 
@@ -6,7 +5,6 @@ interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
   variant?: 'default' | 'outline' | 'ghost' | 'link' | 'destructive' | 'secondary';
   size?: 'default' | 'sm' | 'lg' | 'icon';
   children: React.ReactNode;
-  asChild?: boolean;
 }
 
 export function Button({ 
@@ -14,10 +12,11 @@ export function Button({
   size = 'default',
   className = '', 
   children, 
-  asChild = false,
+  disabled = false,
+  type = 'button',
   ...props 
 }: ButtonProps) {
-  const baseClasses = 'inline-flex items-center justify-center whitespace-nowrap rounded-md font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50';
+  const baseClasses = 'inline-flex items-center justify-center whitespace-nowrap rounded-md font-medium transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:pointer-events-none disabled:opacity-50';
   
   const variantClasses = {
     default: 'bg-blue-600 text-white hover:bg-blue-700',
@@ -37,6 +36,8 @@ export function Button({
 
   return (
     <button 
+      type={type}
+      disabled={disabled}
       className={cn(
         baseClasses, 
         variantClasses[variant],
