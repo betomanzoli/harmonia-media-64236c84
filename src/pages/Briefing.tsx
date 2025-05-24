@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { supabase } from '@/lib/supabase';
+import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -111,13 +111,11 @@ const Briefing: React.FC = () => {
   const handleSendMessage = () => {
     if (!currentInput.trim()) return;
 
-    // Adicionar resposta do usuário
     const newMessages = [...messages, {
       type: 'user' as const,
       content: currentInput
     }];
 
-    // Salvar resposta
     const currentQuestion = questions[currentStep];
     const newAnswers = {
       ...answers,
@@ -125,7 +123,6 @@ const Briefing: React.FC = () => {
     };
     setAnswers(newAnswers);
 
-    // Próxima pergunta ou finalizar
     if (currentStep < questions.length - 1) {
       const nextStep = currentStep + 1;
       const nextQuestion = questions[nextStep];
@@ -138,7 +135,6 @@ const Briefing: React.FC = () => {
       
       setCurrentStep(nextStep);
     } else {
-      // Finalizar perguntas e mostrar pacotes
       newMessages.push({
         type: 'bot',
         content: `Perfeito, ${newAnswers.clientName?.split(' ')[0]}! ✨\n\nAgora que conheço sua história, vou te apresentar nossos pacotes. Escolha o que melhor se encaixa no seu projeto:`
@@ -159,7 +155,6 @@ const Briefing: React.FC = () => {
     try {
       console.log('[DEBUG] Selecionando pacote:', packageType, 'com dados:', answers);
       
-      // Criar briefing no Supabase
       const briefingData = {
         client_name: answers.clientName || '',
         client_email: answers.clientEmail || '',
@@ -190,7 +185,6 @@ const Briefing: React.FC = () => {
         description: 'Redirecionando para aceite do contrato...'
       });
 
-      // ✅ REDIRECIONAR PARA CONTRATO ESPECÍFICO
       navigate(`/contract/${packageType}?briefing=${data.id}`);
       
     } catch (error) {
@@ -223,7 +217,6 @@ const Briefing: React.FC = () => {
           </CardHeader>
           
           <CardContent className="flex-1 flex flex-col p-0">
-            {/* Área de Mensagens */}
             <div className="flex-1 p-6 overflow-y-auto space-y-4">
               {messages.map((message, index) => (
                 <div
@@ -239,7 +232,6 @@ const Briefing: React.FC = () => {
                   >
                     <p className="whitespace-pre-line">{message.content}</p>
                     
-                    {/* Opções de resposta rápida */}
                     {message.options && (
                       <div className="mt-3 space-y-2">
                         {message.options.map((option, optIndex) => (
@@ -259,7 +251,6 @@ const Briefing: React.FC = () => {
                 </div>
               ))}
 
-              {/* Seleção de Pacotes */}
               {showPackages && (
                 <div className="space-y-4">
                   <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
@@ -313,7 +304,6 @@ const Briefing: React.FC = () => {
               )}
             </div>
 
-            {/* Área de Input */}
             {!showPackages && (
               <div className="border-t p-4">
                 <div className="flex gap-2">
