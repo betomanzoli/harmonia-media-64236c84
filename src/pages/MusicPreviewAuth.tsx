@@ -1,175 +1,114 @@
-
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { useToast } from '@/hooks/use-toast';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
 import { supabase } from '@/lib/supabase';
-import { setPreviewAccessCookie } from '@/utils/authCookies';
+import { useToast } from '@/hooks/use-toast';
 import { Loader2 } from 'lucide-react';
 
-const MusicPreviewAuth: React.FC = () => {
-  const { previewId } = useParams<{ previewId: string }>();
+const MusicPreviewAuth = () => {
+  const { previewId } = useParams();
   const navigate = useNavigate();
   const { toast } = useToast();
   const [email, setEmail] = useState('');
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  const [isCheckingAuth, setIsCheckingAuth] = useState(true);
+  const [isLoading, setIsLoading] = useState(false);
+  const [isPrivateWindow, setIsPrivateWindow] = useState(false);
 
-  // Check if user is already authenticated
+  // Detecção robusta de navegador privado
   useEffect(() => {
-    const checkAuth = async () => {
-      if (!previewId) {
-        setIsCheckingAuth(false);
-        return;
-      }
-
+    const detectPrivateMode = async () => {
       try {
-        // Check for existing auth
-        const { data: { session } } = await supabase.auth.getSession();
-        
-        if (session) {
-          console.log("User already authenticated:", session.user.email);
-          // Set cookie for this preview and redirect
-          setPreviewAccessCookie(previewId);
-          navigate(`/preview/${previewId}`);
-        }
-      } catch (error) {
-        console.error("Error checking auth:", error);
-      } finally {
-        setIsCheckingAuth(false);
+        const testKey = '_harmonia_private_test_';
+        sessionStorage.setItem(testKey, 'true');
+        sessionStorage.removeItem(testKey);
+        setIsPrivateWindow(false);
+      } catch (e) {
+        setIsPrivateWindow(true);
+        document.cookie = `harmonia_private=1; SameSite=None; Secure; Partitioned`;
       }
     };
+    detectPrivateMode();
+  }, []);
 
-    checkAuth();
-  }, [previewId, navigate]);
-
-  const handleMagicLinkLogin = async (e: React.FormEvent) => {
-    e.preventDefault();
-    
-    if (!email || !email.trim()) {
-      toast({
-        title: "Email necessário",
-        description: "Por favor, digite seu email para acessar a prévia.",
-        variant: "destructive"
-      });
-      return;
-    }
-
-    setIsSubmitting(true);
-
+  const handleSendMagicLink = async () => {
+    setIsLoading(true);
     try {
-      // Set up redirect URL with the current preview ID
-      const redirectTo = `${window.location.origin}/auth/callback?redirect=/preview/${previewId}`;
-      
-      console.log("Sending magic link with redirect:", redirectTo);
-      
-      // Send magic link email
-      const { error } = await supabase.auth.signInWithOtp({ 
+      const { error } = await supabase.auth.signInWithOtp({
         email,
         options: {
-          emailRedirectTo: redirectTo
+          emailRedirectTo: isPrivateWindow 
+            ? `${window.location.origin}/auth/callback?is_private=true&preview_id=${previewId}`
+            : `${window.location.origin}/auth/callback?preview_id=${previewId}`,
+          data: { preview_id: previewId }
         }
       });
 
-      if (error) {
-        throw error;
+      if (error) throw error;
+
+      // Sistema híbrido de armazenamento
+      const sessionData = {
+        previewId,
+        email,
+        timestamp: new Date().getTime()
+      };
+      
+      try {
+        localStorage.setItem('previewSession', JSON.stringify(sessionData));
+      } catch {
+        sessionStorage.setItem('previewSessionTemp', JSON.stringify(sessionData));
       }
 
-      // Show success message
       toast({
-        title: "Link enviado",
-        description: `Enviamos um link de acesso para ${email}. Por favor, verifique sua caixa de entrada.`,
+        title: "Link de acesso enviado!",
+        description: "Verifique seu email para continuar",
       });
-      
-      // We don't redirect here because user needs to click the magic link in email
-    } catch (error: any) {
-      console.error("Magic link error:", error);
+
+    } catch (error) {
       toast({
-        title: "Erro",
-        description: error.message || "Houve um problema ao enviar o link. Tente novamente.",
+        title: "Erro ao enviar link",
+        description: error.message,
         variant: "destructive"
       });
     } finally {
-      setIsSubmitting(false);
+      setIsLoading(false);
     }
   };
 
-  if (isCheckingAuth) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-100">
-        <div className="flex flex-col items-center">
-          <Loader2 className="h-10 w-10 animate-spin text-harmonia-green" />
-          <p className="mt-4 text-gray-600">Verificando autenticação...</p>
+  return (
+    <div className="min-h-screen flex items-center justify-center bg-gray-50">
+      <div className="w-full max-w-md p-8 space-y-8 bg-white rounded-lg shadow-md">
+        <div className="text-center space-y-2">
+          <h1 className="text-3xl font-bold">Acesso à Prévia</h1>
+          <p className="text-gray-600">
+            Digite seu email para receber o link de acesso seguro
+          </p>
+        </div>
+        
+        <div className="space-y-6">
+          <div className="space-y-2">
+            <Label htmlFor="email">Email</Label>
+            <Input
+              id="email"
+              type="email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              placeholder="seu@email.com"
+            />
+          </div>
+          
+          <Button 
+            onClick={handleSendMagicLink}
+            disabled={isLoading}
+            className="w-full bg-harmonia-green hover:bg-harmonia-green/90"
+          >
+            {isLoading ? (
+              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+            ) : null}
+            Enviar Link de Acesso
+          </Button>
         </div>
       </div>
-    );
-  }
-
-  if (!previewId) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-100">
-        <Card className="max-w-md w-full">
-          <CardHeader>
-            <CardTitle>Acesso não disponível</CardTitle>
-            <CardDescription>O código de prévia não foi encontrado.</CardDescription>
-          </CardHeader>
-          <CardFooter>
-            <Button 
-              className="w-full" 
-              onClick={() => navigate('/')}
-            >
-              Voltar para o início
-            </Button>
-          </CardFooter>
-        </Card>
-      </div>
-    );
-  }
-
-  return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-100 p-4">
-      <Card className="max-w-md w-full">
-        <CardHeader>
-          <CardTitle className="text-xl">Acesso à Prévia</CardTitle>
-          <CardDescription>
-            Por favor, insira seu email para acessar a prévia musical.
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <form onSubmit={handleMagicLinkLogin}>
-            <div className="grid gap-4">
-              <div className="grid gap-2">
-                <Label htmlFor="email">Email</Label>
-                <Input
-                  id="email"
-                  type="email"
-                  placeholder="seu@email.com"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  disabled={isSubmitting}
-                  required
-                />
-              </div>
-              <Button type="submit" className="w-full" disabled={isSubmitting}>
-                {isSubmitting ? (
-                  <>
-                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                    Enviando...
-                  </>
-                ) : (
-                  "Acessar Prévia"
-                )}
-              </Button>
-            </div>
-          </form>
-          <p className="text-xs text-gray-500 mt-4 text-center">
-            Enviaremos um link de acesso para o email cadastrado.
-          </p>
-        </CardContent>
-      </Card>
     </div>
   );
 };
