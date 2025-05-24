@@ -23,9 +23,10 @@ interface CreateBriefingFormData {
 
 interface CreateBriefingFormProps {
   onSuccess?: () => void;
+  initialData?: any;
 }
 
-const CreateBriefingForm: React.FC<CreateBriefingFormProps> = ({ onSuccess }) => {
+const CreateBriefingForm: React.FC<CreateBriefingFormProps> = ({ onSuccess, initialData }) => {
   const { createBriefing } = useBriefings();
   const {
     register,
@@ -33,7 +34,14 @@ const CreateBriefingForm: React.FC<CreateBriefingFormProps> = ({ onSuccess }) =>
     formState: { errors, isSubmitting },
     setValue,
     reset
-  } = useForm<CreateBriefingFormData>();
+  } = useForm<CreateBriefingFormData>({
+    defaultValues: initialData ? {
+      clientName: initialData.name || '',
+      email: initialData.email || '',
+      phone: initialData.phone || '',
+      company: initialData.company || ''
+    } : undefined
+  });
 
   const onSubmit = async (data: CreateBriefingFormData) => {
     const result = await createBriefing(data);

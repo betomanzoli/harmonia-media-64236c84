@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { usePreviewProject } from '@/hooks/usePreviewProject';
 import { Loader2, Calendar, Music, MessageSquare, ArrowLeft, CheckCircle } from 'lucide-react';
@@ -6,10 +7,28 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { useToast } from '@/hooks/use-toast';
 import { Textarea } from '@/components/ui/textarea';
-import PreviewPlayerList from '@/components/previews/player/PreviewPlayerList';
+import PreviewPlayerList from '@/components/previews/PreviewPlayerList';
 import PreviewProjectDetails from '@/components/previews/PreviewProjectDetails';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { supabase } from '@/integrations/supabase/client';
+
+interface MusicPreview {
+  id: string;
+  title: string;
+  description: string;
+  audioUrl?: string;
+  url?: string;
+  recommended?: boolean;
+}
+
+interface PreviewProject {
+  projectTitle: string;
+  clientName: string;
+  status: string;
+  packageType?: string;
+  creationDate?: string;
+  previews: MusicPreview[];
+}
 
 interface MusicPreviewSystemProps {
   projectId: string;
@@ -43,7 +62,7 @@ const MusicPreviewSystem: React.FC<MusicPreviewSystemProps> = ({ projectId, user
     };
   }, [projectData]);
   
-  const handlePlay = (preview: any) => {
+  const handlePlay = (preview: MusicPreview) => {
     if (playingAudio) {
       playingAudio.pause();
       playingAudio.src = '';
@@ -61,8 +80,8 @@ const MusicPreviewSystem: React.FC<MusicPreviewSystemProps> = ({ projectId, user
       });
       
       setPlayingAudio(audio);
-    } else if (preview.fileId) {
-      window.open(`https://drive.google.com/file/d/${preview.fileId}/view`, '_blank');
+    } else if (preview.url) {
+      window.open(preview.url, '_blank');
     }
   };
   
@@ -80,7 +99,6 @@ const MusicPreviewSystem: React.FC<MusicPreviewSystemProps> = ({ projectId, user
         created_at: new Date().toISOString()
       };
 
-      // Salvar feedback na tabela feedbacks
       const { error: feedbackError } = await supabase
         .from('feedbacks')
         .insert(feedbackData);
@@ -89,7 +107,6 @@ const MusicPreviewSystem: React.FC<MusicPreviewSystemProps> = ({ projectId, user
         console.error('Erro ao salvar feedback:', feedbackError);
       }
 
-      // Atualizar status do projeto se existir na tabela projects
       const { error: projectError } = await supabase
         .from('projects')
         .update({ 
@@ -102,7 +119,6 @@ const MusicPreviewSystem: React.FC<MusicPreviewSystemProps> = ({ projectId, user
         console.warn('Projeto não encontrado na tabela projects, apenas feedback salvo:', projectError);
       }
 
-      // Usar função append_feedback se disponível
       try {
         const { error: functionError } = await supabase.rpc('append_feedback', {
           project_id: projectId,
@@ -151,10 +167,7 @@ const MusicPreviewSystem: React.FC<MusicPreviewSystemProps> = ({ projectId, user
     
     setSubmitting(true);
     
-    // Salvar no Supabase
     const supabaseSuccess = await saveFeedbackToSupabase('feedback', feedback);
-    
-    // Atualizar localmente
     const localSuccess = updateProjectStatus('feedback', feedback);
     
     setTimeout(() => {
@@ -191,10 +204,7 @@ const MusicPreviewSystem: React.FC<MusicPreviewSystemProps> = ({ projectId, user
     
     const approvalComment = feedback || 'Cliente aprovou a versão sem comentários adicionais.';
     
-    // Salvar no Supabase
     const supabaseSuccess = await saveFeedbackToSupabase('approved', approvalComment);
-    
-    // Atualizar localmente
     const localSuccess = updateProjectStatus('approved', approvalComment);
     
     setTimeout(() => {
@@ -275,7 +285,6 @@ const MusicPreviewSystem: React.FC<MusicPreviewSystemProps> = ({ projectId, user
         </TabsList>
 
         <TabsContent value="preview" className="space-y-6">
-          {/* ... keep existing code for preview content */}
           <PreviewPlayerList
             previews={projectData.previews}
             selectedVersion={selectedVersion}
@@ -283,7 +292,6 @@ const MusicPreviewSystem: React.FC<MusicPreviewSystemProps> = ({ projectId, user
             onPlay={handlePlay}
           />
 
-          {/* Feedback Section */}
           <Card>
             <CardHeader>
               <CardTitle className="flex items-center gap-2">

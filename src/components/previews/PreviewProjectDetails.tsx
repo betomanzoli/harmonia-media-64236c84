@@ -3,17 +3,19 @@ import React from 'react';
 import { Card, CardContent, CardTitle } from '@/components/ui/card';
 import { Calendar, Music, Package } from 'lucide-react';
 
-interface PreviewProjectDetailsProps {
-  projectData: {
-    projectTitle: string;
-    clientName: string;
-    status: string;
-    packageType?: string;
-    creationDate?: string;
-  };
+interface PreviewProject {
+  projectTitle: string;
+  clientName: string;
+  status: string;
+  packageType?: string;
+  creationDate?: string;
 }
 
-const PreviewProjectDetails: React.FC<PreviewProjectDetailsProps> = ({ projectData }) => {
+interface PreviewProjectDetailsProps {
+  project: PreviewProject;
+}
+
+const PreviewProjectDetails: React.FC<PreviewProjectDetailsProps> = ({ project }) => {
   return (
     <Card>
       <CardContent className="pt-6">
@@ -25,7 +27,7 @@ const PreviewProjectDetails: React.FC<PreviewProjectDetailsProps> = ({ projectDa
             <div>
               <div className="text-sm font-medium text-black">Pacote</div>
               <div className="text-sm text-black">
-                {projectData.packageType || projectData.projectTitle}
+                {project.packageType || project.projectTitle}
               </div>
             </div>
           </div>
@@ -45,7 +47,7 @@ const PreviewProjectDetails: React.FC<PreviewProjectDetailsProps> = ({ projectDa
             <div>
               <div className="text-sm font-medium text-black">Data de Criação</div>
               <div className="text-sm text-black">
-                {projectData.creationDate || new Date().toLocaleDateString('pt-BR')}
+                {project.creationDate || new Date().toLocaleDateString('pt-BR')}
               </div>
             </div>
           </div>

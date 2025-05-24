@@ -13,16 +13,19 @@ export interface BriefingItem {
   createdAt: string;
   budget?: string;
   timeline?: string;
+  projectCreated?: boolean;
 }
 
 export const useBriefings = () => {
   const [briefings, setBriefings] = useState<BriefingItem[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const { toast } = useToast();
 
   const loadBriefings = async () => {
     try {
       setIsLoading(true);
+      setError(null);
       const { data, error } = await supabase
         .from('briefings')
         .select('*')
@@ -30,6 +33,7 @@ export const useBriefings = () => {
 
       if (error) {
         console.error('Erro ao carregar briefings:', error);
+        setError('Não foi possível carregar os briefings.');
         toast({
           title: "Erro",
           description: "Não foi possível carregar os briefings.",
@@ -38,21 +42,26 @@ export const useBriefings = () => {
         return;
       }
 
-      const formattedBriefings: BriefingItem[] = data.map(briefing => ({
-        id: briefing.id,
-        clientName: briefing.data?.clientName || 'Cliente sem nome',
-        email: briefing.data?.email || 'Email não informado',
-        projectDescription: briefing.data?.projectDescription || 'Descrição não informada',
-        packageType: briefing.package_type || 'Não definido',
-        status: briefing.status || 'pending',
-        createdAt: new Date(briefing.created_at).toLocaleDateString('pt-BR'),
-        budget: briefing.data?.budget,
-        timeline: briefing.data?.timeline
-      }));
+      const formattedBriefings: BriefingItem[] = data.map(briefing => {
+        const briefingData = briefing.data as any;
+        return {
+          id: briefing.id,
+          clientName: briefingData?.clientName || 'Cliente sem nome',
+          email: briefingData?.email || 'Email não informado',
+          projectDescription: briefingData?.projectDescription || 'Descrição não informada',
+          packageType: briefing.package_type || 'Não definido',
+          status: briefing.status || 'pending',
+          createdAt: new Date(briefing.created_at).toLocaleDateString('pt-BR'),
+          budget: briefingData?.budget,
+          timeline: briefingData?.timeline,
+          projectCreated: briefing.project_id ? true : false
+        };
+      });
 
       setBriefings(formattedBriefings);
     } catch (error) {
       console.error('Erro ao carregar briefings:', error);
+      setError('Erro inesperado ao carregar briefings.');
       toast({
         title: "Erro",
         description: "Erro inesperado ao carregar briefings.",
@@ -113,9 +122,7 @@ export const useBriefings = () => {
         description: "Briefing criado com sucesso!",
       });
 
-      // Recarregar a lista
       await loadBriefings();
-      
       return data;
     } catch (error) {
       console.error('Erro ao criar briefing:', error);
@@ -150,7 +157,6 @@ export const useBriefings = () => {
         description: "Briefing deletado com sucesso!",
       });
 
-      // Recarregar a lista
       await loadBriefings();
       return true;
     } catch (error) {
@@ -164,6 +170,40 @@ export const useBriefings = () => {
     }
   };
 
+  const updateBriefing = async (briefingId: string, updates: Partial<BriefingItem>) => {
+    try {
+      const { error } = await supabase
+        .from('briefings')
+        .update({
+          status: updates.status,
+          data: {
+            clientName: updates.clientName,
+            email: updates.email,
+            projectDescription: updates.projectDescription,
+            budget: updates.budget,
+            timeline: updates.timeline
+          }
+        })
+        .eq('id', briefingId);
+
+      if (error) {
+        console.error('Erro ao atualizar briefing:', error);
+        toast({
+          title: "Erro",
+          description: "Não foi possível atualizar o briefing.",
+          variant: "destructive"
+        });
+        return false;
+      }
+
+      await loadBriefings();
+      return true;
+    } catch (error) {
+      console.error('Erro ao atualizar briefing:', error);
+      return false;
+    }
+  };
+
   useEffect(() => {
     loadBriefings();
   }, []);
@@ -171,8 +211,14 @@ export const useBriefings = () => {
   return {
     briefings,
     isLoading,
+    error,
     createBriefing,
     deleteBriefing,
-    loadBriefings
+    loadBriefings: loadBriefings,
+    fetchBriefings: loadBriefings,
+    updateBriefing,
+    addBriefing: createBriefing,
+    updateBriefingStatus: updateBriefing,
+    createProjectFromBriefing: (briefing: BriefingItem) => `proj_${Date.now()}`
   };
 };

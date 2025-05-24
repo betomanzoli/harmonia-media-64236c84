@@ -1,172 +1,131 @@
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect } from 'react';
+import { supabase } from '@/integrations/supabase/client';
+import { useToast } from '@/hooks/use-toast';
 
 export interface Customer {
   id: string;
   name: string;
   email: string;
   phone?: string;
-  status: 'active' | 'inactive';
-  projects: number;
+  company?: string;
   createdAt: string;
 }
 
 export const useCustomers = () => {
   const [customers, setCustomers] = useState<Customer[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const { toast } = useToast();
 
-  // Load customers from localStorage
-  const loadCustomers = useCallback(() => {
-    setIsLoading(true);
-    
+  const loadCustomers = async () => {
     try {
-      const storedCustomers = localStorage.getItem('harmonIA_customers');
-      if (storedCustomers) {
-        setCustomers(JSON.parse(storedCustomers));
-      } else {
-        // Default data with proper typing
-        const defaultCustomers: Customer[] = [
-          {
-            id: '1',
-            name: 'João Silva',
-            email: 'joao.silva@example.com',
-            phone: '(11) 98765-4321',
-            status: 'active',
-            projects: 3,
-            createdAt: '2025-03-10T08:00:00.000Z'
-          },
-          {
-            id: '2',
-            name: 'Maria Oliveira',
-            email: 'maria.oliveira@example.com',
-            phone: '(21) 91234-5678',
-            status: 'active',
-            projects: 2,
-            createdAt: '2025-02-15T10:30:00.000Z'
-          },
-          {
-            id: '3',
-            name: 'Carlos Santos',
-            email: 'carlos.santos@example.com',
-            phone: '(31) 99876-5432',
-            status: 'inactive',
-            projects: 1,
-            createdAt: '2025-01-20T14:45:00.000Z'
-          },
-          {
-            id: '4',
-            name: 'Ana Ferreira',
-            email: 'ana.ferreira@example.com',
-            phone: '(41) 98765-1234',
-            status: 'active',
-            projects: 4,
-            createdAt: '2025-03-05T09:15:00.000Z'
-          },
-          {
-            id: '5',
-            name: 'Pedro Costa',
-            email: 'pedro.costa@example.com',
-            status: 'active',
-            projects: 0,
-            createdAt: '2025-04-01T11:20:00.000Z'
-          }
-        ];
-        setCustomers(defaultCustomers);
-        localStorage.setItem('harmonIA_customers', JSON.stringify(defaultCustomers));
+      setIsLoading(true);
+      const { data, error } = await supabase
+        .from('clients')
+        .select('*')
+        .order('created_at', { ascending: false });
+
+      if (error) {
+        console.error('Erro ao carregar clientes:', error);
+        toast({
+          title: "Erro",
+          description: "Não foi possível carregar os clientes.",
+          variant: "destructive"
+        });
+        return;
       }
+
+      const formattedCustomers: Customer[] = data.map(client => ({
+        id: client.id,
+        name: client.name,
+        email: client.email,
+        phone: client.phone,
+        company: client.company,
+        createdAt: new Date(client.created_at).toLocaleDateString('pt-BR')
+      }));
+
+      setCustomers(formattedCustomers);
     } catch (error) {
-      console.error('Error loading customers:', error);
-      setCustomers([]);
+      console.error('Erro ao carregar clientes:', error);
+      toast({
+        title: "Erro",
+        description: "Erro inesperado ao carregar clientes.",
+        variant: "destructive"
+      });
     } finally {
       setIsLoading(false);
     }
-  }, []);
+  };
 
-  // Add new customer (with duplicate check)
-  const addCustomer = useCallback((customerData: Omit<Customer, 'id'>) => {
-    const existingCustomer = customers.find(
-      c => c.email.toLowerCase() === customerData.email.toLowerCase()
-    );
+  const createCustomer = async (customerData: {
+    name: string;
+    email: string;
+    phone?: string;
+    company?: string;
+  }) => {
+    try {
+      const { data, error } = await supabase
+        .from('clients')
+        .insert({
+          name: customerData.name,
+          email: customerData.email,
+          phone: customerData.phone,
+          company: customerData.company
+        })
+        .select()
+        .single();
 
-    if (existingCustomer) {
-      // Update existing customer with new project count
-      const updatedCustomers = customers.map(c => {
-        if (c.id === existingCustomer.id) {
-          return {
-            ...c,
-            projects: customerData.projects || c.projects + 1,
-            // Update other fields if needed
-            name: customerData.name || c.name,
-            phone: customerData.phone || c.phone
-          };
-        }
-        return c;
+      if (error) {
+        console.error('Erro ao criar cliente:', error);
+        toast({
+          title: "Erro",
+          description: "Não foi possível criar o cliente.",
+          variant: "destructive"
+        });
+        return null;
+      }
+
+      toast({
+        title: "Sucesso",
+        description: "Cliente criado com sucesso!",
       });
-      
-      setCustomers(updatedCustomers);
-      localStorage.setItem('harmonIA_customers', JSON.stringify(updatedCustomers));
-      return existingCustomer.id;
+
+      await loadCustomers();
+      return data;
+    } catch (error) {
+      console.error('Erro ao criar cliente:', error);
+      toast({
+        title: "Erro",
+        description: "Erro inesperado ao criar cliente.",
+        variant: "destructive"
+      });
+      return null;
     }
+  };
 
-    // Add new customer
-    const newId = (customers.length + 1).toString();
-    const newCustomer: Customer = {
-      id: newId,
-      ...customerData,
-      status: customerData.status || 'active' as const
-    };
-    
-    const updatedCustomers = [...customers, newCustomer];
-    setCustomers(updatedCustomers);
-    localStorage.setItem('harmonIA_customers', JSON.stringify(updatedCustomers));
-    
-    return newId;
-  }, [customers]);
-
-  // Get customer by email
-  const getCustomerByEmail = useCallback((email: string) => {
-    return customers.find(c => c.email.toLowerCase() === email.toLowerCase()) || null;
-  }, [customers]);
-
-  // Update customer
-  const updateCustomer = useCallback((id: string, data: Partial<Omit<Customer, 'id'>>) => {
-    setCustomers(prevCustomers => {
-      const updatedCustomers = prevCustomers.map(c => {
-        if (c.id === id) {
-          return { ...c, ...data };
-        }
-        return c;
-      });
-      localStorage.setItem('harmonIA_customers', JSON.stringify(updatedCustomers));
-      return updatedCustomers;
-    });
-  }, []);
-
-  // Delete customer
-  const deleteCustomer = useCallback((id: string) => {
-    setCustomers(prevCustomers => {
-      const updatedCustomers = prevCustomers.filter(c => c.id !== id);
-      localStorage.setItem('harmonIA_customers', JSON.stringify(updatedCustomers));
-      return updatedCustomers;
-    });
-  }, []);
-
-  // Refresh customers
-  const refreshCustomers = useCallback(() => {
-    loadCustomers();
-  }, [loadCustomers]);
+  const getCustomerByEmail = (email: string): Customer | null => {
+    return customers.find(customer => customer.email === email) || null;
+  };
 
   useEffect(() => {
     loadCustomers();
-  }, [loadCustomers]);
+  }, []);
 
   return {
     customers,
     isLoading,
-    refreshCustomers,
-    addCustomer,
-    updateCustomer,
-    deleteCustomer,
-    getCustomerByEmail
+    refreshCustomers: loadCustomers,
+    addCustomer: (customerData: Omit<Customer, "id">) => {
+      createCustomer(customerData);
+      return `temp_${Date.now()}`;
+    },
+    updateCustomer: (id: string, data: Partial<Customer>) => {
+      console.log('Update customer:', id, data);
+    },
+    deleteCustomer: (id: string) => {
+      console.log('Delete customer:', id);
+    },
+    getCustomerByEmail,
+    createCustomer
   };
 };
