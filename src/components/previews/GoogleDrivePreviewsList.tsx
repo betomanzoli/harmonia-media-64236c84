@@ -2,13 +2,14 @@
 import React from 'react';
 
 interface GoogleDrivePreviewsListProps {
-  projectId: string | undefined;
+  projectId?: string;
+  title?: string;
 }
 
-const GoogleDrivePreviewsList: React.FC<GoogleDrivePreviewsListProps> = ({ projectId }) => {
+const GoogleDrivePreviewsList: React.FC<GoogleDrivePreviewsListProps> = ({ projectId, title }) => {
   return (
     <div className="p-4 border rounded-md">
-      <h3 className="text-xl font-semibold mb-4">Prévia via Google Drive</h3>
+      <h3 className="text-xl font-semibold mb-4">{title || 'Prévia via Google Drive'}</h3>
       <p className="text-gray-600 mb-4">
         As prévias para este projeto estão disponíveis no Google Drive. Clique no botão abaixo para acessar.
       </p>

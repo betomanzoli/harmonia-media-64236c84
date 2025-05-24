@@ -1,7 +1,7 @@
 
 import React, { forwardRef } from 'react';
 import { cn } from "@/lib/utils";
-import { Slot } from '@radix-ui/react-slot';
+import { Slot } from '@/components/ui/slot';
 
 interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
   variant?: 'default' | 'outline' | 'ghost' | 'link' | 'destructive' | 'secondary';

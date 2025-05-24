@@ -25,10 +25,10 @@ export const createOrder = (packageId: string): string => {
   return orderId;
 };
 
-export const createOrderData = (packageId: string): OrderData => {
+export const createOrderData = (packageInfo: any, clientName?: string, paymentMethod?: string, packageType?: string): OrderData => {
   return {
-    id: `order-${Date.now()}`,
-    packageId,
+    id: packageInfo.orderId || `order-${Date.now()}`,
+    packageId: packageInfo.packageId || packageType || 'essential',
     status: 'pending',
     createdAt: new Date().toISOString()
   };
