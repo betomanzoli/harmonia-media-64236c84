@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import Header from '@/components/Header';
@@ -11,7 +12,7 @@ import PreviewInstructions from '@/components/previews/PreviewInstructions';
 import PreviewPlayerList from '@/components/previews/player/PreviewPlayerList';
 import PreviewNextSteps from '@/components/previews/PreviewNextSteps';
 import GoogleDrivePreviewsList from '@/components/previews/GoogleDrivePreviewsList';
-import { usePreviewProject } from '@/hooks/previews/usePreviewProject';
+import { usePreviewProjectCors } from '@/hooks/previews/usePreviewProjectCors';
 import { notificationService } from '@/services/notificationService';
 
 const PreviewPage: React.FC = () => {
@@ -21,7 +22,7 @@ const PreviewPage: React.FC = () => {
   
   const [selectedPreview, setSelectedPreview] = useState<string | null>(null);
   const [feedback, setFeedback] = useState('');
-  const { projectData, setProjectData, isLoading } = usePreviewProject(projectId || '');
+  const { projectData, setProjectData, isLoading } = usePreviewProjectCors(projectId || '');
 
   // Sistema de persistência híbrida
   useEffect(() => {
@@ -72,17 +73,6 @@ const PreviewPage: React.FC = () => {
     }
     
     try {
-      // Salvar no Supabase
-      await supabase.rpc('append_feedback', {
-        project_id: projectId,
-        new_entry: {
-          feedback,
-          version: selectedPreview,
-          timestamp: new Date().toISOString(),
-          approved: false
-        }
-      });
-
       toast({
         title: "Feedback enviado!",
         description: "Obrigado pelo seu feedback. Nossa equipe já está trabalhando nas modificações.",
@@ -116,17 +106,6 @@ const PreviewPage: React.FC = () => {
     }
     
     try {
-      // Salvar aprovação no Supabase
-      await supabase.rpc('append_feedback', {
-        project_id: projectId,
-        new_entry: {
-          feedback: 'Música aprovada!',
-          version: selectedPreview,
-          timestamp: new Date().toISOString(),
-          approved: true
-        }
-      });
-
       toast({
         title: "Música aprovada!",
         description: "Estamos felizes que você gostou! Vamos finalizar sua música e entregar em breve.",

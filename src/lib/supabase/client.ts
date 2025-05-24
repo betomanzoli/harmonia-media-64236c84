@@ -42,16 +42,19 @@ export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
     storageKey: 'harmonia-auth'
   },
   global: {
+    headers: {
+      'Access-Control-Allow-Origin': '*',
+      'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, OPTIONS',
+      'Access-Control-Allow-Headers': 'Content-Type, Authorization, apikey',
+    },
     fetch: (...args: Parameters<typeof fetch>) => {
       return fetch(...args).catch(error => {
-        // Avoid CORS and network errors from crashing the app
-        console.warn('Supabase fetch warning:', error.message);
+        console.warn('Supabase fetch warning (CORS safe):', error.message);
         return Promise.reject(error);
       });
     }
   },
   realtime: {
-    // Disable realtime to avoid WebSocket CORS issues
     params: {
       eventsPerSecond: 2
     }
@@ -60,4 +63,4 @@ export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
 
 export const getSupabaseUrl = () => supabaseUrl;
 
-console.log('🔌 Cliente Supabase inicializado com conexão segura.');
+console.log('🔌 Cliente Supabase inicializado com configuração CORS-friendly.');
