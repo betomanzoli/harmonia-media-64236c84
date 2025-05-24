@@ -1,21 +1,25 @@
-import React from 'react';
+
+import React, { forwardRef } from 'react';
 import { cn } from "@/lib/utils";
+import { Slot } from '@radix-ui/react-slot';
 
 interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
   variant?: 'default' | 'outline' | 'ghost' | 'link' | 'destructive' | 'secondary';
   size?: 'default' | 'sm' | 'lg' | 'icon';
+  asChild?: boolean;
   children: React.ReactNode;
 }
 
-export function Button({ 
-  variant = 'default', 
+export const Button = forwardRef<HTMLButtonElement, ButtonProps>(({
+  variant = 'default',
   size = 'default',
-  className = '', 
-  children, 
+  className = '',
+  children,
   disabled = false,
   type = 'button',
-  ...props 
-}: ButtonProps) {
+  asChild = false,
+  ...props
+}, ref) => {
   const baseClasses = 'inline-flex items-center justify-center whitespace-nowrap rounded-md font-medium transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:pointer-events-none disabled:opacity-50';
   
   const variantClasses = {
@@ -34,9 +38,12 @@ export function Button({
     icon: 'h-9 w-9'
   };
 
+  const Comp = asChild ? Slot : "button";
+
   return (
-    <button 
-      type={type}
+    <Comp
+      ref={ref}
+      type={asChild ? undefined : type}
       disabled={disabled}
       className={cn(
         baseClasses, 
@@ -47,6 +54,10 @@ export function Button({
       {...props}
     >
       {children}
-    </button>
+    </Comp>
   );
-}
+});
+
+Button.displayName = "Button";
+
+export { Button as default };

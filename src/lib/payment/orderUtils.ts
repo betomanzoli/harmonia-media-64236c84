@@ -25,6 +25,15 @@ export const createOrder = (packageId: string): string => {
   return orderId;
 };
 
+export const createOrderData = (packageId: string): OrderData => {
+  return {
+    id: `order-${Date.now()}`,
+    packageId,
+    status: 'pending',
+    createdAt: new Date().toISOString()
+  };
+};
+
 export const validatePaymentStatus = async (orderId: string, token: string): Promise<boolean> => {
   // This would normally validate with payment provider
   return true;
