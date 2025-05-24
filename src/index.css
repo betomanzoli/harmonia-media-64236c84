@@ -1,29 +1,38 @@
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
-/* ✅ CSS MÍNIMO - MANTER VISUAL ORIGINAL */
 @layer base {
   :root {
-    --background: 0 0% 100%;
-    --foreground: 222.2 84% 4.9%;
-    --card: 0 0% 100%;
-    --card-foreground: 222.2 84% 4.9%;
-    --popover: 0 0% 100%;
-    --popover-foreground: 222.2 84% 4.9%;
-    --primary: 222.2 47.4% 11.2%;
-    --primary-foreground: 210 40% 98%;
-    --secondary: 210 40% 96%;
-    --secondary-foreground: 222.2 84% 4.9%;
-    --muted: 210 40% 96%;
-    --muted-foreground: 215.4 16.3% 46.9%;
-    --accent: 210 40% 96%;
-    --accent-foreground: 222.2 84% 4.9%;
+    --background: 0 0% 7%;
+    --foreground: 0 0% 98%;
+
+    --card: 0 0% 10%;
+    --card-foreground: 0 0% 98%;
+
+    --popover: 0 0% 10%;
+    --popover-foreground: 0 0% 98%;
+
+    --primary: 142 69% 52%;
+    --primary-foreground: 0 0% 100%;
+
+    --secondary: 0 0% 13%;
+    --secondary-foreground: 0 0% 98%;
+
+    --muted: 0 0% 20%;
+    --muted-foreground: 0 0% 65%;
+
+    --accent: 142 69% 52%;
+    --accent-foreground: 0 0% 100%;
+
     --destructive: 0 84.2% 60.2%;
-    --destructive-foreground: 210 40% 98%;
-    --border: 214.3 31.8% 91.4%;
-    --input: 214.3 31.8% 91.4%;
-    --ring: 222.2 84% 4.9%;
+    --destructive-foreground: 0 0% 98%;
+
+    --border: 0 0% 20%;
+    --input: 0 0% 20%;
+    --ring: 142 69% 52%;
+
     --radius: 0.5rem;
   }
 }
@@ -32,7 +41,117 @@
   * {
     @apply border-border;
   }
+
   body {
     @apply bg-background text-foreground;
   }
+  
+  /* Improved form input contrast for admin interface */
+  .admin-input,
+  .admin-textarea,
+  .admin-select {
+    @apply bg-secondary border-gray-600 text-white placeholder-gray-400;
+  }
+  
+  /* Make sure popover components have proper background and text colors */
+  [data-radix-popper-content-wrapper] {
+    @apply bg-card text-card-foreground border border-border;
+  }
+  
+  /* Improved contrast for form elements in dark mode */
+  input, 
+  select, 
+  textarea {
+    @apply bg-secondary border-gray-600;
+  }
+  
+  /* Better dropdown contrast */
+  [role="listbox"],
+  [role="menu"] {
+    @apply bg-secondary border border-gray-600 text-white shadow-xl z-50;
+  }
+  
+  [role="option"],
+  [role="menuitem"] {
+    @apply hover:bg-muted;
+  }
+}
+
+.gradient-text {
+  @apply text-transparent bg-clip-text bg-gradient-to-r from-harmonia-green to-green-400;
+}
+
+/* Admin panel specific styles */
+.admin-card {
+  @apply bg-gradient-to-b from-gray-800 to-gray-900 border-gray-700;
+}
+
+.admin-section-title {
+  @apply text-xl font-bold text-white mb-4;
+}
+
+.admin-input-label {
+  @apply text-gray-300 font-medium mb-1;
+}
+
+/* Dialog and modal improvements */
+.dialog-content,
+.modal-content {
+  @apply bg-gray-800 border-gray-700;
+}
+
+/* Toast improvements */
+.toast {
+  @apply bg-gray-800 border-gray-700 text-white;
+}
+
+/* Table improvements */
+.table-header {
+  @apply bg-gray-800 text-gray-300;
+}
+
+.table-row {
+  @apply border-gray-700 hover:bg-gray-800/50;
+}
+
+/* Button hover effects */
+.button-primary {
+  @apply bg-harmonia-green hover:bg-harmonia-green/90 text-white;
+}
+
+.button-secondary {
+  @apply bg-gray-700 hover:bg-gray-600 text-white;
+}
+
+.button-danger {
+  @apply bg-red-600 hover:bg-red-700 text-white;
+}
+
+/* Admin background fix */
+[class*="AdminGuides"],
+[class*="AdminPortfolio"],
+[class*="AdminInvoices"],
+[class*="AdminProjects"],
+[class*="AdminClients"],
+[class*="AdminDashboard"],
+[class*="AdminPreviews"],
+[class*="AdminSettings"],
+[class*="AdminStorage"],
+[class*="AdminStatistics"],
+[class*="AdminIntegrations"] {
+  @apply bg-gray-800 text-white;
+}
+
+.admin-panel {
+  @apply bg-gray-800 text-white;
+}
+
+/* Fix specifically for table text in admin pages */
+.admin-table {
+  @apply text-white;
+}
+
+/* Make card content more visible in admin pages */
+.admin-content-card {
+  @apply bg-gray-700 text-white border border-gray-600;
 }

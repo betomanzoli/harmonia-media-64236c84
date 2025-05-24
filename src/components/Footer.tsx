@@ -1,154 +1,153 @@
+
 import React from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import Logo from './Logo';
+import { MessageCircle, Mail, Shield, ChevronUp, Clock, FileCheck, Music, Package, DollarSign } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { useNavigate } from 'react-router-dom';
+import { siteConfig } from '@/config/site';
+import NavLink from './NavLink';
 
 const Footer: React.FC = () => {
   const navigate = useNavigate();
+  
+  const scrollToTop = () => {
+    window.scrollTo({
+      top: 0,
+      behavior: 'smooth'
+    });
+  };
+
+  const handleWhatsAppContact = () => {
+    window.open(`https://wa.me/${siteConfig.contact.whatsapp}`, '_blank');
+  };
+
+  const handleEmailContact = () => {
+    window.open(`mailto:${siteConfig.contact.email}`, '_blank');
+  };
+
+  const handlePaymentClick = () => {
+    navigate('/pagamento/essencial');
+  };
 
   return (
-    <footer className="bg-slate-900 text-white">
-      <div className="container mx-auto px-6 py-12">
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
-          
-          {/* ✅ LOGO E CTA */}
-          <div className="md:col-span-1">
-            <div className="flex items-center gap-3 mb-4">
-              {/* Logo harmonIA */}
-              <div className="w-8 h-8">
-                <svg viewBox="0 0 100 100" className="w-full h-full">
-                  <rect x="10" y="60" width="6" height="30" fill="#00c853" rx="3"/>
-                  <rect x="20" y="40" width="6" height="50" fill="#00c853" rx="3"/>
-                  <rect x="30" y="20" width="6" height="70" fill="#00c853" rx="3"/>
-                  <rect x="40" y="10" width="6" height="80" fill="#00c853" rx="3"/>
-                  <rect x="50" y="25" width="6" height="65" fill="#00c853" rx="3"/>
-                  <rect x="60" y="45" width="6" height="45" fill="#00c853" rx="3"/>
-                  <rect x="70" y="35" width="6" height="55" fill="#00c853" rx="3"/>
-                  <rect x="80" y="50" width="6" height="40" fill="#00c853" rx="3"/>
-                  <circle cx="35" cy="55" r="8" fill="#00c853"/>
-                  <rect x="43" y="25" width="2" height="30" fill="#00c853"/>
-                </svg>
-              </div>
-              <div className="text-xl font-bold">
-                <span className="text-white">harmon</span>
-                <span className="text-green-400">IA</span>
-              </div>
-            </div>
-            
-            <p className="text-gray-300 mb-6 text-sm">
-              Criamos composições personalizadas usando os melhores 
-              da IA e o talento de músicos profissionais.
+    <footer className="bg-black pt-16 pb-8 px-6 md:px-10 relative">
+      <div className="max-w-7xl mx-auto">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-10 mb-10">
+          <div>
+            <Logo />
+            <p className="text-gray-400 mt-4">
+              Criamos composições personalizadas usando o melhor da IA e o talento de músicos profissionais.
             </p>
-            
-            <Button 
-              onClick={() => navigate('/briefing')}
-              className="bg-green-500 hover:bg-green-600 text-white"
-            >
-              Contratar Agora
-            </Button>
-          </div>
-
-          {/* ✅ LINKS RÁPIDOS */}
-          <div>
-            <h4 className="text-lg font-semibold mb-4">Links Rápidos</h4>
-            <ul className="space-y-2">
-              <li>
-                <Link 
-                  to="/acompanhar-pedido" 
-                  className="text-green-400 hover:text-green-300 transition-colors text-sm flex items-center gap-2"
-                >
-                  📋 Acompanhar Pedido
-                </Link>
-              </li>
-              <li>
-                <Link 
-                  to="/briefing" 
-                  className="text-green-400 hover:text-green-300 transition-colors text-sm flex items-center gap-2"
-                >
-                  📝 Briefing
-                </Link>
-              </li>
-              <li>
-                <Link 
-                  to="/pacotes" 
-                  className="text-green-400 hover:text-green-300 transition-colors text-sm flex items-center gap-2"
-                >
-                  💳 Pacotes e Preços
-                </Link>
-              </li>
-              <li>
-                <Link 
-                  to="/portfolio" 
-                  className="text-green-400 hover:text-green-300 transition-colors text-sm flex items-center gap-2"
-                >
-                  🎵 Portfólio
-                </Link>
-              </li>
-            </ul>
-          </div>
-
-          {/* ✅ CONTATO */}
-          <div>
-            <h4 className="text-lg font-semibold mb-4">Contato</h4>
-            <div className="space-y-2 text-sm">
-              <a 
-                href="tel:+5511526550722"
-                className="text-gray-300 hover:text-green-400 transition-colors flex items-center gap-2"
-              >
-                📞 +55 11 5265-5072
-              </a>
-              <a 
-                href="mailto:contato@harmonia.media"
-                className="text-gray-300 hover:text-green-400 transition-colors flex items-center gap-2"
-              >
-                ✉️ contato@harmonia.media
-              </a>
-              <Link 
-                to="/contato"
-                className="text-green-400 hover:text-green-300 transition-colors flex items-center gap-2"
-              >
-                💬 Formulário de Contato
-              </Link>
+            <div className="mt-6">
+              <Button onClick={handlePaymentClick} className="bg-harmonia-green hover:bg-harmonia-green/90 text-white">
+                <DollarSign className="w-4 h-4 mr-2" />
+                Contratar Agora
+              </Button>
             </div>
           </div>
-
-          {/* ✅ INFORMAÇÕES LEGAIS */}
+          
           <div>
-            <h4 className="text-lg font-semibold mb-4">Informações Legais</h4>
+            <h3 className="font-semibold mb-4">Links Rápidos</h3>
             <ul className="space-y-2">
               <li>
-                <Link 
-                  to="/privacidade" 
-                  className="text-green-400 hover:text-green-300 transition-colors text-sm flex items-center gap-2"
+                <NavLink 
+                  href="/acompanhar-pedido" 
+                  className="text-gray-400 hover:text-harmonia-green transition-colors cursor-pointer flex items-center gap-1"
                 >
-                  🔒 Política de Privacidade
-                </Link>
+                  <Clock className="w-4 h-4" /> Acompanhar Pedido
+                </NavLink>
               </li>
               <li>
-                <Link 
-                  to="/termos" 
-                  className="text-green-400 hover:text-green-300 transition-colors text-sm flex items-center gap-2"
+                <NavLink 
+                  href="/briefing" 
+                  className="text-gray-400 hover:text-harmonia-green transition-colors flex items-center gap-1"
                 >
-                  📋 Termos de Serviço
-                </Link>
+                  <FileCheck className="w-4 h-4" /> Briefing
+                </NavLink>
               </li>
               <li>
-                <Link 
-                  to="/admin-j28s7d1k/login" 
-                  className="text-gray-500 hover:text-gray-400 transition-colors text-xs"
+                <NavLink 
+                  href="/pagamento/essencial" 
+                  className="text-gray-400 hover:text-harmonia-green transition-colors flex items-center gap-1"
                 >
-                  Admin
-                </Link>
+                  <DollarSign className="w-4 h-4" /> Pagamento Direto
+                </NavLink>
+              </li>
+              <li>
+                <NavLink 
+                  href="/pacotes" 
+                  className="text-gray-400 hover:text-harmonia-green transition-colors flex items-center gap-1"
+                >
+                  <Package className="w-4 h-4" /> Pacotes
+                </NavLink>
+              </li>
+              <li>
+                <NavLink 
+                  href="/portfolio" 
+                  className="text-gray-400 hover:text-harmonia-green transition-colors flex items-center gap-1"
+                >
+                  <Music className="w-4 h-4" /> Portfólio
+                </NavLink>
               </li>
             </ul>
           </div>
+          
+          <div>
+            <h3 className="font-semibold mb-4">Contato</h3>
+            <div className="space-y-3">
+              <div 
+                className="flex gap-2 text-gray-400 cursor-pointer hover:text-harmonia-green transition-colors"
+                onClick={handleWhatsAppContact}
+              >
+                <MessageCircle className="w-5 h-5 text-harmonia-green shrink-0" />
+                <span>{siteConfig.contact.whatsapp}</span>
+              </div>
+              <div 
+                className="flex gap-2 text-gray-400 cursor-pointer hover:text-harmonia-green transition-colors"
+                onClick={handleEmailContact}
+              >
+                <Mail className="w-5 h-5 text-harmonia-green shrink-0" />
+                <span>{siteConfig.contact.email}</span>
+              </div>
+            </div>
+            
+            <div className="mt-6">
+              <h3 className="font-semibold mb-4">Informações Legais</h3>
+              <ul className="space-y-2">
+                <li>
+                  <NavLink 
+                    href="/privacidade" 
+                    className="text-gray-400 hover:text-harmonia-green transition-colors flex items-center gap-1"
+                  >
+                    <Shield className="w-4 h-4" /> Política de Privacidade
+                  </NavLink>
+                </li>
+                <li>
+                  <NavLink 
+                    href="/termos" 
+                    className="text-gray-400 hover:text-harmonia-green transition-colors flex items-center gap-1"
+                  >
+                    <Shield className="w-4 h-4" /> Termos de Serviço
+                  </NavLink>
+                </li>
+              </ul>
+            </div>
+          </div>
+        </div>
+        
+        <div className="border-t border-border pt-8 text-center text-gray-500 text-sm">
+          <p>&copy; {new Date().getFullYear()} harmonIA. Todos os direitos reservados.</p>
         </div>
 
-        {/* ✅ COPYRIGHT */}
-        <div className="border-t border-slate-700 mt-8 pt-6 text-center">
-          <p className="text-gray-400 text-sm">
-            © 2024 harmonIA. Todos os direitos reservados.
-          </p>
-        </div>
+        <Button 
+          onClick={scrollToTop}
+          variant="ghost" 
+          size="icon"
+          className="absolute bottom-24 right-10 text-harmonia-green hover:text-white hover:bg-harmonia-green/20"
+          aria-label="Voltar ao topo"
+        >
+          <ChevronUp className="h-6 w-6" />
+        </Button>
       </div>
     </footer>
   );

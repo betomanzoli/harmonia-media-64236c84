@@ -1,357 +1,463 @@
+
 import React, { useState } from 'react';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Textarea } from '@/components/ui/textarea';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Badge } from '@/components/ui/badge';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Label } from '@/components/ui/label';
-import { Separator } from '@/components/ui/separator';
+import { Button } from "@/components/ui/button";
+import { Label } from "@/components/ui/label";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
 import { 
-  Calendar, 
-  Clock, 
-  User, 
-  Mail, 
-  Phone, 
-  FileText, 
-  Edit2, 
-  Save, 
-  X 
-} from 'lucide-react';
+  Select, 
+  SelectContent, 
+  SelectItem, 
+  SelectTrigger, 
+  SelectValue 
+} from "@/components/ui/select";
+import { Briefing } from '@/hooks/admin/useBriefings';
 
-export interface BriefingDetailFormProps {
-  briefingId: string;
-  onClose?: () => void;
-}
-
-interface BriefingData {
-  id: string;
-  clientName: string;
-  clientEmail: string;
-  clientPhone: string;
-  packageType: 'essencial' | 'profissional' | 'premium';
-  status: 'pending' | 'in_progress' | 'completed' | 'cancelled';
-  createdAt: string;
-  updatedAt: string;
-  story: string;
-  musicStyle: string;
-  emotions: string[];
-  duration: string;
-  notes: string;
-  budget: number;
-  deadline: string;
+interface BriefingDetailFormProps {
+  briefing: Briefing;
+  isEditing: boolean;
+  onClose: () => void;
+  onUpdate?: (updatedBriefing: Briefing) => void;
 }
 
 const BriefingDetailForm: React.FC<BriefingDetailFormProps> = ({ 
-  briefingId, 
-  onClose 
+  briefing, 
+  isEditing, 
+  onClose, 
+  onUpdate 
 }) => {
-  const [isEditing, setIsEditing] = useState(false);
-  const [formData, setFormData] = useState<BriefingData>({
-    id: briefingId,
-    clientName: "João Silva",
-    clientEmail: "joao.silva@email.com",
-    clientPhone: "(11) 99999-9999",
-    packageType: "profissional",
-    status: "in_progress",
-    createdAt: "2024-01-15T10:30:00Z",
-    updatedAt: "2024-01-16T14:45:00Z",
-    story: "Quero uma música para minha esposa no nosso aniversário de 10 anos. Ela sempre amou MPB e temos muitas memórias com Caetano Veloso.",
-    musicStyle: "MPB",
-    emotions: ["Amor", "Nostalgia", "Alegria"],
-    duration: "3-4 minutos",
-    notes: "", // ✅ INICIALIZADO COMO STRING VAZIA
-    budget: 800,
-    deadline: "2024-02-15"
-  });
+  const [formData, setFormData] = useState<Briefing>({ ...briefing });
+  const [packageSpecificData, setPackageSpecificData] = useState(briefing.formData || {});
 
-  const handleChange = (field: keyof BriefingData, value: any) => {
-    setFormData(prev => ({ ...prev, [field]: value }));
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+    const { name, value } = e.target;
+    setFormData(prev => ({ ...prev, [name]: value }));
   };
 
-  const handleSave = () => {
-    // Lógica para salvar as alterações
-    console.log('Salvando briefing:', formData);
-    setIsEditing(false);
+  const handlePackageChange = (value: string) => {
+    setFormData(prev => ({ ...prev, packageType: value }));
   };
 
-  const getStatusColor = (status: string) => {
-    const colors = {
-      pending: 'bg-yellow-100 text-yellow-800',
-      in_progress: 'bg-blue-100 text-blue-800',
-      completed: 'bg-green-100 text-green-800',
-      cancelled: 'bg-red-100 text-red-800'
-    };
-    return colors[status as keyof typeof colors] || 'bg-gray-100 text-gray-800';
+  const handlePackageFieldsChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
+    const { name, value } = e.target;
+    setPackageSpecificData(prev => ({ ...prev, [name]: value }));
   };
 
-  const getPackageColor = (packageType: string) => {
-    const colors = {
-      essencial: 'bg-green-100 text-green-800',
-      profissional: 'bg-blue-100 text-blue-800',
-      premium: 'bg-purple-100 text-purple-800'
-    };
-    return colors[packageType as keyof typeof colors] || 'bg-gray-100 text-gray-800';
+  const handleSelectChange = (name: string, value: string | string[]) => {
+    setPackageSpecificData(prev => ({ ...prev, [name]: value }));
+  };
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (onUpdate) {
+      onUpdate({
+        ...formData,
+        formData: packageSpecificData
+      });
+    }
+  };
+
+  const renderEssentialPackageFields = () => {
+    return (
+      <div className="space-y-4">
+        <div className="space-y-2">
+          <Label htmlFor="storyDescription">História ou Conceito</Label>
+          <Textarea
+            id="storyDescription"
+            name="storyDescription"
+            value={packageSpecificData.storyDescription || ''}
+            onChange={handlePackageFieldsChange}
+            disabled={!isEditing}
+            rows={4}
+            placeholder="Descreva a história ou conceito que deseja transformar em música"
+          />
+        </div>
+        
+        <div className="space-y-2">
+          <Label htmlFor="emotions">Emoções Principais</Label>
+          <Input
+            id="emotions"
+            name="emotions"
+            value={packageSpecificData.emotions || ''}
+            onChange={handlePackageFieldsChange}
+            disabled={!isEditing}
+            placeholder="Alegria, Nostalgia, Amor, etc."
+          />
+        </div>
+        
+        <div className="space-y-2">
+          <Label htmlFor="musicStyle">Estilo Musical</Label>
+          <Input
+            id="musicStyle"
+            name="musicStyle"
+            value={packageSpecificData.musicStyle || ''}
+            onChange={handlePackageFieldsChange}
+            disabled={!isEditing}
+            placeholder="Pop, MPB, Rock, etc."
+          />
+        </div>
+        
+        <div className="space-y-2">
+          <Label htmlFor="referenceArtists">Artistas de Referência</Label>
+          <Input
+            id="referenceArtists"
+            name="referenceArtists"
+            value={packageSpecificData.referenceArtists || ''}
+            onChange={handlePackageFieldsChange}
+            disabled={!isEditing}
+            placeholder="Mencione até 3 artistas de referência"
+          />
+        </div>
+        
+        <div className="space-y-2">
+          <Label htmlFor="tempo">Andamento</Label>
+          <Select
+            value={packageSpecificData.tempo || ''}
+            onValueChange={(value) => handleSelectChange('tempo', value)}
+            disabled={!isEditing}
+          >
+            <SelectTrigger id="tempo">
+              <SelectValue placeholder="Selecione o andamento" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="lento">Lento e contemplativo</SelectItem>
+              <SelectItem value="medio">Médio e equilibrado</SelectItem>
+              <SelectItem value="animado">Animado e energético</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
+        
+        <div className="space-y-2">
+          <Label htmlFor="specificPhrases">Frases Específicas</Label>
+          <Input
+            id="specificPhrases"
+            name="specificPhrases"
+            value={packageSpecificData.specificPhrases || ''}
+            onChange={handlePackageFieldsChange}
+            disabled={!isEditing}
+            placeholder="A música deve incluir alguma frase específica?"
+          />
+        </div>
+        
+        <div className="space-y-2">
+          <Label htmlFor="certificateName">Nome para Certificado</Label>
+          <Input
+            id="certificateName"
+            name="certificateName"
+            value={packageSpecificData.certificateName || ''}
+            onChange={handlePackageFieldsChange}
+            disabled={!isEditing}
+            placeholder="Nome completo para o certificado"
+          />
+        </div>
+      </div>
+    );
+  };
+
+  const renderProfessionalPackageFields = () => {
+    return (
+      <div className="space-y-4">
+        <div className="space-y-2">
+          <Label htmlFor="storyDescription">História e Conceito</Label>
+          <Textarea
+            id="storyDescription"
+            name="storyDescription"
+            value={packageSpecificData.storyDescription || ''}
+            onChange={handlePackageFieldsChange}
+            disabled={!isEditing}
+            rows={4}
+            placeholder="Descrição detalhada da história ou conceito"
+          />
+        </div>
+        
+        <div className="space-y-2">
+          <Label htmlFor="purpose">Propósito Principal</Label>
+          <Select
+            value={packageSpecificData.purpose || ''}
+            onValueChange={(value) => handleSelectChange('purpose', value)}
+            disabled={!isEditing}
+          >
+            <SelectTrigger id="purpose">
+              <SelectValue placeholder="Selecione o propósito" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="identidade">Identidade sonora para marca/conteúdo</SelectItem>
+              <SelectItem value="trilha">Trilha para vídeo/podcast</SelectItem>
+              <SelectItem value="conteudo">Conteúdo para monetização</SelectItem>
+              <SelectItem value="outro">Outro</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
+        
+        <div className="space-y-2">
+          <Label htmlFor="musicStyles">Estilos Musicais</Label>
+          <Input
+            id="musicStyles"
+            name="musicStyles"
+            value={packageSpecificData.musicStyles || ''}
+            onChange={handlePackageFieldsChange}
+            disabled={!isEditing}
+            placeholder="Estilos musicais desejados (até 3)"
+          />
+        </div>
+        
+        <div className="space-y-2">
+          <Label htmlFor="bpm">BPM Aproximado</Label>
+          <Input
+            id="bpm"
+            name="bpm"
+            value={packageSpecificData.bpm || ''}
+            onChange={handlePackageFieldsChange}
+            disabled={!isEditing}
+            placeholder="Tempo/BPM aproximado"
+          />
+        </div>
+        
+        <div className="space-y-2">
+          <Label htmlFor="instruments">Instrumentos Destacados</Label>
+          <Input
+            id="instruments"
+            name="instruments"
+            value={packageSpecificData.instruments || ''}
+            onChange={handlePackageFieldsChange}
+            disabled={!isEditing}
+            placeholder="Instrumentos que gostaria de destacar"
+          />
+        </div>
+        
+        <div className="space-y-2">
+          <Label htmlFor="structure">Estrutura Preferida</Label>
+          <Select
+            value={packageSpecificData.structure || ''}
+            onValueChange={(value) => handleSelectChange('structure', value)}
+            disabled={!isEditing}
+          >
+            <SelectTrigger id="structure">
+              <SelectValue placeholder="Selecione a estrutura" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="tradicional">Tradicional (intro, verso, refrão...)</SelectItem>
+              <SelectItem value="narrativa">Narrativa (desenvolvimento contínuo)</SelectItem>
+              <SelectItem value="minimalista">Minimalista (loops com pequenas variações)</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
+        
+        <div className="space-y-2">
+          <Label htmlFor="referenceLinks">Links de Referência</Label>
+          <Textarea
+            id="referenceLinks"
+            name="referenceLinks"
+            value={packageSpecificData.referenceLinks || ''}
+            onChange={handlePackageFieldsChange}
+            disabled={!isEditing}
+            rows={2}
+            placeholder="Links para músicas de referência"
+          />
+        </div>
+      </div>
+    );
+  };
+
+  const renderPremiumPackageFields = () => {
+    return (
+      <div className="space-y-4">
+        <div className="space-y-2">
+          <Label htmlFor="conceptDescription">Conceito e Aplicação</Label>
+          <Textarea
+            id="conceptDescription"
+            name="conceptDescription"
+            value={packageSpecificData.conceptDescription || ''}
+            onChange={handlePackageFieldsChange}
+            disabled={!isEditing}
+            rows={4}
+            placeholder="Descrição detalhada do conceito e valores"
+          />
+        </div>
+        
+        <div className="space-y-2">
+          <Label htmlFor="strategicObjectives">Objetivos Estratégicos</Label>
+          <Textarea
+            id="strategicObjectives"
+            name="strategicObjectives"
+            value={packageSpecificData.strategicObjectives || ''}
+            onChange={handlePackageFieldsChange}
+            disabled={!isEditing}
+            rows={2}
+            placeholder="Objetivos estratégicos para a composição"
+          />
+        </div>
+        
+        <div className="space-y-2">
+          <Label htmlFor="targetAudience">Público-Alvo</Label>
+          <Input
+            id="targetAudience"
+            name="targetAudience"
+            value={packageSpecificData.targetAudience || ''}
+            onChange={handlePackageFieldsChange}
+            disabled={!isEditing}
+            placeholder="Público-alvo e contexto de utilização"
+          />
+        </div>
+        
+        <div className="space-y-2">
+          <Label htmlFor="primaryEmotions">Emoções Primárias</Label>
+          <Input
+            id="primaryEmotions"
+            name="primaryEmotions"
+            value={packageSpecificData.primaryEmotions || ''}
+            onChange={handlePackageFieldsChange}
+            disabled={!isEditing}
+            placeholder="Emoções primárias (até 3)"
+          />
+        </div>
+        
+        <div className="space-y-2">
+          <Label htmlFor="secondaryEmotions">Emoções Secundárias</Label>
+          <Input
+            id="secondaryEmotions"
+            name="secondaryEmotions"
+            value={packageSpecificData.secondaryEmotions || ''}
+            onChange={handlePackageFieldsChange}
+            disabled={!isEditing}
+            placeholder="Emoções secundárias (até 3)"
+          />
+        </div>
+        
+        <div className="space-y-2">
+          <Label htmlFor="centralMessage">Mensagem Central</Label>
+          <Input
+            id="centralMessage"
+            name="centralMessage"
+            value={packageSpecificData.centralMessage || ''}
+            onChange={handlePackageFieldsChange}
+            disabled={!isEditing}
+            placeholder="Mensagem central a ser transmitida"
+          />
+        </div>
+        
+        <div className="space-y-2">
+          <Label htmlFor="musicStyles">Estilos Musicais</Label>
+          <Input
+            id="musicStyles"
+            name="musicStyles"
+            value={packageSpecificData.musicStyles || ''}
+            onChange={handlePackageFieldsChange}
+            disabled={!isEditing}
+            placeholder="Estilos musicais (até 5)"
+          />
+        </div>
+        
+        <div className="space-y-2">
+          <Label htmlFor="registrationName">Nome para Registro</Label>
+          <Input
+            id="registrationName"
+            name="registrationName"
+            value={packageSpecificData.registrationName || ''}
+            onChange={handlePackageFieldsChange}
+            disabled={!isEditing}
+            placeholder="Nome completo para registro na Biblioteca Nacional"
+          />
+        </div>
+      </div>
+    );
+  };
+
+  const renderPackageFields = () => {
+    // Convert packageType to lowercase for standardized comparison
+    const packageTypeLower = formData.packageType.toLowerCase();
+    
+    if (packageTypeLower.includes('essencial')) {
+      return renderEssentialPackageFields();
+    } else if (packageTypeLower.includes('profissional')) {
+      return renderProfessionalPackageFields();
+    } else if (packageTypeLower.includes('premium')) {
+      return renderPremiumPackageFields();
+    } else {
+      return <p className="text-muted-foreground">Pacote não reconhecido</p>;
+    }
   };
 
   return (
-    <div className="space-y-6">
-      {/* Header */}
-      <div className="flex justify-between items-start">
-        <div>
-          <h2 className="text-2xl font-bold">Briefing #{briefingId}</h2>
-          <div className="flex items-center gap-2 mt-2">
-            <Badge className={getStatusColor(formData.status)}>
-              {formData.status.replace('_', ' ')}
-            </Badge>
-            <Badge className={getPackageColor(formData.packageType)}>
-              {formData.packageType}
-            </Badge>
-          </div>
+    <form onSubmit={handleSubmit} className="space-y-6">
+      <div className="grid grid-cols-2 gap-4">
+        <div className="space-y-2">
+          <Label htmlFor="name">Nome do Cliente</Label>
+          <Input
+            id="name"
+            name="name"
+            value={formData.name}
+            onChange={handleChange}
+            disabled={!isEditing}
+          />
         </div>
-        <div className="flex items-center gap-2">
-          {isEditing ? (
-            <>
-              <Button onClick={handleSave} size="sm">
-                <Save className="h-4 w-4 mr-2" />
-                Salvar
-              </Button>
-              <Button 
-                variant="outline" 
-                onClick={() => setIsEditing(false)} 
-                size="sm"
-              >
-                <X className="h-4 w-4 mr-2" />
-                Cancelar
-              </Button>
-            </>
-          ) : (
-            <Button onClick={() => setIsEditing(true)} size="sm">
-              <Edit2 className="h-4 w-4 mr-2" />
-              Editar
-            </Button>
-          )}
-          {onClose && (
-            <Button variant="outline" onClick={onClose} size="sm">
-              <X className="h-4 w-4" />
-            </Button>
-          )}
+        <div className="space-y-2">
+          <Label htmlFor="email">Email</Label>
+          <Input
+            id="email"
+            name="email"
+            type="email"
+            value={formData.email}
+            onChange={handleChange}
+            disabled={!isEditing}
+          />
         </div>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* Informações do Cliente */}
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <User className="h-5 w-5" />
-              Cliente
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div>
-              <Label>Nome</Label>
-              {isEditing ? (
-                <Input
-                  value={formData.clientName}
-                  onChange={(e) => handleChange('clientName', e.target.value)}
-                />
-              ) : (
-                <p className="text-sm font-medium">{formData.clientName}</p>
-              )}
-            </div>
-            
-            <div>
-              <Label className="flex items-center gap-2">
-                <Mail className="h-4 w-4" />
-                Email
-              </Label>
-              {isEditing ? (
-                <Input
-                  type="email"
-                  value={formData.clientEmail}
-                  onChange={(e) => handleChange('clientEmail', e.target.value)}
-                />
-              ) : (
-                <p className="text-sm">{formData.clientEmail}</p>
-              )}
-            </div>
-            
-            <div>
-              <Label className="flex items-center gap-2">
-                <Phone className="h-4 w-4" />
-                Telefone
-              </Label>
-              {isEditing ? (
-                <Input
-                  value={formData.clientPhone}
-                  onChange={(e) => handleChange('clientPhone', e.target.value)}
-                />
-              ) : (
-                <p className="text-sm">{formData.clientPhone}</p>
-              )}
-            </div>
-          </CardContent>
-        </Card>
-
-        {/* Detalhes do Projeto */}
-        <Card className="lg:col-span-2">
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <FileText className="h-5 w-5" />
-              Detalhes do Projeto
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div>
-              <Label>História / Conceito</Label>
-              {isEditing ? (
-                <Textarea
-                  value={formData.story}
-                  onChange={(e) => handleChange('story', e.target.value)}
-                  placeholder="Descreva a história ou conceito da música"
-                  rows={3}
-                />
-              ) : (
-                <p className="text-sm bg-gray-50 p-3 rounded-md">{formData.story}</p>
-              )}
-            </div>
-
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div>
-                <Label>Estilo Musical</Label>
-                {isEditing ? (
-                  <Select 
-                    value={formData.musicStyle} 
-                    onValueChange={(value) => handleChange('musicStyle', value)}
-                  >
-                    <SelectTrigger>
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="MPB">MPB</SelectItem>
-                      <SelectItem value="Pop">Pop</SelectItem>
-                      <SelectItem value="Rock">Rock</SelectItem>
-                      <SelectItem value="Sertanejo">Sertanejo</SelectItem>
-                      <SelectItem value="Jazz">Jazz</SelectItem>
-                    </SelectContent>
-                  </Select>
-                ) : (
-                  <p className="text-sm font-medium">{formData.musicStyle}</p>
-                )}
-              </div>
-
-              <div>
-                <Label>Duração</Label>
-                {isEditing ? (
-                  <Select 
-                    value={formData.duration} 
-                    onValueChange={(value) => handleChange('duration', value)}
-                  >
-                    <SelectTrigger>
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="1-2 minutos">1-2 minutos</SelectItem>
-                      <SelectItem value="2-3 minutos">2-3 minutos</SelectItem>
-                      <SelectItem value="3-4 minutos">3-4 minutos</SelectItem>
-                      <SelectItem value="4+ minutos">4+ minutos</SelectItem>
-                    </SelectContent>
-                  </Select>
-                ) : (
-                  <p className="text-sm font-medium">{formData.duration}</p>
-                )}
-              </div>
-            </div>
-
-            <div>
-              <Label>Emoções</Label>
-              <div className="flex flex-wrap gap-2 mt-1">
-                {formData.emotions.map((emotion, index) => (
-                  <Badge key={index} variant="outline">
-                    {emotion}
-                  </Badge>
-                ))}
-              </div>
-            </div>
-
-            <Separator />
-
-            <div>
-              <Label>Notas Adicionais</Label>
-              {/* ✅ CORRIGIDO: placeholder adicionado */}
-              <Textarea
-                id="notes"
-                name="notes"
-                value={formData.notes}
-                onChange={(e) => handleChange('notes', e.target.value)}
-                placeholder="Adicione notas ou observações sobre este briefing"
-                rows={4}
-                disabled={!isEditing}
-              />
-            </div>
-
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div>
-                <Label>Orçamento</Label>
-                {isEditing ? (
-                  <Input
-                    type="number"
-                    value={formData.budget}
-                    onChange={(e) => handleChange('budget', parseFloat(e.target.value))}
-                    placeholder="0"
-                  />
-                ) : (
-                  <p className="text-sm font-medium">
-                    R$ {formData.budget.toLocaleString('pt-BR')}
-                  </p>
-                )}
-              </div>
-
-              <div>
-                <Label className="flex items-center gap-2">
-                  <Calendar className="h-4 w-4" />
-                  Prazo
-                </Label>
-                {isEditing ? (
-                  <Input
-                    type="date"
-                    value={formData.deadline}
-                    onChange={(e) => handleChange('deadline', e.target.value)}
-                  />
-                ) : (
-                  <p className="text-sm font-medium">
-                    {new Date(formData.deadline).toLocaleDateString('pt-BR')}
-                  </p>
-                )}
-              </div>
-            </div>
-          </CardContent>
-        </Card>
+      <div className="grid grid-cols-2 gap-4">
+        <div className="space-y-2">
+          <Label htmlFor="phone">Telefone</Label>
+          <Input
+            id="phone"
+            name="phone"
+            value={formData.phone || ''}
+            onChange={handleChange}
+            disabled={!isEditing}
+          />
+        </div>
+        <div className="space-y-2">
+          <Label htmlFor="packageType">Pacote</Label>
+          <Select 
+            value={formData.packageType} 
+            onValueChange={handlePackageChange}
+            disabled={!isEditing}
+          >
+            <SelectTrigger id="packageType">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="Essencial">Essencial</SelectItem>
+              <SelectItem value="Premium">Premium</SelectItem>
+              <SelectItem value="Profissional">Profissional</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
       </div>
 
-      {/* Informações de Sistema */}
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <Clock className="h-5 w-5" />
-            Informações do Sistema
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm text-gray-600">
-            <div>
-              <span className="font-medium">Criado em:</span>{' '}
-              {new Date(formData.createdAt).toLocaleString('pt-BR')}
-            </div>
-            <div>
-              <span className="font-medium">Última atualização:</span>{' '}
-              {new Date(formData.updatedAt).toLocaleString('pt-BR')}
-            </div>
-          </div>
-        </CardContent>
-      </Card>
-    </div>
+      <div className="space-y-2">
+        <Label htmlFor="description">Descrição</Label>
+        <Textarea
+          id="description"
+          name="description"
+          value={formData.description || ''}
+          onChange={handleChange}
+          disabled={!isEditing}
+          rows={3}
+        />
+      </div>
+
+      <div className="border-t pt-4">
+        <h3 className="text-lg font-medium mb-4">Informações Específicas do Pacote {formData.packageType}</h3>
+        {renderPackageFields()}
+      </div>
+
+      <div className="flex justify-end space-x-2 pt-4">
+        <Button type="button" variant="outline" onClick={onClose}>
+          {isEditing ? 'Cancelar' : 'Fechar'}
+        </Button>
+        {isEditing && <Button type="submit">Salvar Alterações</Button>}
+      </div>
+    </form>
   );
 };
 

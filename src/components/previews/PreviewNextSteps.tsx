@@ -1,64 +1,112 @@
 
 import React from 'react';
-import { ArrowRight } from 'lucide-react';
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { ArrowRightCircle, MessageSquare, CheckCircle, Clock } from 'lucide-react';
 
 interface PreviewNextStepsProps {
   status: string;
 }
 
 const PreviewNextSteps: React.FC<PreviewNextStepsProps> = ({ status }) => {
-  const getNextSteps = () => {
-    switch (status) {
-      case 'pending':
-        return [
-          'Ouça todas as versões disponibilizadas',
-          'Selecione sua favorita',
-          'Envie feedback ou aprove a versão escolhida',
-          'Nossa equipe irá trabalhar em sua solicitação'
-        ];
-      case 'feedback':
-        return [
-          'Sua solicitação foi enviada',
-          'Nossa equipe está trabalhando nas alterações',
-          'Novas versões serão disponibilizadas em breve',
-          'Você receberá uma notificação por email'
-        ];
-      case 'approved':
-        return [
-          'Sua música está sendo finalizada',
-          'A masterização será realizada',
-          'Você receberá a versão final em breve',
-          'Você será notificado por email quando estiver pronto'
-        ];
-      case 'completed':
-        return [
-          'Seu projeto foi concluído com sucesso',
-          'Você pode baixar a versão final abaixo',
-          'Considere adquirir serviços complementares',
-          'Obrigado por escolher nossa plataforma!'
-        ];
-      default:
-        return [
-          'Ouça as versões disponíveis',
-          'Selecione sua favorita',
-          'Envie feedback ou aprove',
-          'Aguarde a finalização do seu projeto'
-        ];
-    }
-  };
-
+  let steps: { title: string; description: string; icon: React.ReactNode; active: boolean }[] = [];
+  
+  switch (status) {
+    case 'waiting':
+      steps = [
+        {
+          title: "Avalie as versões",
+          description: "Ouça cada versão disponível e escolha a que mais lhe agrada.",
+          icon: <Clock className="h-5 w-5 text-harmonia-green" />,
+          active: true
+        },
+        {
+          title: "Envie seu feedback",
+          description: "Compartilhe suas impressões ou solicite ajustes, se necessário.",
+          icon: <MessageSquare className="h-5 w-5 text-gray-400" />,
+          active: false
+        },
+        {
+          title: "Aprove sua música",
+          description: "Após os ajustes, aprove a versão final para finalização.",
+          icon: <CheckCircle className="h-5 w-5 text-gray-400" />,
+          active: false
+        }
+      ];
+      break;
+    case 'feedback':
+      steps = [
+        {
+          title: "Avaliação realizada",
+          description: "Você já avaliou as versões disponíveis.",
+          icon: <Clock className="h-5 w-5 text-harmonia-green" />,
+          active: false
+        },
+        {
+          title: "Feedback enviado",
+          description: "Seu feedback foi enviado. Estamos trabalhando nos ajustes.",
+          icon: <MessageSquare className="h-5 w-5 text-harmonia-green" />,
+          active: true
+        },
+        {
+          title: "Aguardando aprovação",
+          description: "Após os ajustes, você poderá avaliar as novas versões.",
+          icon: <CheckCircle className="h-5 w-5 text-gray-400" />,
+          active: false
+        }
+      ];
+      break;
+    case 'approved':
+      steps = [
+        {
+          title: "Avaliação realizada",
+          description: "Você avaliou as versões disponíveis.",
+          icon: <Clock className="h-5 w-5 text-harmonia-green" />,
+          active: false
+        },
+        {
+          title: "Feedback enviado",
+          description: "Você compartilhou suas impressões sobre a música.",
+          icon: <MessageSquare className="h-5 w-5 text-harmonia-green" />,
+          active: false
+        },
+        {
+          title: "Música aprovada",
+          description: "Você aprovou a música final. Parabéns!",
+          icon: <CheckCircle className="h-5 w-5 text-harmonia-green" />,
+          active: true
+        }
+      ];
+      break;
+    default:
+      return null;
+  }
+  
   return (
-    <div>
-      <h3 className="text-xl font-semibold mb-4">Próximos passos</h3>
-      <div className="space-y-3">
-        {getNextSteps().map((step, index) => (
-          <div key={index} className="flex items-start">
-            <ArrowRight className="h-5 w-5 text-harmonia-green mr-3 mt-0.5" />
-            <p>{step}</p>
-          </div>
-        ))}
-      </div>
-    </div>
+    <Card>
+      <CardHeader>
+        <CardTitle>Próximos Passos</CardTitle>
+      </CardHeader>
+      <CardContent>
+        <div className="space-y-6">
+          {steps.map((step, index) => (
+            <div key={index} className="flex">
+              <div className={`mr-4 flex-shrink-0 mt-1 ${step.active ? 'text-harmonia-green' : 'text-gray-300'}`}>
+                {step.icon}
+              </div>
+              <div className={`${!step.active && 'text-gray-400'}`}>
+                <h3 className={`font-medium ${step.active ? 'text-harmonia-green' : ''}`}>{step.title}</h3>
+                <p className="text-sm mt-1">{step.description}</p>
+              </div>
+              {index < steps.length - 1 && (
+                <div className="mx-auto flex justify-center">
+                  <ArrowRightCircle className="h-5 w-5 text-gray-300 hidden" />
+                </div>
+              )}
+            </div>
+          ))}
+        </div>
+      </CardContent>
+    </Card>
   );
 };
 

@@ -1,35 +1,59 @@
 
 import React from 'react';
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { AlertCircle, Info, CheckCircle } from 'lucide-react';
 
 interface PreviewInstructionsProps {
-  status: string;
+  status: 'waiting' | 'feedback' | 'approved';
 }
 
-const PreviewInstructions: React.FC<PreviewInstructionsProps> = ({ status }) => {
-  let message = '';
-  
+const PreviewInstructions: React.FC<PreviewInstructionsProps> = ({ status = 'waiting' }) => {
   switch (status) {
-    case 'pending':
-      message = 'Ouça as versões abaixo e selecione sua favorita. Você pode enviar feedback específico ou aprovar a versão que preferir.';
-      break;
+    case 'waiting':
+      return (
+        <Alert className="mb-8 bg-yellow-50 border-yellow-200 text-yellow-800">
+          <AlertCircle className="h-4 w-4" />
+          <AlertTitle>Bem-vindo à página de avaliação</AlertTitle>
+          <AlertDescription>
+            Ouça as versões disponíveis abaixo e escolha a que mais gostou. Você pode enviar feedback 
+            específico sobre cada uma delas ou aprovar diretamente a sua preferida.
+          </AlertDescription>
+        </Alert>
+      );
     case 'feedback':
-      message = 'Obrigado pelo seu feedback! Nossa equipe está trabalhando nas alterações solicitadas. Em breve novas versões serão disponibilizadas.';
-      break;
+      return (
+        <Alert className="mb-8 bg-blue-50 border-blue-200 text-blue-800">
+          <Info className="h-4 w-4" />
+          <AlertTitle>Em processo de ajustes</AlertTitle>
+          <AlertDescription>
+            Obrigado pelo seu feedback! Nossa equipe está trabalhando nos ajustes solicitados. 
+            Logo você receberá uma notificação com as novas versões.
+          </AlertDescription>
+        </Alert>
+      );
     case 'approved':
-      message = 'Você aprovou uma das versões! Nossa equipe está finalizando sua música e você receberá a versão final em breve.';
-      break;
-    case 'completed':
-      message = 'Seu projeto foi finalizado! Você pode baixar a versão final abaixo.';
-      break;
+      return (
+        <Alert className="mb-8 bg-green-50 border-green-200 text-green-800">
+          <CheckCircle className="h-4 w-4" />
+          <AlertTitle>Música aprovada!</AlertTitle>
+          <AlertDescription>
+            Estamos felizes que você aprovou a música! Nossa equipe está trabalhando na 
+            finalização e você receberá o arquivo em breve.
+          </AlertDescription>
+        </Alert>
+      );
     default:
-      message = 'Bem-vindo ao sistema de prévia. Ouça as versões abaixo e nos envie seu feedback.';
+      return (
+        <Alert className="mb-8 bg-yellow-50 border-yellow-200 text-yellow-800">
+          <AlertCircle className="h-4 w-4" />
+          <AlertTitle>Bem-vindo à página de avaliação</AlertTitle>
+          <AlertDescription>
+            Ouça as versões disponíveis abaixo e escolha a que mais gostou. Você pode enviar feedback 
+            específico sobre cada uma delas ou aprovar diretamente a sua preferida.
+          </AlertDescription>
+        </Alert>
+      );
   }
-
-  return (
-    <div className="bg-gray-50 border-l-4 border-blue-500 p-4 mb-6">
-      <p className="text-gray-700">{message}</p>
-    </div>
-  );
 };
 
 export default PreviewInstructions;

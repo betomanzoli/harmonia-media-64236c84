@@ -1,105 +1,121 @@
 
-import React from 'react';
-
-// Contract content object that provides methods to get different contract texts
 export const ContractContent = {
-  getEssencialContract: () => {
-    return `CONTRATO DE PRESTAÇÃO DE SERVIÇOS - PACOTE ESSENCIAL
-
-CLÁUSULA PRIMEIRA - DO OBJETO
-1.1. Prestação de serviços de composição musical assistida por inteligência artificial com intervenção humana, conforme especificações do Pacote Essencial.
-
-CLÁUSULA SEGUNDA - DO ESCOPO DO SERVIÇO
-2.1. O serviço inclui:
-a) 1 (uma) composição musical (letra + melodia) via IA com supervisão humana;
-b) 1 (uma) revisão de letra/estrutura musical;
-c) Arquivo digital em alta qualidade (MP3/WAV);
-d) Entrega em até 72 horas úteis;
-e) Certificado digital de autoria.
-
-CLÁUSULA TERCEIRA - DOS DIREITOS CONCEDIDOS
-3.1. O CONTRATANTE recebe uma licença não-exclusiva, intransferível, para uso EXCLUSIVAMENTE PESSOAL E NÃO-COMERCIAL da OBRA MUSICAL.
-3.2. É expressamente VEDADA a reprodução pública, comercialização, adaptação, sincronização com imagens, ou cessão a terceiros da OBRA MUSICAL.
-3.3. O uso da OBRA MUSICAL exige a atribuição de crédito: "Música criada por harmonIA".`;
+  getEssencialContract: (): string => {
+    return `
+      <h3 class="text-lg font-semibold mb-2">Contrato de Prestação de Serviços - Pacote Essencial</h3>
+      
+      <p class="mb-2">Por meio deste instrumento particular, a empresa HarmonIA, prestadora de serviços de produção musical, doravante denominada CONTRATADA, e o cliente, doravante denominado CONTRATANTE, estabelecem as seguintes cláusulas:</p>
+      
+      <h4 class="font-medium mt-4 mb-2">1. OBJETO</h4>
+      <p>1.1. O presente contrato tem como objeto a prestação de serviços de criação e produção de uma música personalizada, de acordo com as informações fornecidas pelo CONTRATANTE através do briefing.</p>
+      
+      <h4 class="font-medium mt-4 mb-2">2. DESCRIÇÃO DOS SERVIÇOS</h4>
+      <p>2.1. A CONTRATADA se compromete a prestar os seguintes serviços:</p>
+      <ul class="list-disc pl-5 my-2">
+        <li>Composição musical única;</li>
+        <li>Uma revisão gratuita;</li>
+        <li>Uso exclusivamente pessoal;</li>
+        <li>Entrega digital em até 7 dias;</li>
+        <li>Suporte por e-mail;</li>
+        <li>Arquivo digital em alta qualidade (MP3/WAV);</li>
+        <li>Certificado digital de autoria.</li>
+      </ul>
+      
+      <h4 class="font-medium mt-4 mb-2">3. PRAZO DE ENTREGA</h4>
+      <p>3.1. O prazo para entrega da primeira prévia será de até 7 dias úteis após a aprovação do briefing e confirmação do pagamento.</p>
+      <p>3.2. O prazo para entrega da versão final será de até 7 dias úteis após a aprovação da prévia pelo CONTRATANTE.</p>
+      
+      <h4 class="font-medium mt-4 mb-2">4. ALTERAÇÕES E AJUSTES</h4>
+      <p>4.1. O CONTRATANTE terá direito a solicitar ajustes menores na versão entregue.</p>
+      
+      <h4 class="font-medium mt-4 mb-2">5. PAGAMENTO</h4>
+      <p>5.1. O CONTRATANTE pagará à CONTRATADA o valor do pacote Essencial.</p>
+      <p>5.2. O pagamento deverá ser efetuado integralmente no ato da contratação dos serviços.</p>
+      
+      <h4 class="font-medium mt-4 mb-2">6. DIREITOS AUTORAIS</h4>
+      <p>6.1. A CONTRATADA cede ao CONTRATANTE os direitos de uso da música para fins não comerciais.</p>
+      <p>6.2. A CONTRATADA manterá os créditos da composição e produção musical.</p>
+    `;
   },
-  
-  getProfissionalContract: () => {
-    return `CONTRATO DE PRESTAÇÃO DE SERVIÇOS - PACOTE PROFISSIONAL
 
-CLÁUSULA PRIMEIRA - DO OBJETO
-1.1. Prestação de serviços de composição musical assistida por inteligência artificial com intervenção humana, conforme especificações do Pacote Profissional.
-
-CLÁUSULA SEGUNDA - DO ESCOPO DO SERVIÇO
-2.1. O serviço inclui:
-a) 1 (uma) composição musical (letra + melodia) via IA com supervisão humana;
-b) Até 2 (duas) revisões de letra/estrutura musical;
-c) Produção musical com arranjo profissional;
-d) Arquivo digital em alta qualidade (MP3/WAV);
-e) Entrega em até 5 dias úteis;
-f) Certificado digital de autoria;
-g) Uso pessoal e comercial limitado.
-
-CLÁUSULA TERCEIRA - DOS DIREITOS CONCEDIDOS
-3.1. O CONTRATANTE recebe uma licença não-exclusiva para uso PESSOAL E COMERCIAL LIMITADO da OBRA MUSICAL.
-3.2. O uso comercial limitado permite a utilização em até 3 (três) vídeos online, 1 (uma) apresentação ao vivo, e sincronização com imagens para fins promocionais pessoais.
-3.3. É vedada a comercialização direta da OBRA MUSICAL como produto independente.
-3.4. O uso da OBRA MUSICAL exige a atribuição de crédito: "Música criada por harmonIA".`;
+  getPremiumContract: (): string => {
+    return `
+      <h3 class="text-lg font-semibold mb-2">Contrato de Prestação de Serviços - Pacote Premium</h3>
+      
+      <p class="mb-2">Por meio deste instrumento particular, a empresa HarmonIA, prestadora de serviços de produção musical, doravante denominada CONTRATADA, e o cliente, doravante denominado CONTRATANTE, estabelecem as seguintes cláusulas:</p>
+      
+      <h4 class="font-medium mt-4 mb-2">1. OBJETO</h4>
+      <p>1.1. O presente contrato tem como objeto a prestação de serviços de criação e produção de uma música personalizada, de acordo com as informações fornecidas pelo CONTRATANTE através do briefing.</p>
+      
+      <h4 class="font-medium mt-4 mb-2">2. DESCRIÇÃO DOS SERVIÇOS</h4>
+      <p>2.1. A CONTRATADA se compromete a prestar os seguintes serviços:</p>
+      <ul class="list-disc pl-5 my-2">
+        <li>Composição totalmente personalizada;</li>
+        <li>Revisões ilimitadas (até aprovação);</li>
+        <li>Cessão total dos direitos autorais;</li>
+        <li>Cinco versões para escolha;</li>
+        <li>Registro na Biblioteca Nacional;</li>
+        <li>Certificado blockchain;</li>
+        <li>Consultoria de 30 minutos;</li>
+        <li>Entrega prioritária;</li>
+        <li>Suporte VIP por WhatsApp;</li>
+        <li>Partitura em formato MusicXML.</li>
+      </ul>
+      
+      <h4 class="font-medium mt-4 mb-2">3. PRAZO DE ENTREGA</h4>
+      <p>3.1. O prazo para entrega da primeira prévia será de até 7 dias úteis após a aprovação do briefing e confirmação do pagamento.</p>
+      <p>3.2. O prazo para entrega da versão final será de até 7 dias úteis após a aprovação da prévia pelo CONTRATANTE.</p>
+      
+      <h4 class="font-medium mt-4 mb-2">4. ALTERAÇÕES E AJUSTES</h4>
+      <p>4.1. O CONTRATANTE terá direito a solicitar revisões ilimitadas até a sua completa satisfação.</p>
+      
+      <h4 class="font-medium mt-4 mb-2">5. PAGAMENTO</h4>
+      <p>5.1. O CONTRATANTE pagará à CONTRATADA o valor do pacote Premium.</p>
+      <p>5.2. O pagamento deverá ser efetuado integralmente no ato da contratação dos serviços.</p>
+      
+      <h4 class="font-medium mt-4 mb-2">6. DIREITOS AUTORAIS</h4>
+      <p>6.1. A CONTRATADA cede ao CONTRATANTE os direitos totais da composição.</p>
+      <p>6.2. Os direitos concedidos incluem, mas não se limitam a, reprodução, modificação, distribuição e uso comercial da obra.</p>
+    `;
   },
-  
-  getPremiumContract: () => {
-    return `CONTRATO DE PRESTAÇÃO DE SERVIÇOS - PACOTE PREMIUM
 
-CLÁUSULA PRIMEIRA - DO OBJETO
-1.1. Prestação de serviços de composição musical assistida por inteligência artificial com intervenção humana, conforme especificações do Pacote Premium.
-
-CLÁUSULA SEGUNDA - DO ESCOPO DO SERVIÇO
-2.1. O serviço inclui:
-a) 1 (uma) composição musical (letra + melodia) via IA com supervisão humana;
-b) Revisões ilimitadas de letra/estrutura musical;
-c) Produção musical premium com arranjo personalizado;
-d) Mixagem e masterização profissional;
-e) Arquivo digital em alta qualidade (MP3/WAV/STEMS);
-f) Entrega em até 10 dias úteis;
-g) Certificado digital de autoria;
-h) Uso comercial completo.
-
-CLÁUSULA TERCEIRA - DOS DIREITOS CONCEDIDOS
-3.1. O CONTRATANTE recebe uma licença não-exclusiva para uso PESSOAL E COMERCIAL COMPLETO da OBRA MUSICAL.
-3.2. O uso comercial completo permite utilização sem restrições quantitativas em vídeos, apresentações ao vivo, sincronização com imagens e distribuição em plataformas digitais.
-3.3. O CONTRATANTE pode comercializar a OBRA MUSICAL como parte de produtos e serviços.
-3.4. O CONTRATANTE pode registrar a OBRA MUSICAL em seu nome nas entidades de direitos autorais.
-3.5. O uso da OBRA MUSICAL exige a atribuição de crédito: "Música criada por harmonIA".`;
+  getProfissionalContract: (): string => {
+    return `
+      <h3 class="text-lg font-semibold mb-2">Contrato de Prestação de Serviços - Pacote Profissional</h3>
+      
+      <p class="mb-2">Por meio deste instrumento particular, a empresa HarmonIA, prestadora de serviços de produção musical, doravante denominada CONTRATADA, e o cliente, doravante denominado CONTRATANTE, estabelecem as seguintes cláusulas:</p>
+      
+      <h4 class="font-medium mt-4 mb-2">1. OBJETO</h4>
+      <p>1.1. O presente contrato tem como objeto a prestação de serviços de criação e produção de uma música personalizada, de acordo com as informações fornecidas pelo CONTRATANTE através do briefing.</p>
+      
+      <h4 class="font-medium mt-4 mb-2">2. DESCRIÇÃO DOS SERVIÇOS</h4>
+      <p>2.1. A CONTRATADA se compromete a prestar os seguintes serviços:</p>
+      <ul class="list-disc pl-5 my-2">
+        <li>Composição musical personalizada;</li>
+        <li>Até três revisões gratuitas;</li>
+        <li>Licença para uso em conteúdo digital próprio;</li>
+        <li>Três versões para escolha;</li>
+        <li>Entrega em até 5 dias;</li>
+        <li>Suporte prioritário;</li>
+        <li>Masterização básica IA;</li>
+        <li>Stems separados (vocais + instrumentação).</li>
+      </ul>
+      
+      <h4 class="font-medium mt-4 mb-2">3. PRAZO DE ENTREGA</h4>
+      <p>3.1. O prazo para entrega da primeira prévia será de até 5 dias úteis após a aprovação do briefing e confirmação do pagamento.</p>
+      <p>3.2. O prazo para entrega da versão final será de até 5 dias úteis após a aprovação da prévia pelo CONTRATANTE.</p>
+      
+      <h4 class="font-medium mt-4 mb-2">4. ALTERAÇÕES E AJUSTES</h4>
+      <p>4.1. O CONTRATANTE terá direito a solicitar até três revisões gratuitas.</p>
+      <p>4.2. Revisões adicionais poderão ser solicitadas mediante pagamento adicional, conforme tabela de valores vigente.</p>
+      
+      <h4 class="font-medium mt-4 mb-2">5. PAGAMENTO</h4>
+      <p>5.1. O CONTRATANTE pagará à CONTRATADA o valor do pacote Profissional.</p>
+      <p>5.2. O pagamento deverá ser efetuado integralmente no ato da contratação dos serviços.</p>
+      
+      <h4 class="font-medium mt-4 mb-2">6. DIREITOS AUTORAIS</h4>
+      <p>6.1. A CONTRATADA cede ao CONTRATANTE os direitos de uso da música para fins de conteúdo digital próprio.</p>
+      <p>6.2. A CONTRATADA manterá os créditos da composição e produção musical.</p>
+    `;
   }
 };
-
-interface ContractDetailsProps {
-  packageType: 'essencial' | 'profissional' | 'premium';
-}
-
-const ContractDetails: React.FC<ContractDetailsProps> = ({ packageType }) => {
-  let contractText = '';
-  
-  switch(packageType) {
-    case 'essencial':
-      contractText = ContractContent.getEssencialContract();
-      break;
-    case 'profissional':
-      contractText = ContractContent.getProfissionalContract();
-      break;
-    case 'premium':
-      contractText = ContractContent.getPremiumContract();
-      break;
-    default:
-      contractText = ContractContent.getEssencialContract();
-  }
-  
-  return (
-    <div className="bg-gray-50 p-4 rounded-md border text-sm">
-      <pre className="whitespace-pre-wrap font-mono text-xs">
-        {contractText}
-      </pre>
-    </div>
-  );
-};
-
-export default ContractDetails;

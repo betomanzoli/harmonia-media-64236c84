@@ -1,75 +1,26 @@
 
 import { useState, useEffect } from 'react';
+import { usePreviewProject as useBasePreviewProject, MusicPreview, PreviewProject as BasePreviewProject } from '@/hooks/usePreviewProject';
+import { useToast } from '@/hooks/use-toast';
 
-interface PreviewVersion {
-  id: string;
-  title: string;
-  url: string;
-  date: string;
-}
-
-interface ProjectData {
-  projectTitle: string;
-  clientName: string;
-  status: 'pending' | 'feedback' | 'approved' | 'completed';
-  previews?: PreviewVersion[];
+// Extend the PreviewProject interface to include additional fields
+export interface PreviewProject extends BasePreviewProject {
   useGoogleDrive?: boolean;
 }
 
-export const usePreviewProject = (projectId: string) => {
-  const [projectData, setProjectData] = useState<ProjectData | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-
-  useEffect(() => {
-    const fetchProject = async () => {
-      // Simulate API call
-      setIsLoading(true);
-      
-      try {
-        // In a real app, this would be an API call
-        await new Promise(resolve => setTimeout(resolve, 1000));
-        
-        // Mock data for demonstration
-        const mockData: ProjectData = {
-          projectTitle: "Composição para Aniversário",
-          clientName: "João Silva",
-          status: "pending",
-          previews: [
-            {
-              id: "v1",
-              title: "Versão Acústica",
-              url: "https://example.com/sample.mp3",
-              date: "2023-10-15"
-            },
-            {
-              id: "v2",
-              title: "Versão Orquestrada",
-              url: "https://example.com/sample2.mp3",
-              date: "2023-10-16"
-            }
-          ]
-        };
-        
-        setProjectData(mockData);
-        setError(null);
-      } catch (err) {
-        setError("Erro ao carregar dados do projeto");
-        setProjectData(null);
-      } finally {
-        setIsLoading(false);
-      }
-    };
-    
-    if (projectId) {
-      fetchProject();
-    }
-  }, [projectId]);
-
-  return {
-    projectData,
-    setProjectData,
-    isLoading,
-    error
+// Re-export the hook functionality but with a better directory structure
+export const usePreviewProject = (projectId: string | undefined) => {
+  const { toast } = useToast();
+  const baseHook = useBasePreviewProject(projectId);
+  
+  // Return the baseHook with the proper type
+  return baseHook as {
+    projectData: PreviewProject | null;
+    setProjectData: React.Dispatch<React.SetStateAction<PreviewProject | null>>;
+    isLoading: boolean;
+    updateProjectStatus: (newStatus: 'approved' | 'feedback', comments: string) => boolean;
   };
 };
+
+// Re-export the MusicPreview type
+export type { MusicPreview };

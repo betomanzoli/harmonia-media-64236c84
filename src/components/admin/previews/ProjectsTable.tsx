@@ -1,105 +1,173 @@
 
 import React from 'react';
-import { 
-  Table, TableBody, TableCell, TableHead, 
-  TableHeader, TableRow 
-} from '@/components/ui/table';
-import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
-import { Trash2, Send } from 'lucide-react';
-import { ProjectItem } from '@/hooks/admin/usePreviewProjects';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import { MoreHorizontal, Eye, Edit, Trash, Bell } from 'lucide-react';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { Link } from 'react-router-dom';
+import { Skeleton } from "@/components/ui/skeleton";
+import { useToast } from "@/hooks/use-toast";
 
 interface ProjectsTableProps {
-  projects: ProjectItem[];
-  isLoading?: boolean;
-  onDelete?: (id: string) => void;
-  onSendReminder?: (id: string) => void;
+  projects: any[];
+  isLoading: boolean;
+  onDelete: (id: string) => void;
+  onSendReminder: (id: string) => void;
 }
 
-const ProjectsTable: React.FC<ProjectsTableProps> = ({ 
-  projects, 
-  isLoading = false,
+const ProjectsTable: React.FC<ProjectsTableProps> = ({
+  projects,
+  isLoading,
   onDelete,
   onSendReminder
 }) => {
-  const getStatusBadge = (status: string) => {
-    switch (status) {
-      case 'waiting':
-        return <Badge variant="secondary">Aguardando</Badge>;
-      case 'feedback':
-        return <Badge variant="outline">Feedback</Badge>;
-      case 'approved':
-        return <Badge className="bg-green-500">Aprovado</Badge>;
-      case 'processing':
-        return <Badge className="bg-blue-500">Processando</Badge>;
-      default:
-        return <Badge variant="outline">{status}</Badge>;
+  const { toast } = useToast();
+  
+  // Helper to format dates for better display
+  const formatDate = (dateString: string) => {
+    if (!dateString) return 'N/A';
+    
+    // If it's already in DD/MM/YYYY format, return as is
+    if (/^\d{2}\/\d{2}\/\d{4}$/.test(dateString)) {
+      return dateString;
+    }
+    
+    try {
+      // Try to parse the date string
+      const date = new Date(dateString);
+      return date.toLocaleDateString('pt-BR');
+    } catch {
+      return dateString;
     }
   };
-  
+
+  const getStatusBadge = (status: string) => {
+    switch(status?.toLowerCase()) {
+      case 'waiting':
+      case 'em_andamento':
+        return <Badge className="bg-blue-500">Em Análise</Badge>;
+      case 'feedback':
+        return <Badge className="bg-yellow-500">Com Feedback</Badge>;
+      case 'approved':
+        return <Badge className="bg-green-500">Aprovado</Badge>;
+      case 'expired':
+        return <Badge variant="outline" className="text-red-600 border-red-600">Expirado</Badge>;
+      default:
+        return <Badge variant="outline">Aguardando</Badge>;
+    }
+  };
+
+  const copyPreviewLink = (projectId: string) => {
+    const link = `${window.location.origin}/preview/${projectId}`;
+    navigator.clipboard.writeText(link);
+    toast({
+      title: "Link copiado!",
+      description: "Link de prévia copiado para a área de transferência."
+    });
+  };
+
   if (isLoading) {
-    return <div className="flex justify-center p-8">Carregando projetos...</div>;
+    return (
+      <div className="p-4">
+        <div className="space-y-2">
+          {Array.from({ length: 5 }).map((_, index) => (
+            <div key={index} className="flex items-center space-x-4">
+              <Skeleton className="h-12 w-full" />
+            </div>
+          ))}
+        </div>
+      </div>
+    );
   }
-  
+
   return (
-    <div className="rounded-md border">
+    <div className="border rounded-md overflow-hidden">
       <Table>
         <TableHeader>
           <TableRow>
             <TableHead>ID</TableHead>
             <TableHead>Cliente</TableHead>
             <TableHead>Pacote</TableHead>
-            <TableHead>Data</TableHead>
             <TableHead>Status</TableHead>
+            <TableHead>Versões</TableHead>
+            <TableHead>Atualizado</TableHead>
+            <TableHead>Expira</TableHead>
             <TableHead className="text-right">Ações</TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
           {projects.length === 0 ? (
             <TableRow>
-              <TableCell colSpan={6} className="h-24 text-center">
-                Nenhum projeto encontrado.
+              <TableCell colSpan={8} className="h-24 text-center">
+                Nenhum projeto de prévia encontrado.
               </TableCell>
             </TableRow>
           ) : (
             projects.map((project) => (
               <TableRow key={project.id}>
-                <TableCell className="font-medium">{project.id}</TableCell>
-                <TableCell>
-                  <div>
-                    {project.clientName}
-                    <div className="text-xs text-gray-500">{project.clientEmail}</div>
-                  </div>
+                <TableCell className="font-medium">
+                  {project.id}
                 </TableCell>
-                <TableCell>{project.packageType}</TableCell>
-                <TableCell>{project.createdAt}</TableCell>
+                <TableCell className="font-medium">
+                  {project.clientName || "Cliente sem nome"}
+                </TableCell>
+                <TableCell>
+                  {project.packageType ? (
+                    <span className="capitalize">{project.packageType}</span>
+                  ) : (
+                    "Padrão"
+                  )}
+                </TableCell>
                 <TableCell>{getStatusBadge(project.status)}</TableCell>
+                <TableCell>{project.versions || 0}</TableCell>
+                <TableCell>{formatDate(project.lastActivityDate)}</TableCell>
+                <TableCell>{formatDate(project.expirationDate)}</TableCell>
                 <TableCell className="text-right">
-                  <div className="flex justify-end gap-2">
-                    {project.status === 'feedback' && onSendReminder && (
-                      <Button 
-                        size="sm" 
-                        variant="ghost" 
-                        className="h-8 w-8 p-0"
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                      <Button variant="ghost" size="icon">
+                        <MoreHorizontal className="h-4 w-4" />
+                        <span className="sr-only">Abrir menu</span>
+                      </Button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="end">
+                      <DropdownMenuLabel>Ações</DropdownMenuLabel>
+                      <DropdownMenuSeparator />
+                      <DropdownMenuItem
+                        onClick={() => copyPreviewLink(project.id)}
+                      >
+                        <Eye className="mr-2 h-4 w-4" />
+                        Copiar Link
+                      </DropdownMenuItem>
+                      <Link to={`/admin-j28s7d1k/previews/${project.id}`} className="w-full">
+                        <DropdownMenuItem>
+                          <Edit className="mr-2 h-4 w-4" />
+                          Editar
+                        </DropdownMenuItem>
+                      </Link>
+                      <DropdownMenuItem
                         onClick={() => onSendReminder(project.id)}
                       >
-                        <Send className="h-4 w-4" />
-                        <span className="sr-only">Enviar lembrete</span>
-                      </Button>
-                    )}
-                    
-                    {onDelete && (
-                      <Button 
-                        size="sm" 
-                        variant="ghost" 
-                        className="h-8 w-8 p-0 text-red-500 hover:text-red-600 hover:bg-red-50"
+                        <Bell className="mr-2 h-4 w-4" />
+                        Enviar Lembrete
+                      </DropdownMenuItem>
+                      <DropdownMenuItem
                         onClick={() => onDelete(project.id)}
+                        className="text-red-600 focus:text-red-600"
                       >
-                        <Trash2 className="h-4 w-4" />
-                        <span className="sr-only">Excluir</span>
-                      </Button>
-                    )}
-                  </div>
+                        <Trash className="mr-2 h-4 w-4" />
+                        Excluir
+                      </DropdownMenuItem>
+                    </DropdownMenuContent>
+                  </DropdownMenu>
                 </TableCell>
               </TableRow>
             ))

@@ -1,41 +1,92 @@
 
-import React from 'react';
+import React, { useState } from 'react';
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Button } from "@/components/ui/button";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Label } from "@/components/ui/label";
+import { ScrollArea } from "@/components/ui/scroll-area";
+import { ContractContent } from '@/components/service-card/ContractDetails';
+
+export type PackageId = 'essencial' | 'premium' | 'profissional';
 
 interface ContractTermsDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  onAccept: () => void;
+  packageId: PackageId;
+  accepted: boolean;
+  onAcceptedChange: (accepted: boolean) => void;
+  onConfirm: () => void;
+  isLoading: boolean;
 }
 
 const ContractTermsDialog: React.FC<ContractTermsDialogProps> = ({
   open,
   onOpenChange,
-  onAccept
+  packageId,
+  accepted,
+  onAcceptedChange,
+  onConfirm,
+  isLoading
 }) => {
+  // Obter o contrato específico para o pacote selecionado
+  const getContractHtml = () => {
+    switch(packageId) {
+      case 'essencial':
+        return ContractContent.getEssencialContract();
+      case 'premium':
+        return ContractContent.getPremiumContract();
+      case 'profissional':
+        return ContractContent.getProfissionalContract();
+      default:
+        return ContractContent.getEssencialContract();
+    }
+  };
+  
   return (
-    <div className={`fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 ${open ? 'block' : 'hidden'}`}>
-      <div className="bg-white p-6 rounded-lg max-w-2xl w-full max-h-[80vh] overflow-y-auto">
-        <h2 className="text-xl font-bold mb-4">Termos e Condições</h2>
-        <div className="prose prose-sm mb-4">
-          <p>Ao aceitar estes termos, você concorda com as condições de serviço da harmonIA.</p>
-          {/* Conteúdo completo dos termos seria inserido aqui */}
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent className="max-w-3xl max-h-[90vh] flex flex-col">
+        <DialogHeader>
+          <DialogTitle>Contrato de Prestação de Serviços - {packageId.charAt(0).toUpperCase() + packageId.slice(1)}</DialogTitle>
+          <DialogDescription>
+            Por favor, leia com atenção o contrato abaixo antes de prosseguir com o pagamento.
+          </DialogDescription>
+        </DialogHeader>
+        
+        <ScrollArea className="flex-1 max-h-[50vh] overflow-auto mt-4 rounded-md border p-4">
+          <div dangerouslySetInnerHTML={{ __html: getContractHtml() }} />
+        </ScrollArea>
+        
+        <div className="flex items-start space-x-2 mt-4">
+          <Checkbox 
+            id="terms" 
+            checked={accepted}
+            onCheckedChange={(checked) => onAcceptedChange(!!checked)}
+          />
+          <Label 
+            htmlFor="terms"
+            className="text-sm leading-tight"
+          >
+            Li e aceito os termos e condições deste contrato.
+          </Label>
         </div>
-        <div className="flex justify-end gap-4 mt-4">
-          <button 
-            className="px-4 py-2 border border-gray-300 rounded-md"
+        
+        <DialogFooter>
+          <Button 
+            variant="outline" 
             onClick={() => onOpenChange(false)}
           >
             Cancelar
-          </button>
-          <button 
-            className="px-4 py-2 bg-harmonia-green text-white rounded-md"
-            onClick={onAccept}
+          </Button>
+          <Button 
+            onClick={onConfirm} 
+            disabled={!accepted || isLoading}
+            className="bg-harmonia-green hover:bg-harmonia-green/90"
           >
-            Aceitar e Continuar
-          </button>
-        </div>
-      </div>
-    </div>
+            {isLoading ? 'Processando...' : 'Aceitar e Prosseguir'}
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
   );
 };
 

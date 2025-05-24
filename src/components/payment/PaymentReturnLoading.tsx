@@ -4,15 +4,11 @@ import { Loader2 } from 'lucide-react';
 
 const PaymentReturnLoading: React.FC = () => {
   return (
-    <div className="bg-white p-8 rounded-lg shadow-sm max-w-md mx-auto text-center">
-      <div className="flex justify-center mb-6">
-        <Loader2 className="h-12 w-12 text-harmonia-green animate-spin" />
-      </div>
-      
-      <h2 className="text-2xl font-bold mb-3">Processando pagamento</h2>
-      
-      <p className="text-gray-600">
-        Por favor, aguarde enquanto confirmamos seu pagamento...
+    <div className="flex flex-col items-center">
+      <Loader2 className="w-12 h-12 text-harmonia-green animate-spin mb-4" />
+      <h2 className="text-2xl font-bold mb-2">Processando seu pagamento</h2>
+      <p className="mb-6 text-gray-400">
+        Estamos verificando o status do seu pagamento, aguarde um momento...
       </p>
     </div>
   );

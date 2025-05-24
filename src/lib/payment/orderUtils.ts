@@ -1,40 +1,77 @@
 
-// Helper functions for order management
+/**
+ * Utility functions for creating order data
+ */
 
-interface OrderData {
-  id: string;
-  packageId: string;
-  status: 'pending' | 'completed' | 'failed';
-  createdAt: string;
-}
+import { PackageId } from './packageData';
+import { getExpectedDeliveryDate } from './dateUtils';
+import { PaymentData } from '@/hooks/payment/types';
 
-export const getOrderById = async (orderId: string): Promise<OrderData | null> => {
-  // This would normally fetch from an API or database
-  // For now, just returning mock data
+/**
+ * Create order tracking data based on payment information
+ * @param paymentData Payment data object
+ * @param clientName Client name
+ * @param method Payment method
+ * @returns Order tracking data object
+ */
+export const createOrderData = (
+  paymentData: PaymentData,
+  clientName: string,
+  method: string,
+  packageId: PackageId
+) => {
   return {
-    id: orderId,
-    packageId: 'profissional',
-    status: 'completed',
-    createdAt: new Date().toISOString()
+    orderId: paymentData.orderId,
+    clientName: clientName || 'Cliente',
+    packageType: packageId,
+    status: 'Em Análise',
+    currentStep: 1,
+    orderDate: new Date().toLocaleDateString('pt-BR'),
+    expectedDelivery: getExpectedDeliveryDate(packageId, method),
+    previewLink: null,
+    progress: [
+      {
+        step: 1,
+        title: "Pagamento Confirmado",
+        description: method === 'Pix' 
+          ? "Seu pagamento via Pix foi registrado. O projeto será iniciado após a confirmação do pagamento."
+          : "Seu pagamento foi confirmado e seu projeto foi iniciado.",
+        date: new Date().toLocaleDateString('pt-BR'),
+        status: "completed",
+        icon: "CreditCard"
+      },
+      {
+        step: 2,
+        title: "Análise Inicial",
+        description: "Nossa equipe está analisando seu briefing e definindo a abordagem criativa.",
+        date: null,
+        status: "current",
+        icon: "FileText"
+      },
+      {
+        step: 3,
+        title: "Composição",
+        description: "Nossos compositores estão trabalhando na sua música personalizada.",
+        date: null,
+        status: "pending",
+        icon: "Music"
+      },
+      {
+        step: 4,
+        title: "Produção",
+        description: "Fase de arranjo e produção musical da sua composição.",
+        date: null,
+        status: "pending",
+        icon: "Settings"
+      },
+      {
+        step: 5,
+        title: "Apresentação",
+        description: "Prévias da sua música estão prontas para sua avaliação.",
+        date: null,
+        status: "pending",
+        icon: "Headphones"
+      }
+    ]
   };
-};
-
-export const createOrder = (packageId: string): string => {
-  const orderId = `order-${Date.now()}`;
-  // Would normally save to database
-  return orderId;
-};
-
-export const createOrderData = (packageInfo: any, clientName?: string, paymentMethod?: string, packageType?: string): OrderData => {
-  return {
-    id: packageInfo.orderId || `order-${Date.now()}`,
-    packageId: packageInfo.packageId || packageType || 'essential',
-    status: 'pending',
-    createdAt: new Date().toISOString()
-  };
-};
-
-export const validatePaymentStatus = async (orderId: string, token: string): Promise<boolean> => {
-  // This would normally validate with payment provider
-  return true;
 };

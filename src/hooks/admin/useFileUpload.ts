@@ -1,94 +1,160 @@
 
 import { useState } from 'react';
-import { uploadFile, deleteFile } from '@/services/storageService';
+import { useToast } from '@/hooks/use-toast';
+import { useAdminStorage, StorageType } from '@/services/adminStorageService';
 
-interface UploadOptions {
-  path?: string;
-  acceptedTypes?: string[];
-  maxSizeMB?: number;
+export interface UploadedFile {
+  id: string;
+  name: string;
+  url: string;
+  type: string;
+  size: number;
+  uploadedAt: string;
 }
 
-export function useFileUpload(options: UploadOptions = {}) {
+export function useFileUpload(storageType: StorageType) {
   const [isUploading, setIsUploading] = useState(false);
-  const [progress, setProgress] = useState(0);
-  const [error, setError] = useState<string | null>(null);
-  
-  const defaultOptions = {
-    path: 'uploads',
-    acceptedTypes: ['image/*', 'audio/*', 'video/*', 'application/pdf'],
-    maxSizeMB: 10
-  };
-  
-  const mergedOptions = { ...defaultOptions, ...options };
-  
-  const upload = async (file: File) => {
-    // Validate file
-    if (!validateFile(file, mergedOptions)) {
-      return { success: false, error: error };
-    }
+  const [uploadProgress, setUploadProgress] = useState(0);
+  const [uploadedFiles, setUploadedFiles] = useState<UploadedFile[]>([]);
+  const { toast } = useToast();
+  const storage = useAdminStorage();
+
+  // Upload a single file
+  const uploadFile = async (file: File, metadata?: Record<string, any>): Promise<UploadedFile | null> => {
+    if (!file) return null;
     
     try {
       setIsUploading(true);
-      setProgress(0);
-      setError(null);
+      setUploadProgress(0);
       
-      const result = await uploadFile(file, mergedOptions.path!, (progress) => {
-        setProgress(progress);
+      // Simulate upload progress
+      const progressInterval = setInterval(() => {
+        setUploadProgress((prev) => {
+          const newProgress = prev + Math.random() * 20;
+          return newProgress > 90 ? 90 : newProgress;
+        });
+      }, 500);
+      
+      // Upload the file using our storage service
+      const result = await storage.uploadFile(storageType, file, metadata);
+      
+      clearInterval(progressInterval);
+      setUploadProgress(100);
+      
+      if (result.success && result.fileUrl && result.fileId) {
+        const uploadedFile: UploadedFile = {
+          id: result.fileId,
+          name: file.name,
+          url: result.fileUrl,
+          type: file.type,
+          size: file.size,
+          uploadedAt: new Date().toISOString()
+        };
+        
+        setUploadedFiles(prev => [...prev, uploadedFile]);
+        
+        toast({
+          title: "Upload concluído",
+          description: `${file.name} foi enviado com sucesso.`,
+        });
+        
+        return uploadedFile;
+      } else {
+        throw new Error("Falha ao fazer upload do arquivo");
+      }
+    } catch (error) {
+      console.error("Erro no upload:", error);
+      
+      toast({
+        title: "Erro no upload",
+        description: "Não foi possível enviar o arquivo. Tente novamente.",
+        variant: "destructive",
       });
       
-      setProgress(100);
+      return null;
+    } finally {
       setIsUploading(false);
-      
-      return result;
-    } catch (err: any) {
-      setError(err.message || 'Error uploading file');
-      setIsUploading(false);
-      return { success: false, error: err };
+      setUploadProgress(0);
     }
   };
   
-  const remove = async (key: string) => {
+  // Upload multiple files
+  const uploadMultipleFiles = async (files: File[], metadata?: Record<string, any>): Promise<UploadedFile[]> => {
+    if (!files.length) return [];
+    
+    const uploadedResults: UploadedFile[] = [];
+    
     try {
-      setError(null);
-      return await deleteFile(key);
-    } catch (err: any) {
-      setError(err.message || 'Error deleting file');
-      return { success: false, error: err };
-    }
-  };
-  
-  const validateFile = (file: File, options: Required<UploadOptions>): boolean => {
-    // Check file type
-    const fileType = file.type;
-    const isTypeAllowed = options.acceptedTypes.some(type => {
-      if (type.endsWith('/*')) {
-        // Check media type (e.g., image/*)
-        const mediaType = type.split('/')[0];
-        return fileType.startsWith(`${mediaType}/`);
+      setIsUploading(true);
+      
+      for (let i = 0; i < files.length; i++) {
+        // Update progress based on current file index
+        setUploadProgress((i / files.length) * 100);
+        
+        const result = await uploadFile(files[i], metadata);
+        if (result) {
+          uploadedResults.push(result);
+        }
       }
-      return type === fileType;
-    });
-    
-    if (!isTypeAllowed) {
-      setError(`File type not allowed. Accepted types: ${options.acceptedTypes.join(', ')}`);
-      return false;
+      
+      // If at least some files were uploaded successfully
+      if (uploadedResults.length > 0) {
+        if (uploadedResults.length === files.length) {
+          toast({
+            title: "Uploads concluídos",
+            description: `${files.length} arquivos foram enviados com sucesso.`,
+          });
+        } else {
+          toast({
+            title: "Uploads parcialmente concluídos",
+            description: `${uploadedResults.length} de ${files.length} arquivos foram enviados.`,
+            variant: "default",
+          });
+        }
+      }
+      
+      return uploadedResults;
+    } catch (error) {
+      console.error("Erro no upload múltiplo:", error);
+      
+      toast({
+        title: "Erro nos uploads",
+        description: "Alguns arquivos não puderam ser enviados. Tente novamente.",
+        variant: "destructive",
+      });
+      
+      return uploadedResults;
+    } finally {
+      setIsUploading(false);
+      setUploadProgress(0);
     }
-    
-    // Check file size
-    const maxSizeBytes = options.maxSizeMB * 1024 * 1024;
-    if (file.size > maxSizeBytes) {
-      setError(`File size exceeds the maximum allowed (${options.maxSizeMB}MB)`);
-      return false;
-    }
-    
-    return true;
   };
   
+  // Open the respective Google Drive folder
+  const openStorageFolder = () => {
+    storage.openFolder(storageType);
+  };
+  
+  // Get the folder URL
+  const getFolderUrl = () => {
+    return storage.getFolderUrl(storageType);
+  };
+  
+  // Reset state
+  const resetUploadState = () => {
+    setUploadedFiles([]);
+    setIsUploading(false);
+    setUploadProgress(0);
+  };
+
   return {
-    upload,
-    remove,
     isUploading,
-    progress,
-    error
+    uploadProgress,
+    uploadedFiles,
+    uploadFile,
+    uploadMultipleFiles,
+    openStorageFolder,
+    getFolderUrl,
+    resetUploadState
   };
 }

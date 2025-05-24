@@ -1,148 +1,191 @@
 
-import React, { useState } from 'react';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Textarea } from '@/components/ui/textarea';
-import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from '@/components/ui/select';
+import React from 'react';
+import { DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
+import { Form } from "@/components/ui/form";
+import { useCreateBriefingForm, BriefingFormValues } from '@/hooks/useCreateBriefingForm';
+import ClientInfoSection from './FormSections/ClientInfoSection';
+import PackageInfoSection from './FormSections/PackageInfoSection';
+import FormFooter from './FormSections/FormFooter';
+import { supabase } from '@/lib/supabase';
+import { useToast } from '@/hooks/use-toast';
+import { usePreviewProjects } from '@/hooks/admin/usePreviewProjects';
+import { useCustomers } from '@/hooks/admin/useCustomers';
+import webhookService from '@/services/webhookService';
 
 interface CreateBriefingFormProps {
   onClose: () => void;
-  onSubmit: (data: any) => void;
+  onSubmit: (data: BriefingFormValues) => void;
   initialData?: any;
 }
 
 const CreateBriefingForm: React.FC<CreateBriefingFormProps> = ({ onClose, onSubmit, initialData }) => {
-  const [formData, setFormData] = useState({
-    name: initialData?.name || '',
-    email: initialData?.email || '',
-    phone: initialData?.phone || '',
-    packageType: initialData?.packageType || 'essencial',
-    description: '',
-    musicStyle: '',
-    references: ''
+  const { form, isSubmitting, handleSubmit } = useCreateBriefingForm({ 
+    onSubmit,
+    initialData
   });
-  
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
-    const { name, value } = e.target;
-    setFormData(prev => ({ ...prev, [name]: value }));
-  };
-  
-  const handleSelectChange = (name: string, value: string) => {
-    setFormData(prev => ({ ...prev, [name]: value }));
-  };
-  
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    
-    // Convert references string to array if provided
-    const references = formData.references 
-      ? formData.references.split('\n').filter(ref => ref.trim() !== '')
-      : [];
+  const { toast } = useToast();
+  const { addProject } = usePreviewProjects();
+  const { addCustomer, getCustomerByEmail } = useCustomers();
+
+  const processFormSubmit = async (data: BriefingFormValues) => {
+    try {
+      // First, check if client exists or create a new one
+      let clientId: string | null = null;
       
-    onSubmit({
-      ...formData,
-      references
-    });
+      const { data: existingClients, error: clientError } = await supabase
+        .from('clients')
+        .select('id')
+        .eq('email', data.email)
+        .limit(1);
+      
+      if (clientError) {
+        throw clientError;
+      }
+      
+      if (existingClients && existingClients.length > 0) {
+        clientId = existingClients[0].id;
+        
+        // Atualizar informações do cliente caso tenha mudado
+        await supabase
+          .from('clients')
+          .update({
+            name: data.name,
+            phone: data.phone.fullNumber // Armazenar no formato internacional
+          })
+          .eq('id', clientId);
+      } else {
+        // Create a new client
+        const { data: newClient, error: newClientError } = await supabase
+          .from('clients')
+          .insert([
+            {
+              name: data.name,
+              email: data.email,
+              phone: data.phone.fullNumber // Armazenar no formato internacional
+            }
+          ])
+          .select()
+          .single();
+        
+        if (newClientError) {
+          throw newClientError;
+        }
+        
+        clientId = newClient.id;
+        
+        // Enviar notificação de novo cliente
+        await webhookService.sendItemNotification('new_customer', {
+          name: data.name,
+          email: data.email,
+          phone: data.phone.fullNumber,
+          createdAt: new Date().toISOString()
+        });
+      }
+      
+      // Create the briefing
+      const { data: newBriefing, error: briefingError } = await supabase
+        .from('briefings')
+        .insert([
+          {
+            client_id: clientId,
+            package_type: data.packageType as 'essencial' | 'profissional' | 'premium' | 'qualification',
+            status: 'pending',
+            data: {
+              description: data.description || 'Novo briefing',
+              name: data.name,
+              email: data.email,
+              phone: data.phone.fullNumber,
+              packageType: data.packageType,
+              createdAt: new Date().toISOString(),
+            }
+          }
+        ])
+        .select()
+        .single();
+      
+      if (briefingError) {
+        throw briefingError;
+      }
+      
+      // Also add or update customer in the local storage system
+      let existingCustomer = getCustomerByEmail(data.email);
+      if (!existingCustomer) {
+        addCustomer({
+          name: data.name,
+          email: data.email,
+          phone: data.phone.fullNumber,
+          status: 'active',
+          projects: 1,
+          createdAt: new Date().toISOString()
+        });
+      }
+      
+      // Generate a consistent project ID based on the briefing ID
+      // Use the Supabase briefing ID directly to ensure consistency
+      const projectId = newBriefing.id;
+      
+      // Create a preview project automatically linked to this briefing
+      const expirationDate = new Date();
+      expirationDate.setDate(expirationDate.getDate() + 30); // 30-day expiration
+      
+      const previewProject = {
+        id: projectId, // Use the same ID as the briefing
+        clientName: data.name,
+        clientEmail: data.email,
+        clientPhone: data.phone.fullNumber,
+        packageType: data.packageType,
+        createdAt: new Date().toLocaleDateString('pt-BR'),
+        status: 'waiting' as const,
+        versions: 0,
+        previewUrl: `/preview/${projectId}`,
+        expirationDate: expirationDate.toLocaleDateString('pt-BR'),
+        lastActivityDate: new Date().toLocaleDateString('pt-BR'),
+        briefingId: newBriefing.id,
+        versionsList: []
+      };
+      
+      // Add the project with a specific ID instead of generating a new one
+      addProject(previewProject);
+      console.log(`Created project ${projectId} for briefing ${newBriefing.id}`);
+      
+      // Call the passed onSubmit to update the UI
+      onSubmit(data);
+      
+      toast({
+        title: "Briefing criado",
+        description: `O briefing foi criado com sucesso e o projeto de prévia foi iniciado automaticamente.`
+      });
+      
+    } catch (error: any) {
+      console.error('Error creating briefing:', error);
+      toast({
+        title: "Erro ao criar briefing",
+        description: error.message || "Não foi possível criar o briefing",
+        variant: "destructive"
+      });
+      
+      // Re-throw so the form stays in error state
+      throw error;
+    }
   };
-  
+
   return (
-    <form onSubmit={handleSubmit} className="space-y-4">
-      <div className="space-y-2">
-        <Label htmlFor="name">Nome do Cliente</Label>
-        <Input 
-          id="name"
-          name="name"
-          value={formData.name}
-          onChange={handleChange}
-          required
-        />
-      </div>
-      
-      <div className="space-y-2">
-        <Label htmlFor="email">Email</Label>
-        <Input 
-          id="email"
-          name="email"
-          type="email"
-          value={formData.email}
-          onChange={handleChange}
-          required
-        />
-      </div>
-      
-      <div className="space-y-2">
-        <Label htmlFor="phone">Telefone</Label>
-        <Input 
-          id="phone"
-          name="phone"
-          value={formData.phone}
-          onChange={handleChange}
-        />
-      </div>
-      
-      <div className="space-y-2">
-        <Label htmlFor="packageType">Pacote</Label>
-        <Select 
-          value={formData.packageType}
-          onValueChange={(value) => handleSelectChange('packageType', value)}
-        >
-          <SelectTrigger>
-            <SelectValue placeholder="Selecionar pacote" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="essencial">Essencial</SelectItem>
-            <SelectItem value="profissional">Profissional</SelectItem>
-            <SelectItem value="premium">Premium</SelectItem>
-          </SelectContent>
-        </Select>
-      </div>
-      
-      <div className="space-y-2">
-        <Label htmlFor="description">Descrição do Projeto</Label>
-        <Textarea 
-          id="description"
-          name="description"
-          value={formData.description}
-          onChange={handleChange}
-          placeholder="Descreva o projeto musical detalhadamente"
-          rows={4}
-          required
-        />
-      </div>
-      
-      <div className="space-y-2">
-        <Label htmlFor="musicStyle">Estilo Musical</Label>
-        <Input 
-          id="musicStyle"
-          name="musicStyle"
-          value={formData.musicStyle}
-          onChange={handleChange}
-          placeholder="Pop, Rock, Jazz, Clássico, etc."
-        />
-      </div>
-      
-      <div className="space-y-2">
-        <Label htmlFor="references">Referências Musicais</Label>
-        <Textarea 
-          id="references"
-          name="references"
-          value={formData.references}
-          onChange={handleChange}
-          placeholder="Uma referência por linha"
-          rows={3}
-        />
-      </div>
-      
-      <div className="flex justify-end gap-2 pt-4">
-        <Button type="button" variant="outline" onClick={onClose}>
-          Cancelar
-        </Button>
-        <Button type="submit">
-          Criar Briefing
-        </Button>
-      </div>
-    </form>
+    <div className="space-y-4">
+      <DialogHeader>
+        <DialogTitle>Criar Novo Briefing</DialogTitle>
+        <DialogDescription>
+          Preencha os detalhes abaixo para adicionar um novo briefing.
+        </DialogDescription>
+      </DialogHeader>
+
+      <Form {...form}>
+        <form onSubmit={form.handleSubmit(data => handleSubmit(data, processFormSubmit))} className="space-y-4">
+          <ClientInfoSection form={form} />
+          <PackageInfoSection form={form} />
+          <FormFooter isSubmitting={isSubmitting} onClose={onClose} />
+        </form>
+      </Form>
+    </div>
   );
 };
 

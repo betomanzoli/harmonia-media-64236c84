@@ -1,136 +1,331 @@
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useCallback, useEffect } from 'react';
+import { createId } from '@paralleldrive/cuid2';
+import { supabase } from '@/lib/supabase';
+import { useToast } from '@/hooks/use-toast';
 
 export interface Briefing {
   id: string;
   name: string;
   email: string;
-  phoneNumber?: string;
+  phone?: string;
   packageType: string;
-  description: string;
-  musicStyle?: string;
-  references?: string[];
-  status: 'pending' | 'completed' | 'approved';
-  notes?: string;
   createdAt: string;
-  projectCreated?: boolean;
+  status: 'pending' | 'completed' | 'approved';
+  description?: string;
+  projectCreated: boolean;
+  formData?: any;
 }
 
-export function useBriefings() {
+export const useBriefings = () => {
   const [briefings, setBriefings] = useState<Briefing[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const { toast } = useToast();
 
-  const loadBriefings = useCallback(() => {
+  // Load briefings from Supabase
+  const fetchBriefings = useCallback(async () => {
     setIsLoading(true);
-    // Simulating API call
-    setTimeout(() => {
-      const savedBriefings = localStorage.getItem('briefings');
-      if (savedBriefings) {
-        setBriefings(JSON.parse(savedBriefings));
-      } else {
-        // Mock data if none exists
-        const mockBriefings: Briefing[] = [
-          {
-            id: 'bf-' + Math.random().toString(36).substring(2, 10),
-            name: 'João Silva',
-            email: 'joao@example.com',
-            phoneNumber: '(11) 99999-9999',
-            packageType: 'Premium',
-            description: 'Música para casamento com estilo romântico',
-            musicStyle: 'Pop Romântico',
-            references: ['https://youtube.com/example1', 'https://youtube.com/example2'],
-            status: 'pending',
-            createdAt: '2023-05-15',
-            projectCreated: false
-          },
-          {
-            id: 'bf-' + Math.random().toString(36).substring(2, 10),
-            name: 'Maria Oliveira',
-            email: 'maria@example.com',
-            phoneNumber: '(21) 98888-8888',
-            packageType: 'Essencial',
-            description: 'Jingle para comercial de TV',
-            musicStyle: 'Animado',
-            status: 'completed',
-            notes: 'Cliente solicitou entrega urgente',
-            createdAt: '2023-05-10',
-            projectCreated: true
-          }
-        ];
-        setBriefings(mockBriefings);
-        localStorage.setItem('briefings', JSON.stringify(mockBriefings));
+    
+    try {
+      const { data, error } = await supabase
+        .from('briefings')
+        .select(`
+          id,
+          package_type,
+          status,
+          data,
+          created_at,
+          updated_at,
+          completed_at,
+          project_id,
+          clients (
+            id,
+            name,
+            email,
+            phone
+          )
+        `)
+        .eq('is_deleted', false)
+        .order('created_at', { ascending: false });
+      
+      if (error) {
+        throw error;
       }
+      
+      // Transform data to match the Briefing interface
+      const transformedBriefings: Briefing[] = data.map((item: any) => ({
+        id: item.id,
+        name: item.clients?.name || 'Cliente sem nome',
+        email: item.clients?.email || 'sem email',
+        phone: item.clients?.phone || '',
+        packageType: item.package_type,
+        createdAt: new Date(item.created_at).toLocaleDateString('pt-BR'),
+        status: item.status,
+        description: item.data?.description || 'Sem descrição',
+        projectCreated: !!item.project_id,
+        formData: item.data || {}
+      }));
+      
+      setBriefings(transformedBriefings);
+    } catch (err: any) {
+      console.error('Error fetching briefings:', err);
+      setError(err.message);
+      
+      // Fallback to localStorage if Supabase fails
+      const storedBriefings = localStorage.getItem('harmonIA_briefings');
+      if (storedBriefings) {
+        setBriefings(JSON.parse(storedBriefings));
+      }
+    } finally {
       setIsLoading(false);
-    }, 500);
+    }
   }, []);
 
   useEffect(() => {
-    loadBriefings();
-  }, [loadBriefings]);
+    fetchBriefings();
+  }, [fetchBriefings]);
 
-  const createBriefing = (newBriefing: Omit<Briefing, 'id' | 'status' | 'createdAt'>) => {
-    const briefing: Briefing = {
-      ...newBriefing,
-      id: 'bf-' + Math.random().toString(36).substring(2, 10),
-      status: 'pending',
-      createdAt: new Date().toISOString().split('T')[0],
-      projectCreated: false
-    };
+  const addBriefing = useCallback((briefing: Omit<Briefing, 'id'>) => {
+    const id = `B${String(briefings.length + 1).padStart(3, '0')}`;
+    const newBriefing = { ...briefing, id };
     
-    setBriefings(prev => {
-      const updatedBriefings = [...prev, briefing];
-      localStorage.setItem('briefings', JSON.stringify(updatedBriefings));
-      return updatedBriefings;
-    });
+    // Store in local state
+    setBriefings(prev => [...prev, newBriefing as Briefing]);
     
-    return briefing;
-  };
+    // Save to localStorage for persistence
+    const allBriefings = [...briefings, newBriefing as Briefing];
+    localStorage.setItem('harmonIA_briefings', JSON.stringify(allBriefings));
+    
+    return id;
+  }, [briefings]);
 
-  const updateBriefing = (id: string, updates: Partial<Briefing>) => {
-    setBriefings(prev => {
-      const updatedBriefings = prev.map(briefing => 
+  const updateBriefingStatus = useCallback(async (id: string, status: Briefing['status']) => {
+    try {
+      // Update in Supabase
+      const { error } = await supabase
+        .from('briefings')
+        .update({ status })
+        .eq('id', id);
+      
+      if (error) {
+        throw error;
+      }
+      
+      // Update local state
+      setBriefings(prev => 
+        prev.map(briefing => 
+          briefing.id === id ? { ...briefing, status } : briefing
+        )
+      );
+      
+      // Also update localStorage
+      const updatedBriefings = briefings.map(briefing => 
+        briefing.id === id ? { ...briefing, status } : briefing
+      );
+      localStorage.setItem('harmonIA_briefings', JSON.stringify(updatedBriefings));
+      
+      return true;
+    } catch (err: any) {
+      console.error('Error updating briefing status:', err);
+      toast({
+        title: "Erro ao atualizar status",
+        description: err.message || "Não foi possível atualizar o status do briefing",
+        variant: "destructive"
+      });
+      return false;
+    }
+  }, [briefings, toast]);
+
+  const updateBriefing = useCallback(async (id: string, updates: Partial<Briefing>) => {
+    try {
+      // Get the existing briefing from state
+      const existingBriefing = briefings.find(b => b.id === id);
+      if (!existingBriefing) {
+        throw new Error("Briefing não encontrado");
+      }
+      
+      // Transform updates to match Supabase schema
+      const supabaseUpdates: any = {};
+      
+      // Only update the 'data' field in Supabase if formData is provided
+      if (updates.formData) {
+        supabaseUpdates.data = {
+          ...(existingBriefing.formData || {}),
+          ...updates.formData
+        };
+      }
+      
+      // Map status if provided
+      if (updates.status) {
+        supabaseUpdates.status = updates.status;
+      }
+      
+      // Update in Supabase
+      const { error } = await supabase
+        .from('briefings')
+        .update(supabaseUpdates)
+        .eq('id', id);
+      
+      if (error) {
+        throw error;
+      }
+      
+      // Update local state
+      setBriefings(prev => 
+        prev.map(briefing => 
+          briefing.id === id ? { ...briefing, ...updates } : briefing
+        )
+      );
+      
+      // Also update localStorage
+      const updatedBriefings = briefings.map(briefing => 
         briefing.id === id ? { ...briefing, ...updates } : briefing
       );
-      localStorage.setItem('briefings', JSON.stringify(updatedBriefings));
-      return updatedBriefings;
-    });
-  };
+      localStorage.setItem('harmonIA_briefings', JSON.stringify(updatedBriefings));
+      
+      return true;
+    } catch (err: any) {
+      console.error('Error updating briefing:', err);
+      toast({
+        title: "Erro ao atualizar briefing",
+        description: err.message || "Não foi possível atualizar o briefing",
+        variant: "destructive"
+      });
+      return false;
+    }
+  }, [briefings, toast]);
 
-  const deleteBriefing = (id: string) => {
-    setBriefings(prev => {
-      const updatedBriefings = prev.filter(briefing => briefing.id !== id);
-      localStorage.setItem('briefings', JSON.stringify(updatedBriefings));
-      return updatedBriefings;
-    });
-  };
+  const deleteBriefing = useCallback(async (id: string) => {
+    try {
+      // Soft delete in Supabase
+      const { error } = await supabase
+        .from('briefings')
+        .update({ is_deleted: true })
+        .eq('id', id);
+      
+      if (error) {
+        throw error;
+      }
+      
+      // Update local state
+      setBriefings(prev => prev.filter(briefing => briefing.id !== id));
+      
+      // Also update localStorage
+      const updatedBriefings = briefings.filter(briefing => briefing.id !== id);
+      localStorage.setItem('harmonIA_briefings', JSON.stringify(updatedBriefings));
+      
+      return true;
+    } catch (err: any) {
+      console.error('Error deleting briefing:', err);
+      toast({
+        title: "Erro ao excluir briefing",
+        description: err.message || "Não foi possível excluir o briefing",
+        variant: "destructive"
+      });
+      
+      // Fallback to just removing from local state
+      setBriefings(prev => prev.filter(briefing => briefing.id !== id));
+      const updatedBriefings = briefings.filter(briefing => briefing.id !== id);
+      localStorage.setItem('harmonIA_briefings', JSON.stringify(updatedBriefings));
+      
+      return false;
+    }
+  }, [briefings, toast]);
 
-  const updateBriefingStatus = (id: string, status: Briefing['status']) => {
-    updateBriefing(id, { status });
-  };
-
-  const createProjectFromBriefing = (briefing: Briefing) => {
-    // Mark briefing as having a project
-    updateBriefing(briefing.id, { projectCreated: true });
-    
-    // In a real app, this would create a project in another system/table
-    // For now, we just return a mock project ID
-    const projectId = 'prj-' + Math.random().toString(36).substring(2, 8);
-    console.log(`Created project ${projectId} from briefing ${briefing.id}`);
-    
-    return projectId;
-  };
+  const createProjectFromBriefing = useCallback(async (briefing: Briefing) => {
+    try {
+      // Create a project in Supabase
+      const { data: project, error } = await supabase
+        .from('projects')
+        .insert([
+          {
+            title: briefing.description || `Projeto para ${briefing.name}`,
+            client_id: briefing.formData?.client_id,
+            status: 'waiting',
+            description: briefing.description
+          }
+        ])
+        .select()
+        .single();
+      
+      if (error) {
+        throw error;
+      }
+      
+      // Update the briefing to link it to the project
+      const { error: updateError } = await supabase
+        .from('briefings')
+        .update({ project_id: project.id })
+        .eq('id', briefing.id);
+      
+      if (updateError) {
+        throw updateError;
+      }
+      
+      // Update local state
+      setBriefings(prev => 
+        prev.map(b => 
+          b.id === briefing.id ? { ...b, projectCreated: true } : b
+        )
+      );
+      
+      // Save updated briefings
+      const updatedBriefings = briefings.map(b => 
+        b.id === briefing.id ? { ...b, projectCreated: true } : b
+      );
+      localStorage.setItem('harmonIA_briefings', JSON.stringify(updatedBriefings));
+      
+      return project.id;
+    } catch (err: any) {
+      console.error('Error creating project from briefing:', err);
+      toast({
+        title: "Erro ao criar projeto",
+        description: err.message || "Não foi possível criar o projeto a partir do briefing",
+        variant: "destructive"
+      });
+      
+      // Create a project ID for the fallback
+      const projectId = `P${String(Math.floor(Math.random() * 1000)).padStart(4, '0')}`;
+      
+      // Store in localStorage as fallback
+      // Create a project in localStorage
+      const storedProjects = localStorage.getItem('harmonIA_projects') || '[]';
+      const projects = JSON.parse(storedProjects);
+      
+      const newProject = {
+        id: projectId,
+        title: briefing.description || `Projeto para ${briefing.name}`,
+        clientName: briefing.name,
+        status: 'em_andamento',
+        deadline: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
+        createdAt: new Date().toISOString().split('T')[0],
+        packageType: briefing.packageType
+      };
+      
+      const updatedProjects = [...projects, newProject];
+      localStorage.setItem('harmonIA_projects', JSON.stringify(updatedProjects));
+      
+      // Update local state
+      setBriefings(prev => 
+        prev.map(b => 
+          b.id === briefing.id ? { ...b, projectCreated: true } : b
+        )
+      );
+      
+      return projectId;
+    }
+  }, [briefings, toast]);
 
   return {
     briefings,
     isLoading,
-    loadBriefings,
-    createBriefing,
+    error,
+    addBriefing,
+    updateBriefingStatus,
     updateBriefing,
     deleteBriefing,
-    updateBriefingStatus,
     createProjectFromBriefing,
-    fetchBriefings: loadBriefings,
-    error: null,
-    addBriefing: createBriefing
+    fetchBriefings
   };
-}
+};

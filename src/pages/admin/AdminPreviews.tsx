@@ -1,157 +1,145 @@
 
-import React, { useState, useRef } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
+import { useNavigate } from 'react-router-dom';
 import AdminLayout from '@/components/admin/layout/AdminLayout';
-import { Button } from '@/components/ui/button';
 import PreviewsHeader from '@/components/admin/previews/PreviewsHeader';
 import ProjectsTable from '@/components/admin/previews/ProjectsTable';
 import NewProjectForm from '@/components/admin/previews/NewProjectForm';
 import AdminPreviewGuide from '@/components/admin/guides/AdminPreviewGuide';
 import { usePreviewProjects } from '@/hooks/admin/usePreviewProjects';
-import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Button } from "@/components/ui/button";
+import { ArrowLeft } from 'lucide-react';
 import ClientSelectionDialog from '@/components/admin/ClientSelectionDialog';
-import { useCustomers } from '@/hooks/admin/useCustomers';
+import { Link } from 'react-router-dom';
 import { useToast } from '@/hooks/use-toast';
 
 const AdminPreviews: React.FC = () => {
-  const { projects } = usePreviewProjects();
+  const navigate = useNavigate();
+  const { projects, isLoading, loadProjects, deleteProject } = usePreviewProjects();
+  const [activeTab, setActiveTab] = useState<string>("projects");
+  const [isClientDialogOpen, setIsClientDialogOpen] = useState(false);
+  const newProjectFormRef = useRef<HTMLDivElement>(null);
   const { toast } = useToast();
-  const newFormRef = useRef<HTMLDivElement>(null);
-  
-  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
-  const [projectToDelete, setProjectToDelete] = useState<string | null>(null);
-  const [showNewForm, setShowNewForm] = useState(false);
-  const [showClientSelectionDialog, setShowClientSelectionDialog] = useState(false);
-  const [selectedClient, setSelectedClient] = useState<any>(null);
-  
-  // Add missing functions
-  const isLoading = false; // Simulated loading state
-  
-  const loadProjects = () => {
-    console.log('Loading projects...');
-    // Implementation would fetch projects from API
+
+  useEffect(() => {
+    loadProjects();
+  }, [loadProjects]);
+
+  const handleClientSelection = (option: 'new' | 'existing', clientId?: string) => {
+    setIsClientDialogOpen(false);
+    
+    if (option === 'new') {
+      // Navigate to create new client flow
+      navigate('/admin-j28s7d1k/clients/new');
+    } else if (option === 'existing' && clientId) {
+      // Navigate to new preview with existing client
+      navigate(`/admin-j28s7d1k/previews/new?clientId=${clientId}`);
+    }
+  };
+
+  const scrollToNewForm = () => {
+    newProjectFormRef.current?.scrollIntoView({ behavior: 'smooth' });
   };
   
-  const deleteProject = (id: string) => {
-    console.log(`Deleting project ${id}...`);
-    setProjectToDelete(id);
-    setShowDeleteConfirm(true);
-  };
-  
-  const handleConfirmDelete = () => {
-    if (projectToDelete) {
-      console.log(`Confirmed delete for project ${projectToDelete}`);
-      // In a real implementation, this would call an API to delete the project
-      setShowDeleteConfirm(false);
-      setProjectToDelete(null);
-      
+  const handleDeleteProject = (id: string) => {
+    if (window.confirm('Tem certeza que deseja excluir este projeto? Esta ação não pode ser desfeita.')) {
+      deleteProject(id);
       toast({
         title: "Projeto excluído",
-        description: `O projeto foi removido com sucesso.`
+        description: "O projeto foi excluído com sucesso"
       });
     }
   };
   
-  const handleAddProject = (projectData: any) => {
-    console.log('Adding new project:', projectData);
-    // In a real implementation, this would call an API to add the project
-    
-    setShowNewForm(false);
-    
-    toast({
-      title: "Projeto criado",
-      description: `O projeto para ${projectData.clientName} foi criado com sucesso.`
-    });
-  };
-  
-  const handleSendReminder = (projectId: string) => {
-    console.log(`Sending reminder for project ${projectId}`);
-    
+  const handleSendReminder = (id: string) => {
+    // Implementação para enviar lembrete
     toast({
       title: "Lembrete enviado",
-      description: `Um lembrete foi enviado para o cliente.`
+      description: "Um lembrete foi enviado para o cliente"
     });
   };
   
-  const scrollToNewForm = () => {
-    setShowNewForm(true);
-    setTimeout(() => {
-      newFormRef.current?.scrollIntoView({ behavior: 'smooth' });
-    }, 100);
+  const handleAddProject = (projectData: any) => {
+    // Implementation for adding projects
+    console.log("Adding project:", projectData);
+    toast({
+      title: "Projeto adicionado",
+      description: "O projeto foi adicionado com sucesso"
+    });
   };
-  
-  const handleClientSelection = (option: 'new' | 'existing', clientId?: string) => {
-    setShowClientSelectionDialog(false);
-    
-    if (option === 'new') {
-      setSelectedClient(null);
-      setShowNewForm(true);
-    } else if (option === 'existing' && clientId) {
-      // Here you would fetch client details or use a hook
-      const mockClient = {
-        id: clientId,
-        name: `Cliente ${clientId.substring(0, 4)}`,
-        email: `cliente${clientId.substring(0, 4)}@example.com`
-      };
-      
-      setSelectedClient(mockClient);
-      setShowNewForm(true);
-    }
-  };
-  
+
   return (
     <AdminLayout>
-      <div className="p-6">
-        <PreviewsHeader scrollToNewForm={scrollToNewForm} />
-        
-        <div className="mt-8 grid grid-cols-1 lg:grid-cols-3 gap-6">
-          <div className="lg:col-span-2 space-y-6">
+      <div className="p-6 space-y-6">
+        <div className="flex items-center justify-between">
+          <PreviewsHeader scrollToNewForm={scrollToNewForm} />
+          <div className="flex space-x-2">
+            <Button 
+              variant="outline" 
+              size="sm" 
+              asChild
+            >
+              <Link to="/admin-j28s7d1k/dashboard">
+                <ArrowLeft className="mr-2 h-4 w-4" />
+                Voltar ao Dashboard
+              </Link>
+            </Button>
+          </div>
+        </div>
+
+        <Tabs defaultValue="projects" value={activeTab} onValueChange={setActiveTab}>
+          <TabsList className="mb-4">
+            <TabsTrigger value="projects">Projetos de Prévias</TabsTrigger>
+            <TabsTrigger value="guide">Guia de Uso</TabsTrigger>
+          </TabsList>
+          
+          <TabsContent value="projects" className="space-y-6">
             <ProjectsTable 
               projects={projects} 
               isLoading={isLoading} 
-              onDelete={deleteProject} 
-              onSendReminder={handleSendReminder} 
+              onDelete={handleDeleteProject}
+              onSendReminder={handleSendReminder}
             />
             
-            {showNewForm && (
-              <div ref={newFormRef} className="bg-white p-6 border rounded-lg shadow-sm">
-                <h2 className="text-xl font-semibold mb-4">Criar Nova Prévia</h2>
-                <NewProjectForm 
-                  onSubmit={handleAddProject} 
-                  onCancel={() => setShowNewForm(false)}
-                  initialData={selectedClient}
-                />
+            {activeTab === "projects" && (
+              <div className="mt-8" ref={newProjectFormRef}>
+                <h2 className="text-2xl font-semibold mb-4">Criar Novo Projeto de Prévias</h2>
+                <div className="bg-gray-50 p-6 rounded-lg border">
+                  <div className="mb-6 text-center">
+                    <p className="text-gray-500 mb-4">Para criar um novo projeto de prévias, é recomendado seguir o fluxo completo:</p>
+                    <div className="flex flex-col md:flex-row justify-center items-center gap-4">
+                      <Button 
+                        variant="outline" 
+                        onClick={() => setIsClientDialogOpen(true)}
+                      >
+                        Criar Novo Projeto de Prévia
+                      </Button>
+                      <span className="text-gray-400">ou</span>
+                      <Button
+                        variant="default"
+                        asChild
+                      >
+                        <Link to="/admin-j28s7d1k/briefings">
+                          Iniciar pelo Briefing (Recomendado)
+                        </Link>
+                      </Button>
+                    </div>
+                  </div>
+                  <NewProjectForm onAddProject={handleAddProject} />
+                </div>
               </div>
             )}
-          </div>
+          </TabsContent>
           
-          <div>
+          <TabsContent value="guide">
             <AdminPreviewGuide />
-          </div>
-        </div>
-        
-        <AlertDialog open={showDeleteConfirm} onOpenChange={setShowDeleteConfirm}>
-          <AlertDialogContent>
-            <AlertDialogHeader>
-              <AlertDialogTitle>Confirmar exclusão</AlertDialogTitle>
-              <AlertDialogDescription>
-                Tem certeza que deseja excluir este projeto? Esta ação não pode ser desfeita.
-              </AlertDialogDescription>
-            </AlertDialogHeader>
-            <AlertDialogFooter>
-              <AlertDialogCancel>Cancelar</AlertDialogCancel>
-              <AlertDialogAction 
-                onClick={handleConfirmDelete}
-                className="bg-red-500 hover:bg-red-600"
-              >
-                Excluir
-              </AlertDialogAction>
-            </AlertDialogFooter>
-          </AlertDialogContent>
-        </AlertDialog>
+          </TabsContent>
+        </Tabs>
         
         <ClientSelectionDialog 
-          open={showClientSelectionDialog}
-          onClose={() => setShowClientSelectionDialog(false)}
+          open={isClientDialogOpen}
+          onClose={() => setIsClientDialogOpen(false)}
           onSelectClient={handleClientSelection}
         />
       </div>

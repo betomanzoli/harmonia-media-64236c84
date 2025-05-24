@@ -1,40 +1,94 @@
 
 import React from 'react';
-import { Badge } from '@/components/ui/badge';
-
-interface ProjectHeaderData {
-  projectTitle: string;
-  clientName: string;
-  status: string;
-}
+import { Button } from "@/components/ui/button";
+import { Share2 } from 'lucide-react';
 
 interface PreviewHeaderProps {
-  projectData: ProjectHeaderData;
+  projectData?: {
+    projectTitle: string;
+    clientName: string;
+    status: 'waiting' | 'feedback' | 'approved' | 'pending';
+    packageType?: string;
+    createdAt?: string;
+  };
+  onShareClick?: () => void;
 }
 
-const PreviewHeader: React.FC<PreviewHeaderProps> = ({ projectData }) => {
-  const getStatusBadge = (status: string) => {
+const PreviewHeader: React.FC<PreviewHeaderProps> = ({ 
+  projectData,
+  onShareClick
+}) => {
+  const title = projectData?.projectTitle || 'Prévia Musical';
+  const client = projectData?.clientName || 'Cliente';
+  const currentStatus = projectData?.status || 'waiting';
+  const packageType = projectData?.packageType;
+  const createdAt = projectData?.createdAt;
+
+  const getStatusLabel = (status: string) => {
     switch (status) {
-      case 'pending':
-        return <Badge variant="secondary">Aguardando feedback</Badge>;
+      case 'waiting':
+        return 'Aguardando avaliação';
       case 'feedback':
-        return <Badge variant="secondary">Feedback enviado</Badge>;
+        return 'Feedback enviado';
       case 'approved':
-        return <Badge variant="success">Aprovado</Badge>;
-      case 'completed':
-        return <Badge variant="success">Concluído</Badge>;
+        return 'Prévia aprovada';
       default:
-        return <Badge variant="secondary">Em andamento</Badge>;
+        return 'Em andamento';
+    }
+  };
+
+  const getStatusColor = (status: string) => {
+    switch (status) {
+      case 'waiting':
+        return 'bg-yellow-100 text-yellow-700';
+      case 'feedback':
+        return 'bg-blue-100 text-blue-700';
+      case 'approved':
+        return 'bg-green-100 text-green-700';
+      default:
+        return 'bg-gray-100 text-gray-700';
     }
   };
 
   return (
-    <div className="mb-6">
-      <h1 className="text-3xl font-bold mb-2">{projectData.projectTitle}</h1>
-      <div className="flex flex-wrap gap-2 items-center text-gray-600">
-        <span>Cliente: {projectData.clientName}</span>
-        <span className="mx-2">•</span>
-        {getStatusBadge(projectData.status)}
+    <div className="mb-8">
+      <div className="flex flex-col md:flex-row justify-between items-start md:items-center">
+        <div>
+          <h1 className="text-2xl md:text-3xl font-bold text-black mb-2">{title}</h1>
+          <p className="text-black">Cliente: {client}</p>
+          {packageType && <p className="text-sm text-gray-500">{packageType}</p>}
+          {createdAt && (
+            <p className="text-xs text-gray-400 mt-1">
+              Criado em: {new Date(createdAt).toLocaleDateString('pt-BR')}
+            </p>
+          )}
+        </div>
+        
+        <div className="flex items-center mt-4 md:mt-0">
+          {onShareClick && (
+            <Button 
+              variant="outline" 
+              size="sm" 
+              onClick={onShareClick} 
+              className="mr-2 text-sm"
+            >
+              <Share2 className="h-4 w-4 mr-1" />
+              Compartilhar
+            </Button>
+          )}
+          
+          <div className={`px-3 py-1 rounded-full text-sm font-medium ${getStatusColor(currentStatus)}`}>
+            {getStatusLabel(currentStatus)}
+          </div>
+        </div>
+      </div>
+      
+      <div className="mt-6 pt-6 border-t">
+        <h2 className="text-xl font-semibold text-black mb-2">Avaliação de Prévias Musicais</h2>
+        <p className="text-black">
+          Abaixo você encontrará as versões musicais para avaliação. 
+          Ouça cada uma delas e escolha sua favorita ou envie um feedback para ajustes.
+        </p>
       </div>
     </div>
   );

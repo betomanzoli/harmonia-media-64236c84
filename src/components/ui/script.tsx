@@ -1,64 +1,36 @@
 
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useRef } from 'react';
 
-interface ScriptProps {
+interface ScriptProps extends React.HTMLAttributes<HTMLScriptElement> {
   src: string;
-  onLoad?: () => void;
-  onError?: () => void;
-  async?: boolean;
-  defer?: boolean;
+  'data-preference-id'?: string;
+  'data-source'?: string;
 }
 
-// Component to load external scripts dynamically
-export const Script: React.FC<ScriptProps> = ({ 
-  src, 
-  onLoad, 
-  onError,
-  async = false,
-  defer = false
-}) => {
-  const [loaded, setLoaded] = useState(false);
-  const [error, setError] = useState(false);
+export const Script: React.FC<ScriptProps> = ({ src, ...props }) => {
+  const containerRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    // Check if script already exists
-    const existingScript = document.querySelector(`script[src="${src}"]`);
+    if (!containerRef.current) return;
     
-    if (existingScript) {
-      setLoaded(true);
-      return;
-    }
-
-    // Create script element
     const script = document.createElement('script');
     script.src = src;
-    script.async = async;
-    script.defer = defer;
     
-    // Event handlers
-    script.onload = () => {
-      setLoaded(true);
-      if (onLoad) onLoad();
-    };
+    // Adiciona todos os props como atributos
+    Object.entries(props).forEach(([key, value]) => {
+      if (value !== undefined && value !== null) {
+        script.setAttribute(key, value.toString());
+      }
+    });
     
-    script.onerror = () => {
-      setError(true);
-      if (onError) onError();
-    };
+    containerRef.current.appendChild(script);
     
-    // Add to document
-    document.body.appendChild(script);
-    
-    // Cleanup
     return () => {
-      // Only remove scripts we've added (not pre-existing ones)
-      if (script.parentNode) {
-        script.parentNode.removeChild(script);
+      if (containerRef.current && script.parentNode) {
+        containerRef.current.removeChild(script);
       }
     };
-  }, [src, async, defer, onLoad, onError]);
-
-  return null; // This component doesn't render anything
+  }, [src, props]);
+  
+  return <div ref={containerRef} className="mercadopago-button-container" />;
 };
-
-export default Script;
