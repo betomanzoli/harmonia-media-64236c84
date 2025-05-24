@@ -1,5 +1,5 @@
 
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
@@ -10,22 +10,21 @@ import { Label } from "@/components/ui/label";
 import { ArrowLeft, Check, CreditCard } from 'lucide-react';
 import { useToast } from "@/hooks/use-toast";
 import ContractTermsDialog from "@/components/payment/ContractTermsDialog";
-import { PackageId, packageData } from '@/lib/payment/packageData';
+import { packageData } from '@/lib/payment/packageData';
 import { packagePaymentLinks } from '@/lib/payment/paymentLinks';
 
 const Payment: React.FC = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
-  
-  const [selectedPackage, setSelectedPackage] = useState<PackageId>('profissional');
+  const [selectedPackage, setSelectedPackage] = useState('profissional');
   const [isTermsDialogOpen, setIsTermsDialogOpen] = useState(false);
   const [acceptedTerms, setAcceptedTerms] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
-  
-  const handleSelectPackage = (packageId: PackageId) => {
+
+  const handleSelectPackage = (packageId: string) => {
     setSelectedPackage(packageId);
   };
-  
+
   const handlePaymentClick = () => {
     if (acceptedTerms) {
       proceedToPayment();
@@ -33,15 +32,15 @@ const Payment: React.FC = () => {
       setIsTermsDialogOpen(true);
     }
   };
-  
+
   const handleAcceptTerms = async () => {
     setAcceptedTerms(true);
     setIsTermsDialogOpen(false);
     proceedToPayment();
   };
-  
+
   const proceedToPayment = () => {
-    const paymentLink = packagePaymentLinks[selectedPackage]?.standard.url;
+    const paymentLink = packagePaymentLinks[selectedPackage as keyof typeof packagePaymentLinks]?.standard.url;
     if (paymentLink) {
       window.location.href = paymentLink;
     } else {
@@ -53,14 +52,16 @@ const Payment: React.FC = () => {
     }
   };
 
+  const selectedPackageData = packageData[selectedPackage as keyof typeof packageData];
+
   return (
     <div className="min-h-screen bg-background">
       <Header />
       <main className="pt-24 pb-20 px-6 md:px-10">
         <div className="max-w-4xl mx-auto">
-          <Button 
-            variant="ghost" 
-            className="mb-6 flex items-center text-gray-500" 
+          <Button
+            variant="ghost"
+            className="mb-6 flex items-center text-gray-500"
             onClick={() => navigate('/pacotes')}
           >
             <ArrowLeft className="h-4 w-4 mr-2" />
@@ -76,18 +77,20 @@ const Payment: React.FC = () => {
                   <CardTitle>Escolha seu Pacote</CardTitle>
                 </CardHeader>
                 <CardContent>
-                  <RadioGroup value={selectedPackage} onValueChange={(value) => handleSelectPackage(value as PackageId)} className="space-y-4">
-                    {Object.entries(packageData).map(([id, pkg]) => (
-                      <div key={id} className={`flex items-start space-x-2 border p-4 rounded-lg ${selectedPackage === id ? 'border-harmonia-green bg-harmonia-green/10' : 'border-gray-200'}`}>
-                        <RadioGroupItem value={id} id={id} />
-                        <div className="flex-grow">
-                          <Label htmlFor={id} className="font-medium text-lg block mb-1">{pkg.name} - {pkg.price}</Label>
-                          <p className="text-sm text-gray-500 mb-2">{pkg.description}</p>
-                          <ul className="space-y-1">
+                  <RadioGroup value={selectedPackage} onValueChange={handleSelectPackage}>
+                    {Object.entries(packageData).map(([key, pkg]) => (
+                      <div key={key} className={`flex items-start space-x-4 p-4 rounded-lg ${selectedPackage === key ? 'bg-muted' : ''}`}>
+                        <RadioGroupItem value={key} id={`package-${key}`} />
+                        <div className="flex-1">
+                          <Label htmlFor={`package-${key}`} className="text-lg font-semibold">
+                            {pkg.name} - R$ {pkg.price}
+                          </Label>
+                          <p className="text-gray-500 mt-1">{pkg.description}</p>
+                          <ul className="mt-3 space-y-2">
                             {pkg.features.map((feature, index) => (
-                              <li key={index} className="flex items-start text-sm">
-                                <Check className="h-4 w-4 text-green-500 mr-1.5 mt-0.5 flex-shrink-0" />
-                                <span>{feature}</span>
+                              <li key={index} className="flex items-center">
+                                <Check className="h-4 w-4 text-green-500 mr-2" />
+                                <span className="text-sm">{feature}</span>
                               </li>
                             ))}
                           </ul>
@@ -100,53 +103,67 @@ const Payment: React.FC = () => {
               
               <Card>
                 <CardHeader>
-                  <CardTitle>Finalizar Pagamento</CardTitle>
+                  <CardTitle>Método de Pagamento</CardTitle>
                 </CardHeader>
                 <CardContent>
-                  <Button 
-                    onClick={handlePaymentClick}
-                    className="w-full bg-harmonia-green hover:bg-harmonia-green/90 flex items-center justify-center gap-2"
-                    disabled={isProcessing}
-                  >
-                    <CreditCard className="h-4 w-4" />
-                    {isProcessing ? "Processando..." : "Pagar agora"}
-                  </Button>
-                  
-                  <p className="text-sm text-gray-500 text-center mt-4">
-                    Ao clicar em "Pagar agora", você será redirecionado para o MercadoPago para finalizar sua compra com segurança.
-                  </p>
+                  <div className="flex items-center justify-between p-4 border rounded-lg">
+                    <div className="flex items-center">
+                      <CreditCard className="h-5 w-5 mr-3" />
+                      <div>
+                        <p className="font-medium">Cartão de Crédito / PIX</p>
+                        <p className="text-sm text-gray-500">Processado por Gateway Seguro</p>
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <img src="/visa.svg" alt="Visa" className="h-6" />
+                      <img src="/mastercard.svg" alt="Mastercard" className="h-6" />
+                      <img src="/pix.svg" alt="PIX" className="h-6" />
+                    </div>
+                  </div>
                 </CardContent>
               </Card>
             </div>
             
             <div>
-              <Card>
+              <Card className="sticky top-24">
                 <CardHeader>
                   <CardTitle>Resumo do Pedido</CardTitle>
                 </CardHeader>
                 <CardContent>
-                  {selectedPackage && (
-                    <div className="space-y-4">
-                      <div>
-                        <h3 className="font-medium">{packageData[selectedPackage].name}</h3>
-                        <p className="text-sm text-gray-500">{packageData[selectedPackage].description}</p>
-                      </div>
-                      
-                      <div className="border-t pt-4">
-                        <div className="flex justify-between">
-                          <span className="text-gray-600">Subtotal</span>
-                          <span>{packageData[selectedPackage].price}</span>
-                        </div>
-                      </div>
-                      
-                      <div className="border-t pt-4">
-                        <div className="flex justify-between font-bold">
-                          <span>Total</span>
-                          <span>{packageData[selectedPackage].price}</span>
-                        </div>
-                      </div>
+                  <div className="space-y-4">
+                    <div className="flex justify-between">
+                      <span>Pacote:</span>
+                      <span className="font-medium">{selectedPackageData.name}</span>
                     </div>
-                  )}
+                    
+                    <div className="flex justify-between">
+                      <span>Subtotal:</span>
+                      <span>R$ {selectedPackageData.price}</span>
+                    </div>
+                    
+                    <hr className="my-4" />
+                    
+                    <div className="flex justify-between text-lg font-bold">
+                      <span>Total:</span>
+                      <span>R$ {selectedPackageData.price}</span>
+                    </div>
+                    
+                    <Button
+                      className="w-full mt-4 bg-harmonia-green hover:bg-harmonia-green/90"
+                      onClick={handlePaymentClick}
+                      disabled={isProcessing}
+                    >
+                      {isProcessing ? "Processando..." : "Finalizar Compra"}
+                    </Button>
+                    
+                    <p className="text-xs text-center text-gray-500 mt-4">
+                      Ao finalizar a compra, você concorda com nossos{" "}
+                      <a href="/termos" className="text-harmonia-green">
+                        termos de serviço
+                      </a>
+                      .
+                    </p>
+                  </div>
                 </CardContent>
               </Card>
             </div>
@@ -158,11 +175,7 @@ const Payment: React.FC = () => {
       <ContractTermsDialog
         open={isTermsDialogOpen}
         onOpenChange={setIsTermsDialogOpen}
-        packageId={selectedPackage}
-        accepted={acceptedTerms}
-        onAcceptedChange={setAcceptedTerms}
-        onConfirm={handleAcceptTerms}
-        isLoading={isProcessing}
+        onAccept={handleAcceptTerms}
       />
     </div>
   );
