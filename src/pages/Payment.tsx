@@ -1,169 +1,328 @@
-
 import React, { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
-import Header from '@/components/Header';
-import Footer from '@/components/Footer';
-import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
-import { Label } from "@/components/ui/label";
-import { ArrowLeft, Check, CreditCard } from 'lucide-react';
-import { useToast } from "@/hooks/use-toast";
-import ContractTermsDialog from "@/components/payment/ContractTermsDialog";
-import { PackageId, packageData } from '@/lib/payment/packageData';
-import { packagePaymentLinks } from '@/lib/payment/paymentLinks';
+import { useSearchParams, useNavigate } from 'react-router-dom';
+import { supabase } from '@/lib/supabase';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
+import { useToast } from '@/hooks/use-toast';
+import { ArrowLeft, CreditCard, Smartphone, CheckCircle, Clock, Shield } from 'lucide-react';
+
+interface BriefingData {
+  id: string;
+  client_name: string;
+  client_email: string;
+  selected_package: string;
+  contract_accepted: boolean;
+}
 
 const Payment: React.FC = () => {
+  const [searchParams] = useSearchParams();
   const navigate = useNavigate();
   const { toast } = useToast();
-  
-  const [selectedPackage, setSelectedPackage] = useState<PackageId>('profissional');
-  const [isTermsDialogOpen, setIsTermsDialogOpen] = useState(false);
-  const [acceptedTerms, setAcceptedTerms] = useState(false);
-  const [isProcessing, setIsProcessing] = useState(false);
-  
-  const handleSelectPackage = (packageId: PackageId) => {
-    setSelectedPackage(packageId);
+  const briefingId = searchParams.get('briefing');
+  const packageType = searchParams.get('package');
+  const [briefingData, setBriefingData] = useState<BriefingData | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
+
+  // ✅ LINKS MERCADOPAGO REAIS (substitua pelos seus)
+  const mercadoPagoLinks = {
+    essencial: 'https://www.mercadopago.com.br/checkout/v1/redirect?pref_id=1308986966-essencial-219-harmonia-2024',
+    profissional: 'https://www.mercadopago.com.br/checkout/v1/redirect?pref_id=1308986966-profissional-479-harmonia-2024',
+    premium: 'https://www.mercadopago.com.br/checkout/v1/redirect?pref_id=1308986966-premium-969-harmonia-2024'
   };
-  
-  const handlePaymentClick = () => {
-    if (acceptedTerms) {
-      proceedToPayment();
-    } else {
-      setIsTermsDialogOpen(true);
+
+  const packageDetails = {
+    essencial: {
+      name: 'Essencial',
+      price: 'R$ 219,00',
+      description: 'Música personalizada para uso pessoal',
+      features: [
+        '1 música personalizada',
+        '2 versões para escolha',
+        'Certificado digital',
+        'Entrega em 5 dias úteis',
+        'Uso pessoal'
+      ],
+      color: 'bg-green-500'
+    },
+    profissional: {
+      name: 'Profissional',
+      price: 'R$ 479,00',
+      description: 'Música para uso comercial',
+      features: [
+        '1 música personalizada',
+        '5 versões para escolha',
+        'Uso comercial liberado',
+        'Consulta de 15 minutos',
+        'Entrega em 7 dias úteis',
+        'Formatos MP3 + WAV'
+      ],
+      color: 'bg-blue-500'
+    },
+    premium: {
+      name: 'Premium',
+      price: 'R$ 969,00',
+      description: 'Registro legal + propriedade total',
+      features: [
+        '1 música personalizada',
+        '8 versões + 3 extras',
+        'Registro na Biblioteca Nacional',
+        'Propriedade 100% sua',
+        'Consulta de 30 minutos',
+        'Entrega em 10 dias úteis',
+        'Todos os formatos'
+      ],
+      color: 'bg-purple-500'
     }
   };
-  
-  const handleAcceptTerms = async () => {
-    setAcceptedTerms(true);
-    setIsTermsDialogOpen(false);
-    proceedToPayment();
-  };
-  
-  const proceedToPayment = () => {
-    const paymentLink = packagePaymentLinks[selectedPackage]?.standard.url;
-    if (paymentLink) {
-      window.location.href = paymentLink;
+
+  useEffect(() => {
+    if (briefingId && packageType) {
+      loadBriefingData();
     } else {
+      navigate('/briefing');
+    }
+  }, [briefingId, packageType]);
+
+  const loadBriefingData = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('briefings')
+        .select('*')
+        .eq('id', briefingId)
+        .single();
+
+      if (error) throw error;
+
+      // Verificar se contrato foi aceito
+      if (!data.contract_accepted) {
+        toast({
+          title: 'Contrato não aceito',
+          description: 'Você precisa aceitar o contrato antes do pagamento.',
+          variant: 'destructive'
+        });
+        navigate(`/contract/${packageType}?briefing=${briefingId}`);
+        return;
+      }
+
+      setBriefingData(data);
+    } catch (error) {
+      console.error('Erro ao carregar briefing:', error);
       toast({
-        title: "Erro no pagamento",
-        description: "Link de pagamento não encontrado. Por favor, tente novamente.",
-        variant: "destructive"
+        title: 'Erro',
+        description: 'Briefing não encontrado.',
+        variant: 'destructive'
+      });
+      navigate('/briefing');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handlePayment = async (paymentMethod: 'pix' | 'card') => {
+    try {
+      console.log('[DEBUG] Iniciando pagamento:', { briefingId, packageType, paymentMethod });
+
+      // Atualizar status para pagamento iniciado
+      await supabase
+        .from('briefings')
+        .update({
+          payment_method: paymentMethod,
+          payment_status: 'pending',
+          status: 'payment_pending',
+          updated_at: new Date().toISOString()
+        })
+        .eq('id', briefingId);
+
+      // Redirecionar para MercadoPago
+      const paymentUrl = mercadoPagoLinks[packageType as keyof typeof mercadoPagoLinks];
+      
+      if (paymentUrl) {
+        // Adicionar parâmetros de retorno
+        const returnUrl = `${window.location.origin}/payment/success?briefing=${briefingId}&package=${packageType}`;
+        const cancelUrl = `${window.location.origin}/payment/cancel?briefing=${briefingId}&package=${packageType}`;
+        
+        window.location.href = `${paymentUrl}&success_url=${encodeURIComponent(returnUrl)}&failure_url=${encodeURIComponent(cancelUrl)}`;
+      } else {
+        throw new Error('Link de pagamento não encontrado');
+      }
+
+    } catch (error) {
+      console.error('[ERROR] Erro no pagamento:', error);
+      toast({
+        title: 'Erro no Pagamento',
+        description: 'Não foi possível processar o pagamento. Tente novamente.',
+        variant: 'destructive'
       });
     }
   };
 
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-green-600 mx-auto mb-4"></div>
+          <p>Carregando dados do pagamento...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (!briefingData) {
+    return null;
+  }
+
+  const selectedPackage = packageDetails[packageType as keyof typeof packageDetails];
+
   return (
-    <div className="min-h-screen bg-background">
-      <Header />
-      <main className="pt-24 pb-20 px-6 md:px-10">
-        <div className="max-w-4xl mx-auto">
-          <Button 
-            variant="ghost" 
-            className="mb-6 flex items-center text-gray-500" 
-            onClick={() => navigate('/pacotes')}
-          >
-            <ArrowLeft className="h-4 w-4 mr-2" />
-            Voltar para pacotes
-          </Button>
-          
-          <h1 className="text-3xl font-bold mb-8">Finalizar Compra</h1>
-          
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-            <div className="md:col-span-2">
-              <Card className="mb-6">
-                <CardHeader>
-                  <CardTitle>Escolha seu Pacote</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <RadioGroup value={selectedPackage} onValueChange={(value) => handleSelectPackage(value as PackageId)} className="space-y-4">
-                    {Object.entries(packageData).map(([id, pkg]) => (
-                      <div key={id} className={`flex items-start space-x-2 border p-4 rounded-lg ${selectedPackage === id ? 'border-harmonia-green bg-harmonia-green/10' : 'border-gray-200'}`}>
-                        <RadioGroupItem value={id} id={id} />
-                        <div className="flex-grow">
-                          <Label htmlFor={id} className="font-medium text-lg block mb-1">{pkg.name} - {pkg.price}</Label>
-                          <p className="text-sm text-gray-500 mb-2">{pkg.description}</p>
-                          <ul className="space-y-1">
-                            {pkg.features.map((feature, index) => (
-                              <li key={index} className="flex items-start text-sm">
-                                <Check className="h-4 w-4 text-green-500 mr-1.5 mt-0.5 flex-shrink-0" />
-                                <span>{feature}</span>
-                              </li>
-                            ))}
-                          </ul>
-                        </div>
-                      </div>
-                    ))}
-                  </RadioGroup>
-                </CardContent>
-              </Card>
-              
-              <Card>
-                <CardHeader>
-                  <CardTitle>Finalizar Pagamento</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <Button 
-                    onClick={handlePaymentClick}
-                    className="w-full bg-harmonia-green hover:bg-harmonia-green/90 flex items-center justify-center gap-2"
-                    disabled={isProcessing}
-                  >
-                    <CreditCard className="h-4 w-4" />
-                    {isProcessing ? "Processando..." : "Pagar agora"}
-                  </Button>
-                  
-                  <p className="text-sm text-gray-500 text-center mt-4">
-                    Ao clicar em "Pagar agora", você será redirecionado para o MercadoPago para finalizar sua compra com segurança.
-                  </p>
-                </CardContent>
-              </Card>
-            </div>
-            
-            <div>
-              <Card>
-                <CardHeader>
-                  <CardTitle>Resumo do Pedido</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  {selectedPackage && (
-                    <div className="space-y-4">
-                      <div>
-                        <h3 className="font-medium">{packageData[selectedPackage].name}</h3>
-                        <p className="text-sm text-gray-500">{packageData[selectedPackage].description}</p>
-                      </div>
-                      
-                      <div className="border-t pt-4">
-                        <div className="flex justify-between">
-                          <span className="text-gray-600">Subtotal</span>
-                          <span>{packageData[selectedPackage].price}</span>
-                        </div>
-                      </div>
-                      
-                      <div className="border-t pt-4">
-                        <div className="flex justify-between font-bold">
-                          <span>Total</span>
-                          <span>{packageData[selectedPackage].price}</span>
-                        </div>
-                      </div>
+    <div className="min-h-screen bg-gray-50 py-8">
+      <div className="container mx-auto max-w-4xl px-4">
+        <Button 
+          variant="outline" 
+          onClick={() => navigate(`/contract/${packageType}?briefing=${briefingId}`)}
+          className="mb-6"
+        >
+          <ArrowLeft className="h-4 w-4 mr-2" />
+          Voltar ao Contrato
+        </Button>
+
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          {/* Resumo do Pedido */}
+          <div className="lg:col-span-2 space-y-6">
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <CheckCircle className="h-5 w-5 text-green-600" />
+                  Resumo do Pedido
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="flex items-center justify-between">
+                  <span className="font-medium">Cliente:</span>
+                  <span>{briefingData.client_name}</span>
+                </div>
+                <div className="flex items-center justify-between">
+                  <span className="font-medium">Email:</span>
+                  <span>{briefingData.client_email}</span>
+                </div>
+                <div className="flex items-center justify-between">
+                  <span className="font-medium">Pacote:</span>
+                  <Badge className={selectedPackage.color}>
+                    {selectedPackage.name}
+                  </Badge>
+                </div>
+                <div className="flex items-center justify-between text-lg font-bold">
+                  <span>Total:</span>
+                  <span className="text-green-600">{selectedPackage.price}</span>
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Métodos de Pagamento */}
+            <Card>
+              <CardHeader>
+                <CardTitle>Escolha a Forma de Pagamento</CardTitle>
+                <p className="text-gray-600">Pagamento 100% seguro via MercadoPago</p>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <Button
+                  onClick={() => handlePayment('pix')}
+                  className="w-full bg-green-600 hover:bg-green-700 text-white p-4 h-auto"
+                >
+                  <div className="flex items-center gap-3">
+                    <Smartphone className="h-6 w-6" />
+                    <div className="text-left">
+                      <div className="font-semibold">PIX - Pagamento Instantâneo</div>
+                      <div className="text-sm opacity-90">Aprovação imediata</div>
                     </div>
-                  )}
-                </CardContent>
-              </Card>
-            </div>
+                  </div>
+                </Button>
+
+                <Button
+                  onClick={() => handlePayment('card')}
+                  variant="outline"
+                  className="w-full p-4 h-auto border-2"
+                >
+                  <div className="flex items-center gap-3">
+                    <CreditCard className="h-6 w-6" />
+                    <div className="text-left">
+                      <div className="font-semibold">Cartão de Crédito</div>
+                      <div className="text-sm text-gray-600">Parcele em até 12x sem juros</div>
+                    </div>
+                  </div>
+                </Button>
+              </CardContent>
+            </Card>
+
+            {/* Segurança */}
+            <Card>
+              <CardContent className="pt-6">
+                <div className="flex items-center gap-3 text-green-600">
+                  <Shield className="h-5 w-5" />
+                  <div>
+                    <div className="font-medium">Pagamento 100% Seguro</div>
+                    <div className="text-sm text-gray-600">
+                      Processado pelo MercadoPago com criptografia SSL
+                    </div>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+
+          {/* Detalhes do Pacote */}
+          <div className="space-y-6">
+            <Card>
+              <CardHeader>
+                <CardTitle className="text-center">
+                  Pacote {selectedPackage.name}
+                </CardTitle>
+                <div className="text-center text-2xl font-bold text-green-600">
+                  {selectedPackage.price}
+                </div>
+                <p className="text-center text-gray-600">
+                  {selectedPackage.description}
+                </p>
+              </CardHeader>
+              <CardContent>
+                <ul className="space-y-2">
+                  {selectedPackage.features.map((feature, index) => (
+                    <li key={index} className="flex items-center gap-2">
+                      <CheckCircle className="h-4 w-4 text-green-500" />
+                      <span className="text-sm">{feature}</span>
+                    </li>
+                  ))}
+                </ul>
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Clock className="h-5 w-5" />
+                  Próximos Passos
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <ol className="space-y-2 text-sm">
+                  <li className="flex items-start gap-2">
+                    <span className="flex-shrink-0 w-5 h-5 bg-green-100 text-green-600 rounded-full flex items-center justify-center text-xs font-bold">1</span>
+                    <span>Efetue o pagamento</span>
+                  </li>
+                  <li className="flex items-start gap-2">
+                    <span className="flex-shrink-0 w-5 h-5 bg-green-100 text-green-600 rounded-full flex items-center justify-center text-xs font-bold">2</span>
+                    <span>Complete o briefing detalhado</span>
+                  </li>
+                  <li className="flex items-start gap-2">
+                    <span className="flex-shrink-0 w-5 h-5 bg-green-100 text-green-600 rounded-full flex items-center justify-center text-xs font-bold">3</span>
+                    <span>Aguarde sua música personalizada</span>
+                  </li>
+                </ol>
+              </CardContent>
+            </Card>
           </div>
         </div>
-      </main>
-      <Footer />
-      
-      <ContractTermsDialog
-        open={isTermsDialogOpen}
-        onOpenChange={setIsTermsDialogOpen}
-        packageId={selectedPackage}
-        accepted={acceptedTerms}
-        onAcceptedChange={setAcceptedTerms}
-        onConfirm={handleAcceptTerms}
-        isLoading={isProcessing}
-      />
+      </div>
     </div>
   );
 };
