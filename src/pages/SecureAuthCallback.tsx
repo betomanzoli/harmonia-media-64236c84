@@ -1,3 +1,4 @@
+
 import React, { useEffect, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { supabase } from '@/lib/supabase';
@@ -27,10 +28,6 @@ const SecureAuthCallback = () => {
           const { data, error } = await supabase.auth.setSession({
             access_token: accessToken,
             refresh_token: refreshToken || '',
-            expires_at: Number(expiresAt),
-            expires_in: Math.floor((Number(expiresAt) - Date.now()) / 1000),
-            token_type: 'bearer',
-            user: null
           });
 
           if (error) {
