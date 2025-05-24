@@ -1,5 +1,5 @@
-
 import React from 'react';
+import { cn } from '@/lib/utils';
 
 interface CardProps {
   children: React.ReactNode;
@@ -8,7 +8,7 @@ interface CardProps {
 
 export function Card({ children, className = '' }: CardProps) {
   return (
-    <div className={`bg-white border border-gray-200 rounded-lg shadow-sm ${className}`}>
+    <div className={cn('rounded-lg border bg-white text-gray-950 shadow-sm', className)}>
       {children}
     </div>
   );
@@ -16,15 +16,7 @@ export function Card({ children, className = '' }: CardProps) {
 
 export function CardHeader({ children, className = '' }: CardProps) {
   return (
-    <div className={`px-6 py-4 border-b border-gray-200 ${className}`}>
-      {children}
-    </div>
-  );
-}
-
-export function CardContent({ children, className = '' }: CardProps) {
-  return (
-    <div className={`px-6 py-4 ${className}`}>
+    <div className={cn('flex flex-col space-y-1.5 p-6', className)}>
       {children}
     </div>
   );
@@ -32,7 +24,7 @@ export function CardContent({ children, className = '' }: CardProps) {
 
 export function CardTitle({ children, className = '' }: CardProps) {
   return (
-    <h3 className={`text-lg font-semibold ${className}`}>
+    <h3 className={cn('text-2xl font-semibold leading-none tracking-tight', className)}>
       {children}
     </h3>
   );
@@ -40,15 +32,23 @@ export function CardTitle({ children, className = '' }: CardProps) {
 
 export function CardDescription({ children, className = '' }: CardProps) {
   return (
-    <p className={`text-sm text-gray-600 ${className}`}>
+    <p className={cn('text-sm text-gray-500', className)}>
       {children}
     </p>
   );
 }
 
+export function CardContent({ children, className = '' }: CardProps) {
+  return (
+    <div className={cn('p-6 pt-0', className)}>
+      {children}
+    </div>
+  );
+}
+
 export function CardFooter({ children, className = '' }: CardProps) {
   return (
-    <div className={`px-6 py-4 border-t border-gray-200 ${className}`}>
+    <div className={cn('flex items-center p-6 pt-0', className)}>
       {children}
     </div>
   );
