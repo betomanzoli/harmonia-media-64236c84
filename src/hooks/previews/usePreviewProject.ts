@@ -1,37 +1,106 @@
-
 import { useState, useEffect } from 'react';
-import { usePreviewProject as useBasePreviewProject, MusicPreview, PreviewProject as BasePreviewProject } from '@/hooks/usePreviewProject';
 import { useToast } from '@/hooks/use-toast';
+import { supabase } from '@/lib/supabase';
 
-// Extend the PreviewProject interface to include additional fields
-export interface PreviewProject extends BasePreviewProject {
+export interface MusicPreview {
+  id: string;
+  title: string;
+  description: string;
+  audioUrl: string;
+  fileId?: string;
+  recommended?: boolean;
+}
+
+export interface PreviewProject {
+  clientName: string;
+  projectTitle: string;
+  status: 'waiting' | 'feedback' | 'approved';
+  previews: MusicPreview[];
+  packageType?: string;
+  createdAt?: string;
+  expiresAt?: string;
   useGoogleDrive?: boolean;
 }
 
-// Re-export the hook functionality but with a better directory structure
-export const usePreviewProject = (projectId: string | undefined) => {
+export const usePreviewProject = (projectId?: string) => {
   const { toast } = useToast();
-  const baseHook = useBasePreviewProject(projectId);
-  
-  // Wrap the updateProjectStatus to match the expected return type
-  const updateProjectStatus = async (newStatus: 'approved' | 'feedback', comments: string) => {
-    const result = await baseHook.updateProjectStatus(newStatus, comments);
-    return result;
+  const [projectData, setProjectData] = useState<PreviewProject | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const [accessTokenValid, setAccessTokenValid] = useState(true);
+
+  useEffect(() => {
+    const loadProject = async () => {
+      if (!projectId) {
+        setIsLoading(false);
+        return;
+      }
+
+      try {
+        const { data, error } = await supabase
+          .from('projects')
+          .select(`
+            client_name,
+            title,
+            status,
+            versions,
+            package_type,
+            created_at,
+            expires_at,
+            use_google_drive
+          `)
+          .eq('id', projectId)
+          .single();
+
+        if (error) throw error;
+
+        setProjectData({
+          clientName: data.client_name,
+          projectTitle: data.title,
+          status: data.status,
+          previews: data.versions,
+          packageType: data.package_type,
+          createdAt: data.created_at,
+          expiresAt: data.expires_at,
+          useGoogleDrive: data.use_google_drive
+        });
+
+      } catch (error) {
+        console.error('Error loading project:', error);
+        toast({
+          title: "Erro de carregamento",
+          description: "Não foi possível carregar o projeto",
+          variant: "destructive"
+        });
+        setAccessTokenValid(false);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    loadProject();
+  }, [projectId, toast]);
+
+  const updateProjectStatus = async (newStatus: 'approved' | 'feedback', comments: string): Promise<boolean> => {
+    if (!projectId) return false;
+
+    try {
+      await supabase
+        .from('projects')
+        .update({ status: newStatus })
+        .eq('id', projectId);
+      return true;
+    } catch (error) {
+      console.error('Error updating status:', error);
+      return false;
+    }
   };
-  
-  // Return the baseHook with the proper type and wrapped function
-  return {
-    ...baseHook,
-    updateProjectStatus
-  } as {
-    projectData: PreviewProject | null;
-    setProjectData: React.Dispatch<React.SetStateAction<PreviewProject | null>>;
-    isLoading: boolean;
-    updateProjectStatus: (newStatus: 'approved' | 'feedback', comments: string) => Promise<boolean>;
-    accessTokenValid: boolean;
-    originalProjectId: string | undefined;
+
+  return { 
+    projectData, 
+    setProjectData, 
+    isLoading,
+    updateProjectStatus,
+    accessTokenValid,
+    originalProjectId: projectId || ''
   };
 };
-
-// Re-export the MusicPreview type
-export type { MusicPreview };
