@@ -1,5 +1,6 @@
-
+// src/hooks/admin/usePreviewProjects.ts
 import { useState, useCallback, useEffect, useRef } from 'react';
+import { supabase } from '@/lib/supabase';
 
 export interface VersionItem {
   id: string;
@@ -16,21 +17,20 @@ export interface VersionItem {
 
 export interface ProjectItem {
   id: string;
-  clientName: string;
-  clientEmail: string;
-  clientPhone?: string;
-  packageType?: string;
-  createdAt: string;
+  client_name: string;
+  client_email: string;
+  client_phone?: string;
+  package_type?: string;
+  created_at: string;
   status: 'waiting' | 'feedback' | 'approved';
   versions: number;
-  previewUrl?: string;
-  expirationDate?: string;
-  lastActivityDate?: string;
-  versionsList?: VersionItem[];
-  briefingId?: string;
+  preview_url?: string;
+  expiration_date?: string;
+  last_activity_date?: string;
+  versions_list?: VersionItem[];
+  briefing_id?: string;
   history?: any[];
   feedback?: string;
-  [key: string]: any; // Allow for additional properties
 }
 
 export const usePreviewProjects = () => {
@@ -38,233 +38,86 @@ export const usePreviewProjects = () => {
   const [isLoading, setIsLoading] = useState(false);
   const loadingRef = useRef(false);
   const hasInitializedRef = useRef(false);
-  
-  // Load projects from localStorage on mount
+
+  // Carregar projetos do Supabase
   const loadProjects = useCallback(async () => {
-    // Avoid multiple simultaneous loading operations
-    if (loadingRef.current) {
-      console.log("Already loading projects, skipping duplicate call");
-      return projects;
-    }
+    if (loadingRef.current) return projects;
     
-    console.log("==== LOADING PROJECTS ====");
     loadingRef.current = true;
     setIsLoading(true);
-    
+
     try {
-      // Check if localStorage is available
-      const isLocalStorageAvailable = typeof localStorage !== 'undefined';
-      console.log("Is localStorage available:", isLocalStorageAvailable);
-      
-      if (isLocalStorageAvailable) {
-        const stored = localStorage.getItem('harmonIA_projects');
-        console.log("Retrieved from localStorage:", stored ? 'Data found' : 'No data');
-        
-        if (stored) {
-          try {
-            const parsedProjects = JSON.parse(stored);
-            console.log("Successfully parsed projects:", parsedProjects);
-            setProjects(parsedProjects);
-            console.log("Projects count:", parsedProjects.length);
-            hasInitializedRef.current = true;
-            loadingRef.current = false;
-            setIsLoading(false);
-            return parsedProjects;
-          } catch (parseError) {
-            console.error('Error parsing stored projects:', parseError);
-          }
-        }
-      }
-      
-      // Fallback to default data if no stored data or error
-      const defaultProjects = [
-        {
-          id: 'P0001',
-          clientName: 'Humberto Manzoli',
-          clientEmail: 'cliente@exemplo.com',
-          packageType: 'Essencial',
-          createdAt: new Date().toLocaleDateString('pt-BR'),
-          status: 'waiting' as const,
-          versions: 0,
-          previewUrl: `${window.location.origin}/preview/P0001`,
-          expirationDate: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toLocaleDateString('pt-BR'),
-          lastActivityDate: new Date().toLocaleDateString('pt-BR'),
-          versionsList: []
-        }
-      ];
-      
-      setProjects(defaultProjects);
-      console.log("Using default projects");
-      
-      // Save default data to localStorage
-      if (isLocalStorageAvailable) {
-        localStorage.setItem('harmonIA_projects', JSON.stringify(defaultProjects));
-      }
-      
-      hasInitializedRef.current = true;
-      loadingRef.current = false;
-      setIsLoading(false);
-      return defaultProjects;
+      const { data, error } = await supabase
+        .from('projects')
+        .select('*')
+        .order('created_at', { ascending: false });
+
+      if (error) throw error;
+
+      setProjects(data || []);
+      return data || [];
+
     } catch (error) {
-      console.error('Error loading projects:', error);
+      console.error('Erro ao carregar projetos:', error);
+      return [];
+    } finally {
       loadingRef.current = false;
       setIsLoading(false);
-      return [];
     }
   }, [projects]);
-  
-  // Load projects on component mount (but only once)
+
+  // Sync inicial
   useEffect(() => {
     if (!hasInitializedRef.current) {
       loadProjects();
+      hasInitializedRef.current = true;
     }
   }, [loadProjects]);
-  
-  // Save projects to localStorage whenever they change
-  useEffect(() => {
-    if (projects.length > 0 && !isLoading) {
-      localStorage.setItem('harmonIA_projects', JSON.stringify(projects));
-    }
-  }, [projects, isLoading]);
-  
-  // Get a specific project by ID - optimized to do less work
-  const getProjectById = useCallback((id: string) => {
-    if (!id) return null;
-    
-    if (projects.length === 0 && !hasInitializedRef.current) {
-      console.log("No projects loaded yet, can't find project:", id);
-      return null;
-    }
-    
-    // Debug the search process
-    console.log(`Looking for project with ID: ${id} among ${projects.length} projects`);
-    
-    // Try to find with exact match first
-    let project = projects.find(p => p.id === id);
-    if (project) {
-      console.log("Project found with exact match");
-      return project;
-    }
-    
-    // If not found, try with case-insensitive comparison
-    project = projects.find(p => 
-      p.id.toLowerCase() === id.toLowerCase()
-    );
-    if (project) {
-      console.log("Project found with case-insensitive match");
-      return project;
-    }
-    
-    // If still not found, try with trimmed strings
-    project = projects.find(p => 
-      p.id.trim() === id.trim()
-    );
-    if (project) {
-      console.log("Project found with trimmed match");
-      return project;
-    }
-    
-    console.log(`No project found with ID: ${id}`);
-    return null;
-  }, [projects]);
-  
-  // Add a new project
-  const addProject = useCallback((project: Omit<ProjectItem, 'id'> & { id?: string }) => {
-    // If an ID is provided, use it; otherwise generate a new one
-    const projectId = project.id || `P${String(projects.length + 1).padStart(4, '0')}`;
-    
-    const newProject: ProjectItem = {
-      ...project,
-      id: projectId,
-      clientName: project.clientName || 'Unknown Client',
-      clientEmail: project.clientEmail || 'unknown@example.com',
-      createdAt: project.createdAt || new Date().toLocaleDateString('pt-BR'),
-      status: project.status || 'waiting',
-      versions: project.versions || 0
-    };
-    
-    setProjects(prev => {
-      // Make sure we're not adding a duplicate
-      const projectExists = prev.some(p => p.id === projectId);
-      if (projectExists) {
-        console.log(`Project with ID ${projectId} already exists, updating instead of adding`);
-        return prev.map(p => p.id === projectId ? { ...p, ...newProject } : p);
-      }
-      
-      return [...prev, newProject];
-    });
-    
-    return projectId;
-  }, [projects]);
-  
-  // Update an existing project
-  const updateProject = useCallback((id: string, updates: Partial<ProjectItem>) => {
-    if (!id) return false;
-    
-    console.log(`Updating project with ID: ${id}`, updates);
-    
-    // Find the project by ID, case-insensitive
-    let foundIndex = projects.findIndex(p => p.id.toLowerCase() === id.toLowerCase());
-    
-    if (foundIndex === -1) {
-      console.log(`Project with ID ${id} not found, cannot update.`);
-      return false;
-    }
-    
-    // Get the existing project
-    const existingProject = projects[foundIndex];
-    
-    // Handle history entries - append new to existing
-    const updatedHistory = (() => {
-      if (!updates.history) return existingProject.history || [];
-      
-      const currentHistory = existingProject.history || [];
-      return [...currentHistory, ...updates.history];
-    })();
-    
-    // Handle versionsList - special logic for adding/updating versions
-    const updatedVersionsList = (() => {
-      if (!updates.versionsList) return existingProject.versionsList || [];
-      
-      return updates.versionsList;
-    })();
-    
-    // Create the updated project
-    const updatedProject = {
-      ...existingProject,
-      ...updates,
-      history: updatedHistory,
-      versionsList: updatedVersionsList
-    };
-    
-    // Update the projects array
-    setProjects(prev => 
-      prev.map((p, index) => 
-        index === foundIndex ? updatedProject : p
-      )
-    );
-    
-    console.log("Project updated successfully");
-    return true;
-  }, [projects]);
-  
-  // Delete a project
-  const deleteProject = useCallback((id: string) => {
-    if (!id) return false;
-    
-    setProjects(prev => prev.filter(p => p.id !== id));
-    return true;
+
+  // Operações CRUD
+  const addProject = useCallback(async (project: Omit<ProjectItem, 'id'>) => {
+    const { data, error } = await supabase
+      .from('projects')
+      .insert(project)
+      .select();
+
+    if (data) setProjects(prev => [...prev, data[0]]);
+    return { data, error };
   }, []);
-  
+
+  const updateProject = useCallback(async (id: string, updates: Partial<ProjectItem>) => {
+    const { data, error } = await supabase
+      .from('projects')
+      .update(updates)
+      .eq('id', id)
+      .select();
+
+    if (data) {
+      setProjects(prev => 
+        prev.map(p => p.id === id ? { ...p, ...data[0] } : p)
+      );
+    }
+    return { data, error };
+  }, []);
+
+  const deleteProject = useCallback(async (id: string) => {
+    const { error } = await supabase
+      .from('projects')
+      .delete()
+      .eq('id', id);
+
+    if (!error) {
+      setProjects(prev => prev.filter(p => p.id !== id));
+    }
+    return { error };
+  }, []);
+
   return {
     projects,
     isLoading,
     loadProjects,
-    getProjectById,
     addProject,
     updateProject,
     deleteProject
   };
 };
-
-export default usePreviewProjects;
