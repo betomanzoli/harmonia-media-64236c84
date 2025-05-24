@@ -16,7 +16,7 @@ import {
   Music
 } from 'lucide-react';
 import PreviewPlayerList from './PreviewPlayerList';
-import PreviewProjectDetails from './ProjectDetails';
+import PreviewProjectDetails from './PreviewProjectDetails';
 import { supabase } from '@/integrations/supabase/client';
 
 interface MusicPreview {
