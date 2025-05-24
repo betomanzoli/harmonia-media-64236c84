@@ -43,14 +43,15 @@ import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { useBriefings } from '@/hooks/admin/useBriefings';
 import CreateBriefingForm from '@/components/admin/briefings/CreateBriefingForm';
 import BriefingDetailForm from '@/components/admin/briefings/BriefingDetailForm';
+import { supabase } from '@/lib/supabase';
 import { useCustomers } from '@/hooks/admin/useCustomers';
 import ClientSelectionDialog from '@/components/admin/ClientSelectionDialog';
 
 const AdminBriefings: React.FC = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
-  const { briefings, isLoading, error, createBriefing, deleteBriefing, updateBriefing, loadBriefings } = useBriefings();
-  const { customers } = useCustomers();
+  const { briefings, isLoading, error, addBriefing, updateBriefingStatus, deleteBriefing, createProjectFromBriefing, updateBriefing, fetchBriefings } = useBriefings();
+  const { customers, getCustomerByEmail } = useCustomers();
   
   const [searchTerm, setSearchTerm] = useState('');
   const [showCreateDialog, setShowCreateDialog] = useState(false);
@@ -65,31 +66,47 @@ const AdminBriefings: React.FC = () => {
   const [showEditDialog, setShowEditDialog] = useState(false);
   
   // State for client selection dialog and selected client
+  // IMPORTANT: Moved these state declarations to the top level, not inside conditional
   const [showClientSelectionDialog, setShowClientSelectionDialog] = useState(false);
   const [selectedClient, setSelectedClient] = useState<any>(null);
   
   // Refresh briefings when component mounts
   useEffect(() => {
-    loadBriefings();
-  }, [loadBriefings]);
+    fetchBriefings();
+  }, [fetchBriefings]);
 
   // Filter briefings based on search term
   const filteredBriefings = briefings.filter(
     (briefing) =>
-      briefing.clientName.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      briefing.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
       briefing.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
       briefing.id.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
-  const handleCreateBriefing = async () => {
-    setShowCreateDialog(false);
-    toast({
-      title: "Briefing criado",
-      description: `O briefing foi criado com sucesso.`
-    });
-    
-    // Refresh briefings
-    loadBriefings();
+  const handleCreateBriefing = async (briefingData: any) => {
+    try {
+      console.log("Creating briefing with data:", briefingData);
+      
+      // The actual database operation is now handled in the CreateBriefingForm component
+      // This function is now mainly for UI state management
+      
+      setShowCreateDialog(false);
+      toast({
+        title: "Briefing criado",
+        description: `O briefing foi criado com sucesso.`
+      });
+      
+      // Refresh briefings
+      fetchBriefings();
+      
+    } catch (error: any) {
+      console.error('Error creating briefing:', error);
+      toast({
+        title: "Erro ao criar briefing",
+        description: error.message || "Não foi possível criar o briefing",
+        variant: "destructive"
+      });
+    }
   };
 
   const handleViewBriefing = (briefing: any) => {
@@ -137,7 +154,7 @@ const AdminBriefings: React.FC = () => {
     const briefing = briefings.find(b => b.id === briefingId);
     if (!briefing) return;
     
-    const projectId = `proj_${Date.now()}`;
+    const projectId = createProjectFromBriefing(briefing);
     
     toast({
       title: "Projeto criado",
@@ -172,18 +189,17 @@ const AdminBriefings: React.FC = () => {
     
     if (option === 'new') {
       // Open create briefing dialog with empty client data
-      setSelectedClient(null);
       setShowCreateDialog(true);
     } else if (option === 'existing' && clientId) {
       // Find the client and open create briefing dialog with client data
       const client = customers.find(c => c.id === clientId);
       if (client) {
-        setSelectedClient({
+        const initialData = {
           name: client.name,
           email: client.email,
           phone: client.phone || '',
-          company: client.company || ''
-        });
+        };
+        setSelectedClient(client);
         setShowCreateDialog(true);
       }
     }
@@ -229,7 +245,7 @@ const AdminBriefings: React.FC = () => {
               <h2 className="text-lg font-semibold text-red-700 mb-2">Erro ao carregar briefings</h2>
               <p className="text-red-600">{error}</p>
               <Button 
-                onClick={loadBriefings} 
+                onClick={fetchBriefings} 
                 variant="outline" 
                 className="mt-4 border-red-500 text-red-500 hover:bg-red-50"
               >
@@ -317,7 +333,7 @@ const AdminBriefings: React.FC = () => {
                           <TableCell className="font-medium">{briefing.id.slice(0, 8)}</TableCell>
                           <TableCell>
                             <div>
-                              <div className="font-medium">{briefing.clientName}</div>
+                              <div className="font-medium">{briefing.name}</div>
                               <div className="text-sm text-muted-foreground">
                                 {briefing.email}
                               </div>
@@ -420,7 +436,8 @@ const AdminBriefings: React.FC = () => {
       <Dialog open={showCreateDialog} onOpenChange={setShowCreateDialog}>
         <DialogContent className="sm:max-w-[550px]">
           <CreateBriefingForm 
-            onSuccess={handleCreateBriefing} 
+            onClose={() => setShowCreateDialog(false)} 
+            onSubmit={handleCreateBriefing}
             initialData={selectedClient}
           />
         </DialogContent>

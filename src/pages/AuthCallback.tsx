@@ -3,7 +3,7 @@ import React, { useEffect, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { supabase } from '@/lib/supabase';
 import { Loader2 } from 'lucide-react';
-import { setPreviewAccessCookie, setPreviewEmailCookie, debugCookies } from '@/utils/authCookies';
+import { setPreviewAccessCookie, setPreviewEmailCookie } from '@/utils/authCookies';
 import { useToast } from '@/hooks/use-toast';
 
 const AuthCallback: React.FC = () => {
@@ -16,7 +16,6 @@ const AuthCallback: React.FC = () => {
   useEffect(() => {
     const handleAuthCallback = async () => {
       console.log("Auth callback triggered");
-      debugCookies(); // Debug existing cookies
       
       try {
         // Handle the magic link callback
@@ -41,25 +40,12 @@ const AuthCallback: React.FC = () => {
             const projectId = redirectTo.replace('/preview/', '');
             console.log("Setting access cookie for project:", projectId);
             
-            // Set cookies for access - try multiple times with verification
-            let cookieSuccess = false;
-            for (let attempt = 0; attempt < 3 && !cookieSuccess; attempt++) {
-              // Set cookies for access
-              setPreviewAccessCookie(projectId);
-              
-              // Also set email cookie if we have it
-              if (data.session.user.email) {
-                setPreviewEmailCookie(projectId, data.session.user.email);
-              }
-              
-              // Verify cookie was set successfully
-              setTimeout(() => {
-                debugCookies();
-              }, 100);
-              
-              // Wait a bit and check again
-              await new Promise(resolve => setTimeout(resolve, 200));
-              cookieSuccess = true; // Assume success and continue
+            // Set cookies for access
+            setPreviewAccessCookie(projectId);
+            
+            // Also set email cookie if we have it
+            if (data.session.user.email) {
+              setPreviewEmailCookie(projectId, data.session.user.email);
             }
             
             // Show success toast
@@ -67,10 +53,6 @@ const AuthCallback: React.FC = () => {
               title: "Acesso autorizado",
               description: "Você foi autenticado com sucesso para acessar esta prévia.",
             });
-
-            // Force page reload instead of navigate to ensure clean state
-            window.location.href = redirectTo;
-            return;
           }
           
           // Navigate to the redirect URL

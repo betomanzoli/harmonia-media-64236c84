@@ -1,418 +1,281 @@
-
 import React, { useState, useEffect } from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { usePreviewProject } from '@/hooks/usePreviewProject';
+import { Loader2, Calendar, Music, MessageSquare, ArrowLeft, CheckCircle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { Textarea } from '@/components/ui/textarea';
-import { Badge } from '@/components/ui/badge';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { useToast } from '@/hooks/use-toast';
-import { 
-  Play, 
-  Pause, 
-  Volume2, 
-  Star, 
-  MessageCircle, 
-  CheckCircle, 
-  Clock,
-  Music
-} from 'lucide-react';
-import PreviewPlayerList from './PreviewPlayerList';
-import PreviewProjectDetails from './PreviewProjectDetails';
-import { supabase } from '@/integrations/supabase/client';
-
-interface MusicPreview {
-  id: string;
-  title: string;
-  description: string;
-  audioUrl?: string;
-  url?: string;
-  recommended?: boolean;
-}
+import { Textarea } from '@/components/ui/textarea';
+import PreviewPlayerList from '@/components/previews/player/PreviewPlayerList';
+import PreviewProjectDetails from '@/components/previews/PreviewProjectDetails';
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 
 interface MusicPreviewSystemProps {
   projectId: string;
-  userEmail?: string;
 }
 
-const MusicPreviewSystem: React.FC<MusicPreviewSystemProps> = ({ 
-  projectId, 
-  userEmail 
-}) => {
-  const { toast } = useToast();
-  const [projectData, setProjectData] = useState<any>(null);
-  const [isLoading, setIsLoading] = useState(true);
+const MusicPreviewSystem: React.FC<MusicPreviewSystemProps> = ({ projectId }) => {
+  const { projectData, isLoading, updateProjectStatus } = usePreviewProject(projectId);
   const [selectedVersion, setSelectedVersion] = useState<string | null>(null);
   const [feedback, setFeedback] = useState('');
-  const [isSubmittingFeedback, setIsSubmittingFeedback] = useState(false);
-  const [currentlyPlaying, setCurrentlyPlaying] = useState<string | null>(null);
-
-  // Carregar dados do projeto
+  const [submitting, setSubmitting] = useState(false);
+  const [playingAudio, setPlayingAudio] = useState<HTMLAudioElement | null>(null);
+  const { toast } = useToast();
+  
   useEffect(() => {
-    loadProjectData();
-  }, [projectId]);
-
-  const loadProjectData = async () => {
-    try {
-      setIsLoading(true);
-
-      // Buscar projeto na tabela preview_projects
-      const { data: previewProject, error: previewError } = await supabase
-        .from('preview_projects')
-        .select('*')
-        .eq('id', projectId)
-        .single();
-
-      if (previewError) {
-        console.error('Erro ao buscar projeto preview:', previewError);
-        // Fallback para dados mock se não encontrar no banco
-        setProjectData(createMockProjectData());
-        setIsLoading(false);
-        return;
-      }
-
-      // Buscar versões do projeto
-      const { data: versions, error: versionsError } = await supabase
-        .from('project_versions')
-        .select('*')
-        .eq('project_id', projectId)
-        .order('created_at', { ascending: false });
-
-      if (versionsError) {
-        console.error('Erro ao buscar versões:', versionsError);
-      }
-
-      const formattedVersions: MusicPreview[] = versions?.map(version => ({
-        id: version.version_id,
-        title: version.name,
-        description: version.description || 'Versão para aprovação',
-        audioUrl: version.audio_url || `https://drive.google.com/uc?export=download&id=${version.file_id}`,
-        recommended: version.recommended
-      })) || [];
-
-      setProjectData({
-        projectTitle: previewProject.project_title,
-        clientName: previewProject.client_name,
-        status: previewProject.status,
-        packageType: previewProject.package_type,
-        createdAt: previewProject.created_at,
-        expiresAt: previewProject.expiration_date,
-        previews: formattedVersions.length > 0 ? formattedVersions : createMockPreviews()
-      });
-
-    } catch (error) {
-      console.error('Erro ao carregar dados do projeto:', error);
-      setProjectData(createMockProjectData());
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  const createMockProjectData = () => ({
-    projectTitle: 'Música Personalizada',
-    clientName: 'Cliente',
-    status: 'waiting',
-    packageType: 'Profissional',
-    createdAt: new Date().toISOString(),
-    expiresAt: new Date(Date.now() + 14 * 24 * 60 * 60 * 1000).toISOString(),
-    previews: createMockPreviews()
-  });
-
-  const createMockPreviews = (): MusicPreview[] => [
-    {
-      id: 'v1',
-      title: 'Versão Acústica',
-      description: 'Versão suave com violão e piano',
-      audioUrl: 'https://drive.google.com/uc?export=download&id=1H62ylCwQYJ23BLpygtvNmCgwTDcHX6Cl',
-      recommended: true
-    },
-    {
-      id: 'v2',
-      title: 'Versão Orquestral',
-      description: 'Arranjo completo com cordas e metais',
-      audioUrl: 'https://drive.google.com/uc?export=download&id=11c6JahRd5Lx0iKCL_gHZ0zrZ3LFBJ47a'
-    },
-    {
-      id: 'v3',
-      title: 'Versão Minimalista',
-      description: 'Abordagem simplificada com foco na melodia',
-      audioUrl: 'https://drive.google.com/uc?export=download&id=1fCsWubN8pXwM-mRlDtnQFTCkBbIkuUyW'
-    }
-  ];
-
-  const handleVersionSelect = (versionId: string) => {
-    setSelectedVersion(versionId);
-  };
-
-  const handlePlay = (preview: MusicPreview) => {
-    if (currentlyPlaying === preview.id) {
-      setCurrentlyPlaying(null);
-    } else {
-      setCurrentlyPlaying(preview.id);
+    // If project data is loaded and there are previews, select the first one
+    if (projectData && projectData.previews && projectData.previews.length > 0) {
+      // Try to find recommended preview first
+      const recommendedPreview = projectData.previews.find(p => p.recommended);
       
-      // Log da reprodução
-      if (userEmail) {
-        logPreviewAccess('play', preview.id);
+      if (recommendedPreview) {
+        setSelectedVersion(recommendedPreview.id);
+      } else {
+        // Otherwise select the first one
+        setSelectedVersion(projectData.previews[0].id);
       }
     }
-  };
-
-  const logPreviewAccess = async (action: string, versionId?: string) => {
-    try {
-      await supabase
-        .from('preview_access_logs')
-        .insert({
-          project_id: projectId,
-          email: userEmail || 'unknown',
-          accessed_at: new Date().toISOString()
+    
+    // Clean up any playing audio on dismount
+    return () => {
+      if (playingAudio) {
+        playingAudio.pause();
+        playingAudio.src = '';
+      }
+    };
+  }, [projectData]);
+  
+  const handlePlay = (preview: any) => {
+    // Stop any currently playing audio
+    if (playingAudio) {
+      playingAudio.pause();
+      playingAudio.src = '';
+    }
+    
+    // Create a new audio element and play it
+    if (preview.audioUrl) {
+      const audio = new Audio(preview.audioUrl);
+      audio.play().catch(error => {
+        console.error('Error playing audio:', error);
+        toast({
+          title: 'Erro ao reproduzir áudio',
+          description: 'Não foi possível reproduzir o áudio. Tente abrir no Google Drive.',
+          variant: 'destructive'
         });
-    } catch (error) {
-      console.error('Erro ao registrar acesso:', error);
+      });
+      
+      setPlayingAudio(audio);
+    } else if (preview.fileId) {
+      // If there's a fileId but no audioUrl, redirect to Google Drive
+      window.open(`https://drive.google.com/file/d/${preview.fileId}/view`, '_blank');
     }
   };
-
-  const handleSubmitFeedback = async () => {
+  
+  const handleVersionSelect = (id: string) => {
+    setSelectedVersion(id);
+  };
+  
+  const handleFeedbackSubmit = () => {
     if (!selectedVersion) {
       toast({
-        title: "Selecione uma versão",
-        description: "Por favor, selecione uma das versões antes de enviar.",
-        variant: "destructive"
+        title: 'Versão não selecionada',
+        description: 'Por favor, selecione uma versão antes de enviar seu feedback.',
+        variant: 'destructive'
       });
       return;
     }
-
+    
     if (!feedback.trim()) {
       toast({
-        title: "Feedback necessário",
-        description: "Por favor, escreva seu feedback antes de enviar.",
-        variant: "destructive"
+        title: 'Feedback vazio',
+        description: 'Por favor, escreva seu feedback antes de enviar.',
+        variant: 'destructive'
       });
       return;
     }
-
-    setIsSubmittingFeedback(true);
-
-    try {
-      // Salvar feedback no banco
-      const { error } = await supabase
-        .from('feedbacks')
-        .insert({
-          project_id: projectId,
-          user_email: userEmail || 'unknown',
-          comments: feedback,
-          status: 'pending'
+    
+    setSubmitting(true);
+    
+    // Update project status
+    const success = updateProjectStatus('feedback', feedback);
+    
+    setTimeout(() => {
+      setSubmitting(false);
+      
+      if (success) {
+        toast({
+          title: 'Feedback enviado',
+          description: 'Seu feedback foi enviado com sucesso.',
+          variant: 'default'
         });
-
-      if (error) {
-        throw error;
+        setFeedback('');
+      } else {
+        toast({
+          title: 'Erro ao enviar feedback',
+          description: 'Não foi possível enviar seu feedback. Tente novamente mais tarde.',
+          variant: 'destructive'
+        });
       }
-
-      // Atualizar status do projeto
-      await supabase
-        .from('preview_projects')
-        .update({ 
-          status: 'feedback',
-          last_activity_date: new Date().toISOString()
-        })
-        .eq('id', projectId);
-
-      toast({
-        title: "Feedback enviado!",
-        description: "Obrigado pelo seu feedback. Nossa equipe já está trabalhando nas modificações.",
-      });
-
-      setProjectData(prev => prev ? {...prev, status: 'feedback'} : null);
-      setFeedback('');
-      setSelectedVersion(null);
-
-    } catch (error) {
-      console.error('Erro ao enviar feedback:', error);
-      toast({
-        title: "Erro",
-        description: "Não foi possível enviar o feedback. Tente novamente.",
-        variant: "destructive"
-      });
-    } finally {
-      setIsSubmittingFeedback(false);
-    }
+    }, 1000); // Simulating API call delay
   };
-
-  const handleApprove = async () => {
+  
+  const handleApproveVersion = () => {
     if (!selectedVersion) {
       toast({
-        title: "Selecione uma versão",
-        description: "Por favor, selecione uma das versões antes de aprovar.",
-        variant: "destructive"
+        title: 'Versão não selecionada',
+        description: 'Por favor, selecione uma versão antes de aprovar.',
+        variant: 'destructive'
       });
       return;
     }
-
-    try {
-      // Salvar aprovação no banco
-      const { error } = await supabase
-        .from('feedbacks')
-        .insert({
-          project_id: projectId,
-          user_email: userEmail || 'unknown',
-          comments: `Versão aprovada: ${selectedVersion}`,
-          status: 'approved'
+    
+    setSubmitting(true);
+    
+    // Update project status
+    const success = updateProjectStatus('approved', feedback || 'Cliente aprovou a versão sem comentários adicionais.');
+    
+    setTimeout(() => {
+      setSubmitting(false);
+      
+      if (success) {
+        toast({
+          title: 'Versão aprovada',
+          description: 'Sua aprovação foi registrada com sucesso.',
+          variant: 'default'
         });
-
-      if (error) {
-        throw error;
+        setFeedback('');
+      } else {
+        toast({
+          title: 'Erro ao aprovar versão',
+          description: 'Não foi possível registrar sua aprovação. Tente novamente mais tarde.',
+          variant: 'destructive'
+        });
       }
-
-      // Atualizar status do projeto
-      await supabase
-        .from('preview_projects')
-        .update({ 
-          status: 'approved',
-          last_activity_date: new Date().toISOString()
-        })
-        .eq('id', projectId);
-
-      toast({
-        title: "Música aprovada!",
-        description: "Estamos felizes que você gostou! Vamos finalizar sua música e entregar em breve.",
-      });
-
-      setProjectData(prev => prev ? {...prev, status: 'approved'} : null);
-
-    } catch (error) {
-      console.error('Erro ao aprovar:', error);
-      toast({
-        title: "Erro",
-        description: "Não foi possível aprovar. Tente novamente.",
-        variant: "destructive"
-      });
-    }
+    }, 1000); // Simulating API call delay
   };
-
+  
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-gray-100 flex items-center justify-center">
-        <div className="text-center">
-          <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-harmonia-green"></div>
-          <p className="mt-4 text-gray-500">Carregando prévias...</p>
+      <div className="container mx-auto max-w-5xl px-4">
+        <div className="flex flex-col items-center justify-center py-12">
+          <Loader2 className="h-12 w-12 animate-spin text-harmonia-green mb-6" />
+          <p className="text-lg">Carregando prévia do projeto...</p>
         </div>
       </div>
     );
   }
-
+  
   if (!projectData) {
     return (
-      <div className="min-h-screen bg-gray-100 flex items-center justify-center">
-        <Card className="max-w-md w-full mx-4">
-          <CardContent className="py-8 text-center">
-            <Music className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-            <h3 className="text-lg font-medium text-gray-900 mb-2">
-              Prévia não encontrada
-            </h3>
-            <p className="text-gray-500">
-              O código de prévia fornecido não é válido ou expirou.
-            </p>
-          </CardContent>
-        </Card>
+      <div className="container mx-auto max-w-5xl px-4">
+        <div className="flex flex-col items-center justify-center py-12">
+          <div className="bg-white p-8 rounded-lg shadow-sm w-full max-w-lg text-center">
+            <h2 className="text-2xl font-bold text-black mb-4">Prévia não encontrada</h2>
+            <p className="text-black mb-6">Esta prévia não existe ou expirou. Por favor, verifique o link ou entre em contato conosco.</p>
+          </div>
+        </div>
       </div>
     );
   }
-
-  const getStatusBadge = (status: string) => {
-    switch (status) {
-      case 'waiting':
-        return <Badge className="bg-blue-500"><Clock className="mr-1 h-3 w-3" />Aguardando</Badge>;
-      case 'feedback':
-        return <Badge className="bg-yellow-500"><MessageCircle className="mr-1 h-3 w-3" />Feedback</Badge>;
-      case 'approved':
-        return <Badge className="bg-green-500"><CheckCircle className="mr-1 h-3 w-3" />Aprovado</Badge>;
-      default:
-        return <Badge>Desconhecido</Badge>;
-    }
-  };
-
+  
+  const selectedPreview = projectData.previews.find(p => p.id === selectedVersion);
+  const isApproved = projectData.status === 'approved';
+  
   return (
-    <div className="min-h-screen bg-gray-100 py-8">
-      <div className="container mx-auto max-w-4xl px-4">
-        {/* Header */}
-        <div className="text-center mb-8">
-          <h1 className="text-3xl font-bold text-gray-900 mb-2">
-            {projectData.projectTitle}
-          </h1>
-          <p className="text-gray-600 mb-4">
-            Projeto para {projectData.clientName}
-          </p>
-          {getStatusBadge(projectData.status)}
-        </div>
-
-        <div className="grid lg:grid-cols-3 gap-6">
-          {/* Prévias */}
-          <div className="lg:col-span-2 space-y-6">
-            <Card>
-              <CardHeader>
-                <CardTitle>Versões Disponíveis</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <PreviewPlayerList
-                  previews={projectData.previews}
-                  selectedVersion={selectedVersion}
-                  onVersionSelect={handleVersionSelect}
-                  onPlay={handlePlay}
-                />
-              </CardContent>
-            </Card>
-
-            {/* Feedback */}
-            <Card>
-              <CardHeader>
-                <CardTitle>Seu Feedback</CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <Textarea
-                  value={feedback}
-                  onChange={(e) => setFeedback(e.target.value)}
-                  placeholder="Conte-nos o que achou das versões. Que mudanças gostaria de ver?"
-                  rows={4}
-                  disabled={projectData.status === 'approved'}
-                />
-                
-                <div className="flex gap-3">
-                  <Button
-                    onClick={handleSubmitFeedback}
-                    disabled={!selectedVersion || !feedback.trim() || isSubmittingFeedback || projectData.status === 'approved'}
-                    variant="outline"
-                  >
-                    {isSubmittingFeedback ? 'Enviando...' : 'Solicitar Mudanças'}
-                  </Button>
-                  
-                  <Button
-                    onClick={handleApprove}
-                    disabled={!selectedVersion || projectData.status === 'approved'}
-                    className="bg-harmonia-green hover:bg-harmonia-green/90"
-                  >
-                    <CheckCircle className="mr-2 h-4 w-4" />
-                    Aprovar Esta Versão
-                  </Button>
+    <div className="container mx-auto max-w-5xl px-4">
+      <div className="mb-8">
+        <h1 className="text-2xl md:text-3xl font-bold text-black mb-3">{projectData.projectTitle}</h1>
+        <p className="text-gray-600">
+          Olá {projectData.clientName}, avalie as versões do seu projeto e envie seu feedback.
+        </p>
+      </div>
+      
+      {isApproved && (
+        <Alert className="mb-6 bg-green-50 border-green-200">
+          <CheckCircle className="h-5 w-5 text-green-600" />
+          <AlertTitle className="text-green-800">Projeto aprovado</AlertTitle>
+          <AlertDescription className="text-green-700">
+            Você já aprovou este projeto. Em breve enviaremos os arquivos finais.
+          </AlertDescription>
+        </Alert>
+      )}
+      
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <div className="md:col-span-2">
+          <PreviewPlayerList
+            versions={projectData.previews}
+            selectedVersion={selectedVersion}
+            setSelectedVersion={handleVersionSelect}
+            isApproved={isApproved}
+            onPlay={handlePlay}
+          />
+          
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center">
+                <MessageSquare className="h-5 w-5 mr-2 text-harmonia-green" />
+                {isApproved ? 'Feedback enviado' : 'Envie seu feedback'}
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              {isApproved ? (
+                <div className="bg-green-50 p-4 rounded-md">
+                  <p className="text-green-700">
+                    Obrigado pelo seu feedback! Seu projeto foi aprovado e estamos finalizando os detalhes.
+                  </p>
                 </div>
-
-                {projectData.status === 'approved' && (
-                  <div className="p-4 bg-green-50 border border-green-200 rounded-md">
-                    <p className="text-green-800 font-medium">
-                      ✅ Projeto aprovado! Sua música está sendo finalizada.
+              ) : (
+                <div className="space-y-4">
+                  <div className="bg-gray-50 p-4 rounded-md">
+                    <p className="text-sm text-gray-600 mb-2">
+                      {selectedVersion 
+                        ? `Versão selecionada: ${projectData.previews.find(p => p.id === selectedVersion)?.title || 'Versão selecionada'}` 
+                        : 'Nenhuma versão selecionada. Por favor, escolha uma opção acima.'}
                     </p>
+                    
+                    <Textarea
+                      placeholder="Conte-nos o que você achou da versão selecionada. O que você gostou? Há algo que você gostaria de mudar?"
+                      className="min-h-[150px]"
+                      value={feedback}
+                      onChange={(e) => setFeedback(e.target.value)}
+                      disabled={isApproved || submitting}
+                    />
                   </div>
-                )}
-              </CardContent>
-            </Card>
-          </div>
-
-          {/* Sidebar */}
-          <div>
-            <PreviewProjectDetails project={{
+                  
+                  <div className="flex justify-end space-x-3">
+                    <Button
+                      variant="outline"
+                      onClick={handleApproveVersion}
+                      disabled={isApproved || submitting || !selectedVersion}
+                    >
+                      <CheckCircle className="h-4 w-4 mr-2" />
+                      Aprovar versão
+                    </Button>
+                    <Button
+                      className="bg-harmonia-green hover:bg-harmonia-green/90"
+                      onClick={handleFeedbackSubmit}
+                      disabled={isApproved || submitting || !selectedVersion || !feedback.trim()}
+                    >
+                      <MessageSquare className="h-4 w-4 mr-2" />
+                      Enviar feedback
+                    </Button>
+                  </div>
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        </div>
+        
+        <div>
+          <PreviewProjectDetails 
+            projectData={{
               projectTitle: projectData.projectTitle,
               clientName: projectData.clientName,
               status: projectData.status,
               packageType: projectData.packageType,
-              creationDate: new Date(projectData.createdAt).toLocaleDateString('pt-BR')
-            }} />
-          </div>
+              creationDate: projectData.createdAt ? new Date(projectData.createdAt).toLocaleDateString('pt-BR') : undefined
+            }}
+          />
         </div>
       </div>
     </div>

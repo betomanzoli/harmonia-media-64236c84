@@ -18,7 +18,7 @@ const DashboardContent: React.FC = () => {
   } = useStatistics();
   
   const { projects, loadProjects } = usePreviewProjects();
-  const { briefings, loadBriefings } = useBriefings();
+  const { briefings, fetchBriefings } = useBriefings();
   const { customers, refreshCustomers } = useCustomers();
   
   // Calculate revenue from the prices of different package types
@@ -72,9 +72,9 @@ const DashboardContent: React.FC = () => {
   useEffect(() => {
     // Load all data when the component mounts
     loadProjects();
-    loadBriefings();
+    fetchBriefings();
     refreshCustomers();
-  }, [loadProjects, loadBriefings, refreshCustomers]);
+  }, [loadProjects, fetchBriefings, refreshCustomers]);
   
   return (
     <div className="space-y-6 p-6">

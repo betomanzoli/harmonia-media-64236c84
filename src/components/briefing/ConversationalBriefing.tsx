@@ -1,21 +1,23 @@
 
-import React, { useState, useEffect } from 'react';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Textarea } from '@/components/ui/textarea';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import React, { useState, useRef, useEffect } from 'react';
+import { Button } from "@/components/ui/button";
+import { Textarea } from "@/components/ui/textarea";
+import { Loader2, ArrowRight, ArrowLeft, Send } from 'lucide-react';
 import { useConversationalBriefing } from '@/hooks/useConversationalBriefing';
-import { Music, Send, ArrowLeft, ArrowRight, Sparkles } from 'lucide-react';
-import { useToast } from '@/hooks/use-toast';
+import PackageSelection from './PackageSelection';
+
+interface Message {
+  role: 'system' | 'user';
+  content: string;
+  isTyping?: boolean;
+}
 
 interface ConversationalBriefingProps {
   onComplete: (briefingId: string, packageType: 'essencial' | 'profissional' | 'premium') => void;
 }
 
 const ConversationalBriefing: React.FC<ConversationalBriefingProps> = ({ onComplete }) => {
-  const { toast } = useToast();
   const {
-    briefingId,
     currentStep,
     initialQuestions,
     initialResponses,
@@ -24,241 +26,216 @@ const ConversationalBriefing: React.FC<ConversationalBriefingProps> = ({ onCompl
     updateResponse,
     nextStep,
     prevStep,
-    saveInitialBriefing,
+    saveInitialBriefing
   } = useConversationalBriefing();
 
+  const [messages, setMessages] = useState<Message[]>([
+    {
+      role: 'system',
+      content: 'Olá! Sou o assistente de composição da harmonIA. Para criar sua música personalizada, preciso conhecer um pouco sobre o que você imagina.'
+    }
+  ]);
   const [currentResponse, setCurrentResponse] = useState('');
-  const [selectedPackage, setSelectedPackage] = useState<'essencial' | 'profissional' | 'premium' | null>(null);
-  const [showPackages, setShowPackages] = useState(false);
+  const [isTyping, setIsTyping] = useState(false);
+  const messagesEndRef = useRef<HTMLDivElement>(null);
 
-  useEffect(() => {
-    if (isInitialBriefingComplete) {
-      setShowPackages(true);
-    }
-  }, [isInitialBriefingComplete]);
+  // Simulate assistant typing
+  const simulateTyping = (message: string, delay = 30) => {
+    return new Promise<void>((resolve) => {
+      setIsTyping(true);
+      
+      // Add a temporary typing message
+      setMessages(prev => [...prev, {
+        role: 'system',
+        content: '',
+        isTyping: true
+      }]);
+      
+      // Delay before showing the message
+      setTimeout(() => {
+        setMessages(prev => [
+          ...prev.filter(m => !m.isTyping),
+          {
+            role: 'system',
+            content: message
+          }
+        ]);
+        setIsTyping(false);
+        resolve();
+      }, delay * message.length); // Simulates typing speed
+    });
+  };
 
-  const handleNextQuestion = () => {
-    if (!currentResponse.trim()) {
-      toast({
-        title: "Resposta necessária",
-        description: "Por favor, responda à pergunta antes de continuar.",
-        variant: "destructive"
-      });
-      return;
-    }
-
+  // Handle user response submission
+  const handleSubmit = async () => {
+    if (!currentResponse.trim()) return;
+    
+    // Add user message to chat
+    setMessages(prev => [...prev, {
+      role: 'user',
+      content: currentResponse
+    }]);
+    
+    // Save the response
     updateResponse(currentStep, currentResponse);
     setCurrentResponse('');
-    nextStep();
-  };
-
-  const handlePrevQuestion = () => {
-    const responses = Object.values(initialResponses);
-    if (currentStep > 0 && responses[currentStep - 1]) {
-      setCurrentResponse(responses[currentStep - 1]);
-    }
-    prevStep();
-  };
-
-  const handlePackageSelection = async (packageType: 'essencial' | 'profissional' | 'premium') => {
-    setSelectedPackage(packageType);
     
-    try {
-      const savedBriefingId = await saveInitialBriefing(packageType);
-      
-      if (savedBriefingId) {
-        toast({
-          title: "Briefing salvo com sucesso!",
-          description: "Redirecionando para o contrato...",
-        });
+    // Move to next step after a brief delay
+    setTimeout(async () => {
+      // If we have more questions, show the next one
+      if (currentStep < initialQuestions.length - 1) {
+        nextStep();
+        await simulateTyping(initialQuestions[currentStep + 1]);
+      } 
+      // If we've completed all initial questions
+      else if (currentStep === initialQuestions.length - 1) {
+        nextStep();
         
-        onComplete(savedBriefingId, packageType);
-      } else {
-        toast({
-          title: "Erro",
-          description: "Não foi possível salvar o briefing. Tente novamente.",
-          variant: "destructive"
-        });
+        // Prepare a summary of what the user has shared
+        const inspirationSummary = initialResponses.inspiration ? 
+          `Uma música inspirada em "${initialResponses.inspiration.substring(0, 50)}${initialResponses.inspiration.length > 50 ? '...' : ''}"` : '';
+        
+        const emotionSummary = initialResponses.emotion ?
+          `que transmite sentimentos de ${initialResponses.emotion.toLowerCase()}` : '';
+        
+        const connectionSummary = initialResponses.specialConnection ?
+          `com uma conexão especial a "${initialResponses.specialConnection.substring(0, 50)}${initialResponses.specialConnection.length > 50 ? '...' : ''}"` : '';
+        
+        // Create a natural language summary
+        let summary = "Com base no que você compartilhou, vejo que deseja ";
+        
+        if (inspirationSummary) {
+          summary += inspirationSummary;
+        }
+        
+        if (emotionSummary) {
+          summary += inspirationSummary ? ` ${emotionSummary}` : emotionSummary;
+        }
+        
+        if (connectionSummary) {
+          summary += (inspirationSummary || emotionSummary) ? ` e ${connectionSummary}` : connectionSummary;
+        }
+        
+        summary += ".";
+        
+        // Show the summary and then the package selection message
+        await simulateTyping(summary);
+        await simulateTyping("Para continuar criando sua música personalizada, precisamos de mais detalhes específicos que são desbloqueados após a contratação de um dos pacotes abaixo. Escolha o que melhor atende às suas necessidades:");
       }
-    } catch (error) {
-      console.error('Erro ao salvar briefing:', error);
-      toast({
-        title: "Erro",
-        description: "Erro inesperado. Tente novamente.",
-        variant: "destructive"
-      });
+    }, 500);
+  };
+
+  // Handle package selection
+  const handlePackageSelect = async (packageType: 'essencial' | 'profissional' | 'premium') => {
+    const briefingId = await saveInitialBriefing(packageType);
+    if (briefingId) {
+      onComplete(briefingId, packageType);
     }
   };
 
-  const packages = [
-    {
-      id: 'essencial' as const,
-      name: 'Essencial',
-      price: 'R$ 297',
-      description: 'Música personalizada com produção básica',
-      features: ['1 música personalizada', 'Produção básica', 'Entrega em 7 dias', 'Formato MP3']
-    },
-    {
-      id: 'profissional' as const,
-      name: 'Profissional',
-      price: 'R$ 597',
-      description: 'Música personalizada com produção premium',
-      features: ['1 música personalizada', 'Produção premium', 'Entrega em 5 dias', 'Múltiplos formatos', '2 revisões']
-    },
-    {
-      id: 'premium' as const,
-      name: 'Premium',
-      price: 'R$ 997',
-      description: 'Música personalizada com produção completa',
-      features: ['1 música personalizada', 'Produção completa', 'Entrega em 3 dias', 'Todos os formatos', 'Revisões ilimitadas', 'Videoclipe lyric']
+  // Auto-scroll to bottom of chat
+  useEffect(() => {
+    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+  }, [messages]);
+
+  // Show first question on initial render
+  useEffect(() => {
+    if (messages.length === 1) {
+      setTimeout(async () => {
+        await simulateTyping(initialQuestions[0]);
+      }, 1000);
     }
-  ];
-
-  if (showPackages) {
-    return (
-      <div className="container mx-auto max-w-4xl px-4 py-8">
-        <div className="text-center mb-8">
-          <div className="flex items-center justify-center mb-4">
-            <Music className="h-8 w-8 text-harmonia-green mr-2" />
-            <h1 className="text-3xl font-bold text-gray-900">Escolha seu Pacote</h1>
-          </div>
-          <p className="text-gray-600">
-            Baseado nas suas respostas, escolha o pacote que melhor atende às suas necessidades.
-          </p>
-        </div>
-
-        <div className="grid md:grid-cols-3 gap-6 mb-8">
-          {packages.map((pkg) => (
-            <Card 
-              key={pkg.id}
-              className={`cursor-pointer transition-all hover:shadow-lg ${
-                selectedPackage === pkg.id ? 'ring-2 ring-harmonia-green border-harmonia-green' : ''
-              }`}
-              onClick={() => setSelectedPackage(pkg.id)}
-            >
-              <CardHeader>
-                <CardTitle className="text-xl text-center">{pkg.name}</CardTitle>
-                <div className="text-center">
-                  <span className="text-3xl font-bold text-harmonia-green">{pkg.price}</span>
-                </div>
-                <p className="text-center text-gray-600">{pkg.description}</p>
-              </CardHeader>
-              <CardContent>
-                <ul className="space-y-2">
-                  {pkg.features.map((feature, index) => (
-                    <li key={index} className="flex items-center">
-                      <Sparkles className="h-4 w-4 text-harmonia-green mr-2" />
-                      <span className="text-sm">{feature}</span>
-                    </li>
-                  ))}
-                </ul>
-              </CardContent>
-            </Card>
-          ))}
-        </div>
-
-        <div className="text-center">
-          <Button
-            onClick={() => selectedPackage && handlePackageSelection(selectedPackage)}
-            disabled={!selectedPackage || isSubmitting}
-            className="bg-harmonia-green hover:bg-harmonia-green/90 px-8 py-3"
-          >
-            {isSubmitting ? (
-              <>
-                <div className="mr-2 h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent" />
-                Processando...
-              </>
-            ) : (
-              'Continuar com o Pacote Selecionado'
-            )}
-          </Button>
-        </div>
-      </div>
-    );
-  }
+  }, []);
 
   return (
-    <div className="container mx-auto max-w-2xl px-4 py-8">
-      <div className="text-center mb-8">
-        <div className="flex items-center justify-center mb-4">
-          <Music className="h-8 w-8 text-harmonia-green mr-2" />
-          <h1 className="text-3xl font-bold text-gray-900">harmonIA</h1>
-        </div>
-        <p className="text-gray-600">
-          Assistente especializada em música personalizada
-        </p>
-        <div className="mt-4">
-          <div className="bg-gray-200 rounded-full h-2">
-            <div 
-              className="bg-harmonia-green h-2 rounded-full transition-all duration-300"
-              style={{ width: `${((currentStep + 1) / initialQuestions.length) * 100}%` }}
-            />
-          </div>
-          <p className="text-sm text-gray-500 mt-2">
-            Pergunta {currentStep + 1} de {initialQuestions.length}
-          </p>
+    <div className="flex flex-col h-full">
+      <div className="flex items-center justify-between mb-4">
+        <h3 className="text-lg font-semibold">Briefing Musical</h3>
+        <div className="flex items-center gap-1 text-sm text-gray-500">
+          {!isInitialBriefingComplete && (
+            <>
+              <span>Etapa {currentStep + 1} de {initialQuestions.length}</span>
+              <div className="w-32 h-2 bg-gray-200 rounded-full ml-2">
+                <div 
+                  className="h-2 bg-harmonia-green rounded-full" 
+                  style={{ width: `${((currentStep + 1) / initialQuestions.length) * 100}%` }}
+                />
+              </div>
+            </>
+          )}
         </div>
       </div>
 
-      <Card className="mb-6">
-        <CardHeader>
-          <div className="flex items-start space-x-3">
-            <div className="w-10 h-10 bg-harmonia-green rounded-full flex items-center justify-center">
-              <Music className="h-5 w-5 text-white" />
-            </div>
-            <div className="flex-1">
-              <h3 className="font-semibold text-gray-900">harmonIA</h3>
-              <p className="text-gray-600 mt-2">{initialQuestions[currentStep]}</p>
-            </div>
-          </div>
-        </CardHeader>
-        <CardContent>
-          <Textarea
-            value={currentResponse}
-            onChange={(e) => setCurrentResponse(e.target.value)}
-            placeholder="Digite sua resposta aqui..."
-            className="min-h-[120px] resize-none"
-            disabled={isSubmitting}
-          />
-          
-          <div className="flex justify-between mt-4">
-            <Button
-              variant="outline"
-              onClick={handlePrevQuestion}
-              disabled={currentStep === 0 || isSubmitting}
-            >
-              <ArrowLeft className="h-4 w-4 mr-2" />
-              Anterior
-            </Button>
-            
-            <Button
-              onClick={handleNextQuestion}
-              disabled={!currentResponse.trim() || isSubmitting}
-              className="bg-harmonia-green hover:bg-harmonia-green/90"
-            >
-              {currentStep === initialQuestions.length - 1 ? 'Finalizar' : 'Próxima'}
-              <ArrowRight className="h-4 w-4 ml-2" />
-            </Button>
-          </div>
-        </CardContent>
-      </Card>
-
-      {/* Mostrar respostas anteriores */}
-      {currentStep > 0 && (
+      <div className="flex-1 overflow-y-auto bg-card rounded-lg p-4 mb-4 border border-border">
         <div className="space-y-4">
-          {Array.from({ length: currentStep }, (_, index) => {
-            const responses = Object.values(initialResponses);
-            return (
-              <Card key={index} className="bg-gray-50">
-                <CardContent className="pt-4">
-                  <p className="text-sm font-medium text-gray-700 mb-2">
-                    {initialQuestions[index]}
-                  </p>
-                  <p className="text-gray-600">{responses[index]}</p>
-                </CardContent>
-              </Card>
-            );
-          })}
+          {messages.map((message, index) => (
+            <div 
+              key={index} 
+              className={`flex ${message.role === 'system' ? 'justify-start' : 'justify-end'}`}
+            >
+              <div 
+                className={`max-w-[80%] rounded-lg p-3 ${
+                  message.role === 'system' 
+                    ? 'bg-muted text-foreground' 
+                    : 'bg-harmonia-green/20 text-foreground'
+                }`}
+              >
+                {message.isTyping ? (
+                  <div className="flex space-x-1 items-center h-6">
+                    <div className="w-2 h-2 rounded-full bg-foreground/70 animate-bounce" 
+                      style={{ animationDelay: '0ms' }} />
+                    <div className="w-2 h-2 rounded-full bg-foreground/70 animate-bounce" 
+                      style={{ animationDelay: '300ms' }} />
+                    <div className="w-2 h-2 rounded-full bg-foreground/70 animate-bounce" 
+                      style={{ animationDelay: '600ms' }} />
+                  </div>
+                ) : (
+                  <p className="whitespace-pre-wrap">{message.content}</p>
+                )}
+              </div>
+            </div>
+          ))}
+          <div ref={messagesEndRef} />
+        </div>
+      </div>
+
+      {isInitialBriefingComplete ? (
+        <PackageSelection 
+          onSelectPackage={handlePackageSelect}
+          isSubmitting={isSubmitting}
+        />
+      ) : (
+        <div className="flex gap-2">
+          <Button
+            variant="outline"
+            size="icon"
+            disabled={currentStep === 0 || isTyping}
+            onClick={prevStep}
+          >
+            <ArrowLeft className="h-4 w-4" />
+          </Button>
+          
+          <div className="flex-1 flex gap-2">
+            <Textarea
+              value={currentResponse}
+              onChange={(e) => setCurrentResponse(e.target.value)}
+              placeholder="Digite sua resposta aqui..."
+              className="flex-1"
+              onKeyDown={(e) => {
+                if (e.key === 'Enter' && !e.shiftKey) {
+                  e.preventDefault();
+                  handleSubmit();
+                }
+              }}
+              disabled={isTyping}
+            />
+            <Button
+              disabled={!currentResponse.trim() || isTyping}
+              onClick={handleSubmit}
+            >
+              <Send className="h-4 w-4" />
+            </Button>
+          </div>
         </div>
       )}
     </div>

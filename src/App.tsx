@@ -36,20 +36,6 @@ import BriefingComplete from './pages/BriefingComplete';
 import ClientDashboard from './pages/ClientDashboard';
 import FinalDeliveryPage from './pages/FinalDeliveryPage';
 
-// New contract pages
-import ContractEssencial from './pages/contract/ContractEssencial';
-import ContractProfissional from './pages/contract/ContractProfissional';
-import ContractPremium from './pages/contract/ContractPremium';
-
-// New payment return pages
-import PaymentSuccess from './pages/payment/PaymentSuccess';
-import PaymentCancel from './pages/payment/PaymentCancel';
-
-// New detailed briefing pages
-import BriefingEssencial from './pages/briefing/BriefingEssencial';
-import BriefingProfissional from './pages/briefing/BriefingProfissional';
-import BriefingPremium from './pages/briefing/BriefingPremium';
-
 // Import admin pages
 import AdminBriefings from './pages/admin/AdminBriefings';
 import AdminProjects from './pages/admin/AdminProjects';
@@ -95,26 +81,9 @@ const AppRoutes: React.FC = () => {
         <Route path="/calculadora" element={<Calculator />} />
         <Route path="/qualificacao" element={<QualificacaoPage />} />
         <Route path="/pacotes" element={<Packages />} />
-        
-        {/* Contract pages */}
-        <Route path="/contract/essencial" element={<ContractEssencial />} />
-        <Route path="/contract/profissional" element={<ContractProfissional />} />
-        <Route path="/contract/premium" element={<ContractPremium />} />
-        
-        {/* Payment pages */}
         <Route path="/pagamento" element={<Payment />} />
         <Route path="/pagamento/:packageId" element={<Payment />} />
         <Route path="/pagamento-retorno" element={<PaymentReturn />} />
-        
-        {/* Payment return pages */}
-        <Route path="/payment/success" element={<PaymentSuccess />} />
-        <Route path="/payment/cancel" element={<PaymentCancel />} />
-        
-        {/* Detailed briefing pages */}
-        <Route path="/briefing/essencial" element={<BriefingEssencial />} />
-        <Route path="/briefing/profissional" element={<BriefingProfissional />} />
-        <Route path="/briefing/premium" element={<BriefingPremium />} />
-        
         <Route path="/acompanhar-pedido" element={<OrderTracking />} />
         <Route path="/privacidade" element={<PrivacyPolicy />} />
         <Route path="/termos" element={<Terms />} />

@@ -1,65 +1,71 @@
 
-import React, { useState, useEffect } from 'react';
-import { useNavigate, useSearchParams } from 'react-router-dom';
+import React, { useEffect, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
+import { Button } from "@/components/ui/button";
+import { ArrowLeft } from 'lucide-react';
 import ConversationalBriefing from '@/components/briefing/ConversationalBriefing';
-import { briefingStorage, BriefingData } from '@/utils/briefingStorage';
-import { useToast } from '@/hooks/use-toast';
+import { supabase } from '@/lib/supabase';
 
 const Briefing: React.FC = () => {
   const navigate = useNavigate();
-  const [searchParams] = useSearchParams();
-  const { toast } = useToast();
-  const [currentBriefingId, setCurrentBriefingId] = useState<string>('');
-  const [isLoading, setIsLoading] = useState(false);
+  const [hasPurchased, setHasPurchased] = useState(false);
+  const [purchaseData, setPurchaseData] = useState<any>(null);
 
   useEffect(() => {
-    // Verificar se há um briefing ID existente ou criar novo
-    const existingId = searchParams.get('id') || briefingStorage.generateBriefingId();
-    setCurrentBriefingId(existingId);
-    
-    // Atualizar URL se necessário
-    if (!searchParams.get('id')) {
-      const newUrl = new URL(window.location.href);
-      newUrl.searchParams.set('id', existingId);
-      window.history.replaceState({}, '', newUrl.toString());
+    // Check if user has purchased a package
+    const paymentData = localStorage.getItem('paymentData');
+    if (paymentData) {
+      try {
+        const data = JSON.parse(paymentData);
+        setHasPurchased(true);
+        setPurchaseData(data);
+      } catch (e) {
+        console.error('Error parsing payment data:', e);
+      }
     }
-  }, [searchParams]);
+  }, []);
 
+  // Handle completion of initial briefing and selection of package
   const handleBriefingComplete = async (briefingId: string, packageType: 'essencial' | 'profissional' | 'premium') => {
-    if (!briefingId) return;
+    console.log('Briefing complete with ID:', briefingId);
+    console.log('Selected package:', packageType);
     
-    setIsLoading(true);
+    // Save briefingId to localStorage for later use
+    localStorage.setItem('currentBriefingId', briefingId);
     
-    try {
-      toast({
-        title: "Briefing salvo",
-        description: "Suas informações foram salvas. Redirecionando para o contrato...",
-      });
-
-      // Redirecionar para página de contrato específica
-      navigate(`/contract/${packageType}?briefing=${briefingId}`);
-      
-    } catch (error) {
-      console.error('Erro ao salvar briefing:', error);
-      toast({
-        title: "Erro",
-        description: "Erro ao salvar briefing. Tente novamente.",
-        variant: "destructive"
-      });
-    } finally {
-      setIsLoading(false);
-    }
+    // Redirect to payment page with briefingId parameter
+    navigate(`/pagamento/${packageType}?briefingId=${briefingId}`);
   };
 
   return (
-    <div className="min-h-screen bg-white">
+    <div className="min-h-screen bg-background text-foreground">
       <Header />
-      <main className="pt-20">
-        <ConversationalBriefing 
-          onComplete={handleBriefingComplete}
-        />
+      <main className="pt-24 pb-20 px-6 md:px-10">
+        <div className="max-w-4xl mx-auto">
+          <div className="mb-6">
+            <Button 
+              variant="ghost" 
+              className="flex items-center gap-1 text-gray-400 hover:text-white"
+              onClick={() => navigate('/')}
+            >
+              <ArrowLeft className="w-4 h-4" />
+              Voltar para a página inicial
+            </Button>
+          </div>
+          
+          <div className="text-center mb-10">
+            <h1 className="text-3xl md:text-4xl font-bold mb-4">Transforme sua história em música</h1>
+            <p className="text-gray-400 max-w-2xl mx-auto">
+              Conte-nos um pouco sobre a sua visão musical e criaremos uma composição personalizada especialmente para você.
+            </p>
+          </div>
+
+          <div className="bg-card border border-border rounded-lg p-8">
+            <ConversationalBriefing onComplete={handleBriefingComplete} />
+          </div>
+        </div>
       </main>
       <Footer />
     </div>
