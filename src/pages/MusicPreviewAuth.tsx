@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { Button } from "@/components/ui/button";
@@ -37,12 +38,6 @@ const MusicPreviewAuth: React.FC = () => {
         email,
         options: {
           emailRedirectTo: `${window.location.origin}/auth/callback?redirect=/preview/${previewId}`,
-          cookieOptions: {
-            name: 'sb-auth',
-            sameSite: 'None',
-            secure: true,
-            partitioned: true
-          }
         }
       });
 

@@ -13,12 +13,23 @@ export const usePreviewProject = (projectId: string | undefined) => {
   const { toast } = useToast();
   const baseHook = useBasePreviewProject(projectId);
   
-  // Return the baseHook with the proper type
-  return baseHook as {
+  // Wrap the updateProjectStatus to match the expected return type
+  const updateProjectStatus = async (newStatus: 'approved' | 'feedback', comments: string) => {
+    const result = await baseHook.updateProjectStatus(newStatus, comments);
+    return result;
+  };
+  
+  // Return the baseHook with the proper type and wrapped function
+  return {
+    ...baseHook,
+    updateProjectStatus
+  } as {
     projectData: PreviewProject | null;
     setProjectData: React.Dispatch<React.SetStateAction<PreviewProject | null>>;
     isLoading: boolean;
-    updateProjectStatus: (newStatus: 'approved' | 'feedback', comments: string) => boolean;
+    updateProjectStatus: (newStatus: 'approved' | 'feedback', comments: string) => Promise<boolean>;
+    accessTokenValid: boolean;
+    originalProjectId: string | undefined;
   };
 };
 
