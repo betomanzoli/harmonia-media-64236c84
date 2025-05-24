@@ -19,7 +19,12 @@ export function usePreviewProjects() {
   useEffect(() => {
     // Simulating API call
     setTimeout(() => {
-      setProjects(mockPreviewProjects);
+      // Make sure mockPreviewProjects items all have the required versions property
+      const projectsWithVersions = mockPreviewProjects.map(project => ({
+        ...project,
+        versions: project.versions || []
+      }));
+      setProjects(projectsWithVersions);
       setIsLoading(false);
     }, 500);
   }, []);

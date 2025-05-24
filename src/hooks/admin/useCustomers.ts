@@ -10,6 +10,8 @@ interface Customer {
   createdAt: string;
   orders?: number;
   totalSpent?: number;
+  status?: string;
+  projects?: number;
 }
 
 export function useCustomers() {
@@ -32,7 +34,9 @@ export function useCustomers() {
             phone: '(11) 99999-9999',
             createdAt: '2023-05-15',
             orders: 2,
-            totalSpent: 1200
+            totalSpent: 1200,
+            status: 'active',
+            projects: 2
           },
           {
             id: 'cust-' + Math.random().toString(36).substring(2, 10),
@@ -41,7 +45,9 @@ export function useCustomers() {
             phone: '(21) 98888-8888',
             createdAt: '2023-05-10',
             orders: 1,
-            totalSpent: 500
+            totalSpent: 500,
+            status: 'active',
+            projects: 1
           }
         ];
         setCustomers(mockCustomers);
@@ -55,9 +61,15 @@ export function useCustomers() {
     return customers.find(customer => customer.email === email);
   };
 
+  const refreshCustomers = () => {
+    // In a real implementation, this would fetch the latest customers from an API
+    console.log("Refreshing customers...");
+  };
+
   return {
     customers,
     isLoading,
-    getCustomerByEmail
+    getCustomerByEmail,
+    refreshCustomers
   };
 }

@@ -21,6 +21,34 @@ const AdminMarketing: React.FC = () => {
   const [activeTab, setActiveTab] = useState('campaigns');
   const [isWebhookDialogOpen, setIsWebhookDialogOpen] = useState(false);
   
+  // Mock data for marketing leads
+  const mockLeads = [
+    {
+      id: 'lead-1',
+      name: 'João Silva',
+      email: 'joao@example.com',
+      status: 'new',
+      lead_source: 'Website',
+      created_at: '2023-10-15'
+    },
+    {
+      id: 'lead-2',
+      name: 'Maria Oliveira',
+      email: 'maria@example.com',
+      status: 'contacted',
+      lead_source: 'Facebook',
+      created_at: '2023-10-12'
+    }
+  ];
+
+  const handleUpdateLeadStatus = (id: string, status: 'new' | 'contacted' | 'qualified' | 'converted' | 'unqualified') => {
+    console.log(`Updating lead ${id} to status ${status}`);
+  };
+
+  const handleDeleteLead = (id: string) => {
+    console.log(`Deleting lead ${id}`);
+  };
+  
   return (
     <AdminLayout>
       <div className="p-6">
@@ -156,7 +184,12 @@ const AdminMarketing: React.FC = () => {
           
           <TabsContent value="leads">
             <div>
-              <MarketingLeadsList />
+              <MarketingLeadsList 
+                leads={mockLeads}
+                isLoading={false}
+                onUpdateStatus={handleUpdateLeadStatus}
+                onDelete={handleDeleteLead}
+              />
             </div>
           </TabsContent>
           
@@ -370,7 +403,7 @@ const AdminMarketing: React.FC = () => {
       
       <WebhookConfigDialog
         open={isWebhookDialogOpen}
-        onClose={() => setIsWebhookDialogOpen(false)}
+        onOpenChange={setIsWebhookDialogOpen}
       />
     </AdminLayout>
   );
