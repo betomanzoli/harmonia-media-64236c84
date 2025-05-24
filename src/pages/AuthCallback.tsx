@@ -14,41 +14,6 @@ const AuthCallback: React.FC = () => {
   const [processing, setProcessing] = useState(true);
 
   useEffect(() => {
-    const params = new URLSearchParams(window.location.search);
-    const isPrivate = params.get('is_private') === 'true';
-    const previewId = params.get('preview_id');
-
-    const handleAuth = async () => {
-      const { data, error } = await supabase.auth.getUser();
-
-      if (error || !data.user) {
-        navigate('/auth-error');
-        return;
-      }
-
-      if (isPrivate && previewId) {
-        // Para navegadores privados, usar sistema de transferência de sessão
-        const { data: sessionData } = await supabase.auth.getSession();
-        
-        if (sessionData.session) {
-          const transferData = {
-            access_token: sessionData.session.access_token,
-            refresh_token: sessionData.session.refresh_token,
-            expires_at: sessionData.session.expires_at,
-            preview_id: previewId
-          };
-
-          const encoded = btoa(JSON.stringify(transferData));
-          document.cookie = `temp_session=${encoded}; Path=/; SameSite=None; Secure; Max-Age=300`;
-          
-          navigate('/session-transfer');
-        }
-      } else {
-        // Fluxo normal
-        navigate(`/preview/${previewId}`);
-      }
-    };
-
     const handleAuthCallback = async () => {
       console.log("Auth callback triggered");
       debugCookies(); // Debug existing cookies

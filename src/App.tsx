@@ -48,10 +48,6 @@ import AdminIntegrations from './pages/admin/AdminIntegrations';
 import AdminStatistics from './pages/admin/AdminStatistics';
 import AdminGuides from './pages/admin/AdminGuides';
 
-// Session transfer pages
-import SessionTransfer from './pages/SessionTransfer';
-import SecureAuthCallback from './pages/SecureAuthCallback';
-
 const App: React.FC = () => {
   return (
     <>
@@ -95,10 +91,6 @@ const AppRoutes: React.FC = () => {
         {/* Client Dashboard and Delivery Routes */}
         <Route path="/client-dashboard" element={<ClientDashboard />} />
         <Route path="/deliveries/:projectId" element={<FinalDeliveryPage />} />
-        
-        {/* Session Transfer Routes */}
-        <Route path="/session-transfer" element={<SessionTransfer />} />
-        <Route path="/secure-auth-callback" element={<SecureAuthCallback />} />
         
         {/* Authentication routes */}
         <Route path="/auth/preview/:projectId" element={<MusicPreviewAuth />} />
