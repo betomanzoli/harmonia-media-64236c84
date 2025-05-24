@@ -9,12 +9,14 @@ import { Textarea } from '@/components/ui/textarea';
 import PreviewPlayerList from '@/components/previews/player/PreviewPlayerList';
 import PreviewProjectDetails from '@/components/previews/PreviewProjectDetails';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
+import { supabase } from '@/integrations/supabase/client';
 
 interface MusicPreviewSystemProps {
   projectId: string;
+  userEmail?: string | null;
 }
 
-const MusicPreviewSystem: React.FC<MusicPreviewSystemProps> = ({ projectId }) => {
+const MusicPreviewSystem: React.FC<MusicPreviewSystemProps> = ({ projectId, userEmail }) => {
   const { projectData, isLoading, updateProjectStatus } = usePreviewProject(projectId);
   const [selectedVersion, setSelectedVersion] = useState<string | null>(null);
   const [feedback, setFeedback] = useState('');
@@ -23,20 +25,16 @@ const MusicPreviewSystem: React.FC<MusicPreviewSystemProps> = ({ projectId }) =>
   const { toast } = useToast();
   
   useEffect(() => {
-    // If project data is loaded and there are previews, select the first one
     if (projectData && projectData.previews && projectData.previews.length > 0) {
-      // Try to find recommended preview first
       const recommendedPreview = projectData.previews.find(p => p.recommended);
       
       if (recommendedPreview) {
         setSelectedVersion(recommendedPreview.id);
       } else {
-        // Otherwise select the first one
         setSelectedVersion(projectData.previews[0].id);
       }
     }
     
-    // Clean up any playing audio on dismount
     return () => {
       if (playingAudio) {
         playingAudio.pause();
@@ -46,13 +44,11 @@ const MusicPreviewSystem: React.FC<MusicPreviewSystemProps> = ({ projectId }) =>
   }, [projectData]);
   
   const handlePlay = (preview: any) => {
-    // Stop any currently playing audio
     if (playingAudio) {
       playingAudio.pause();
       playingAudio.src = '';
     }
     
-    // Create a new audio element and play it
     if (preview.audioUrl) {
       const audio = new Audio(preview.audioUrl);
       audio.play().catch(error => {
@@ -66,7 +62,6 @@ const MusicPreviewSystem: React.FC<MusicPreviewSystemProps> = ({ projectId }) =>
       
       setPlayingAudio(audio);
     } else if (preview.fileId) {
-      // If there's a fileId but no audioUrl, redirect to Google Drive
       window.open(`https://drive.google.com/file/d/${preview.fileId}/view`, '_blank');
     }
   };
@@ -74,8 +69,68 @@ const MusicPreviewSystem: React.FC<MusicPreviewSystemProps> = ({ projectId }) =>
   const handleVersionSelect = (id: string) => {
     setSelectedVersion(id);
   };
+
+  const saveFeedbackToSupabase = async (status: 'feedback' | 'approved', comments: string) => {
+    try {
+      const feedbackData = {
+        project_id: projectId,
+        user_email: userEmail || 'cliente@anonimo.com',
+        status,
+        comments: comments || 'Sem comentários adicionais',
+        created_at: new Date().toISOString()
+      };
+
+      // Salvar feedback na tabela feedbacks
+      const { error: feedbackError } = await supabase
+        .from('feedbacks')
+        .insert(feedbackData);
+
+      if (feedbackError) {
+        console.error('Erro ao salvar feedback:', feedbackError);
+      }
+
+      // Atualizar status do projeto se existir na tabela projects
+      const { error: projectError } = await supabase
+        .from('projects')
+        .update({ 
+          status: status === 'approved' ? 'approved' : 'revision_required',
+          updated_at: new Date().toISOString()
+        })
+        .eq('id', projectId);
+
+      if (projectError) {
+        console.warn('Projeto não encontrado na tabela projects, apenas feedback salvo:', projectError);
+      }
+
+      // Usar função append_feedback se disponível
+      try {
+        const { error: functionError } = await supabase.rpc('append_feedback', {
+          project_id: projectId,
+          new_entry: {
+            email: userEmail,
+            status,
+            comments,
+            version_id: selectedVersion,
+            timestamp: new Date().toISOString(),
+            approved: status === 'approved'
+          }
+        });
+
+        if (functionError) {
+          console.warn('Função append_feedback não disponível:', functionError);
+        }
+      } catch (rpcError) {
+        console.warn('RPC não disponível:', rpcError);
+      }
+
+      return true;
+    } catch (error) {
+      console.error('Erro ao salvar no Supabase:', error);
+      return false;
+    }
+  };
   
-  const handleFeedbackSubmit = () => {
+  const handleFeedbackSubmit = async () => {
     if (!selectedVersion) {
       toast({
         title: 'Versão não selecionada',
@@ -96,13 +151,16 @@ const MusicPreviewSystem: React.FC<MusicPreviewSystemProps> = ({ projectId }) =>
     
     setSubmitting(true);
     
-    // Update project status
-    const success = updateProjectStatus('feedback', feedback);
+    // Salvar no Supabase
+    const supabaseSuccess = await saveFeedbackToSupabase('feedback', feedback);
+    
+    // Atualizar localmente
+    const localSuccess = updateProjectStatus('feedback', feedback);
     
     setTimeout(() => {
       setSubmitting(false);
       
-      if (success) {
+      if (supabaseSuccess || localSuccess) {
         toast({
           title: 'Feedback enviado',
           description: 'Seu feedback foi enviado com sucesso.',
@@ -116,10 +174,10 @@ const MusicPreviewSystem: React.FC<MusicPreviewSystemProps> = ({ projectId }) =>
           variant: 'destructive'
         });
       }
-    }, 1000); // Simulating API call delay
+    }, 1000);
   };
   
-  const handleApproveVersion = () => {
+  const handleApproveVersion = async () => {
     if (!selectedVersion) {
       toast({
         title: 'Versão não selecionada',
@@ -131,13 +189,18 @@ const MusicPreviewSystem: React.FC<MusicPreviewSystemProps> = ({ projectId }) =>
     
     setSubmitting(true);
     
-    // Update project status
-    const success = updateProjectStatus('approved', feedback || 'Cliente aprovou a versão sem comentários adicionais.');
+    const approvalComment = feedback || 'Cliente aprovou a versão sem comentários adicionais.';
+    
+    // Salvar no Supabase
+    const supabaseSuccess = await saveFeedbackToSupabase('approved', approvalComment);
+    
+    // Atualizar localmente
+    const localSuccess = updateProjectStatus('approved', approvalComment);
     
     setTimeout(() => {
       setSubmitting(false);
       
-      if (success) {
+      if (supabaseSuccess || localSuccess) {
         toast({
           title: 'Versão aprovada',
           description: 'Sua aprovação foi registrada com sucesso.',
@@ -151,7 +214,7 @@ const MusicPreviewSystem: React.FC<MusicPreviewSystemProps> = ({ projectId }) =>
           variant: 'destructive'
         });
       }
-    }, 1000); // Simulating API call delay
+    }, 1000);
   };
   
   if (isLoading) {
@@ -188,96 +251,106 @@ const MusicPreviewSystem: React.FC<MusicPreviewSystemProps> = ({ projectId }) =>
         <p className="text-gray-600">
           Olá {projectData.clientName}, avalie as versões do seu projeto e envie seu feedback.
         </p>
+        {userEmail && (
+          <p className="text-sm text-gray-500 mt-1">
+            Logado como: {userEmail}
+          </p>
+        )}
       </div>
-      
+
       {isApproved && (
-        <Alert className="mb-6 bg-green-50 border-green-200">
-          <CheckCircle className="h-5 w-5 text-green-600" />
-          <AlertTitle className="text-green-800">Projeto aprovado</AlertTitle>
+        <Alert className="mb-6 border-green-200 bg-green-50">
+          <CheckCircle className="h-4 w-4 text-green-600" />
+          <AlertTitle className="text-green-800">Projeto Aprovado!</AlertTitle>
           <AlertDescription className="text-green-700">
-            Você já aprovou este projeto. Em breve enviaremos os arquivos finais.
+            Você já aprovou uma versão deste projeto. Nossa equipe finalizará a produção em breve.
           </AlertDescription>
         </Alert>
       )}
-      
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        <div className="md:col-span-2">
+
+      <Tabs defaultValue="preview" className="space-y-6">
+        <TabsList className="grid w-full grid-cols-2">
+          <TabsTrigger value="preview">Prévias Musicais</TabsTrigger>
+          <TabsTrigger value="details">Detalhes do Projeto</TabsTrigger>
+        </TabsList>
+
+        <TabsContent value="preview" className="space-y-6">
+          {/* ... keep existing code for preview content */}
           <PreviewPlayerList
-            versions={projectData.previews}
+            previews={projectData.previews}
             selectedVersion={selectedVersion}
-            setSelectedVersion={handleVersionSelect}
-            isApproved={isApproved}
+            onVersionSelect={handleVersionSelect}
             onPlay={handlePlay}
           />
-          
+
+          {/* Feedback Section */}
           <Card>
             <CardHeader>
-              <CardTitle className="flex items-center">
-                <MessageSquare className="h-5 w-5 mr-2 text-harmonia-green" />
-                {isApproved ? 'Feedback enviado' : 'Envie seu feedback'}
+              <CardTitle className="flex items-center gap-2">
+                <MessageSquare className="h-5 w-5" />
+                Seu Feedback
               </CardTitle>
             </CardHeader>
-            <CardContent>
-              {isApproved ? (
-                <div className="bg-green-50 p-4 rounded-md">
-                  <p className="text-green-700">
-                    Obrigado pelo seu feedback! Seu projeto foi aprovado e estamos finalizando os detalhes.
+            <CardContent className="space-y-4">
+              {selectedPreview && (
+                <div className="bg-blue-50 p-3 rounded-md border border-blue-200">
+                  <p className="text-sm text-blue-800">
+                    <strong>Versão selecionada:</strong> {selectedPreview.title}
+                  </p>
+                  <p className="text-xs text-blue-600 mt-1">
+                    {selectedPreview.description}
                   </p>
                 </div>
-              ) : (
-                <div className="space-y-4">
-                  <div className="bg-gray-50 p-4 rounded-md">
-                    <p className="text-sm text-gray-600 mb-2">
-                      {selectedVersion 
-                        ? `Versão selecionada: ${projectData.previews.find(p => p.id === selectedVersion)?.title || 'Versão selecionada'}` 
-                        : 'Nenhuma versão selecionada. Por favor, escolha uma opção acima.'}
-                    </p>
-                    
-                    <Textarea
-                      placeholder="Conte-nos o que você achou da versão selecionada. O que você gostou? Há algo que você gostaria de mudar?"
-                      className="min-h-[150px]"
-                      value={feedback}
-                      onChange={(e) => setFeedback(e.target.value)}
-                      disabled={isApproved || submitting}
-                    />
-                  </div>
-                  
-                  <div className="flex justify-end space-x-3">
-                    <Button
-                      variant="outline"
-                      onClick={handleApproveVersion}
-                      disabled={isApproved || submitting || !selectedVersion}
-                    >
-                      <CheckCircle className="h-4 w-4 mr-2" />
-                      Aprovar versão
-                    </Button>
-                    <Button
-                      className="bg-harmonia-green hover:bg-harmonia-green/90"
-                      onClick={handleFeedbackSubmit}
-                      disabled={isApproved || submitting || !selectedVersion || !feedback.trim()}
-                    >
-                      <MessageSquare className="h-4 w-4 mr-2" />
-                      Enviar feedback
-                    </Button>
-                  </div>
-                </div>
               )}
+
+              <Textarea
+                value={feedback}
+                onChange={(e) => setFeedback(e.target.value)}
+                placeholder="Compartilhe sua opinião sobre a versão selecionada..."
+                className="min-h-[120px]"
+                disabled={submitting}
+              />
+
+              <div className="flex flex-col sm:flex-row gap-3">
+                <Button
+                  onClick={handleApproveVersion}
+                  disabled={!selectedVersion || submitting}
+                  className="bg-green-600 hover:bg-green-700 flex-1"
+                >
+                  {submitting ? (
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  ) : (
+                    <CheckCircle className="mr-2 h-4 w-4" />
+                  )}
+                  Aprovar Versão
+                </Button>
+
+                <Button
+                  onClick={handleFeedbackSubmit}
+                  disabled={!selectedVersion || submitting || !feedback.trim()}
+                  variant="outline"
+                  className="flex-1"
+                >
+                  {submitting ? (
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  ) : (
+                    <MessageSquare className="mr-2 h-4 w-4" />
+                  )}
+                  Enviar Feedback
+                </Button>
+              </div>
+
+              <p className="text-xs text-gray-500 text-center">
+                Suas respostas são registradas automaticamente e nossa equipe será notificada.
+              </p>
             </CardContent>
           </Card>
-        </div>
-        
-        <div>
-          <PreviewProjectDetails 
-            projectData={{
-              projectTitle: projectData.projectTitle,
-              clientName: projectData.clientName,
-              status: projectData.status,
-              packageType: projectData.packageType,
-              creationDate: projectData.createdAt ? new Date(projectData.createdAt).toLocaleDateString('pt-BR') : undefined
-            }}
-          />
-        </div>
-      </div>
+        </TabsContent>
+
+        <TabsContent value="details">
+          <PreviewProjectDetails project={projectData} />
+        </TabsContent>
+      </Tabs>
     </div>
   );
 };

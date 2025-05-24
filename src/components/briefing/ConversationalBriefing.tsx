@@ -1,243 +1,263 @@
 
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import { Loader2, ArrowRight, ArrowLeft, Send } from 'lucide-react';
-import { useConversationalBriefing } from '@/hooks/useConversationalBriefing';
-import PackageSelection from './PackageSelection';
-
-interface Message {
-  role: 'system' | 'user';
-  content: string;
-  isTyping?: boolean;
-}
+import { Music, MessageCircle, ArrowRight, CheckCircle } from 'lucide-react';
+import { briefingStorage, BriefingData } from '@/utils/briefingStorage';
 
 interface ConversationalBriefingProps {
   onComplete: (briefingId: string, packageType: 'essencial' | 'profissional' | 'premium') => void;
 }
 
+interface ChatMessage {
+  id: string;
+  type: 'bot' | 'user';
+  content: string;
+  timestamp: Date;
+}
+
 const ConversationalBriefing: React.FC<ConversationalBriefingProps> = ({ onComplete }) => {
-  const {
-    currentStep,
-    initialQuestions,
-    initialResponses,
-    isSubmitting,
-    isInitialBriefingComplete,
-    updateResponse,
-    nextStep,
-    prevStep,
-    saveInitialBriefing
-  } = useConversationalBriefing();
+  const [currentStep, setCurrentStep] = useState(0);
+  const [messages, setMessages] = useState<ChatMessage[]>([]);
+  const [userInput, setUserInput] = useState('');
+  const [briefingData, setBriefingData] = useState<Partial<BriefingData>>({});
+  const [selectedPackage, setSelectedPackage] = useState<'essencial' | 'profissional' | 'premium' | null>(null);
+  const [briefingId] = useState(() => briefingStorage.generateBriefingId());
 
-  const [messages, setMessages] = useState<Message[]>([
+  const steps = [
     {
-      role: 'system',
-      content: 'Olá! Sou o assistente de composição da harmonIA. Para criar sua música personalizada, preciso conhecer um pouco sobre o que você imagina.'
+      question: "Olá! Sou o assistente da Harmonia Music. Qual é o seu nome?",
+      field: 'clientName',
+      type: 'text'
+    },
+    {
+      question: "Ótimo! Qual é o seu melhor e-mail para contato?",
+      field: 'email',
+      type: 'email'
+    },
+    {
+      question: "Perfeito! Agora me conte: que tipo de música você precisa? Descreva o projeto.",
+      field: 'projectDescription',
+      type: 'textarea'
+    },
+    {
+      question: "Interessante! Qual o seu orçamento estimado para este projeto?",
+      field: 'budget',
+      type: 'text'
+    },
+    {
+      question: "E qual o prazo que você tem em mente para a entrega?",
+      field: 'timeline',
+      type: 'text'
+    },
+    {
+      question: "Excelente! Agora vou apresentar nossos pacotes. Qual melhor se adequa ao seu projeto?",
+      field: 'packageType',
+      type: 'package-selection'
     }
-  ]);
-  const [currentResponse, setCurrentResponse] = useState('');
-  const [isTyping, setIsTyping] = useState(false);
-  const messagesEndRef = useRef<HTMLDivElement>(null);
+  ];
 
-  // Simulate assistant typing
-  const simulateTyping = (message: string, delay = 30) => {
-    return new Promise<void>((resolve) => {
-      setIsTyping(true);
-      
-      // Add a temporary typing message
-      setMessages(prev => [...prev, {
-        role: 'system',
-        content: '',
-        isTyping: true
-      }]);
-      
-      // Delay before showing the message
-      setTimeout(() => {
-        setMessages(prev => [
-          ...prev.filter(m => !m.isTyping),
-          {
-            role: 'system',
-            content: message
-          }
-        ]);
-        setIsTyping(false);
-        resolve();
-      }, delay * message.length); // Simulates typing speed
-    });
-  };
-
-  // Handle user response submission
-  const handleSubmit = async () => {
-    if (!currentResponse.trim()) return;
-    
-    // Add user message to chat
-    setMessages(prev => [...prev, {
-      role: 'user',
-      content: currentResponse
-    }]);
-    
-    // Save the response
-    updateResponse(currentStep, currentResponse);
-    setCurrentResponse('');
-    
-    // Move to next step after a brief delay
-    setTimeout(async () => {
-      // If we have more questions, show the next one
-      if (currentStep < initialQuestions.length - 1) {
-        nextStep();
-        await simulateTyping(initialQuestions[currentStep + 1]);
-      } 
-      // If we've completed all initial questions
-      else if (currentStep === initialQuestions.length - 1) {
-        nextStep();
-        
-        // Prepare a summary of what the user has shared
-        const inspirationSummary = initialResponses.inspiration ? 
-          `Uma música inspirada em "${initialResponses.inspiration.substring(0, 50)}${initialResponses.inspiration.length > 50 ? '...' : ''}"` : '';
-        
-        const emotionSummary = initialResponses.emotion ?
-          `que transmite sentimentos de ${initialResponses.emotion.toLowerCase()}` : '';
-        
-        const connectionSummary = initialResponses.specialConnection ?
-          `com uma conexão especial a "${initialResponses.specialConnection.substring(0, 50)}${initialResponses.specialConnection.length > 50 ? '...' : ''}"` : '';
-        
-        // Create a natural language summary
-        let summary = "Com base no que você compartilhou, vejo que deseja ";
-        
-        if (inspirationSummary) {
-          summary += inspirationSummary;
-        }
-        
-        if (emotionSummary) {
-          summary += inspirationSummary ? ` ${emotionSummary}` : emotionSummary;
-        }
-        
-        if (connectionSummary) {
-          summary += (inspirationSummary || emotionSummary) ? ` e ${connectionSummary}` : connectionSummary;
-        }
-        
-        summary += ".";
-        
-        // Show the summary and then the package selection message
-        await simulateTyping(summary);
-        await simulateTyping("Para continuar criando sua música personalizada, precisamos de mais detalhes específicos que são desbloqueados após a contratação de um dos pacotes abaixo. Escolha o que melhor atende às suas necessidades:");
-      }
-    }, 500);
-  };
-
-  // Handle package selection
-  const handlePackageSelect = async (packageType: 'essencial' | 'profissional' | 'premium') => {
-    const briefingId = await saveInitialBriefing(packageType);
-    if (briefingId) {
-      onComplete(briefingId, packageType);
-    }
-  };
-
-  // Auto-scroll to bottom of chat
   useEffect(() => {
-    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
-  }, [messages]);
-
-  // Show first question on initial render
-  useEffect(() => {
-    if (messages.length === 1) {
-      setTimeout(async () => {
-        await simulateTyping(initialQuestions[0]);
-      }, 1000);
-    }
+    // Iniciar conversa
+    addBotMessage(steps[0].question);
   }, []);
 
+  useEffect(() => {
+    // Salvar dados automaticamente
+    if (Object.keys(briefingData).length > 0) {
+      briefingStorage.saveBriefingData(briefingId, {
+        ...briefingData,
+        id: briefingId,
+        createdAt: new Date().toISOString()
+      });
+    }
+  }, [briefingData, briefingId]);
+
+  const addBotMessage = (content: string) => {
+    setMessages(prev => [...prev, {
+      id: Date.now().toString(),
+      type: 'bot',
+      content,
+      timestamp: new Date()
+    }]);
+  };
+
+  const addUserMessage = (content: string) => {
+    setMessages(prev => [...prev, {
+      id: Date.now().toString(),
+      type: 'user',
+      content,
+      timestamp: new Date()
+    }]);
+  };
+
+  const handleUserResponse = () => {
+    if (!userInput.trim()) return;
+
+    const currentStepData = steps[currentStep];
+    addUserMessage(userInput);
+
+    // Salvar resposta
+    setBriefingData(prev => ({
+      ...prev,
+      [currentStepData.field]: userInput
+    }));
+
+    setUserInput('');
+
+    // Próximo passo
+    setTimeout(() => {
+      if (currentStep < steps.length - 1) {
+        setCurrentStep(currentStep + 1);
+        addBotMessage(steps[currentStep + 1].question);
+      }
+    }, 1000);
+  };
+
+  const handlePackageSelection = (packageType: 'essencial' | 'profissional' | 'premium') => {
+    setSelectedPackage(packageType);
+    addUserMessage(`Escolhi o pacote ${packageType}`);
+    
+    setBriefingData(prev => ({
+      ...prev,
+      packageType
+    }));
+
+    setTimeout(() => {
+      addBotMessage("Perfeito! Vou salvar suas informações e te redirecionar para finalizar o processo.");
+      
+      setTimeout(() => {
+        onComplete(briefingId, packageType);
+      }, 2000);
+    }, 1000);
+  };
+
+  const getCurrentStepType = () => {
+    if (currentStep >= steps.length) return 'completed';
+    return steps[currentStep].type;
+  };
+
   return (
-    <div className="flex flex-col h-full">
-      <div className="flex items-center justify-between mb-4">
-        <h3 className="text-lg font-semibold">Briefing Musical</h3>
-        <div className="flex items-center gap-1 text-sm text-gray-500">
-          {!isInitialBriefingComplete && (
-            <>
-              <span>Etapa {currentStep + 1} de {initialQuestions.length}</span>
-              <div className="w-32 h-2 bg-gray-200 rounded-full ml-2">
-                <div 
-                  className="h-2 bg-harmonia-green rounded-full" 
-                  style={{ width: `${((currentStep + 1) / initialQuestions.length) * 100}%` }}
-                />
-              </div>
-            </>
-          )}
-        </div>
+    <div className="container mx-auto max-w-4xl px-4 py-8">
+      <div className="text-center mb-8">
+        <Music className="h-12 w-12 text-harmonia-green mx-auto mb-4" />
+        <h1 className="text-3xl font-bold text-gray-900 mb-2">
+          Vamos criar sua música personalizada
+        </h1>
+        <p className="text-gray-600">
+          Responda algumas perguntas para começarmos
+        </p>
       </div>
 
-      <div className="flex-1 overflow-y-auto bg-card rounded-lg p-4 mb-4 border border-border">
-        <div className="space-y-4">
-          {messages.map((message, index) => (
-            <div 
-              key={index} 
-              className={`flex ${message.role === 'system' ? 'justify-start' : 'justify-end'}`}
-            >
-              <div 
-                className={`max-w-[80%] rounded-lg p-3 ${
-                  message.role === 'system' 
-                    ? 'bg-muted text-foreground' 
-                    : 'bg-harmonia-green/20 text-foreground'
-                }`}
+      <Card className="max-w-2xl mx-auto">
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <MessageCircle className="h-5 w-5" />
+            Briefing Conversacional
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="space-y-4 mb-6 max-h-96 overflow-y-auto">
+            {messages.map((message) => (
+              <div
+                key={message.id}
+                className={`flex ${message.type === 'user' ? 'justify-end' : 'justify-start'}`}
               >
-                {message.isTyping ? (
-                  <div className="flex space-x-1 items-center h-6">
-                    <div className="w-2 h-2 rounded-full bg-foreground/70 animate-bounce" 
-                      style={{ animationDelay: '0ms' }} />
-                    <div className="w-2 h-2 rounded-full bg-foreground/70 animate-bounce" 
-                      style={{ animationDelay: '300ms' }} />
-                    <div className="w-2 h-2 rounded-full bg-foreground/70 animate-bounce" 
-                      style={{ animationDelay: '600ms' }} />
+                <div
+                  className={`max-w-xs lg:max-w-md px-4 py-2 rounded-lg ${
+                    message.type === 'user'
+                      ? 'bg-harmonia-green text-white'
+                      : 'bg-gray-100 text-gray-900'
+                  }`}
+                >
+                  {message.content}
+                </div>
+              </div>
+            ))}
+          </div>
+
+          {getCurrentStepType() === 'package-selection' && (
+            <div className="space-y-4">
+              <div className="grid gap-4">
+                <Button
+                  onClick={() => handlePackageSelection('essencial')}
+                  className="h-auto p-6 bg-blue-500 hover:bg-blue-600 text-left"
+                >
+                  <div>
+                    <h3 className="font-bold text-lg mb-2">Pacote Essencial - R$ 297</h3>
+                    <p className="text-sm opacity-90">Música instrumental personalizada, ideal para conteúdo digital</p>
                   </div>
-                ) : (
-                  <p className="whitespace-pre-wrap">{message.content}</p>
-                )}
+                </Button>
+                
+                <Button
+                  onClick={() => handlePackageSelection('profissional')}
+                  className="h-auto p-6 bg-harmonia-green hover:bg-harmonia-green/90 text-left"
+                >
+                  <div>
+                    <h3 className="font-bold text-lg mb-2">Pacote Profissional - R$ 597</h3>
+                    <p className="text-sm opacity-90">Música completa com arranjos profissionais e mixagem</p>
+                  </div>
+                </Button>
+                
+                <Button
+                  onClick={() => handlePackageSelection('premium')}
+                  className="h-auto p-6 bg-purple-600 hover:bg-purple-700 text-left"
+                >
+                  <div>
+                    <h3 className="font-bold text-lg mb-2">Pacote Premium - R$ 997</h3>
+                    <p className="text-sm opacity-90">Produção completa com consultoria e versões ilimitadas</p>
+                  </div>
+                </Button>
               </div>
             </div>
-          ))}
-          <div ref={messagesEndRef} />
-        </div>
-      </div>
+          )}
 
-      {isInitialBriefingComplete ? (
-        <PackageSelection 
-          onSelectPackage={handlePackageSelect}
-          isSubmitting={isSubmitting}
-        />
-      ) : (
-        <div className="flex gap-2">
-          <Button
-            variant="outline"
-            size="icon"
-            disabled={currentStep === 0 || isTyping}
-            onClick={prevStep}
-          >
-            <ArrowLeft className="h-4 w-4" />
-          </Button>
-          
-          <div className="flex-1 flex gap-2">
-            <Textarea
-              value={currentResponse}
-              onChange={(e) => setCurrentResponse(e.target.value)}
-              placeholder="Digite sua resposta aqui..."
-              className="flex-1"
-              onKeyDown={(e) => {
-                if (e.key === 'Enter' && !e.shiftKey) {
-                  e.preventDefault();
-                  handleSubmit();
-                }
-              }}
-              disabled={isTyping}
-            />
-            <Button
-              disabled={!currentResponse.trim() || isTyping}
-              onClick={handleSubmit}
-            >
-              <Send className="h-4 w-4" />
-            </Button>
-          </div>
-        </div>
-      )}
+          {getCurrentStepType() === 'textarea' && (
+            <div className="space-y-4">
+              <Textarea
+                value={userInput}
+                onChange={(e) => setUserInput(e.target.value)}
+                placeholder="Digite sua resposta aqui..."
+                className="min-h-[100px]"
+              />
+              <Button onClick={handleUserResponse} className="w-full">
+                <ArrowRight className="h-4 w-4 mr-2" />
+                Enviar
+              </Button>
+            </div>
+          )}
+
+          {getCurrentStepType() === 'text' || getCurrentStepType() === 'email' && (
+            <div className="space-y-4">
+              <Input
+                type={getCurrentStepType() === 'email' ? 'email' : 'text'}
+                value={userInput}
+                onChange={(e) => setUserInput(e.target.value)}
+                placeholder="Digite sua resposta..."
+                onKeyPress={(e) => e.key === 'Enter' && handleUserResponse()}
+              />
+              <Button onClick={handleUserResponse} className="w-full">
+                <ArrowRight className="h-4 w-4 mr-2" />
+                Continuar
+              </Button>
+            </div>
+          )}
+
+          {getCurrentStepType() === 'completed' && (
+            <div className="text-center py-8">
+              <CheckCircle className="h-12 w-12 text-green-500 mx-auto mb-4" />
+              <h3 className="text-xl font-bold text-gray-900 mb-2">
+                Briefing Concluído!
+              </h3>
+              <p className="text-gray-600">
+                Redirecionando para finalizar seu pedido...
+              </p>
+            </div>
+          )}
+        </CardContent>
+      </Card>
     </div>
   );
 };
