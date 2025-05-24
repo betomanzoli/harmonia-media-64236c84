@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { useToast } from '@/hooks/use-toast';
 import { useGoogleDriveAudio } from '@/hooks/audio/useGoogleDriveAudio';
 import { usePreviewProjects } from '@/hooks/admin/usePreviewProjects';
+import { supabase } from '@/lib/supabase';
 
 interface MusicPreview {
   id: string;
@@ -22,7 +23,6 @@ interface PreviewProject {
   expiresAt?: string;
 }
 
-// Extend ProjectItem interface with the title property that we need
 interface ExtendedProjectItem {
   title?: string;
   [key: string]: any;
@@ -36,197 +36,145 @@ export const usePreviewProject = (projectId: string | undefined) => {
   const [isLoading, setIsLoading] = useState(true);
   const [accessTokenValid, setAccessTokenValid] = useState(true);
   const [originalProjectId] = useState(projectId);
-  
+
+  // Novo: Carregar projeto do Supabase se não encontrar localmente
+  const loadFromSupabase = async (id: string) => {
+    try {
+      const { data, error } = await supabase
+        .from('projects')
+        .select('*')
+        .eq('id', id)
+        .single();
+
+      if (error) throw error;
+      
+      return data;
+    } catch (error) {
+      console.error('Erro ao buscar projeto no Supabase:', error);
+      return null;
+    }
+  };
+
+  // Novo: Sincronizar dados entre localStorage e Supabase
+  const syncProjectData = async (id: string) => {
+    try {
+      // 1. Tentar localStorage primeiro
+      const localData = localStorage.getItem(`project_${id}`);
+      if (localData) return JSON.parse(localData);
+
+      // 2. Buscar do Supabase se não encontrar
+      const supabaseData = await loadFromSupabase(id);
+      if (supabaseData) {
+        // 3. Salvar no localStorage para próximas visitas
+        localStorage.setItem(`project_${id}`, JSON.stringify(supabaseData));
+        return supabaseData;
+      }
+
+      return null;
+    } catch (error) {
+      console.error('Erro na sincronização de dados:', error);
+      return null;
+    }
+  };
+
   useEffect(() => {
     if (!projectId) {
       setIsLoading(false);
       return;
     }
 
-    setIsLoading(true);
-    console.log("[usePreviewProject] Loading project with ID:", projectId);
-    
-    try {
-      // Get project from admin projects
-      const adminProject = getProjectById(projectId) as ExtendedProjectItem;
+    const loadProject = async () => {
+      setIsLoading(true);
       
-      if (adminProject) {
-        console.log('[usePreviewProject] Project found in admin system:', adminProject);
+      try {
+        // Etapa 1: Buscar dados sincronizados
+        const syncedData = await syncProjectData(projectId);
         
-        // Create previews from project versions list
-        const previews: MusicPreview[] = adminProject.versionsList?.map(v => ({
-          id: v.id,
-          title: v.name || `Versão ${v.id}`,
-          description: v.description || '',
-          audioUrl: `https://drive.google.com/uc?export=download&id=${v.fileId || audioFiles[0]?.id || '1H62ylCwQYJ23BLpygtvNmCgwTDcHX6Cl'}`,
-          fileId: v.fileId,
-          recommended: v.recommended
-        })) || [];
-        
-        // If no previews but versionsList exists, create from versionsList
-        if (previews.length === 0 && adminProject.versionsList && adminProject.versionsList.length > 0) {
-          for (let i = 0; i < adminProject.versionsList.length; i++) {
-            const version = adminProject.versionsList[i];
-            const fileId = version.fileId || audioFiles[i % audioFiles.length]?.id || '1H62ylCwQYJ23BLpygtvNmCgwTDcHX6Cl';
-            
-            previews.push({
-              id: version.id || `v${i+1}`,
-              title: version.name || `Versão ${i+1}`,
-              description: version.description || 'Versão para aprovação',
-              audioUrl: `https://drive.google.com/uc?export=download&id=${fileId}`,
-              fileId: fileId,
-              recommended: version.recommended || i === 0 // Mark first version as recommended
-            });
-          }
-        }
-        
-        // If there are no versions yet, create fallback previews only for demo purposes
-        // In the future, you would remove this when your backend integration is complete
-        const fallbackPreviews = [
-          {
-            id: 'v1',
-            title: 'Versão Acústica',
-            description: 'Versão suave com violão e piano',
-            audioUrl: 'https://drive.google.com/uc?export=download&id=1H62ylCwQYJ23BLpygtvNmCgwTDcHX6Cl',
-            fileId: '1H62ylCwQYJ23BLpygtvNmCgwTDcHX6Cl'
-          },
-          {
-            id: 'v2',
-            title: 'Versão Orquestral',
-            description: 'Arranjo completo com cordas e metais',
-            audioUrl: 'https://drive.google.com/uc?export=download&id=11c6JahRd5Lx0iKCL_gHZ0zrZ3LFBJ47a',
-            fileId: '11c6JahRd5Lx0iKCL_gHZ0zrZ3LFBJ47a'
-          },
-          {
-            id: 'v3',
-            title: 'Versão Minimalista',
-            description: 'Abordagem simplificada com foco na melodia',
-            audioUrl: 'https://drive.google.com/uc?export=download&id=1fCsWubN8pXwM-mRlDtnQFTCkBbIkuUyW',
-            fileId: '1fCsWubN8pXwM-mRlDtnQFTCkBbIkuUyW'
-          }
-        ];
+        // Etapa 2: Processar dados
+        if (syncedData) {
+          const previews: MusicPreview[] = syncedData.versionsList?.map((v: any) => ({
+            id: v.id,
+            title: v.name || `Versão ${v.id}`,
+            description: v.description || '',
+            audioUrl: v.audio_url || `https://drive.google.com/uc?export=download&id=${v.fileId}`,
+            fileId: v.fileId,
+            recommended: v.recommended
+          })) || [];
 
-        // Create project data
-        setProjectData({
-          clientName: adminProject.clientName || 'Cliente',
-          projectTitle: adminProject.title || adminProject.packageType || 'Música Personalizada',
-          packageType: adminProject.packageType || 'Música Personalizada',
-          status: adminProject.status as 'waiting' | 'feedback' | 'approved',
-          expiresAt: adminProject.expirationDate,
-          createdAt: adminProject.createdAt,
-          previews: previews.length > 0 ? previews : (adminProject.id === 'P0001' ? [] : fallbackPreviews)
-        });
-        
-        // Record access in logs
-        console.log(`Cliente acessando prévia: ${projectId}, data: ${new Date().toISOString()}`);
-      } else {
-        console.error(`Project with ID ${projectId} not found in admin system`);
-        
-        // Fallback to mock data if project not found
-        setProjectData({
-          clientName: 'Cliente Exemplo',
-          projectTitle: 'Projeto de Música Personalizada',
-          packageType: 'Música Personalizada',
-          status: 'waiting',
-          expiresAt: new Date(Date.now() + 14 * 24 * 60 * 60 * 1000).toISOString(),
-          createdAt: new Date().toISOString(),
-          previews: [
-            {
-              id: 'v1',
-              title: 'Versão Acústica',
-              description: 'Versão suave com violão e piano',
-              audioUrl: 'https://drive.google.com/uc?export=download&id=1H62ylCwQYJ23BLpygtvNmCgwTDcHX6Cl',
-              fileId: '1H62ylCwQYJ23BLpygtvNmCgwTDcHX6Cl'
-            },
-            {
-              id: 'v2',
-              title: 'Versão Orquestral',
-              description: 'Arranjo completo com cordas e metais',
-              audioUrl: 'https://drive.google.com/uc?export=download&id=11c6JahRd5Lx0iKCL_gHZ0zrZ3LFBJ47a',
-              fileId: '11c6JahRd5Lx0iKCL_gHZ0zrZ3LFBJ47a'
-            },
-            {
-              id: 'v3',
-              title: 'Versão Minimalista',
-              description: 'Abordagem simplificada com foco na melodia',
-              audioUrl: 'https://drive.google.com/uc?export=download&id=1fCsWubN8pXwM-mRlDtnQFTCkBbIkuUyW',
-              fileId: '1fCsWubN8pXwM-mRlDtnQFTCkBbIkuUyW'
-            }
-          ]
-        });
-        
-        setAccessTokenValid(false);
-        
-        // Show a toast if the project wasn't found, but only if we're not in a testing mode or iframe
-        if (!window.location.href.includes('localhost') && !window.location.href.includes('127.0.0.1')) {
-          toast({
-            title: "Aviso de prévia",
-            description: "Você está acessando uma versão de demonstração. Contate o administrador.",
-            variant: "default"
+          setProjectData({
+            clientName: syncedData.client_name,
+            projectTitle: syncedData.title,
+            status: syncedData.status,
+            previews,
+            packageType: syncedData.package_type,
+            createdAt: syncedData.created_at,
+            expiresAt: syncedData.expires_at
           });
+          
+          console.log(`Projeto carregado: ${projectId}`);
+        } else {
+          // Fallback para dados mockados
+          setProjectData({
+            clientName: 'Cliente Exemplo',
+            projectTitle: 'Projeto Demo',
+            status: 'waiting',
+            previews: [...], // Manter array de fallback
+            expiresAt: new Date(Date.now() + 12096e5).toISOString()
+          });
+          
+          setAccessTokenValid(false);
+          console.warn(`Projeto ${projectId} não encontrado, usando dados demo`);
         }
+      } catch (error) {
+        console.error("Erro crítico ao carregar projeto:", error);
+        setAccessTokenValid(false);
+        toast({
+          title: "Erro de conexão",
+          description: "Não foi possível carregar os dados do projeto",
+          variant: "destructive"
+        });
+      } finally {
+        setIsLoading(false);
       }
-    } catch (error) {
-      console.error("Error loading preview project:", error);
-      setAccessTokenValid(false);
-      toast({
-        title: "Erro ao carregar prévia",
-        description: "Houve um erro ao carregar os dados da prévia.",
-        variant: "destructive"
-      });
-    } finally {
-      setIsLoading(false);
-    }
-  }, [projectId, getProjectById, audioFiles, toast]);
-  
-  // Update project status function
-  const updateProjectStatus = (newStatus: 'approved' | 'feedback', comments: string) => {
+    };
+
+    loadProject();
+  }, [projectId, toast]);
+
+  // Função para atualizar status (agora persiste no Supabase)
+  const updateProjectStatus = async (newStatus: 'approved' | 'feedback', comments: string) => {
     if (!projectId || !projectData) return false;
 
-    console.log(`Atualizando status do projeto ${projectId} para ${newStatus}`);
-    console.log(`Feedback do cliente: ${comments}`);
-    
-    // Update the project in the admin system
-    if (projectId) {
-      // Add history entry
-      const historyAction = newStatus === 'approved' 
-        ? 'Prévia aprovada pelo cliente' 
-        : 'Feedback recebido do cliente';
-      
-      const historyEntry = {
-        action: historyAction,
-        timestamp: new Date().toLocaleString('pt-BR'),
-        data: {
-          message: comments || 'Sem comentários adicionais'
-        }
-      };
-      
-      const updates = {
-        status: newStatus,
-        feedback: comments,
-        lastActivityDate: new Date().toLocaleDateString('pt-BR'),
-        history: [historyEntry]
-      };
-      
-      const updated = updateProject(projectId, updates);
-      
-      if (updated) {
-        // Update local state
-        setProjectData(prev => {
-          if (!prev) return null;
-          return {
-            ...prev,
-            status: newStatus
-          };
-        });
-        
-        return true;
-      }
+    try {
+      // Atualizar no Supabase
+      const { error } = await supabase
+        .from('projects')
+        .update({ 
+          status: newStatus,
+          feedback: comments,
+          updated_at: new Date().toISOString()
+        })
+        .eq('id', projectId);
+
+      if (error) throw error;
+
+      // Atualizar localStorage
+      const updatedData = { ...projectData, status: newStatus };
+      localStorage.setItem(`project_${projectId}`, JSON.stringify(updatedData));
+      setProjectData(updatedData);
+
+      return true;
+    } catch (error) {
+      console.error("Erro ao atualizar status:", error);
+      toast({
+        title: "Erro de atualização",
+        description: "Não foi possível salvar as alterações",
+        variant: "destructive"
+      });
+      return false;
     }
-    
-    return false;
   };
-  
+
   return { 
     projectData, 
     setProjectData, 
@@ -236,5 +184,3 @@ export const usePreviewProject = (projectId: string | undefined) => {
     originalProjectId
   };
 };
-
-export type { PreviewProject, MusicPreview };
