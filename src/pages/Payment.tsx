@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useSearchParams, useNavigate } from 'react-router-dom';
-import { supabase } from '@/lib/supabase';
+import { supabase } from '@/integrations/supabase/client';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -27,12 +27,11 @@ const Payment: React.FC = () => {
   const [cupomCode, setCupomCode] = useState('');
   const [cupomApplicado, setCupomApplicado] = useState(false);
 
-  // ✅ CONFIGURAÇÃO DE PACOTES COM CUPONS
   const packageDetails = {
     essencial: {
       name: 'Essencial',
-      price: import.meta.env.VITE_PRICE_ESSENCIAL,
-      priceFormatted: `R$ ${import.meta.env.VITE_PRICE_ESSENCIAL},00`,
+      price: 219,
+      priceFormatted: 'R$ 219,00',
       description: 'Música personalizada para uso pessoal',
       features: [
         '1 música personalizada',
@@ -42,14 +41,14 @@ const Payment: React.FC = () => {
         'Uso pessoal'
       ],
       color: 'bg-green-500',
-      mercadoPagoLink: import.meta.env.VITE_MERCADOPAGO_ESSENCIAL,
-      mercadoPagoLinkCupom: import.meta.env.VITE_MERCADOPAGO_ESSENCIAL_CUPOM,
-      cupomValido: import.meta.env.VITE_CUPOM_ESSENCIAL
+      mercadoPagoLink: 'https://mpago.la/2C16Zhc',
+      mercadoPagoLinkCupom: 'https://mpago.la/1cimFu6',
+      cupomValido: 'ESSENCIAL5'
     },
     profissional: {
       name: 'Profissional',
-      price: import.meta.env.VITE_PRICE_PROFISSIONAL,
-      priceFormatted: `R$ ${import.meta.env.VITE_PRICE_PROFISSIONAL},00`,
+      price: 479,
+      priceFormatted: 'R$ 479,00',
       description: 'Música para uso comercial',
       features: [
         '1 música personalizada',
@@ -60,14 +59,14 @@ const Payment: React.FC = () => {
         'Formatos MP3 + WAV'
       ],
       color: 'bg-blue-500',
-      mercadoPagoLink: import.meta.env.VITE_MERCADOPAGO_PROFISSIONAL,
-      mercadoPagoLinkCupom: import.meta.env.VITE_MERCADOPAGO_PROFISSIONAL_CUPOM,
-      cupomValido: import.meta.env.VITE_CUPOM_PROFISSIONAL
+      mercadoPagoLink: 'https://mpago.la/1fejmqL',
+      mercadoPagoLinkCupom: 'https://mpago.la/2E1tYaj',
+      cupomValido: 'PROFISSIONAL5'
     },
     premium: {
       name: 'Premium',
-      price: import.meta.env.VITE_PRICE_PREMIUM,
-      priceFormatted: `R$ ${import.meta.env.VITE_PRICE_PREMIUM},00`,
+      price: 969,
+      priceFormatted: 'R$ 969,00',
       description: 'Registro legal + propriedade total',
       features: [
         '1 música personalizada',
@@ -79,9 +78,9 @@ const Payment: React.FC = () => {
         'Todos os formatos'
       ],
       color: 'bg-purple-500',
-      mercadoPagoLink: import.meta.env.VITE_MERCADOPAGO_PREMIUM,
-      mercadoPagoLinkCupom: import.meta.env.VITE_MERCADOPAGO_PREMIUM_CUPOM,
-      cupomValido: import.meta.env.VITE_CUPOM_PREMIUM
+      mercadoPagoLink: 'https://mpago.li/1fDXjQp',
+      mercadoPagoLinkCupom: 'https://mpago.li/28opNmP',
+      cupomValido: 'PREMIUM5'
     }
   };
 
@@ -91,7 +90,7 @@ const Payment: React.FC = () => {
     } else {
       navigate('/briefing');
     }
-  }, [briefingId, packageType]);
+  }, [briefingId, packageType, navigate]);
 
   const loadBriefingData = async () => {
     try {
@@ -117,6 +116,8 @@ const Payment: React.FC = () => {
   };
 
   const handleCupomApply = () => {
+    if (!packageType || !(packageType in packageDetails)) return;
+    
     const selectedPackage = packageDetails[packageType as keyof typeof packageDetails];
     
     if (cupomCode.toUpperCase() === selectedPackage.cupomValido) {
@@ -135,10 +136,11 @@ const Payment: React.FC = () => {
   };
 
   const handlePayment = async (paymentMethod: 'pix' | 'card') => {
+    if (!packageType || !(packageType in packageDetails)) return;
+    
     try {
       console.log('[DEBUG] Iniciando pagamento:', { briefingId, packageType, paymentMethod, cupomApplicado });
 
-      // Atualizar status para pagamento iniciado
       await supabase
         .from('briefings')
         .update({
@@ -150,12 +152,10 @@ const Payment: React.FC = () => {
         })
         .eq('id', briefingId);
 
-      // ✅ ESCOLHER LINK COM OU SEM CUPOM
       const selectedPackage = packageDetails[packageType as keyof typeof packageDetails];
       const paymentUrl = cupomApplicado ? selectedPackage.mercadoPagoLinkCupom : selectedPackage.mercadoPagoLink;
       
       if (paymentUrl) {
-        // Adicionar parâmetros de retorno
         const returnUrl = `${window.location.origin}/payment/success?briefing=${briefingId}&package=${packageType}`;
         const cancelUrl = `${window.location.origin}/payment/cancel?briefing=${briefingId}&package=${packageType}`;
         
@@ -185,8 +185,17 @@ const Payment: React.FC = () => {
     );
   }
 
-  if (!briefingData) {
-    return null;
+  if (!briefingData || !packageType || !(packageType in packageDetails)) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="text-center">
+          <p>Dados de pagamento inválidos</p>
+          <Button onClick={() => navigate('/briefing')} className="mt-4">
+            Voltar ao Briefing
+          </Button>
+        </div>
+      </div>
+    );
   }
 
   const selectedPackage = packageDetails[packageType as keyof typeof packageDetails];
@@ -204,7 +213,6 @@ const Payment: React.FC = () => {
         </Button>
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          {/* Resumo do Pedido */}
           <div className="lg:col-span-2 space-y-6">
             <Card>
               <CardHeader>
@@ -229,7 +237,6 @@ const Payment: React.FC = () => {
                   </Badge>
                 </div>
                 
-                {/* ✅ CAMPO DE CUPOM */}
                 <div className="border-t pt-4">
                   <div className="flex items-center gap-2 mb-3">
                     <Tag className="h-4 w-4 text-gray-500" />
@@ -276,7 +283,6 @@ const Payment: React.FC = () => {
               </CardContent>
             </Card>
 
-            {/* Métodos de Pagamento */}
             <Card>
               <CardHeader>
                 <CardTitle>Escolha a Forma de Pagamento</CardTitle>
@@ -312,7 +318,6 @@ const Payment: React.FC = () => {
               </CardContent>
             </Card>
 
-            {/* Segurança */}
             <Card>
               <CardContent className="pt-6">
                 <div className="flex items-center gap-3 text-green-600">
@@ -328,7 +333,6 @@ const Payment: React.FC = () => {
             </Card>
           </div>
 
-          {/* Detalhes do Pacote */}
           <div className="space-y-6">
             <Card>
               <CardHeader>
@@ -353,4 +357,44 @@ const Payment: React.FC = () => {
               <CardContent>
                 <ul className="space-y-2">
                   {selectedPackage.features.map((feature, index) => (
-                    <li key={index} className="flex
+                    <li key={index} className="flex items-center gap-2">
+                      <CheckCircle className="h-4 w-4 text-green-500" />
+                      <span className="text-sm">{feature}</span>
+                    </li>
+                  ))}
+                </ul>
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Clock className="h-5 w-5" />
+                  Próximos Passos
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <ol className="space-y-2 text-sm">
+                  <li className="flex items-start gap-2">
+                    <span className="flex-shrink-0 w-5 h-5 bg-green-100 text-green-600 rounded-full flex items-center justify-center text-xs font-bold">1</span>
+                    <span>Efetue o pagamento</span>
+                  </li>
+                  <li className="flex items-start gap-2">
+                    <span className="flex-shrink-0 w-5 h-5 bg-green-100 text-green-600 rounded-full flex items-center justify-center text-xs font-bold">2</span>
+                    <span>Complete o briefing detalhado</span>
+                  </li>
+                  <li className="flex items-start gap-2">
+                    <span className="flex-shrink-0 w-5 h-5 bg-green-100 text-green-600 rounded-full flex items-center justify-center text-xs font-bold">3</span>
+                    <span>Aguarde sua música personalizada</span>
+                  </li>
+                </ol>
+              </CardContent>
+            </Card>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+export default Payment;
