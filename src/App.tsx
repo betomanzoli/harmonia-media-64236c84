@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Routes, Route, useLocation } from 'react-router-dom';
 import ScrollToTop from './components/ScrollToTop';
@@ -35,6 +34,7 @@ import BriefingSuccess from './pages/BriefingSuccess';
 import BriefingComplete from './pages/BriefingComplete';
 import ClientDashboard from './pages/ClientDashboard';
 import FinalDeliveryPage from './pages/FinalDeliveryPage';
+import SessionTransfer from './pages/SessionTransfer'; // Novo componente adicionado
 
 // Import admin pages
 import AdminBriefings from './pages/admin/AdminBriefings';
@@ -61,7 +61,6 @@ const AppRoutes: React.FC = () => {
   const location = useLocation();
   const [showChatbot, setShowChatbot] = useState(true);
   
-  // Check if current route is an admin route
   useEffect(() => {
     const isAdminRoute = location.pathname.includes('/admin-');
     setShowChatbot(!isAdminRoute);
@@ -70,6 +69,7 @@ const AppRoutes: React.FC = () => {
   return (
     <>
       <Routes>
+        {/* Rotas públicas */}
         <Route path="/" element={<HomePage />} />
         <Route path="/sobre" element={<AboutPage />} />
         <Route path="/servicos" element={<ServicesPage />} />
@@ -87,23 +87,24 @@ const AppRoutes: React.FC = () => {
         <Route path="/acompanhar-pedido" element={<OrderTracking />} />
         <Route path="/privacidade" element={<PrivacyPolicy />} />
         <Route path="/termos" element={<Terms />} />
-        
-        {/* Client Dashboard and Delivery Routes */}
+
+        {/* Rotas de cliente */}
         <Route path="/client-dashboard" element={<ClientDashboard />} />
         <Route path="/deliveries/:projectId" element={<FinalDeliveryPage />} />
-        
-        {/* Authentication routes */}
+
+        {/* Rotas de autenticação */}
         <Route path="/auth/preview/:projectId" element={<MusicPreviewAuth />} />
         <Route path="/auth/callback" element={<AuthCallback />} />
         <Route path="/auth-error" element={<AuthError />} />
-        
-        {/* Preview routes */}
+        <Route path="/session-transfer" element={<SessionTransfer />} /> {/* Nova rota adicionada */}
+
+        {/* Rotas de pré-visualização */}
         <Route path="/preview/:projectId" element={<PreviewPage />} />
         <Route path="/preview/:previewId" element={<MusicPreviews />} />
         <Route path="/feedback-confirmacao" element={<FeedbackConfirmation />} />
         <Route path="/como-funciona" element={<ServicesPage />} />
-        
-        {/* Admin routes */}
+
+        {/* Rotas administrativas */}
         <Route path="/admin-j28s7d1k/login" element={<AdminLogin />} />
         <Route path="/admin-j28s7d1k/reset-password" element={<ResetPassword />} />
         <Route path="/admin-j28s7d1k/dashboard" element={<AdminDashboard />} />
@@ -123,8 +124,8 @@ const AppRoutes: React.FC = () => {
         <Route path="/admin-j28s7d1k/integrations" element={<AdminIntegrations />} />
         <Route path="/admin-j28s7d1k/invoices" element={<AdminInvoices />} />
         <Route path="/admin-j28s7d1k/storage" element={<AdminStorage />} />
-        
-        {/* 404 route */}
+
+        {/* Rota 404 */}
         <Route path="*" element={<NotFoundPage />} />
       </Routes>
       
