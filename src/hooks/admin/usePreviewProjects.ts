@@ -1,66 +1,58 @@
 
 import { useState, useEffect } from 'react';
+import { mockPreviewProjects } from '@/utils/mockPreviewsData';
 
 export interface ProjectItem {
   id: string;
   clientName: string;
   clientEmail: string;
   packageType: string;
+  status: string;
   createdAt: string;
-  status: 'waiting' | 'feedback' | 'approved' | 'processing';
-  versions?: Array<{
-    id: string;
-    name: string;
-    url: string;
-    feedback?: string;
-    isApproved?: boolean;
-  }>;
+  versions: any[];
 }
 
 export function usePreviewProjects() {
-  const [projects, setProjects] = useState<ProjectItem[]>([
-    {
-      id: 'P0001',
-      clientName: 'João Silva',
-      clientEmail: 'joao@example.com',
-      packageType: 'Profissional',
-      createdAt: '10/05/2023',
-      status: 'waiting',
-      versions: []
-    },
-    {
-      id: 'P0002',
-      clientName: 'Maria Santos',
-      clientEmail: 'maria@example.com',
-      packageType: 'Premium',
-      createdAt: '15/05/2023',
-      status: 'feedback',
-      versions: []
-    }
-  ]);
+  const [projects, setProjects] = useState<ProjectItem[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
 
-  const [isLoading, setIsLoading] = useState(false);
-
-  const loadProjects = () => {
-    setIsLoading(true);
-    // In a real app, this would be an API call to load projects
+  useEffect(() => {
+    // Simulating API call
     setTimeout(() => {
+      setProjects(mockPreviewProjects);
       setIsLoading(false);
     }, 500);
+  }, []);
+
+  const addProject = (newProject: Omit<ProjectItem, 'id' | 'createdAt'>) => {
+    const project: ProjectItem = {
+      ...newProject,
+      id: `PRJ-${Math.random().toString(36).substring(2, 6).toUpperCase()}`,
+      createdAt: new Date().toISOString().split('T')[0],
+      versions: []
+    };
+    
+    setProjects(prev => [...prev, project]);
+    return project.id;
   };
 
   const deleteProject = (id: string) => {
-    setProjects(projects.filter(project => project.id !== id));
+    setProjects(prev => prev.filter(project => project.id !== id));
   };
 
-  useEffect(() => {
-    loadProjects();
-  }, []);
+  const updateProject = (id: string, updates: Partial<ProjectItem>) => {
+    setProjects(prev => 
+      prev.map(project => 
+        project.id === id ? { ...project, ...updates } : project
+      )
+    );
+  };
 
-  return { 
+  return {
     projects,
     isLoading,
-    loadProjects,
-    deleteProject
+    addProject,
+    deleteProject,
+    updateProject
   };
 }

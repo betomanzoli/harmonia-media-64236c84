@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import AdminLayout from '@/components/admin/layout/AdminLayout';
 import { Button } from '@/components/ui/button';
@@ -15,8 +14,8 @@ import {
   BarChart,
   ExternalLink
 } from 'lucide-react';
-import { MarketingLeadsList } from '@/components/admin/marketing/MarketingLeadsList';
-import { WebhookConfigDialog } from '@/components/admin/marketing/WebhookConfigDialog';
+import MarketingLeadsList from '@/components/admin/marketing/MarketingLeadsList';
+import WebhookConfigDialog from '@/components/admin/marketing/WebhookConfigDialog';
 
 const AdminMarketing: React.FC = () => {
   const [activeTab, setActiveTab] = useState('campaigns');

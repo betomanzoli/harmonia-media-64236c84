@@ -1,5 +1,5 @@
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 
 export interface Briefing {
   id: string;
@@ -8,75 +8,117 @@ export interface Briefing {
   phoneNumber?: string;
   packageType: string;
   description: string;
-  references?: string[];
   musicStyle?: string;
-  createdAt: string;
+  references?: string[];
   status: 'pending' | 'completed' | 'approved';
   notes?: string;
+  createdAt: string;
+  projectCreated?: boolean;
 }
 
 export function useBriefings() {
-  const [briefings, setBriefings] = useState<Briefing[]>([
-    {
-      id: 'BR001',
-      name: 'João Silva',
-      email: 'joao@example.com',
-      phoneNumber: '(11) 99999-9999',
-      packageType: 'Profissional',
-      description: 'Música para aniversário de casamento de 10 anos com estilo romântico.',
-      references: ['Música 1 - Artista X', 'Música 2 - Artista Y'],
-      musicStyle: 'Romântico',
-      createdAt: '10/05/2023',
-      status: 'pending'
-    },
-    {
-      id: 'BR002',
-      name: 'Maria Santos',
-      email: 'maria@example.com',
-      packageType: 'Premium',
-      description: 'Composição para vídeo institucional de empresa de tecnologia.',
-      references: ['Música corporativa exemplo'],
-      musicStyle: 'Corporativo',
-      createdAt: '15/05/2023',
-      status: 'completed',
-      notes: 'Cliente solicitou estilo mais moderno'
-    }
-  ]);
+  const [briefings, setBriefings] = useState<Briefing[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
 
-  const [isLoading, setIsLoading] = useState(false);
-
-  const loadBriefings = () => {
+  const loadBriefings = useCallback(() => {
     setIsLoading(true);
-    // In a real app, this would be an API call to load briefings
+    // Simulating API call
     setTimeout(() => {
+      const savedBriefings = localStorage.getItem('briefings');
+      if (savedBriefings) {
+        setBriefings(JSON.parse(savedBriefings));
+      } else {
+        // Mock data if none exists
+        const mockBriefings: Briefing[] = [
+          {
+            id: 'bf-' + Math.random().toString(36).substring(2, 10),
+            name: 'João Silva',
+            email: 'joao@example.com',
+            phoneNumber: '(11) 99999-9999',
+            packageType: 'Premium',
+            description: 'Música para casamento com estilo romântico',
+            musicStyle: 'Pop Romântico',
+            references: ['https://youtube.com/example1', 'https://youtube.com/example2'],
+            status: 'pending',
+            createdAt: '2023-05-15',
+            projectCreated: false
+          },
+          {
+            id: 'bf-' + Math.random().toString(36).substring(2, 10),
+            name: 'Maria Oliveira',
+            email: 'maria@example.com',
+            phoneNumber: '(21) 98888-8888',
+            packageType: 'Essencial',
+            description: 'Jingle para comercial de TV',
+            musicStyle: 'Animado',
+            status: 'completed',
+            notes: 'Cliente solicitou entrega urgente',
+            createdAt: '2023-05-10',
+            projectCreated: true
+          }
+        ];
+        setBriefings(mockBriefings);
+        localStorage.setItem('briefings', JSON.stringify(mockBriefings));
+      }
       setIsLoading(false);
     }, 500);
-  };
+  }, []);
 
-  const createBriefing = (newBriefing: Omit<Briefing, 'id' | 'createdAt' | 'status'>) => {
+  useEffect(() => {
+    loadBriefings();
+  }, [loadBriefings]);
+
+  const createBriefing = (newBriefing: Omit<Briefing, 'id' | 'status' | 'createdAt'>) => {
     const briefing: Briefing = {
       ...newBriefing,
-      id: `BR${Math.floor(Math.random() * 1000).toString().padStart(3, '0')}`,
-      createdAt: new Date().toLocaleDateString(),
-      status: 'pending'
+      id: 'bf-' + Math.random().toString(36).substring(2, 10),
+      status: 'pending',
+      createdAt: new Date().toISOString().split('T')[0],
+      projectCreated: false
     };
-    setBriefings([briefing, ...briefings]);
+    
+    setBriefings(prev => {
+      const updatedBriefings = [...prev, briefing];
+      localStorage.setItem('briefings', JSON.stringify(updatedBriefings));
+      return updatedBriefings;
+    });
+    
     return briefing;
   };
 
   const updateBriefing = (id: string, updates: Partial<Briefing>) => {
-    setBriefings(briefings.map(briefing => 
-      briefing.id === id ? { ...briefing, ...updates } : briefing
-    ));
+    setBriefings(prev => {
+      const updatedBriefings = prev.map(briefing => 
+        briefing.id === id ? { ...briefing, ...updates } : briefing
+      );
+      localStorage.setItem('briefings', JSON.stringify(updatedBriefings));
+      return updatedBriefings;
+    });
   };
 
   const deleteBriefing = (id: string) => {
-    setBriefings(briefings.filter(briefing => briefing.id !== id));
+    setBriefings(prev => {
+      const updatedBriefings = prev.filter(briefing => briefing.id !== id);
+      localStorage.setItem('briefings', JSON.stringify(updatedBriefings));
+      return updatedBriefings;
+    });
   };
 
-  useEffect(() => {
-    loadBriefings();
-  }, []);
+  const updateBriefingStatus = (id: string, status: Briefing['status']) => {
+    updateBriefing(id, { status });
+  };
+
+  const createProjectFromBriefing = (briefing: Briefing) => {
+    // Mark briefing as having a project
+    updateBriefing(briefing.id, { projectCreated: true });
+    
+    // In a real app, this would create a project in another system/table
+    // For now, we just return a mock project ID
+    const projectId = 'prj-' + Math.random().toString(36).substring(2, 8);
+    console.log(`Created project ${projectId} from briefing ${briefing.id}`);
+    
+    return projectId;
+  };
 
   return {
     briefings,
@@ -84,6 +126,11 @@ export function useBriefings() {
     loadBriefings,
     createBriefing,
     updateBriefing,
-    deleteBriefing
+    deleteBriefing,
+    updateBriefingStatus,
+    createProjectFromBriefing,
+    fetchBriefings: loadBriefings,
+    error: null,
+    addBriefing: createBriefing
   };
 }

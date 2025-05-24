@@ -1,76 +1,80 @@
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 
-interface PortfolioItem {
+export interface PortfolioItem {
   id: string;
   title: string;
   description: string;
+  category: string;
   imageUrl: string;
-  audioUrl: string;
-  musicStyle: string;
-  projectType: string;
+  audioUrl?: string;
+  videoUrl?: string;
   featured: boolean;
+  published: boolean;
+  createdAt: string;
 }
 
 export function usePortfolioItems() {
-  const [portfolioItems, setPortfolioItems] = useState<PortfolioItem[]>([
-    {
-      id: 'port-001',
-      title: 'Música para Casamento - João e Maria',
-      description: 'Composição romântica personalizada para cerimônia de casamento.',
-      imageUrl: 'https://images.unsplash.com/photo-1519741497674-611481863552',
-      audioUrl: 'https://example.com/audio/casamento-joao-maria.mp3',
-      musicStyle: 'Pop/Romântico',
-      projectType: 'Eventos',
-      featured: true
-    },
-    {
-      id: 'port-002',
-      title: 'Trilha para Vídeo Institucional - TechCorp',
-      description: 'Música corporativa para vídeo de apresentação empresarial.',
-      imageUrl: 'https://images.unsplash.com/photo-1516321318423-f06f85e504b3',
-      audioUrl: 'https://example.com/audio/techcorp-institucional.mp3',
-      musicStyle: 'Corporativo/Eletrônico',
-      projectType: 'Vídeos',
-      featured: false
-    }
-  ]);
+  const [portfolioItems, setPortfolioItems] = useState<PortfolioItem[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
 
-  const [isLoading, setIsLoading] = useState(false);
+  useEffect(() => {
+    // Simulating API call
+    setTimeout(() => {
+      const savedItems = localStorage.getItem('portfolioItems');
+      if (savedItems) {
+        setPortfolioItems(JSON.parse(savedItems));
+      }
+      setIsLoading(false);
+    }, 500);
+  }, []);
 
-  const handleAddItem = (item: Partial<PortfolioItem> & { persistData?: boolean }) => {
-    const newItem: PortfolioItem = {
-      id: `port-${Date.now()}`,
-      title: item.title || 'Item sem título',
-      description: item.description || '',
-      imageUrl: item.imageUrl || 'https://via.placeholder.com/300',
-      audioUrl: item.audioUrl || '',
-      musicStyle: item.musicStyle || '',
-      projectType: item.projectType || 'Outros',
-      featured: item.featured || false
+  const handleAddItem = (newItem: Omit<PortfolioItem, 'id' | 'createdAt'> & { persistData?: boolean, id?: string }) => {
+    const { persistData, ...itemData } = newItem;
+    
+    const id = itemData.id || `item-${Date.now()}`;
+    const createdAt = new Date().toISOString().split('T')[0];
+    
+    const item: PortfolioItem = {
+      ...itemData as any,
+      id,
+      createdAt
     };
-
-    setPortfolioItems(prev => [...prev, newItem]);
-    return newItem.id;
-  };
-
-  const updatePortfolioItem = (id: string, updatedItem: Partial<PortfolioItem>) => {
-    setPortfolioItems(prev => 
-      prev.map(item => 
-        item.id === id ? { ...item, ...updatedItem } : item
-      )
-    );
+    
+    setPortfolioItems(prev => {
+      const updatedItems = [...prev, item];
+      if (persistData) {
+        localStorage.setItem('portfolioItems', JSON.stringify(updatedItems));
+      }
+      return updatedItems;
+    });
+    
+    return id;
   };
 
   const deletePortfolioItem = (id: string) => {
-    setPortfolioItems(prev => prev.filter(item => item.id !== id));
+    setPortfolioItems(prev => {
+      const updatedItems = prev.filter(item => item.id !== id);
+      localStorage.setItem('portfolioItems', JSON.stringify(updatedItems));
+      return updatedItems;
+    });
+  };
+
+  const updatePortfolioItem = (id: string, updates: Partial<PortfolioItem>) => {
+    setPortfolioItems(prev => {
+      const updatedItems = prev.map(item => 
+        item.id === id ? { ...item, ...updates } : item
+      );
+      localStorage.setItem('portfolioItems', JSON.stringify(updatedItems));
+      return updatedItems;
+    });
   };
 
   return {
     portfolioItems,
-    isLoading,
     handleAddItem,
+    deletePortfolioItem,
     updatePortfolioItem,
-    deletePortfolioItem
+    isLoading
   };
 }
