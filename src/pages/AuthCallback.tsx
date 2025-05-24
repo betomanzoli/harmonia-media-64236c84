@@ -1,4 +1,3 @@
-
 import React, { useEffect, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { supabase } from '@/lib/supabase';
@@ -13,82 +12,68 @@ const AuthCallback: React.FC = () => {
   const [error, setError] = useState<string | null>(null);
   const [processing, setProcessing] = useState(true);
 
+  // Detectar navegador privado
+  const isPrivateWindow = () => {
+    try {
+      sessionStorage.setItem('test', 'test');
+      sessionStorage.removeItem('test');
+      return false;
+    } catch {
+      return true;
+    }
+  };
+
   useEffect(() => {
     const handleAuthCallback = async () => {
-      console.log("Auth callback triggered");
-      
       try {
-        // Handle the magic link callback
-        const { data, error: sessionError } = await supabase.auth.getSession();
+        const { data: { session }, error: sessionError } = await supabase.auth.getSession();
         
-        if (sessionError) {
-          console.error('Auth callback error:', sessionError);
-          setError('Erro de autenticação: ' + sessionError.message);
-          setProcessing(false);
-          return;
-        }
+        if (sessionError) throw sessionError;
         
-        if (data?.session) {
-          console.log("User authenticated:", data.session.user.email);
-          
-          // Get the redirect URL from search params
+        if (session) {
           const redirectTo = searchParams.get('redirect') || '/';
-          console.log("Redirect path:", redirectTo);
-          
-          // If redirecting to a preview page, extract the project ID and set cookie
-          if (redirectTo.startsWith('/preview/')) {
-            const projectId = redirectTo.replace('/preview/', '');
-            console.log("Setting access cookie for project:", projectId);
-            
-            // Set cookies for access
-            setPreviewAccessCookie(projectId);
-            
-            // Also set email cookie if we have it
-            if (data.session.user.email) {
-              setPreviewEmailCookie(projectId, data.session.user.email);
-            }
-            
-            // Show success toast
-            toast({
-              title: "Acesso autorizado",
-              description: "Você foi autenticado com sucesso para acessar esta prévia.",
-            });
+          const projectId = redirectTo.replace('/preview/', '');
+
+          if (isPrivateWindow()) {
+            // Redirecionar para transferência de sessão em navegadores privados
+            const transferUrl = `/session-transfer?token=${session.access_token}&previewId=${projectId}`;
+            navigate(transferUrl);
+            return;
           }
+
+          // Fluxo normal para navegadores não privados
+          setPreviewAccessCookie(projectId);
+          if (session.user.email) setPreviewEmailCookie(projectId, session.user.email);
           
-          // Navigate to the redirect URL
-          setProcessing(false);
+          toast({
+            title: "Acesso autorizado",
+            description: "Autenticação realizada com sucesso.",
+          });
+          
           navigate(redirectTo);
-        } else {
-          console.error('No session found in auth callback');
-          setError('Nenhuma sessão de autenticação encontrada');
-          setProcessing(false);
         }
       } catch (error: any) {
-        console.error('Error in auth callback:', error);
-        setError('Erro durante autenticação: ' + error.message);
+        setError(error.message || 'Erro na autenticação');
+      } finally {
         setProcessing(false);
       }
     };
-    
+
     handleAuthCallback();
   }, [navigate, searchParams, toast]);
 
   if (error) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gradient-to-b from-gray-100 to-white">
-        <div className="flex flex-col items-center space-y-4">
-          <div className="rounded-full bg-red-100 p-3">
-            <svg className="h-6 w-6 text-red-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-            </svg>
-          </div>
-          <h2 className="text-xl font-medium text-gray-800">Erro de autenticação</h2>
-          <p className="text-gray-500 text-center max-w-md">{error}</p>
-          <button 
+      <div className="min-h-screen flex items-center justify-center bg-gray-100">
+        <div className="text-center p-8 max-w-md">
+          <div className="text-red-500 text-4xl mb-4">✖</div>
+          <h2 className="text-xl font-semibold mb-2">Erro de Acesso</h2>
+          <p className="text-gray-600 mb-6">{error}</p>
+          <button
             onClick={() => navigate('/')}
-            className="mt-4 px-4 py-2 bg-harmonia-green text-white rounded hover:bg-harmonia-green/90"
+            className="bg-harmonia-green text-white px-6 py-2 rounded hover:bg-harmonia-green/90"
           >
-            Voltar para o início
+            Voltar ao Início
           </button>
         </div>
       </div>
@@ -96,11 +81,10 @@ const AuthCallback: React.FC = () => {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-b from-gray-100 to-white">
+    <div className="min-h-screen flex items-center justify-center bg-gray-100">
       <div className="flex flex-col items-center space-y-4">
-        <Loader2 className="h-10 w-10 animate-spin text-harmonia-green" />
-        <h2 className="text-xl font-medium text-gray-800">Autenticando...</h2>
-        <p className="text-gray-500">Por favor, aguarde enquanto finalizamos o processo de login.</p>
+        <Loader2 className="h-12 w-12 animate-spin text-harmonia-green" />
+        <p className="text-gray-600">Finalizando autenticação...</p>
       </div>
     </div>
   );
