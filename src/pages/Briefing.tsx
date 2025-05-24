@@ -1,71 +1,90 @@
 
-import React, { useEffect, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import React, { useState, useEffect } from 'react';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
-import { Button } from "@/components/ui/button";
-import { ArrowLeft } from 'lucide-react';
 import ConversationalBriefing from '@/components/briefing/ConversationalBriefing';
-import { supabase } from '@/lib/supabase';
+import { briefingStorage, BriefingData } from '@/utils/briefingStorage';
+import { useToast } from '@/hooks/use-toast';
 
 const Briefing: React.FC = () => {
   const navigate = useNavigate();
-  const [hasPurchased, setHasPurchased] = useState(false);
-  const [purchaseData, setPurchaseData] = useState<any>(null);
+  const [searchParams] = useSearchParams();
+  const { toast } = useToast();
+  const [currentBriefingId, setCurrentBriefingId] = useState<string>('');
+  const [isLoading, setIsLoading] = useState(false);
 
   useEffect(() => {
-    // Check if user has purchased a package
-    const paymentData = localStorage.getItem('paymentData');
-    if (paymentData) {
-      try {
-        const data = JSON.parse(paymentData);
-        setHasPurchased(true);
-        setPurchaseData(data);
-      } catch (e) {
-        console.error('Error parsing payment data:', e);
-      }
+    // Verificar se há um briefing ID existente ou criar novo
+    const existingId = searchParams.get('id') || briefingStorage.generateBriefingId();
+    setCurrentBriefingId(existingId);
+    
+    // Atualizar URL se necessário
+    if (!searchParams.get('id')) {
+      const newUrl = new URL(window.location.href);
+      newUrl.searchParams.set('id', existingId);
+      window.history.replaceState({}, '', newUrl.toString());
     }
-  }, []);
+  }, [searchParams]);
 
-  // Handle completion of initial briefing and selection of package
-  const handleBriefingComplete = async (briefingId: string, packageType: 'essencial' | 'profissional' | 'premium') => {
-    console.log('Briefing complete with ID:', briefingId);
-    console.log('Selected package:', packageType);
+  const handleBriefingComplete = async (formData: any, selectedPackage: string) => {
+    if (!currentBriefingId) return;
     
-    // Save briefingId to localStorage for later use
-    localStorage.setItem('currentBriefingId', briefingId);
+    setIsLoading(true);
     
-    // Redirect to payment page with briefingId parameter
-    navigate(`/pagamento/${packageType}?briefingId=${briefingId}`);
+    try {
+      // Preparar dados do briefing
+      const briefingData: Partial<BriefingData> = {
+        id: currentBriefingId,
+        packageType: selectedPackage as 'essencial' | 'profissional' | 'premium',
+        clientName: formData.name || '',
+        email: formData.email || '',
+        phone: formData.phone || '',
+        company: formData.company || '',
+        projectDescription: formData.projectDescription || '',
+        budget: formData.budget || '',
+        timeline: formData.timeline || '',
+        musicStyle: formData.musicStyle || '',
+        emotionalTone: formData.emotionalTone || '',
+        references: formData.references || [],
+        additionalInfo: formData.additionalInfo || '',
+        createdAt: new Date().toISOString(),
+        contractAccepted: false,
+        paymentStatus: 'pending'
+      };
+
+      // Salvar dados localmente
+      briefingStorage.saveBriefingData(currentBriefingId, briefingData);
+
+      toast({
+        title: "Briefing salvo",
+        description: "Suas informações foram salvas. Redirecionando para o contrato...",
+      });
+
+      // Redirecionar para página de contrato específica
+      navigate(`/contract/${selectedPackage}?briefing=${currentBriefingId}`);
+      
+    } catch (error) {
+      console.error('Erro ao salvar briefing:', error);
+      toast({
+        title: "Erro",
+        description: "Erro ao salvar briefing. Tente novamente.",
+        variant: "destructive"
+      });
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (
-    <div className="min-h-screen bg-background text-foreground">
+    <div className="min-h-screen bg-white">
       <Header />
-      <main className="pt-24 pb-20 px-6 md:px-10">
-        <div className="max-w-4xl mx-auto">
-          <div className="mb-6">
-            <Button 
-              variant="ghost" 
-              className="flex items-center gap-1 text-gray-400 hover:text-white"
-              onClick={() => navigate('/')}
-            >
-              <ArrowLeft className="w-4 h-4" />
-              Voltar para a página inicial
-            </Button>
-          </div>
-          
-          <div className="text-center mb-10">
-            <h1 className="text-3xl md:text-4xl font-bold mb-4">Transforme sua história em música</h1>
-            <p className="text-gray-400 max-w-2xl mx-auto">
-              Conte-nos um pouco sobre a sua visão musical e criaremos uma composição personalizada especialmente para você.
-            </p>
-          </div>
-
-          <div className="bg-card border border-border rounded-lg p-8">
-            <ConversationalBriefing onComplete={handleBriefingComplete} />
-          </div>
-        </div>
+      <main className="pt-20">
+        <ConversationalBriefing 
+          onComplete={handleBriefingComplete}
+          isLoading={isLoading}
+          briefingId={currentBriefingId}
+        />
       </main>
       <Footer />
     </div>
