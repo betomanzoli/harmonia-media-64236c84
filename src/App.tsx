@@ -30,24 +30,22 @@ const App: React.FC = () => {
   useEffect(() => {
     const initializeDatabaseFunctions = async () => {
       try {
-        // Check if we're online before proceeding
+        // Verificar se estamos online antes de prosseguir
         if (!navigator.onLine) {
-          console.log('Application is offline. Skipping database function verification.');
+          console.log('Aplicação está offline. Pulando verificação de funções.');
           return;
         }
         
-        // Safely check if the functions exist
+        // Verificar se as funções existem de maneira segura
         try {
-          console.log('Checking if database functions exist...');
+          // Tentar chamar uma função para testar
+          const { error } = await supabase.rpc('check_if_table_exists', { table_name: 'not_real_table' });
           
-          // First check if exec_sql exists since it's needed for other functions
-          const { data, error } = await supabase.rpc('exec_sql', { sql: 'SELECT 1' });
-          
-          if (error && error.message && error.message.includes('function')) {
+          if (error && error.message && error.message.includes('Could not find the function')) {
             console.log("Database functions don't exist, creating them...");
             
             try {
-              // Correct path to SQL file in the public directory
+              // Execute SQL file to create functions
               const response = await fetch('/supabase/migrations/20250522_create_db_functions.sql');
               
               if (!response.ok) {
@@ -57,64 +55,24 @@ const App: React.FC = () => {
               
               const sql = await response.text();
               
-              // Execute SQL directly with Supabase - this will need RLS permissions
-              // We'll use a special SQL executor function that should already exist
-              console.log('Executing SQL to create database functions...');
+              // Split into individual statements and execute them
+              const statements = sql.split(';').filter(stmt => stmt.trim().length > 0);
               
-              // Create individual statements from the SQL file
-              const statements = sql
-                .split(';')
-                .filter(stmt => stmt.trim().length > 0)
-                .map(stmt => stmt.trim() + ';');
-              
-              // Log how many statements we found for diagnostic purposes
-              console.log(`Found ${statements.length} SQL statements to execute`);
-              
-              // Since we can't execute multiple statements at once through RPC,
-              // we need to create a basic function first if it doesn't exist
-              const initStatement = `
-                CREATE OR REPLACE FUNCTION public.exec_sql(sql text)
-                RETURNS void AS $$
-                BEGIN
-                  EXECUTE sql;
-                END;
-                $$ LANGUAGE plpgsql SECURITY DEFINER;
-              `;
-              
-              try {
-                // Create or replace the exec_sql function directly
-                const { error: execSqlError } = await supabase.rpc('exec_sql', { 
-                  sql: initStatement 
-                });
-                
-                if (execSqlError) {
-                  // If even this fails, we need administrator intervention
-                  console.error("Failed to create exec_sql function:", execSqlError);
-                  console.log("Please contact the administrator to run the SQL migrations manually.");
-                  return;
+              for (const statement of statements) {
+                try {
+                  await supabase.rpc('exec_sql', { sql: statement });
+                } catch (err) {
+                  console.warn("Error executing SQL statement, may already exist:", err);
                 }
-                
-                // Now we can execute the rest of the statements
-                for (const statement of statements) {
-                  if (statement.length > 10) { // Skip very short statements
-                    try {
-                      await supabase.rpc('exec_sql', { sql: statement });
-                    } catch (err) {
-                      console.warn("Error executing SQL statement, may already exist:", err);
-                    }
-                  }
-                }
-                
-                console.log("Database functions created successfully");
-              } catch (execError) {
-                console.error("Error executing SQL:", execError);
               }
+              
+              console.log("Database functions created successfully");
             } catch (fetchError) {
               console.error("Error fetching or executing SQL file:", fetchError);
             }
           } else if (error) {
-            // If the error is not about missing functions, log it
-            console.log("Error checking functions:", error);
+            // Se o erro não for "função não encontrada", pode ser outro problema
+            console.log("Outro erro ao verificar funções:", error);
           } else {
             console.log("Database functions already exist.");
           }
@@ -126,26 +84,7 @@ const App: React.FC = () => {
       }
     };
     
-    // Only initialize functions when online
-    if (navigator.onLine) {
-      initializeDatabaseFunctions();
-    } else {
-      console.log('Application is offline. Database function initialization skipped.');
-    }
-    
-    // Listen for when we come back online
-    const handleOnlineStatus = () => {
-      if (navigator.onLine) {
-        console.log('App is back online. Initializing database functions...');
-        initializeDatabaseFunctions();
-      }
-    };
-    
-    window.addEventListener('online', handleOnlineStatus);
-    
-    return () => {
-      window.removeEventListener('online', handleOnlineStatus);
-    };
+    initializeDatabaseFunctions();
   }, []);
 
   return (
