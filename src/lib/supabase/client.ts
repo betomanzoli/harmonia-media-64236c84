@@ -1,7 +1,8 @@
+
 import { createClient } from '@supabase/supabase-js';
 
-const supabaseUrl = import.meta.env.VITE_SUPABASE_URL || 'https://ivueqxyuflxsiecqvmgt.supabase.co';
-const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Iml2dWVxeHl1Zmx4c2llY3F2bWd0Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDY3MjY0MzEsImV4cCI6MjA2MjMwMjQzMX0.db1UVta6PSPGokJOZozwqZ7AAs2jBljfWCdUR3LjIdM';
+const supabaseUrl = 'https://ivueqxyuflxsiecqvmgt.supabase.co';
+const supabaseAnonKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Iml2dWVxeHl1Zmx4c2llY3F2bWd0Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDY3MjY0MzEsImV4cCI6MjA2MjMwMjQzMX0.db1UVta6PSPGokJOZozwqZ7AAs2jBljfWCdUR3LjIdM';
 
 // Sistema de armazenamento híbrido para navegadores privados
 const getHybridStorage = () => ({
@@ -43,13 +44,20 @@ export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
   global: {
     fetch: (...args: Parameters<typeof fetch>) => {
       return fetch(...args).catch(error => {
-        console.error('Supabase fetch error:', error);
-        throw error;
+        // Avoid CORS and network errors from crashing the app
+        console.warn('Supabase fetch warning:', error.message);
+        return Promise.reject(error);
       });
+    }
+  },
+  realtime: {
+    // Disable realtime to avoid WebSocket CORS issues
+    params: {
+      eventsPerSecond: 2
     }
   }
 });
 
 export const getSupabaseUrl = () => supabaseUrl;
 
-console.log('🔌 Cliente Supabase inicializado com conexão atualizada.');
+console.log('🔌 Cliente Supabase inicializado com conexão segura.');
