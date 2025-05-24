@@ -1,7 +1,7 @@
 
 import { v4 as uuidv4 } from 'uuid';
 import { setPreviewAccessCookie, checkPreviewAccessCookie, setPreviewEmailCookie, getAuthCookie } from './authCookies';
-import { supabase } from '@/lib/supabase';
+import { supabase } from '@/integrations/supabase/client';
 
 // Create a more secure mapping between encoded IDs and project IDs
 const previewLinksMap = new Map<string, string>();
@@ -30,26 +30,8 @@ export const generatePreviewLink = async (projectId: string): Promise<string> =>
     // Generate a unique encoded ID that's harder to guess
     const encodedId = uuidv4().replace(/-/g, ''); 
     
-    // Generate a magic token for direct access
-    const token = Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15);
-    
-    // Insert token into database
-    const { data, error } = await supabase
-      .from('preview_tokens')
-      .insert({ 
-        preview_id: projectId,
-        token: token,
-        expires_at: new Date(Date.now() + 14 * 24 * 60 * 60 * 1000).toISOString()
-      })
-      .select('token');
-      
-    if (error) {
-      console.error('Failed to create preview token:', error);
-      throw error;
-    }
-    
     // Update the project record with the preview code
-    const { error: projectError } = await supabase
+    const { error } = await supabase
       .from('projects')
       .update({ 
         preview_code: encodedId,
@@ -57,9 +39,9 @@ export const generatePreviewLink = async (projectId: string): Promise<string> =>
       })
       .eq('id', projectId);
       
-    if (projectError) {
-      console.error('Failed to update preview code:', projectError);
-      throw projectError;
+    if (error) {
+      console.error('Failed to update preview code:', error);
+      throw error;
     }
     
     // Store the mapping locally as a fallback
@@ -70,8 +52,7 @@ export const generatePreviewLink = async (projectId: string): Promise<string> =>
     mappings[encodedId] = projectId;
     setCookie('previewLinksMappings', JSON.stringify(mappings));
     
-    // Generate access URL with the token
-    return `${window.location.origin}/preview/${projectId}?token=${token}`;
+    return encodedId;
   } catch (error) {
     console.error('Error generating preview link:', error);
     return '';

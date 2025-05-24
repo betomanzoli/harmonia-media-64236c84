@@ -54,11 +54,6 @@ const ProjectActionCard: React.FC<ProjectActionCardProps> = ({
       });
   };
   
-  // Primeiro letra maiúscula para pacote
-  const capitalizedPackageType = packageType 
-    ? packageType.charAt(0).toUpperCase() + packageType.slice(1) 
-    : '';
-  
   return (
     <Card>
       <CardHeader>
@@ -117,7 +112,7 @@ const ProjectActionCard: React.FC<ProjectActionCardProps> = ({
           }}
           projectId={projectId}
           isFinalVersion={projectStatus === 'approved'}
-          packageType={capitalizedPackageType}
+          packageType={packageType}
         />
       </CardContent>
     </Card>

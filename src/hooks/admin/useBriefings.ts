@@ -28,10 +28,7 @@ export const useBriefings = () => {
     setIsLoading(true);
     
     try {
-      // Use regular supabase client for admin operations
-      const supabaseClient = supabase;
-      
-      const { data, error } = await supabaseClient
+      const { data, error } = await supabase
         .from('briefings')
         .select(`
           id,

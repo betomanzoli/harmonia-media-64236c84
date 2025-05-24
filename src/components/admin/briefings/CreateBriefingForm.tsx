@@ -28,86 +28,52 @@ const CreateBriefingForm: React.FC<CreateBriefingFormProps> = ({ onClose, onSubm
   const { addCustomer, getCustomerByEmail } = useCustomers();
 
   const processFormSubmit = async (data: BriefingFormValues) => {
-    console.log('Submitting form with data:', data);
-    
     try {
-      // Ensure we have valid form data
-      if (!data.name || !data.email) {
-        throw new Error('Nome e email são obrigatórios');
-      }
-      
-      // Validate phone data
-      if (!data.phone || !data.phone.fullNumber) {
-        data.phone = {
-          fullNumber: '+5511999999999', // Fallback default
-          countryCode: '55',
-          nationalNumber: '11999999999'
-        };
-      }
-      
       // First, check if client exists or create a new one
       let clientId: string | null = null;
       
-      console.log('Checking for existing client with email:', data.email);
-      
-      // Use service role key for admin operations to bypass RLS
-      const adminSupabase = supabase;
-      
-      const { data: existingClients, error: clientError } = await adminSupabase
+      const { data: existingClients, error: clientError } = await supabase
         .from('clients')
         .select('id')
         .eq('email', data.email)
         .limit(1);
       
-      console.log('Supabase returned:', { existingClients, clientError });
-      
       if (clientError) {
-        console.error('Error checking for existing client:', clientError);
         throw clientError;
       }
       
       if (existingClients && existingClients.length > 0) {
         clientId = existingClients[0].id;
-        console.log('Found existing client with ID:', clientId);
         
-        // Update client information in case it changed
-        const { error: updateError } = await adminSupabase
+        // Atualizar informações do cliente caso tenha mudado
+        await supabase
           .from('clients')
           .update({
             name: data.name,
-            phone: data.phone.fullNumber // Store in international format
+            phone: data.phone.fullNumber // Armazenar no formato internacional
           })
           .eq('id', clientId);
-          
-        if (updateError) {
-          console.error('Error updating client information:', updateError);
-          // Continue anyway, non-critical error
-        }
       } else {
         // Create a new client
-        console.log('Creating new client with data:', { name: data.name, email: data.email, phone: data.phone.fullNumber });
-        
-        const { data: newClient, error: newClientError } = await adminSupabase
+        const { data: newClient, error: newClientError } = await supabase
           .from('clients')
           .insert([
             {
               name: data.name,
               email: data.email,
-              phone: data.phone.fullNumber // Store in international format
+              phone: data.phone.fullNumber // Armazenar no formato internacional
             }
           ])
           .select()
           .single();
         
         if (newClientError) {
-          console.error('Error creating new client:', newClientError);
           throw newClientError;
         }
         
         clientId = newClient.id;
-        console.log('Created new client with ID:', clientId);
         
-        // Send notification of new client
+        // Enviar notificação de novo cliente
         await webhookService.sendItemNotification('new_customer', {
           name: data.name,
           email: data.email,
@@ -116,40 +82,30 @@ const CreateBriefingForm: React.FC<CreateBriefingFormProps> = ({ onClose, onSubm
         });
       }
       
-      // Capitalize first letter of package type
-      const packageType = data.packageType;
-      const capitalizedPackageType = packageType.charAt(0).toUpperCase() + packageType.slice(1);
-      
       // Create the briefing
-      const briefingData = {
-        client_id: clientId,
-        package_type: data.packageType as 'essencial' | 'profissional' | 'premium' | 'qualification',
-        status: 'pending',
-        data: {
-          description: data.description || 'Novo briefing',
-          name: data.name, // Ensure client name is saved correctly
-          email: data.email, // Ensure client email is saved correctly
-          phone: data.phone.fullNumber,
-          packageType: capitalizedPackageType,
-          createdAt: new Date().toISOString(),
-        }
-      };
-      
-      console.log('Creating briefing with data:', briefingData);
-      
-      // Use the admin client to bypass RLS
-      const { data: newBriefing, error: briefingError } = await adminSupabase
+      const { data: newBriefing, error: briefingError } = await supabase
         .from('briefings')
-        .insert([briefingData])
+        .insert([
+          {
+            client_id: clientId,
+            package_type: data.packageType as 'essencial' | 'profissional' | 'premium' | 'qualification',
+            status: 'pending',
+            data: {
+              description: data.description || 'Novo briefing',
+              name: data.name,
+              email: data.email,
+              phone: data.phone.fullNumber,
+              packageType: data.packageType,
+              createdAt: new Date().toISOString(),
+            }
+          }
+        ])
         .select()
         .single();
       
       if (briefingError) {
-        console.error('Error creating briefing:', briefingError);
         throw briefingError;
       }
-      
-      console.log('Created briefing with ID:', newBriefing.id);
       
       // Also add or update customer in the local storage system
       let existingCustomer = getCustomerByEmail(data.email);
@@ -165,6 +121,7 @@ const CreateBriefingForm: React.FC<CreateBriefingFormProps> = ({ onClose, onSubm
       }
       
       // Generate a consistent project ID based on the briefing ID
+      // Use the Supabase briefing ID directly to ensure consistency
       const projectId = newBriefing.id;
       
       // Create a preview project automatically linked to this briefing
@@ -176,7 +133,7 @@ const CreateBriefingForm: React.FC<CreateBriefingFormProps> = ({ onClose, onSubm
         clientName: data.name,
         clientEmail: data.email,
         clientPhone: data.phone.fullNumber,
-        packageType: capitalizedPackageType,
+        packageType: data.packageType,
         createdAt: new Date().toLocaleDateString('pt-BR'),
         status: 'waiting' as const,
         versions: 0,
