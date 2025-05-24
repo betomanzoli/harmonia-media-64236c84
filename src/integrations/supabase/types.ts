@@ -279,6 +279,36 @@ export type Database = {
         }
         Relationships: []
       }
+      feedbacks: {
+        Row: {
+          comments: string | null
+          created_at: string | null
+          id: string
+          project_id: string
+          status: string
+          updated_at: string | null
+          user_email: string
+        }
+        Insert: {
+          comments?: string | null
+          created_at?: string | null
+          id?: string
+          project_id: string
+          status?: string
+          updated_at?: string | null
+          user_email: string
+        }
+        Update: {
+          comments?: string | null
+          created_at?: string | null
+          id?: string
+          project_id?: string
+          status?: string
+          updated_at?: string | null
+          user_email?: string
+        }
+        Relationships: []
+      }
       invoices: {
         Row: {
           amount: string
@@ -445,6 +475,27 @@ export type Database = {
           },
         ]
       }
+      preview_access_logs: {
+        Row: {
+          accessed_at: string
+          email: string
+          id: string
+          project_id: string
+        }
+        Insert: {
+          accessed_at?: string
+          email: string
+          id?: string
+          project_id: string
+        }
+        Update: {
+          accessed_at?: string
+          email?: string
+          id?: string
+          project_id?: string
+        }
+        Relationships: []
+      }
       preview_codes: {
         Row: {
           code: string
@@ -528,6 +579,33 @@ export type Database = {
           expires_at?: string
           id?: string
           preview_id?: string
+          token?: string
+        }
+        Relationships: []
+      }
+      preview_validations: {
+        Row: {
+          created_at: string | null
+          email: string
+          expires_at: string
+          id: string
+          project_id: string
+          token: string
+        }
+        Insert: {
+          created_at?: string | null
+          email: string
+          expires_at?: string
+          id?: string
+          project_id: string
+          token: string
+        }
+        Update: {
+          created_at?: string | null
+          email?: string
+          expires_at?: string
+          id?: string
+          project_id?: string
           token?: string
         }
         Relationships: []

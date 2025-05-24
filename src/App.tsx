@@ -1,8 +1,10 @@
+
 import React from 'react';
 import { Routes, Route } from 'react-router-dom';
 import ScrollToTop from './components/ScrollToTop';
 import Header from './components/Header';
 import Footer from './components/Footer';
+import { Toaster } from '@/components/ui/toaster';
 
 // ✅ PÁGINAS PRINCIPAIS
 import HomePage from './pages/HomePage';
@@ -89,7 +91,7 @@ const App: React.FC = () => {
           <Route path="/payment/success" element={<PaymentSuccess />} />
           <Route path="/payment/cancel" element={<PaymentCancel />} />
           
-          {/* ✅ PREVIEW */}
+          {/* ✅ PREVIEW - Simplified to single route */}
           <Route path="/preview/:projectId" element={<PreviewPage />} />
           
           {/* ✅ ADMIN COMPLETO */}
@@ -115,6 +117,7 @@ const App: React.FC = () => {
       </main>
       
       <Footer />
+      <Toaster />
     </div>
   );
 };

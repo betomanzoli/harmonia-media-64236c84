@@ -5,90 +5,29 @@ import Header from '@/components/Header';
 import Footer from '@/components/Footer';
 import { useToast } from "@/hooks/use-toast";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
-import PreviewFeedbackForm from '@/components/previews/PreviewFeedbackForm';
-import PreviewHeader from '@/components/previews/PreviewHeader';
-import PreviewInstructions from '@/components/previews/PreviewInstructions';
-import PreviewPlayerList from '@/components/previews/player/PreviewPlayerList';
-import PreviewNextSteps from '@/components/previews/PreviewNextSteps';
-import GoogleDrivePreviewsList from '@/components/previews/GoogleDrivePreviewsList';
-import { usePreviewProject } from '@/hooks/previews/usePreviewProject';
-import { notificationService } from '@/services/notificationService';
+import { Card, CardContent } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Loader2 } from 'lucide-react';
 
 const PreviewPage: React.FC = () => {
   const { projectId } = useParams<{ projectId: string }>();
   const navigate = useNavigate();
   const { toast } = useToast();
   
+  const [isLoading, setIsLoading] = useState(true);
   const [selectedPreview, setSelectedPreview] = useState<string | null>(null);
   const [feedback, setFeedback] = useState('');
-  const { projectData, setProjectData, isLoading } = usePreviewProject(projectId || '');
-  
-  const handleSubmitFeedback = () => {
-    if (!selectedPreview) {
-      toast({
-        title: "Selecione uma versão",
-        description: "Por favor, selecione uma das versões antes de enviar.",
-        variant: "destructive"
-      });
-      return;
-    }
-    
-    toast({
-      title: "Feedback enviado!",
-      description: "Obrigado pelo seu feedback. Nossa equipe já está trabalhando nas modificações.",
-    });
-    
-    // Notify about feedback
-    notificationService.notify('feedback_received', {
-      projectId: projectId || '',
-      clientName: projectData?.clientName || 'Cliente',
-      message: feedback
-    });
-    
-    setProjectData(prev => prev ? {...prev, status: 'feedback'} : null);
-  };
-  
-  const handleApprove = () => {
-    if (!selectedPreview) {
-      toast({
-        title: "Selecione uma versão",
-        description: "Por favor, selecione uma das versões antes de aprovar.",
-        variant: "destructive"
-      });
-      return;
-    }
-    
-    toast({
-      title: "Música aprovada!",
-      description: "Estamos felizes que você gostou! Vamos finalizar sua música e entregar em breve.",
-    });
-    
-    // Notify about approval
-    notificationService.notify('preview_approved', {
-      projectId: projectId || '',
-      clientName: projectData?.clientName || 'Cliente',
-      versionId: selectedPreview
-    });
-    
-    setProjectData(prev => prev ? {...prev, status: 'approved'} : null);
-  };
-  
-  if (isLoading) {
-    return (
-      <div className="min-h-screen bg-white text-gray-900">
-        <Header />
-        <div className="pt-24 pb-20 px-6 md:px-10 flex items-center justify-center">
-          <div className="text-center">
-            <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-harmonia-green"></div>
-            <p className="mt-4 text-gray-500">Carregando prévias...</p>
-          </div>
-        </div>
-        <Footer />
-      </div>
-    );
-  }
-  
-  if (!projectData) {
+
+  useEffect(() => {
+    // Simulate loading
+    const timer = setTimeout(() => {
+      setIsLoading(false);
+    }, 1000);
+
+    return () => clearTimeout(timer);
+  }, []);
+
+  if (!projectId) {
     return (
       <div className="min-h-screen bg-white text-gray-900">
         <Header />
@@ -96,12 +35,27 @@ const PreviewPage: React.FC = () => {
           <div className="text-center max-w-md">
             <h1 className="text-2xl font-bold mb-4">Preview não encontrado</h1>
             <p className="text-gray-400 mb-6">O código de preview fornecido não é válido ou expirou.</p>
-            <button 
+            <Button 
               onClick={() => navigate('/')}
-              className="bg-harmonia-green hover:bg-harmonia-green/90 text-white px-4 py-2 rounded"
+              className="bg-green-500 hover:bg-green-600"
             >
               Voltar à página inicial
-            </button>
+            </Button>
+          </div>
+        </div>
+        <Footer />
+      </div>
+    );
+  }
+  
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-white text-gray-900">
+        <Header />
+        <div className="pt-24 pb-20 px-6 md:px-10 flex items-center justify-center">
+          <div className="text-center">
+            <Loader2 className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-green-600 mb-4" />
+            <p className="text-gray-500">Carregando prévias...</p>
           </div>
         </div>
         <Footer />
@@ -114,59 +68,41 @@ const PreviewPage: React.FC = () => {
       <Header />
       <main className="pt-24 pb-20 px-6 md:px-10">
         <div className="max-w-4xl mx-auto">
-          <PreviewHeader 
-            projectData={{
-              projectTitle: projectData.projectTitle || projectData.clientName,
-              clientName: projectData.clientName,
-              status: projectData.status
-            }}
-          />
-          
-          <PreviewInstructions status={projectData.status} />
+          <div className="mb-8">
+            <h1 className="text-3xl font-bold mb-2">Preview do Projeto</h1>
+            <p className="text-gray-600">ID: {projectId}</p>
+          </div>
           
           <Tabs defaultValue="versions" className="mb-10">
             <TabsList className="w-full mb-6">
-              <TabsTrigger value="versions" className="flex-1 data-[state=active]:bg-harmonia-green">
+              <TabsTrigger value="versions" className="flex-1">
                 Versões Propostas
               </TabsTrigger>
-              <TabsTrigger value="feedback" className="flex-1 data-[state=active]:bg-harmonia-green">
+              <TabsTrigger value="feedback" className="flex-1">
                 Enviar Feedback
               </TabsTrigger>
             </TabsList>
             
             <TabsContent value="versions">
-              <div className="bg-white p-6 rounded-lg shadow">
-                {projectData.useGoogleDrive ? (
-                  <GoogleDrivePreviewsList projectId={projectId} />
-                ) : (
-                  <PreviewPlayerList 
-                    versions={projectData.previews || []}
-                    selectedVersion={selectedPreview}
-                    setSelectedVersion={setSelectedPreview}
-                    isApproved={projectData.status === 'approved'}
-                  />
-                )}
-              </div>
+              <Card>
+                <CardContent className="p-6">
+                  <p className="text-center text-gray-500">
+                    Preview em desenvolvimento. ID do projeto: {projectId}
+                  </p>
+                </CardContent>
+              </Card>
             </TabsContent>
             
             <TabsContent value="feedback">
-              <div className="bg-white p-6 rounded-lg shadow">
-                <PreviewFeedbackForm 
-                  feedback={feedback}
-                  onFeedbackChange={setFeedback}
-                  onSubmit={handleSubmitFeedback}
-                  onApprove={handleApprove}
-                  status={projectData.status}
-                  selectedVersion={selectedPreview}
-                  versionTitle={projectData.previews?.find(v => v.id === selectedPreview)?.title}
-                />
-              </div>
+              <Card>
+                <CardContent className="p-6">
+                  <p className="text-center text-gray-500">
+                    Sistema de feedback em desenvolvimento.
+                  </p>
+                </CardContent>
+              </Card>
             </TabsContent>
           </Tabs>
-          
-          <div className="bg-white p-6 rounded-lg shadow">
-            <PreviewNextSteps status={projectData.status} />
-          </div>
         </div>
       </main>
       <Footer />
