@@ -1,8 +1,10 @@
 
-import React from 'react';
+import React, { useState } from 'react';
 import ServiceTabs from '../components/ServiceTabs';
 
 const Services: React.FC = () => {
+  const [activeTab, setActiveTab] = useState('todos');
+
   return (
     <section id="servicos" className="py-20 px-6 md:px-10 max-w-7xl mx-auto">
       <div className="text-center mb-12">
@@ -13,7 +15,10 @@ const Services: React.FC = () => {
         </p>
       </div>
       
-      <ServiceTabs activeTab="todos" setActiveTab={() => {}} />
+      <ServiceTabs 
+        activeTab={activeTab} 
+        setActiveTab={setActiveTab} 
+      />
     </section>
   );
 };
