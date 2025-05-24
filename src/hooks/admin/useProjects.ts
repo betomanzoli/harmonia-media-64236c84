@@ -44,7 +44,7 @@ export const useProjects = () => {
         clientId: project.client_id,
         packageType: project.package_id || 'não definido',
         deadline: project.deadline ? new Date(project.deadline).toISOString() : undefined,
-        status: project.status || 'waiting',
+        status: (project.status as Project['status']) || 'waiting',
         createdAt: new Date(project.created_at).toLocaleDateString('pt-BR')
       }));
 

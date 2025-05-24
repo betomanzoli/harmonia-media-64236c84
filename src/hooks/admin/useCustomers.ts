@@ -9,6 +9,8 @@ export interface Customer {
   email: string;
   phone?: string;
   company?: string;
+  status?: 'active' | 'inactive';
+  projects?: number;
   createdAt: string;
 }
 
@@ -41,6 +43,8 @@ export const useCustomers = () => {
         email: client.email,
         phone: client.phone,
         company: client.company,
+        status: 'active',
+        projects: 0,
         createdAt: new Date(client.created_at).toLocaleDateString('pt-BR')
       }));
 

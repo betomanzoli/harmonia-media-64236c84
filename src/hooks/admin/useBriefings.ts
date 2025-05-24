@@ -9,7 +9,7 @@ export interface BriefingItem {
   email: string;
   projectDescription: string;
   packageType: string;
-  status: string;
+  status: 'pending' | 'completed' | 'approved';
   createdAt: string;
   budget?: string;
   timeline?: string;
@@ -50,7 +50,7 @@ export const useBriefings = () => {
           email: briefingData?.email || 'Email não informado',
           projectDescription: briefingData?.projectDescription || 'Descrição não informada',
           packageType: briefing.package_type || 'Não definido',
-          status: briefing.status || 'pending',
+          status: (briefing.status as 'pending' | 'completed' | 'approved') || 'pending',
           createdAt: new Date(briefing.created_at).toLocaleDateString('pt-BR'),
           budget: briefingData?.budget,
           timeline: briefingData?.timeline,

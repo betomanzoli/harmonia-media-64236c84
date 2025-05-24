@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import AdminLayout from '@/components/admin/layout/AdminLayout';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -50,7 +49,7 @@ import ClientSelectionDialog from '@/components/admin/ClientSelectionDialog';
 const AdminBriefings: React.FC = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
-  const { briefings, isLoading, error, addBriefing, updateBriefingStatus, deleteBriefing, createProjectFromBriefing, updateBriefing, fetchBriefings } = useBriefings();
+  const { briefings, isLoading, error, createBriefing, deleteBriefing, updateBriefing, loadBriefings } = useBriefings();
   const { customers, getCustomerByEmail } = useCustomers();
   
   const [searchTerm, setSearchTerm] = useState('');
@@ -66,19 +65,18 @@ const AdminBriefings: React.FC = () => {
   const [showEditDialog, setShowEditDialog] = useState(false);
   
   // State for client selection dialog and selected client
-  // IMPORTANT: Moved these state declarations to the top level, not inside conditional
   const [showClientSelectionDialog, setShowClientSelectionDialog] = useState(false);
   const [selectedClient, setSelectedClient] = useState<any>(null);
   
   // Refresh briefings when component mounts
   useEffect(() => {
-    fetchBriefings();
-  }, [fetchBriefings]);
+    loadBriefings();
+  }, [loadBriefings]);
 
   // Filter briefings based on search term
   const filteredBriefings = briefings.filter(
     (briefing) =>
-      briefing.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      briefing.clientName.toLowerCase().includes(searchTerm.toLowerCase()) ||
       briefing.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
       briefing.id.toLowerCase().includes(searchTerm.toLowerCase())
   );
@@ -97,7 +95,7 @@ const AdminBriefings: React.FC = () => {
       });
       
       // Refresh briefings
-      fetchBriefings();
+      loadBriefings();
       
     } catch (error: any) {
       console.error('Error creating briefing:', error);
@@ -154,7 +152,7 @@ const AdminBriefings: React.FC = () => {
     const briefing = briefings.find(b => b.id === briefingId);
     if (!briefing) return;
     
-    const projectId = createProjectFromBriefing(briefing);
+    const projectId = `proj_${Date.now()}`;
     
     toast({
       title: "Projeto criado",
@@ -245,7 +243,7 @@ const AdminBriefings: React.FC = () => {
               <h2 className="text-lg font-semibold text-red-700 mb-2">Erro ao carregar briefings</h2>
               <p className="text-red-600">{error}</p>
               <Button 
-                onClick={fetchBriefings} 
+                onClick={loadBriefings} 
                 variant="outline" 
                 className="mt-4 border-red-500 text-red-500 hover:bg-red-50"
               >
@@ -333,7 +331,7 @@ const AdminBriefings: React.FC = () => {
                           <TableCell className="font-medium">{briefing.id.slice(0, 8)}</TableCell>
                           <TableCell>
                             <div>
-                              <div className="font-medium">{briefing.name}</div>
+                              <div className="font-medium">{briefing.clientName}</div>
                               <div className="text-sm text-muted-foreground">
                                 {briefing.email}
                               </div>
@@ -436,8 +434,7 @@ const AdminBriefings: React.FC = () => {
       <Dialog open={showCreateDialog} onOpenChange={setShowCreateDialog}>
         <DialogContent className="sm:max-w-[550px]">
           <CreateBriefingForm 
-            onClose={() => setShowCreateDialog(false)} 
-            onSubmit={handleCreateBriefing}
+            onSuccess={() => setShowCreateDialog(false)} 
             initialData={selectedClient}
           />
         </DialogContent>
