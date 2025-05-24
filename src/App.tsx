@@ -21,7 +21,7 @@ import Terms from './pages/Terms';
 import PreviewPage from './pages/PreviewPage';
 import BriefingSuccess from './pages/BriefingSuccess';
 
-// ✅ BRIEFINGS ESPECÍFICOS (NOVOS)
+// ✅ BRIEFINGS ESPECÍFICOS (NOMES CORRETOS)
 import BriefingEssencial from './pages/briefing/BriefingEssencial';
 import BriefingProfissional from './pages/briefing/BriefingProfissional';
 import BriefingPremium from './pages/briefing/BriefingPremium';
