@@ -18,7 +18,7 @@ const InvoicesList: React.FC = () => {
     invoices,
     clients,
     projects,
-    loading,
+    isLoading,
     showCreateDialog,
     showDeleteDialog,
     setShowCreateDialog,
@@ -30,6 +30,39 @@ const InvoicesList: React.FC = () => {
     handleViewPdf,
     handleDownloadInvoice
   } = useInvoices();
+
+  // Wrapper functions to match expected signatures
+  const handleEdit = (invoiceId: string) => {
+    const invoice = invoices.find(inv => inv.id === invoiceId);
+    if (invoice) {
+      handleEditInvoice(invoice);
+    }
+  };
+
+  const handleDelete = (invoiceId: string) => {
+    const invoice = invoices.find(inv => inv.id === invoiceId);
+    if (invoice) {
+      handleDeleteClick(invoice);
+    }
+  };
+
+  const handleViewPdfWrapper = (pdfUrl: string) => {
+    // Find invoice by PDF URL or handle differently based on your needs
+    const invoice = invoices.find(inv => inv.invoice_pdf === pdfUrl);
+    if (invoice) {
+      handleViewPdf(invoice);
+    } else {
+      // Handle case where we only have the PDF URL
+      window.open(pdfUrl, '_blank');
+    }
+  };
+
+  const handleDownloadWrapper = (invoiceId: string) => {
+    const invoice = invoices.find(inv => inv.id === invoiceId);
+    if (invoice) {
+      handleDownloadInvoice(invoice);
+    }
+  };
 
   return (
     <div className="space-y-6">
@@ -43,12 +76,12 @@ const InvoicesList: React.FC = () => {
 
       <InvoiceTable 
         invoices={invoices}
-        loading={loading}
+        loading={isLoading}
         projects={projects}
-        onEdit={handleEditInvoice}
-        onDelete={handleDeleteClick}
-        onViewPdf={handleViewPdf}
-        onDownload={handleDownloadInvoice}
+        onEdit={handleEdit}
+        onDelete={handleDelete}
+        onViewPdf={handleViewPdfWrapper}
+        onDownload={handleDownloadWrapper}
       />
 
       {/* Create invoice dialog */}
