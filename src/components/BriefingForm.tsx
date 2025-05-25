@@ -108,6 +108,7 @@ const BriefingForm: React.FC<BriefingFormProps> = ({
               field_type: field.field_type as 'text' | 'textarea' | 'select' | 'multi_select' | 'radio' | 'checkbox' | 'file' | 'date',
               placeholder: field.placeholder || '', // Ensure placeholder is never null
               options: field.options || [], // Ensure options is never null
+              max_length: field.max_length || null, // Ensure max_length is properly handled
             }));
 
             return (
