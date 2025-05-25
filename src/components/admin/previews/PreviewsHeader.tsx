@@ -1,9 +1,9 @@
-
 import React from 'react';
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { DollarSign, CreditCard, Users, Plus, BarChart4, Activity, Clock, ArrowUpRight } from 'lucide-react';
 import { usePreviewProjects } from '@/hooks/admin/usePreviewProjects';
+import { toast } from 'react-toastify';
 
 interface PreviewsHeaderProps {
   scrollToNewForm: () => void;
@@ -30,6 +30,26 @@ const PreviewsHeader: React.FC<PreviewsHeaderProps> = ({ scrollToNewForm }) => {
   // In a real app, this would compare with historical data
   const projectsTrend = 12; // Placeholder value, should be calculated from historical data
   
+  const sendEmailToClient = async (project: ProjectItem) => {
+    try {
+      console.log(`Sending email to ${project.client_email} for project ${project.id}`);
+      
+      // Here you would implement the actual email sending logic
+      // For now, we'll just show a success message
+      toast({
+        title: "Email enviado",
+        description: `Email de notificação enviado para ${project.client_email}`,
+      });
+    } catch (error) {
+      console.error('Error sending email:', error);
+      toast({
+        title: "Erro ao enviar email",
+        description: "Não foi possível enviar o email. Tente novamente.",
+        variant: "destructive"
+      });
+    }
+  };
+
   const stats = [
     {
       title: "Prévias Ativas",

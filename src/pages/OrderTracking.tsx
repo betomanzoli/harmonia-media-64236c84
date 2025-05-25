@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
@@ -36,7 +35,7 @@ const OrderTracking: React.FC = () => {
     setTimeout(() => {
       const foundProject = projects.find(p => 
         p.id.toLowerCase() === orderId.toLowerCase() && 
-        p.clientEmail.toLowerCase() === email.toLowerCase()
+        p.client_email.toLowerCase() === email.toLowerCase()
       );
       
       if (foundProject) {
@@ -131,26 +130,26 @@ const OrderTracking: React.FC = () => {
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div>
                       <h3 className="text-sm font-medium text-gray-500">Cliente</h3>
-                      <p className="font-medium">{orderDetails.clientName}</p>
+                      <p className="font-medium">{orderDetails.client_name}</p>
                     </div>
                     
                     <div>
                       <h3 className="text-sm font-medium text-gray-500">Email</h3>
-                      <p className="font-medium">{orderDetails.clientEmail}</p>
+                      <p className="font-medium">{orderDetails.client_email}</p>
                     </div>
                   </div>
                   
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div>
                       <h3 className="text-sm font-medium text-gray-500">Pacote</h3>
-                      <p className="font-medium">{orderDetails.packageType}</p>
+                      <p className="font-medium">{orderDetails.package_type}</p>
                     </div>
                     
                     <div>
                       <h3 className="text-sm font-medium text-gray-500">Data do Pedido</h3>
                       <p className="flex items-center">
                         <Calendar className="h-4 w-4 mr-2 text-gray-400" />
-                        {orderDetails.createdAt}
+                        {orderDetails.created_at}
                       </p>
                     </div>
                   </div>

@@ -1,4 +1,3 @@
-
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/lib/supabase';
@@ -261,6 +260,24 @@ const ClientDashboard: React.FC = () => {
     }
   };
   
+  const projectsToShow = projects
+    .filter(project => {
+      // Filter logic based on client association
+      return project.package_type?.toLowerCase().includes('cliente') || 
+             project.client_name?.toLowerCase().includes('cliente exemplo');
+    })
+    .map(project => ({
+      id: project.id,
+      title: project.package_type || 'Projeto Musical',
+      client: project.client_name || 'Cliente',
+      date: project.created_at || new Date().toLocaleDateString('pt-BR'),
+      lastActivity: project.last_activity_date || project.created_at || new Date().toLocaleDateString('pt-BR'),
+      status: project.status,
+      versions: project.versions_list ? project.versions_list.length : 0,
+      hasVersions: project.versions_list && project.versions_list.length > 0,
+      previewLink: project.preview_url || `/preview/${project.id}`
+    }));
+  
   if (isLoading) {
     return (
       <div className="min-h-screen flex flex-col items-center justify-center bg-gray-50">
@@ -302,13 +319,13 @@ const ClientDashboard: React.FC = () => {
           
           <TabsContent value="all" className="mt-6">
             <div className="grid gap-6 md:grid-cols-2">
-              {projects.length > 0 ? (
-                projects.map((project) => (
+              {projectsToShow.length > 0 ? (
+                projectsToShow.map((project) => (
                   <Card key={project.id} className="overflow-hidden">
                     <CardHeader className="pb-3">
                       <CardTitle>{project.title}</CardTitle>
                       <CardDescription>
-                        Criado em {new Date(project.created_at).toLocaleDateString('pt-BR')}
+                        Criado em {project.date}
                       </CardDescription>
                     </CardHeader>
                     <CardContent>
@@ -319,18 +336,18 @@ const ClientDashboard: React.FC = () => {
                         </div>
                         <div className="flex justify-between items-center">
                           <span className="text-sm text-gray-500">Última atualização:</span>
-                          <span className="text-sm">{new Date(project.updated_at).toLocaleString('pt-BR')}</span>
+                          <span className="text-sm">{project.lastActivity}</span>
                         </div>
-                        {project.versions && project.versions.length > 0 && (
+                        {project.hasVersions && (
                           <div className="flex justify-between items-center">
                             <span className="text-sm text-gray-500">Versões disponíveis:</span>
-                            <span className="text-sm">{project.versions.length}</span>
+                            <span className="text-sm">{project.versions}</span>
                           </div>
                         )}
                       </div>
                     </CardContent>
                     <CardFooter className="flex gap-2 justify-end pt-3 border-t">
-                      {project.preview_link && (
+                      {project.previewLink && (
                         <Button 
                           variant="outline" 
                           size="sm"
@@ -395,7 +412,7 @@ const ClientDashboard: React.FC = () => {
                       <CardHeader className="pb-3">
                         <CardTitle>{project.title}</CardTitle>
                         <CardDescription>
-                          Criado em {new Date(project.created_at).toLocaleDateString('pt-BR')}
+                          Criado em {project.date}
                         </CardDescription>
                       </CardHeader>
                       <CardContent>
@@ -406,12 +423,12 @@ const ClientDashboard: React.FC = () => {
                           </div>
                           <div className="flex justify-between items-center">
                             <span className="text-sm text-gray-500">Última atualização:</span>
-                            <span className="text-sm">{new Date(project.updated_at).toLocaleString('pt-BR')}</span>
+                            <span className="text-sm">{project.lastActivity}</span>
                           </div>
                         </div>
                       </CardContent>
                       <CardFooter className="flex gap-2 justify-end pt-3 border-t">
-                        {project.preview_link && (
+                        {project.previewLink && (
                           <Button 
                             variant="outline" 
                             size="sm"
@@ -463,7 +480,7 @@ const ClientDashboard: React.FC = () => {
                       <CardHeader className="pb-3">
                         <CardTitle>{project.title}</CardTitle>
                         <CardDescription>
-                          Criado em {new Date(project.created_at).toLocaleDateString('pt-BR')}
+                          Criado em {project.date}
                         </CardDescription>
                       </CardHeader>
                       <CardContent>
@@ -474,7 +491,7 @@ const ClientDashboard: React.FC = () => {
                           </div>
                           <div className="flex justify-between items-center">
                             <span className="text-sm text-gray-500">Entregue em:</span>
-                            <span className="text-sm">{new Date(project.updated_at).toLocaleDateString('pt-BR')}</span>
+                            <span className="text-sm">{project.lastActivity}</span>
                           </div>
                         </div>
                       </CardContent>

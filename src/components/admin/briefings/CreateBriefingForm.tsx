@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Form } from "@/components/ui/form";
@@ -129,19 +128,18 @@ const CreateBriefingForm: React.FC<CreateBriefingFormProps> = ({ onClose, onSubm
       expirationDate.setDate(expirationDate.getDate() + 30); // 30-day expiration
       
       const previewProject = {
-        id: projectId, // Use the same ID as the briefing
-        clientName: data.name,
-        clientEmail: data.email,
-        clientPhone: data.phone.fullNumber,
-        packageType: data.packageType,
-        createdAt: new Date().toLocaleDateString('pt-BR'),
+        client_name: data.name,
+        client_email: data.email,
+        client_phone: data.phone.fullNumber,
+        package_type: data.packageType,
+        created_at: new Date().toLocaleDateString('pt-BR'),
         status: 'waiting' as const,
         versions: 0,
-        previewUrl: `/preview/${projectId}`,
-        expirationDate: expirationDate.toLocaleDateString('pt-BR'),
-        lastActivityDate: new Date().toLocaleDateString('pt-BR'),
-        briefingId: newBriefing.id,
-        versionsList: []
+        preview_url: `/preview/${projectId}`,
+        expiration_date: expirationDate.toLocaleDateString('pt-BR'),
+        last_activity_date: new Date().toLocaleDateString('pt-BR'),
+        briefing_id: newBriefing.id,
+        versions_list: []
       };
       
       // Add the project with a specific ID instead of generating a new one
