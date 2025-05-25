@@ -15,16 +15,16 @@ export const generateMockPreviews = (): ProjectItem[] => {
   return [
     {
       id: "P0001",
-      clientName: "João Silva",
-      clientEmail: "joao.silva@email.com",
-      packageType: "Premium",
-      createdAt: "10/04/2025",
+      client_name: "João Silva",
+      client_email: "joao.silva@email.com",
+      package_type: "Premium",
+      created_at: "10/04/2025",
       status: "waiting",
       versions: 2,
-      previewUrl: "/preview/P0001",
-      expirationDate: expirationDate.toLocaleDateString('pt-BR'),
-      lastActivityDate: today.toLocaleDateString('pt-BR'),
-      versionsList: [
+      preview_url: "/preview/P0001",
+      expiration_date: expirationDate.toLocaleDateString('pt-BR'),
+      last_activity_date: today.toLocaleDateString('pt-BR'),
+      versions_list: [
         {
           id: "v1",
           name: "Versão Acústica",
@@ -45,16 +45,16 @@ export const generateMockPreviews = (): ProjectItem[] => {
     },
     {
       id: "P0002",
-      clientName: "Maria Oliveira",
-      clientEmail: "maria.oliveira@email.com",
-      packageType: "Essencial",
-      createdAt: "05/04/2025",
+      client_name: "Maria Oliveira",
+      client_email: "maria.oliveira@email.com",
+      package_type: "Essencial",
+      created_at: "05/04/2025",
       status: "feedback",
       versions: 1,
-      previewUrl: "/preview/P0002",
-      expirationDate: expirationDate.toLocaleDateString('pt-BR'),
-      lastActivityDate: lastWeek.toLocaleDateString('pt-BR'),
-      versionsList: [
+      preview_url: "/preview/P0002",
+      expiration_date: expirationDate.toLocaleDateString('pt-BR'),
+      last_activity_date: lastWeek.toLocaleDateString('pt-BR'),
+      versions_list: [
         {
           id: "v1",
           name: "Versão Demo",
@@ -68,16 +68,16 @@ export const generateMockPreviews = (): ProjectItem[] => {
     },
     {
       id: "P0003",
-      clientName: "Carlos Santos",
-      clientEmail: "carlos.santos@email.com",
-      packageType: "Profissional",
-      createdAt: "01/04/2025",
+      client_name: "Carlos Santos",
+      client_email: "carlos.santos@email.com",
+      package_type: "Profissional",
+      created_at: "01/04/2025",
       status: "approved",
       versions: 3,
-      previewUrl: "/preview/P0003",
-      expirationDate: expirationDate.toLocaleDateString('pt-BR'),
-      lastActivityDate: "03/04/2025",
-      versionsList: [
+      preview_url: "/preview/P0003",
+      expiration_date: expirationDate.toLocaleDateString('pt-BR'),
+      last_activity_date: "03/04/2025",
+      versions_list: [
         {
           id: "v1",
           name: "Versão Inicial",

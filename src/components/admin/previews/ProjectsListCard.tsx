@@ -85,17 +85,32 @@ export const ProjectsListCard: React.FC<ProjectsListCardProps> = ({
                       </div>
                     </td>
                     <td className="px-4 py-3 whitespace-nowrap">
-                      <div>{project.clientName}</div>
-                      <div className="text-xs text-muted-foreground">{project.clientEmail}</div>
+                      <div className="mb-4">
+                        <h3 className="text-lg font-semibold text-gray-100 mb-1">
+                          {project.client_name}
+                        </h3>
+                        <p className="text-sm text-gray-300 mb-2">{project.client_email}</p>
+                        
+                        <div className="grid grid-cols-2 gap-4 text-sm">
+                          <div>
+                            <span className="text-gray-400">Criado em:</span>
+                            <p className="text-gray-200">{project.created_at}</p>
+                          </div>
+                          <div>
+                            <span className="text-gray-400">Expira em:</span>
+                            <p className="text-gray-200">{project.expiration_date || 'Não definido'}</p>
+                          </div>
+                        </div>
+                      </div>
                     </td>
                     <td className="px-4 py-3 whitespace-nowrap">
                       {getStatusLabel(project.status)}
                     </td>
                     <td className="px-4 py-3 whitespace-nowrap text-sm">
-                      {project.createdAt}
+                      {project.created_at}
                     </td>
                     <td className="px-4 py-3 whitespace-nowrap text-sm">
-                      {project.expirationDate}
+                      {project.expiration_date}
                     </td>
                     <td className="px-4 py-3 whitespace-nowrap text-right text-sm">
                       <div className="flex justify-end gap-2">

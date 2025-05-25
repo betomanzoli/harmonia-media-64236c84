@@ -6,7 +6,7 @@ import { useCreateBriefingForm, BriefingFormValues } from '@/hooks/useCreateBrie
 import ClientInfoSection from './FormSections/ClientInfoSection';
 import PackageInfoSection from './FormSections/PackageInfoSection';
 import FormFooter from './FormSections/FormFooter';
-import { supabase } from '@/lib/supabase';
+import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { usePreviewProjects } from '@/hooks/admin/usePreviewProjects';
 import { useCustomers } from '@/hooks/admin/useCustomers';
@@ -43,7 +43,7 @@ const CreateBriefingForm: React.FC<CreateBriefingFormProps> = ({ onClose, onSubm
       }
       
       if (existingClients && existingClients.length > 0) {
-        clientId = existingClients[0].id;
+        clientId = existingClients[0].id as string;
         
         // Atualizar informações do cliente caso tenha mudado
         await supabase
@@ -71,7 +71,7 @@ const CreateBriefingForm: React.FC<CreateBriefingFormProps> = ({ onClose, onSubm
           throw newClientError;
         }
         
-        clientId = newClient.id;
+        clientId = newClient.id as string;
         
         // Enviar notificação de novo cliente
         await webhookService.sendItemNotification('new_customer', {
@@ -122,26 +122,25 @@ const CreateBriefingForm: React.FC<CreateBriefingFormProps> = ({ onClose, onSubm
       
       // Generate a consistent project ID based on the briefing ID
       // Use the Supabase briefing ID directly to ensure consistency
-      const projectId = newBriefing.id;
+      const projectId = newBriefing.id as string;
       
       // Create a preview project automatically linked to this briefing
       const expirationDate = new Date();
       expirationDate.setDate(expirationDate.getDate() + 30); // 30-day expiration
       
       const previewProject = {
-        id: projectId, // Use the same ID as the briefing
-        clientName: data.name,
-        clientEmail: data.email,
-        clientPhone: data.phone.fullNumber,
-        packageType: data.packageType,
-        createdAt: new Date().toLocaleDateString('pt-BR'),
+        client_name: data.name,
+        client_email: data.email,
+        client_phone: data.phone.fullNumber,
+        package_type: data.packageType,
+        created_at: new Date().toLocaleDateString('pt-BR'),
         status: 'waiting' as const,
         versions: 0,
-        previewUrl: `/preview/${projectId}`,
-        expirationDate: expirationDate.toLocaleDateString('pt-BR'),
-        lastActivityDate: new Date().toLocaleDateString('pt-BR'),
-        briefingId: newBriefing.id,
-        versionsList: []
+        preview_url: `/preview/${projectId}`,
+        expiration_date: expirationDate.toLocaleDateString('pt-BR'),
+        last_activity_date: new Date().toLocaleDateString('pt-BR'),
+        briefing_id: newBriefing.id as string,
+        versions_list: []
       };
       
       // Add the project with a specific ID instead of generating a new one

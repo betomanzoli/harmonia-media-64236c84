@@ -1,5 +1,5 @@
 
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { Button } from "@/components/ui/button";
 import { Form } from "@/components/ui/form";
 import { useBriefingForm } from './briefing/useBriefingForm';
@@ -12,15 +12,16 @@ import { Music, Loader2 } from 'lucide-react';
 import { useLocation } from 'react-router-dom';
 import { useBriefingData } from '@/hooks/useBriefingData';
 import DynamicFormSection from './qualification/DynamicFormSection';
+import { BriefingSection as ImportedBriefingSection, BriefingField as ImportedBriefingField } from '@/types/briefing';
 
 interface BriefingFormProps {
-  packageType?: 'essencial' | 'profissional' | 'premium';
+  selectedPackage?: 'essencial' | 'profissional' | 'premium';
   initialData?: any;
-  onSubmit?: (data: any) => void;
+  onSubmit?: (briefingId: string) => void;
 }
 
 const BriefingForm: React.FC<BriefingFormProps> = ({ 
-  packageType,
+  selectedPackage: packageType,
   initialData,
   onSubmit 
 }) => {
@@ -58,14 +59,20 @@ const BriefingForm: React.FC<BriefingFormProps> = ({
     selectedPackage
   } = useBriefingForm(initialPackage, initialData);
 
-  const { sections, fields, isLoading } = useBriefingData(selectedPackage);
+  const { sections, fields, isLoading } = useBriefingData();
 
   // Custom submit handler that calls the provided onSubmit if available
   const handleCustomSubmit = async (data: any) => {
-    if (onSubmit) {
-      onSubmit(data);
-    } else {
+    try {
       await handleFormSubmit(data);
+      // Since handleFormSubmit doesn't return briefingId, we'll generate a mock one for now
+      // In a real implementation, you'd get this from the actual submission response
+      const mockBriefingId = `briefing_${Date.now()}`;
+      if (onSubmit) {
+        onSubmit(mockBriefingId);
+      }
+    } catch (error) {
+      console.error('Error submitting briefing:', error);
     }
   };
 
@@ -87,14 +94,32 @@ const BriefingForm: React.FC<BriefingFormProps> = ({
     if (sections.length > 0 && Object.keys(fields).length > 0) {
       return (
         <>
-          {sections.map((section) => (
-            <DynamicFormSection
-              key={section.id}
-              section={section}
-              fields={fields[section.id] || []}
-              form={form}
-            />
-          ))}
+          {sections.map((section) => {
+            // Convert to the expected type, ensuring required fields have values
+            const typedSection: ImportedBriefingSection = {
+              ...section,
+              package_type: section.package_type as 'essencial' | 'profissional' | 'premium' | 'qualification',
+              description: section.description || '', // Ensure description is never null
+            };
+            
+            const sectionFields = fields[section.id] || [];
+            const typedFields: ImportedBriefingField[] = sectionFields.map(field => ({
+              ...field,
+              field_type: field.field_type as 'text' | 'textarea' | 'select' | 'multi_select' | 'radio' | 'checkbox' | 'file' | 'date',
+              placeholder: field.placeholder || '', // Ensure placeholder is never null
+              options: field.options || [], // Ensure options is never null
+              max_length: field.max_length || null, // Ensure max_length is properly handled
+            }));
+
+            return (
+              <DynamicFormSection
+                key={section.id}
+                section={typedSection}
+                fields={typedFields}
+                form={form}
+              />
+            );
+          })}
         </>
       );
     }
