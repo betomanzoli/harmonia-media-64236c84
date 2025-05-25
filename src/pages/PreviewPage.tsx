@@ -15,13 +15,35 @@ import { usePreviewProject } from '@/hooks/previews/usePreviewProject';
 import { notificationService } from '@/services/notificationService';
 
 const PreviewPage: React.FC = () => {
-  const { projectId } = useParams<{ projectId: string }>();
+  const params = useParams<{ projectId: string }>();
   const navigate = useNavigate();
   const { toast } = useToast();
+  
+  // Safely extract projectId and ensure it's not the literal route parameter
+  const projectId = params.projectId && params.projectId !== ':projectId' ? params.projectId : undefined;
   
   const [selectedPreview, setSelectedPreview] = useState<string | null>(null);
   const [feedback, setFeedback] = useState('');
   const { projectData, setProjectData, isLoading } = usePreviewProject(projectId || '');
+  
+  // Clean up any ethereum/MetaMask references that might interfere
+  useEffect(() => {
+    // Remove any ethereum or MetaMask window object references to prevent TypeErrors
+    if (typeof window !== 'undefined') {
+      try {
+        // Safely remove ethereum references if they exist
+        if ('ethereum' in window) {
+          delete (window as any).ethereum;
+        }
+        if ('MetaMask' in window) {
+          delete (window as any).MetaMask;
+        }
+      } catch (error) {
+        // Silently handle any errors during cleanup
+        console.log('Cleaned up ethereum references');
+      }
+    }
+  }, []);
   
   const handleSubmitFeedback = () => {
     if (!selectedPreview) {
