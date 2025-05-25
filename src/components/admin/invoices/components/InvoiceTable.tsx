@@ -20,8 +20,8 @@ interface InvoiceTableProps {
   loading: boolean;
   projects: Project[];
   onEdit: (invoice: Invoice) => void;
-  onDelete: (invoiceId: string) => void;
-  onViewPdf: (pdfUrl: string) => void;
+  onDelete: (invoice: Invoice) => void;
+  onViewPdf: (invoice: Invoice) => void;
   onDownload: (invoice: Invoice) => void;
 }
 
