@@ -23,21 +23,23 @@
     
     <!-- Preconnect to improve performance -->
     <link rel="preconnect" href="https://ivueqxyuflxsiecqvmgt.supabase.co" />
-    
-    <!-- Block MetaMask injection -->
-    <script>
-      if (typeof window !== 'undefined') {
-        Object.defineProperty(window, 'ethereum', {
-          value: undefined,
-          writable: false,
-          configurable: false
-        });
-      }
-    </script>
   </head>
   <body>
     <div id="root"></div>
     <script type="module" src="/src/main.tsx"></script>
-    <script src="https://cdn.gpteng.co/gptengineer.js" defer></script>
+    <script>
+      // Environment-aware script loading with error handling
+      (function() {
+        if (typeof window !== 'undefined' && window.location.hostname.includes('lovable')) {
+          var script = document.createElement('script');
+          script.src = 'https://cdn.gpteng.co/gptengineer.js';
+          script.defer = true;
+          script.onerror = function() {
+            console.warn('Failed to load GPT Engineer script');
+          };
+          document.body.appendChild(script);
+        }
+      })();
+    </script>
   </body>
 </html>

@@ -4,21 +4,31 @@ import { createClient } from '@supabase/supabase-js';
 const supabaseUrl = 'https://ivueqxyuflxsiecqvmgt.supabase.co';
 const supabaseAnonKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Iml2dWVxeHl1Zmx4c2llY3F2bWd0Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDY3MjY0MzEsImV4cCI6MjA2MjMwMjQzMX0.db1UVta6PSPGokJOZozwqZ7AAs2jBljfWCdUR3LjIdM';
 
-// Single Supabase client instance to prevent multiple GoTrueClient warnings
-export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
-  auth: {
-    storage: typeof window !== 'undefined' ? window.localStorage : undefined,
-    autoRefreshToken: true,
-    persistSession: true,
-    detectSessionInUrl: false,
-    storageKey: 'harmonia-auth'
-  },
-  global: {
-    headers: {
-      'X-Client-Info': 'harmonia-music@1.0.0'
-    }
+// Singleton pattern to prevent multiple GoTrueClient warnings
+let supabaseInstance: ReturnType<typeof createClient> | null = null;
+
+export const getSupabase = () => {
+  if (!supabaseInstance) {
+    supabaseInstance = createClient(supabaseUrl, supabaseAnonKey, {
+      auth: {
+        storage: typeof window !== 'undefined' ? window.localStorage : undefined,
+        autoRefreshToken: true,
+        persistSession: true,
+        detectSessionInUrl: false,
+        storageKey: 'harmonia-auth'
+      },
+      global: {
+        headers: {
+          'X-Client-Info': 'harmonia-music@1.0.0'
+        }
+      }
+    });
   }
-});
+  return supabaseInstance;
+};
+
+// Main export for backwards compatibility
+export const supabase = getSupabase();
 
 // Enhanced email service with all required methods
 export const emailService = {
