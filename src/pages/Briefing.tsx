@@ -1,62 +1,74 @@
 
-import React, { useState, useEffect } from 'react';
-import { useNavigate, useSearchParams } from 'react-router-dom';
-import PublicLayout from '@/layouts/PublicLayout';
-import BriefingForm from '@/components/BriefingForm';
+import React, { useEffect, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
+import Header from '@/components/Header';
+import Footer from '@/components/Footer';
+import { Button } from "@/components/ui/button";
+import { ArrowLeft } from 'lucide-react';
 import ConversationalBriefing from '@/components/briefing/ConversationalBriefing';
-import { useToast } from '@/hooks/use-toast';
+import { supabase } from '@/lib/supabase';
 
 const Briefing: React.FC = () => {
   const navigate = useNavigate();
-  const [searchParams] = useSearchParams();
-  const { toast } = useToast();
-  const [useConversational, setUseConversational] = useState(false);
-
-  // Get package from URL params
-  const packageFromUrl = searchParams.get('package') as 'essencial' | 'profissional' | 'premium' | null;
+  const [hasPurchased, setHasPurchased] = useState(false);
+  const [purchaseData, setPurchaseData] = useState<any>(null);
 
   useEffect(() => {
-    // Check if user prefers conversational briefing
-    const conversationalMode = searchParams.get('mode') === 'conversational';
-    setUseConversational(conversationalMode);
-  }, [searchParams]);
-
-  const handleBriefingSubmit = async (briefingId: string, packageType?: 'essencial' | 'profissional' | 'premium') => {
-    try {
-      toast({
-        title: "Briefing enviado com sucesso!",
-        description: "Entraremos em contato em breve para dar início ao seu projeto."
-      });
-
-      // Navigate to success page with briefing ID
-      navigate(`/briefing-success?id=${briefingId}${packageType ? `&package=${packageType}` : ''}`);
-    } catch (error) {
-      console.error('Error handling briefing submission:', error);
-      toast({
-        title: "Erro ao processar briefing",
-        description: "Ocorreu um erro. Tente novamente ou entre em contato conosco.",
-        variant: "destructive"
-      });
+    // Check if user has purchased a package
+    const paymentData = localStorage.getItem('paymentData');
+    if (paymentData) {
+      try {
+        const data = JSON.parse(paymentData);
+        setHasPurchased(true);
+        setPurchaseData(data);
+      } catch (e) {
+        console.error('Error parsing payment data:', e);
+      }
     }
+  }, []);
+
+  // Handle completion of initial briefing and selection of package
+  const handleBriefingComplete = async (briefingId: string, packageType: 'essencial' | 'profissional' | 'premium') => {
+    console.log('Briefing complete with ID:', briefingId);
+    console.log('Selected package:', packageType);
+    
+    // Save briefingId to localStorage for later use
+    localStorage.setItem('currentBriefingId', briefingId);
+    
+    // Redirect to payment page with briefingId parameter
+    navigate(`/pagamento/${packageType}?briefingId=${briefingId}`);
   };
 
-  if (useConversational) {
-    return (
-      <PublicLayout>
-        <ConversationalBriefing 
-          onComplete={handleBriefingSubmit}
-        />
-      </PublicLayout>
-    );
-  }
-
   return (
-    <PublicLayout>
-      <BriefingForm 
-        selectedPackage={packageFromUrl || undefined}
-        onSubmit={(briefingId) => handleBriefingSubmit(briefingId)}
-      />
-    </PublicLayout>
+    <div className="min-h-screen bg-background text-foreground">
+      <Header />
+      <main className="pt-24 pb-20 px-6 md:px-10">
+        <div className="max-w-4xl mx-auto">
+          <div className="mb-6">
+            <Button 
+              variant="ghost" 
+              className="flex items-center gap-1 text-gray-400 hover:text-white"
+              onClick={() => navigate('/')}
+            >
+              <ArrowLeft className="w-4 h-4" />
+              Voltar para a página inicial
+            </Button>
+          </div>
+          
+          <div className="text-center mb-10">
+            <h1 className="text-3xl md:text-4xl font-bold mb-4">Transforme sua história em música</h1>
+            <p className="text-gray-400 max-w-2xl mx-auto">
+              Conte-nos um pouco sobre a sua visão musical e criaremos uma composição personalizada especialmente para você.
+            </p>
+          </div>
+
+          <div className="bg-card border border-border rounded-lg p-8">
+            <ConversationalBriefing onComplete={handleBriefingComplete} />
+          </div>
+        </div>
+      </main>
+      <Footer />
+    </div>
   );
 };
 

@@ -54,7 +54,7 @@ const MusicPreviews: React.FC = () => {
     // Notify about feedback
     notificationService.notify('feedback_received', {
       projectId: actualProjectId || previewId,
-      clientName: projectData?.client_name || 'Cliente',
+      clientName: projectData?.clientName || 'Cliente',
       message: feedback
     });
     
@@ -79,7 +79,7 @@ const MusicPreviews: React.FC = () => {
     // Notify about approval
     notificationService.notify('preview_approved', {
       projectId: actualProjectId || previewId,
-      clientName: projectData?.client_name || 'Cliente',
+      clientName: projectData?.clientName || 'Cliente',
       versionId: selectedPreview
     });
     
@@ -129,8 +129,8 @@ const MusicPreviews: React.FC = () => {
         <div className="max-w-4xl mx-auto">
           <PreviewHeader 
             projectData={{
-              projectTitle: projectData.project_title,
-              clientName: projectData.client_name,
+              projectTitle: projectData.projectTitle,
+              clientName: projectData.clientName,
               status: projectData.status
             }}
           />
@@ -152,7 +152,7 @@ const MusicPreviews: React.FC = () => {
                 <PreviewPlayerList 
                   versions={projectData.previews.map(preview => ({
                     ...preview,
-                    description: preview.description || `Versão musical para ${projectData.client_name}`
+                    description: preview.description || `Versão musical para ${projectData.clientName}`
                   }))}
                   selectedVersion={selectedPreview}
                   setSelectedVersion={setSelectedPreview}

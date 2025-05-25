@@ -751,70 +751,40 @@ export type Database = {
       }
       projects: {
         Row: {
-          client_email: string | null
           client_id: string | null
-          client_name: string | null
-          client_phone: string | null
           created_at: string | null
           deadline: string | null
           description: string | null
-          expires_at: string | null
-          feedback: string | null
-          feedback_history: Json | null
           id: string
           package_id: string | null
-          package_type: string | null
           preview_code: string | null
-          preview_url: string | null
           status: string | null
           title: string
           updated_at: string | null
-          use_google_drive: boolean | null
-          versions: Json | null
         }
         Insert: {
-          client_email?: string | null
           client_id?: string | null
-          client_name?: string | null
-          client_phone?: string | null
           created_at?: string | null
           deadline?: string | null
           description?: string | null
-          expires_at?: string | null
-          feedback?: string | null
-          feedback_history?: Json | null
           id?: string
           package_id?: string | null
-          package_type?: string | null
           preview_code?: string | null
-          preview_url?: string | null
           status?: string | null
           title: string
           updated_at?: string | null
-          use_google_drive?: boolean | null
-          versions?: Json | null
         }
         Update: {
-          client_email?: string | null
           client_id?: string | null
-          client_name?: string | null
-          client_phone?: string | null
           created_at?: string | null
           deadline?: string | null
           description?: string | null
-          expires_at?: string | null
-          feedback?: string | null
-          feedback_history?: Json | null
           id?: string
           package_id?: string | null
-          package_type?: string | null
           preview_code?: string | null
-          preview_url?: string | null
           status?: string | null
           title?: string
           updated_at?: string | null
-          use_google_drive?: boolean | null
-          versions?: Json | null
         }
         Relationships: [
           {

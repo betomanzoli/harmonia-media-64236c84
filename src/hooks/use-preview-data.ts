@@ -38,7 +38,7 @@ export const usePreviewData = (projectId: string | undefined) => {
     if (adminProject) {
       console.log('Project found:', adminProject);
       
-      const previews = adminProject.versions_list?.map(v => ({
+      const previews = adminProject.versionsList?.map(v => ({
         id: v.id,
         title: v.name || `Versão ${v.id}`,
         description: v.description || '',
@@ -59,8 +59,8 @@ export const usePreviewData = (projectId: string | undefined) => {
       }
 
       setProjectData({
-        clientName: adminProject.client_name,
-        projectTitle: adminProject.package_type || 'Música Personalizada',
+        clientName: adminProject.clientName,
+        projectTitle: adminProject.packageType || 'Música Personalizada',
         status: adminProject.status as 'waiting' | 'feedback' | 'approved',
         previews: previews.length > 0 ? previews : [
           {

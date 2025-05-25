@@ -1,112 +1,110 @@
 
-import { useState, useEffect } from 'react';
-import { supabase } from '@/integrations/supabase/client';
+import { useEffect, useState } from 'react';
+import { supabase } from '@/lib/supabase';
+import { BriefingSection, BriefingField } from '@/types/briefing';
+import { useToast } from './use-toast';
 
-interface BriefingSection {
-  id: string;
-  package_type: string;
-  section_type: string;
-  title: string;
-  description?: string;
-  order_num: number;
-  is_active: boolean;
-  created_at: string;
-}
-
-interface BriefingField {
-  id: string;
-  section_id: string;
-  field_key: string;
-  field_name: string;
-  field_type: string;
-  placeholder?: string;
-  options?: any;
-  max_length?: number;
-  is_required: boolean;
-  order_num: number;
-  is_active: boolean;
-  created_at: string;
-}
-
-export const useBriefingData = () => {
+export function useBriefingData(packageType: 'essencial' | 'profissional' | 'premium' | 'qualification') {
   const [sections, setSections] = useState<BriefingSection[]>([]);
-  const [fields, setFields] = useState<Record<string, BriefingField[]>>({});
+  const [fields, setFields] = useState<{ [sectionId: string]: BriefingField[] }>({});
   const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const { toast } = useToast();
 
   useEffect(() => {
-    const loadBriefingData = async () => {
+    const fetchBriefingStructure = async () => {
+      setIsLoading(true);
+      setError(null);
+
       try {
-        // Load sections
+        // Fetch sections for the selected package type
         const { data: sectionsData, error: sectionsError } = await supabase
           .from('briefing_sections')
           .select('*')
+          .eq('package_type', packageType)
           .eq('is_active', true)
           .order('order_num');
 
-        if (sectionsError) throw sectionsError;
+        if (sectionsError) {
+          throw sectionsError;
+        }
 
-        const typedSections: BriefingSection[] = (sectionsData || []).map((item: any) => ({
-          id: String(item.id || ''),
-          package_type: String(item.package_type || ''),
-          section_type: String(item.section_type || ''),
-          title: String(item.title || ''),
-          description: item.description ? String(item.description) : undefined,
-          order_num: Number(item.order_num || 0),
-          is_active: Boolean(item.is_active),
-          created_at: String(item.created_at || new Date().toISOString())
-        }));
+        setSections(sectionsData || []);
 
-        setSections(typedSections);
+        // Fetch fields for each section
+        if (sectionsData && sectionsData.length > 0) {
+          const fieldsObj: { [sectionId: string]: BriefingField[] } = {};
+          
+          for (const section of sectionsData) {
+            const { data: fieldsData, error: fieldsError } = await supabase
+              .from('briefing_fields')
+              .select('*')
+              .eq('section_id', section.id)
+              .eq('is_active', true)
+              .order('order_num');
 
-        // Load fields for each section
-        const { data: fieldsData, error: fieldsError } = await supabase
-          .from('briefing_fields')
-          .select('*')
-          .eq('is_active', true)
-          .order('order_num');
+            if (fieldsError) {
+              console.error(`Error fetching fields for section ${section.id}:`, fieldsError);
+              continue;
+            }
 
-        if (fieldsError) throw fieldsError;
-
-        const typedFields: BriefingField[] = (fieldsData || []).map((item: any) => ({
-          id: String(item.id || ''),
-          section_id: String(item.section_id || ''),
-          field_key: String(item.field_key || ''),
-          field_name: String(item.field_name || ''),
-          field_type: String(item.field_type || ''),
-          placeholder: item.placeholder ? String(item.placeholder) : undefined,
-          options: item.options,
-          max_length: item.max_length ? Number(item.max_length) : undefined,
-          is_required: Boolean(item.is_required),
-          order_num: Number(item.order_num || 0),
-          is_active: Boolean(item.is_active),
-          created_at: String(item.created_at || new Date().toISOString())
-        }));
-
-        // Group fields by section_id
-        const groupedFields: Record<string, BriefingField[]> = {};
-        typedFields.forEach(field => {
-          if (!groupedFields[field.section_id]) {
-            groupedFields[field.section_id] = [];
+            fieldsObj[section.id] = fieldsData || [];
           }
-          groupedFields[field.section_id].push(field);
-        });
 
-        setFields(groupedFields);
-      } catch (error) {
-        console.error('Error loading briefing data:', error);
-        setSections([]);
-        setFields({});
+          setFields(fieldsObj);
+        }
+
+      } catch (err: any) {
+        console.error('Error fetching briefing structure:', err);
+        setError(err.message || 'Failed to load briefing form structure');
+        toast({
+          title: "Erro ao carregar formulário",
+          description: "Não foi possível carregar a estrutura do formulário. Por favor, tente novamente.",
+          variant: "destructive"
+        });
       } finally {
         setIsLoading(false);
       }
     };
 
-    loadBriefingData();
-  }, []);
+    fetchBriefingStructure();
+  }, [packageType, toast]);
+
+  const saveBriefingData = async (data: any, clientId?: string) => {
+    try {
+      const { data: savedData, error } = await supabase
+        .from('briefings')
+        .insert([
+          {
+            client_id: clientId || null,
+            package_type: packageType,
+            data: data,
+          }
+        ])
+        .select()
+        .single();
+
+      if (error) {
+        throw error;
+      }
+
+      return { success: true, data: savedData };
+    } catch (err: any) {
+      console.error('Error saving briefing data:', err);
+      toast({
+        title: "Erro ao salvar dados",
+        description: err.message || "Não foi possível salvar os dados do briefing",
+        variant: "destructive"
+      });
+      return { success: false, error: err.message };
+    }
+  };
 
   return {
     sections,
     fields,
-    isLoading
+    isLoading,
+    error,
+    saveBriefingData
   };
-};
+}

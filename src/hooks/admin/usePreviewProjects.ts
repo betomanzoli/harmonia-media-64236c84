@@ -1,7 +1,6 @@
-
 // src/hooks/admin/usePreviewProjects.ts
 import { useState, useCallback, useEffect, useRef } from 'react';
-import { supabase } from '@/integrations/supabase/client';
+import { supabase } from '@/lib/supabase';
 
 export interface VersionItem {
   id: string;
@@ -55,27 +54,8 @@ export const usePreviewProjects = () => {
 
       if (error) throw error;
 
-      // Type-safe mapping
-      const typedProjects: ProjectItem[] = (data || []).map((item: any) => ({
-        id: item.id as string,
-        client_name: item.client_name as string,
-        client_email: item.client_email as string,
-        client_phone: item.client_phone as string,
-        package_type: item.package_type as string,
-        created_at: item.created_at as string,
-        status: item.status as 'waiting' | 'feedback' | 'approved',
-        versions: typeof item.versions === 'number' ? item.versions : 0,
-        preview_url: item.preview_url as string,
-        expiration_date: item.expiration_date as string,
-        last_activity_date: item.last_activity_date as string,
-        versions_list: Array.isArray(item.versions_list) ? item.versions_list : [],
-        briefing_id: item.briefing_id as string,
-        history: Array.isArray(item.history) ? item.history : [],
-        feedback: item.feedback as string
-      }));
-
-      setProjects(typedProjects);
-      return typedProjects;
+      setProjects(data || []);
+      return data || [];
 
     } catch (error) {
       console.error('Erro ao carregar projetos:', error);
@@ -94,11 +74,6 @@ export const usePreviewProjects = () => {
     }
   }, [loadProjects]);
 
-  // Get project by ID
-  const getProjectById = useCallback((id: string): ProjectItem | undefined => {
-    return projects.find(project => project.id === id);
-  }, [projects]);
-
   // Operações CRUD
   const addProject = useCallback(async (project: Omit<ProjectItem, 'id'>) => {
     const { data, error } = await supabase
@@ -106,28 +81,7 @@ export const usePreviewProjects = () => {
       .insert(project)
       .select();
 
-    if (data && data[0]) {
-      const newProject = data[0] as any;
-      const typedProject: ProjectItem = {
-        id: newProject.id as string,
-        client_name: newProject.client_name as string,
-        client_email: newProject.client_email as string,
-        client_phone: newProject.client_phone as string,
-        package_type: newProject.package_type as string,
-        created_at: newProject.created_at as string,
-        status: newProject.status as 'waiting' | 'feedback' | 'approved',
-        versions: typeof newProject.versions === 'number' ? newProject.versions : 0,
-        preview_url: newProject.preview_url as string,
-        expiration_date: newProject.expiration_date as string,
-        last_activity_date: newProject.last_activity_date as string,
-        versions_list: Array.isArray(newProject.versions_list) ? newProject.versions_list : [],
-        briefing_id: newProject.briefing_id as string,
-        history: Array.isArray(newProject.history) ? newProject.history : [],
-        feedback: newProject.feedback as string
-      };
-      
-      setProjects(prev => [typedProject, ...prev]);
-    }
+    if (data) setProjects(prev => [...prev, data[0]]);
     return { data, error };
   }, []);
 
@@ -138,28 +92,9 @@ export const usePreviewProjects = () => {
       .eq('id', id)
       .select();
 
-    if (data && data[0]) {
-      const updatedProject = data[0] as any;
-      const typedProject: ProjectItem = {
-        id: updatedProject.id as string,
-        client_name: updatedProject.client_name as string,
-        client_email: updatedProject.client_email as string,
-        client_phone: updatedProject.client_phone as string,
-        package_type: updatedProject.package_type as string,
-        created_at: updatedProject.created_at as string,
-        status: updatedProject.status as 'waiting' | 'feedback' | 'approved',
-        versions: typeof updatedProject.versions === 'number' ? updatedProject.versions : 0,
-        preview_url: updatedProject.preview_url as string,
-        expiration_date: updatedProject.expiration_date as string,
-        last_activity_date: updatedProject.last_activity_date as string,
-        versions_list: Array.isArray(updatedProject.versions_list) ? updatedProject.versions_list : [],
-        briefing_id: updatedProject.briefing_id as string,
-        history: Array.isArray(updatedProject.history) ? updatedProject.history : [],
-        feedback: updatedProject.feedback as string
-      };
-
+    if (data) {
       setProjects(prev => 
-        prev.map(p => p.id === id ? typedProject : p)
+        prev.map(p => p.id === id ? { ...p, ...data[0] } : p)
       );
     }
     return { data, error };
@@ -181,7 +116,6 @@ export const usePreviewProjects = () => {
     projects,
     isLoading,
     loadProjects,
-    getProjectById,
     addProject,
     updateProject,
     deleteProject
