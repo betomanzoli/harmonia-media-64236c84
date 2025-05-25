@@ -28,7 +28,8 @@ const ServiceCard: React.FC<ServiceCardProps> = ({
     acceptedTerms,
     setAcceptedTerms,
     handleChoosePackage,
-    handleProceedToBriefing
+    handleProceedToBriefing,
+    isTermsAccepted
   } = useServiceTerms(title);
   
   return (
@@ -61,8 +62,11 @@ const ServiceCard: React.FC<ServiceCardProps> = ({
         open={isTermsDialogOpen}
         onOpenChange={setIsTermsDialogOpen}
         title={title}
-        acceptedTerms={acceptedTerms}
-        onAcceptedTermsChange={setAcceptedTerms}
+        acceptedTerms={isTermsAccepted(title.toLowerCase())}
+        onAcceptedTermsChange={(accepted) => setAcceptedTerms(prev => ({
+          ...prev,
+          [title.toLowerCase()]: accepted
+        }))}
         onAccept={handleProceedToBriefing}
       />
     </div>

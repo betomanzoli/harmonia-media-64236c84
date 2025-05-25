@@ -1,3 +1,4 @@
+
 import { supabase } from '@/integrations/supabase/client';
 
 export interface ProjectPreview {
@@ -8,6 +9,37 @@ export interface ProjectPreview {
   created_at: string;
   expires_at?: string;
 }
+
+export const getProjectIdFromPreviewLink = async (previewId: string): Promise<string | null> => {
+  try {
+    // First try to use the ID directly
+    const { data: directData, error: directError } = await supabase
+      .from('projects')
+      .select('id')
+      .eq('id', previewId)
+      .maybeSingle();
+
+    if (!directError && directData) {
+      return previewId;
+    }
+
+    // Try to find by preview_code
+    const { data: codeData, error: codeError } = await supabase
+      .from('projects')
+      .select('id')
+      .eq('preview_code', previewId)
+      .maybeSingle();
+
+    if (!codeError && codeData) {
+      return String(codeData.id);
+    }
+
+    return null;
+  } catch (error) {
+    console.error('Error getting project ID from preview link:', error);
+    return null;
+  }
+};
 
 export const previewLinkUtils = {
   generatePreviewLink: (projectId: string): string => {

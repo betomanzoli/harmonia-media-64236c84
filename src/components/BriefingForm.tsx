@@ -14,13 +14,13 @@ import { useBriefingData } from '@/hooks/useBriefingData';
 import DynamicFormSection from './qualification/DynamicFormSection';
 
 interface BriefingFormProps {
-  packageType?: 'essencial' | 'profissional' | 'premium';
+  selectedPackage?: 'essencial' | 'profissional' | 'premium';
   initialData?: any;
-  onSubmit?: (data: any) => void;
+  onSubmit?: (briefingId: string) => void;
 }
 
 const BriefingForm: React.FC<BriefingFormProps> = ({ 
-  packageType,
+  selectedPackage: packageType,
   initialData,
   onSubmit 
 }) => {
@@ -58,12 +58,15 @@ const BriefingForm: React.FC<BriefingFormProps> = ({
     selectedPackage
   } = useBriefingForm(initialPackage, initialData);
 
-  const { sections, fields, isLoading } = useBriefingData(selectedPackage);
+  const { sections, fields, isLoading } = useBriefingData();
 
   // Custom submit handler that calls the provided onSubmit if available
   const handleCustomSubmit = async (data: any) => {
     if (onSubmit) {
-      onSubmit(data);
+      const result = await handleFormSubmit(data);
+      if (result?.briefingId) {
+        onSubmit(result.briefingId);
+      }
     } else {
       await handleFormSubmit(data);
     }

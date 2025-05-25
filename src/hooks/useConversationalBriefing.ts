@@ -1,6 +1,13 @@
+
 import { useState, useCallback } from 'react';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
+
+const initialQuestions = [
+  'O que inspira você no seu projeto musical?',
+  'Há alguma conexão especial com este projeto?',
+  'Que emoções você quer transmitir através da música?'
+];
 
 interface BriefingStep {
   question: string;
@@ -48,6 +55,12 @@ export const useConversationalBriefing = () => {
   const [answers, setAnswers] = useState<Record<string, any>>({});
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [selectedPackage, setSelectedPackage] = useState<'essencial' | 'profissional' | 'premium'>('essencial');
+  const [isInitialBriefingComplete, setIsInitialBriefingComplete] = useState(false);
+  const [initialResponses, setInitialResponses] = useState({
+    inspiration: '',
+    specialConnection: '',
+    emotion: ''
+  });
 
   const handleAnswer = useCallback((questionKey: string, answer: any) => {
     setAnswers(prev => ({
@@ -55,6 +68,30 @@ export const useConversationalBriefing = () => {
       [questionKey]: answer
     }));
   }, []);
+
+  const updateResponse = useCallback((stepIndex: number, value: string) => {
+    if (stepIndex === 0) {
+      setInitialResponses(prev => ({ ...prev, inspiration: value }));
+    } else if (stepIndex === 1) {
+      setInitialResponses(prev => ({ ...prev, specialConnection: value }));
+    } else if (stepIndex === 2) {
+      setInitialResponses(prev => ({ ...prev, emotion: value }));
+    }
+  }, []);
+
+  const nextStep = useCallback(() => {
+    if (currentStep < initialQuestions.length - 1) {
+      setCurrentStep(prev => prev + 1);
+    } else {
+      setIsInitialBriefingComplete(true);
+    }
+  }, [currentStep]);
+
+  const prevStep = useCallback(() => {
+    if (currentStep > 0) {
+      setCurrentStep(prev => prev - 1);
+    }
+  }, [currentStep]);
 
   const handleNext = useCallback(() => {
     if (currentStep < steps.length - 1) {
@@ -107,6 +144,46 @@ export const useConversationalBriefing = () => {
     }
   };
 
+  const saveInitialBriefing = async (packageType: 'essencial' | 'profissional' | 'premium') => {
+    setIsSubmitting(true);
+    try {
+      const briefingData = {
+        package_type: packageType,
+        status: 'pending',
+        data: {
+          inspiration: initialResponses.inspiration,
+          specialConnection: initialResponses.specialConnection,
+          emotion: initialResponses.emotion,
+          created_at: new Date().toISOString()
+        }
+      };
+
+      const { data, error } = await supabase
+        .from('briefings')
+        .insert([briefingData])
+        .select();
+
+      if (error) throw error;
+
+      toast({
+        title: "Briefing salvo!",
+        description: "Suas respostas foram salvas com sucesso."
+      });
+
+      return String(data?.[0]?.id || '');
+    } catch (error) {
+      console.error('Error saving initial briefing:', error);
+      toast({
+        title: "Erro ao salvar briefing",
+        description: "Ocorreu um erro ao salvar suas respostas.",
+        variant: "destructive"
+      });
+      return null;
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
   const getCurrentStepData = () => {
     if (currentStep >= 0 && currentStep < steps.length) {
       return steps[currentStep];
@@ -130,6 +207,13 @@ export const useConversationalBriefing = () => {
     getCurrentStepData,
     isLastStep,
     isFirstStep,
-    totalSteps: steps.length
+    totalSteps: steps.length,
+    initialQuestions,
+    initialResponses,
+    isInitialBriefingComplete,
+    updateResponse,
+    nextStep,
+    prevStep,
+    saveInitialBriefing
   };
 };

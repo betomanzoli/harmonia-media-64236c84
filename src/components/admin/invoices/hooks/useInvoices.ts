@@ -1,13 +1,41 @@
 
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
-import { Invoice, Client, Project } from '../types';
+import { useToast } from '@/hooks/use-toast';
+
+export interface Invoice {
+  id: string;
+  client: string;
+  amount: string;
+  date: string;
+  due_date: string;
+  status: string;
+  description: string;
+  client_id: string;
+  has_receipt: boolean;
+}
+
+export interface Client {
+  id: string;
+  name: string;
+  email: string;
+}
+
+export interface Project {
+  id: string;
+  title: string;
+  client_id: string;
+}
 
 export const useInvoices = () => {
   const [invoices, setInvoices] = useState<Invoice[]>([]);
   const [clients, setClients] = useState<Client[]>([]);
   const [projects, setProjects] = useState<Project[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [showCreateDialog, setShowCreateDialog] = useState(false);
+  const [showDeleteDialog, setShowDeleteDialog] = useState(false);
+  const [selectedInvoice, setSelectedInvoice] = useState<Invoice | null>(null);
+  const { toast } = useToast();
 
   const loadInvoices = async () => {
     try {
@@ -81,6 +109,81 @@ export const useInvoices = () => {
     }
   };
 
+  const handleCreateInvoice = async (invoiceData: Partial<Invoice>) => {
+    try {
+      const { data, error } = await supabase
+        .from('invoices')
+        .insert([invoiceData])
+        .select();
+
+      if (error) throw error;
+
+      toast({
+        title: "Fatura criada",
+        description: "A fatura foi criada com sucesso."
+      });
+
+      await loadInvoices();
+      setShowCreateDialog(false);
+    } catch (error) {
+      console.error('Error creating invoice:', error);
+      toast({
+        title: "Erro ao criar fatura",
+        description: "Não foi possível criar a fatura.",
+        variant: "destructive"
+      });
+    }
+  };
+
+  const handleDeleteClick = (invoice: Invoice) => {
+    setSelectedInvoice(invoice);
+    setShowDeleteDialog(true);
+  };
+
+  const handleDeleteInvoice = async () => {
+    if (!selectedInvoice) return;
+
+    try {
+      const { error } = await supabase
+        .from('invoices')
+        .delete()
+        .eq('id', selectedInvoice.id);
+
+      if (error) throw error;
+
+      toast({
+        title: "Fatura excluída",
+        description: "A fatura foi excluída com sucesso."
+      });
+
+      await loadInvoices();
+      setShowDeleteDialog(false);
+      setSelectedInvoice(null);
+    } catch (error) {
+      console.error('Error deleting invoice:', error);
+      toast({
+        title: "Erro ao excluir fatura",
+        description: "Não foi possível excluir a fatura.",
+        variant: "destructive"
+      });
+    }
+  };
+
+  const handleEditInvoice = (invoice: Invoice) => {
+    console.log('Edit invoice:', invoice);
+    // TODO: Implement edit functionality
+  };
+
+  const handleViewPdf = (invoice: Invoice) => {
+    console.log('View PDF for invoice:', invoice);
+    // TODO: Implement PDF view functionality
+  };
+
+  const handleDownloadInvoice = (invoice: Invoice) => {
+    console.log('Download invoice:', invoice);
+    // TODO: Implement download functionality
+  };
+
   useEffect(() => {
     const loadData = async () => {
       setIsLoading(true);
@@ -96,6 +199,17 @@ export const useInvoices = () => {
     clients,
     projects,
     isLoading,
+    loading: isLoading, // Alias for backward compatibility
+    showCreateDialog,
+    showDeleteDialog,
+    setShowCreateDialog,
+    setShowDeleteDialog,
+    handleCreateInvoice,
+    handleDeleteInvoice,
+    handleDeleteClick,
+    handleEditInvoice,
+    handleViewPdf,
+    handleDownloadInvoice,
     loadInvoices,
     loadClients,
     loadProjects

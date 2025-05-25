@@ -1,10 +1,13 @@
 
 import { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useToast } from '@/hooks/use-toast';
 import contractAcceptanceLogger from '@/services/contractAcceptanceLogger';
 
-export const useServiceTerms = () => {
+export const useServiceTerms = (packageTitle: string) => {
   const [acceptedTerms, setAcceptedTerms] = useState<{ [key: string]: boolean }>({});
+  const [isTermsDialogOpen, setIsTermsDialogOpen] = useState(false);
+  const navigate = useNavigate();
   const { toast } = useToast();
 
   const acceptTerms = async (packageType: string, clientData?: any) => {
@@ -47,9 +50,28 @@ export const useServiceTerms = () => {
     return acceptedTerms[packageType] || false;
   };
 
+  const handleChoosePackage = () => {
+    setIsTermsDialogOpen(true);
+  };
+
+  const handleProceedToBriefing = async () => {
+    const packageType = packageTitle.toLowerCase();
+    const success = await acceptTerms(packageType);
+    
+    if (success) {
+      setIsTermsDialogOpen(false);
+      navigate(`/briefing?package=${packageType}`);
+    }
+  };
+
   return {
     acceptTerms,
     isTermsAccepted,
-    acceptedTerms
+    acceptedTerms,
+    isTermsDialogOpen,
+    setIsTermsDialogOpen,
+    setAcceptedTerms,
+    handleChoosePackage,
+    handleProceedToBriefing
   };
 };

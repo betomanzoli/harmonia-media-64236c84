@@ -5,7 +5,6 @@ import PublicLayout from '@/layouts/PublicLayout';
 import BriefingForm from '@/components/BriefingForm';
 import ConversationalBriefing from '@/components/briefing/ConversationalBriefing';
 import { useToast } from '@/hooks/use-toast';
-import { supabase } from '@/integrations/supabase/client';
 
 const Briefing: React.FC = () => {
   const navigate = useNavigate();
@@ -45,7 +44,6 @@ const Briefing: React.FC = () => {
     return (
       <PublicLayout>
         <ConversationalBriefing 
-          initialPackage={packageFromUrl || 'essencial'}
           onComplete={handleBriefingSubmit}
         />
       </PublicLayout>
