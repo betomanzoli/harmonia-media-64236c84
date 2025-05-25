@@ -1,363 +1,528 @@
 
-import React, { useState, useEffect } from 'react';
-import Header from '@/components/Header';
-import Footer from '@/components/Footer';
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
-import { useToast } from "@/hooks/use-toast";
+import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Clock, Calendar, FileText, Download, Eye, Music, Play } from 'lucide-react';
-import { usePreviewProjects, ProjectItem } from '@/hooks/admin/usePreviewProjects';
+import { supabase } from '@/lib/supabase';
+import { Loader2, Music, Clock, CheckCircle, AlertTriangle, FileAudio, MessageSquare, ArrowLeft } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
+import { useToast } from '@/hooks/use-toast';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import GoogleDrivePreviewsList from '@/components/previews/GoogleDrivePreviewsList';
+import { usePreviewProjects } from '@/hooks/admin/usePreviewProjects';
+import ProjectPreviewDetails from '@/components/client/ProjectPreviewDetails';
+import { setPreviewAccessCookie, setPreviewEmailCookie } from '@/utils/authCookies';
 
 interface Project {
   id: string;
   title: string;
-  client: string;
-  date: string;
-  lastActivity: string;
   status: string;
-  versions: number;
-  hasVersions: boolean;
-  previewLink: string;
   created_at: string;
   updated_at: string;
-  delivery_files?: Array<{
-    name: string;
-    url: string;
-    type: string;
-  }>;
+  preview_link?: string;
+  delivery_files?: string[];
+  versions?: any[]; // Changed from number to any[]
+  versionsList?: any[];
+  previewUrl?: string;
 }
 
 const ClientDashboard: React.FC = () => {
-  const [clientEmail, setClientEmail] = useState('');
-  const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [projects, setProjects] = useState<Project[]>([]);
-  const [isLoading, setIsLoading] = useState(false);
-  const { toast } = useToast();
+  const [isLoading, setIsLoading] = useState(true);
+  const [user, setUser] = useState<any>(null);
+  const [selectedProject, setSelectedProject] = useState<Project | null>(null);
+  const [showProjectDetails, setShowProjectDetails] = useState(false);
   const navigate = useNavigate();
-  const { projects: allProjects } = usePreviewProjects();
-
-  const handleEmailSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!clientEmail.trim()) {
-      toast({
-        title: "Email obrigatório",
-        description: "Por favor, informe seu email para acessar seus projetos.",
-        variant: "destructive"
-      });
-      return;
-    }
-
-    setIsLoading(true);
-    
-    // Simular autenticação
-    setTimeout(() => {
-      const clientProjects = allProjects.filter(p => 
-        p.client_email.toLowerCase() === clientEmail.toLowerCase()
-      );
-      
-      if (clientProjects.length === 0) {
+  const { toast } = useToast();
+  const { projects: adminProjects } = usePreviewProjects();
+  
+  useEffect(() => {
+    const checkAuth = async () => {
+      try {
+        const { data: { session } } = await supabase.auth.getSession();
+        
+        if (!session) {
+          navigate('/auth/preview/login');
+          return;
+        }
+        
+        setUser(session.user);
+        // Store user email in localStorage for preview access
+        localStorage.setItem('userEmail', session.user.email || '');
+        fetchProjects(session.user.id);
+      } catch (error) {
+        console.error('Error checking auth:', error);
         toast({
-          title: "Nenhum projeto encontrado",
-          description: "Não encontramos projetos associados a este email.",
-          variant: "destructive"
+          title: 'Erro de autenticação',
+          description: 'Não foi possível verificar seu login. Por favor, tente novamente.',
+          variant: 'destructive'
         });
-        setIsLoading(false);
-        return;
+        navigate('/auth/preview/login');
       }
-
-      // Convert ProjectItem to Project format
-      const formattedProjects: Project[] = clientProjects.map(p => ({
-        id: p.id,
-        title: `Projeto ${p.package_type || 'Musical'}`,
-        client: p.client_name,
-        date: p.created_at,
-        lastActivity: p.last_activity_date || p.created_at,
-        status: p.status,
-        versions: p.versions_list?.length || 0,
-        hasVersions: (p.versions_list?.length || 0) > 0,
-        previewLink: p.preview_url || `/preview/${p.id}`,
-        created_at: p.created_at,
-        updated_at: p.last_activity_date || p.created_at
-      }));
-
-      setProjects(formattedProjects);
-      setIsAuthenticated(true);
-      setIsLoading(false);
+    };
+    
+    checkAuth();
+  }, [navigate, toast]);
+  
+  const fetchProjects = async (userId: string) => {
+    setIsLoading(true);
+    try {
+      // Use the admin projects from usePreviewProjects hook for now
+      // Later this will be replaced with a query to the actual user projects
       
-      toast({
-        title: "Acesso autorizado",
-        description: `Encontramos ${formattedProjects.length} projeto(s) para você.`
+      // Map admin projects to client projects format
+      const clientProjects = adminProjects.map(adminProject => {
+        // Convert status from admin format to client format
+        let clientStatus = 'em_andamento';
+        if (adminProject.status === 'approved') {
+          clientStatus = 'aprovado';
+        } else if (adminProject.status === 'feedback') {
+          clientStatus = 'aguardando_feedback';
+        }
+        
+        return {
+          id: adminProject.id,
+          title: adminProject.packageType || 'Música Personalizada',
+          status: clientStatus,
+          created_at: adminProject.createdAt,
+          updated_at: adminProject.lastActivityDate || adminProject.createdAt,
+          preview_link: `/preview/${adminProject.id}`,
+          versions: adminProject.versionsList || [], // Make sure this is always an array
+          versionsList: adminProject.versionsList || [],
+          previewUrl: adminProject.previewUrl
+        };
       });
-    }, 1000);
+      
+      // If there are no admin projects, use mockProjects
+      if (clientProjects.length === 0) {
+        const mockProjects: Project[] = [
+          {
+            id: 'P0001',
+            title: 'Música para Casamento',
+            status: 'em_andamento',
+            created_at: '2023-11-10T14:23:00Z',
+            updated_at: '2023-11-12T09:15:00Z',
+            preview_link: '/preview/P0001',
+            versionsList: [
+              {
+                id: 'v1',
+                name: 'Versão Acústica',
+                description: 'Versão suave com violão e piano',
+                fileId: '1H62ylCwQYJ23BLpygtvNmCgwTDcHX6Cl',
+                recommended: true
+              },
+              {
+                id: 'v2',
+                name: 'Versão Orquestral',
+                description: 'Arranjo completo com cordas e metais',
+                fileId: '11c6JahRd5Lx0iKCL_gHZ0zrZ3LFBJ47a'
+              }
+            ],
+            versions: [
+              {
+                id: 'v1',
+                name: 'Versão Acústica',
+                description: 'Versão suave com violão e piano',
+                fileId: '1H62ylCwQYJ23BLpygtvNmCgwTDcHX6Cl',
+                recommended: true
+              },
+              {
+                id: 'v2',
+                name: 'Versão Orquestral',
+                description: 'Arranjo completo com cordas e metais',
+                fileId: '11c6JahRd5Lx0iKCL_gHZ0zrZ3LFBJ47a'
+              }
+            ]
+          },
+          {
+            id: 'P0002',
+            title: 'Jingle Publicitário',
+            status: 'aprovado',
+            created_at: '2023-10-05T11:30:00Z',
+            updated_at: '2023-10-20T16:45:00Z',
+            preview_link: '/preview/P0002',
+            delivery_files: ['música_final.wav', 'música_final.mp3', 'stems.zip'],
+            versionsList: [
+              {
+                id: 'v1',
+                name: 'Jingle 30 segundos',
+                description: 'Versão completa para o comercial',
+                fileId: '1fCsWubN8pXwM-mRlDtnQFTCkBbIkuUyW',
+                recommended: true
+              }
+            ],
+            versions: [
+              {
+                id: 'v1',
+                name: 'Jingle 30 segundos',
+                description: 'Versão completa para o comercial',
+                fileId: '1fCsWubN8pXwM-mRlDtnQFTCkBbIkuUyW',
+                recommended: true
+              }
+            ]
+          },
+          {
+            id: 'P0003',
+            title: 'Trilha para Vídeo Corporativo',
+            status: 'aguardando_feedback',
+            created_at: '2023-11-18T08:20:00Z',
+            updated_at: '2023-11-20T14:10:00Z',
+            preview_link: '/preview/P0003',
+            versionsList: [
+              {
+                id: 'v1',
+                name: 'Versão Corporativa',
+                description: 'Trilha institucional com piano e strings',
+                fileId: '1H62ylCwQYJ23BLpygtvNmCgwTDcHX6Cl',
+                recommended: true
+              },
+              {
+                id: 'v2',
+                name: 'Versão Minimalista',
+                description: 'Abordagem mais clean e moderna',
+                fileId: '11c6JahRd5Lx0iKCL_gHZ0zrZ3LFBJ47a'
+              }
+            ],
+            versions: [
+              {
+                id: 'v1',
+                name: 'Versão Corporativa',
+                description: 'Trilha institucional com piano e strings',
+                fileId: '1H62ylCwQYJ23BLpygtvNmCgwTDcHX6Cl',
+                recommended: true
+              },
+              {
+                id: 'v2',
+                name: 'Versão Minimalista',
+                description: 'Abordagem mais clean e moderna',
+                fileId: '11c6JahRd5Lx0iKCL_gHZ0zrZ3LFBJ47a'
+              }
+            ]
+          }
+        ];
+        
+        setProjects(mockProjects);
+      } else {
+        setProjects(clientProjects);
+      }
+    } catch (error) {
+      console.error('Error fetching projects:', error);
+      toast({
+        title: 'Erro ao carregar projetos',
+        description: 'Não foi possível carregar seus projetos. Por favor, atualize a página.',
+        variant: 'destructive'
+      });
+    } finally {
+      setIsLoading(false);
+    }
   };
-
-  const getStatusText = (status: string) => {
-    switch(status) {
-      case 'waiting':
-        return 'Aguardando sua avaliação';
-      case 'feedback':
-        return 'Em ajustes conforme seu feedback';
-      case 'approved':
-        return 'Projeto aprovado - Finalização em andamento';
+  
+  const getStatusBadge = (status: string) => {
+    switch (status) {
+      case 'em_andamento':
+        return <div className="flex items-center"><Clock className="h-4 w-4 text-blue-500 mr-1" /> <span className="text-blue-500">Em andamento</span></div>;
+      case 'aprovado':
+        return <div className="flex items-center"><CheckCircle className="h-4 w-4 text-green-500 mr-1" /> <span className="text-green-500">Aprovado</span></div>;
+      case 'aguardando_feedback':
+        return <div className="flex items-center"><AlertTriangle className="h-4 w-4 text-amber-500 mr-1" /> <span className="text-amber-500">Aguardando feedback</span></div>;
       default:
-        return 'Em processamento';
+        return <div className="flex items-center"><Clock className="h-4 w-4 text-gray-500 mr-1" /> <span className="text-gray-500">{status}</span></div>;
     }
   };
-
-  const getStatusColor = (status: string) => {
-    switch(status) {
-      case 'waiting':
-        return 'bg-yellow-100 text-yellow-800';
-      case 'feedback':
-        return 'bg-blue-100 text-blue-800';
-      case 'approved':
-        return 'bg-green-100 text-green-800';
-      default:
-        return 'bg-gray-100 text-gray-800';
+  
+  const viewProjectDetails = (project: Project) => {
+    setSelectedProject(project);
+    setShowProjectDetails(true);
+  };
+  
+  const backToProjectsList = () => {
+    setSelectedProject(null);
+    setShowProjectDetails(false);
+  };
+  
+  const viewDeliveryFiles = (projectId: string) => {
+    navigate(`/deliveries/${projectId}`);
+  };
+  
+  const handleViewPreviews = (project: Project) => {
+    if (!project.id) return;
+    
+    // Try to get userEmail from localStorage
+    const userEmail = localStorage.getItem('userEmail');
+    
+    // Set access cookies to allow direct preview access
+    if (userEmail) {
+      setPreviewAccessCookie(project.id);
+      setPreviewEmailCookie(project.id, userEmail);
+    }
+    
+    // Navigate to preview page directly
+    if (project.preview_link) {
+      navigate(project.preview_link);
     }
   };
-
-  const mockProjects: Project[] = [
-    {
-      id: 'P0001',
-      title: 'Música Comercial - Projeto Empresa ABC',
-      client: 'João Silva',
-      date: '2024-01-15',
-      lastActivity: '2024-01-20',
-      status: 'approved',
-      versions: 3,
-      hasVersions: true,
-      previewLink: '/preview/P0001',
-      created_at: '2024-01-15',
-      updated_at: '2024-01-20',
-      delivery_files: [
-        { name: 'Musica_Final_Master.wav', url: '#', type: 'audio' },
-        { name: 'Stems_Separados.zip', url: '#', type: 'archive' }
-      ]
-    },
-    {
-      id: 'P0002', 
-      title: 'Trilha Sonora - Vídeo Institucional',
-      client: 'Maria Santos',
-      date: '2024-01-18',
-      lastActivity: '2024-01-22',
-      status: 'feedback',
-      versions: 2,
-      hasVersions: true,
-      previewLink: '/preview/P0002',
-      created_at: '2024-01-18',
-      updated_at: '2024-01-22'
-    },
-    {
-      id: 'P0003',
-      title: 'Música para Podcast - Vinheta',
-      client: 'Carlos Oliveira',
-      date: '2024-01-20',
-      lastActivity: '2024-01-20',
-      status: 'waiting',
-      versions: 1,
-      hasVersions: true,
-      previewLink: '/preview/P0003',
-      created_at: '2024-01-20',
-      updated_at: '2024-01-20'
-    }
-  ];
-
-  // Função para adicionar projetos mock se não houver projetos reais
-  const displayProjects = projects.length > 0 ? projects : (isAuthenticated ? mockProjects : []);
-
-  if (!isAuthenticated) {
+  
+  if (isLoading) {
     return (
-      <div className="min-h-screen bg-background">
-        <Header />
-        <main className="pt-24 pb-20 px-6 md:px-10">
-          <div className="max-w-md mx-auto">
-            <Card>
-              <CardHeader>
-                <CardTitle>Acesso à Área do Cliente</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <form onSubmit={handleEmailSubmit} className="space-y-4">
-                  <div>
-                    <label htmlFor="email" className="block text-sm font-medium mb-2">
-                      Email cadastrado no projeto
-                    </label>
-                    <input
-                      id="email"
-                      type="email"
-                      value={clientEmail}
-                      onChange={(e) => setClientEmail(e.target.value)}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-harmonia-green"
-                      placeholder="seu@email.com"
-                      required
-                    />
-                  </div>
-                  <Button 
-                    type="submit" 
-                    className="w-full bg-harmonia-green hover:bg-harmonia-green/90"
-                    disabled={isLoading}
-                  >
-                    {isLoading ? 'Verificando...' : 'Acessar Meus Projetos'}
-                  </Button>
-                </form>
-              </CardContent>
-            </Card>
-          </div>
-        </main>
-        <Footer />
+      <div className="min-h-screen flex flex-col items-center justify-center bg-gray-50">
+        <Loader2 className="h-8 w-8 animate-spin text-harmonia-green mb-4" />
+        <h2 className="text-xl font-medium text-gray-700">Carregando seus projetos...</h2>
+      </div>
+    );
+  }
+
+  if (showProjectDetails && selectedProject) {
+    return (
+      <div className="min-h-screen bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
+        <div className="max-w-5xl mx-auto">
+          <ProjectPreviewDetails 
+            project={selectedProject}
+            onBack={backToProjectsList}
+          />
+        </div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-background">
-      <Header />
-      <main className="pt-24 pb-20 px-6 md:px-10">
-        <div className="max-w-6xl mx-auto">
-          <div className="mb-8">
-            <h1 className="text-3xl font-bold mb-2">Meus Projetos</h1>
-            <p className="text-gray-600">Acompanhe o andamento dos seus projetos musicais</p>
-          </div>
-
-          <div className="grid gap-6">
-            {displayProjects.map(project => (
-              <Card key={project.id} className="border border-gray-200">
-                <CardHeader>
-                  <div className="flex justify-between items-start">
-                    <div>
-                      <CardTitle className="text-xl mb-2">{project.title}</CardTitle>
-                      <div className="flex items-center space-x-4 text-sm text-gray-500">
-                        <span className="flex items-center">
-                          <Calendar className="h-4 w-4 mr-1" />
-                          Criado em {project.date}
-                        </span>
-                        <span className="flex items-center">
-                          <Clock className="h-4 w-4 mr-1" />
-                          Última atividade: {project.lastActivity}
-                        </span>
-                      </div>
-                    </div>
-                    <Badge className={getStatusColor(project.status)}>
-                      {getStatusText(project.status)}
-                    </Badge>
-                  </div>
-                </CardHeader>
-                <CardContent>
-                  <div className="grid md:grid-cols-2 gap-6">
-                    <div>
-                      <h4 className="font-medium mb-3">Status do Projeto</h4>
+    <div className="min-h-screen bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
+      <div className="max-w-5xl mx-auto">
+        <div className="text-center mb-10">
+          <h1 className="text-3xl font-bold text-gray-900 mb-2">Dashboard do Cliente</h1>
+          <p className="text-gray-600">
+            Bem-vindo, {user?.email}! Aqui você pode acompanhar todos os seus projetos.
+          </p>
+        </div>
+        
+        <Tabs defaultValue="all" className="w-full">
+          <TabsList className="grid w-full grid-cols-3">
+            <TabsTrigger value="all">Todos</TabsTrigger>
+            <TabsTrigger value="active">Em Andamento</TabsTrigger>
+            <TabsTrigger value="completed">Concluídos</TabsTrigger>
+          </TabsList>
+          
+          <TabsContent value="all" className="mt-6">
+            <div className="grid gap-6 md:grid-cols-2">
+              {projects.length > 0 ? (
+                projects.map((project) => (
+                  <Card key={project.id} className="overflow-hidden">
+                    <CardHeader className="pb-3">
+                      <CardTitle>{project.title}</CardTitle>
+                      <CardDescription>
+                        Criado em {new Date(project.created_at).toLocaleDateString('pt-BR')}
+                      </CardDescription>
+                    </CardHeader>
+                    <CardContent>
                       <div className="space-y-2">
-                        <div className="flex justify-between">
-                          <span>Versões disponíveis:</span>
-                          <span className="font-medium">{project.versions}</span>
+                        <div className="flex justify-between items-center">
+                          <span className="text-sm text-gray-500">Status:</span>
+                          {getStatusBadge(project.status)}
                         </div>
-                        <div className="flex justify-between">
-                          <span>Tem versões para avaliar:</span>
-                          <span className={`font-medium ${project.hasVersions ? 'text-green-600' : 'text-gray-400'}`}>
-                            {project.hasVersions ? 'Sim' : 'Não'}
-                          </span>
+                        <div className="flex justify-between items-center">
+                          <span className="text-sm text-gray-500">Última atualização:</span>
+                          <span className="text-sm">{new Date(project.updated_at).toLocaleString('pt-BR')}</span>
                         </div>
-                      </div>
-                    </div>
-                    
-                    <div>
-                      <h4 className="font-medium mb-3">Ações Disponíveis</h4>
-                      <div className="space-y-2">
-                        {project.hasVersions && (
-                          <Button 
-                            variant="default" 
-                            size="sm" 
-                            className="w-full bg-harmonia-green hover:bg-harmonia-green/90"
-                            onClick={() => navigate(project.previewLink)}
-                          >
-                            <Play className="h-4 w-4 mr-2" />
-                            Ouvir Prévias
-                          </Button>
-                        )}
-                        
-                        {project.status === 'approved' && project.delivery_files && project.delivery_files.length > 0 && (
-                          <div className="space-y-1">
-                            <p className="text-sm font-medium text-gray-700">Arquivos finais:</p>
-                            {project.delivery_files.map((file, index) => (
-                              <Button
-                                key={index}
-                                variant="outline"
-                                size="sm"
-                                className="w-full justify-start"
-                                onClick={() => window.open(file.url, '_blank')}
-                              >
-                                <Download className="h-4 w-4 mr-2" />
-                                {file.name}
-                              </Button>
-                            ))}
+                        {project.versions && project.versions.length > 0 && (
+                          <div className="flex justify-between items-center">
+                            <span className="text-sm text-gray-500">Versões disponíveis:</span>
+                            <span className="text-sm">{project.versions.length}</span>
                           </div>
                         )}
                       </div>
-                    </div>
+                    </CardContent>
+                    <CardFooter className="flex gap-2 justify-end pt-3 border-t">
+                      {project.preview_link && (
+                        <Button 
+                          variant="outline" 
+                          size="sm"
+                          onClick={() => handleViewPreviews(project)}
+                          className="flex items-center gap-1"
+                        >
+                          <Music className="h-4 w-4" />
+                          Ver prévias
+                        </Button>
+                      )}
+                      
+                      <Button 
+                        variant="default" 
+                        size="sm"
+                        className="bg-harmonia-green hover:bg-harmonia-green/90"
+                        onClick={() => viewProjectDetails(project)}
+                      >
+                        Ver detalhes
+                      </Button>
+                      
+                      {project.status === 'aprovado' && project.delivery_files && project.delivery_files.length > 0 && (
+                        <Button 
+                          variant="default" 
+                          size="sm"
+                          className="bg-harmonia-green hover:bg-harmonia-green/90 flex items-center gap-1"
+                          onClick={() => viewDeliveryFiles(project.id)}
+                        >
+                          <FileAudio className="h-4 w-4" />
+                          Download
+                        </Button>
+                      )}
+                    </CardFooter>
+                  </Card>
+                ))
+              ) : (
+                <div className="col-span-2 text-center py-12 bg-white rounded-lg border">
+                  <Music className="h-12 w-12 text-gray-400 mx-auto mb-3" />
+                  <h3 className="text-lg font-medium text-gray-900">Nenhum projeto encontrado</h3>
+                  <p className="mt-1 text-sm text-gray-500">
+                    Você ainda não possui projetos. Comece criando um novo projeto.
+                  </p>
+                  <div className="mt-6">
+                    <Button 
+                      onClick={() => navigate('/briefing')}
+                      className="bg-harmonia-green hover:bg-harmonia-green/90"
+                    >
+                      Iniciar novo projeto
+                    </Button>
                   </div>
-                  
-                  {project.status === 'waiting' && (
-                    <div className="mt-4 p-4 bg-yellow-50 border border-yellow-200 rounded-md">
-                      <div className="flex items-center">
-                        <Music className="h-5 w-5 text-yellow-600 mr-2" />
-                        <div>
-                          <p className="font-medium text-yellow-800">Prévias disponíveis para avaliação</p>
-                          <p className="text-sm text-yellow-700">
-                            Suas prévias musicais estão prontas! Clique em "Ouvir Prévias" para avaliar e dar seu feedback.
-                          </p>
-                        </div>
-                      </div>
-                    </div>
-                  )}
-                  
-                  {project.status === 'feedback' && (
-                    <div className="mt-4 p-4 bg-blue-50 border border-blue-200 rounded-md">
-                      <div className="flex items-center">
-                        <FileText className="h-5 w-5 text-blue-600 mr-2" />
-                        <div>
-                          <p className="font-medium text-blue-800">Aguardando novas versões</p>
-                          <p className="text-sm text-blue-700">
-                            Recebemos seu feedback e estamos trabalhando nos ajustes. Novas versões serão disponibilizadas em breve.
-                          </p>
-                        </div>
-                      </div>
-                    </div>
-                  )}
-                  
-                  {project.status === 'approved' && (
-                    <div className="mt-4 p-4 bg-green-50 border border-green-200 rounded-md">
-                      <div className="flex items-center">
-                        <Download className="h-5 w-5 text-green-600 mr-2" />
-                        <div>
-                          <p className="font-medium text-green-800">Projeto aprovado e finalizado</p>
-                          <p className="text-sm text-green-700">
-                            Parabéns! Seu projeto foi aprovado e finalizado. Os arquivos finais estão disponíveis para download.
-                          </p>
-                        </div>
-                      </div>
-                    </div>
-                  )}
-                </CardContent>
-              </Card>
-            ))}
-          </div>
+                </div>
+              )}
+            </div>
+          </TabsContent>
           
-          {displayProjects.length === 0 && (
-            <Card>
-              <CardContent className="text-center py-8">
-                <Music className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-                <h3 className="text-lg font-medium text-gray-900 mb-2">Nenhum projeto encontrado</h3>
-                <p className="text-gray-500">
-                  Não encontramos projetos associados ao seu email. Verifique se digitou corretamente ou entre em contato conosco.
-                </p>
-              </CardContent>
-            </Card>
-          )}
-        </div>
-      </main>
-      <Footer />
+          <TabsContent value="active" className="mt-6">
+            <div className="grid gap-6 md:grid-cols-2">
+              {projects.filter(p => p.status === 'em_andamento' || p.status === 'aguardando_feedback').length > 0 ? (
+                projects
+                  .filter(p => p.status === 'em_andamento' || p.status === 'aguardando_feedback')
+                  .map((project) => (
+                    <Card key={project.id} className="overflow-hidden">
+                      <CardHeader className="pb-3">
+                        <CardTitle>{project.title}</CardTitle>
+                        <CardDescription>
+                          Criado em {new Date(project.created_at).toLocaleDateString('pt-BR')}
+                        </CardDescription>
+                      </CardHeader>
+                      <CardContent>
+                        <div className="space-y-2">
+                          <div className="flex justify-between items-center">
+                            <span className="text-sm text-gray-500">Status:</span>
+                            {getStatusBadge(project.status)}
+                          </div>
+                          <div className="flex justify-between items-center">
+                            <span className="text-sm text-gray-500">Última atualização:</span>
+                            <span className="text-sm">{new Date(project.updated_at).toLocaleString('pt-BR')}</span>
+                          </div>
+                        </div>
+                      </CardContent>
+                      <CardFooter className="flex gap-2 justify-end pt-3 border-t">
+                        {project.preview_link && (
+                          <Button 
+                            variant="outline" 
+                            size="sm"
+                            onClick={() => handleViewPreviews(project)}
+                            className="flex items-center gap-1"
+                          >
+                            <Music className="h-4 w-4" />
+                            Ver prévias
+                          </Button>
+                        )}
+                        <Button 
+                          variant="default" 
+                          size="sm"
+                          className="bg-harmonia-green hover:bg-harmonia-green/90"
+                          onClick={() => viewProjectDetails(project)}
+                        >
+                          Ver detalhes
+                        </Button>
+                      </CardFooter>
+                    </Card>
+                  ))
+              ) : (
+                <div className="col-span-2 text-center py-12 bg-white rounded-lg border">
+                  <Clock className="h-12 w-12 text-gray-400 mx-auto mb-3" />
+                  <h3 className="text-lg font-medium text-gray-900">Nenhum projeto em andamento</h3>
+                  <p className="mt-1 text-sm text-gray-500">
+                    Você não possui projetos em andamento no momento.
+                  </p>
+                  <div className="mt-6">
+                    <Button 
+                      onClick={() => navigate('/briefing')}
+                      className="bg-harmonia-green hover:bg-harmonia-green/90"
+                    >
+                      Iniciar novo projeto
+                    </Button>
+                  </div>
+                </div>
+              )}
+            </div>
+          </TabsContent>
+          
+          <TabsContent value="completed" className="mt-6">
+            <div className="grid gap-6 md:grid-cols-2">
+              {projects.filter(p => p.status === 'aprovado').length > 0 ? (
+                projects
+                  .filter(p => p.status === 'aprovado')
+                  .map((project) => (
+                    <Card key={project.id} className="overflow-hidden">
+                      <CardHeader className="pb-3">
+                        <CardTitle>{project.title}</CardTitle>
+                        <CardDescription>
+                          Criado em {new Date(project.created_at).toLocaleDateString('pt-BR')}
+                        </CardDescription>
+                      </CardHeader>
+                      <CardContent>
+                        <div className="space-y-2">
+                          <div className="flex justify-between items-center">
+                            <span className="text-sm text-gray-500">Status:</span>
+                            {getStatusBadge(project.status)}
+                          </div>
+                          <div className="flex justify-between items-center">
+                            <span className="text-sm text-gray-500">Entregue em:</span>
+                            <span className="text-sm">{new Date(project.updated_at).toLocaleDateString('pt-BR')}</span>
+                          </div>
+                        </div>
+                      </CardContent>
+                      <CardFooter className="flex gap-2 justify-end pt-3 border-t">
+                        <Button 
+                          variant="default" 
+                          size="sm"
+                          className="bg-harmonia-green hover:bg-harmonia-green/90"
+                          onClick={() => viewProjectDetails(project)}
+                        >
+                          Ver detalhes
+                        </Button>
+                        {project.delivery_files && project.delivery_files.length > 0 && (
+                          <Button 
+                            variant="default" 
+                            size="sm"
+                            className="bg-harmonia-green hover:bg-harmonia-green/90 flex items-center gap-1"
+                            onClick={() => viewDeliveryFiles(project.id)}
+                          >
+                            <FileAudio className="h-4 w-4" />
+                            Download
+                          </Button>
+                        )}
+                        <Button 
+                          variant="outline" 
+                          size="sm"
+                          onClick={() => navigate('/briefing')}
+                          className="flex items-center gap-1"
+                        >
+                          <Music className="h-4 w-4" />
+                          Novo projeto
+                        </Button>
+                      </CardFooter>
+                    </Card>
+                  ))
+              ) : (
+                <div className="col-span-2 text-center py-12 bg-white rounded-lg border">
+                  <CheckCircle className="h-12 w-12 text-gray-400 mx-auto mb-3" />
+                  <h3 className="text-lg font-medium text-gray-900">Nenhum projeto concluído</h3>
+                  <p className="mt-1 text-sm text-gray-500">
+                    Você ainda não possui projetos concluídos.
+                  </p>
+                </div>
+              )}
+            </div>
+          </TabsContent>
+        </Tabs>
+      </div>
     </div>
   );
 };

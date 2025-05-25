@@ -95,16 +95,16 @@ const ProjectDetails: React.FC = () => {
             console.log("Initializing demo project for P0001");
             const demoProject = {
               id: 'P0001',
-              client_name: 'Humberto Manzoli',
-              client_email: 'cliente@exemplo.com',
-              package_type: 'Essencial',
-              created_at: new Date().toLocaleDateString('pt-BR'),
+              clientName: 'Humberto Manzoli',
+              clientEmail: 'cliente@exemplo.com',
+              packageType: 'Essencial',
+              createdAt: new Date().toLocaleDateString('pt-BR'),
               status: 'waiting',
               versions: 0,
-              preview_url: `${window.location.origin}/preview/P0001`,
-              expiration_date: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toLocaleDateString('pt-BR'),
-              last_activity_date: new Date().toLocaleDateString('pt-BR'),
-              versions_list: []
+              previewUrl: `${window.location.origin}/preview/P0001`,
+              expirationDate: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toLocaleDateString('pt-BR'),
+              lastActivityDate: new Date().toLocaleDateString('pt-BR'),
+              versionsList: []
             };
             
             setProject(demoProject);
@@ -219,7 +219,7 @@ const ProjectDetails: React.FC = () => {
   const handleAddVersion = (newVersion: VersionItem) => {
     if (!projectId) return;
     
-    const currentVersions = project.versions_list || [];
+    const currentVersions = project.versionsList || [];
     
     // Se a nova versão for marcada como final, adiciona um indicador
     const isFinalVersion = newVersion.final === true;
@@ -259,19 +259,19 @@ const ProjectDetails: React.FC = () => {
     
     // Update project
     updateProject(projectId, {
-      versions_list: updatedVersions,
+      versionsList: updatedVersions,
       versions: updatedVersions.length,
       history,
-      last_activity_date: new Date().toLocaleDateString('pt-BR')
+      lastActivityDate: new Date().toLocaleDateString('pt-BR')
     });
     
     // Update local state
     setProject({
       ...project,
-      versions_list: updatedVersions,
+      versionsList: updatedVersions,
       versions: updatedVersions.length,
       history,
-      last_activity_date: new Date().toLocaleDateString('pt-BR')
+      lastActivityDate: new Date().toLocaleDateString('pt-BR')
     });
     
     toast({
@@ -286,8 +286,8 @@ const ProjectDetails: React.FC = () => {
     if (!projectId) return;
     
     // Calculate new expiration date (current + 7 days)
-    const currentDate = project.expiration_date 
-      ? new Date(project.expiration_date.split('/').reverse().join('-')) 
+    const currentDate = project.expirationDate 
+      ? new Date(project.expirationDate.split('/').reverse().join('-')) 
       : new Date();
       
     currentDate.setDate(currentDate.getDate() + 7);
@@ -306,17 +306,17 @@ const ProjectDetails: React.FC = () => {
     
     // Update project
     updateProject(projectId, {
-      expiration_date: newExpirationDate,
+      expirationDate: newExpirationDate,
       history,
-      last_activity_date: new Date().toLocaleDateString('pt-BR')
+      lastActivityDate: new Date().toLocaleDateString('pt-BR')
     });
     
     // Update local state
     setProject({
       ...project,
-      expiration_date: newExpirationDate,
+      expirationDate: newExpirationDate,
       history,
-      last_activity_date: new Date().toLocaleDateString('pt-BR')
+      lastActivityDate: new Date().toLocaleDateString('pt-BR')
     });
     
     toast({
@@ -330,7 +330,7 @@ const ProjectDetails: React.FC = () => {
   const handleDeleteVersion = (versionId: string) => {
     if (!projectId) return;
     
-    const currentVersions = project.versions_list || [];
+    const currentVersions = project.versionsList || [];
     const versionToDelete = currentVersions.find(v => v.id === versionId);
     
     if (!versionToDelete) return;
@@ -350,19 +350,19 @@ const ProjectDetails: React.FC = () => {
     
     // Update project
     updateProject(projectId, {
-      versions_list: updatedVersions,
+      versionsList: updatedVersions,
       versions: updatedVersions.length,
       history,
-      last_activity_date: new Date().toLocaleDateString('pt-BR')
+      lastActivityDate: new Date().toLocaleDateString('pt-BR')
     });
     
     // Update local state
     setProject({
       ...project,
-      versions_list: updatedVersions,
+      versionsList: updatedVersions,
       versions: updatedVersions.length,
       history,
-      last_activity_date: new Date().toLocaleDateString('pt-BR')
+      lastActivityDate: new Date().toLocaleDateString('pt-BR')
     });
     
     toast({
@@ -392,7 +392,7 @@ const ProjectDetails: React.FC = () => {
   };
   
   const handleSendEmail = async () => {
-    if (!project.client_email) {
+    if (!project.clientEmail) {
       toast({
         title: "Email não disponível",
         description: "Não há email cadastrado para este cliente."
@@ -412,15 +412,15 @@ const ProjectDetails: React.FC = () => {
     try {
       const previewUrl = `${window.location.origin}/preview/${projectId}`;
       const result = await emailService.sendPreviewNotification(
-        project.client_email,
-        project.client_name || 'Cliente',
+        project.clientEmail,
+        project.clientName || 'Cliente',
         previewUrl
       );
       
       if (result.success) {
         toast({
           title: "Email enviado",
-          description: `Email de notificação enviado para ${project.client_email}`
+          description: `Email de notificação enviado para ${project.clientEmail}`
         });
       } else {
         throw new Error('Falha ao enviar email');
@@ -439,7 +439,7 @@ const ProjectDetails: React.FC = () => {
   };
   
   const handleWhatsAppContact = () => {
-    if (!project.client_phone) {
+    if (!project.clientPhone) {
       toast({
         title: "Telefone não disponível",
         description: "Não há número de telefone cadastrado para este cliente."
@@ -448,7 +448,7 @@ const ProjectDetails: React.FC = () => {
     }
     
     // Format phone number (remove non-numeric characters)
-    const formattedPhone = project.client_phone.replace(/\D/g, '');
+    const formattedPhone = project.clientPhone.replace(/\D/g, '');
     
     // Open WhatsApp with the client's phone number
     window.open(`https://wa.me/${formattedPhone}`, '_blank');
@@ -470,13 +470,13 @@ const ProjectDetails: React.FC = () => {
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         <div className="md:col-span-2 space-y-6">
           <ProjectHeader 
-            projectTitle={project.title || project.package_type || 'Projeto musical'} 
-            clientName={project.client_name}
-            packageType={project.package_type}
+            projectTitle={project.title || project.packageType || 'Projeto musical'} 
+            clientName={project.clientName}
+            packageType={project.packageType}
           />
           
           <PreviewVersionsList 
-            versions={project.versions_list || []}
+            versions={project.versionsList || []}
             projectId={projectId || ''}
             onDeleteVersion={handleDeleteVersion}
           />
@@ -511,12 +511,12 @@ const ProjectDetails: React.FC = () => {
         
         <div className="space-y-6">
           <ProjectClientInfo 
-            clientName={project.client_name}
-            clientEmail={project.client_email || ''}
-            packageType={project.package_type || 'Padrão'}
-            createdAt={project.created_at || new Date().toLocaleDateString('pt-BR')}
-            expirationDate={project.expiration_date || 'Não definida'}
-            lastActivityDate={project.last_activity_date || new Date().toLocaleDateString('pt-BR')}
+            clientName={project.clientName}
+            clientEmail={project.clientEmail || ''}
+            packageType={project.packageType || 'Padrão'}
+            createdAt={project.createdAt || new Date().toLocaleDateString('pt-BR')}
+            expirationDate={project.expirationDate || 'Não definida'}
+            lastActivityDate={project.lastActivityDate || new Date().toLocaleDateString('pt-BR')}
           />
           
           <Card className="bg-slate-900 text-white">
@@ -584,7 +584,7 @@ const ProjectDetails: React.FC = () => {
         projectId={projectId || ''}
         onAddVersion={handleAddVersion}
         isFinalVersion={isApproved}
-        packageType={project?.package_type}
+        packageType={project?.packageType}
       />
       
       {/* Extend Deadline Dialog */}

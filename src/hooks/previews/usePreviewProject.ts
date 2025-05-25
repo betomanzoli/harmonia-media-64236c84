@@ -12,7 +12,7 @@ export interface MusicPreview {
 }
 
 export interface PreviewProject {
-  client_name: string;
+  client_name: string;  // Alterado para snake_case
   project_title: string;
   status: 'waiting' | 'feedback' | 'approved';
   previews: MusicPreview[];
