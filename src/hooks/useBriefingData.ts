@@ -1,6 +1,6 @@
 
 import { useEffect, useState } from 'react';
-import { supabase } from '@/lib/supabase';
+import { supabase } from '@/integrations/supabase/client';
 import { BriefingSection, BriefingField } from '@/types/briefing';
 import { useToast } from './use-toast';
 
@@ -29,13 +29,25 @@ export function useBriefingData(packageType: 'essencial' | 'profissional' | 'pre
           throw sectionsError;
         }
 
-        setSections(sectionsData || []);
+        // Type-safe mapping for sections
+        const typedSections: BriefingSection[] = (sectionsData || []).map((item: any) => ({
+          id: item.id as string,
+          package_type: item.package_type as string,
+          section_type: item.section_type as string,
+          title: item.title as string,
+          description: item.description as string,
+          order_num: item.order_num as number,
+          is_active: item.is_active as boolean,
+          created_at: item.created_at as string
+        }));
+
+        setSections(typedSections);
 
         // Fetch fields for each section
-        if (sectionsData && sectionsData.length > 0) {
+        if (typedSections && typedSections.length > 0) {
           const fieldsObj: { [sectionId: string]: BriefingField[] } = {};
           
-          for (const section of sectionsData) {
+          for (const section of typedSections) {
             const { data: fieldsData, error: fieldsError } = await supabase
               .from('briefing_fields')
               .select('*')
@@ -48,7 +60,23 @@ export function useBriefingData(packageType: 'essencial' | 'profissional' | 'pre
               continue;
             }
 
-            fieldsObj[section.id] = fieldsData || [];
+            // Type-safe mapping for fields
+            const typedFields: BriefingField[] = (fieldsData || []).map((item: any) => ({
+              id: item.id as string,
+              section_id: item.section_id as string,
+              field_key: item.field_key as string,
+              field_name: item.field_name as string,
+              field_type: item.field_type as string,
+              placeholder: item.placeholder as string,
+              is_required: item.is_required as boolean,
+              order_num: item.order_num as number,
+              is_active: item.is_active as boolean,
+              options: item.options,
+              max_length: item.max_length as number,
+              created_at: item.created_at as string
+            }));
+
+            fieldsObj[section.id] = typedFields;
           }
 
           setFields(fieldsObj);

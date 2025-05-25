@@ -1,6 +1,7 @@
+
 import { useState, useEffect } from 'react';
 import { useToast } from '@/hooks/use-toast';
-import { supabase } from '@/lib/supabase';
+import { supabase } from '@/integrations/supabase/client';
 
 export interface MusicPreview {
   id: string;
@@ -54,14 +55,14 @@ export const usePreviewProject = (projectId?: string) => {
         if (error) throw error;
 
         setProjectData({
-          client_name: data.client_name,
-          project_title: data.title,
-          status: data.status,
-          previews: data.versions,
-          package_type: data.package_type,
-          created_at: data.created_at,
-          expires_at: data.expires_at,
-          use_google_drive: data.use_google_drive
+          client_name: data.client_name as string,
+          project_title: data.title as string,
+          status: data.status as 'waiting' | 'feedback' | 'approved',
+          previews: Array.isArray(data.versions) ? data.versions : [],
+          package_type: data.package_type as string,
+          created_at: data.created_at as string,
+          expires_at: data.expires_at as string,
+          use_google_drive: data.use_google_drive as boolean
         });
 
       } catch (error) {

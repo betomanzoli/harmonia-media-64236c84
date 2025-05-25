@@ -1,6 +1,6 @@
 
 import { useState } from 'react';
-import { supabase } from '@/lib/supabase';
+import { supabase } from '@/integrations/supabase/client';
 import { useToast } from './use-toast';
 
 interface InitialBriefingResponse {
@@ -101,12 +101,12 @@ export function useConversationalBriefing() {
 
       if (data) {
         console.log("Briefing created successfully:", data.id);
-        setBriefingId(data.id);
+        setBriefingId(data.id as string);
         
         // Log for debugging n8n integration
         console.log("Data prepared for n8n workflow:", formattedData);
         
-        return data.id;
+        return data.id as string;
       }
 
       return null;

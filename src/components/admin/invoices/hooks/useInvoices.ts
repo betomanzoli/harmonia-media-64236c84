@@ -1,6 +1,5 @@
-
 import { useState, useEffect } from 'react';
-import { supabase } from '@/lib/supabase';
+import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { Invoice, Client, Project } from '../types';
 import { FormValues } from '../components/CreateInvoiceForm';
@@ -31,7 +30,19 @@ export function useInvoices() {
 
       if (error) throw error;
 
-      setInvoices(data || []);
+      // Type-safe mapping
+      const typedInvoices: Invoice[] = (data || []).map((item: any) => ({
+        id: item.id as string,
+        client: item.client as string,
+        amount: item.amount as string,
+        date: item.date as string,
+        due_date: item.due_date as string,
+        status: item.status as string,
+        description: item.description as string,
+        client_id: item.client_id as string
+      }));
+
+      setInvoices(typedInvoices);
     } catch (error) {
       console.error('Error fetching invoices:', error);
       toast({
@@ -53,7 +64,14 @@ export function useInvoices() {
 
       if (error) throw error;
 
-      setClients(data || []);
+      // Type-safe mapping
+      const typedClients: Client[] = (data || []).map((item: any) => ({
+        id: item.id as string,
+        name: item.name as string,
+        email: item.email as string
+      }));
+
+      setClients(typedClients);
     } catch (error) {
       console.error('Error fetching clients:', error);
     }
@@ -67,7 +85,14 @@ export function useInvoices() {
 
       if (error) throw error;
 
-      setProjects(data || []);
+      // Type-safe mapping
+      const typedProjects: Project[] = (data || []).map((item: any) => ({
+        id: item.id as string,
+        title: item.title as string,
+        client_id: item.client_id as string
+      }));
+
+      setProjects(typedProjects);
     } catch (error) {
       console.error('Error fetching projects:', error);
     }
