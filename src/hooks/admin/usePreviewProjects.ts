@@ -1,3 +1,4 @@
+
 // src/hooks/admin/usePreviewProjects.ts
 import { useState, useCallback, useEffect, useRef } from 'react';
 import { supabase } from '@/lib/supabase';
@@ -74,6 +75,11 @@ export const usePreviewProjects = () => {
     }
   }, [loadProjects]);
 
+  // Get project by ID
+  const getProjectById = useCallback((id: string): ProjectItem | undefined => {
+    return projects.find(project => project.id === id);
+  }, [projects]);
+
   // Operações CRUD
   const addProject = useCallback(async (project: Omit<ProjectItem, 'id'>) => {
     const { data, error } = await supabase
@@ -116,6 +122,7 @@ export const usePreviewProjects = () => {
     projects,
     isLoading,
     loadProjects,
+    getProjectById,
     addProject,
     updateProject,
     deleteProject
