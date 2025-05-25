@@ -22,12 +22,12 @@ export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
 
 // Enhanced email service with all required methods
 export const emailService = {
-  sendEmail: async (to: string, subject: string, content: string) => {
+  sendEmail: async (to: string, subject: string, content: string = '') => {
     console.log('Email would be sent:', { to, subject, content });
     return Promise.resolve({ success: true });
   },
   
-  sendBriefingConfirmation: async (to: string, clientName: string, briefingId: string) => {
+  sendBriefingConfirmation: async (to: string, clientName: string, briefingId: string = '') => {
     console.log('Briefing confirmation email would be sent:', { to, clientName, briefingId });
     return Promise.resolve({ success: true });
   },

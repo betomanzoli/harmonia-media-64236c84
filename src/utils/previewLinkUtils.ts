@@ -1,7 +1,7 @@
 
 import { v4 as uuidv4 } from 'uuid';
 import { setPreviewAccessCookie, checkPreviewAccessCookie, setPreviewEmailCookie, getAuthCookie } from './authCookies';
-import { supabase } from '@/integrations/supabase/client';
+import { supabase } from '@/lib/supabase';
 
 // Create a more secure mapping between encoded IDs and project IDs
 const previewLinksMap = new Map<string, string>();

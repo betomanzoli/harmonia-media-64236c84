@@ -32,7 +32,7 @@ const DashboardContent: React.FC = () => {
     };
     
     return projects.reduce((total, project) => {
-      const packageType = project.packageType?.toString() || '';
+      const packageType = project.package_type?.toString() || '';
       // Find a matching package price or use default
       let price = 0;
       for (const [key, value] of Object.entries(packagePrices)) {
@@ -59,14 +59,14 @@ const DashboardContent: React.FC = () => {
   
   // Convert ProjectItem to the format compatible with RecentProjectsList
   const formattedProjects: RecentProject[] = projects
-    .sort((a, b) => new Date(b.lastActivityDate).getTime() - new Date(a.lastActivityDate).getTime())
+    .sort((a, b) => new Date(b.last_activity_date || b.created_at).getTime() - new Date(a.last_activity_date || a.created_at).getTime())
     .slice(0, 5)
     .map(p => ({
       id: p.id,
-      clientName: p.clientName,
-      title: p.packageType ? `${p.packageType} para ${p.clientName}` : `Projeto ${p.id}`,
+      clientName: p.client_name,
+      title: p.package_type ? `${p.package_type} para ${p.client_name}` : `Projeto ${p.id}`,
       status: p.status,
-      date: p.createdAt
+      date: p.created_at
     }));
   
   useEffect(() => {

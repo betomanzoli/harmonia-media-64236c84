@@ -1,89 +1,53 @@
 
-import React, { createContext, useContext, useState, useCallback, useEffect } from 'react';
-import { supabase } from '@/integrations/supabase/client';
-
-// Update AuthStatus type to match the actual string literals used in the code
-type AuthStatus = 'loading' | 'authenticated' | 'unauthenticated';
+import React, { createContext, useContext, useEffect, useState } from 'react';
+import { User } from '@supabase/supabase-js';
+import { supabase } from '@/lib/supabase';
 
 interface AuthContextType {
-  authStatus: AuthStatus;
-  checkAuthStatus: () => void;
-  login: (username: string, password: string) => Promise<boolean>;
-  logout: () => void;
+  user: User | null;
+  loading: boolean;
+  signOut: () => Promise<void>;
 }
 
-const AuthContext = createContext<AuthContextType>({
-  authStatus: 'loading',
-  checkAuthStatus: () => {},
-  login: async () => false,
-  logout: () => {},
-});
+const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const [authStatus, setAuthStatus] = useState<AuthStatus>('loading');
+  const [user, setUser] = useState<User | null>(null);
+  const [loading, setLoading] = useState(true);
 
-  // Check auth status on mount
   useEffect(() => {
-    checkAuthStatus();
-  }, []);
+    // Get initial session
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      setUser(session?.user ?? null);
+      setLoading(false);
+    });
 
-  const checkAuthStatus = useCallback(() => {
-    // This is a simplified mock implementation
-    // In a real app, you'd check tokens in localStorage or cookies
-    const storedToken = localStorage.getItem('admin-auth-token');
-    const storedUser = localStorage.getItem('admin-auth-user');
-    
-    if (storedToken && storedUser) {
-      console.log('Auth token found, setting status to authenticated');
-      setAuthStatus('authenticated');
-    } else {
-      console.log('No auth token found, setting status to unauthenticated');
-      setAuthStatus('unauthenticated');
-    }
-  }, []);
-
-  const login = async (username: string, password: string): Promise<boolean> => {
-    console.log('Login attempt with:', username);
-    
-    try {
-      // This is a simplified mock implementation
-      // In a real app, you'd make an API call to validate credentials
-      if ((username === 'admin@harmonia.com' && password === 'admin123456') || 
-          (username === 'contato@harmonia.media' && password === 'i9!_b!ThA;2H6/bt')) {
-        localStorage.setItem('admin-auth-token', 'mock-token-' + new Date().getTime());
-        const userData = {
-          email: username,
-          name: username === 'admin@harmonia.com' ? 'Admin User' : 'Contato User',
-          role: 'admin'
-        };
-        localStorage.setItem('admin-auth-user', JSON.stringify(userData));
-        setAuthStatus('authenticated');
-        console.log('Login successful, token stored');
-        return true;
+    // Listen for auth changes
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(
+      (event, session) => {
+        setUser(session?.user ?? null);
+        setLoading(false);
       }
-      
-      console.log('Login failed, invalid credentials');
-      setAuthStatus('unauthenticated');
-      return false;
-    } catch (error) {
-      console.error('Login error:', error);
-      setAuthStatus('unauthenticated');
-      return false;
-    }
-  };
+    );
 
-  const logout = () => {
-    console.log('Logging out, removing auth token');
-    localStorage.removeItem('admin-auth-token');
-    localStorage.removeItem('admin-auth-user');
-    setAuthStatus('unauthenticated');
+    return () => subscription.unsubscribe();
+  }, []);
+
+  const signOut = async () => {
+    await supabase.auth.signOut();
   };
 
   return (
-    <AuthContext.Provider value={{ authStatus, checkAuthStatus, login, logout }}>
+    <AuthContext.Provider value={{ user, loading, signOut }}>
       {children}
     </AuthContext.Provider>
   );
 };
 
-export const useAuth = () => useContext(AuthContext);
+export const useAuth = () => {
+  const context = useContext(AuthContext);
+  if (context === undefined) {
+    throw new Error('useAuth must be used within an AuthProvider');
+  }
+  return context;
+};
