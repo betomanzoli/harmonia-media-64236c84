@@ -7,7 +7,6 @@ const Logo: React.FC = () => {
   
   useEffect(() => {
     const interval = setInterval(() => {
-      // Generate random heights for sound bars
       const newHeights = barHeights.map(() => Math.floor(Math.random() * 20) + 5);
       setBarHeights(newHeights);
     }, 500);
