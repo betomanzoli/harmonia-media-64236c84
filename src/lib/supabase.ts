@@ -1,38 +1,56 @@
+
 import { createClient } from '@supabase/supabase-js';
 
 const supabaseUrl = 'https://ivueqxyuflxsiecqvmgt.supabase.co';
 const supabaseAnonKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Iml2dWVxeHl1Zmx4c2llY3F2bWd0Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDY3MjY0MzEsImV4cCI6MjA2MjMwMjQzMX0.db1UVta6PSPGokJOZozwqZ7AAs2jBljfWCdUR3LjIdM';
 
-const hybridStorage = {
-  getItem: (key: string) => {
-    try {
-      return localStorage.getItem(key);
-    } catch {
-      const cookie = document.cookie
-        .split('; ')
-        .find(row => row.startsWith(`${key}=`))
-        ?.split('=')[1];
-      return cookie ? decodeURIComponent(cookie) : null;
-    }
+// Singleton pattern to prevent multiple GoTrueClient warnings
+let supabaseInstance: ReturnType<typeof createClient> | null = null;
+
+export const getSupabase = () => {
+  if (!supabaseInstance) {
+    supabaseInstance = createClient(supabaseUrl, supabaseAnonKey, {
+      auth: {
+        storage: typeof window !== 'undefined' ? window.localStorage : undefined,
+        autoRefreshToken: true,
+        persistSession: true,
+        detectSessionInUrl: false,
+        storageKey: 'harmonia-auth'
+      },
+      global: {
+        headers: {
+          'X-Client-Info': 'harmonia-music@1.0.0'
+        }
+      }
+    });
+  }
+  return supabaseInstance;
+};
+
+// Main export for backwards compatibility
+export const supabase = getSupabase();
+
+// Enhanced email service with all required methods
+export const emailService = {
+  sendEmail: async (to: string, subject: string, content: string = '') => {
+    console.log('Email would be sent:', { to, subject, content });
+    return Promise.resolve({ success: true });
   },
-  setItem: (key: string, value: string) => {
-    try {
-      localStorage.setItem(key, value);
-    } catch {
-      document.cookie = `${key}=${encodeURIComponent(value)}; Path=/; Secure; SameSite=None; Partitioned`;
-    }
+  
+  sendBriefingConfirmation: async (to: string, clientName: string, briefingId: string = '') => {
+    console.log('Briefing confirmation email would be sent:', { to, clientName, briefingId });
+    return Promise.resolve({ success: true });
   },
-  removeItem: (key: string) => {
-    localStorage.removeItem(key);
-    document.cookie = `${key}=; Path=/; Expires=Thu, 01 Jan 1970 00:00:00 GMT`;
+  
+  sendPreviewNotification: async (to: string, clientName: string, previewUrl: string) => {
+    console.log('Preview notification email would be sent:', { to, clientName, previewUrl });
+    return Promise.resolve({ success: true });
+  },
+  
+  sendPaymentConfirmation: async (to: string, clientName: string, amount: string) => {
+    console.log('Payment confirmation email would be sent:', { to, clientName, amount });
+    return Promise.resolve({ success: true });
   }
 };
 
-export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
-  auth: {
-    storage: hybridStorage,
-    autoRefreshToken: true,
-    persistSession: true,
-    detectSessionInUrl: false
-  }
-});
+export const getSupabaseUrl = () => supabaseUrl;

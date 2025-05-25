@@ -62,7 +62,7 @@ export const usePreviewProject = (projectId?: string) => {
           package_type: data.package_type as string,
           created_at: data.created_at as string,
           expires_at: data.expires_at as string,
-          use_google_drive: data.use_google_drive as boolean
+          use_google_drive: Boolean(data.use_google_drive)
         });
 
       } catch (error) {

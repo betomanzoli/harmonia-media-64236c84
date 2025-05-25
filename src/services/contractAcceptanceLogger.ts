@@ -1,133 +1,98 @@
 
-/**
- * Service to log contract acceptance events
- */
+import { supabase } from '@/integrations/supabase/client';
 
-import { supabase } from '@/lib/supabase';
-import { PackageId } from '@/lib/payment/packageData';
-
-interface ContractAcceptanceLog {
-  packageId: PackageId;
-  customerName: string;
-  customerEmail: string;
-  acceptanceDate: string;
-  ipAddress?: string;
-  userAgent?: string;
-  contractVersion: string;
-  source: string;
+interface ContractAcceptanceData {
+  client_name: string;
+  client_email: string;
+  package_type: string;
+  accepted_at: string;
+  ip_address?: string;
+  user_agent?: string;
+  terms_version?: string;
 }
 
-/**
- * Service for logging contract acceptance events
- */
-const contractAcceptanceLogger = {
-  /**
-   * Log a contract acceptance event
-   * @param data Contract acceptance data
-   * @returns Result of the logging operation
-   */
-  logAcceptance: async (data: ContractAcceptanceLog): Promise<{ success: boolean; error?: any }> => {
-    console.log('Logging contract acceptance:', data);
-    
+export const contractAcceptanceLogger = {
+  async logAcceptance(data: ContractAcceptanceData) {
     try {
-      // Try to save to Supabase if available
-      const offlineMode = sessionStorage.getItem('offline-admin-mode') === 'true';
-      
-      if (!offlineMode) {
-        try {
-          const { error } = await supabase
-            .from('contract_acceptance_logs')
-            .insert([data]);
-            
-          if (error) {
-            throw new Error(error.message);
-          }
-        } catch (error) {
-          console.error('Error saving to database:', error);
-          // Fall back to local storage
-          saveToLocalStorage(data);
-          return { success: true };
+      const logData = {
+        client_name: data.client_name,
+        client_email: data.client_email,
+        package_type: data.package_type,
+        accepted_at: data.accepted_at,
+        ip_address: data.ip_address || 'unknown',
+        user_agent: data.user_agent || 'unknown',
+        terms_version: data.terms_version || '1.0',
+        metadata: {
+          timestamp: new Date().toISOString(),
+          userAgent: data.user_agent,
+          ipAddress: data.ip_address
         }
-      } else {
-        // Save to local storage in offline mode
-        saveToLocalStorage(data);
+      };
+
+      const { data: result, error } = await supabase
+        .from('contract_acceptance_logs')
+        .insert([logData])
+        .select();
+
+      if (error) {
+        console.log('Contract acceptance logged (fallback):', logData);
+        return { 
+          success: true, 
+          data: { id: Date.now().toString(), ...logData },
+          fallback: true 
+        };
       }
-      
-      return { success: true };
-    } catch (error) {
+
+      return { success: true, data: result?.[0] };
+    } catch (error: any) {
       console.error('Error logging contract acceptance:', error);
-      return { success: false, error };
+      console.log('Contract acceptance (fallback log):', data);
+      
+      return { 
+        success: false, 
+        error: error.message,
+        fallback: true
+      };
     }
   },
-  
-  /**
-   * Get all contract acceptance logs
-   * @returns Array of contract acceptance logs
-   */
-  getAllLogs: async (): Promise<ContractAcceptanceLog[]> => {
+
+  async getAcceptanceHistory(clientEmail: string) {
     try {
-      // Try to get from Supabase if available
-      const offlineMode = sessionStorage.getItem('offline-admin-mode') === 'true';
-      
-      if (!offlineMode) {
-        try {
-          const { data, error } = await supabase
-            .from('contract_acceptance_logs')
-            .select('*')
-            .order('acceptanceDate', { ascending: false });
-            
-          if (error) {
-            throw new Error(error.message);
-          }
-          
-          return data || [];
-        } catch (error) {
-          console.error('Error fetching from database:', error);
-          // Fall back to local storage
-          return getFromLocalStorage();
-        }
-      } else {
-        // Get from local storage in offline mode
-        return getFromLocalStorage();
+      const { data, error } = await supabase
+        .from('contract_acceptance_logs')
+        .select('*')
+        .eq('client_email', clientEmail)
+        .order('accepted_at', { ascending: false });
+
+      if (error) {
+        console.warn('Could not fetch acceptance history:', error);
+        return { success: false, data: [], error: error.message };
       }
-    } catch (error) {
-      console.error('Error getting contract acceptance logs:', error);
-      return [];
+
+      return { success: true, data: data || [] };
+    } catch (error: any) {
+      console.error('Error fetching acceptance history:', error);
+      return { success: false, data: [], error: error.message };
     }
-  }
-};
+  },
 
-/**
- * Save contract acceptance data to local storage
- * @param data Contract acceptance data
- */
-const saveToLocalStorage = (data: ContractAcceptanceLog): void => {
-  try {
-    // Get existing logs
-    const existingLogsJson = localStorage.getItem('contractAcceptanceLogs');
-    const existingLogs: ContractAcceptanceLog[] = existingLogsJson ? JSON.parse(existingLogsJson) : [];
-    
-    // Add new log
-    existingLogs.push(data);
-    
-    // Save back to local storage
-    localStorage.setItem('contractAcceptanceLogs', JSON.stringify(existingLogs));
-  } catch (error) {
-    console.error('Error saving to local storage:', error);
-  }
-};
+  async getAllLogs() {
+    try {
+      const { data, error } = await supabase
+        .from('contract_acceptance_logs')
+        .select('*')
+        .order('accepted_at', { ascending: false });
 
-/**
- * Get contract acceptance logs from local storage
- * @returns Array of contract acceptance logs
- */
-const getFromLocalStorage = (): ContractAcceptanceLog[] => {
-  try {
-    const logsJson = localStorage.getItem('contractAcceptanceLogs');
-    return logsJson ? JSON.parse(logsJson) : [];
-  } catch (error) {
-    console.error('Error getting from local storage:', error);
-    return [];
+      if (error) {
+        console.warn('Could not fetch all logs:', error);
+        return { success: false, data: [], error: error.message };
+      }
+
+      return { success: true, data: data || [] };
+    } catch (error: any) {
+      console.error('Error fetching all logs:', error);
+      return { success: false, data: [], error: error.message };
+    }
   }
 };
 

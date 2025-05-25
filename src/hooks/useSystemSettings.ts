@@ -1,6 +1,6 @@
 
 import { useState, useEffect } from 'react';
-import { supabase } from '@/lib/supabase';
+import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 
 // Interface para as configurações do sistema
@@ -43,7 +43,8 @@ export function useSystemSettings() {
       // Converter a lista de pares chave-valor em um objeto
       const settingsObj: SystemSettings = {};
       data?.forEach(item => {
-        settingsObj[item.key] = item.value;
+        const key = item.key as string;
+        settingsObj[key] = item.value;
       });
       
       setSettings(settingsObj);

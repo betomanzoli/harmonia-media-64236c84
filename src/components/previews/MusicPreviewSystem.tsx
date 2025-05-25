@@ -184,9 +184,9 @@ const MusicPreviewSystem: React.FC<MusicPreviewSystemProps> = ({ projectId }) =>
   return (
     <div className="container mx-auto max-w-5xl px-4">
       <div className="mb-8">
-        <h1 className="text-2xl md:text-3xl font-bold text-black mb-3">{projectData.projectTitle}</h1>
+        <h1 className="text-2xl md:text-3xl font-bold text-black mb-3">{projectData.project_title}</h1>
         <p className="text-gray-600">
-          Olá {projectData.clientName}, avalie as versões do seu projeto e envie seu feedback.
+          Olá {projectData.client_name}, avalie as versões do seu projeto e envie seu feedback.
         </p>
       </div>
       
@@ -269,11 +269,11 @@ const MusicPreviewSystem: React.FC<MusicPreviewSystemProps> = ({ projectId }) =>
         <div>
           <PreviewProjectDetails 
             projectData={{
-              projectTitle: projectData.projectTitle,
-              clientName: projectData.clientName,
+              projectTitle: projectData.project_title,
+              clientName: projectData.client_name,
               status: projectData.status,
-              packageType: projectData.packageType,
-              creationDate: projectData.createdAt ? new Date(projectData.createdAt).toLocaleDateString('pt-BR') : undefined
+              packageType: projectData.package_type,
+              creationDate: projectData.created_at ? new Date(projectData.created_at).toLocaleDateString('pt-BR') : undefined
             }}
           />
         </div>

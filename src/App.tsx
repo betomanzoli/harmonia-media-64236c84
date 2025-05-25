@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { Routes, Route, useLocation } from 'react-router-dom';
 import ScrollToTop from './components/ScrollToTop';
@@ -34,7 +35,7 @@ import BriefingSuccess from './pages/BriefingSuccess';
 import BriefingComplete from './pages/BriefingComplete';
 import ClientDashboard from './pages/ClientDashboard';
 import FinalDeliveryPage from './pages/FinalDeliveryPage';
-import SessionTransfer from './pages/SessionTransfer'; // Novo componente adicionado
+import SessionTransfer from './pages/SessionTransfer';
 
 // Import admin pages
 import AdminBriefings from './pages/admin/AdminBriefings';
@@ -47,6 +48,21 @@ import AdminStorage from './pages/admin/AdminStorage';
 import AdminIntegrations from './pages/admin/AdminIntegrations';
 import AdminStatistics from './pages/admin/AdminStatistics';
 import AdminGuides from './pages/admin/AdminGuides';
+
+// Clean window object from ethereum/MetaMask on app start
+if (typeof window !== 'undefined') {
+  // Remove ethereum-related properties
+  delete (window as any).ethereum;
+  delete (window as any).web3;
+  delete (window as any).MetaMask;
+  
+  // Prevent MetaMask injection
+  Object.defineProperty(window, 'ethereum', {
+    value: undefined,
+    writable: false,
+    configurable: false
+  });
+}
 
 const App: React.FC = () => {
   return (
@@ -87,24 +103,16 @@ const AppRoutes: React.FC = () => {
         <Route path="/acompanhar-pedido" element={<OrderTracking />} />
         <Route path="/privacidade" element={<PrivacyPolicy />} />
         <Route path="/termos" element={<Terms />} />
-
-        {/* Rotas de cliente */}
         <Route path="/client-dashboard" element={<ClientDashboard />} />
         <Route path="/deliveries/:projectId" element={<FinalDeliveryPage />} />
-
-        {/* Rotas de autenticação */}
         <Route path="/auth/preview/:projectId" element={<MusicPreviewAuth />} />
         <Route path="/auth/callback" element={<AuthCallback />} />
         <Route path="/auth-error" element={<AuthError />} />
-        <Route path="/session-transfer" element={<SessionTransfer />} /> {/* Nova rota adicionada */}
-
-        {/* Rotas de pré-visualização */}
+        <Route path="/session-transfer" element={<SessionTransfer />} />
         <Route path="/preview/:projectId" element={<PreviewPage />} />
         <Route path="/preview/:previewId" element={<MusicPreviews />} />
         <Route path="/feedback-confirmacao" element={<FeedbackConfirmation />} />
         <Route path="/como-funciona" element={<ServicesPage />} />
-
-        {/* Rotas administrativas */}
         <Route path="/admin-j28s7d1k/login" element={<AdminLogin />} />
         <Route path="/admin-j28s7d1k/reset-password" element={<ResetPassword />} />
         <Route path="/admin-j28s7d1k/dashboard" element={<AdminDashboard />} />
@@ -124,8 +132,6 @@ const AppRoutes: React.FC = () => {
         <Route path="/admin-j28s7d1k/integrations" element={<AdminIntegrations />} />
         <Route path="/admin-j28s7d1k/invoices" element={<AdminInvoices />} />
         <Route path="/admin-j28s7d1k/storage" element={<AdminStorage />} />
-
-        {/* Rota 404 */}
         <Route path="*" element={<NotFoundPage />} />
       </Routes>
       

@@ -1,72 +1,77 @@
 
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import contractAcceptanceLogger from '@/services/contractAcceptanceLogger';
-import { PackageId } from '@/lib/payment/packageData';
 import { useToast } from '@/hooks/use-toast';
+import contractAcceptanceLogger from '@/services/contractAcceptanceLogger';
 
-export function useServiceTerms(title: string) {
+export const useServiceTerms = (packageTitle: string) => {
+  const [acceptedTerms, setAcceptedTerms] = useState<{ [key: string]: boolean }>({});
   const [isTermsDialogOpen, setIsTermsDialogOpen] = useState(false);
-  const [acceptedTerms, setAcceptedTerms] = useState(false);
   const navigate = useNavigate();
   const { toast } = useToast();
 
-  // Determine o ID do pacote com base no título
-  const getPackageId = (): PackageId => {
-    if (title.includes('Essencial')) return 'essencial';
-    if (title.includes('Profissional')) return 'profissional';
-    if (title.includes('Premium')) return 'premium';
-    return 'essencial';
+  const acceptTerms = async (packageType: string, clientData?: any) => {
+    try {
+      if (clientData) {
+        await contractAcceptanceLogger.logAcceptance({
+          client_name: clientData.name || 'Unknown',
+          client_email: clientData.email || 'unknown@email.com',
+          package_type: packageType,
+          accepted_at: new Date().toISOString(),
+          ip_address: 'unknown',
+          user_agent: navigator.userAgent,
+          terms_version: '1.0'
+        });
+      }
+
+      setAcceptedTerms(prev => ({
+        ...prev,
+        [packageType]: true
+      }));
+
+      toast({
+        title: "Termos aceitos",
+        description: "Você aceitou os termos e condições do serviço."
+      });
+
+      return true;
+    } catch (error) {
+      console.error('Error accepting terms:', error);
+      toast({
+        title: "Erro",
+        description: "Não foi possível registrar a aceitação dos termos.",
+        variant: "destructive"
+      });
+      return false;
+    }
   };
 
-  // Abrir o diálogo de termos
+  const isTermsAccepted = (packageType: string): boolean => {
+    return acceptedTerms[packageType] || false;
+  };
+
   const handleChoosePackage = () => {
     setIsTermsDialogOpen(true);
   };
 
-  // Proceder para o pagamento após aceitar os termos
   const handleProceedToBriefing = async () => {
-    // Obter o ID do pacote a partir do título
-    const packageId = getPackageId();
+    const packageType = packageTitle.toLowerCase();
+    const success = await acceptTerms(packageType);
     
-    // Get user data from localStorage if available
-    const qualificationData = localStorage.getItem('qualificationData');
-    const userData = qualificationData ? JSON.parse(qualificationData) : null;
-    
-    // Log contract acceptance
-    try {
-      await contractAcceptanceLogger.logAcceptance({
-        packageId,
-        customerName: userData?.name || 'Cliente Anônimo',
-        customerEmail: userData?.email || 'email@não-fornecido.com',
-        acceptanceDate: new Date().toISOString(),
-        ipAddress: 'client-side',
-        userAgent: navigator.userAgent,
-        contractVersion: '1.0',
-        source: 'service-card-selection'
-      });
-      
-      toast({
-        title: "Contrato aceito",
-        description: "Os termos de serviço foram aceitos e registrados."
-      });
-    } catch (error) {
-      console.error('Error logging contract acceptance:', error);
+    if (success) {
+      setIsTermsDialogOpen(false);
+      navigate(`/briefing?package=${packageType}`);
     }
-    
-    // Armazenar o pacote selecionado no localStorage
-    localStorage.setItem('selectedPackage', packageId);
-    
-    // Redirecionar para a página de pagamento
-    navigate(`/pagamento/${packageId}`);
   };
 
   return {
+    acceptTerms,
+    isTermsAccepted,
+    acceptedTerms,
     isTermsDialogOpen,
     setIsTermsDialogOpen,
-    acceptedTerms,
     setAcceptedTerms,
     handleChoosePackage,
     handleProceedToBriefing
   };
-}
+};
