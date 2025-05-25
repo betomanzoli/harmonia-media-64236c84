@@ -1,9 +1,10 @@
+
 import React from 'react';
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { DollarSign, CreditCard, Users, Plus, BarChart4, Activity, Clock, ArrowUpRight } from 'lucide-react';
-import { usePreviewProjects } from '@/hooks/admin/usePreviewProjects';
-import { toast } from 'react-toastify';
+import { usePreviewProjects, ProjectItem } from '@/hooks/admin/usePreviewProjects';
+import { useToast } from '@/hooks/use-toast';
 
 interface PreviewsHeaderProps {
   scrollToNewForm: () => void;
@@ -12,6 +13,7 @@ interface PreviewsHeaderProps {
 const PreviewsHeader: React.FC<PreviewsHeaderProps> = ({ scrollToNewForm }) => {
   // Use the hook to get actual data instead of hardcoded values
   const { projects } = usePreviewProjects();
+  const { toast } = useToast();
   
   // Calculate dynamic stats based on the actual project data
   const activeProjects = projects.filter(p => p.status === 'waiting' || p.status === 'feedback').length;
@@ -21,7 +23,7 @@ const PreviewsHeader: React.FC<PreviewsHeaderProps> = ({ scrollToNewForm }) => {
     
   // Get unique client IDs to count unique clients
   // Using email as a unique identifier since clientId might not be available
-  const uniqueClients = [...new Set(projects.map(p => p.clientEmail))].length;
+  const uniqueClients = [...new Set(projects.map(p => p.client_email))].length;
   
   // Total projects count
   const totalProjects = projects.length;
