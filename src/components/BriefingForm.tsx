@@ -95,16 +95,18 @@ const BriefingForm: React.FC<BriefingFormProps> = ({
       return (
         <>
           {sections.map((section) => {
-            // Convert to the expected type
+            // Convert to the expected type, ensuring required fields have values
             const typedSection: ImportedBriefingSection = {
               ...section,
               package_type: section.package_type as 'essencial' | 'profissional' | 'premium' | 'qualification',
+              description: section.description || '', // Ensure description is never null
             };
             
             const sectionFields = fields[section.id] || [];
             const typedFields: ImportedBriefingField[] = sectionFields.map(field => ({
               ...field,
               field_type: field.field_type as 'text' | 'textarea' | 'select' | 'multi_select' | 'radio' | 'checkbox' | 'file' | 'date',
+              placeholder: field.placeholder || '', // Ensure placeholder is never null
             }));
 
             return (

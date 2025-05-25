@@ -13,6 +13,7 @@ export interface Invoice {
   description: string;
   client_id: string;
   has_receipt: boolean;
+  invoice_pdf?: string;
 }
 
 export interface Client {
@@ -55,7 +56,8 @@ export const useInvoices = () => {
         status: String(item.status || 'pending'),
         description: String(item.description || ''),
         client_id: String(item.client_id || ''),
-        has_receipt: Boolean(item.has_receipt || false)
+        has_receipt: Boolean(item.has_receipt || false),
+        invoice_pdf: item.invoice_pdf ? String(item.invoice_pdf) : undefined
       }));
 
       setInvoices(mappedInvoices);

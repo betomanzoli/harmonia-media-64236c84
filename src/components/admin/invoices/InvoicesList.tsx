@@ -11,7 +11,7 @@ import {
 import InvoiceTable from './components/InvoiceTable';
 import CreateInvoiceForm from './components/CreateInvoiceForm';
 import DeleteInvoiceDialog from './components/DeleteInvoiceDialog';
-import { useInvoices } from './hooks/useInvoices';
+import { useInvoices, Invoice } from './hooks/useInvoices';
 
 const InvoicesList: React.FC = () => {
   const {
@@ -31,37 +31,21 @@ const InvoicesList: React.FC = () => {
     handleDownloadInvoice
   } = useInvoices();
 
-  // Wrapper functions to match expected signatures
-  const handleEdit = (invoiceId: string) => {
-    const invoice = invoices.find(inv => inv.id === invoiceId);
-    if (invoice) {
-      handleEditInvoice(invoice);
-    }
+  // Wrapper functions to match expected signatures from InvoiceTable
+  const handleEdit = (invoice: Invoice) => {
+    handleEditInvoice(invoice);
   };
 
-  const handleDelete = (invoiceId: string) => {
-    const invoice = invoices.find(inv => inv.id === invoiceId);
-    if (invoice) {
-      handleDeleteClick(invoice);
-    }
+  const handleDelete = (invoice: Invoice) => {
+    handleDeleteClick(invoice);
   };
 
-  const handleViewPdfWrapper = (pdfUrl: string) => {
-    // Find invoice by PDF URL or handle differently based on your needs
-    const invoice = invoices.find(inv => inv.invoice_pdf === pdfUrl);
-    if (invoice) {
-      handleViewPdf(invoice);
-    } else {
-      // Handle case where we only have the PDF URL
-      window.open(pdfUrl, '_blank');
-    }
+  const handleViewPdfWrapper = (invoice: Invoice) => {
+    handleViewPdf(invoice);
   };
 
-  const handleDownloadWrapper = (invoiceId: string) => {
-    const invoice = invoices.find(inv => inv.id === invoiceId);
-    if (invoice) {
-      handleDownloadInvoice(invoice);
-    }
+  const handleDownloadWrapper = (invoice: Invoice) => {
+    handleDownloadInvoice(invoice);
   };
 
   return (
