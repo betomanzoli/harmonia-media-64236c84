@@ -1,16 +1,43 @@
 
 <!doctype html>
-<html lang="en">
+<html lang="pt-BR">
   <head>
     <meta charset="UTF-8" />
     <link rel="icon" type="image/svg+xml" href="/favicon.ico" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Humberto Manzoli - Produtor Musical</title>
-    <meta name="description" content="Produtor musical especializado em trilhas sonoras personalizadas para casamentos, eventos e projetos audiovisuais." />
+    <title>Harmonia Music - Composições Musicais Personalizadas</title>
+    <meta name="description" content="Criamos músicas únicas e personalizadas para ocasiões especiais, empresas e criadores de conteúdo. Transforme suas emoções em música." />
+    <meta name="keywords" content="música personalizada, composição musical, harmonia, música sob medida" />
+    <meta name="author" content="Harmonia Music" />
+    
+    <!-- Open Graph -->
+    <meta property="og:title" content="Harmonia Music - Composições Musicais Personalizadas" />
+    <meta property="og:description" content="Criamos músicas únicas e personalizadas para ocasiões especiais, empresas e criadores de conteúdo." />
+    <meta property="og:type" content="website" />
+    <meta property="og:url" content="https://harmonia.media" />
+    
+    <!-- Twitter Card -->
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content="Harmonia Music - Composições Musicais Personalizadas" />
+    <meta name="twitter:description" content="Criamos músicas únicas e personalizadas para ocasiões especiais, empresas e criadores de conteúdo." />
+    
+    <!-- Preconnect to improve performance -->
+    <link rel="preconnect" href="https://ivueqxyuflxsiecqvmgt.supabase.co" />
+    
+    <!-- Block MetaMask injection -->
+    <script>
+      if (typeof window !== 'undefined') {
+        Object.defineProperty(window, 'ethereum', {
+          value: undefined,
+          writable: false,
+          configurable: false
+        });
+      }
+    </script>
   </head>
   <body>
     <div id="root"></div>
-    <script src="https://cdn.gpteng.co/gptengineer.js" type="module"></script>
     <script type="module" src="/src/main.tsx"></script>
+    <script src="https://cdn.gpteng.co/gptengineer.js" defer></script>
   </body>
 </html>

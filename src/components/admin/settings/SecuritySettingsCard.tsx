@@ -1,93 +1,182 @@
 
 import React, { useState } from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
-import { Shield, CheckCircle, AlertTriangle } from 'lucide-react';
+import { ShieldCheck, ShieldAlert, RefreshCw } from "lucide-react";
+import { securityService } from '@/lib/supabase/securityConfig';
 import { useToast } from '@/hooks/use-toast';
-import { securityConfig } from '@/lib/supabase/securityConfig';
+import applyAllSecurityConfigurations from '@/lib/supabase/applySecurityConfig';
 
-const SecuritySettingsCard: React.FC = () => {
-  const [isTestingRLS, setIsTestingRLS] = useState(false);
-  const [rlsStatus, setRlsStatus] = useState<'unknown' | 'active' | 'error'>('unknown');
+const SecuritySettingsCard = () => {
   const { toast } = useToast();
-
-  const testRLS = async () => {
-    setIsTestingRLS(true);
+  const [isLoading, setIsLoading] = useState(false);
+  const [securityStatus, setSecurityStatus] = useState<any>(null);
+  
+  const handleCheckSecurity = async () => {
+    setIsLoading(true);
     try {
-      const result = await securityConfig.testRLS();
+      const result = await securityService.validateSecurity();
+      setSecurityStatus(result);
       
-      if (result.success) {
-        setRlsStatus('active');
-        toast({
-          title: "RLS Ativo",
-          description: "Row Level Security está funcionando corretamente"
-        });
-      } else {
-        setRlsStatus('error');
-        toast({
-          title: "Erro no RLS",
-          description: result.error || "Erro ao testar Row Level Security",
-          variant: "destructive"
-        });
-      }
-    } catch (error) {
-      console.error('Error testing RLS:', error);
-      setRlsStatus('error');
       toast({
-        title: "Erro no teste",
-        description: "Não foi possível testar o RLS",
-        variant: "destructive"
+        title: result.success ? "Verificação completa" : "Verificação falhou",
+        description: result.success 
+          ? "A configuração de segurança foi verificada com sucesso." 
+          : `Erro: ${result.error}`,
+        variant: result.success ? "default" : "destructive",
+      });
+    } catch (error: any) {
+      toast({
+        title: "Erro",
+        description: `Falha ao verificar segurança: ${error.message}`,
+        variant: "destructive",
       });
     } finally {
-      setIsTestingRLS(false);
+      setIsLoading(false);
     }
   };
-
+  
+  const handleApplySecurity = async () => {
+    setIsLoading(true);
+    try {
+      const result = await applyAllSecurityConfigurations();
+      
+      if (result.success) {
+        toast({
+          title: "Segurança configurada",
+          description: "As configurações de segurança foram aplicadas com sucesso.",
+        });
+        
+        // Atualizar status após aplicar configurações
+        await handleCheckSecurity();
+      } else {
+        toast({
+          title: "Erro",
+          description: `Falha ao aplicar configurações: ${result.error}`,
+          variant: "destructive",
+        });
+      }
+    } catch (error: any) {
+      toast({
+        title: "Erro",
+        description: `Falha ao aplicar configurações: ${error.message}`,
+        variant: "destructive",
+      });
+    } finally {
+      setIsLoading(false);
+    }
+  };
+  
   return (
     <Card>
       <CardHeader>
         <CardTitle className="flex items-center">
-          <Shield className="mr-2 h-5 w-5" />
+          <ShieldCheck className="mr-2 h-5 w-5" />
           Configurações de Segurança
         </CardTitle>
+        <CardDescription>
+          Gerencie as configurações de segurança do Supabase
+        </CardDescription>
       </CardHeader>
+      
       <CardContent className="space-y-4">
-        <div className="flex items-center justify-between">
-          <div>
-            <h3 className="font-medium">Row Level Security (RLS)</h3>
-            <p className="text-sm text-gray-500">
-              Controle de acesso a nível de linha no banco de dados
-            </p>
+        {securityStatus && (
+          <div className="space-y-4">
+            <div className="grid grid-cols-2 gap-2">
+              <div className="bg-card border rounded p-3">
+                <h3 className="text-sm font-medium mb-1">Políticas RLS</h3>
+                <Badge variant={securityStatus.rlsPolicies?.length > 0 ? "default" : "destructive"}>
+                  {securityStatus.rlsPolicies?.length > 0 ? 
+                    `${securityStatus.rlsPolicies.length} políticas configuradas` : 
+                    "Sem políticas"}
+                </Badge>
+              </div>
+              
+              <div className="bg-card border rounded p-3">
+                <h3 className="text-sm font-medium mb-1">MFA</h3>
+                <Badge variant={securityStatus.mfaEnabled ? "default" : "destructive"}>
+                  {securityStatus.mfaEnabled ? "Ativado" : "Desativado"}
+                </Badge>
+              </div>
+              
+              <div className="bg-card border rounded p-3">
+                <h3 className="text-sm font-medium mb-1">Segurança de Senha</h3>
+                <Badge 
+                  variant={
+                    securityStatus.passwordSecurityLevel === 'high' ? "default" : 
+                    securityStatus.passwordSecurityLevel === 'medium' ? "secondary" : 
+                    "destructive"
+                  }
+                >
+                  {securityStatus.passwordSecurityLevel === 'high' ? "Alta" : 
+                   securityStatus.passwordSecurityLevel === 'medium' ? "Média" : 
+                   "Baixa"}
+                </Badge>
+              </div>
+              
+              <div className="bg-card border rounded p-3">
+                <h3 className="text-sm font-medium mb-1">Status Geral</h3>
+                <Badge 
+                  variant={securityStatus.success ? "default" : "destructive"}
+                >
+                  {securityStatus.success ? "Configurado" : "Problemas Detectados"}
+                </Badge>
+              </div>
+            </div>
+            
+            {!securityStatus.success && (
+              <Alert variant="destructive">
+                <ShieldAlert className="h-4 w-4" />
+                <AlertTitle>Problemas de segurança detectados</AlertTitle>
+                <AlertDescription>
+                  {securityStatus.error || "Há questões de segurança que precisam ser resolvidas."}
+                </AlertDescription>
+              </Alert>
+            )}
           </div>
-          <div className="flex items-center space-x-2">
-            {rlsStatus === 'active' && (
-              <Badge variant="default" className="bg-green-100 text-green-800">
-                <CheckCircle className="mr-1 h-3 w-3" />
-                Ativo
-              </Badge>
-            )}
-            {rlsStatus === 'error' && (
-              <Badge variant="destructive">
-                <AlertTriangle className="mr-1 h-3 w-3" />
-                Erro
-              </Badge>
-            )}
-            {rlsStatus === 'unknown' && (
-              <Badge variant="secondary">Desconhecido</Badge>
-            )}
-          </div>
-        </div>
-
-        <Button 
-          onClick={testRLS} 
-          disabled={isTestingRLS}
-          variant="outline"
-          className="w-full"
-        >
-          {isTestingRLS ? 'Testando...' : 'Testar RLS'}
-        </Button>
+        )}
+        
+        {!securityStatus && (
+          <Alert>
+            <AlertTitle>Verificação não realizada</AlertTitle>
+            <AlertDescription>
+              Clique em "Verificar Segurança" para avaliar as configurações atuais.
+            </AlertDescription>
+          </Alert>
+        )}
       </CardContent>
+      
+      <CardFooter className="flex justify-end space-x-2">
+        <Button
+          variant="outline"
+          onClick={handleCheckSecurity}
+          disabled={isLoading}
+        >
+          {isLoading ? (
+            <>
+              <RefreshCw className="mr-2 h-4 w-4 animate-spin" />
+              Verificando...
+            </>
+          ) : (
+            <>Verificar Segurança</>
+          )}
+        </Button>
+        <Button
+          onClick={handleApplySecurity}
+          disabled={isLoading}
+        >
+          {isLoading ? (
+            <>
+              <RefreshCw className="mr-2 h-4 w-4 animate-spin" />
+              Configurando...
+            </>
+          ) : (
+            <>Aplicar Configurações de Segurança</>
+          )}
+        </Button>
+      </CardFooter>
     </Card>
   );
 };

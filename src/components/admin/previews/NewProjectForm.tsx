@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -16,10 +17,10 @@ const NewProjectForm: React.FC<NewProjectFormProps> = ({ onAddProject }) => {
       // Get form data and call the callback
       const formData = new FormData(e.target as HTMLFormElement);
       const projectData = {
-        client_name: formData.get('client-name'),
-        client_email: formData.get('client-email'),
-        project_title: formData.get('project-title'),
-        package_type: formData.get('package-type'),
+        clientName: formData.get('client-name'),
+        clientEmail: formData.get('client-email'),
+        projectTitle: formData.get('project-title'),
+        packageType: formData.get('package-type'),
         description: formData.get('project-description')
       };
       onAddProject(projectData);

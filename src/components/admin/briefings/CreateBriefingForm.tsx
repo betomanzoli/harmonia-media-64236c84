@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Form } from "@/components/ui/form";
@@ -6,7 +5,7 @@ import { useCreateBriefingForm, BriefingFormValues } from '@/hooks/useCreateBrie
 import ClientInfoSection from './FormSections/ClientInfoSection';
 import PackageInfoSection from './FormSections/PackageInfoSection';
 import FormFooter from './FormSections/FormFooter';
-import { supabase } from '@/integrations/supabase/client';
+import { supabase } from '@/lib/supabase';
 import { useToast } from '@/hooks/use-toast';
 import { usePreviewProjects } from '@/hooks/admin/usePreviewProjects';
 import { useCustomers } from '@/hooks/admin/useCustomers';
@@ -43,7 +42,7 @@ const CreateBriefingForm: React.FC<CreateBriefingFormProps> = ({ onClose, onSubm
       }
       
       if (existingClients && existingClients.length > 0) {
-        clientId = existingClients[0].id as string;
+        clientId = existingClients[0].id;
         
         // Atualizar informações do cliente caso tenha mudado
         await supabase
@@ -71,7 +70,7 @@ const CreateBriefingForm: React.FC<CreateBriefingFormProps> = ({ onClose, onSubm
           throw newClientError;
         }
         
-        clientId = newClient.id as string;
+        clientId = newClient.id;
         
         // Enviar notificação de novo cliente
         await webhookService.sendItemNotification('new_customer', {
@@ -122,7 +121,7 @@ const CreateBriefingForm: React.FC<CreateBriefingFormProps> = ({ onClose, onSubm
       
       // Generate a consistent project ID based on the briefing ID
       // Use the Supabase briefing ID directly to ensure consistency
-      const projectId = newBriefing.id as string;
+      const projectId = newBriefing.id;
       
       // Create a preview project automatically linked to this briefing
       const expirationDate = new Date();
@@ -139,7 +138,7 @@ const CreateBriefingForm: React.FC<CreateBriefingFormProps> = ({ onClose, onSubm
         preview_url: `/preview/${projectId}`,
         expiration_date: expirationDate.toLocaleDateString('pt-BR'),
         last_activity_date: new Date().toLocaleDateString('pt-BR'),
-        briefing_id: newBriefing.id as string,
+        briefing_id: newBriefing.id,
         versions_list: []
       };
       

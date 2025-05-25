@@ -11,14 +11,14 @@ import {
 import InvoiceTable from './components/InvoiceTable';
 import CreateInvoiceForm from './components/CreateInvoiceForm';
 import DeleteInvoiceDialog from './components/DeleteInvoiceDialog';
-import { useInvoices, Invoice } from './hooks/useInvoices';
+import { useInvoices } from './hooks/useInvoices';
 
 const InvoicesList: React.FC = () => {
   const {
     invoices,
     clients,
     projects,
-    isLoading,
+    loading,
     showCreateDialog,
     showDeleteDialog,
     setShowCreateDialog,
@@ -30,23 +30,6 @@ const InvoicesList: React.FC = () => {
     handleViewPdf,
     handleDownloadInvoice
   } = useInvoices();
-
-  // Wrapper functions to match expected signatures from InvoiceTable
-  const handleEdit = (invoice: Invoice) => {
-    handleEditInvoice(invoice);
-  };
-
-  const handleDelete = (invoice: Invoice) => {
-    handleDeleteClick(invoice);
-  };
-
-  const handleViewPdfWrapper = (invoice: Invoice) => {
-    handleViewPdf(invoice);
-  };
-
-  const handleDownloadWrapper = (invoice: Invoice) => {
-    handleDownloadInvoice(invoice);
-  };
 
   return (
     <div className="space-y-6">
@@ -60,12 +43,12 @@ const InvoicesList: React.FC = () => {
 
       <InvoiceTable 
         invoices={invoices}
-        loading={isLoading}
+        loading={loading}
         projects={projects}
-        onEdit={handleEdit}
-        onDelete={handleDelete}
-        onViewPdf={handleViewPdfWrapper}
-        onDownload={handleDownloadWrapper}
+        onEdit={handleEditInvoice}
+        onDelete={handleDeleteClick}
+        onViewPdf={handleViewPdf}
+        onDownload={handleDownloadInvoice}
       />
 
       {/* Create invoice dialog */}

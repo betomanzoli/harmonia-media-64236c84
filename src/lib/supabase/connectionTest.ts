@@ -1,6 +1,6 @@
 
 import { createClient } from '@supabase/supabase-js';
-import { supabase } from '@/integrations/supabase/client';
+import { supabase } from './client';
 
 export const getSupabaseUrl = () => {
   return 'https://ivueqxyuflxsiecqvmgt.supabase.co';
@@ -29,7 +29,7 @@ export const checkDatabaseConnection = async () => {
   return await testConnection();
 };
 
-// Fixed export that the test is looking for
+// Add the missing export that the test is looking for
 export const testSupabaseConnection = async () => {
   try {
     // Test direct fetch to Supabase endpoint

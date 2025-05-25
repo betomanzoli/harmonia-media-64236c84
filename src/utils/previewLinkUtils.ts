@@ -1,94 +1,143 @@
 
-import { supabase } from '@/integrations/supabase/client';
+import { v4 as uuidv4 } from 'uuid';
+import { setPreviewAccessCookie, checkPreviewAccessCookie, setPreviewEmailCookie, getAuthCookie } from './authCookies';
+import { supabase } from '@/lib/supabase';
 
-export interface ProjectPreview {
-  id: string;
-  client_name: string;
-  title: string;
-  status: string;
-  created_at: string;
-  expires_at?: string;
-}
+// Create a more secure mapping between encoded IDs and project IDs
+const previewLinksMap = new Map<string, string>();
 
-export const getProjectIdFromPreviewLink = async (previewId: string): Promise<string | null> => {
+// Helper functions to work with cookies
+const setCookie = (name: string, value: string, days = 1) => {
+  const date = new Date();
+  date.setTime(date.getTime() + (days * 24 * 60 * 60 * 1000));
+  const expires = `; expires=${date.toUTCString()}`;
+  document.cookie = `${name}=${value}${expires}; path=/; Secure; SameSite=None`;
+};
+
+const getCookie = (name: string): string | null => {
+  const value = `; ${document.cookie}`;
+  const parts = value.split(`; ${name}=`);
+  if (parts.length === 2) {
+    const cookieValue = parts.pop()?.split(';').shift();
+    return cookieValue || null;
+  }
+  return null;
+};
+
+// Generate a preview link with a unique encoded ID
+export const generatePreviewLink = async (projectId: string): Promise<string> => {
   try {
-    // First try to use the ID directly
-    const { data: directData, error: directError } = await supabase
+    // Generate a unique encoded ID that's harder to guess
+    const encodedId = uuidv4().replace(/-/g, ''); 
+    
+    // Update the project record with the preview code
+    const { error } = await supabase
+      .from('projects')
+      .update({ 
+        preview_code: encodedId,
+        updated_at: new Date().toISOString()
+      })
+      .eq('id', projectId);
+      
+    if (error) {
+      console.error('Failed to update preview code:', error);
+      throw error;
+    }
+    
+    // Store the mapping locally as a fallback
+    previewLinksMap.set(encodedId, projectId);
+    
+    // Store in cookie instead of localStorage
+    const mappings = JSON.parse(getCookie('previewLinksMappings') || '{}');
+    mappings[encodedId] = projectId;
+    setCookie('previewLinksMappings', JSON.stringify(mappings));
+    
+    return encodedId;
+  } catch (error) {
+    console.error('Error generating preview link:', error);
+    return '';
+  }
+};
+
+// Get project ID from preview link (encoded ID)
+export const getProjectIdFromPreviewLink = async (encodedId: string): Promise<string | null> => {
+  try {
+    // Try to get project ID from database first
+    const { data, error } = await supabase
       .from('projects')
       .select('id')
-      .eq('id', previewId)
-      .maybeSingle();
-
-    if (!directError && directData) {
-      return previewId;
+      .eq('preview_code', encodedId)
+      .single();
+      
+    if (data && data.id) {
+      return data.id;
     }
-
-    // Try to find by preview_code
-    const { data: codeData, error: codeError } = await supabase
-      .from('projects')
-      .select('id')
-      .eq('preview_code', previewId)
-      .maybeSingle();
-
-    if (!codeError && codeData) {
-      return String(codeData.id);
+    
+    if (error) {
+      console.warn('Error getting project from database:', error);
     }
-
-    return null;
+    
+    // Fall back to in-memory map
+    let projectId = previewLinksMap.get(encodedId);
+    
+    // If not found in memory, check in cookies
+    if (!projectId) {
+      const storedMappings = JSON.parse(getCookie('previewLinksMappings') || '{}');
+      projectId = storedMappings[encodedId] || null;
+      
+      // Add to in-memory map if found
+      if (projectId) {
+        previewLinksMap.set(encodedId, projectId);
+      }
+    }
+    
+    return projectId;
   } catch (error) {
     console.error('Error getting project ID from preview link:', error);
     return null;
   }
 };
 
-export const previewLinkUtils = {
-  generatePreviewLink: (projectId: string): string => {
-    const baseUrl = window.location.origin;
-    return `${baseUrl}/preview/${projectId}`;
-  },
-
-  validateProjectAccess: async (projectId: string): Promise<{ valid: boolean; project?: ProjectPreview; error?: string }> => {
-    try {
-      const { data, error } = await supabase
-        .from('projects')
-        .select('id, client_name, title, status, created_at, expires_at')
-        .eq('id', projectId)
-        .single();
-
-      if (error) {
-        console.error('Error validating project access:', error);
-        return { valid: false, error: 'Project not found' };
-      }
-
-      if (!data) {
-        return { valid: false, error: 'Project not found' };
-      }
-
-      const project: ProjectPreview = {
-        id: String(data.id || ''),
-        client_name: String(data.client_name || ''),
-        title: String(data.title || ''),
-        status: String(data.status || ''),
-        created_at: String(data.created_at || ''),
-        expires_at: data.expires_at ? String(data.expires_at) : undefined
-      };
-
-      // Check if project has expired
-      if (project.expires_at) {
-        const expirationDate = new Date(project.expires_at);
-        const now = new Date();
-        
-        if (now > expirationDate) {
-          return { valid: false, error: 'Project has expired' };
-        }
-      }
-
-      return { valid: true, project };
-    } catch (error) {
-      console.error('Error in validateProjectAccess:', error);
-      return { valid: false, error: 'Internal error' };
-    }
-  },
+// Authorize access to a project preview
+export const authorizeEmailForProject = (email: string, projectId: string): void => {
+  try {
+    // Store authorization in cookie
+    setPreviewAccessCookie(projectId);
+    
+    // Also store email in cookie for validation
+    setPreviewEmailCookie(projectId, email);
+  } catch (error) {
+    console.error('Error authorizing email for project:', error);
+  }
 };
 
-export default previewLinkUtils;
+// Check if an email is authorized for a project
+export const isEmailAuthorizedForProject = (email: string, projectId: string): boolean => {
+  try {
+    // First check if project is authorized
+    if (checkPreviewAccessCookie(projectId)) {
+      // Then validate if the email matches
+      const storedEmail = getCookie(`preview_email_${projectId}`);
+      return storedEmail === email;
+    }
+    
+    return false;
+  } catch (error) {
+    console.error('Error checking email authorization for project:', error);
+    return false;
+  }
+};
+
+// Load stored mappings from cookies when the module loads
+const loadStoredData = () => {
+  try {
+    const storedMappings = JSON.parse(getCookie('previewLinksMappings') || '{}');
+    Object.entries(storedMappings).forEach(([encodedId, projectId]) => {
+      previewLinksMap.set(encodedId, projectId as string);
+    });
+  } catch (error) {
+    console.error('Error loading stored preview data:', error);
+  }
+};
+
+loadStoredData();

@@ -15,8 +15,8 @@ import { Invoice } from '../types';
 interface InvoiceActionMenuProps {
   invoice: Invoice;
   onEdit: (invoice: Invoice) => void;
-  onDelete: (invoice: Invoice) => void;
-  onViewPdf: (invoice: Invoice) => void;
+  onDelete: (invoiceId: string) => void;
+  onViewPdf: (pdfUrl: string) => void;
   onDownload: (invoice: Invoice) => void;
 }
 
@@ -39,7 +39,7 @@ const InvoiceActionMenu: React.FC<InvoiceActionMenuProps> = ({
         <DropdownMenuLabel>Ações</DropdownMenuLabel>
         <DropdownMenuSeparator />
         {invoice.invoice_pdf && (
-          <DropdownMenuItem onClick={() => onViewPdf(invoice)}>
+          <DropdownMenuItem onClick={() => onViewPdf(invoice.invoice_pdf!)}>
             <span className="mr-2">📄</span>
             Ver fatura
           </DropdownMenuItem>
@@ -54,7 +54,7 @@ const InvoiceActionMenu: React.FC<InvoiceActionMenuProps> = ({
         </DropdownMenuItem>
         <DropdownMenuItem 
           className="text-red-600"
-          onClick={() => onDelete(invoice)}
+          onClick={() => onDelete(invoice.id)}
         >
           <span className="mr-2">🗑️</span>
           Excluir
