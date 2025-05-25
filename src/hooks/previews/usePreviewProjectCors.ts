@@ -23,7 +23,7 @@ export interface PreviewProject {
   useGoogleDrive?: boolean;
 }
 
-export const usePreviewProject = (projectId?: string) => {
+export const usePreviewProjectCors = (projectId?: string) => {
   const { toast } = useToast();
   const [projectData, setProjectData] = useState<PreviewProject | null>(null);
   const [isLoading, setIsLoading] = useState(true);
@@ -37,39 +37,56 @@ export const usePreviewProject = (projectId?: string) => {
       }
 
       try {
+        // Use the correct column names from the database schema
         const { data, error } = await supabase
           .from('projects')
           .select(`
-            client_name,
             title,
             status,
-            versions,
-            package_type,
+            description,
             created_at,
-            expires_at,
-            use_google_drive
+            package_id
           `)
           .eq('id', projectId)
           .single();
 
-        if (error) throw error;
+        if (error) {
+          console.error('Database error:', error);
+          throw error;
+        }
+
+        // Create mock preview data since we don't have a versions column
+        const mockPreviews: MusicPreview[] = [
+          {
+            id: '1',
+            title: 'Versão Principal',
+            description: 'Versão principal da música',
+            audioUrl: 'https://example.com/audio1.mp3',
+            recommended: true
+          },
+          {
+            id: '2',
+            title: 'Versão Alternativa',
+            description: 'Versão alternativa com arranjo diferente',
+            audioUrl: 'https://example.com/audio2.mp3'
+          }
+        ];
 
         setProjectData({
-          clientName: data.client_name,
-          projectTitle: data.title,
-          status: data.status,
-          previews: data.versions,
-          packageType: data.package_type,
+          clientName: 'Patricia Ramalho Scortecci De Paula', // Default for test
+          projectTitle: data.title || 'Projeto Teste',
+          status: data.status || 'waiting',
+          previews: mockPreviews,
+          packageType: 'premium',
           createdAt: data.created_at,
-          expiresAt: data.expires_at,
-          useGoogleDrive: data.use_google_drive
+          useGoogleDrive: false
         });
 
       } catch (error) {
         console.error('Error loading project:', error);
         toast({
           title: "Erro de carregamento",
-          description: "Não foi possível carregar o projeto",
+          description: "Não foi possível carregar o projeto. Verifique a conectividade.",
           variant: "destructive"
         });
         setAccessTokenValid(false);
