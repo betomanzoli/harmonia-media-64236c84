@@ -1,219 +1,181 @@
 
 import { useState, useEffect } from 'react';
-import { supabase } from '@/integrations/supabase/client';
+import { supabase } from '@/lib/supabase';
 import { useToast } from '@/hooks/use-toast';
+import { Invoice, Client, Project } from '../types';
+import { FormValues } from '../components/CreateInvoiceForm';
 
-export interface Invoice {
-  id: string;
-  client: string;
-  amount: string;
-  date: string;
-  due_date: string;
-  status: string;
-  description: string;
-  client_id: string;
-  has_receipt: boolean;
-  invoice_pdf?: string;
-}
-
-export interface Client {
-  id: string;
-  name: string;
-  email: string;
-}
-
-export interface Project {
-  id: string;
-  title: string;
-  client_id: string;
-}
-
-export const useInvoices = () => {
+export function useInvoices() {
+  const { toast } = useToast();
   const [invoices, setInvoices] = useState<Invoice[]>([]);
   const [clients, setClients] = useState<Client[]>([]);
   const [projects, setProjects] = useState<Project[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
+  const [loading, setLoading] = useState(true);
   const [showCreateDialog, setShowCreateDialog] = useState(false);
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
-  const [selectedInvoice, setSelectedInvoice] = useState<Invoice | null>(null);
-  const { toast } = useToast();
+  const [invoiceToDelete, setInvoiceToDelete] = useState<string | null>(null);
 
-  const loadInvoices = async () => {
+  useEffect(() => {
+    fetchInvoices();
+    fetchClients();
+    fetchProjects();
+  }, []);
+
+  const fetchInvoices = async () => {
+    setLoading(true);
     try {
       const { data, error } = await supabase
         .from('invoices')
         .select('*')
-        .order('created_at', { ascending: false });
+        .order('date', { ascending: false });
 
       if (error) throw error;
 
-      const mappedInvoices: Invoice[] = (data || []).map((item: any) => ({
-        id: String(item.id || ''),
-        client: String(item.client || ''),
-        amount: String(item.amount || '0'),
-        date: String(item.date || new Date().toISOString().split('T')[0]),
-        due_date: String(item.due_date || new Date().toISOString().split('T')[0]),
-        status: String(item.status || 'pending'),
-        description: String(item.description || ''),
-        client_id: String(item.client_id || ''),
-        has_receipt: Boolean(item.has_receipt || false),
-        invoice_pdf: item.invoice_pdf ? String(item.invoice_pdf) : undefined
-      }));
-
-      setInvoices(mappedInvoices);
+      setInvoices(data || []);
     } catch (error) {
-      console.error('Error loading invoices:', error);
-      setInvoices([]);
+      console.error('Error fetching invoices:', error);
+      toast({
+        title: 'Erro',
+        description: 'Não foi possível carregar as faturas',
+        variant: 'destructive',
+      });
+    } finally {
+      setLoading(false);
     }
   };
 
-  const loadClients = async () => {
+  const fetchClients = async () => {
     try {
       const { data, error } = await supabase
         .from('clients')
-        .select('*')
+        .select('id, name, email')
         .order('name');
 
       if (error) throw error;
 
-      const mappedClients: Client[] = (data || []).map((item: any) => ({
-        id: String(item.id || ''),
-        name: String(item.name || ''),
-        email: String(item.email || '')
-      }));
-
-      setClients(mappedClients);
+      setClients(data || []);
     } catch (error) {
-      console.error('Error loading clients:', error);
-      setClients([]);
+      console.error('Error fetching clients:', error);
     }
   };
 
-  const loadProjects = async () => {
+  const fetchProjects = async () => {
     try {
       const { data, error } = await supabase
         .from('projects')
-        .select('*')
-        .order('title');
+        .select('id, title, client_id');
 
       if (error) throw error;
 
-      const mappedProjects: Project[] = (data || []).map((item: any) => ({
-        id: String(item.id || ''),
-        title: String(item.title || ''),
-        client_id: String(item.client_id || '')
-      }));
-
-      setProjects(mappedProjects);
+      setProjects(data || []);
     } catch (error) {
-      console.error('Error loading projects:', error);
-      setProjects([]);
+      console.error('Error fetching projects:', error);
     }
   };
 
-  const handleCreateInvoice = async (invoiceData: Partial<Invoice>) => {
+  const handleCreateInvoice = async (values: FormValues) => {
     try {
+      const selectedClient = clients.find(c => c.id === values.client_id);
+      
       const { data, error } = await supabase
         .from('invoices')
-        .insert([invoiceData])
+        .insert([
+          {
+            client: selectedClient?.name || 'Cliente',
+            client_id: values.client_id,
+            project_id: values.project_id,
+            description: values.description,
+            amount: values.amount,
+            due_date: values.due_date,
+            status: 'pending'
+          }
+        ])
         .select();
 
       if (error) throw error;
 
       toast({
-        title: "Fatura criada",
-        description: "A fatura foi criada com sucesso."
+        title: 'Sucesso',
+        description: 'Fatura criada com sucesso',
       });
 
-      await loadInvoices();
       setShowCreateDialog(false);
+      fetchInvoices();
     } catch (error) {
       console.error('Error creating invoice:', error);
       toast({
-        title: "Erro ao criar fatura",
-        description: "Não foi possível criar a fatura.",
-        variant: "destructive"
+        title: 'Erro',
+        description: 'Não foi possível criar a fatura',
+        variant: 'destructive',
       });
     }
   };
 
-  const handleDeleteClick = (invoice: Invoice) => {
-    setSelectedInvoice(invoice);
-    setShowDeleteDialog(true);
-  };
-
   const handleDeleteInvoice = async () => {
-    if (!selectedInvoice) return;
+    if (!invoiceToDelete) return;
 
     try {
       const { error } = await supabase
         .from('invoices')
         .delete()
-        .eq('id', selectedInvoice.id);
+        .eq('id', invoiceToDelete);
 
       if (error) throw error;
 
       toast({
-        title: "Fatura excluída",
-        description: "A fatura foi excluída com sucesso."
+        title: 'Sucesso',
+        description: 'Fatura excluída com sucesso',
       });
 
-      await loadInvoices();
-      setShowDeleteDialog(false);
-      setSelectedInvoice(null);
+      fetchInvoices();
     } catch (error) {
       console.error('Error deleting invoice:', error);
       toast({
-        title: "Erro ao excluir fatura",
-        description: "Não foi possível excluir a fatura.",
-        variant: "destructive"
+        title: 'Erro',
+        description: 'Não foi possível excluir a fatura',
+        variant: 'destructive',
       });
+    } finally {
+      setShowDeleteDialog(false);
+      setInvoiceToDelete(null);
     }
   };
 
-  const handleEditInvoice = (invoice: Invoice) => {
-    console.log('Edit invoice:', invoice);
-    // TODO: Implement edit functionality
+  const handleDeleteClick = (invoiceId: string) => {
+    setInvoiceToDelete(invoiceId);
+    setShowDeleteDialog(true);
   };
 
-  const handleViewPdf = (invoice: Invoice) => {
-    console.log('View PDF for invoice:', invoice);
-    // TODO: Implement PDF view functionality
+  const handleEditInvoice = (invoice: Invoice) => {
+    // To be implemented - editing functionality
+    console.log('Edit invoice:', invoice);
+  };
+
+  const handleViewPdf = (pdfUrl: string) => {
+    window.open(pdfUrl, '_blank');
   };
 
   const handleDownloadInvoice = (invoice: Invoice) => {
+    // To be implemented - download functionality
     console.log('Download invoice:', invoice);
-    // TODO: Implement download functionality
   };
-
-  useEffect(() => {
-    const loadData = async () => {
-      setIsLoading(true);
-      await Promise.all([loadInvoices(), loadClients(), loadProjects()]);
-      setIsLoading(false);
-    };
-
-    loadData();
-  }, []);
 
   return {
     invoices,
     clients,
     projects,
-    isLoading,
-    loading: isLoading, // Alias for backward compatibility
+    loading,
     showCreateDialog,
     showDeleteDialog,
+    invoiceToDelete,
     setShowCreateDialog,
     setShowDeleteDialog,
+    setInvoiceToDelete,
     handleCreateInvoice,
     handleDeleteInvoice,
     handleDeleteClick,
     handleEditInvoice,
     handleViewPdf,
-    handleDownloadInvoice,
-    loadInvoices,
-    loadClients,
-    loadProjects
+    handleDownloadInvoice
   };
-};
+}

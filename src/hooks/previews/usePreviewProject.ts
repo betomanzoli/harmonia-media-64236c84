@@ -1,7 +1,7 @@
 
 import { useState, useEffect } from 'react';
 import { useToast } from '@/hooks/use-toast';
-import { supabase } from '@/integrations/supabase/client';
+import { supabase } from '@/lib/supabase';
 
 export interface MusicPreview {
   id: string;
@@ -13,14 +13,14 @@ export interface MusicPreview {
 }
 
 export interface PreviewProject {
-  client_name: string;
-  project_title: string;
+  clientName: string;
+  projectTitle: string;
   status: 'waiting' | 'feedback' | 'approved';
   previews: MusicPreview[];
-  package_type?: string;
-  created_at?: string;
-  expires_at?: string;
-  use_google_drive?: boolean;
+  packageType?: string;
+  createdAt?: string;
+  expiresAt?: string;
+  useGoogleDrive?: boolean;
 }
 
 export const usePreviewProject = (projectId?: string) => {
@@ -55,18 +55,18 @@ export const usePreviewProject = (projectId?: string) => {
         if (error) throw error;
 
         setProjectData({
-          client_name: data.client_name as string,
-          project_title: data.title as string,
-          status: data.status as 'waiting' | 'feedback' | 'approved',
-          previews: Array.isArray(data.versions) ? data.versions : [],
-          package_type: data.package_type as string,
-          created_at: data.created_at as string,
-          expires_at: data.expires_at as string,
-          use_google_drive: data.use_google_drive as boolean
+          clientName: data.client_name,
+          projectTitle: data.title,
+          status: data.status,
+          previews: data.versions,
+          packageType: data.package_type,
+          createdAt: data.created_at,
+          expiresAt: data.expires_at,
+          useGoogleDrive: data.use_google_drive
         });
 
       } catch (error) {
-        console.error('Erro ao carregar projeto:', error);
+        console.error('Error loading project:', error);
         toast({
           title: "Erro de carregamento",
           description: "Não foi possível carregar o projeto",
@@ -81,26 +81,17 @@ export const usePreviewProject = (projectId?: string) => {
     loadProject();
   }, [projectId, toast]);
 
-  const updateProjectStatus = async (
-    newStatus: 'approved' | 'feedback', 
-    comments: string
-  ): Promise<boolean> => {
+  const updateProjectStatus = async (newStatus: 'approved' | 'feedback', comments: string): Promise<boolean> => {
     if (!projectId) return false;
 
     try {
       await supabase
         .from('projects')
-        .update({ 
-          status: newStatus,
-          feedback: comments,
-          updated_at: new Date().toISOString()
-        })
+        .update({ status: newStatus })
         .eq('id', projectId);
-
-      setProjectData(prev => prev ? {...prev, status: newStatus} : null);
       return true;
     } catch (error) {
-      console.error('Erro ao atualizar status:', error);
+      console.error('Error updating status:', error);
       return false;
     }
   };

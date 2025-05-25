@@ -3,8 +3,7 @@ import React from 'react';
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { DollarSign, CreditCard, Users, Plus, BarChart4, Activity, Clock, ArrowUpRight } from 'lucide-react';
-import { usePreviewProjects, ProjectItem } from '@/hooks/admin/usePreviewProjects';
-import { useToast } from '@/hooks/use-toast';
+import { usePreviewProjects } from '@/hooks/admin/usePreviewProjects';
 
 interface PreviewsHeaderProps {
   scrollToNewForm: () => void;
@@ -13,7 +12,6 @@ interface PreviewsHeaderProps {
 const PreviewsHeader: React.FC<PreviewsHeaderProps> = ({ scrollToNewForm }) => {
   // Use the hook to get actual data instead of hardcoded values
   const { projects } = usePreviewProjects();
-  const { toast } = useToast();
   
   // Calculate dynamic stats based on the actual project data
   const activeProjects = projects.filter(p => p.status === 'waiting' || p.status === 'feedback').length;
@@ -23,7 +21,7 @@ const PreviewsHeader: React.FC<PreviewsHeaderProps> = ({ scrollToNewForm }) => {
     
   // Get unique client IDs to count unique clients
   // Using email as a unique identifier since clientId might not be available
-  const uniqueClients = [...new Set(projects.map(p => p.client_email))].length;
+  const uniqueClients = [...new Set(projects.map(p => p.clientEmail))].length;
   
   // Total projects count
   const totalProjects = projects.length;
@@ -32,26 +30,6 @@ const PreviewsHeader: React.FC<PreviewsHeaderProps> = ({ scrollToNewForm }) => {
   // In a real app, this would compare with historical data
   const projectsTrend = 12; // Placeholder value, should be calculated from historical data
   
-  const sendEmailToClient = async (project: ProjectItem) => {
-    try {
-      console.log(`Sending email to ${project.client_email} for project ${project.id}`);
-      
-      // Here you would implement the actual email sending logic
-      // For now, we'll just show a success message
-      toast({
-        title: "Email enviado",
-        description: `Email de notificação enviado para ${project.client_email}`,
-      });
-    } catch (error) {
-      console.error('Error sending email:', error);
-      toast({
-        title: "Erro ao enviar email",
-        description: "Não foi possível enviar o email. Tente novamente.",
-        variant: "destructive"
-      });
-    }
-  };
-
   const stats = [
     {
       title: "Prévias Ativas",

@@ -1,9 +1,11 @@
-
+// src/hooks/previews/usePreviewProject.ts
 import { useState, useEffect } from 'react';
 import { useToast } from '@/hooks/use-toast';
-import { supabase } from '@/integrations/supabase/client';
+import { useGoogleDriveAudio } from '@/hooks/audio/useGoogleDriveAudio';
+import { usePreviewProjects } from '@/hooks/admin/usePreviewProjects';
+import { supabase } from '@/lib/supabase';
 
-export interface MusicPreview {
+interface MusicPreview {
   id: string;
   title: string;
   description: string;
@@ -12,67 +14,80 @@ export interface MusicPreview {
   recommended?: boolean;
 }
 
-export interface PreviewProject {
-  client_name: string;
-  project_title: string;
+interface PreviewProject {
+  clientName: string;
+  projectTitle: string;
   status: 'waiting' | 'feedback' | 'approved';
   previews: MusicPreview[];
-  package_type?: string;
-  created_at?: string;
-  expires_at?: string;
-  use_google_drive?: boolean;
+  packageType?: string;
+  createdAt?: string;
+  expiresAt?: string;
 }
 
-export const usePreviewProject = (projectId?: string) => {
+export const usePreviewProject = (projectId: string | undefined) => {
   const { toast } = useToast();
   const [projectData, setProjectData] = useState<PreviewProject | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [accessTokenValid, setAccessTokenValid] = useState(true);
 
+  // Função de sincronização com Supabase
+  const syncProject = async (id: string) => {
+    try {
+      // 1. Tentar localStorage
+      const localData = localStorage.getItem(`project_${id}`);
+      if (localData) return JSON.parse(localData);
+
+      // 2. Buscar do Supabase
+      const { data, error } = await supabase
+        .from('projects')
+        .select('*')
+        .eq('id', id)
+        .single();
+
+      if (error) throw error;
+      
+      // 3. Atualizar localStorage
+      localStorage.setItem(`project_${id}`, JSON.stringify(data));
+      return data;
+
+    } catch (error) {
+      console.error('Erro de sincronização:', error);
+      return null;
+    }
+  };
+
   useEffect(() => {
+    if (!projectId) {
+      setIsLoading(false);
+      return;
+    }
+
     const loadProject = async () => {
-      if (!projectId) {
-        setIsLoading(false);
-        return;
-      }
-
+      setIsLoading(true);
       try {
-        const { data, error } = await supabase
-          .from('projects')
-          .select(`
-            client_name,
-            title,
-            status,
-            versions,
-            package_type,
-            created_at,
-            expires_at,
-            use_google_drive
-          `)
-          .eq('id', projectId)
-          .single();
-
-        if (error) throw error;
-
-        setProjectData({
-          client_name: data.client_name as string,
-          project_title: data.title as string,
-          status: data.status as 'waiting' | 'feedback' | 'approved',
-          previews: Array.isArray(data.versions) ? data.versions : [],
-          package_type: data.package_type as string,
-          created_at: data.created_at as string,
-          expires_at: data.expires_at as string,
-          use_google_drive: Boolean(data.use_google_drive)
-        });
-
+        const data = await syncProject(projectId);
+        
+        if (data) {
+          setProjectData({
+            clientName: data.client_name,
+            projectTitle: data.title,
+            status: data.status,
+            previews: data.versions.map((v: any) => ({
+              id: v.id,
+              title: v.name,
+              audioUrl: v.audio_url,
+              description: v.description
+            }))
+          });
+        } else {
+          setAccessTokenValid(false);
+        }
       } catch (error) {
-        console.error('Erro ao carregar projeto:', error);
         toast({
-          title: "Erro de carregamento",
-          description: "Não foi possível carregar o projeto",
+          title: "Erro de conexão",
+          description: "Falha ao carregar projeto",
           variant: "destructive"
         });
-        setAccessTokenValid(false);
       } finally {
         setIsLoading(false);
       }
@@ -81,26 +96,20 @@ export const usePreviewProject = (projectId?: string) => {
     loadProject();
   }, [projectId, toast]);
 
+  // Função corrigida com tipo Promise<boolean>
   const updateProjectStatus = async (
     newStatus: 'approved' | 'feedback', 
     comments: string
   ): Promise<boolean> => {
-    if (!projectId) return false;
-
     try {
       await supabase
         .from('projects')
-        .update({ 
-          status: newStatus,
-          feedback: comments,
-          updated_at: new Date().toISOString()
-        })
+        .update({ status: newStatus })
         .eq('id', projectId);
-
-      setProjectData(prev => prev ? {...prev, status: newStatus} : null);
+      
       return true;
     } catch (error) {
-      console.error('Erro ao atualizar status:', error);
+      console.error('Erro na atualização:', error);
       return false;
     }
   };
@@ -110,7 +119,6 @@ export const usePreviewProject = (projectId?: string) => {
     setProjectData, 
     isLoading,
     updateProjectStatus,
-    accessTokenValid,
-    originalProjectId: projectId || ''
+    accessTokenValid 
   };
 };

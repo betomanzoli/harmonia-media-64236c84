@@ -15,7 +15,7 @@ export const useProjectPreviewSync = () => {
         console.log('Prévia aprovada, atualizando projeto:', data);
         updateProject(data.projectId, { 
           status: 'approved',
-          last_activity_date: new Date().toLocaleDateString('pt-BR')
+          lastActivityDate: new Date().toLocaleDateString('pt-BR')
         });
       }
     );
@@ -27,7 +27,7 @@ export const useProjectPreviewSync = () => {
         updateProject(data.projectId, { 
           status: 'feedback',
           feedback: data.message,
-          last_activity_date: new Date().toLocaleDateString('pt-BR')
+          lastActivityDate: new Date().toLocaleDateString('pt-BR')
         });
       }
     );
@@ -53,7 +53,7 @@ export const useProjectPreviewSync = () => {
       // Atualiza o projeto com o novo status
       updateProject(projectId, { 
         status, 
-        last_activity_date: new Date().toLocaleDateString('pt-BR') 
+        lastActivityDate: new Date().toLocaleDateString('pt-BR') 
       });
       
       // Notifica sobre a mudança de status
