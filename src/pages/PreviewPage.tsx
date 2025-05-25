@@ -1,9 +1,9 @@
+
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
 import { useToast } from "@/hooks/use-toast";
-import { supabase } from '@/lib/supabase';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import PreviewFeedbackForm from '@/components/previews/PreviewFeedbackForm';
 import PreviewHeader from '@/components/previews/PreviewHeader';
@@ -22,46 +22,8 @@ const PreviewPage: React.FC = () => {
   const [selectedPreview, setSelectedPreview] = useState<string | null>(null);
   const [feedback, setFeedback] = useState('');
   const { projectData, setProjectData, isLoading } = usePreviewProject(projectId || '');
-
-  // Sistema de persistência híbrida
-  useEffect(() => {
-    const restoreState = () => {
-      try {
-        const savedState = localStorage.getItem(`previewState_${projectId}`);
-        if (savedState) {
-          const { selected, feedback: savedFeedback } = JSON.parse(savedState);
-          setSelectedPreview(selected);
-          setFeedback(savedFeedback);
-        }
-      } catch {
-        const cookieState = document.cookie
-          .split('; ')
-          .find(row => row.startsWith(`previewState_${projectId}=`))
-          ?.split('=')[1];
-        if (cookieState) {
-          const { selected, feedback: savedFeedback } = JSON.parse(decodeURIComponent(cookieState));
-          setSelectedPreview(selected);
-          setFeedback(savedFeedback);
-        }
-      }
-    };
-
-    if (projectId) restoreState();
-  }, [projectId]);
-
-  // Auto-save do estado
-  useEffect(() => {
-    if (projectId && (selectedPreview || feedback)) {
-      const state = JSON.stringify({ selected: selectedPreview, feedback });
-      try {
-        localStorage.setItem(`previewState_${projectId}`, state);
-      } catch {
-        document.cookie = `previewState_${projectId}=${encodeURIComponent(state)}; Path=/; Max-Age=604800; Secure; SameSite=None; Partitioned`;
-      }
-    }
-  }, [selectedPreview, feedback, projectId]);
   
-  const handleSubmitFeedback = async () => {
+  const handleSubmitFeedback = () => {
     if (!selectedPreview) {
       toast({
         title: "Selecione uma versão",
@@ -71,41 +33,22 @@ const PreviewPage: React.FC = () => {
       return;
     }
     
-    try {
-      // Salvar no Supabase
-      await supabase.rpc('append_feedback', {
-        project_id: projectId,
-        new_entry: {
-          feedback,
-          version: selectedPreview,
-          timestamp: new Date().toISOString(),
-          approved: false
-        }
-      });
-
-      toast({
-        title: "Feedback enviado!",
-        description: "Obrigado pelo seu feedback. Nossa equipe já está trabalhando nas modificações.",
-      });
-      
-      notificationService.notify('feedback_received', {
-        projectId: projectId || '',
-        clientName: projectData?.clientName || 'Cliente',
-        message: feedback
-      });
-      
-      setProjectData(prev => prev ? {...prev, status: 'feedback'} : null);
-    } catch (error) {
-      console.error('Erro ao enviar feedback:', error);
-      toast({
-        title: "Erro",
-        description: "Não foi possível enviar o feedback. Tente novamente.",
-        variant: "destructive"
-      });
-    }
+    toast({
+      title: "Feedback enviado!",
+      description: "Obrigado pelo seu feedback. Nossa equipe já está trabalhando nas modificações.",
+    });
+    
+    // Notify about feedback
+    notificationService.notify('feedback_received', {
+      projectId: projectId || '',
+      clientName: projectData?.clientName || 'Cliente',
+      message: feedback
+    });
+    
+    setProjectData(prev => prev ? {...prev, status: 'feedback'} : null);
   };
   
-  const handleApprove = async () => {
+  const handleApprove = () => {
     if (!selectedPreview) {
       toast({
         title: "Selecione uma versão",
@@ -115,38 +58,19 @@ const PreviewPage: React.FC = () => {
       return;
     }
     
-    try {
-      // Salvar aprovação no Supabase
-      await supabase.rpc('append_feedback', {
-        project_id: projectId,
-        new_entry: {
-          feedback: 'Música aprovada!',
-          version: selectedPreview,
-          timestamp: new Date().toISOString(),
-          approved: true
-        }
-      });
-
-      toast({
-        title: "Música aprovada!",
-        description: "Estamos felizes que você gostou! Vamos finalizar sua música e entregar em breve.",
-      });
-      
-      notificationService.notify('preview_approved', {
-        projectId: projectId || '',
-        clientName: projectData?.clientName || 'Cliente',
-        versionId: selectedPreview
-      });
-      
-      setProjectData(prev => prev ? {...prev, status: 'approved'} : null);
-    } catch (error) {
-      console.error('Erro ao aprovar:', error);
-      toast({
-        title: "Erro",
-        description: "Não foi possível salvar a aprovação. Tente novamente.",
-        variant: "destructive"
-      });
-    }
+    toast({
+      title: "Música aprovada!",
+      description: "Estamos felizes que você gostou! Vamos finalizar sua música e entregar em breve.",
+    });
+    
+    // Notify about approval
+    notificationService.notify('preview_approved', {
+      projectId: projectId || '',
+      clientName: projectData?.clientName || 'Cliente',
+      versionId: selectedPreview
+    });
+    
+    setProjectData(prev => prev ? {...prev, status: 'approved'} : null);
   };
   
   if (isLoading) {
