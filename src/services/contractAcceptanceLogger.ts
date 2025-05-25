@@ -14,9 +14,6 @@ interface ContractAcceptanceData {
 export const contractAcceptanceLogger = {
   async logAcceptance(data: ContractAcceptanceData) {
     try {
-      // First, ensure we have a contract_acceptance_logs table
-      // If not, we'll store in a generic logs table or create one
-      
       const logData = {
         client_name: data.client_name,
         client_email: data.client_email,
@@ -32,19 +29,13 @@ export const contractAcceptanceLogger = {
         }
       };
 
-      // Try to insert into contract_acceptance_logs table
-      // If it doesn't exist, we'll handle the error gracefully
       const { data: result, error } = await supabase
         .from('contract_acceptance_logs')
         .insert([logData])
         .select();
 
       if (error) {
-        // If table doesn't exist, log to console for now
         console.log('Contract acceptance logged (fallback):', logData);
-        
-        // Optionally, store in a different table or create a custom logging solution
-        // For now, we'll just return success to not break the flow
         return { 
           success: true, 
           data: { id: Date.now().toString(), ...logData },
@@ -55,8 +46,6 @@ export const contractAcceptanceLogger = {
       return { success: true, data: result?.[0] };
     } catch (error: any) {
       console.error('Error logging contract acceptance:', error);
-      
-      // Fallback logging to console
       console.log('Contract acceptance (fallback log):', data);
       
       return { 
@@ -83,6 +72,25 @@ export const contractAcceptanceLogger = {
       return { success: true, data: data || [] };
     } catch (error: any) {
       console.error('Error fetching acceptance history:', error);
+      return { success: false, data: [], error: error.message };
+    }
+  },
+
+  async getAllLogs() {
+    try {
+      const { data, error } = await supabase
+        .from('contract_acceptance_logs')
+        .select('*')
+        .order('accepted_at', { ascending: false });
+
+      if (error) {
+        console.warn('Could not fetch all logs:', error);
+        return { success: false, data: [], error: error.message };
+      }
+
+      return { success: true, data: data || [] };
+    } catch (error: any) {
+      console.error('Error fetching all logs:', error);
       return { success: false, data: [], error: error.message };
     }
   }

@@ -1,138 +1,137 @@
 
-import { useEffect, useState } from 'react';
+import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
-import { BriefingSection, BriefingField } from '@/types/briefing';
-import { useToast } from './use-toast';
 
-export function useBriefingData(packageType: 'essencial' | 'profissional' | 'premium' | 'qualification') {
+export interface BriefingSection {
+  id: string;
+  package_type: 'essencial' | 'profissional' | 'premium' | 'qualification';
+  section_type: string;
+  title: string;
+  description: string;
+  order_num: number;
+  is_active: boolean;
+  created_at: string;
+}
+
+export interface BriefingField {
+  id: string;
+  section_id: string;
+  field_key: string;
+  field_name: string;
+  field_type: 'select' | 'textarea' | 'text' | 'date' | 'checkbox' | 'file' | 'radio' | 'multi_select';
+  placeholder: string;
+  is_required: boolean;
+  order_num: number;
+  is_active: boolean;
+  options: any;
+  max_length: number;
+  created_at: string;
+}
+
+export const useBriefingData = () => {
   const [sections, setSections] = useState<BriefingSection[]>([]);
   const [fields, setFields] = useState<{ [sectionId: string]: BriefingField[] }>({});
   const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-  const { toast } = useToast();
 
-  useEffect(() => {
-    const fetchBriefingStructure = async () => {
-      setIsLoading(true);
-      setError(null);
-
-      try {
-        // Fetch sections for the selected package type
-        const { data: sectionsData, error: sectionsError } = await supabase
-          .from('briefing_sections')
-          .select('*')
-          .eq('package_type', packageType)
-          .eq('is_active', true)
-          .order('order_num');
-
-        if (sectionsError) {
-          throw sectionsError;
-        }
-
-        // Type-safe mapping for sections
-        const typedSections: BriefingSection[] = (sectionsData || []).map((item: any) => ({
-          id: item.id as string,
-          package_type: item.package_type as string,
-          section_type: item.section_type as string,
-          title: item.title as string,
-          description: item.description as string,
-          order_num: item.order_num as number,
-          is_active: item.is_active as boolean,
-          created_at: item.created_at as string
-        }));
-
-        setSections(typedSections);
-
-        // Fetch fields for each section
-        if (typedSections && typedSections.length > 0) {
-          const fieldsObj: { [sectionId: string]: BriefingField[] } = {};
-          
-          for (const section of typedSections) {
-            const { data: fieldsData, error: fieldsError } = await supabase
-              .from('briefing_fields')
-              .select('*')
-              .eq('section_id', section.id)
-              .eq('is_active', true)
-              .order('order_num');
-
-            if (fieldsError) {
-              console.error(`Error fetching fields for section ${section.id}:`, fieldsError);
-              continue;
-            }
-
-            // Type-safe mapping for fields
-            const typedFields: BriefingField[] = (fieldsData || []).map((item: any) => ({
-              id: item.id as string,
-              section_id: item.section_id as string,
-              field_key: item.field_key as string,
-              field_name: item.field_name as string,
-              field_type: item.field_type as string,
-              placeholder: item.placeholder as string,
-              is_required: item.is_required as boolean,
-              order_num: item.order_num as number,
-              is_active: item.is_active as boolean,
-              options: item.options,
-              max_length: item.max_length as number,
-              created_at: item.created_at as string
-            }));
-
-            fieldsObj[section.id] = typedFields;
-          }
-
-          setFields(fieldsObj);
-        }
-
-      } catch (err: any) {
-        console.error('Error fetching briefing structure:', err);
-        setError(err.message || 'Failed to load briefing form structure');
-        toast({
-          title: "Erro ao carregar formulário",
-          description: "Não foi possível carregar a estrutura do formulário. Por favor, tente novamente.",
-          variant: "destructive"
-        });
-      } finally {
-        setIsLoading(false);
-      }
-    };
-
-    fetchBriefingStructure();
-  }, [packageType, toast]);
-
-  const saveBriefingData = async (data: any, clientId?: string) => {
+  const loadSections = async () => {
     try {
-      const { data: savedData, error } = await supabase
-        .from('briefings')
-        .insert([
-          {
-            client_id: clientId || null,
-            package_type: packageType,
-            data: data,
-          }
-        ])
-        .select()
-        .single();
+      const { data, error } = await supabase
+        .from('briefing_sections')
+        .select('*')
+        .eq('is_active', true)
+        .order('order_num');
 
-      if (error) {
-        throw error;
-      }
+      if (error) throw error;
 
-      return { success: true, data: savedData };
-    } catch (err: any) {
-      console.error('Error saving briefing data:', err);
-      toast({
-        title: "Erro ao salvar dados",
-        description: err.message || "Não foi possível salvar os dados do briefing",
-        variant: "destructive"
-      });
-      return { success: false, error: err.message };
+      const mappedSections: BriefingSection[] = (data || []).map((item: any) => ({
+        id: String(item.id || ''),
+        package_type: ['essencial', 'profissional', 'premium', 'qualification'].includes(item.package_type) 
+          ? item.package_type as BriefingSection['package_type']
+          : 'essencial',
+        section_type: String(item.section_type || ''),
+        title: String(item.title || ''),
+        description: String(item.description || ''),
+        order_num: Number(item.order_num || 0),
+        is_active: Boolean(item.is_active),
+        created_at: String(item.created_at || new Date().toISOString())
+      }));
+
+      setSections(mappedSections);
+      return mappedSections;
+    } catch (error) {
+      console.error('Error loading briefing sections:', error);
+      setSections([]);
+      return [];
     }
   };
+
+  const loadFields = async (sections: BriefingSection[]) => {
+    try {
+      const sectionIds = sections.map(s => s.id);
+      if (sectionIds.length === 0) return;
+
+      const { data, error } = await supabase
+        .from('briefing_fields')
+        .select('*')
+        .in('section_id', sectionIds)
+        .eq('is_active', true)
+        .order('order_num');
+
+      if (error) throw error;
+
+      const mappedFields: BriefingField[] = (data || []).map((item: any) => ({
+        id: String(item.id || ''),
+        section_id: String(item.section_id || ''),
+        field_key: String(item.field_key || ''),
+        field_name: String(item.field_name || ''),
+        field_type: ['select', 'textarea', 'text', 'date', 'checkbox', 'file', 'radio', 'multi_select'].includes(item.field_type)
+          ? item.field_type as BriefingField['field_type']
+          : 'text',
+        placeholder: String(item.placeholder || ''),
+        is_required: Boolean(item.is_required),
+        order_num: Number(item.order_num || 0),
+        is_active: Boolean(item.is_active),
+        options: item.options || null,
+        max_length: Number(item.max_length || 0),
+        created_at: String(item.created_at || new Date().toISOString())
+      }));
+
+      const groupedFields = mappedFields.reduce((acc, field) => {
+        const sectionId = field.section_id;
+        if (!acc[sectionId]) {
+          acc[sectionId] = [];
+        }
+        acc[sectionId].push(field);
+        return acc;
+      }, {} as { [sectionId: string]: BriefingField[] });
+
+      setFields(groupedFields);
+    } catch (error) {
+      console.error('Error loading briefing fields:', error);
+      setFields({});
+    }
+  };
+
+  useEffect(() => {
+    const loadData = async () => {
+      setIsLoading(true);
+      const loadedSections = await loadSections();
+      await loadFields(loadedSections);
+      setIsLoading(false);
+    };
+
+    loadData();
+  }, []);
 
   return {
     sections,
     fields,
     isLoading,
-    error,
-    saveBriefingData
+    reload: async () => {
+      setIsLoading(true);
+      const loadedSections = await loadSections();
+      await loadFields(loadedSections);
+      setIsLoading(false);
+    }
   };
-}
+};

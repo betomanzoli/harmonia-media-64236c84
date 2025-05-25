@@ -1,120 +1,104 @@
-
-import { useState } from 'react';
+import { useState, useCallback } from 'react';
+import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
-import { useToast } from './use-toast';
 
-interface InitialBriefingResponse {
-  inspiration: string;
-  specialConnection: string;
-  emotion: string;
+interface BriefingStep {
+  question: string;
+  key: string;
+  type: 'text' | 'textarea' | 'email' | 'phone';
+  required: boolean;
 }
 
-export function useConversationalBriefing() {
-  const [briefingId, setBriefingId] = useState<string | null>(null);
-  const [currentStep, setCurrentStep] = useState(0);
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  const [initialResponses, setInitialResponses] = useState<InitialBriefingResponse>({
-    inspiration: '',
-    specialConnection: '',
-    emotion: '',
-  });
+const steps: BriefingStep[] = [
+  {
+    question: 'Qual é o seu nome?',
+    key: 'client_name',
+    type: 'text',
+    required: true
+  },
+  {
+    question: 'Qual é o seu email?',
+    key: 'client_email',
+    type: 'email',
+    required: true
+  },
+  {
+    question: 'Qual é o seu telefone?',
+    key: 'client_phone',
+    type: 'phone',
+    required: false
+  },
+  {
+    question: 'Descreva o seu projeto musical ideal:',
+    key: 'project_description',
+    type: 'textarea',
+    required: true
+  },
+  {
+    question: 'Compartilhe suas inspirações e referências musicais:',
+    key: 'musical_inspirations',
+    type: 'textarea',
+    required: false
+  }
+];
+
+export const useConversationalBriefing = () => {
   const { toast } = useToast();
+  const [currentStep, setCurrentStep] = useState(0);
+  const [answers, setAnswers] = useState<Record<string, any>>({});
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [selectedPackage, setSelectedPackage] = useState<'essencial' | 'profissional' | 'premium'>('essencial');
 
-  // Initial questions for pre-payment briefing - more targeted for music composition
-  const initialQuestions = [
-    "O que inspirou você a criar esta música? Conte um pouco sobre a história ou sentimento por trás dela.",
-    "Existe alguma pessoa ou momento especial relacionado a esta música? Quem ou o que você gostaria de homenagear?",
-    "Que emoção principal você gostaria que a música transmitisse ao ouvinte?"
-  ];
+  const handleAnswer = useCallback((questionKey: string, answer: any) => {
+    setAnswers(prev => ({
+      ...prev,
+      [questionKey]: answer
+    }));
+  }, []);
 
-  // Update response for a specific step
-  const updateResponse = (step: number, response: string) => {
-    setInitialResponses(prev => {
-      if (step === 0) return { ...prev, inspiration: response };
-      if (step === 1) return { ...prev, specialConnection: response };
-      if (step === 2) return { ...prev, emotion: response };
-      return prev;
-    });
-  };
-
-  // Move to next question
-  const nextStep = () => {
-    if (currentStep < initialQuestions.length) {
-      setCurrentStep(currentStep + 1);
+  const handleNext = useCallback(() => {
+    if (currentStep < steps.length - 1) {
+      setCurrentStep(prev => prev + 1);
     }
-  };
+  }, [currentStep, steps.length]);
 
-  // Go back to previous question
-  const prevStep = () => {
+  const handlePrevious = useCallback(() => {
     if (currentStep > 0) {
-      setCurrentStep(currentStep - 1);
+      setCurrentStep(prev => prev - 1);
     }
-  };
+  }, [currentStep]);
 
-  // Check if we're at the final initial step (showing packages)
-  const isInitialBriefingComplete = currentStep === initialQuestions.length;
-
-  // Save initial responses to Supabase
-  const saveInitialBriefing = async (packageType: 'essencial' | 'profissional' | 'premium') => {
+  const submitBriefing = async () => {
     setIsSubmitting(true);
     try {
-      // Prepare a structured format for the briefing data that will be used by n8n later
-      const formattedData = {
-        initialBriefing: true,
-        responses: initialResponses,
-        createdAt: new Date().toISOString(),
-        packageType,
-        questions: {
-          inspiration: initialQuestions[0],
-          specialConnection: initialQuestions[1],
-          emotion: initialQuestions[2]
-        },
-        briefingSummary: {
-          inspiration: initialResponses.inspiration?.substring(0, 100) || 'Não especificado',
-          connection: initialResponses.specialConnection?.substring(0, 100) || 'Nenhuma',
-          emotion: initialResponses.emotion || 'Não especificado'
-        },
-        status: {
-          conversationComplete: false,
-          needsRevision: false
-        },
-        workflow: {
-          currentStage: 'initial',
-          nextStage: 'payment',
-          completedSteps: ['initial_briefing']
-        }
+      const briefingData = {
+        package_type: selectedPackage,
+        client_name: String(answers.client_name || ''),
+        client_email: String(answers.client_email || ''),
+        client_phone: String(answers.client_phone || ''),
+        answers: answers,
+        status: 'completed',
+        created_at: new Date().toISOString()
       };
 
       const { data, error } = await supabase
         .from('briefings')
-        .insert([{
-          initial_responses: initialResponses,
-          payment_status: 'pending',
-          completion_status: 'initial',
-          package_type: packageType,
-          data: formattedData
-        }])
-        .select()
-        .single();
+        .insert([briefingData])
+        .select();
 
       if (error) throw error;
 
-      if (data) {
-        console.log("Briefing created successfully:", data.id);
-        setBriefingId(data.id as string);
-        
-        // Log for debugging n8n integration
-        console.log("Data prepared for n8n workflow:", formattedData);
-        
-        return data.id as string;
-      }
-
-      return null;
-    } catch (error: any) {
-      console.error("Error saving initial briefing:", error);
       toast({
-        title: "Erro ao salvar briefing",
-        description: error.message || "Não foi possível salvar suas respostas iniciais",
+        title: "Briefing enviado!",
+        description: "Seu briefing foi enviado com sucesso. Entraremos em contato em breve."
+      });
+
+      return data?.[0];
+    } catch (error) {
+      console.error('Error submitting briefing:', error);
+      toast({
+        title: "Erro ao enviar briefing",
+        description: "Ocorreu um erro ao enviar seu briefing. Tente novamente.",
         variant: "destructive"
       });
       return null;
@@ -123,16 +107,29 @@ export function useConversationalBriefing() {
     }
   };
 
-  return {
-    briefingId,
-    currentStep,
-    initialQuestions,
-    initialResponses,
-    isSubmitting,
-    isInitialBriefingComplete,
-    updateResponse,
-    nextStep,
-    prevStep,
-    saveInitialBriefing,
+  const getCurrentStepData = () => {
+    if (currentStep >= 0 && currentStep < steps.length) {
+      return steps[currentStep];
+    }
+    return null;
   };
-}
+
+  const isLastStep = currentStep === steps.length - 1;
+  const isFirstStep = currentStep === 0;
+
+  return {
+    currentStep,
+    answers,
+    isSubmitting,
+    selectedPackage,
+    setSelectedPackage,
+    handleAnswer,
+    handleNext,
+    handlePrevious,
+    submitBriefing,
+    getCurrentStepData,
+    isLastStep,
+    isFirstStep,
+    totalSteps: steps.length
+  };
+};
