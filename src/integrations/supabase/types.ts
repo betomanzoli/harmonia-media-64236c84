@@ -279,6 +279,27 @@ export type Database = {
         }
         Relationships: []
       }
+      feedback: {
+        Row: {
+          content: string | null
+          created_at: string | null
+          id: string
+          project_id: string | null
+        }
+        Insert: {
+          content?: string | null
+          created_at?: string | null
+          id?: string
+          project_id?: string | null
+        }
+        Update: {
+          content?: string | null
+          created_at?: string | null
+          id?: string
+          project_id?: string | null
+        }
+        Relationships: []
+      }
       feedbacks: {
         Row: {
           comments: string | null
