@@ -44,30 +44,15 @@ export const usePreviewProjects = () => {
     setIsLoading(true);
     
     try {
-      const { data: supabaseProjects, error } = await supabase
+      // First fetch projects
+      const { data: supabaseProjects, error: projectsError } = await supabase
         .from('projects')
-        .select(`
-          *,
-          project_versions (
-            version_id,
-            name,
-            description,
-            file_id,
-            audio_url,
-            recommended,
-            created_at
-          ),
-          project_history (
-            action,
-            created_at,
-            details
-          )
-        `)
+        .select('*')
         .order('created_at', { ascending: false });
 
-      if (error) {
-        console.error('Error loading projects from Supabase:', error);
-        throw error;
+      if (projectsError) {
+        console.error('Error loading projects from Supabase:', projectsError);
+        throw projectsError;
       }
 
       if (!supabaseProjects || supabaseProjects.length === 0) {
@@ -76,9 +61,33 @@ export const usePreviewProjects = () => {
         return [];
       }
 
+      // Fetch all project versions and history separately
+      const projectIds = supabaseProjects.map(p => p.id);
+      
+      const { data: allVersions, error: versionsError } = await supabase
+        .from('project_versions')
+        .select('*')
+        .in('project_id', projectIds);
+
+      const { data: allHistory, error: historyError } = await supabase
+        .from('project_history')
+        .select('*')
+        .in('project_id', projectIds);
+
+      if (versionsError) {
+        console.error('Error fetching project versions:', versionsError);
+      }
+
+      if (historyError) {
+        console.error('Error fetching project history:', historyError);
+      }
+
       // Transform Supabase data to ProjectItem format
       const transformedProjects: ProjectItem[] = supabaseProjects.map(project => {
-        const versionsList: VersionItem[] = project.project_versions?.map(version => ({
+        const projectVersions = allVersions?.filter(v => v.project_id === project.id) || [];
+        const projectHistory = allHistory?.filter(h => h.project_id === project.id) || [];
+
+        const versionsList: VersionItem[] = projectVersions.map(version => ({
           id: version.version_id,
           name: version.name,
           description: version.description,
@@ -86,13 +95,13 @@ export const usePreviewProjects = () => {
           audioUrl: version.audio_url,
           recommended: version.recommended,
           dateAdded: version.created_at
-        })) || [];
+        }));
 
-        const history = project.project_history?.map(h => ({
+        const history = projectHistory.map(h => ({
           action: h.action,
           timestamp: new Date(h.created_at).toLocaleString('pt-BR'),
           data: h.details
-        })) || [];
+        }));
 
         return {
           id: project.id,

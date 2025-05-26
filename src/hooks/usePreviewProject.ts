@@ -38,25 +38,15 @@ export const usePreviewProject = (projectId: string | undefined) => {
       console.log("[usePreviewProject] Fetching project from Supabase:", projectId);
       
       try {
-        // Fetch project from Supabase projects table
-        const { data: project, error } = await supabase
+        // First fetch the project
+        const { data: project, error: projectError } = await supabase
           .from('projects')
-          .select(`
-            *,
-            project_versions (
-              version_id,
-              name,
-              description,
-              file_id,
-              audio_url,
-              recommended
-            )
-          `)
+          .select('*')
           .eq('id', projectId)
           .single();
 
-        if (error) {
-          console.error('Error fetching project:', error);
+        if (projectError || !project) {
+          console.error('Error fetching project:', projectError);
           toast({
             title: "Erro ao carregar projeto",
             description: "Não foi possível carregar os dados do projeto.",
@@ -66,14 +56,19 @@ export const usePreviewProject = (projectId: string | undefined) => {
           return;
         }
 
-        if (!project) {
-          console.log('Project not found in Supabase');
-          setProjectData(null);
-          return;
+        // Then fetch the project versions separately
+        const { data: versions, error: versionsError } = await supabase
+          .from('project_versions')
+          .select('*')
+          .eq('project_id', projectId);
+
+        if (versionsError) {
+          console.error('Error fetching project versions:', versionsError);
+          // Continue without versions if there's an error
         }
 
         // Transform project versions to previews format
-        const previews: MusicPreview[] = project.project_versions?.map(version => ({
+        const previews: MusicPreview[] = versions?.map(version => ({
           id: version.version_id,
           title: version.name,
           description: version.description || '',
