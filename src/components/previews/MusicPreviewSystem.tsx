@@ -15,7 +15,7 @@ interface MusicPreviewSystemProps {
 }
 
 const MusicPreviewSystem: React.FC<MusicPreviewSystemProps> = ({ projectId }) => {
-  const { projectData, isLoading, updateProjectStatus } = usePreviewProject(projectId);
+  const { projectData, isLoading, updateProjectStatus, submitFeedback } = usePreviewProject(projectId);
   const [selectedVersion, setSelectedVersion] = useState<string | null>(null);
   const [feedback, setFeedback] = useState('');
   const [submitting, setSubmitting] = useState(false);
@@ -75,7 +75,7 @@ const MusicPreviewSystem: React.FC<MusicPreviewSystemProps> = ({ projectId }) =>
     setSelectedVersion(id);
   };
   
-  const handleFeedbackSubmit = () => {
+  const handleFeedbackSubmit = async () => {
     if (!selectedVersion) {
       toast({
         title: 'Versão não selecionada',
@@ -96,13 +96,14 @@ const MusicPreviewSystem: React.FC<MusicPreviewSystemProps> = ({ projectId }) =>
     
     setSubmitting(true);
     
-    // Update project status
-    const success = updateProjectStatus('feedback', feedback);
-    
-    setTimeout(() => {
-      setSubmitting(false);
+    try {
+      // Submit feedback to database
+      const success = await submitFeedback(feedback);
       
       if (success) {
+        // Update project status
+        await updateProjectStatus('feedback', feedback);
+        
         toast({
           title: 'Feedback enviado',
           description: 'Seu feedback foi enviado com sucesso.',
@@ -116,10 +117,19 @@ const MusicPreviewSystem: React.FC<MusicPreviewSystemProps> = ({ projectId }) =>
           variant: 'destructive'
         });
       }
-    }, 1000); // Simulating API call delay
+    } catch (error) {
+      console.error('Error submitting feedback:', error);
+      toast({
+        title: 'Erro ao enviar feedback',
+        description: 'Não foi possível enviar seu feedback. Tente novamente mais tarde.',
+        variant: 'destructive'
+      });
+    } finally {
+      setSubmitting(false);
+    }
   };
   
-  const handleApproveVersion = () => {
+  const handleApproveVersion = async () => {
     if (!selectedVersion) {
       toast({
         title: 'Versão não selecionada',
@@ -131,11 +141,9 @@ const MusicPreviewSystem: React.FC<MusicPreviewSystemProps> = ({ projectId }) =>
     
     setSubmitting(true);
     
-    // Update project status
-    const success = updateProjectStatus('approved', feedback || 'Cliente aprovou a versão sem comentários adicionais.');
-    
-    setTimeout(() => {
-      setSubmitting(false);
+    try {
+      // Update project status
+      const success = await updateProjectStatus('approved', feedback || 'Cliente aprovou a versão sem comentários adicionais.');
       
       if (success) {
         toast({
@@ -151,7 +159,16 @@ const MusicPreviewSystem: React.FC<MusicPreviewSystemProps> = ({ projectId }) =>
           variant: 'destructive'
         });
       }
-    }, 1000); // Simulating API call delay
+    } catch (error) {
+      console.error('Error approving version:', error);
+      toast({
+        title: 'Erro ao aprovar versão',
+        description: 'Não foi possível registrar sua aprovação. Tente novamente mais tarde.',
+        variant: 'destructive'
+      });
+    } finally {
+      setSubmitting(false);
+    }
   };
   
   if (isLoading) {
@@ -257,7 +274,7 @@ const MusicPreviewSystem: React.FC<MusicPreviewSystemProps> = ({ projectId }) =>
                       disabled={isApproved || submitting || !selectedVersion || !feedback.trim()}
                     >
                       <MessageSquare className="h-4 w-4 mr-2" />
-                      Enviar feedback
+                      {submitting ? 'Enviando...' : 'Enviar feedback'}
                     </Button>
                   </div>
                 </div>

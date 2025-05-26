@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
@@ -158,12 +157,41 @@ export const usePreviewProject = (projectId: string | undefined) => {
       return false;
     }
   };
+
+  // Submit feedback function
+  const submitFeedback = async (content: string) => {
+    if (!projectId || !content.trim()) return false;
+
+    console.log(`Submitting feedback for project ${projectId}`);
+    
+    try {
+      const { error } = await supabase
+        .from('feedback')
+        .insert({
+          project_id: projectId,
+          content: content.trim(),
+          created_at: new Date().toISOString()
+        });
+
+      if (error) {
+        console.error('Error submitting feedback:', error);
+        return false;
+      }
+
+      console.log('Feedback submitted successfully');
+      return true;
+    } catch (error) {
+      console.error('Error submitting feedback:', error);
+      return false;
+    }
+  };
   
   return { 
     projectData, 
     setProjectData, 
     isLoading, 
-    updateProjectStatus
+    updateProjectStatus,
+    submitFeedback
   };
 };
 
