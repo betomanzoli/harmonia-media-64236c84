@@ -89,35 +89,12 @@ const ProjectDetails: React.FC = () => {
           hasLoadedRef.current = true;
         } else {
           console.error(`Project with ID ${projectId} not found`);
-          
-          // Initialize fallback for demo project
-          if (projectId === 'P0001') {
-            console.log("Initializing demo project for P0001");
-            const demoProject = {
-              id: 'P0001',
-              clientName: 'Humberto Manzoli',
-              clientEmail: 'cliente@exemplo.com',
-              packageType: 'Essencial',
-              createdAt: new Date().toLocaleDateString('pt-BR'),
-              status: 'waiting',
-              versions: 0,
-              previewUrl: `${window.location.origin}/preview/P0001`,
-              expirationDate: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toLocaleDateString('pt-BR'),
-              lastActivityDate: new Date().toLocaleDateString('pt-BR'),
-              versionsList: []
-            };
-            
-            setProject(demoProject);
-            setLoadFailed(false);
-            hasLoadedRef.current = true;
-          } else {
-            setLoadFailed(true);
-            toast({
-              title: "Projeto não encontrado",
-              description: `Não foi possível encontrar o projeto com ID: ${projectId}`,
-              variant: "destructive"
-            });
-          }
+          setLoadFailed(true);
+          toast({
+            title: "Projeto não encontrado",
+            description: `Não foi possível encontrar o projeto com ID: ${projectId}`,
+            variant: "destructive"
+          });
         }
       }
     } catch (error) {

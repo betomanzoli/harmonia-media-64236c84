@@ -1,4 +1,3 @@
-
 import { useState, useCallback, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 
@@ -61,6 +60,13 @@ export const usePreviewProjects = () => {
         return [];
       }
 
+      console.log('Raw projects from Supabase:', supabaseProjects.map(p => ({
+        id: p.id,
+        client_name: p.client_name,
+        title: p.title,
+        status: p.status
+      })));
+
       // Fetch all project versions and history separately
       const projectIds = supabaseProjects.map(p => p.id);
       
@@ -82,10 +88,13 @@ export const usePreviewProjects = () => {
         console.error('Error fetching project history:', historyError);
       }
 
+      console.log('Fetched versions:', allVersions || []);
+      console.log('Fetched history:', allHistory || []);
+
       // Transform Supabase data to ProjectItem format
       const transformedProjects: ProjectItem[] = supabaseProjects.map(project => {
-        const projectVersions = allVersions?.filter(v => v.project_id === project.id) || [];
-        const projectHistory = allHistory?.filter(h => h.project_id === project.id) || [];
+        const projectVersions = (allVersions || []).filter(v => v.project_id === project.id);
+        const projectHistory = (allHistory || []).filter(h => h.project_id === project.id);
 
         const versionsList: VersionItem[] = projectVersions.map(version => ({
           id: version.version_id,
@@ -103,7 +112,7 @@ export const usePreviewProjects = () => {
           data: h.details
         }));
 
-        return {
+        const transformedProject = {
           id: project.id,
           clientName: project.client_name || 'Cliente',
           clientEmail: project.client_email || '',
@@ -119,9 +128,18 @@ export const usePreviewProjects = () => {
           history,
           feedback: project.feedback
         };
+
+        console.log(`Transformed project ${project.id}:`, {
+          originalClientName: project.client_name,
+          transformedClientName: transformedProject.clientName,
+          originalTitle: project.title,
+          status: transformedProject.status
+        });
+
+        return transformedProject;
       });
 
-      console.log("Projects loaded from Supabase:", transformedProjects.length);
+      console.log("Final transformed projects:", transformedProjects.length);
       setProjects(transformedProjects);
       return transformedProjects;
     } catch (error) {
@@ -146,7 +164,11 @@ export const usePreviewProjects = () => {
     
     const project = projects.find(p => p.id === id);
     if (project) {
-      console.log("Project found:", project);
+      console.log("Project found:", {
+        id: project.id,
+        clientName: project.clientName,
+        status: project.status
+      });
       return project;
     }
     
