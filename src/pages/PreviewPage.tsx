@@ -26,25 +26,6 @@ const PreviewPage: React.FC = () => {
   const [feedback, setFeedback] = useState('');
   const { projectData, setProjectData, isLoading } = usePreviewProject(projectId || '');
   
-  // Clean up any ethereum/MetaMask references that might interfere
-  useEffect(() => {
-    // Remove any ethereum or MetaMask window object references to prevent TypeErrors
-    if (typeof window !== 'undefined') {
-      try {
-        // Safely remove ethereum references if they exist
-        if ('ethereum' in window) {
-          delete (window as any).ethereum;
-        }
-        if ('MetaMask' in window) {
-          delete (window as any).MetaMask;
-        }
-      } catch (error) {
-        // Silently handle any errors during cleanup
-        console.log('Cleaned up ethereum references');
-      }
-    }
-  }, []);
-  
   const handleSubmitFeedback = () => {
     if (!selectedPreview) {
       toast({
