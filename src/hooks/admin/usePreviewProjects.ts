@@ -1,3 +1,4 @@
+
 import { useState, useCallback, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 
@@ -176,6 +177,139 @@ export const usePreviewProjects = () => {
     return null;
   }, [projects]);
   
+  // Add a new version to a project
+  const addVersionToProject = useCallback(async (projectId: string, version: VersionItem) => {
+    if (!projectId) return false;
+    
+    console.log(`Adding version to project ${projectId}:`, version);
+    
+    try {
+      // Insert version into project_versions table
+      const { error: versionError } = await supabase
+        .from('project_versions')
+        .insert({
+          project_id: projectId,
+          version_id: version.id,
+          name: version.name,
+          description: version.description || null,
+          file_id: version.fileId || null,
+          audio_url: version.audioUrl || version.url || null,
+          recommended: version.recommended || false
+        });
+
+      if (versionError) {
+        console.error('Error adding version:', versionError);
+        return false;
+      }
+
+      // Add history entry
+      const historyAction = version.final 
+        ? `Versão final adicionada: ${version.name}` 
+        : `Nova versão adicionada: ${version.name}`;
+        
+      const { error: historyError } = await supabase
+        .from('project_history')
+        .insert({
+          project_id: projectId,
+          action: historyAction,
+          details: {
+            message: version.description || 'Sem descrição',
+            version_id: version.id,
+            version_name: version.name
+          }
+        });
+
+      if (historyError) {
+        console.error('Error adding history entry:', historyError);
+      }
+
+      // Update project updated_at timestamp
+      const { error: updateError } = await supabase
+        .from('projects')
+        .update({ updated_at: new Date().toISOString() })
+        .eq('id', projectId);
+
+      if (updateError) {
+        console.error('Error updating project timestamp:', updateError);
+      }
+
+      // Refresh projects list
+      await loadProjects();
+      
+      console.log("Version added successfully");
+      return true;
+    } catch (error) {
+      console.error('Error adding version to project:', error);
+      return false;
+    }
+  }, [loadProjects]);
+
+  // Delete a version from a project
+  const deleteVersionFromProject = useCallback(async (projectId: string, versionId: string) => {
+    if (!projectId || !versionId) return false;
+    
+    console.log(`Deleting version ${versionId} from project ${projectId}`);
+    
+    try {
+      // Get version details before deletion for history
+      const { data: versionData } = await supabase
+        .from('project_versions')
+        .select('name')
+        .eq('project_id', projectId)
+        .eq('version_id', versionId)
+        .single();
+
+      // Delete version from project_versions table
+      const { error: deleteError } = await supabase
+        .from('project_versions')
+        .delete()
+        .eq('project_id', projectId)
+        .eq('version_id', versionId);
+
+      if (deleteError) {
+        console.error('Error deleting version:', deleteError);
+        return false;
+      }
+
+      // Add history entry
+      const versionName = versionData?.name || 'Versão desconhecida';
+      const { error: historyError } = await supabase
+        .from('project_history')
+        .insert({
+          project_id: projectId,
+          action: `Versão removida: ${versionName}`,
+          details: {
+            message: `A versão "${versionName}" foi removida do projeto.`,
+            version_id: versionId,
+            version_name: versionName
+          }
+        });
+
+      if (historyError) {
+        console.error('Error adding history entry:', historyError);
+      }
+
+      // Update project updated_at timestamp
+      const { error: updateError } = await supabase
+        .from('projects')
+        .update({ updated_at: new Date().toISOString() })
+        .eq('id', projectId);
+
+      if (updateError) {
+        console.error('Error updating project timestamp:', updateError);
+      }
+
+      // Refresh projects list
+      await loadProjects();
+      
+      console.log("Version deleted successfully");
+      return true;
+    } catch (error) {
+      console.error('Error deleting version from project:', error);
+      return false;
+    }
+  }, [loadProjects]);
+  
   // Add a new project
   const addProject = useCallback(async (project: Omit<ProjectItem, 'id'> & { id?: string }) => {
     try {
@@ -251,12 +385,6 @@ export const usePreviewProjects = () => {
         }
       }
 
-      // Handle version list updates
-      if (updates.versionsList) {
-        // This would require more complex logic to sync versions
-        // For now, we'll just refresh the projects list
-      }
-
       // Refresh projects list
       await loadProjects();
       
@@ -300,7 +428,9 @@ export const usePreviewProjects = () => {
     getProjectById,
     addProject,
     updateProject,
-    deleteProject
+    deleteProject,
+    addVersionToProject,
+    deleteVersionFromProject
   };
 };
 

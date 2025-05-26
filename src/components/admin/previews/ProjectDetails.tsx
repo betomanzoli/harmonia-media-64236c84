@@ -16,7 +16,7 @@ import { emailService } from '@/lib/supabase';
 const ProjectDetails: React.FC = () => {
   const { projectId } = useParams<{ projectId: string }>();
   const navigate = useNavigate();
-  const { getProjectById, updateProject, loadProjects } = usePreviewProjects();
+  const { getProjectById, updateProject, loadProjects, addVersionToProject, deleteVersionFromProject } = usePreviewProjects();
   const { toast } = useToast();
   
   const [project, setProject] = useState<any>(null);
@@ -193,12 +193,12 @@ const ProjectDetails: React.FC = () => {
   
   const isApproved = project.status === 'approved';
   
-  const handleAddVersion = (newVersion: VersionItem) => {
+  const handleAddVersion = async (newVersion: VersionItem) => {
     if (!projectId) return;
     
-    const currentVersions = project.versionsList || [];
+    console.log("Adding new version:", newVersion);
     
-    // Se a nova versão for marcada como final, adiciona um indicador
+    // If the new version is marked as final, add an indicator
     const isFinalVersion = newVersion.final === true;
     const versionTitle = isFinalVersion ? `FINAL - ${newVersion.name}` : newVersion.name;
     
@@ -207,59 +207,30 @@ const ProjectDetails: React.FC = () => {
       name: versionTitle
     };
     
-    // If the new version is marked as recommended, remove recommended from others
-    let updatedVersions = currentVersions;
-    if (newVersion.recommended) {
-      updatedVersions = currentVersions.map(v => ({
-        ...v,
-        recommended: false
-      }));
-    }
+    // Use the new addVersionToProject function
+    const success = await addVersionToProject(projectId, versionToAdd);
     
-    // Add the new version
-    updatedVersions = [...updatedVersions, versionToAdd];
-    
-    // Update history
-    const historyAction = isFinalVersion 
-      ? `Versão final adicionada: ${versionTitle}` 
-      : `Nova versão adicionada: ${versionTitle}`;
+    if (success) {
+      toast({
+        title: isFinalVersion ? "Versão final adicionada" : "Versão adicionada",
+        description: `${versionTitle} foi adicionada ao projeto com sucesso.`
+      });
       
-    const historyEntry = {
-      action: historyAction,
-      timestamp: new Date().toLocaleString('pt-BR'),
-      data: {
-        message: newVersion.description || 'Sem descrição'
-      }
-    };
-    
-    const history = [...(project.history || []), historyEntry];
-    
-    // Update project
-    updateProject(projectId, {
-      versionsList: updatedVersions,
-      versions: updatedVersions.length,
-      history,
-      lastActivityDate: new Date().toLocaleDateString('pt-BR')
-    });
-    
-    // Update local state
-    setProject({
-      ...project,
-      versionsList: updatedVersions,
-      versions: updatedVersions.length,
-      history,
-      lastActivityDate: new Date().toLocaleDateString('pt-BR')
-    });
-    
-    toast({
-      title: isFinalVersion ? "Versão final adicionada" : "Versão adicionada",
-      description: `${versionTitle} foi adicionada ao projeto com sucesso.`
-    });
+      // Reload project data to reflect changes
+      hasLoadedRef.current = false;
+      await loadProjectData(true);
+    } else {
+      toast({
+        title: "Erro ao adicionar versão",
+        description: "Não foi possível adicionar a versão. Tente novamente.",
+        variant: "destructive"
+      });
+    }
     
     setIsAddVersionOpen(false);
   };
   
-  const handleExtendDeadline = () => {
+  const handleExtendDeadline = async () => {
     if (!projectId) return;
     
     // Calculate new expiration date (current + 7 days)
@@ -270,82 +241,63 @@ const ProjectDetails: React.FC = () => {
     currentDate.setDate(currentDate.getDate() + 7);
     const newExpirationDate = currentDate.toLocaleDateString('pt-BR');
     
-    // Add history entry
-    const historyEntry = {
-      action: "Prazo estendido",
-      timestamp: new Date().toLocaleString('pt-BR'),
-      data: {
-        message: `Prazo estendido por +7 dias. Nova data de expiração: ${newExpirationDate}`
-      }
-    };
-    
-    const history = [...(project.history || []), historyEntry];
-    
-    // Update project
-    updateProject(projectId, {
+    // Update project with new deadline and add history
+    const success = await updateProject(projectId, {
       expirationDate: newExpirationDate,
-      history,
+      history: [{
+        action: "Prazo estendido",
+        timestamp: new Date().toLocaleString('pt-BR'),
+        data: {
+          message: `Prazo estendido por +7 dias. Nova data de expiração: ${newExpirationDate}`
+        }
+      }],
       lastActivityDate: new Date().toLocaleDateString('pt-BR')
     });
     
-    // Update local state
-    setProject({
-      ...project,
-      expirationDate: newExpirationDate,
-      history,
-      lastActivityDate: new Date().toLocaleDateString('pt-BR')
-    });
-    
-    toast({
-      title: "Prazo estendido",
-      description: `O prazo foi estendido por +7 dias. Nova data: ${newExpirationDate}`
-    });
+    if (success) {
+      toast({
+        title: "Prazo estendido",
+        description: `O prazo foi estendido por +7 dias. Nova data: ${newExpirationDate}`
+      });
+      
+      // Reload project data to reflect changes
+      hasLoadedRef.current = false;
+      await loadProjectData(true);
+    } else {
+      toast({
+        title: "Erro ao estender prazo",
+        description: "Não foi possível estender o prazo. Tente novamente.",
+        variant: "destructive"
+      });
+    }
     
     setIsExtendDeadlineOpen(false);
   };
 
-  const handleDeleteVersion = (versionId: string) => {
+  const handleDeleteVersion = async (versionId: string) => {
     if (!projectId) return;
     
-    const currentVersions = project.versionsList || [];
-    const versionToDelete = currentVersions.find(v => v.id === versionId);
+    console.log("Deleting version:", versionId);
     
-    if (!versionToDelete) return;
+    // Use the new deleteVersionFromProject function
+    const success = await deleteVersionFromProject(projectId, versionId);
     
-    const updatedVersions = currentVersions.filter(v => v.id !== versionId);
-    
-    // Add history entry
-    const historyEntry = {
-      action: `Versão removida: ${versionToDelete.name}`,
-      timestamp: new Date().toLocaleString('pt-BR'),
-      data: {
-        message: `A versão "${versionToDelete.name}" foi removida do projeto.`
-      }
-    };
-    
-    const history = [...(project.history || []), historyEntry];
-    
-    // Update project
-    updateProject(projectId, {
-      versionsList: updatedVersions,
-      versions: updatedVersions.length,
-      history,
-      lastActivityDate: new Date().toLocaleDateString('pt-BR')
-    });
-    
-    // Update local state
-    setProject({
-      ...project,
-      versionsList: updatedVersions,
-      versions: updatedVersions.length,
-      history,
-      lastActivityDate: new Date().toLocaleDateString('pt-BR')
-    });
-    
-    toast({
-      title: "Versão removida",
-      description: `${versionToDelete.name} foi removida com sucesso.`
-    });
+    if (success) {
+      toast({
+        title: "Versão removida",
+        description: "A versão foi removida com sucesso."
+      });
+      
+      // Reload project data to reflect changes
+      hasLoadedRef.current = false;
+      await loadProjectData(true);
+    } else {
+      toast({
+        title: "Erro ao remover versão",
+        description: "Não foi possível remover a versão. Tente novamente.",
+        variant: "destructive"
+      });
+    }
   };
   
   const handleCopyLink = () => {
