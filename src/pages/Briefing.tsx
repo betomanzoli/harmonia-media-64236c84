@@ -13,46 +13,56 @@ const Briefing: React.FC = () => {
 
   const packages = [
     {
-      name: 'Essencial',
-      price: 'R$ 149',
-      description: 'Ideal para uso pessoal e presentes',
+      name: 'Pacote Essencial',
+      price: 'R$ 219,00',
+      description: 'Ideal para presentes emocionais rápidos.',
       features: [
-        'Música personalizada',
-        'Letra original',
-        'Áudio em alta qualidade',
+        'Composição musical única',
+        'Uma revisão gratuita',
+        'Uso exclusivamente pessoal',
+        'Entrega digital em até 7 dias',
+        'Suporte por e-mail',
+        'Arquivo digital em alta qualidade (MP3/WAV)',
         'Certificado digital de autoria'
       ],
-      formUrl: 'https://forms.cloud.microsoft/r/0wi3ArSLXv',
+      formUrl: 'https://forms.cloud.microsoft.com/r/0wi3ArSLXv',
       color: 'border-blue-200 hover:border-blue-300'
     },
     {
-      name: 'Profissional',
-      price: 'R$ 349',
-      description: 'Para criadores de conteúdo e pequenos negócios',
+      name: 'Pacote Profissional',
+      price: 'R$ 479,00',
+      description: 'Perfeito para criadores de conteúdo e pequenos negócios.',
       features: [
-        'Tudo do Essencial',
-        'Mais opções de customização',
-        'Até 2 revisões incluídas',
-        'Stems separados disponíveis',
-        'Uso comercial limitado'
+        'Composição musical personalizada',
+        'Até três revisões gratuitas',
+        'Licença para uso em conteúdo digital próprio',
+        'Três versões para escolha',
+        'Entrega em até 5 dias',
+        'Suporte prioritário',
+        'Masterização básica IA',
+        'Stems separados (vocais + instrumentação)'
       ],
-      formUrl: 'https://forms.cloud.microsoft/r/vvd6cq6i2a',
+      formUrl: 'https://forms.cloud.microsoft.com/r/vvd6cq6i2a',
       color: 'border-green-200 hover:border-green-300',
       popular: true
     },
     {
-      name: 'Premium',
-      price: 'R$ 799',
-      description: 'Para empresas e projetos corporativos',
+      name: 'Pacote Premium',
+      price: 'R$ 969,00',
+      description: 'Melhor opção para empresas e projetos corporativos.',
       features: [
-        'Tudo do Profissional',
-        'Cessão total de direitos',
+        'Composição totalmente personalizada',
+        'Revisões ilimitadas (até aprovação)',
+        'Cessão total dos direitos autorais',
+        'Cinco versões para escolha',
         'Registro na Biblioteca Nacional',
-        'Documentação completa',
-        'Suporte prioritário',
-        'Uso comercial irrestrito'
+        'Certificado blockchain',
+        'Consultoria de 30 minutos',
+        'Entrega prioritária',
+        'Suporte VIP por WhatsApp',
+        'Partitura em formato MusicXML'
       ],
-      formUrl: 'https://forms.cloud.microsoft/r/fd0AG5N3it',
+      formUrl: 'https://forms.cloud.microsoft.com/r/fd0AG5N3it',
       color: 'border-purple-200 hover:border-purple-300'
     }
   ];
@@ -95,7 +105,7 @@ const Briefing: React.FC = () => {
                 {pkg.popular && (
                   <div className="absolute -top-3 left-1/2 transform -translate-x-1/2">
                     <span className="bg-harmonia-green text-white px-4 py-1 rounded-full text-sm font-medium">
-                      Mais Popular
+                      MAIS POPULAR
                     </span>
                   </div>
                 )}
@@ -141,7 +151,7 @@ const Briefing: React.FC = () => {
             </Button>
             <Button 
               variant="outline"
-              onClick={() => window.open('https://wa.me/5511999999999', '_blank')}
+              onClick={() => window.open('https://wa.me/5511920585072', '_blank')}
             >
               Falar no WhatsApp
             </Button>
