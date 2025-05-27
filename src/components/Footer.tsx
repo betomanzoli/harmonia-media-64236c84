@@ -1,7 +1,7 @@
 
 import React from 'react';
 import Logo from './Logo';
-import { MessageCircle, Mail, Shield, ChevronUp, Clock, FileCheck, Music, Package, DollarSign } from 'lucide-react';
+import { MessageCircle, Mail, Shield, ChevronUp, Clock, FileCheck, Music, Package, DollarSign, HelpCircle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useNavigate } from 'react-router-dom';
 import { siteConfig } from '@/config/site';
@@ -87,6 +87,14 @@ const Footer: React.FC = () => {
                   className="text-gray-400 hover:text-harmonia-green transition-colors flex items-center gap-1"
                 >
                   <Music className="w-4 h-4" /> Portfólio
+                </NavLink>
+              </li>
+              <li>
+                <NavLink 
+                  href="/faq" 
+                  className="text-gray-400 hover:text-harmonia-green transition-colors flex items-center gap-1"
+                >
+                  <HelpCircle className="w-4 h-4" /> FAQ - Perguntas Frequentes
                 </NavLink>
               </li>
             </ul>

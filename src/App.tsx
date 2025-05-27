@@ -35,6 +35,7 @@ import BriefingSuccess from './pages/BriefingSuccess';
 import BriefingComplete from './pages/BriefingComplete';
 import ClientDashboard from './pages/ClientDashboard';
 import FinalDeliveryPage from './pages/FinalDeliveryPage';
+import FAQ from './pages/FAQ';
 
 // Import admin pages
 import AdminBriefings from './pages/admin/AdminBriefings';
@@ -87,6 +88,7 @@ const AppRoutes: React.FC = () => {
         <Route path="/acompanhar-pedido" element={<OrderTracking />} />
         <Route path="/privacidade" element={<PrivacyPolicy />} />
         <Route path="/termos" element={<Terms />} />
+        <Route path="/faq" element={<FAQ />} />
         
         {/* Client Dashboard and Delivery Routes */}
         <Route path="/client-dashboard" element={<ClientDashboard />} />
