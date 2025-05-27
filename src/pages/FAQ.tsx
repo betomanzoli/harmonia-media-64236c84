@@ -133,14 +133,14 @@ const FAQ: React.FC = () => {
               <div className="flex flex-col sm:flex-row gap-4 justify-center">
                 <Button 
                   className="bg-harmonia-green hover:bg-harmonia-green/90"
-                  onClick={() => window.open('https://wa.me/5511999999999', '_blank')}
+                  onClick={() => window.open('https://wa.me/5511920585072', '_blank')}
                 >
                   <MessageCircle className="w-4 h-4 mr-2" />
                   WhatsApp
                 </Button>
                 <Button 
                   variant="outline"
-                  onClick={() => window.open('mailto:contato@harmonia.com', '_blank')}
+                  onClick={() => window.open('mailto:contato@harmonia.media', '_blank')}
                 >
                   <Mail className="w-4 h-4 mr-2" />
                   E-mail
