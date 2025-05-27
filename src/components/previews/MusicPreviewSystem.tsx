@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { usePreviewProject } from '@/hooks/usePreviewProject';
-import { Loader2, Calendar, Music, MessageSquare, ArrowLeft, CheckCircle } from 'lucide-react';
+import { Loader2, Calendar, Music, MessageSquare, ArrowLeft, CheckCircle, Clock } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -101,9 +101,6 @@ const MusicPreviewSystem: React.FC<MusicPreviewSystemProps> = ({ projectId }) =>
       const success = await submitFeedback(feedback);
       
       if (success) {
-        // Update project status
-        await updateProjectStatus('feedback', feedback);
-        
         toast({
           title: 'Feedback enviado',
           description: 'Seu feedback foi enviado com sucesso.',
@@ -197,6 +194,7 @@ const MusicPreviewSystem: React.FC<MusicPreviewSystemProps> = ({ projectId }) =>
   
   const selectedPreview = projectData.previews.find(p => p.id === selectedVersion);
   const isApproved = projectData.status === 'approved';
+  const hasFeedback = projectData.status === 'feedback';
   
   return (
     <div className="container mx-auto max-w-5xl px-4">
@@ -213,6 +211,16 @@ const MusicPreviewSystem: React.FC<MusicPreviewSystemProps> = ({ projectId }) =>
           <AlertTitle className="text-green-800">Projeto aprovado</AlertTitle>
           <AlertDescription className="text-green-700">
             Você já aprovou este projeto. Em breve enviaremos os arquivos finais.
+          </AlertDescription>
+        </Alert>
+      )}
+
+      {hasFeedback && !isApproved && (
+        <Alert className="mb-6 bg-blue-50 border-blue-200">
+          <MessageSquare className="h-5 w-5 text-blue-600" />
+          <AlertTitle className="text-blue-800">Feedback recebido</AlertTitle>
+          <AlertDescription className="text-blue-700">
+            Recebemos seu feedback e nossa equipe está trabalhando nas modificações solicitadas.
           </AlertDescription>
         </Alert>
       )}
@@ -281,6 +289,38 @@ const MusicPreviewSystem: React.FC<MusicPreviewSystemProps> = ({ projectId }) =>
               )}
             </CardContent>
           </Card>
+
+          {/* Feedback History */}
+          {projectData.feedbackHistory && projectData.feedbackHistory.length > 0 && (
+            <Card className="mt-6">
+              <CardHeader>
+                <CardTitle className="flex items-center">
+                  <Clock className="h-5 w-5 mr-2 text-harmonia-green" />
+                  Histórico de Feedback
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-4">
+                  {projectData.feedbackHistory.map((feedbackItem) => (
+                    <div key={feedbackItem.id} className="border-l-4 border-harmonia-green pl-4 py-2">
+                      <div className="flex justify-between items-start mb-2">
+                        <span className="text-sm text-gray-500">
+                          {new Date(feedbackItem.created_at).toLocaleDateString('pt-BR', {
+                            day: '2-digit',
+                            month: '2-digit',
+                            year: 'numeric',
+                            hour: '2-digit',
+                            minute: '2-digit'
+                          })}
+                        </span>
+                      </div>
+                      <p className="text-gray-700">{feedbackItem.content}</p>
+                    </div>
+                  ))}
+                </div>
+              </CardContent>
+            </Card>
+          )}
         </div>
         
         <div>
