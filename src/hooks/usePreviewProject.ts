@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
@@ -12,12 +11,6 @@ interface MusicPreview {
   recommended?: boolean;
 }
 
-interface FeedbackEntry {
-  id: string;
-  content: string;
-  created_at: string;
-}
-
 interface PreviewProject {
   clientName: string;
   projectTitle: string;
@@ -26,7 +19,6 @@ interface PreviewProject {
   packageType?: string;
   createdAt?: string;
   expiresAt?: string;
-  feedbackHistory?: FeedbackEntry[];
 }
 
 export const usePreviewProject = (projectId: string | undefined) => {
@@ -85,17 +77,6 @@ export const usePreviewProject = (projectId: string | undefined) => {
           // Continue without versions if there's an error
         }
 
-        // Fetch feedback history
-        const { data: feedbackHistory, error: feedbackError } = await supabase
-          .from('feedback')
-          .select('*')
-          .eq('project_id', projectId)
-          .order('created_at', { ascending: false });
-
-        if (feedbackError) {
-          console.error('Error fetching feedback history:', feedbackError);
-        }
-
         // Transform project versions to previews format
         const previews: MusicPreview[] = (versions || []).map(version => ({
           id: version.version_id,
@@ -106,13 +87,6 @@ export const usePreviewProject = (projectId: string | undefined) => {
           recommended: version.recommended
         }));
 
-        // Transform feedback history
-        const transformedFeedbackHistory: FeedbackEntry[] = (feedbackHistory || []).map(feedback => ({
-          id: feedback.id,
-          content: feedback.content || '',
-          created_at: feedback.created_at
-        }));
-
         // Create project data from Supabase response
         setProjectData({
           clientName: project.client_name || 'Cliente',
@@ -121,16 +95,14 @@ export const usePreviewProject = (projectId: string | undefined) => {
           status: project.status as 'waiting' | 'feedback' | 'approved',
           expiresAt: project.expires_at,
           createdAt: project.created_at,
-          previews,
-          feedbackHistory: transformedFeedbackHistory
+          previews
         });
 
         console.log('Project loaded from Supabase:', {
           id: project.id,
           client_name: project.client_name,
           title: project.title,
-          status: project.status,
-          feedbackCount: transformedFeedbackHistory.length
+          status: project.status
         });
         
       } catch (error) {
@@ -193,8 +165,7 @@ export const usePreviewProject = (projectId: string | undefined) => {
     console.log(`Submitting feedback for project ${projectId}`);
     
     try {
-      // Save feedback to feedback table
-      const { error: feedbackError } = await supabase
+      const { error } = await supabase
         .from('feedback')
         .insert({
           project_id: projectId,
@@ -202,42 +173,10 @@ export const usePreviewProject = (projectId: string | undefined) => {
           created_at: new Date().toISOString()
         });
 
-      if (feedbackError) {
-        console.error('Error submitting feedback:', feedbackError);
+      if (error) {
+        console.error('Error submitting feedback:', error);
         return false;
       }
-
-      // Update project status to 'feedback' and save feedback content
-      const { error: projectError } = await supabase
-        .from('projects')
-        .update({ 
-          status: 'feedback',
-          feedback: content.trim(),
-          updated_at: new Date().toISOString()
-        })
-        .eq('id', projectId);
-
-      if (projectError) {
-        console.error('Error updating project status:', projectError);
-        return false;
-      }
-
-      // Update local state
-      setProjectData(prev => {
-        if (!prev) return null;
-        
-        const newFeedbackEntry: FeedbackEntry = {
-          id: crypto.randomUUID(),
-          content: content.trim(),
-          created_at: new Date().toISOString()
-        };
-
-        return {
-          ...prev,
-          status: 'feedback',
-          feedbackHistory: [newFeedbackEntry, ...(prev.feedbackHistory || [])]
-        };
-      });
 
       console.log('Feedback submitted successfully');
       return true;
@@ -256,4 +195,4 @@ export const usePreviewProject = (projectId: string | undefined) => {
   };
 };
 
-export type { PreviewProject, MusicPreview, FeedbackEntry };
+export type { PreviewProject, MusicPreview };
