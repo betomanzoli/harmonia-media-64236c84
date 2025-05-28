@@ -6,9 +6,10 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { Plus, Play, Trash2, ExternalLink } from 'lucide-react';
+import { Plus, Play, Trash2, ExternalLink, AlertCircle, RefreshCw } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Alert, AlertDescription } from '@/components/ui/alert';
 import BandcampUtils from '../bandcamp/BandcampUtils';
 
 interface ProjectVersion {
@@ -20,6 +21,8 @@ interface ProjectVersion {
   embedUrl: string;
   createdAt: string;
   isRecommended: boolean;
+  albumId?: string;
+  trackId?: string;
 }
 
 interface VersionManagerProps {
@@ -31,13 +34,16 @@ const VersionManager: React.FC<VersionManagerProps> = ({ projectId, projectTitle
   const { toast } = useToast();
   const [versions, setVersions] = useState<ProjectVersion[]>([]);
   const [showNewVersionDialog, setShowNewVersionDialog] = useState(false);
+  const [isProcessing, setIsProcessing] = useState(false);
   const [formData, setFormData] = useState({
     name: '',
     description: '',
     bandcampUrl: ''
   });
+  const [previewEmbed, setPreviewEmbed] = useState<string>('');
+  const [embedError, setEmbedError] = useState<string>('');
 
-  const handleAddVersion = () => {
+  const handleAddVersion = async () => {
     if (!formData.name || !formData.bandcampUrl) {
       toast({
         title: "Dados incompletos",
@@ -56,43 +62,105 @@ const VersionManager: React.FC<VersionManagerProps> = ({ projectId, projectTitle
       return;
     }
 
-    const trackNumber = versions.length + 1;
-    const trackInfo = BandcampUtils.createTrackInfoFromUrl(formData.bandcampUrl);
+    setIsProcessing(true);
+    setEmbedError('');
 
-    if (!trackInfo) {
+    try {
+      console.log('Processing Bandcamp URL:', formData.bandcampUrl);
+      
+      const trackInfo = BandcampUtils.createTrackInfoFromUrl(formData.bandcampUrl);
+
+      if (!trackInfo) {
+        throw new Error('Não foi possível extrair informações da URL do Bandcamp');
+      }
+
+      console.log('Track info extracted:', trackInfo);
+
+      // Test if embed URL is valid
+      if (!BandcampUtils.testEmbedUrl(trackInfo.embedUrl)) {
+        console.warn('Embed URL may not be valid:', trackInfo.embedUrl);
+      }
+
+      const trackNumber = versions.length + 1;
+      const newVersion: ProjectVersion = {
+        id: Date.now().toString(),
+        name: formData.name,
+        description: formData.description,
+        trackNumber,
+        bandcampUrl: formData.bandcampUrl,
+        embedUrl: trackInfo.embedUrl,
+        albumId: trackInfo.albumId,
+        trackId: trackInfo.trackId,
+        createdAt: new Date().toLocaleDateString('pt-BR'),
+        isRecommended: versions.length === 0 // First version is recommended by default
+      };
+
+      console.log('Creating new version:', newVersion);
+
+      setVersions([...versions, newVersion]);
+      
+      toast({
+        title: "Versão adicionada",
+        description: `A versão "${formData.name}" foi adicionada ao projeto.`
+      });
+
+      setShowNewVersionDialog(false);
+      setFormData({ name: '', description: '', bandcampUrl: '' });
+      setPreviewEmbed('');
+
+    } catch (error) {
+      console.error('Error adding version:', error);
+      const errorMessage = error instanceof Error ? error.message : 'Erro desconhecido';
+      setEmbedError(errorMessage);
+      
       toast({
         title: "Erro ao processar URL",
-        description: "Não foi possível extrair informações da URL do Bandcamp.",
+        description: errorMessage,
         variant: "destructive"
       });
-      return;
+    } finally {
+      setIsProcessing(false);
     }
-
-    const newVersion: ProjectVersion = {
-      id: Date.now().toString(),
-      name: formData.name,
-      description: formData.description,
-      trackNumber,
-      bandcampUrl: formData.bandcampUrl,
-      embedUrl: trackInfo.embedUrl,
-      createdAt: new Date().toLocaleDateString('pt-BR'),
-      isRecommended: versions.length === 0 // First version is recommended by default
-    };
-
-    setVersions([...versions, newVersion]);
-    
-    toast({
-      title: "Versão adicionada",
-      description: `A versão "${formData.name}" foi adicionada ao projeto.`
-    });
-
-    setShowNewVersionDialog(false);
-    setFormData({ name: '', description: '', bandcampUrl: '' });
   };
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
     setFormData(prev => ({ ...prev, [name]: value }));
+
+    // Auto-generate preview when URL changes
+    if (name === 'bandcampUrl' && value) {
+      setEmbedError('');
+      try {
+        console.log('Generating preview for URL:', value);
+        
+        if (BandcampUtils.isValidBandcampUrl(value)) {
+          const embedUrl = BandcampUtils.autoGenerateEmbed(value);
+          if (embedUrl) {
+            setPreviewEmbed(embedUrl);
+            console.log('Preview embed generated:', embedUrl);
+            
+            // Auto-fill name if empty
+            if (!formData.name) {
+              const autoTitle = BandcampUtils.extractTrackTitle(value);
+              setFormData(prev => ({ ...prev, name: autoTitle }));
+            }
+          } else {
+            setPreviewEmbed('');
+            setEmbedError('Não foi possível gerar preview do embed');
+          }
+        } else {
+          setPreviewEmbed('');
+          setEmbedError('URL do Bandcamp inválida');
+        }
+      } catch (error) {
+        console.error('Error generating preview:', error);
+        setPreviewEmbed('');
+        setEmbedError('Erro ao gerar preview');
+      }
+    } else if (name === 'bandcampUrl' && !value) {
+      setPreviewEmbed('');
+      setEmbedError('');
+    }
   };
 
   const handleDeleteVersion = (versionId: string) => {
@@ -109,6 +177,31 @@ const VersionManager: React.FC<VersionManagerProps> = ({ projectId, projectTitle
       ...v,
       isRecommended: v.id === versionId
     })));
+  };
+
+  const refreshEmbed = (version: ProjectVersion) => {
+    try {
+      console.log('Refreshing embed for version:', version.id);
+      const trackInfo = BandcampUtils.createTrackInfoFromUrl(version.bandcampUrl);
+      if (trackInfo) {
+        setVersions(versions.map(v => 
+          v.id === version.id 
+            ? { ...v, embedUrl: trackInfo.embedUrl, albumId: trackInfo.albumId, trackId: trackInfo.trackId }
+            : v
+        ));
+        toast({
+          title: "Embed atualizado",
+          description: "O embed foi atualizado com sucesso."
+        });
+      }
+    } catch (error) {
+      console.error('Error refreshing embed:', error);
+      toast({
+        title: "Erro ao atualizar embed",
+        description: "Não foi possível atualizar o embed.",
+        variant: "destructive"
+      });
+    }
   };
 
   return (
@@ -132,6 +225,7 @@ const VersionManager: React.FC<VersionManagerProps> = ({ projectId, projectTitle
                 <TableHead>Nome</TableHead>
                 <TableHead>Descrição</TableHead>
                 <TableHead>Track #</TableHead>
+                <TableHead>IDs</TableHead>
                 <TableHead>Recomendada</TableHead>
                 <TableHead>Criada</TableHead>
                 <TableHead className="text-right">Ações</TableHead>
@@ -140,7 +234,7 @@ const VersionManager: React.FC<VersionManagerProps> = ({ projectId, projectTitle
             <TableBody>
               {versions.length === 0 ? (
                 <TableRow>
-                  <TableCell colSpan={6} className="h-24 text-center">
+                  <TableCell colSpan={7} className="h-24 text-center">
                     Nenhuma versão criada ainda.
                   </TableCell>
                 </TableRow>
@@ -157,6 +251,16 @@ const VersionManager: React.FC<VersionManagerProps> = ({ projectId, projectTitle
                     </TableCell>
                     <TableCell className="max-w-md truncate">{version.description}</TableCell>
                     <TableCell>#{version.trackNumber}</TableCell>
+                    <TableCell className="text-xs text-gray-500">
+                      {version.albumId && version.trackId ? (
+                        <div>
+                          <div>Album: {version.albumId}</div>
+                          <div>Track: {version.trackId}</div>
+                        </div>
+                      ) : (
+                        <span className="text-red-500">IDs não encontrados</span>
+                      )}
+                    </TableCell>
                     <TableCell>
                       <Button
                         variant="ghost"
@@ -170,6 +274,14 @@ const VersionManager: React.FC<VersionManagerProps> = ({ projectId, projectTitle
                     <TableCell>{version.createdAt}</TableCell>
                     <TableCell className="text-right">
                       <div className="flex gap-2 justify-end">
+                        <Button 
+                          variant="ghost" 
+                          size="sm"
+                          onClick={() => refreshEmbed(version)}
+                          title="Atualizar embed"
+                        >
+                          <RefreshCw className="h-4 w-4" />
+                        </Button>
                         <Button 
                           variant="ghost" 
                           size="sm"
@@ -202,7 +314,7 @@ const VersionManager: React.FC<VersionManagerProps> = ({ projectId, projectTitle
         </CardContent>
       </Card>
 
-      {/* Preview Section */}
+      {/* Preview Section with better error handling */}
       {versions.length > 0 && (
         <Card>
           <CardHeader>
@@ -210,33 +322,82 @@ const VersionManager: React.FC<VersionManagerProps> = ({ projectId, projectTitle
           </CardHeader>
           <CardContent>
             <div className="space-y-4">
-              {versions.filter(v => v.isRecommended).map((version) => {
-                const trackInfo = BandcampUtils.createTrackInfoFromUrl(version.bandcampUrl);
-                return (
-                  <div key={version.id}>
-                    <h3 className="font-medium mb-2">{version.name}</h3>
-                    {trackInfo && (
-                      <iframe
-                        src={trackInfo.embedUrl}
-                        style={{ border: 0, width: '100%', height: '42px' }}
-                        title={`Player ${version.name}`}
-                      />
-                    )}
+              {versions.filter(v => v.isRecommended).map((version) => (
+                <div key={version.id}>
+                  <h3 className="font-medium mb-2">{version.name}</h3>
+                  <div className="bg-gray-50 p-2 rounded mb-2">
+                    <div className="text-xs text-gray-600">
+                      <div>URL do Embed: {version.embedUrl}</div>
+                      {version.albumId && version.trackId && (
+                        <div>Album ID: {version.albumId} | Track ID: {version.trackId}</div>
+                      )}
+                    </div>
                   </div>
-                );
-              })}
+                  <iframe
+                    src={version.embedUrl}
+                    style={{ border: 0, width: '100%', height: '42px' }}
+                    title={`Player ${version.name}`}
+                    onError={(e) => {
+                      console.error('Iframe error for version:', version.id, e);
+                    }}
+                  />
+                </div>
+              ))}
             </div>
           </CardContent>
         </Card>
       )}
 
-      {/* New Version Dialog */}
+      {/* New Version Dialog with improved preview */}
       <Dialog open={showNewVersionDialog} onOpenChange={setShowNewVersionDialog}>
         <DialogContent className="max-w-md">
           <DialogHeader>
             <DialogTitle>Adicionar Nova Versão</DialogTitle>
           </DialogHeader>
           <div className="space-y-4 pt-4">
+            <div>
+              <Label htmlFor="bandcampUrl">URL do Bandcamp</Label>
+              <Input
+                id="bandcampUrl"
+                name="bandcampUrl"
+                placeholder="https://harmonia-media.bandcamp.com/track/nome-da-track"
+                value={formData.bandcampUrl}
+                onChange={handleChange}
+              />
+              <p className="text-xs text-gray-500 mt-1">
+                Cole a URL completa do track no Bandcamp
+              </p>
+            </div>
+
+            {/* Preview do embed com melhor tratamento de erro */}
+            {formData.bandcampUrl && (
+              <div className="border rounded p-3 bg-gray-50">
+                <Label className="text-sm font-medium mb-2 block">Prévia do Embed:</Label>
+                {embedError ? (
+                  <Alert variant="destructive">
+                    <AlertCircle className="h-4 w-4" />
+                    <AlertDescription>{embedError}</AlertDescription>
+                  </Alert>
+                ) : previewEmbed ? (
+                  <div>
+                    <div className="text-xs text-gray-600 mb-2">
+                      URL: {previewEmbed}
+                    </div>
+                    <iframe
+                      src={previewEmbed}
+                      style={{ border: 0, width: '100%', height: '42px' }}
+                      title="Preview do Bandcamp"
+                      className="rounded"
+                    />
+                  </div>
+                ) : (
+                  <div className="text-sm text-gray-500">
+                    Gerando preview...
+                  </div>
+                )}
+              </div>
+            )}
+
             <div>
               <Label htmlFor="name">Nome da Versão</Label>
               <Input
@@ -258,25 +419,23 @@ const VersionManager: React.FC<VersionManagerProps> = ({ projectId, projectTitle
                 rows={3}
               />
             </div>
-            <div>
-              <Label htmlFor="bandcampUrl">URL do Bandcamp</Label>
-              <Input
-                id="bandcampUrl"
-                name="bandcampUrl"
-                placeholder="https://harmonia-media.bandcamp.com/track/nome-da-track"
-                value={formData.bandcampUrl}
-                onChange={handleChange}
-              />
-              <p className="text-xs text-gray-500 mt-1">
-                Cole a URL completa do track no Bandcamp
-              </p>
-            </div>
             <div className="flex justify-end space-x-2 pt-4">
               <Button variant="outline" onClick={() => setShowNewVersionDialog(false)}>
                 Cancelar
               </Button>
-              <Button onClick={handleAddVersion} className="bg-harmonia-green hover:bg-harmonia-green/90">
-                Adicionar Versão
+              <Button 
+                onClick={handleAddVersion} 
+                className="bg-harmonia-green hover:bg-harmonia-green/90"
+                disabled={isProcessing || !previewEmbed}
+              >
+                {isProcessing ? (
+                  <>
+                    <RefreshCw className="mr-2 h-4 w-4 animate-spin" />
+                    Processando...
+                  </>
+                ) : (
+                  'Adicionar Versão'
+                )}
               </Button>
             </div>
           </div>
