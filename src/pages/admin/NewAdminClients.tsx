@@ -4,390 +4,262 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { Plus, Search, Edit, Trash2, Phone, Mail, User } from 'lucide-react';
-import { useToast } from '@/hooks/use-toast';
+import { Plus, Users, Loader2, Pencil, Trash2 } from 'lucide-react';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import NewAdminLayout from '@/components/admin/layout/NewAdminLayout';
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
-import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
-import PhoneInput, { PhoneWithCountryCode } from '@/components/PhoneInput';
-
-interface Client {
-  id: string;
-  name: string;
-  email: string;
-  phone: PhoneWithCountryCode;
-  company?: string;
-  createdAt: string;
-  projectsCount: number;
-}
+import { useClients, type Client } from '@/hooks/admin/useClients';
 
 const NewAdminClients: React.FC = () => {
-  const { toast } = useToast();
-  
-  const [clients, setClients] = useState<Client[]>([
-    {
-      id: '1',
-      name: 'João Silva',
-      email: 'joao@email.com',
-      phone: { fullNumber: '+5511999999999', countryCode: '55', nationalNumber: '11999999999' },
-      company: 'Empresa A',
-      createdAt: '15/01/2024',
-      projectsCount: 2
-    },
-    {
-      id: '2',
-      name: 'Maria Santos',
-      email: 'maria@email.com',
-      phone: { fullNumber: '+5511888888888', countryCode: '55', nationalNumber: '11888888888' },
-      createdAt: '10/01/2024',
-      projectsCount: 1
-    }
-  ]);
-  
-  const [showNewClientDialog, setShowNewClientDialog] = useState(false);
+  const { clients, loading, createClient, updateClient, deleteClient } = useClients();
+  const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
+  const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [editingClient, setEditingClient] = useState<Client | null>(null);
-  const [searchTerm, setSearchTerm] = useState('');
   const [formData, setFormData] = useState({
     name: '',
     email: '',
-    phone: { fullNumber: '', countryCode: '55', nationalNumber: '' } as PhoneWithCountryCode,
+    phone: '',
     company: ''
   });
 
-  const resetForm = () => {
-    setFormData({
-      name: '',
-      email: '',
-      phone: { fullNumber: '', countryCode: '55', nationalNumber: '' },
-      company: ''
-    });
-  };
-
-  const handleAddClient = () => {
-    // Validação
-    if (!formData.name.trim()) {
-      toast({
-        title: "Nome obrigatório",
-        description: "Por favor, insira o nome do cliente.",
-        variant: "destructive"
-      });
-      return;
-    }
-
-    if (!formData.email.trim()) {
-      toast({
-        title: "Email obrigatório",
-        description: "Por favor, insira o email do cliente.",
-        variant: "destructive"
-      });
-      return;
-    }
-
-    // Validação de telefone
-    if (!formData.phone.nationalNumber || formData.phone.nationalNumber.length < 10) {
-      toast({
-        title: "Telefone obrigatório",
-        description: "Por favor, insira um telefone válido no formato internacional.",
-        variant: "destructive"
-      });
-      return;
-    }
-
-    const newClient: Client = {
-      id: Date.now().toString(),
-      name: formData.name,
-      email: formData.email,
-      phone: formData.phone,
-      company: formData.company,
-      createdAt: new Date().toLocaleDateString('pt-BR'),
-      projectsCount: 0
-    };
-
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    
     if (editingClient) {
-      // Editando cliente existente
-      setClients(clients.map(client => 
-        client.id === editingClient.id ? { ...newClient, id: editingClient.id } : client
-      ));
-      toast({
-        title: "Cliente atualizado",
-        description: `${formData.name} foi atualizado com sucesso.`
-      });
-      setEditingClient(null);
+      const success = await updateClient(editingClient.id, formData);
+      if (success) {
+        setIsEditDialogOpen(false);
+        setEditingClient(null);
+        resetForm();
+      }
     } else {
-      // Adicionando novo cliente
-      setClients([newClient, ...clients]);
-      toast({
-        title: "Cliente adicionado",
-        description: `${formData.name} foi adicionado com sucesso.`
-      });
+      const success = await createClient(formData);
+      if (success) {
+        setIsCreateDialogOpen(false);
+        resetForm();
+      }
     }
-
-    setShowNewClientDialog(false);
-    resetForm();
   };
 
-  const handleEditClient = (client: Client) => {
+  const handleEdit = (client: Client) => {
     setEditingClient(client);
     setFormData({
       name: client.name,
       email: client.email,
-      phone: client.phone,
+      phone: client.phone || '',
       company: client.company || ''
     });
-    setShowNewClientDialog(true);
+    setIsEditDialogOpen(true);
   };
 
-  const handleDeleteClient = (clientId: string) => {
-    const client = clients.find(c => c.id === clientId);
-    if (client && client.projectsCount > 0) {
-      toast({
-        title: "Não é possível excluir",
-        description: "Este cliente possui projetos ativos. Finalize os projetos antes de excluir.",
-        variant: "destructive"
-      });
-      return;
+  const handleDelete = async (id: string) => {
+    if (confirm('Tem certeza que deseja remover este cliente?')) {
+      await deleteClient(id);
     }
-
-    setClients(clients.filter(c => c.id !== clientId));
-    toast({
-      title: "Cliente removido",
-      description: "O cliente foi removido com sucesso.",
-      variant: "destructive"
-    });
   };
 
-  const handleChange = (name: string, value: any) => {
-    setFormData(prev => ({ ...prev, [name]: value }));
+  const resetForm = () => {
+    setFormData({ name: '', email: '', phone: '', company: '' });
   };
 
-  const handleDialogClose = () => {
-    setShowNewClientDialog(false);
-    setEditingClient(null);
-    resetForm();
-  };
-
-  // Filtrar clientes
-  const filteredClients = clients.filter(client =>
-    client.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    client.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    (client.company && client.company.toLowerCase().includes(searchTerm.toLowerCase()))
-  );
-
-  const formatPhoneDisplay = (phone: PhoneWithCountryCode) => {
-    if (!phone.nationalNumber) return '';
-    const digits = phone.nationalNumber;
-    if (digits.length === 11) {
-      return `+55 (${digits.substring(0, 2)}) ${digits.substring(2, 7)}-${digits.substring(7)}`;
-    } else if (digits.length === 10) {
-      return `+55 (${digits.substring(0, 2)}) ${digits.substring(2, 6)}-${digits.substring(6)}`;
-    }
-    return `+55 ${digits}`;
-  };
+  if (loading) {
+    return (
+      <NewAdminLayout>
+        <div className="p-6 flex justify-center items-center h-64">
+          <Loader2 className="h-8 w-8 animate-spin text-harmonia-green" />
+          <span className="ml-2">Carregando clientes...</span>
+        </div>
+      </NewAdminLayout>
+    );
+  }
 
   return (
     <NewAdminLayout>
       <div className="p-6 space-y-6">
-        
-        {/* Header */}
         <div className="flex justify-between items-center">
-          <h1 className="text-3xl font-bold">Clientes</h1>
-          <Button 
-            onClick={() => setShowNewClientDialog(true)} 
-            className="bg-harmonia-green hover:bg-harmonia-green/90"
-          >
-            <Plus className="mr-2 h-4 w-4" />
-            Novo Cliente
-          </Button>
+          <div>
+            <h1 className="text-3xl font-bold">Clientes</h1>
+            <p className="text-gray-600">Gerencie seus clientes</p>
+          </div>
+          
+          <Dialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>
+            <DialogTrigger asChild>
+              <Button className="bg-harmonia-green hover:bg-harmonia-green/90">
+                <Plus className="mr-2 h-4 w-4" />
+                Novo Cliente
+              </Button>
+            </DialogTrigger>
+            <DialogContent>
+              <DialogHeader>
+                <DialogTitle>Criar Novo Cliente</DialogTitle>
+              </DialogHeader>
+              <form onSubmit={handleSubmit} className="space-y-4">
+                <div>
+                  <Label htmlFor="name">Nome *</Label>
+                  <Input
+                    id="name"
+                    value={formData.name}
+                    onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                    required
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="email">E-mail *</Label>
+                  <Input
+                    id="email"
+                    type="email"
+                    value={formData.email}
+                    onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                    required
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="phone">Telefone</Label>
+                  <Input
+                    id="phone"
+                    value={formData.phone}
+                    onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="company">Empresa</Label>
+                  <Input
+                    id="company"
+                    value={formData.company}
+                    onChange={(e) => setFormData({ ...formData, company: e.target.value })}
+                  />
+                </div>
+                <div className="flex gap-2 pt-4">
+                  <Button type="submit" className="flex-1">Criar Cliente</Button>
+                  <Button 
+                    type="button" 
+                    variant="outline" 
+                    onClick={() => setIsCreateDialogOpen(false)}
+                  >
+                    Cancelar
+                  </Button>
+                </div>
+              </form>
+            </DialogContent>
+          </Dialog>
         </div>
 
-        {/* Stats Card */}
-        <Card>
-          <CardContent className="p-4">
-            <div className="text-2xl font-bold">{clients.length}</div>
-            <p className="text-gray-600">Total de Clientes</p>
-          </CardContent>
-        </Card>
-
-        {/* Search */}
         <Card>
           <CardHeader>
-            <CardTitle>Buscar Clientes</CardTitle>
+            <CardTitle className="flex items-center">
+              <Users className="mr-2 h-5 w-5" />
+              Lista de Clientes ({clients.length})
+            </CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="relative">
-              <Search className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
-              <Input
-                placeholder="Buscar por nome, email ou empresa..."
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                className="pl-9"
-              />
-            </div>
+            {clients.length === 0 ? (
+              <div className="text-center py-8 text-gray-500">
+                <Users className="h-12 w-12 mx-auto mb-4 text-gray-400" />
+                <p>Nenhum cliente cadastrado</p>
+                <p className="text-sm">Clique em "Novo Cliente" para começar</p>
+              </div>
+            ) : (
+              <div className="space-y-4">
+                {clients.map((client) => (
+                  <div 
+                    key={client.id} 
+                    className="border rounded-lg p-4 hover:bg-gray-50 transition-colors"
+                  >
+                    <div className="flex justify-between items-start">
+                      <div className="flex-1">
+                        <h3 className="font-semibold">{client.name}</h3>
+                        <p className="text-gray-600">{client.email}</p>
+                        {client.phone && (
+                          <p className="text-sm text-gray-500">{client.phone}</p>
+                        )}
+                        {client.company && (
+                          <p className="text-sm text-gray-500">{client.company}</p>
+                        )}
+                        <p className="text-xs text-gray-400 mt-2">
+                          Criado em: {new Date(client.created_at).toLocaleDateString('pt-BR')}
+                        </p>
+                      </div>
+                      <div className="flex gap-2">
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          onClick={() => handleEdit(client)}
+                        >
+                          <Pencil className="h-4 w-4" />
+                        </Button>
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          onClick={() => handleDelete(client.id)}
+                          className="text-red-600 hover:text-red-700"
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </Button>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
           </CardContent>
         </Card>
 
-        {/* Clients Table */}
-        <Card>
-          <CardHeader>
-            <CardTitle>Lista de Clientes</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Cliente</TableHead>
-                  <TableHead>Contato</TableHead>
-                  <TableHead>Empresa</TableHead>
-                  <TableHead>Projetos</TableHead>
-                  <TableHead>Cadastrado</TableHead>
-                  <TableHead className="text-right">Ações</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {filteredClients.length > 0 ? (
-                  filteredClients.map((client) => (
-                    <TableRow key={client.id}>
-                      <TableCell>
-                        <div className="flex items-center">
-                          <User className="h-4 w-4 mr-2 text-gray-400" />
-                          <div>
-                            <div className="font-medium">{client.name}</div>
-                            <div className="text-sm text-gray-500">{client.email}</div>
-                          </div>
-                        </div>
-                      </TableCell>
-                      <TableCell>
-                        <div className="flex items-center">
-                          <Phone className="h-4 w-4 mr-2 text-gray-400" />
-                          <span className="text-sm">{formatPhoneDisplay(client.phone)}</span>
-                        </div>
-                      </TableCell>
-                      <TableCell>{client.company || '-'}</TableCell>
-                      <TableCell>
-                        <span className="bg-blue-100 text-blue-800 px-2 py-1 rounded-full text-xs">
-                          {client.projectsCount} projetos
-                        </span>
-                      </TableCell>
-                      <TableCell>{client.createdAt}</TableCell>
-                      <TableCell className="text-right">
-                        <div className="flex gap-2 justify-end">
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            onClick={() => handleEditClient(client)}
-                            className="text-blue-600 hover:text-blue-700"
-                          >
-                            <Edit className="h-4 w-4" />
-                          </Button>
-                          <AlertDialog>
-                            <AlertDialogTrigger asChild>
-                              <Button
-                                variant="ghost"
-                                size="sm"
-                                className="text-red-600 hover:text-red-700"
-                              >
-                                <Trash2 className="h-4 w-4" />
-                              </Button>
-                            </AlertDialogTrigger>
-                            <AlertDialogContent>
-                              <AlertDialogHeader>
-                                <AlertDialogTitle>Confirmar exclusão</AlertDialogTitle>
-                                <AlertDialogDescription>
-                                  Tem certeza que deseja excluir o cliente "{client.name}"? 
-                                  Esta ação não pode ser desfeita.
-                                </AlertDialogDescription>
-                              </AlertDialogHeader>
-                              <AlertDialogFooter>
-                                <AlertDialogCancel>Cancelar</AlertDialogCancel>
-                                <AlertDialogAction
-                                  onClick={() => handleDeleteClient(client.id)}
-                                  className="bg-red-600 hover:bg-red-700"
-                                >
-                                  Excluir
-                                </AlertDialogAction>
-                              </AlertDialogFooter>
-                            </AlertDialogContent>
-                          </AlertDialog>
-                        </div>
-                      </TableCell>
-                    </TableRow>
-                  ))
-                ) : (
-                  <TableRow>
-                    <TableCell colSpan={6} className="h-24 text-center">
-                      {clients.length === 0 
-                        ? 'Nenhum cliente cadastrado ainda.' 
-                        : 'Nenhum cliente encontrado com os filtros aplicados.'
-                      }
-                    </TableCell>
-                  </TableRow>
-                )}
-              </TableBody>
-            </Table>
-          </CardContent>
-        </Card>
-
-        {/* New/Edit Client Dialog */}
-        <Dialog open={showNewClientDialog} onOpenChange={handleDialogClose}>
+        {/* Dialog de Edição */}
+        <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
           <DialogContent>
             <DialogHeader>
-              <DialogTitle>{editingClient ? 'Editar Cliente' : 'Novo Cliente'}</DialogTitle>
+              <DialogTitle>Editar Cliente</DialogTitle>
             </DialogHeader>
-            <div className="space-y-4 pt-4">
+            <form onSubmit={handleSubmit} className="space-y-4">
               <div>
-                <Label htmlFor="name">Nome Completo</Label>
+                <Label htmlFor="edit-name">Nome *</Label>
                 <Input
-                  id="name"
-                  placeholder="Nome do cliente"
+                  id="edit-name"
                   value={formData.name}
-                  onChange={(e) => handleChange('name', e.target.value)}
+                  onChange={(e) => setFormData({ ...formData, name: e.target.value })}
                   required
                 />
               </div>
-              
               <div>
-                <Label htmlFor="email">Email</Label>
+                <Label htmlFor="edit-email">E-mail *</Label>
                 <Input
-                  id="email"
+                  id="edit-email"
                   type="email"
-                  placeholder="email@exemplo.com"
                   value={formData.email}
-                  onChange={(e) => handleChange('email', e.target.value)}
+                  onChange={(e) => setFormData({ ...formData, email: e.target.value })}
                   required
                 />
               </div>
-              
-              <PhoneInput
-                label="Telefone"
-                value={formData.phone}
-                onChange={(phone) => handleChange('phone', phone)}
-                required
-                placeholder="(11) 99999-9999"
-              />
-              
               <div>
-                <Label htmlFor="company">Empresa (Opcional)</Label>
+                <Label htmlFor="edit-phone">Telefone</Label>
                 <Input
-                  id="company"
-                  placeholder="Nome da empresa"
-                  value={formData.company}
-                  onChange={(e) => handleChange('company', e.target.value)}
+                  id="edit-phone"
+                  value={formData.phone}
+                  onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
                 />
               </div>
-              
-              <div className="flex justify-end space-x-2 pt-4">
-                <Button variant="outline" onClick={handleDialogClose}>
+              <div>
+                <Label htmlFor="edit-company">Empresa</Label>
+                <Input
+                  id="edit-company"
+                  value={formData.company}
+                  onChange={(e) => setFormData({ ...formData, company: e.target.value })}
+                />
+              </div>
+              <div className="flex gap-2 pt-4">
+                <Button type="submit" className="flex-1">Salvar Alterações</Button>
+                <Button 
+                  type="button" 
+                  variant="outline" 
+                  onClick={() => {
+                    setIsEditDialogOpen(false);
+                    setEditingClient(null);
+                    resetForm();
+                  }}
+                >
                   Cancelar
                 </Button>
-                <Button 
-                  onClick={handleAddClient} 
-                  className="bg-harmonia-green hover:bg-harmonia-green/90"
-                >
-                  {editingClient ? 'Atualizar' : 'Adicionar'} Cliente
-                </Button>
               </div>
-            </div>
+            </form>
           </DialogContent>
         </Dialog>
       </div>
