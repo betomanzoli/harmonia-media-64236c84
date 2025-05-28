@@ -1,35 +1,79 @@
 
-import React, { useState } from 'react';
-import { Sidebar, SidebarContent, SidebarProvider, SidebarTrigger } from '@/components/ui/sidebar';
-import NewAdminSidebar from './NewAdminSidebar';
+import React from 'react';
+import { Button } from '@/components/ui/button';
+import { Music, LogOut, Home, FolderOpen } from 'lucide-react';
+import { Link, useLocation } from 'react-router-dom';
 
 interface NewAdminLayoutProps {
   children: React.ReactNode;
 }
 
 const NewAdminLayout: React.FC<NewAdminLayoutProps> = ({ children }) => {
+  const location = useLocation();
+
+  const handleLogout = () => {
+    localStorage.removeItem('admin-auth');
+    window.location.href = '/admin';
+  };
+
+  const isActive = (path: string) => {
+    return location.pathname === path;
+  };
+
   return (
-    <SidebarProvider>
-      <div className="min-h-screen flex w-full">
-        <NewAdminSidebar />
-        <main className="flex-1 flex flex-col overflow-hidden">
-          <header className="bg-white shadow-sm border-b px-6 py-4">
-            <div className="flex items-center gap-4">
-              <SidebarTrigger />
-              <div className="flex items-center justify-between w-full">
-                <div>
-                  <h2 className="text-lg font-semibold">harmonIA Admin</h2>
-                  <p className="text-sm text-gray-500">Gestão de Projetos Musicais</p>
-                </div>
-              </div>
-            </div>
-          </header>
-          <div className="flex-1 overflow-auto bg-gray-50">
-            {children}
+    <div className="min-h-screen bg-gray-50">
+      {/* Header */}
+      <header className="bg-white border-b border-gray-200">
+        <div className="flex items-center justify-between px-6 py-4">
+          <div className="flex items-center space-x-4">
+            <Link to="/admin" className="flex items-center space-x-2">
+              <Music className="h-8 w-8 text-harmonia-green" />
+              <span className="text-xl font-bold">harmonIA Admin</span>
+            </Link>
+            
+            <nav className="hidden md:flex items-center space-x-1 ml-8">
+              <Button 
+                asChild 
+                variant={isActive('/admin') ? 'default' : 'ghost'}
+                className={isActive('/admin') ? 'bg-harmonia-green hover:bg-harmonia-green/90' : ''}
+              >
+                <Link to="/admin">
+                  <FolderOpen className="h-4 w-4 mr-2" />
+                  Projetos
+                </Link>
+              </Button>
+              <Button 
+                asChild 
+                variant={isActive('/admin/dashboard') ? 'default' : 'ghost'}
+                className={isActive('/admin/dashboard') ? 'bg-harmonia-green hover:bg-harmonia-green/90' : ''}
+              >
+                <Link to="/admin/dashboard">
+                  <Home className="h-4 w-4 mr-2" />
+                  Dashboard
+                </Link>
+              </Button>
+            </nav>
           </div>
-        </main>
-      </div>
-    </SidebarProvider>
+
+          <div className="flex items-center space-x-4">
+            <Button asChild variant="outline" size="sm">
+              <Link to="/" target="_blank">
+                Ver Site Público
+              </Link>
+            </Button>
+            <Button variant="outline" size="sm" onClick={handleLogout}>
+              <LogOut className="h-4 w-4 mr-2" />
+              Sair
+            </Button>
+          </div>
+        </div>
+      </header>
+
+      {/* Main Content */}
+      <main className="flex-1">
+        {children}
+      </main>
+    </div>
   );
 };
 

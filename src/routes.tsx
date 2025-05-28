@@ -14,7 +14,11 @@ import AudioDatabase from './pages/AudioDatabase';
 import ClientPreview from './pages/ClientPreview';
 import AuthCallback from './pages/AuthCallback';
 
-// Admin pages
+// Admin pages - New simplified structure
+import NewAdminDashboard from './pages/admin/NewAdminDashboard';
+import NewAdminProjects from './pages/admin/NewAdminProjects';
+
+// Legacy admin pages (kept for compatibility)
 import NewAdminLogin from './pages/admin/NewAdminLogin';
 import AdminLogin from './pages/admin/AdminLogin';
 import Dashboard from './pages/admin/Dashboard';
@@ -71,11 +75,17 @@ export const router = createBrowserRouter([
     element: <AuthCallback />,
   },
 
-  // Admin routes
+  // New admin routes (main system)
   {
     path: "/admin",
-    element: <NewAdminLogin />,
+    element: <NewAdminProjects />,
   },
+  {
+    path: "/admin/dashboard",
+    element: <NewAdminDashboard />,
+  },
+
+  // Legacy admin routes (for compatibility)
   {
     path: "/admin-j28s7d1k/login",
     element: <AdminLogin />,
