@@ -4,7 +4,6 @@ import { createBrowserRouter } from 'react-router-dom';
 import Index from './pages/Index';
 import PreviewPage from './pages/PreviewPage';
 import OrderTracking from './pages/OrderTracking';
-import ServiceCard from './pages/ServiceCard';
 import MusicPreviews from './pages/MusicPreviews';
 import MusicPreviewAuth from './pages/MusicPreviewAuth';
 import MusicPreviewPage from './pages/MusicPreviewPage';
@@ -19,8 +18,6 @@ import AuthCallback from './pages/AuthCallback';
 import NewAdminLogin from './pages/admin/NewAdminLogin';
 import AdminLogin from './pages/admin/AdminLogin';
 import Dashboard from './pages/admin/Dashboard';
-import AdminClients from './pages/admin/AdminClients';
-import AdminProjects from './pages/admin/AdminProjects';
 import AdminPreviews from './pages/admin/AdminPreviews';
 import AdminBriefings from './pages/admin/AdminBriefings';
 
@@ -36,10 +33,6 @@ export const router = createBrowserRouter([
   {
     path: "/acompanhar-pedido",
     element: <OrderTracking />,
-  },
-  {
-    path: "/servicos/:serviceId",
-    element: <ServiceCard />,
   },
   {
     path: "/music-previews/:previewId",
@@ -90,14 +83,6 @@ export const router = createBrowserRouter([
   {
     path: "/admin-j28s7d1k/dashboard",
     element: <Dashboard />,
-  },
-  {
-    path: "/admin-j28s7d1k/clients",
-    element: <AdminClients />,
-  },
-  {
-    path: "/admin-j28s7d1k/projects",
-    element: <AdminProjects />,
   },
   {
     path: "/admin-j28s7d1k/previews",

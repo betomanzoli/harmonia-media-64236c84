@@ -6,7 +6,6 @@ import { Copy, PlusCircle, Clock, Link, CalendarPlus } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import AddVersionDialog from './AddVersionDialog';
 import { VersionItem } from '@/hooks/admin/usePreviewProjects';
-import ContactClientActions from './components/ContactClientActions';
 
 interface ProjectActionCardProps {
   projectId: string;
@@ -89,13 +88,11 @@ const ProjectActionCard: React.FC<ProjectActionCardProps> = ({
           </Button>
         </div>
         
-        {/* Contact client actions */}
-        <ContactClientActions 
-          clientName={clientName}
-          clientPhone={clientPhone}
-          clientEmail={clientEmail}
-          projectId={projectId}
-        />
+        {/* Contact actions placeholder */}
+        <div className="text-sm text-gray-500 p-2 bg-gray-50 rounded">
+          Contato: {clientEmail}
+          {clientPhone && <div>Telefone: {clientPhone}</div>}
+        </div>
         
         {/* Add version dialog */}
         <AddVersionDialog 

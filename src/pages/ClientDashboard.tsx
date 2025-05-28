@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
@@ -32,7 +31,19 @@ const ClientDashboard: React.FC = () => {
           .single();
 
         if (error) throw error;
-        setProject(data);
+        
+        // Transform the data to match the Project interface
+        const transformedProject: Project = {
+          id: data.id,
+          title: data.title || 'Projeto harmonIA',
+          status: (data.status === 'waiting' || data.status === 'feedback' || data.status === 'approved') 
+            ? data.status 
+            : 'waiting',
+          client_name: data.client_name || 'Cliente',
+          created_at: data.created_at
+        };
+        
+        setProject(transformedProject);
       } catch (error) {
         console.error('Erro ao carregar projeto:', error);
       } finally {
