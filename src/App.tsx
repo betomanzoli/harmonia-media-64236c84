@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { Routes, Route, useLocation } from 'react-router-dom';
 import ScrollToTop from './components/ScrollToTop';
@@ -37,7 +38,7 @@ import NewAdminDashboard from './pages/admin/NewAdminDashboard';
 import NewAdminClients from './pages/admin/NewAdminClients';
 import NewAdminProjects from './pages/admin/NewAdminProjects';
 import ProjectDetailsPage from './pages/admin/ProjectDetailsPage';
-import ClientPreviewPage from './pages/admin/ClientPreviewPage';
+import ClientPreviewPage from './pages/ClientPreviewPage';
 
 const App: React.FC = () => {
   return (
