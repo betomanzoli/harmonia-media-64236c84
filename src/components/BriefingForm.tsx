@@ -58,7 +58,7 @@ const BriefingForm: React.FC<BriefingFormProps> = ({
     selectedPackage
   } = useBriefingForm(initialPackage, initialData);
 
-  const { sections, fields, isLoading } = useBriefingData(selectedPackage);
+  const { sections, fields, loading } = useBriefingData(selectedPackage);
 
   // Custom submit handler that calls the provided onSubmit if available
   const handleCustomSubmit = async (data: any) => {
@@ -84,14 +84,14 @@ const BriefingForm: React.FC<BriefingFormProps> = ({
 
   const renderPackageFields = () => {
     // Use dynamic form if we have data from Supabase
-    if (sections.length > 0 && Object.keys(fields).length > 0) {
+    if (sections.length > 0 && fields.length > 0) {
       return (
         <>
           {sections.map((section) => (
             <DynamicFormSection
               key={section.id}
               section={section}
-              fields={fields[section.id] || []}
+              fields={fields.filter(field => field.section_id === section.id)}
               form={form}
             />
           ))}
@@ -112,7 +112,7 @@ const BriefingForm: React.FC<BriefingFormProps> = ({
     }
   };
 
-  if (isLoading) {
+  if (loading) {
     return (
       <div className="bg-card border border-border rounded-lg p-8 flex justify-center items-center h-64">
         <Loader2 className="h-8 w-8 animate-spin text-harmonia-green" />

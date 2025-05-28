@@ -66,7 +66,7 @@ const WebhookConfigDialog: React.FC = () => {
         .from('system_settings')
         .upsert({
           key: 'webhook_config',
-          value: config
+          value: config as any
         });
 
       if (error) throw error;

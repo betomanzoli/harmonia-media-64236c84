@@ -90,7 +90,7 @@ export const useConversationalBriefing = () => {
     setIsLoading(true);
     try {
       const briefingData = {
-        initial_responses: initialData,
+        initial_responses: initialData as any,
         payment_status: 'pending',
         completion_status: 'conversational',
         package_type: packageType,
@@ -98,7 +98,7 @@ export const useConversationalBriefing = () => {
           conversational_responses: responses,
           completed_questions: currentStep + 1,
           total_questions: questions.length
-        }
+        } as any
       };
 
       const { data, error } = await supabase

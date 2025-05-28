@@ -20,7 +20,7 @@ export interface BriefingField {
 
 export interface BriefingSection {
   id: string;
-  section_type: 'client_info' | 'project_details' | 'technical_specs' | 'creative_direction' | 'timeline';
+  section_type: string;
   package_type: 'essencial' | 'profissional' | 'premium';
   title: string;
   description?: string;
@@ -62,7 +62,19 @@ export const useBriefingData = (packageType: 'essencial' | 'profissional' | 'pre
 
       if (fieldsError) throw fieldsError;
 
-      setSections(sectionsData || []);
+      // Map sections data to match our interface
+      const mappedSections: BriefingSection[] = (sectionsData || []).map(section => ({
+        id: section.id,
+        section_type: section.section_type,
+        package_type: section.package_type,
+        title: section.title,
+        description: section.description || undefined,
+        order_num: section.order_num,
+        is_active: section.is_active,
+        created_at: section.created_at
+      }));
+
+      setSections(mappedSections);
       
       // Convert the fields data to match our interface
       const convertedFields: BriefingField[] = (fieldsData || []).map(field => ({

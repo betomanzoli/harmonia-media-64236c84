@@ -19,14 +19,15 @@ interface ConversationalBriefingProps {
 const ConversationalBriefing: React.FC<ConversationalBriefingProps> = ({ onComplete }) => {
   const {
     currentStep,
-    initialQuestions,
-    initialResponses,
-    isSubmitting,
-    isInitialBriefingComplete,
-    updateResponse,
+    responses,
+    isLoading,
+    questions,
+    handleResponse,
     nextStep,
-    prevStep,
-    saveInitialBriefing
+    previousStep,
+    submitBriefing,
+    isLastQuestion,
+    isFirstQuestion
   } = useConversationalBriefing();
 
   const [messages, setMessages] = useState<Message[]>([
@@ -37,6 +38,7 @@ const ConversationalBriefing: React.FC<ConversationalBriefingProps> = ({ onCompl
   ]);
   const [currentResponse, setCurrentResponse] = useState('');
   const [isTyping, setIsTyping] = useState(false);
+  const [isInitialBriefingComplete, setIsInitialBriefingComplete] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   // Simulate assistant typing
@@ -77,49 +79,19 @@ const ConversationalBriefing: React.FC<ConversationalBriefingProps> = ({ onCompl
     }]);
     
     // Save the response
-    updateResponse(currentStep, currentResponse);
+    handleResponse(questions[currentStep]?.id || `step_${currentStep}`, currentResponse);
     setCurrentResponse('');
     
     // Move to next step after a brief delay
     setTimeout(async () => {
       // If we have more questions, show the next one
-      if (currentStep < initialQuestions.length - 1) {
+      if (!isLastQuestion) {
         nextStep();
-        await simulateTyping(initialQuestions[currentStep + 1]);
+        await simulateTyping(questions[currentStep + 1]?.question || 'Próxima pergunta...');
       } 
-      // If we've completed all initial questions
-      else if (currentStep === initialQuestions.length - 1) {
-        nextStep();
-        
-        // Prepare a summary of what the user has shared
-        const inspirationSummary = initialResponses.inspiration ? 
-          `Uma música inspirada em "${initialResponses.inspiration.substring(0, 50)}${initialResponses.inspiration.length > 50 ? '...' : ''}"` : '';
-        
-        const emotionSummary = initialResponses.emotion ?
-          `que transmite sentimentos de ${initialResponses.emotion.toLowerCase()}` : '';
-        
-        const connectionSummary = initialResponses.specialConnection ?
-          `com uma conexão especial a "${initialResponses.specialConnection.substring(0, 50)}${initialResponses.specialConnection.length > 50 ? '...' : ''}"` : '';
-        
-        // Create a natural language summary
-        let summary = "Com base no que você compartilhou, vejo que deseja ";
-        
-        if (inspirationSummary) {
-          summary += inspirationSummary;
-        }
-        
-        if (emotionSummary) {
-          summary += inspirationSummary ? ` ${emotionSummary}` : emotionSummary;
-        }
-        
-        if (connectionSummary) {
-          summary += (inspirationSummary || emotionSummary) ? ` e ${connectionSummary}` : connectionSummary;
-        }
-        
-        summary += ".";
-        
-        // Show the summary and then the package selection message
-        await simulateTyping(summary);
+      // If we've completed all questions
+      else {
+        setIsInitialBriefingComplete(true);
         await simulateTyping("Para continuar criando sua música personalizada, precisamos de mais detalhes específicos que são desbloqueados após a contratação de um dos pacotes abaixo. Escolha o que melhor atende às suas necessidades:");
       }
     }, 500);
@@ -127,9 +99,22 @@ const ConversationalBriefing: React.FC<ConversationalBriefingProps> = ({ onCompl
 
   // Handle package selection
   const handlePackageSelect = async (packageType: 'essencial' | 'profissional' | 'premium') => {
-    const briefingId = await saveInitialBriefing(packageType);
-    if (briefingId) {
-      onComplete(briefingId, packageType);
+    const mockInitialData = {
+      name: 'Cliente Conversacional',
+      email: 'cliente@exemplo.com',
+      projectType: 'Composição Musical',
+      budget: 'Médio',
+      timeline: 'Flexível',
+      description: 'Projeto criado via conversação'
+    };
+
+    try {
+      const briefingData = await submitBriefing(mockInitialData, packageType);
+      if (briefingData?.id) {
+        onComplete(briefingData.id, packageType);
+      }
+    } catch (error) {
+      console.error('Error selecting package:', error);
     }
   };
 
@@ -140,12 +125,12 @@ const ConversationalBriefing: React.FC<ConversationalBriefingProps> = ({ onCompl
 
   // Show first question on initial render
   useEffect(() => {
-    if (messages.length === 1) {
+    if (messages.length === 1 && questions.length > 0) {
       setTimeout(async () => {
-        await simulateTyping(initialQuestions[0]);
+        await simulateTyping(questions[0].question);
       }, 1000);
     }
-  }, []);
+  }, [questions]);
 
   return (
     <div className="flex flex-col h-full">
@@ -154,11 +139,11 @@ const ConversationalBriefing: React.FC<ConversationalBriefingProps> = ({ onCompl
         <div className="flex items-center gap-1 text-sm text-gray-500">
           {!isInitialBriefingComplete && (
             <>
-              <span>Etapa {currentStep + 1} de {initialQuestions.length}</span>
+              <span>Etapa {currentStep + 1} de {questions.length}</span>
               <div className="w-32 h-2 bg-gray-200 rounded-full ml-2">
                 <div 
                   className="h-2 bg-harmonia-green rounded-full" 
-                  style={{ width: `${((currentStep + 1) / initialQuestions.length) * 100}%` }}
+                  style={{ width: `${((currentStep + 1) / questions.length) * 100}%` }}
                 />
               </div>
             </>
@@ -202,15 +187,15 @@ const ConversationalBriefing: React.FC<ConversationalBriefingProps> = ({ onCompl
       {isInitialBriefingComplete ? (
         <PackageSelection 
           onSelectPackage={handlePackageSelect}
-          isSubmitting={isSubmitting}
+          isSubmitting={isLoading}
         />
       ) : (
         <div className="flex gap-2">
           <Button
             variant="outline"
             size="icon"
-            disabled={currentStep === 0 || isTyping}
-            onClick={prevStep}
+            disabled={isFirstQuestion || isTyping}
+            onClick={previousStep}
           >
             <ArrowLeft className="h-4 w-4" />
           </Button>
