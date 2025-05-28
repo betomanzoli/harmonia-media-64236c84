@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -6,7 +7,6 @@ import { CheckCircle, ArrowLeft, ArrowRight } from 'lucide-react';
 import DynamicFormSection from './DynamicFormSection';
 import QualificationResults from './QualificationResults';
 import { useToast } from '@/hooks/use-toast';
-import { supabase } from '@/integrations/supabase/client';
 
 interface BriefingField {
   id: string;
@@ -23,47 +23,41 @@ interface BriefingSection {
 }
 
 const QualificationForm: React.FC = () => {
-  const [briefingData, setBriefingData] = useState<BriefingSection[]>([]);
+  // Mock data since briefing_form table doesn't exist
+  const mockBriefingData: BriefingSection[] = [
+    {
+      id: 'personal',
+      title: 'Informações Pessoais',
+      fields: [
+        { id: 'name', type: 'text', label: 'Nome completo', required: true },
+        { id: 'email', type: 'text', label: 'Email', required: true },
+        { id: 'phone', type: 'text', label: 'Telefone', required: true }
+      ]
+    },
+    {
+      id: 'project',
+      title: 'Sobre o Projeto',
+      fields: [
+        { id: 'purpose', type: 'textarea', label: 'Qual o propósito da música?', required: true },
+        { id: 'style', type: 'select', label: 'Estilo musical preferido', options: ['Pop', 'Rock', 'Eletrônica', 'Clássica', 'Jazz'] },
+        { id: 'deadline', type: 'text', label: 'Prazo desejado' }
+      ]
+    },
+    {
+      id: 'budget',
+      title: 'Orçamento',
+      fields: [
+        { id: 'budget', type: 'select', label: 'Faixa de orçamento', options: ['Até R$ 500', 'R$ 500 - R$ 1000', 'R$ 1000 - R$ 2000', 'Acima de R$ 2000'] }
+      ]
+    }
+  ];
+
+  const [briefingData, setBriefingData] = useState<BriefingSection[]>(mockBriefingData);
   const [currentSectionIndex, setCurrentSectionIndex] = useState(0);
   const [formValues, setFormValues] = useState<Record<string, any>>({});
   const [isComplete, setIsComplete] = useState(false);
-  const [isLoading, setIsLoading] = useState(true);
+  const [isLoading, setIsLoading] = useState(false);
   const { toast } = useToast();
-
-  useEffect(() => {
-    loadBriefingData();
-  }, []);
-
-  const loadBriefingData = async () => {
-    setIsLoading(true);
-    try {
-      // Fetch briefing data from Supabase
-      const { data, error } = await supabase
-        .from('briefing_form')
-        .select('*')
-        .order('order');
-
-      if (error) throw error;
-
-      // Transform data to match the expected structure
-      const formattedData = data.map(section => ({
-        id: section.id,
-        title: section.title,
-        fields: section.fields
-      }));
-
-      setBriefingData(formattedData);
-    } catch (error) {
-      console.error('Error loading briefing data:', error);
-      toast({
-        title: "Erro ao carregar briefing",
-        description: "Não foi possível carregar o formulário de briefing.",
-        variant: "destructive"
-      });
-    } finally {
-      setIsLoading(false);
-    }
-  };
 
   const handleNextSection = () => {
     if (currentSectionIndex < briefingData.length - 1) {
@@ -87,7 +81,6 @@ const QualificationForm: React.FC = () => {
   };
 
   const handleSubmit = async () => {
-    // Handle form submission logic here
     console.log('Form values:', formValues);
     toast({
       title: "Briefing enviado!",

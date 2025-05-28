@@ -1,4 +1,8 @@
+
 import { useState } from 'react';
+import { useForm } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+import * as z from 'zod';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 
@@ -48,6 +52,7 @@ export const useBriefingForm = (initialPackage: 'essencial' | 'profissional' | '
     setIsSubmitting(true);
     
     try {
+      // Create or get client
       const { data: clientsData, error: clientError } = await supabase
         .from('clients')
         .select('id')
@@ -90,22 +95,22 @@ export const useBriefingForm = (initialPackage: 'essencial' | 'profissional' | '
         clientId = newClient.id;
       }
       
-      // Create briefing
-      const { error: briefingError } = await supabase
-        .from('briefings')
+      // Create a project instead of briefing (since briefings table doesn't exist)
+      const { error: projectError } = await supabase
+        .from('projects')
         .insert([{
+          title: `Projeto ${selectedPackage} - ${data.name}`,
           client_id: clientId,
+          client_name: data.name,
+          client_email: data.email,
+          client_phone: data.phone,
           package_type: selectedPackage,
-          status: 'pending',
-          data: {
-            ...data,
-            createdAt: new Date().toISOString(),
-            packageType: selectedPackage
-          }
+          status: 'waiting',
+          description: data.story || 'Briefing enviado pelo formulário'
         }]);
       
-      if (briefingError) {
-        throw briefingError;
+      if (projectError) {
+        throw projectError;
       }
       
       toast({
