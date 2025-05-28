@@ -4,13 +4,13 @@ import NewAdminLayout from '@/components/admin/layout/NewAdminLayout';
 import AdminAuth from '@/components/admin/AdminAuth';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { useProjects } from '@/hooks/admin/useProjects';
 import { Music, Users, Clock, CheckCircle, Plus, Eye } from 'lucide-react';
 import { Link } from 'react-router-dom';
+import { useProjectManagement } from '@/hooks/useProjectManagement';
 
 const NewAdminDashboard: React.FC = () => {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
-  const { projects } = useProjects();
+  const { projects } = useProjectManagement();
 
   if (!isAuthenticated) {
     return <AdminAuth onAuthenticated={() => setIsAuthenticated(true)} />;

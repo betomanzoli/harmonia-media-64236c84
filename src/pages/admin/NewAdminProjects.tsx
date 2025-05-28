@@ -9,13 +9,15 @@ import { Plus, Search } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import NewAdminLayout from '@/components/admin/layout/NewAdminLayout';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
-import { useProjects } from '@/hooks/admin/useProjects';
 import { Badge } from '@/components/ui/badge';
 import { Link } from 'react-router-dom';
+import AdminAuth from '@/components/admin/AdminAuth';
+import { useProjectManagement } from '@/hooks/useProjectManagement';
 
 const NewAdminProjects: React.FC = () => {
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
   const { toast } = useToast();
-  const { projects, loading, createProject } = useProjects();
+  const { projects, loading, createProject } = useProjectManagement();
   const [showNewProjectDialog, setShowNewProjectDialog] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
@@ -26,6 +28,10 @@ const NewAdminProjects: React.FC = () => {
     title: '',
     description: ''
   });
+
+  if (!isAuthenticated) {
+    return <AdminAuth onAuthenticated={() => setIsAuthenticated(true)} />;
+  }
 
   const handleAddProject = async () => {
     if (!formData.client_name || !formData.title || !formData.client_email) {
@@ -199,10 +205,18 @@ const NewAdminProjects: React.FC = () => {
                     <p className="text-sm text-gray-600">
                       Pacote: {project.package_type || 'Não definido'}
                     </p>
-                    <div className="pt-2">
+                    <p className="text-sm text-gray-600">
+                      Versões: {project.versions.length}
+                    </p>
+                    <div className="pt-2 space-y-2">
                       <Button asChild variant="outline" size="sm" className="w-full">
-                        <Link to={`/admin-j28s7d1k/previews/${project.id}`}>
-                          Ver Detalhes
+                        <Link to={`/client-preview/preview_${project.id}`}>
+                          Ver Preview Cliente
+                        </Link>
+                      </Button>
+                      <Button asChild size="sm" className="w-full bg-harmonia-green hover:bg-harmonia-green/90">
+                        <Link to={`/admin-j28s7d1k/previews?project=${project.id}`}>
+                          Gerenciar Projeto
                         </Link>
                       </Button>
                     </div>
