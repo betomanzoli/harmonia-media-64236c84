@@ -2,233 +2,258 @@
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
-import { Switch } from '@/components/ui/switch';
-import { Plus, Trash } from 'lucide-react';
+import { Textarea } from '@/components/ui/textarea';
+import { Checkbox } from '@/components/ui/checkbox';
+import { Alert, AlertDescription } from '@/components/ui/alert';
+import { AlertCircle, RefreshCw, ExternalLink } from 'lucide-react';
 import { VersionItem } from '@/hooks/admin/usePreviewProjects';
-import { useToast } from '@/hooks/use-toast';
-
-interface AdditionalLink {
-  label: string;
-  url: string;
-}
 
 interface AddVersionFormProps {
   projectId: string;
   onAddVersion: (version: VersionItem) => void;
   onCancel: () => void;
   isFinalVersion?: boolean;
-  packageType?: string;  // Added packageType property
+  packageType?: string;
 }
 
-const AddVersionForm: React.FC<AddVersionFormProps> = ({ 
-  projectId, 
-  onAddVersion, 
+const AddVersionForm: React.FC<AddVersionFormProps> = ({
+  projectId,
+  onAddVersion,
   onCancel,
   isFinalVersion = false,
-  packageType
+  packageType = 'essencial'
 }) => {
-  const [title, setTitle] = useState('');
-  const [description, setDescription] = useState('');
-  const [audioUrl, setAudioUrl] = useState('');
-  const [recommended, setRecommended] = useState(false);
-  const [isLoading, setIsLoading] = useState(false);
-  const [additionalLinks, setAdditionalLinks] = useState<AdditionalLink[]>([]);
-  const { toast } = useToast();
+  const [formData, setFormData] = useState({
+    name: '',
+    description: '',
+    audioUrl: '',
+    recommended: false
+  });
+  const [previewEmbed, setPreviewEmbed] = useState<string>('');
+  const [embedError, setEmbedError] = useState<string>('');
+  const [urlType, setUrlType] = useState<'bandcamp' | 'drive' | 'other'>('bandcamp');
+  const [isProcessing, setIsProcessing] = useState(false);
 
-  const handleAddLink = () => {
-    setAdditionalLinks([...additionalLinks, { label: '', url: '' }]);
-  };
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+    const { name, value } = e.target;
+    setFormData(prev => ({ ...prev, [name]: value }));
 
-  const handleRemoveLink = (index: number) => {
-    setAdditionalLinks(additionalLinks.filter((_, i) => i !== index));
-  };
-
-  const updateLinkLabel = (index: number, label: string) => {
-    const updatedLinks = [...additionalLinks];
-    updatedLinks[index].label = label;
-    setAdditionalLinks(updatedLinks);
-  };
-
-  const updateLinkUrl = (index: number, url: string) => {
-    const updatedLinks = [...additionalLinks];
-    updatedLinks[index].url = url;
-    setAdditionalLinks(updatedLinks);
-  };
-
-  const validateForm = () => {
-    if (!title.trim()) {
-      toast({
-        title: "Título obrigatório",
-        description: "Por favor, informe um título para a versão.",
-        variant: "destructive"
-      });
-      return false;
+    if (name === 'audioUrl' && value) {
+      setEmbedError('');
+      
+      if (value.includes('bandcamp.com')) {
+        setUrlType('bandcamp');
+        setPreviewEmbed('Preview: Bandcamp track');
+      } else if (value.includes('drive.google.com')) {
+        setUrlType('drive');
+        const fileIdMatch = value.match(/\/file\/d\/([a-zA-Z0-9-_]+)/);
+        if (fileIdMatch) {
+          setPreviewEmbed(`Preview: Arquivo do Google Drive (ID: ${fileIdMatch[1]})`);
+        } else {
+          setEmbedError('URL do Google Drive inválida. Use o formato de compartilhamento correto.');
+        }
+      } else {
+        setUrlType('other');
+        setPreviewEmbed('Preview: URL de áudio externa');
+      }
+    } else if (name === 'audioUrl' && !value) {
+      setPreviewEmbed('');
+      setEmbedError('');
+      setUrlType('bandcamp');
     }
+  };
 
-    if (!audioUrl.trim()) {
-      toast({
-        title: "URL de áudio obrigatória",
-        description: "Por favor, informe a URL do áudio principal.",
-        variant: "destructive"
-      });
-      return false;
-    }
+  const handleRecommendedChange = (checked: boolean) => {
+    setFormData(prev => ({ ...prev, recommended: checked }));
+  };
 
-    // Check if all additional links have both label and URL
-    if (additionalLinks.some(link => !link.label.trim() || !link.url.trim())) {
-      toast({
-        title: "Links adicionais incompletos",
-        description: "Todos os links adicionais devem ter um rótulo e uma URL.",
-        variant: "destructive"
-      });
-      return false;
-    }
-
-    return true;
+  const extractGoogleDriveFileId = (url: string): string | null => {
+    const fileIdMatch = url.match(/\/file\/d\/([a-zA-Z0-9-_]+)/);
+    return fileIdMatch ? fileIdMatch[1] : null;
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
-    if (!validateForm()) {
-      return;
-    }
+    setIsProcessing(true);
 
-    setIsLoading(true);
-    
     try {
-      // Extract Google Drive file ID if possible
-      const fileIdMatch = audioUrl.match(/[-\w]{25,}/);
-      const fileId = fileIdMatch ? fileIdMatch[0] : '';
-      
-      const newVersion: VersionItem = {
+      const versionData: VersionItem = {
         id: `v${Date.now()}`,
-        name: title,
-        description,
-        audioUrl,
-        fileId,
+        name: formData.name,
+        description: formData.description,
+        audioUrl: formData.audioUrl,
+        recommended: formData.recommended,
         dateAdded: new Date().toLocaleDateString('pt-BR'),
-        recommended,
-        final: isFinalVersion,
-        additionalLinks: additionalLinks.length > 0 ? additionalLinks : undefined
+        final: isFinalVersion
       };
-      
-      onAddVersion(newVersion);
-      toast({
-        title: isFinalVersion ? "Versão final adicionada" : "Versão adicionada",
-        description: `"${title}" foi adicionada com sucesso.`
-      });
+
+      if (urlType === 'drive') {
+        const fileId = extractGoogleDriveFileId(formData.audioUrl);
+        if (fileId) {
+          versionData.fileId = fileId;
+        }
+      }
+
+      await onAddVersion(versionData);
     } catch (error) {
-      console.error('Erro ao adicionar versão:', error);
-      toast({
-        title: "Erro ao adicionar versão",
-        description: "Ocorreu um erro ao adicionar a versão. Tente novamente.",
-        variant: "destructive"
-      });
+      console.error('Error adding version:', error);
     } finally {
-      setIsLoading(false);
+      setIsProcessing(false);
+    }
+  };
+
+  const getUrlPlaceholder = () => {
+    switch (urlType) {
+      case 'bandcamp':
+        return 'https://harmonia-media.bandcamp.com/track/nome-da-track';
+      case 'drive':
+        return 'https://drive.google.com/file/d/ID_DO_ARQUIVO/view';
+      default:
+        return 'https://exemplo.com/audio.mp3';
+    }
+  };
+
+  const getUrlHelperText = () => {
+    switch (urlType) {
+      case 'bandcamp':
+        return 'Cole a URL completa do track no Bandcamp';
+      case 'drive':
+        return 'Cole o link de compartilhamento do Google Drive (configurado como "Qualquer pessoa com o link")';
+      default:
+        return 'Cole a URL direta do arquivo de áudio';
     }
   };
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-4">
-      <div className="space-y-2">
-        <Label htmlFor="title">Título da Versão</Label>
-        <Input
-          id="title"
-          value={title}
-          onChange={(e) => setTitle(e.target.value)}
-          placeholder={isFinalVersion ? "Ex: Versão Final" : "Ex: Versão Acústica"}
-          required
-        />
-      </div>
-      
-      <div className="space-y-2">
-        <Label htmlFor="description">Descrição</Label>
-        <Textarea
-          id="description"
-          value={description}
-          onChange={(e) => setDescription(e.target.value)}
-          placeholder={isFinalVersion ? "Detalhes sobre a versão final" : "Detalhes sobre esta versão"}
-          rows={3}
-        />
-      </div>
-      
-      <div className="space-y-2">
-        <Label htmlFor="audioUrl">URL do Google Drive (principal)</Label>
+    <form onSubmit={handleSubmit} className="space-y-6">
+      <div>
+        <Label htmlFor="audioUrl">URL do Áudio</Label>
         <Input
           id="audioUrl"
-          value={audioUrl}
-          onChange={(e) => setAudioUrl(e.target.value)}
-          placeholder="https://drive.google.com/file/d/..."
+          name="audioUrl"
+          placeholder={getUrlPlaceholder()}
+          value={formData.audioUrl}
+          onChange={handleChange}
+          className="mt-1"
           required
         />
+        <p className="text-xs text-gray-500 mt-1">
+          {getUrlHelperText()}
+        </p>
+        
+        <div className="flex gap-2 mt-2">
+          <Button
+            type="button"
+            variant={urlType === 'bandcamp' ? 'default' : 'outline'}
+            size="sm"
+            onClick={() => setUrlType('bandcamp')}
+          >
+            Bandcamp
+          </Button>
+          <Button
+            type="button"
+            variant={urlType === 'drive' ? 'default' : 'outline'}
+            size="sm"
+            onClick={() => setUrlType('drive')}
+          >
+            Google Drive
+          </Button>
+          <Button
+            type="button"
+            variant={urlType === 'other' ? 'default' : 'outline'}
+            size="sm"
+            onClick={() => setUrlType('other')}
+          >
+            Outro
+          </Button>
+        </div>
       </div>
-      
-      {isFinalVersion && (
-        <div className="space-y-3">
-          <div className="flex items-center justify-between">
-            <Label>Links Adicionais (Stems, etc)</Label>
-            <Button 
-              type="button" 
-              variant="outline" 
-              size="sm"
-              onClick={handleAddLink}
-            >
-              <Plus className="w-4 h-4 mr-1" /> Adicionar Link
-            </Button>
-          </div>
-          
-          {additionalLinks.map((link, index) => (
-            <div key={index} className="grid grid-cols-12 gap-2 items-center">
-              <div className="col-span-4">
-                <Input
-                  value={link.label}
-                  onChange={(e) => updateLinkLabel(index, e.target.value)}
-                  placeholder="Tipo (Ex: Vocal Stem)"
-                />
-              </div>
-              <div className="col-span-7">
-                <Input
-                  value={link.url}
-                  onChange={(e) => updateLinkUrl(index, e.target.value)}
-                  placeholder="https://drive.google.com/file/d/..."
-                />
-              </div>
-              <div className="col-span-1">
-                <Button 
-                  type="button" 
-                  variant="ghost" 
-                  size="icon"
-                  onClick={() => handleRemoveLink(index)}
-                >
-                  <Trash className="w-4 h-4 text-gray-500" />
-                </Button>
-              </div>
+
+      {formData.audioUrl && (
+        <div className="border rounded p-4 bg-gray-50">
+          <Label className="text-sm font-medium mb-2 block">Prévia:</Label>
+          {embedError ? (
+            <Alert variant="destructive">
+              <AlertCircle className="h-4 w-4" />
+              <AlertDescription>{embedError}</AlertDescription>
+            </Alert>
+          ) : previewEmbed ? (
+            <div className="text-center p-4 bg-blue-50 rounded">
+              <p className="text-blue-700 font-medium">{previewEmbed}</p>
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                className="mt-2"
+                onClick={() => window.open(formData.audioUrl, '_blank')}
+              >
+                <ExternalLink className="mr-2 h-4 w-4" />
+                Abrir URL
+              </Button>
             </div>
-          ))}
+          ) : (
+            <div className="text-sm text-gray-500">
+              Gerando preview...
+            </div>
+          )}
         </div>
       )}
 
-      {!isFinalVersion && (
-        <div className="flex items-center space-x-2">
-          <Switch 
-            id="recommended"
-            checked={recommended}
-            onCheckedChange={setRecommended}
-          />
-          <Label htmlFor="recommended">Marcar como recomendada</Label>
-        </div>
-      )}
-      
+      <div>
+        <Label htmlFor="name">Nome da Versão</Label>
+        <Input
+          id="name"
+          name="name"
+          placeholder={isFinalVersion ? "Ex: Versão Final - Master" : "Ex: Versão 1 - Demo Inicial"}
+          value={formData.name}
+          onChange={handleChange}
+          className="mt-1"
+          required
+        />
+      </div>
+
+      <div>
+        <Label htmlFor="description">Descrição</Label>
+        <Textarea
+          id="description"
+          name="description"
+          placeholder="Descreva as características desta versão..."
+          value={formData.description}
+          onChange={handleChange}
+          rows={3}
+          className="mt-1"
+        />
+      </div>
+
+      <div className="flex items-center space-x-2">
+        <Checkbox 
+          id="recommended"
+          checked={formData.recommended}
+          onCheckedChange={handleRecommendedChange}
+        />
+        <Label htmlFor="recommended" className="text-sm font-medium">
+          Marcar como versão recomendada
+        </Label>
+      </div>
+
       <div className="flex justify-end space-x-2 pt-4">
         <Button type="button" variant="outline" onClick={onCancel}>
           Cancelar
         </Button>
-        <Button type="submit" disabled={isLoading}>
-          {isLoading ? 'Salvando...' : 'Salvar Versão'}
+        <Button 
+          type="submit" 
+          className="bg-harmonia-green hover:bg-harmonia-green/90"
+          disabled={isProcessing || !formData.name || !formData.audioUrl}
+        >
+          {isProcessing ? (
+            <>
+              <RefreshCw className="mr-2 h-4 w-4 animate-spin" />
+              Processando...
+            </>
+          ) : (
+            `Adicionar ${isFinalVersion ? 'Versão Final' : 'Versão'}`
+          )}
         </Button>
       </div>
     </form>

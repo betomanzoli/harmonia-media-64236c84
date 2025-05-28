@@ -1,6 +1,6 @@
 
 import { useState, useEffect, useCallback } from 'react';
-import { dbOperations } from '@/lib/supabase';
+import { dbOperations } from '@/lib/supabase/index';
 import { useToast } from '@/hooks/use-toast';
 
 export interface Client {

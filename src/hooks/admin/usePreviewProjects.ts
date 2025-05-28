@@ -1,6 +1,6 @@
 
 import { useState, useEffect, useCallback } from 'react';
-import { dbOperations } from '@/lib/supabase';
+import { dbOperations } from '@/lib/supabase/index';
 import { useToast } from '@/hooks/use-toast';
 
 export interface VersionItem {
@@ -43,6 +43,9 @@ export interface PreviewProject {
   }>;
   preview_code?: string;
 }
+
+// Export ProjectItem as alias for PreviewProject for backward compatibility
+export type ProjectItem = PreviewProject;
 
 export const usePreviewProjects = () => {
   const [projects, setProjects] = useState<PreviewProject[]>([]);

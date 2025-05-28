@@ -12,7 +12,6 @@ import { Input } from '@/components/ui/input';
 interface AddVersionDialogProps {
   projectId: string;
   onAddVersion: (newVersion: VersionItem) => void;
-  // Adding isOpen and onClose props to match how it's being used
   isOpen?: boolean;
   onOpenChange?: (open: boolean) => void;
   onSubmit?: (version: VersionItem) => void;
@@ -29,22 +28,18 @@ const AddVersionDialog: React.FC<AddVersionDialogProps> = ({
   isFinalVersion = false,
   packageType
 }) => {
-  // Use local state only if isOpen is not provided from props
   const [localOpen, setLocalOpen] = useState(false);
   const [selectedTab, setSelectedTab] = useState<'single' | 'multiple'>('single');
   const [multipleVersions, setMultipleVersions] = useState([
-    { name: '', description: '', url: '', recommended: false }
+    { name: '', description: '', audioUrl: '', recommended: false }
   ]);
 
-  // Determine if dialog is open based on props or local state
   const isDialogOpen = isOpen !== undefined ? isOpen : localOpen;
   
   const handleOpenChange = (open: boolean) => {
     if (isOpen !== undefined && onOpenChange) {
-      // If controlled from parent
       onOpenChange(open);
     } else {
-      // If controlled locally
       setLocalOpen(open);
     }
   };
@@ -64,20 +59,18 @@ const AddVersionDialog: React.FC<AddVersionDialogProps> = ({
   };
 
   const handleAddMultipleVersions = () => {
-    // Filter out empty versions
-    const validVersions = multipleVersions.filter(v => v.name.trim() !== '' && v.url.trim() !== '');
+    const validVersions = multipleVersions.filter(v => v.name.trim() !== '' && v.audioUrl.trim() !== '');
     
     if (validVersions.length === 0) {
       return;
     }
 
-    // Add versions one by one
     validVersions.forEach((versionData, index) => {
       const version: VersionItem = {
         id: `v${Date.now()}-${index}`,
         name: versionData.name,
         description: versionData.description || '',
-        url: versionData.url,
+        audioUrl: versionData.audioUrl,
         recommended: versionData.recommended,
         dateAdded: new Date().toLocaleDateString('pt-BR'),
         final: isFinalVersion
@@ -88,19 +81,17 @@ const AddVersionDialog: React.FC<AddVersionDialogProps> = ({
       }
     });
 
-    // Close dialog
     if (isOpen !== undefined && onOpenChange) {
       onOpenChange(false);
     } else {
       setLocalOpen(false);
     }
     
-    // Reset form
-    setMultipleVersions([{ name: '', description: '', url: '', recommended: false }]);
+    setMultipleVersions([{ name: '', description: '', audioUrl: '', recommended: false }]);
   };
   
   const addEmptyVersion = () => {
-    setMultipleVersions([...multipleVersions, { name: '', description: '', url: '', recommended: false }]);
+    setMultipleVersions([...multipleVersions, { name: '', description: '', audioUrl: '', recommended: false }]);
   };
 
   const removeVersion = (index: number) => {
@@ -119,7 +110,6 @@ const AddVersionDialog: React.FC<AddVersionDialogProps> = ({
   
   return (
     <Dialog open={isDialogOpen} onOpenChange={handleOpenChange}>
-      {/* Only render the trigger button if not externally controlled */}
       {isOpen === undefined && (
         <Button variant="outline" onClick={() => setLocalOpen(true)}>
           <Plus className="w-4 h-4 mr-2" />
@@ -190,8 +180,8 @@ const AddVersionDialog: React.FC<AddVersionDialogProps> = ({
                     <div>
                       <label className="text-sm font-medium">URL do Áudio*</label>
                       <Input
-                        value={version.url}
-                        onChange={(e) => updateVersionField(index, 'url', e.target.value)}
+                        value={version.audioUrl}
+                        onChange={(e) => updateVersionField(index, 'audioUrl', e.target.value)}
                         className="bg-slate-700 mt-1"
                         placeholder="https://drive.google.com/..."
                         required
