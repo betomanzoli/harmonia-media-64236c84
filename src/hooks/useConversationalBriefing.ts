@@ -1,138 +1,157 @@
 
-import { useState } from 'react';
-import { supabase } from '@/lib/supabase';
-import { useToast } from './use-toast';
+import { useState, useCallback } from 'react';
+import { supabase } from '@/integrations/supabase/client';
+import { useToast } from '@/hooks/use-toast';
 
-interface InitialBriefingResponse {
-  inspiration: string;
-  specialConnection: string;
-  emotion: string;
+export interface InitialBriefingResponse {
+  name: string;
+  email: string;
+  phone?: string;
+  projectType: string;
+  budget: string;
+  timeline: string;
+  description: string;
 }
 
-export function useConversationalBriefing() {
-  const [briefingId, setBriefingId] = useState<string | null>(null);
+export interface ConversationalQuestion {
+  id: string;
+  question: string;
+  type: 'text' | 'select' | 'multiselect';
+  options?: string[];
+  followUp?: string;
+}
+
+export const useConversationalBriefing = () => {
   const [currentStep, setCurrentStep] = useState(0);
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  const [initialResponses, setInitialResponses] = useState<InitialBriefingResponse>({
-    inspiration: '',
-    specialConnection: '',
-    emotion: '',
-  });
+  const [responses, setResponses] = useState<Record<string, any>>({});
+  const [isLoading, setIsLoading] = useState(false);
   const { toast } = useToast();
 
-  // Initial questions for pre-payment briefing - more targeted for music composition
-  const initialQuestions = [
-    "O que inspirou você a criar esta música? Conte um pouco sobre a história ou sentimento por trás dela.",
-    "Existe alguma pessoa ou momento especial relacionado a esta música? Quem ou o que você gostaria de homenagear?",
-    "Que emoção principal você gostaria que a música transmitisse ao ouvinte?"
+  const questions: ConversationalQuestion[] = [
+    {
+      id: 'style',
+      question: 'Que estilo musical você tem em mente?',
+      type: 'select',
+      options: ['Pop', 'Rock', 'Jazz', 'Clássico', 'Eletrônico', 'Folk', 'Outro'],
+      followUp: 'Pode descrever mais sobre o estilo que imagina?'
+    },
+    {
+      id: 'mood',
+      question: 'Qual o sentimento que a música deve transmitir?',
+      type: 'select',
+      options: ['Alegre', 'Melancólico', 'Energético', 'Romântico', 'Épico', 'Relaxante'],
+    },
+    {
+      id: 'instruments',
+      question: 'Há instrumentos específicos que gostaria de incluir?',
+      type: 'multiselect',
+      options: ['Piano', 'Violão', 'Violino', 'Bateria', 'Baixo', 'Saxofone', 'Flauta', 'Cordas'],
+    },
+    {
+      id: 'reference',
+      question: 'Tem alguma música de referência que gostaria de compartilhar?',
+      type: 'text',
+      followUp: 'Pode incluir links do YouTube ou Spotify, ou apenas o nome da música e artista'
+    },
+    {
+      id: 'usage',
+      question: 'Para que será usada esta música?',
+      type: 'select',
+      options: ['Vídeo comercial', 'Vídeo pessoal', 'Evento', 'Podcast', 'Jogo', 'Filme', 'Outro'],
+    },
+    {
+      id: 'duration',
+      question: 'Qual a duração desejada?',
+      type: 'select',
+      options: ['30 segundos', '1 minuto', '2-3 minutos', '3-5 minutos', 'Mais de 5 minutos'],
+    }
   ];
 
-  // Update response for a specific step
-  const updateResponse = (step: number, response: string) => {
-    setInitialResponses(prev => {
-      if (step === 0) return { ...prev, inspiration: response };
-      if (step === 1) return { ...prev, specialConnection: response };
-      if (step === 2) return { ...prev, emotion: response };
-      return prev;
-    });
-  };
+  const handleResponse = useCallback((questionId: string, answer: any) => {
+    setResponses(prev => ({
+      ...prev,
+      [questionId]: answer
+    }));
+  }, []);
 
-  // Move to next question
-  const nextStep = () => {
-    if (currentStep < initialQuestions.length) {
-      setCurrentStep(currentStep + 1);
+  const nextStep = useCallback(() => {
+    if (currentStep < questions.length - 1) {
+      setCurrentStep(prev => prev + 1);
     }
-  };
+  }, [currentStep, questions.length]);
 
-  // Go back to previous question
-  const prevStep = () => {
+  const previousStep = useCallback(() => {
     if (currentStep > 0) {
-      setCurrentStep(currentStep - 1);
+      setCurrentStep(prev => prev - 1);
     }
-  };
+  }, [currentStep]);
 
-  // Check if we're at the final initial step (showing packages)
-  const isInitialBriefingComplete = currentStep === initialQuestions.length;
-
-  // Save initial responses to Supabase
-  const saveInitialBriefing = async (packageType: 'essencial' | 'profissional' | 'premium') => {
-    setIsSubmitting(true);
+  const submitBriefing = useCallback(async (initialData: InitialBriefingResponse, packageType: 'essencial' | 'profissional' | 'premium') => {
+    setIsLoading(true);
     try {
-      // Prepare a structured format for the briefing data that will be used by n8n later
-      const formattedData = {
-        initialBriefing: true,
-        responses: initialResponses,
-        createdAt: new Date().toISOString(),
-        packageType,
-        questions: {
-          inspiration: initialQuestions[0],
-          specialConnection: initialQuestions[1],
-          emotion: initialQuestions[2]
-        },
-        briefingSummary: {
-          inspiration: initialResponses.inspiration?.substring(0, 100) || 'Não especificado',
-          connection: initialResponses.specialConnection?.substring(0, 100) || 'Nenhuma',
-          emotion: initialResponses.emotion || 'Não especificado'
-        },
-        status: {
-          conversationComplete: false,
-          needsRevision: false
-        },
-        workflow: {
-          currentStage: 'initial',
-          nextStage: 'payment',
-          completedSteps: ['initial_briefing']
+      const briefingData = {
+        initial_responses: initialData,
+        payment_status: 'pending',
+        completion_status: 'conversational',
+        package_type: packageType,
+        data: {
+          conversational_responses: responses,
+          completed_questions: currentStep + 1,
+          total_questions: questions.length
         }
       };
 
       const { data, error } = await supabase
         .from('briefings')
-        .insert([{
-          initial_responses: initialResponses,
-          payment_status: 'pending',
-          completion_status: 'initial',
-          package_type: packageType,
-          data: formattedData
-        }])
+        .insert([briefingData])
         .select()
         .single();
 
       if (error) throw error;
 
-      if (data) {
-        console.log("Briefing created successfully:", data.id);
-        setBriefingId(data.id);
-        
-        // Log for debugging n8n integration
-        console.log("Data prepared for n8n workflow:", formattedData);
-        
-        return data.id;
-      }
-
-      return null;
-    } catch (error: any) {
-      console.error("Error saving initial briefing:", error);
       toast({
-        title: "Erro ao salvar briefing",
-        description: error.message || "Não foi possível salvar suas respostas iniciais",
+        title: "Briefing salvo!",
+        description: "Suas respostas foram salvas com sucesso."
+      });
+
+      return data;
+    } catch (error) {
+      console.error('Error submitting briefing:', error);
+      toast({
+        title: "Erro ao salvar",
+        description: "Não foi possível salvar o briefing. Tente novamente.",
         variant: "destructive"
       });
-      return null;
+      throw error;
     } finally {
-      setIsSubmitting(false);
+      setIsLoading(false);
     }
-  };
+  }, [responses, currentStep, questions.length, toast]);
+
+  const getCurrentQuestion = useCallback(() => {
+    return questions[currentStep] || null;
+  }, [currentStep, questions]);
+
+  const getProgress = useCallback(() => {
+    return Math.round(((currentStep + 1) / questions.length) * 100);
+  }, [currentStep, questions.length]);
+
+  const isLastQuestion = currentStep === questions.length - 1;
+  const isFirstQuestion = currentStep === 0;
 
   return {
-    briefingId,
     currentStep,
-    initialQuestions,
-    initialResponses,
-    isSubmitting,
-    isInitialBriefingComplete,
-    updateResponse,
+    responses,
+    isLoading,
+    questions,
+    getCurrentQuestion,
+    handleResponse,
     nextStep,
-    prevStep,
-    saveInitialBriefing,
+    previousStep,
+    submitBriefing,
+    getProgress,
+    isLastQuestion,
+    isFirstQuestion,
+    totalQuestions: questions.length
   };
-}
+};

@@ -9,7 +9,7 @@ import { useToast } from '@/hooks/use-toast';
 import { Music, MessageSquare, ArrowLeft, CheckCircle, Star } from 'lucide-react';
 import { notificationService } from '@/services/notificationService';
 import GoogleDriveAudioPlayer from '@/components/previews/GoogleDriveAudioPlayer';
-import { supabase } from '@/lib/supabase';
+import { supabase } from '@/integrations/supabase/client';
 import { checkPreviewAccessCookie, setPreviewAccessCookie, setPreviewEmailCookie } from '@/utils/authCookies';
 
 interface ProjectPreviewDetailsProps {
@@ -17,7 +17,7 @@ interface ProjectPreviewDetailsProps {
     id: string;
     title: string;
     status: string;
-    versions?: any[]; // Make sure this is an array
+    versionsList?: PreviewVersion[];
   };
   onBack: () => void;
 }
@@ -48,14 +48,14 @@ const ProjectPreviewDetails: React.FC<ProjectPreviewDetailsProps> = ({ project, 
 
     // Load versions from project or fetch from backend
     const loadVersions = async () => {
-      if (project.versions && Array.isArray(project.versions) && project.versions.length > 0) {
-        setVersions(project.versions);
+      if (project.versionsList && Array.isArray(project.versionsList) && project.versionsList.length > 0) {
+        setVersions(project.versionsList);
         // Select the recommended version by default if available
-        const recommendedVersion = project.versions.find(v => v.recommended);
+        const recommendedVersion = project.versionsList.find(v => v.recommended);
         if (recommendedVersion) {
           setSelectedVersion(recommendedVersion.id);
-        } else if (project.versions.length > 0) {
-          setSelectedVersion(project.versions[0].id);
+        } else if (project.versionsList.length > 0) {
+          setSelectedVersion(project.versionsList[0].id);
         }
       } else {
         try {
@@ -68,13 +68,10 @@ const ProjectPreviewDetails: React.FC<ProjectPreviewDetailsProps> = ({ project, 
 
           if (error) throw error;
 
-          if (previewData?.versions) {
-            setVersions(previewData.versions);
-            if (previewData.versions.length > 0) {
-              const recommendedVersion = previewData.versions.find(v => v.recommended);
-              setSelectedVersion(recommendedVersion?.id || previewData.versions[0].id);
-            }
-            return;
+          if (previewData) {
+            // Note: previews table doesn't have versions field in the schema
+            // This is a fallback for demonstration
+            console.log('Preview data loaded:', previewData);
           }
         } catch (error) {
           console.error("Error fetching preview versions:", error);

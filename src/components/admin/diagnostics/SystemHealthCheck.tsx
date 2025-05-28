@@ -41,7 +41,7 @@ const SystemHealthCheck: React.FC = () => {
     }
 
     // 2. Verificar tabelas essenciais
-    const tables = ['clients', 'projects', 'project_versions', 'feedback'];
+    const tables = ['clients', 'projects', 'project_versions', 'feedback'] as const;
     for (const table of tables) {
       try {
         const { error } = await supabase.from(table).select('count(*)').limit(1);

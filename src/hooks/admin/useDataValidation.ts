@@ -30,7 +30,7 @@ export const useDataValidation = () => {
   }, [toast]);
 
   // Validar se dados persistem após operação
-  const validateDataPersistence = useCallback(async (table: string, id: string) => {
+  const validateDataPersistence = useCallback(async (table: 'clients' | 'projects' | 'project_versions' | 'feedback', id: string) => {
     try {
       await new Promise(resolve => setTimeout(resolve, 500)); // Aguardar propagação
       
