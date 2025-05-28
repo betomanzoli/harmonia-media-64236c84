@@ -6,8 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { Badge } from '@/components/ui/badge';
 import { useToast } from '@/hooks/use-toast';
-import { CheckCircle, MessageCircle, Clock, Music, ArrowLeft } from 'lucide-react';
-import { BandcampUtils } from '@/components/admin/bandcamp/BandcampUtils';
+import { CheckCircle, MessageCircle, Clock, Music, ArrowLeft, Star } from 'lucide-react';
 
 interface Version {
   id: string;
@@ -18,6 +17,8 @@ interface Version {
   final: boolean;
   recommended: boolean;
   dateAdded: string;
+  albumId?: string;
+  trackId?: string;
 }
 
 interface Project {
@@ -27,6 +28,7 @@ interface Project {
   status: 'waiting' | 'feedback' | 'approved';
   versions: Version[];
   expirationDate: string;
+  packageType?: string;
 }
 
 const ClientPreviewPage: React.FC = () => {
@@ -38,37 +40,30 @@ const ClientPreviewPage: React.FC = () => {
   const [feedback, setFeedback] = useState('');
   const [selectedVersion, setSelectedVersion] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [versionFeedbacks, setVersionFeedbacks] = useState<Record<string, string>>({});
 
-  // Mock data - em produção viria do Supabase
+  // Mock data sincronizado com o admin - em produção viria do Supabase
   useEffect(() => {
     if (projectId) {
-      // Simulação de carregamento do projeto
       const mockProject: Project = {
         id: projectId,
         title: 'Música Personalizada - João Silva',
         clientName: 'João Silva',
         status: 'waiting',
-        expirationDate: '2024-02-15',
+        expirationDate: '15/02/2024',
+        packageType: 'Premium',
         versions: [
           {
             id: '1',
             name: 'Versão 1 - Mix Inicial',
-            description: 'Primeira versão com arranjo básico',
-            embedUrl: BandcampUtils.generateEmbedUrl('4290875691', '1'),
-            bandcampUrl: 'https://harmonia-media.bandcamp.com/album/promocionais-harmonia-01?t=1',
+            description: 'Primeira versão com arranjo básico e instrumentos principais',
+            embedUrl: 'https://bandcamp.com/EmbeddedPlayer/album=4290875691/size=small/bgcol=333333/linkcol=2ebd35/track=2755730140/transparent=true/',
+            bandcampUrl: 'https://harmonia-media.bandcamp.com/track/vozes-em-harmonia-ex-05',
             final: false,
             recommended: true,
-            dateAdded: '2024-01-15'
-          },
-          {
-            id: '2',
-            name: 'Versão 2 - Ajustes de Mixagem',
-            description: 'Versão com melhorias na mixagem e masterização',
-            embedUrl: BandcampUtils.generateEmbedUrl('4290875691', '2'),
-            bandcampUrl: 'https://harmonia-media.bandcamp.com/album/promocionais-harmonia-01?t=2',
-            final: false,
-            recommended: false,
-            dateAdded: '2024-01-20'
+            dateAdded: '15/01/2024',
+            albumId: '4290875691',
+            trackId: '2755730140'
           }
         ]
       };
@@ -81,12 +76,11 @@ const ClientPreviewPage: React.FC = () => {
     setIsSubmitting(true);
     
     try {
-      // Em produção: atualizar status no Supabase
       console.log('Aprovando versão:', versionId);
       
       toast({
         title: "Versão aprovada!",
-        description: "Sua aprovação foi registrada. Entraremos em contato em breve."
+        description: "Sua aprovação foi registrada. Entraremos em contato em breve com os arquivos finais."
       });
       
       if (project) {
@@ -107,7 +101,49 @@ const ClientPreviewPage: React.FC = () => {
     }
   };
 
-  const handleFeedback = async () => {
+  const handleVersionFeedback = async (versionId: string) => {
+    const versionFeedback = versionFeedbacks[versionId];
+    if (!versionFeedback || !versionFeedback.trim()) {
+      toast({
+        title: "Feedback obrigatório",
+        description: "Por favor, descreva as alterações desejadas para esta versão.",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    setIsSubmitting(true);
+    
+    try {
+      console.log('Enviando feedback para versão:', versionId, versionFeedback);
+      
+      toast({
+        title: "Feedback enviado!",
+        description: "Recebemos seu feedback para esta versão. Uma nova versão será criada em breve."
+      });
+      
+      // Limpar feedback da versão
+      setVersionFeedbacks(prev => ({ ...prev, [versionId]: '' }));
+      
+      if (project) {
+        setProject({
+          ...project,
+          status: 'feedback'
+        });
+      }
+      
+    } catch (error) {
+      toast({
+        title: "Erro",
+        description: "Não foi possível enviar o feedback. Tente novamente.",
+        variant: "destructive"
+      });
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  const handleGeneralFeedback = async () => {
     if (!feedback.trim()) {
       toast({
         title: "Feedback obrigatório",
@@ -120,13 +156,14 @@ const ClientPreviewPage: React.FC = () => {
     setIsSubmitting(true);
     
     try {
-      // Em produção: salvar feedback no Supabase
-      console.log('Enviando feedback:', feedback);
+      console.log('Enviando feedback geral:', feedback);
       
       toast({
         title: "Feedback enviado!",
         description: "Recebemos seu feedback. Uma nova versão será criada em breve."
       });
+      
+      setFeedback('');
       
       if (project) {
         setProject({
@@ -134,8 +171,6 @@ const ClientPreviewPage: React.FC = () => {
           status: 'feedback'
         });
       }
-      
-      setFeedback('');
       
     } catch (error) {
       toast({
@@ -187,7 +222,10 @@ const ClientPreviewPage: React.FC = () => {
               <span className="text-2xl font-bold text-white">harmonIA</span>
             </div>
             <h1 className="text-3xl font-bold text-white mb-2">{project.title}</h1>
-            <p className="text-gray-300">Olá, {project.clientName}! Escute suas prévias e nos dê seu feedback.</p>
+            <p className="text-gray-300 mb-2">Olá, {project.clientName}! Escute suas prévias e nos dê seu feedback.</p>
+            {project.packageType && (
+              <p className="text-gray-400 text-sm">Pacote: {project.packageType}</p>
+            )}
             <div className="flex items-center justify-center gap-4 mt-4">
               {getStatusBadge(project.status)}
               <div className="text-gray-400 text-sm flex items-center">
@@ -196,6 +234,19 @@ const ClientPreviewPage: React.FC = () => {
               </div>
             </div>
           </div>
+
+          {/* Instructions */}
+          <Card className="bg-gray-800 border-gray-700 mb-6">
+            <CardContent className="p-4">
+              <h3 className="text-white font-medium mb-2">Como funciona:</h3>
+              <ul className="text-gray-300 text-sm space-y-1">
+                <li>• Escute todas as versões disponíveis usando os players abaixo</li>
+                <li>• Deixe feedback específico para cada versão ou feedback geral</li>
+                <li>• Aprove a versão que mais gostar para finalizar o projeto</li>
+                <li>• Você pode comentar mesmo após a aprovação</li>
+              </ul>
+            </CardContent>
+          </Card>
 
           {/* Versions */}
           <div className="space-y-6 mb-8">
@@ -207,11 +258,13 @@ const ClientPreviewPage: React.FC = () => {
                       {version.name}
                       {version.recommended && (
                         <Badge variant="secondary" className="bg-blue-100 text-blue-700">
+                          <Star className="w-3 h-3 mr-1" />
                           Recomendada
                         </Badge>
                       )}
                       {version.final && (
                         <Badge variant="secondary" className="bg-green-100 text-green-700">
+                          <CheckCircle className="w-3 h-3 mr-1" />
                           Final
                         </Badge>
                       )}
@@ -222,11 +275,12 @@ const ClientPreviewPage: React.FC = () => {
                     <p className="text-gray-300 text-sm">{version.description}</p>
                   )}
                 </CardHeader>
-                <CardContent>
+                <CardContent className="space-y-4">
+                  
                   {/* Bandcamp Player Embed */}
-                  <div className="mb-4">
+                  <div className="bg-gray-900 p-3 rounded">
                     <iframe
-                      style={{ border: 0, width: '100%', height: '120px' }}
+                      style={{ border: 0, width: '100%', height: '42px' }}
                       src={version.embedUrl}
                       seamless
                       title={`Player: ${version.name}`}
@@ -234,6 +288,35 @@ const ClientPreviewPage: React.FC = () => {
                     />
                   </div>
                   
+                  {/* Feedback específico da versão */}
+                  {project.status !== 'approved' && (
+                    <div className="space-y-3">
+                      <Textarea
+                        placeholder={`Feedback específico para "${version.name}"...`}
+                        value={versionFeedbacks[version.id] || ''}
+                        onChange={(e) => setVersionFeedbacks(prev => ({ 
+                          ...prev, 
+                          [version.id]: e.target.value 
+                        }))}
+                        className="bg-gray-700 border-gray-600 text-white"
+                        rows={2}
+                      />
+                      <div className="flex gap-2">
+                        <Button
+                          onClick={() => handleVersionFeedback(version.id)}
+                          disabled={isSubmitting || !versionFeedbacks[version.id]?.trim()}
+                          variant="outline"
+                          size="sm"
+                          className="text-gray-300 border-gray-600 hover:bg-gray-700"
+                        >
+                          <MessageCircle className="w-4 h-4 mr-2" />
+                          Feedback desta Versão
+                        </Button>
+                      </div>
+                    </div>
+                  )}
+                  
+                  {/* Botões de ação */}
                   <div className="flex gap-2">
                     <Button
                       onClick={() => handleApproval(version.id)}
@@ -257,28 +340,28 @@ const ClientPreviewPage: React.FC = () => {
             ))}
           </div>
 
-          {/* Feedback Section */}
+          {/* Feedback Geral */}
           {project.status !== 'approved' && (
             <Card className="bg-gray-800 border-gray-700">
               <CardHeader>
                 <CardTitle className="text-white flex items-center">
                   <MessageCircle className="w-5 h-5 mr-2" />
-                  Precisa de Ajustes? Deixe seu Feedback
+                  Feedback Geral do Projeto
                 </CardTitle>
               </CardHeader>
               <CardContent className="space-y-4">
                 <Textarea
-                  placeholder="Descreva as alterações que gostaria de ver na próxima versão..."
+                  placeholder="Feedback geral sobre o projeto ou sugestões para uma nova versão..."
                   value={feedback}
                   onChange={(e) => setFeedback(e.target.value)}
                   className="bg-gray-700 border-gray-600 text-white min-h-[120px]"
                 />
                 <Button
-                  onClick={handleFeedback}
+                  onClick={handleGeneralFeedback}
                   disabled={isSubmitting || !feedback.trim()}
                   className="bg-harmonia-green hover:bg-harmonia-green/90"
                 >
-                  Enviar Feedback
+                  Enviar Feedback Geral
                 </Button>
               </CardContent>
             </Card>
@@ -290,9 +373,28 @@ const ClientPreviewPage: React.FC = () => {
               <CardContent className="text-center py-8">
                 <CheckCircle className="w-12 h-12 text-green-400 mx-auto mb-4" />
                 <h3 className="text-xl font-bold text-white mb-2">Projeto Aprovado!</h3>
-                <p className="text-green-200">
+                <p className="text-green-200 mb-4">
                   Obrigado pela aprovação! Entraremos em contato em breve com os arquivos finais.
                 </p>
+                
+                {/* Ainda permite comentários após aprovação */}
+                <div className="mt-6 text-left">
+                  <Textarea
+                    placeholder="Comentários adicionais (opcional)..."
+                    value={feedback}
+                    onChange={(e) => setFeedback(e.target.value)}
+                    className="bg-green-700 border-green-600 text-white mb-3"
+                    rows={3}
+                  />
+                  <Button
+                    onClick={handleGeneralFeedback}
+                    disabled={isSubmitting || !feedback.trim()}
+                    variant="outline"
+                    className="text-green-200 border-green-600 hover:bg-green-700"
+                  >
+                    Adicionar Comentário
+                  </Button>
+                </div>
               </CardContent>
             </Card>
           )}

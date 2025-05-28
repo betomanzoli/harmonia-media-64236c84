@@ -36,6 +36,7 @@ const AddVersionDialog: React.FC<AddVersionDialogProps> = ({
     isRecommended: false
   });
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [previewEmbed, setPreviewEmbed] = useState<string>('');
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -62,7 +63,7 @@ const AddVersionDialog: React.FC<AddVersionDialogProps> = ({
     if (!BandcampUtils.isValidBandcampUrl(formData.bandcampUrl)) {
       toast({
         title: "URL inválida",
-        description: "Por favor, insira uma URL válida do Bandcamp.",
+        description: "Por favor, insira uma URL válida do Bandcamp (album ou track).",
         variant: "destructive"
       });
       return;
@@ -72,9 +73,9 @@ const AddVersionDialog: React.FC<AddVersionDialogProps> = ({
 
     try {
       // Extract track information from Bandcamp URL
-      const trackIds = BandcampUtils.extractIds(formData.bandcampUrl);
+      const trackInfo = BandcampUtils.createTrackInfoFromUrl(formData.bandcampUrl);
       
-      if (!trackIds) {
+      if (!trackInfo) {
         throw new Error('Não foi possível extrair informações da URL do Bandcamp');
       }
 
@@ -84,14 +85,16 @@ const AddVersionDialog: React.FC<AddVersionDialogProps> = ({
         name: formData.name,
         description: formData.description,
         bandcampUrl: formData.bandcampUrl,
-        albumId: trackIds.albumId,
-        trackId: trackIds.trackId,
-        embedUrl: BandcampUtils.generateEmbedUrl(trackIds.albumId, trackIds.trackId),
-        audioUrl: formData.bandcampUrl,
+        albumId: trackInfo.albumId,
+        trackId: trackInfo.trackId,
+        embedUrl: trackInfo.embedUrl,
+        audioUrl: trackInfo.directUrl,
         final: formData.isFinal,
         recommended: formData.isRecommended,
         dateAdded: new Date().toLocaleDateString('pt-BR')
       };
+
+      console.log('Adding new version:', newVersion);
 
       // Call parent handler
       await onAddVersion(newVersion);
@@ -104,12 +107,13 @@ const AddVersionDialog: React.FC<AddVersionDialogProps> = ({
         isFinal: isFinalVersion,
         isRecommended: false
       });
+      setPreviewEmbed('');
 
       onOpenChange(false);
 
       toast({
         title: "Versão adicionada",
-        description: `${formData.name} foi adicionada com player do Bandcamp.`
+        description: `${formData.name} foi adicionada com player do Bandcamp para track individual.`
       });
 
     } catch (error) {
@@ -126,6 +130,22 @@ const AddVersionDialog: React.FC<AddVersionDialogProps> = ({
 
   const handleChange = (field: string, value: any) => {
     setFormData(prev => ({ ...prev, [field]: value }));
+    
+    // Auto-generate embed preview when URL changes
+    if (field === 'bandcampUrl' && value) {
+      const embedUrl = BandcampUtils.autoGenerateEmbed(value);
+      if (embedUrl) {
+        setPreviewEmbed(embedUrl);
+        
+        // Auto-fill name if empty
+        if (!formData.name) {
+          const autoTitle = BandcampUtils.extractTrackTitle(value);
+          setFormData(prev => ({ ...prev, name: autoTitle }));
+        }
+      } else {
+        setPreviewEmbed('');
+      }
+    }
   };
 
   const testBandcampUrl = () => {
@@ -134,9 +154,20 @@ const AddVersionDialog: React.FC<AddVersionDialogProps> = ({
     }
   };
 
+  const clearForm = () => {
+    setFormData({
+      name: '',
+      description: '',
+      bandcampUrl: '',
+      isFinal: isFinalVersion,
+      isRecommended: false
+    });
+    setPreviewEmbed('');
+  };
+
   return (
     <Dialog open={isOpen} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-md">
+      <DialogContent className="max-w-md max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>
             {isFinalVersion ? 'Adicionar Versão Final' : 'Adicionar Nova Versão'}
@@ -145,22 +176,11 @@ const AddVersionDialog: React.FC<AddVersionDialogProps> = ({
         
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
-            <Label htmlFor="name">Nome da Versão</Label>
-            <Input
-              id="name"
-              placeholder="Ex: Versão 1 - Mix Inicial"
-              value={formData.name}
-              onChange={(e) => handleChange('name', e.target.value)}
-              required
-            />
-          </div>
-
-          <div>
-            <Label htmlFor="bandcampUrl">URL do Bandcamp</Label>
+            <Label htmlFor="bandcampUrl">URL do Track no Bandcamp</Label>
             <div className="flex gap-2">
               <Input
                 id="bandcampUrl"
-                placeholder="https://harmonia-media.bandcamp.com/album/promocionais-harmonia-01?t=10"
+                placeholder="https://harmonia-media.bandcamp.com/track/nome-da-track"
                 value={formData.bandcampUrl}
                 onChange={(e) => handleChange('bandcampUrl', e.target.value)}
                 required
@@ -176,7 +196,34 @@ const AddVersionDialog: React.FC<AddVersionDialogProps> = ({
               </Button>
             </div>
             <p className="text-xs text-gray-500 mt-1">
-              Cole a URL do track específico no Bandcamp (com ?t=número)
+              Cole a URL de um track específico do Bandcamp. O embed será gerado automaticamente.
+            </p>
+          </div>
+
+          {/* Preview do Embed */}
+          {previewEmbed && (
+            <div className="border rounded p-3 bg-gray-50">
+              <Label className="text-sm font-medium mb-2 block">Prévia do Player:</Label>
+              <iframe
+                src={previewEmbed}
+                style={{ border: 0, width: '100%', height: '42px' }}
+                title="Preview do Bandcamp"
+                className="rounded"
+              />
+            </div>
+          )}
+
+          <div>
+            <Label htmlFor="name">Nome da Versão</Label>
+            <Input
+              id="name"
+              placeholder="Ex: Versão 1 - Mix Inicial"
+              value={formData.name}
+              onChange={(e) => handleChange('name', e.target.value)}
+              required
+            />
+            <p className="text-xs text-gray-500 mt-1">
+              Nome será preenchido automaticamente baseado na URL, mas você pode editar.
             </p>
           </div>
 
@@ -217,13 +264,16 @@ const AddVersionDialog: React.FC<AddVersionDialogProps> = ({
             <Button
               type="button"
               variant="outline"
-              onClick={() => onOpenChange(false)}
+              onClick={() => {
+                clearForm();
+                onOpenChange(false);
+              }}
             >
               Cancelar
             </Button>
             <Button
               type="submit"
-              disabled={isSubmitting}
+              disabled={isSubmitting || !previewEmbed}
               className="bg-harmonia-green hover:bg-harmonia-green/90"
             >
               {isSubmitting ? (

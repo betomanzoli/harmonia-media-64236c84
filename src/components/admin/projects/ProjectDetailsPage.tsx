@@ -1,26 +1,39 @@
 
 import React, { useState, useEffect } from 'react';
+import { useParams, useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { useToast } from '@/hooks/use-toast';
-import { ArrowLeft, Plus, Copy, Clock, Mail, Phone, User, Calendar } from 'lucide-react';
-import { useNavigate, useParams } from 'react-router-dom';
-import NewAdminLayout from '../layout/NewAdminLayout';
-import AddVersionDialog from './AddVersionDialog';
+import { ArrowLeft, Plus, User, Mail, Phone, Calendar, ExternalLink } from 'lucide-react';
+import NewAdminLayout from '@/components/admin/layout/NewAdminLayout';
 import BandcampVersionCard from './BandcampVersionCard';
+import AddVersionDialog from './AddVersionDialog';
+
+interface BandcampVersion {
+  id: string;
+  name: string;
+  description?: string;
+  embedUrl: string;
+  bandcampUrl: string;
+  final?: boolean;
+  recommended?: boolean;
+  dateAdded: string;
+  albumId?: string;
+  trackId?: string;
+}
 
 interface Project {
   id: string;
   clientName: string;
-  clientEmail: string;
-  clientPhone?: string;
   title: string;
-  packageType: string;
   status: 'waiting' | 'feedback' | 'approved';
+  packageType?: string;
   createdAt: string;
-  expirationDate: string;
-  versions: any[];
+  expirationDate?: string;
+  clientEmail?: string;
+  clientPhone?: string;
+  versions: BandcampVersion[];
 }
 
 const ProjectDetailsPage: React.FC = () => {
@@ -29,111 +42,98 @@ const ProjectDetailsPage: React.FC = () => {
   const { toast } = useToast();
   
   const [project, setProject] = useState<Project | null>(null);
-  const [isAddVersionOpen, setIsAddVersionOpen] = useState(false);
+  const [showAddVersionDialog, setShowAddVersionDialog] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
 
+  // Mock data - em produção viria do Supabase
   useEffect(() => {
-    // Mock data - em produção viria do Supabase
+    const loadProject = () => {
+      setIsLoading(true);
+      
+      // Simulação de dados do projeto
+      const mockProject: Project = {
+        id: projectId || '1',
+        clientName: 'João Silva',
+        title: 'Música Personalizada - João Silva',
+        status: 'waiting',
+        packageType: 'Premium',
+        createdAt: '15/01/2024',
+        expirationDate: '15/02/2024',
+        clientEmail: 'joao@email.com',
+        clientPhone: '+55 11 99999-9999',
+        versions: [
+          {
+            id: '1',
+            name: 'Versão 1 - Mix Inicial',
+            description: 'Primeira versão com arranjo básico',
+            embedUrl: 'https://bandcamp.com/EmbeddedPlayer/album=4290875691/size=small/bgcol=333333/linkcol=2ebd35/track=2755730140/transparent=true/',
+            bandcampUrl: 'https://harmonia-media.bandcamp.com/track/vozes-em-harmonia-ex-05',
+            final: false,
+            recommended: true,
+            dateAdded: '15/01/2024',
+            albumId: '4290875691',
+            trackId: '2755730140'
+          }
+        ]
+      };
+      
+      setProject(mockProject);
+      setIsLoading(false);
+    };
+
     if (projectId) {
-      setTimeout(() => {
-        const mockProject: Project = {
-          id: projectId,
-          clientName: 'João Silva',
-          clientEmail: 'joao@email.com',
-          clientPhone: '+55 11 99999-9999',
-          title: 'Música Personalizada - João Silva',
-          packageType: 'Profissional',
-          status: 'waiting',
-          createdAt: '2024-01-15',
-          expirationDate: '2024-02-15',
-          versions: [
-            {
-              id: '1',
-              name: 'Versão 1 - Mix Inicial',
-              description: 'Primeira versão com arranjo básico',
-              embedUrl: 'https://bandcamp.com/EmbeddedPlayer/album=4290875691/track=1/',
-              bandcampUrl: 'https://harmonia-media.bandcamp.com/album/promocionais-harmonia-01?t=1',
-              albumId: '4290875691',
-              trackId: '1',
-              final: false,
-              recommended: true,
-              dateAdded: '2024-01-15'
-            }
-          ]
-        };
-        setProject(mockProject);
-        setIsLoading(false);
-      }, 1000);
+      loadProject();
     }
   }, [projectId]);
 
-  const handleAddVersion = async (newVersion: any) => {
+  const handleAddVersion = (newVersion: BandcampVersion) => {
     if (!project) return;
 
-    // Simular adição de versão
-    const updatedProject = {
-      ...project,
-      versions: [...project.versions, newVersion]
-    };
+    console.log('Adding version to project:', newVersion);
     
-    setProject(updatedProject);
-    
+    setProject(prev => {
+      if (!prev) return null;
+      return {
+        ...prev,
+        versions: [...prev.versions, newVersion]
+      };
+    });
+
     toast({
       title: "Versão adicionada",
-      description: `${newVersion.name} foi adicionada com player do Bandcamp.`
+      description: `${newVersion.name} foi adicionada ao projeto.`
     });
   };
 
-  const handleDeleteVersion = async (versionId: string) => {
+  const handleDeleteVersion = (versionId: string) => {
     if (!project) return;
 
-    const updatedProject = {
-      ...project,
-      versions: project.versions.filter(v => v.id !== versionId)
-    };
-    
-    setProject(updatedProject);
-    
+    const versionToDelete = project.versions.find(v => v.id === versionId);
+    if (!versionToDelete) return;
+
+    setProject(prev => {
+      if (!prev) return null;
+      return {
+        ...prev,
+        versions: prev.versions.filter(v => v.id !== versionId)
+      };
+    });
+
     toast({
       title: "Versão removida",
-      description: "A versão foi removida com sucesso."
+      description: `${versionToDelete.name} foi removida do projeto.`,
+      variant: "destructive"
     });
-  };
-
-  const copyClientPreviewLink = () => {
-    const previewUrl = `${window.location.origin}/client-preview/${projectId}`;
-    navigator.clipboard.writeText(previewUrl).then(() => {
-      toast({
-        title: "Link copiado!",
-        description: "Link de prévia para o cliente foi copiado."
-      });
-    });
-  };
-
-  const handleWhatsApp = () => {
-    if (project?.clientPhone) {
-      const phone = project.clientPhone.replace(/\D/g, '');
-      const message = `Olá ${project.clientName}! Suas prévias estão prontas. Acesse: ${window.location.origin}/client-preview/${projectId}`;
-      window.open(`https://wa.me/${phone}?text=${encodeURIComponent(message)}`, '_blank');
-    }
-  };
-
-  const handleEmail = () => {
-    if (project?.clientEmail) {
-      const subject = `Suas prévias estão prontas - ${project.title}`;
-      const body = `Olá ${project.clientName}!\n\nSuas prévias estão prontas para avaliação.\n\nAcesse: ${window.location.origin}/client-preview/${projectId}\n\nAtenciosamente,\nEquipe harmonIA`;
-      window.open(`mailto:${project.clientEmail}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`);
-    }
   };
 
   const getStatusBadge = (status: string) => {
-    const configs = {
+    const statusConfig = {
       waiting: { label: 'Aguardando', color: 'bg-yellow-500' },
       feedback: { label: 'Feedback', color: 'bg-blue-500' },
       approved: { label: 'Aprovado', color: 'bg-green-500' }
     };
-    
-    const config = configs[status as keyof typeof configs];
+
+    const config = statusConfig[status as keyof typeof statusConfig] || { label: status, color: 'bg-gray-500' };
     
     return (
       <Badge className={`${config.color} text-white`}>
@@ -142,12 +142,25 @@ const ProjectDetailsPage: React.FC = () => {
     );
   };
 
+  const copyClientPreviewLink = () => {
+    const previewUrl = `${window.location.origin}/client-preview/${projectId}`;
+    navigator.clipboard.writeText(previewUrl).then(() => {
+      toast({
+        title: "Link copiado!",
+        description: "Link da prévia para o cliente foi copiado."
+      });
+    });
+  };
+
   if (isLoading) {
     return (
       <NewAdminLayout>
         <div className="p-6">
           <div className="flex items-center justify-center h-64">
-            <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-harmonia-green"></div>
+            <div className="text-center">
+              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-harmonia-green mx-auto mb-4"></div>
+              <p>Carregando projeto...</p>
+            </div>
           </div>
         </div>
       </NewAdminLayout>
@@ -158,14 +171,12 @@ const ProjectDetailsPage: React.FC = () => {
     return (
       <NewAdminLayout>
         <div className="p-6">
-          <Button onClick={() => navigate('/admin/projects')}>
-            <ArrowLeft className="mr-2 h-4 w-4" />
-            Voltar
-          </Button>
-          <div className="text-center mt-16">
-            <h2 className="text-2xl font-semibold mb-4">Projeto não encontrado</h2>
+          <div className="text-center">
+            <h2 className="text-xl font-semibold mb-2">Projeto não encontrado</h2>
+            <p className="text-gray-600 mb-4">O projeto solicitado não foi encontrado.</p>
             <Button onClick={() => navigate('/admin/projects')}>
-              Voltar para Projetos
+              <ArrowLeft className="w-4 h-4 mr-2" />
+              Voltar aos Projetos
             </Button>
           </div>
         </div>
@@ -179,175 +190,147 @@ const ProjectDetailsPage: React.FC = () => {
         
         {/* Header */}
         <div className="flex items-center justify-between">
-          <Button variant="ghost" onClick={() => navigate('/admin/projects')}>
-            <ArrowLeft className="mr-2 h-4 w-4" />
-            Voltar para Projetos
-          </Button>
-          
-          <div className="flex gap-2">
-            <Button onClick={() => setIsAddVersionOpen(true)} className="bg-harmonia-green hover:bg-harmonia-green/90">
-              <Plus className="mr-2 h-4 w-4" />
-              Nova Versão
+          <div className="flex items-center space-x-4">
+            <Button 
+              variant="outline" 
+              onClick={() => navigate('/admin/projects')}
+            >
+              <ArrowLeft className="w-4 h-4 mr-2" />
+              Voltar
             </Button>
-            
-            <Button variant="outline" onClick={copyClientPreviewLink}>
-              <Copy className="mr-2 h-4 w-4" />
-              Link Cliente
-            </Button>
+            <div>
+              <h1 className="text-3xl font-bold">{project.title}</h1>
+              <p className="text-gray-600">Gerenciamento do projeto</p>
+            </div>
+          </div>
+          <div className="flex items-center space-x-2">
+            {getStatusBadge(project.status)}
           </div>
         </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        {/* Project Info */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           
-          {/* Main Content */}
-          <div className="lg:col-span-2 space-y-6">
-            
-            {/* Project Header */}
-            <Card>
-              <CardHeader>
-                <div className="flex items-center justify-between">
-                  <div>
-                    <CardTitle className="text-2xl">{project.title}</CardTitle>
-                    <p className="text-gray-600 mt-1">Cliente: {project.clientName}</p>
-                  </div>
-                  {getStatusBadge(project.status)}
+          {/* Client Info */}
+          <Card>
+            <CardHeader>
+              <CardTitle>Informações do Cliente</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-3">
+              <div className="flex items-center">
+                <User className="w-4 h-4 mr-2 text-gray-400" />
+                <span>{project.clientName}</span>
+              </div>
+              {project.clientEmail && (
+                <div className="flex items-center">
+                  <Mail className="w-4 h-4 mr-2 text-gray-400" />
+                  <span>{project.clientEmail}</span>
                 </div>
-              </CardHeader>
-            </Card>
+              )}
+              {project.clientPhone && (
+                <div className="flex items-center">
+                  <Phone className="w-4 h-4 mr-2 text-gray-400" />
+                  <span>{project.clientPhone}</span>
+                </div>
+              )}
+            </CardContent>
+          </Card>
 
-            {/* Versions */}
-            <Card>
-              <CardHeader>
-                <CardTitle>Versões ({project.versions.length})</CardTitle>
-              </CardHeader>
-              <CardContent>
-                {project.versions.length > 0 ? (
-                  <div className="space-y-4">
-                    {project.versions.map((version) => (
-                      <BandcampVersionCard
-                        key={version.id}
-                        version={version}
-                        projectId={project.id}
-                        onDeleteVersion={handleDeleteVersion}
-                      />
-                    ))}
-                  </div>
-                ) : (
-                  <div className="text-center py-8 text-gray-500">
-                    <p>Nenhuma versão adicionada ainda.</p>
-                    <Button 
-                      onClick={() => setIsAddVersionOpen(true)}
-                      className="mt-4"
-                    >
-                      Adicionar Primeira Versão
-                    </Button>
-                  </div>
-                )}
-              </CardContent>
-            </Card>
+          {/* Project Details */}
+          <Card>
+            <CardHeader>
+              <CardTitle>Detalhes do Projeto</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-3">
+              <div className="flex items-center">
+                <Calendar className="w-4 h-4 mr-2 text-gray-400" />
+                <span>Criado em: {project.createdAt}</span>
+              </div>
+              {project.packageType && (
+                <div>
+                  <span className="font-medium">Pacote:</span> {project.packageType}
+                </div>
+              )}
+              {project.expirationDate && (
+                <div>
+                  <span className="font-medium">Expira em:</span> {project.expirationDate}
+                </div>
+              )}
+              <div>
+                <span className="font-medium">Versões:</span> {project.versions.length}
+              </div>
+            </CardContent>
+          </Card>
+        </div>
 
+        {/* Actions */}
+        <Card>
+          <CardHeader>
+            <CardTitle>Ações do Projeto</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="flex flex-wrap gap-3">
+              <Button
+                onClick={() => setShowAddVersionDialog(true)}
+                className="bg-harmonia-green hover:bg-harmonia-green/90"
+              >
+                <Plus className="w-4 h-4 mr-2" />
+                Nova Versão
+              </Button>
+              
+              <Button
+                variant="outline"
+                onClick={copyClientPreviewLink}
+              >
+                <ExternalLink className="w-4 h-4 mr-2" />
+                Copiar Link Cliente
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Versions */}
+        <div className="space-y-4">
+          <div className="flex items-center justify-between">
+            <h2 className="text-2xl font-bold">Versões do Projeto</h2>
+            <span className="text-gray-500">{project.versions.length} versões</span>
           </div>
-
-          {/* Sidebar */}
-          <div className="space-y-6">
-            
-            {/* Client Info */}
+          
+          {project.versions.length > 0 ? (
+            <div className="space-y-4">
+              {project.versions.map((version) => (
+                <BandcampVersionCard
+                  key={version.id}
+                  version={version}
+                  projectId={project.id}
+                  onDeleteVersion={handleDeleteVersion}
+                />
+              ))}
+            </div>
+          ) : (
             <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center">
-                  <User className="mr-2 h-5 w-5" />
-                  Informações do Cliente
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-3">
-                <div>
-                  <strong>Nome:</strong>
-                  <p className="text-gray-600">{project.clientName}</p>
-                </div>
-                <div>
-                  <strong>Email:</strong>
-                  <p className="text-gray-600">{project.clientEmail}</p>
-                </div>
-                {project.clientPhone && (
-                  <div>
-                    <strong>Telefone:</strong>
-                    <p className="text-gray-600">{project.clientPhone}</p>
-                  </div>
-                )}
-                <div>
-                  <strong>Pacote:</strong>
-                  <p className="text-gray-600">{project.packageType}</p>
-                </div>
-              </CardContent>
-            </Card>
-
-            {/* Project Info */}
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center">
-                  <Calendar className="mr-2 h-5 w-5" />
-                  Informações do Projeto
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-3">
-                <div>
-                  <strong>Criado em:</strong>
-                  <p className="text-gray-600">{project.createdAt}</p>
-                </div>
-                <div>
-                  <strong>Expira em:</strong>
-                  <p className="text-gray-600 flex items-center">
-                    <Clock className="mr-1 h-4 w-4" />
-                    {project.expirationDate}
-                  </p>
-                </div>
-                <div>
-                  <strong>Status:</strong>
-                  <div className="mt-1">{getStatusBadge(project.status)}</div>
-                </div>
-              </CardContent>
-            </Card>
-
-            {/* Contact Actions */}
-            <Card>
-              <CardHeader>
-                <CardTitle>Contatar Cliente</CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-2">
+              <CardContent className="text-center py-12">
+                <p className="text-gray-500 mb-4">Nenhuma versão criada ainda.</p>
                 <Button 
-                  variant="outline" 
-                  className="w-full"
-                  onClick={handleWhatsApp}
-                  disabled={!project.clientPhone}
+                  onClick={() => setShowAddVersionDialog(true)}
+                  className="bg-harmonia-green hover:bg-harmonia-green/90"
                 >
-                  <Phone className="mr-2 h-4 w-4" />
-                  WhatsApp
-                </Button>
-                
-                <Button 
-                  variant="outline" 
-                  className="w-full"
-                  onClick={handleEmail}
-                  disabled={!project.clientEmail}
-                >
-                  <Mail className="mr-2 h-4 w-4" />
-                  Email
+                  <Plus className="w-4 h-4 mr-2" />
+                  Adicionar Primeira Versão
                 </Button>
               </CardContent>
             </Card>
-
-          </div>
+          )}
         </div>
 
         {/* Add Version Dialog */}
         <AddVersionDialog
-          isOpen={isAddVersionOpen}
-          onOpenChange={setIsAddVersionOpen}
+          isOpen={showAddVersionDialog}
+          onOpenChange={setShowAddVersionDialog}
           projectId={project.id}
           onAddVersion={handleAddVersion}
           packageType={project.packageType}
         />
-
       </div>
     </NewAdminLayout>
   );
