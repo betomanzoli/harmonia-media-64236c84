@@ -10,11 +10,6 @@ import AboutPage from './pages/AboutPage';
 import ServicesPage from './pages/ServicesPage';
 import ContactPage from './pages/ContactPage';
 import NotFoundPage from './pages/NotFoundPage';
-import AdminDashboard from './pages/admin/AdminDashboard';
-import AdminPreviews from './pages/admin/AdminPreviews';
-import PreviewProjectPage from './pages/admin/PreviewProjectPage';
-import AdminLogin from './pages/admin/AdminLogin';
-import ResetPassword from './pages/admin/ResetPassword';
 import PortfolioPage from './pages/Portfolio';
 import Briefing from './pages/Briefing';
 import Calculator from './pages/Calculator';
@@ -37,17 +32,11 @@ import ClientDashboard from './pages/ClientDashboard';
 import FinalDeliveryPage from './pages/FinalDeliveryPage';
 import FAQ from './pages/FAQ';
 
-// Import admin pages
-import AdminBriefings from './pages/admin/AdminBriefings';
-import AdminProjects from './pages/admin/AdminProjects';
-import AdminPortfolio from './pages/admin/AdminPortfolio';
-import AdminClients from './pages/admin/AdminClients';
-import AdminSettings from './pages/admin/AdminSettings';
-import AdminInvoices from './pages/admin/AdminInvoices';
-import AdminStorage from './pages/admin/AdminStorage';
-import AdminIntegrations from './pages/admin/AdminIntegrations';
-import AdminStatistics from './pages/admin/AdminStatistics';
-import AdminGuides from './pages/admin/AdminGuides';
+// Import new admin pages
+import NewAdminLogin from './pages/admin/NewAdminLogin';
+import NewAdminDashboard from './pages/admin/NewAdminDashboard';
+import NewAdminClients from './pages/admin/NewAdminClients';
+import NewAdminProjects from './pages/admin/NewAdminProjects';
 
 const App: React.FC = () => {
   return (
@@ -64,7 +53,7 @@ const AppRoutes: React.FC = () => {
   
   // Check if current route is an admin route
   useEffect(() => {
-    const isAdminRoute = location.pathname.includes('/admin-');
+    const isAdminRoute = location.pathname.includes('/admin');
     setShowChatbot(!isAdminRoute);
   }, [location.pathname]);
   
@@ -105,26 +94,11 @@ const AppRoutes: React.FC = () => {
         <Route path="/feedback-confirmacao" element={<FeedbackConfirmation />} />
         <Route path="/como-funciona" element={<ServicesPage />} />
         
-        {/* Admin routes */}
-        <Route path="/admin-j28s7d1k/login" element={<AdminLogin />} />
-        <Route path="/admin-j28s7d1k/reset-password" element={<ResetPassword />} />
-        <Route path="/admin-j28s7d1k/dashboard" element={<AdminDashboard />} />
-        <Route path="/admin-j28s7d1k/previews" element={<AdminPreviews />} />
-        <Route path="/admin-j28s7d1k/previews/:projectId" element={<PreviewProjectPage />} />
-        <Route path="/admin-j28s7d1k/briefings" element={<AdminBriefings />} />
-        <Route path="/admin-j28s7d1k/projects" element={<AdminProjects />} />
-        <Route path="/admin-j28s7d1k/portfolio" element={<AdminPortfolio />} />
-        <Route path="/admin-j28s7d1k/clients" element={<AdminClients />} />
-        <Route path="/admin-j28s7d1k/settings" element={<AdminSettings />} />
-        <Route path="/admin-j28s7d1k/orders" element={<AdminProjects />} />
-        <Route path="/admin-j28s7d1k/payments" element={<AdminInvoices />} />
-        <Route path="/admin-j28s7d1k/analytics" element={<AdminStatistics />} />
-        <Route path="/admin-j28s7d1k/statistics" element={<AdminStatistics />} />
-        <Route path="/admin-j28s7d1k/guides" element={<AdminGuides />} />
-        <Route path="/admin-j28s7d1k/documentation" element={<AdminGuides />} />
-        <Route path="/admin-j28s7d1k/integrations" element={<AdminIntegrations />} />
-        <Route path="/admin-j28s7d1k/invoices" element={<AdminInvoices />} />
-        <Route path="/admin-j28s7d1k/storage" element={<AdminStorage />} />
+        {/* New simplified admin routes */}
+        <Route path="/admin/login" element={<NewAdminLogin />} />
+        <Route path="/admin" element={<NewAdminDashboard />} />
+        <Route path="/admin/clients" element={<NewAdminClients />} />
+        <Route path="/admin/projects" element={<NewAdminProjects />} />
         
         {/* 404 route */}
         <Route path="*" element={<NotFoundPage />} />
