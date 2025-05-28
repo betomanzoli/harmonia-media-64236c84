@@ -7,7 +7,8 @@ import { useToast } from '@/hooks/use-toast';
 import BandcampUtils from '../bandcamp/BandcampUtils';
 import VersionsTable from './VersionsTable';
 import VersionPreview from './VersionPreview';
-import AddVersionDialog from './AddVersionDialog';
+import AddVersionDialog from '../previews/AddVersionDialog';
+import { VersionItem } from '@/hooks/admin/usePreviewProjects';
 
 interface ProjectVersion {
   id: string;
@@ -33,55 +34,31 @@ const VersionManager: React.FC<VersionManagerProps> = ({ projectId, projectTitle
   const [showNewVersionDialog, setShowNewVersionDialog] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
 
-  const handleAddVersion = async (formData: { name: string; description: string; bandcampUrl: string }) => {
-    if (!formData.name || !formData.bandcampUrl) {
-      toast({
-        title: "Dados incompletos",
-        description: "Nome e URL do Bandcamp são obrigatórios.",
-        variant: "destructive"
-      });
-      return;
-    }
-
-    if (!BandcampUtils.isValidBandcampUrl(formData.bandcampUrl)) {
-      toast({
-        title: "URL inválida",
-        description: "Por favor, insira uma URL válida do Bandcamp.",
-        variant: "destructive"
-      });
-      return;
-    }
-
+  // Convert VersionItem to internal format and handle the addition
+  const handleAddVersion = async (versionData: VersionItem) => {
     setIsProcessing(true);
 
     try {
-      console.log('Processing Bandcamp URL:', formData.bandcampUrl);
+      console.log('Processing version data:', versionData);
       
-      const trackInfo = BandcampUtils.createTrackInfoFromUrl(formData.bandcampUrl);
-
-      if (!trackInfo) {
-        throw new Error('Não foi possível extrair informações da URL do Bandcamp');
-      }
-
-      console.log('Track info extracted:', trackInfo);
-
-      // Test if embed URL is valid
-      if (!BandcampUtils.testEmbedUrl(trackInfo.embedUrl)) {
-        console.warn('Embed URL may not be valid:', trackInfo.embedUrl);
+      // Extract trackInfo from audioUrl if it's a Bandcamp URL
+      let trackInfo = null;
+      if (versionData.audioUrl && BandcampUtils.isValidBandcampUrl(versionData.audioUrl)) {
+        trackInfo = BandcampUtils.createTrackInfoFromUrl(versionData.audioUrl);
       }
 
       const trackNumber = versions.length + 1;
       const newVersion: ProjectVersion = {
-        id: Date.now().toString(),
-        name: formData.name,
-        description: formData.description,
+        id: versionData.id,
+        name: versionData.name,
+        description: versionData.description,
         trackNumber,
-        bandcampUrl: formData.bandcampUrl,
-        embedUrl: trackInfo.embedUrl,
-        albumId: trackInfo.albumId,
-        trackId: trackInfo.trackId,
-        createdAt: new Date().toLocaleDateString('pt-BR'),
-        isRecommended: versions.length === 0 // First version is recommended by default
+        bandcampUrl: versionData.audioUrl, // Use audioUrl as bandcampUrl
+        embedUrl: trackInfo?.embedUrl || versionData.audioUrl,
+        albumId: trackInfo?.albumId || versionData.fileId,
+        trackId: trackInfo?.trackId,
+        createdAt: versionData.dateAdded,
+        isRecommended: versionData.recommended
       };
 
       console.log('Creating new version:', newVersion);
@@ -90,7 +67,7 @@ const VersionManager: React.FC<VersionManagerProps> = ({ projectId, projectTitle
       
       toast({
         title: "Versão adicionada",
-        description: `A versão "${formData.name}" foi adicionada ao projeto.`
+        description: `A versão "${versionData.name}" foi adicionada ao projeto.`
       });
 
       setShowNewVersionDialog(false);
@@ -100,7 +77,7 @@ const VersionManager: React.FC<VersionManagerProps> = ({ projectId, projectTitle
       const errorMessage = error instanceof Error ? error.message : 'Erro desconhecido';
       
       toast({
-        title: "Erro ao processar URL",
+        title: "Erro ao processar versão",
         description: errorMessage,
         variant: "destructive"
       });
@@ -177,10 +154,11 @@ const VersionManager: React.FC<VersionManagerProps> = ({ projectId, projectTitle
       <VersionPreview versions={versions} />
 
       <AddVersionDialog
+        projectId={projectId}
+        onAddVersion={handleAddVersion}
         isOpen={showNewVersionDialog}
         onOpenChange={setShowNewVersionDialog}
-        onAddVersion={handleAddVersion}
-        isProcessing={isProcessing}
+        isFinalVersion={false}
       />
     </div>
   );

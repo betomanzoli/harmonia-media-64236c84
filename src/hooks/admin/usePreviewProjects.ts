@@ -1,6 +1,6 @@
 
 import { useState, useEffect, useCallback } from 'react';
-import { dbOperations } from '@/lib/supabase/index';
+import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 
 export interface VersionItem {
@@ -58,9 +58,17 @@ export const usePreviewProjects = () => {
       setIsLoading(true);
       console.log('Loading projects from Supabase...');
       
-      const supabaseProjects = await dbOperations.getProjects();
+      const { data: supabaseProjects, error } = await supabase
+        .from('projects')
+        .select(`
+          *,
+          project_versions (*)
+        `)
+        .order('created_at', { ascending: false });
+
+      if (error) throw error;
       
-      const formattedProjects: PreviewProject[] = supabaseProjects.map(project => ({
+      const formattedProjects: PreviewProject[] = (supabaseProjects || []).map(project => ({
         id: project.id,
         title: project.title,
         clientName: project.client_name || 'Cliente',
@@ -109,15 +117,22 @@ export const usePreviewProjects = () => {
     try {
       console.log('Adding new project:', projectData);
       
-      const newProject = await dbOperations.createProject({
-        title: projectData.title || `Projeto ${projectData.clientName}`,
-        client_name: projectData.clientName,
-        client_email: projectData.clientEmail,
-        client_phone: projectData.clientPhone,
-        package_type: projectData.packageType || 'essencial',
-        status: 'waiting',
-        description: projectData.title
-      });
+      const { data: newProject, error } = await supabase
+        .from('projects')
+        .insert([{
+          title: projectData.title || `Projeto ${projectData.clientName}`,
+          client_name: projectData.clientName,
+          client_email: projectData.clientEmail,
+          client_phone: projectData.clientPhone,
+          package_type: projectData.packageType || 'essencial',
+          status: 'waiting',
+          description: projectData.title,
+          preview_code: Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15)
+        }])
+        .select()
+        .single();
+
+      if (error) throw error;
 
       // Recarregar projetos
       await loadProjects();
@@ -144,15 +159,21 @@ export const usePreviewProjects = () => {
     try {
       console.log('Updating project:', projectId, updates);
       
-      await dbOperations.updateProject(projectId, {
-        title: updates.title,
-        client_name: updates.clientName,
-        client_email: updates.clientEmail,
-        client_phone: updates.clientPhone,
-        package_type: updates.packageType,
-        status: updates.status,
-        feedback: updates.feedback
-      });
+      const { error } = await supabase
+        .from('projects')
+        .update({
+          title: updates.title,
+          client_name: updates.clientName,
+          client_email: updates.clientEmail,
+          client_phone: updates.clientPhone,
+          package_type: updates.packageType,
+          status: updates.status,
+          feedback: updates.feedback,
+          updated_at: new Date().toISOString()
+        })
+        .eq('id', projectId);
+
+      if (error) throw error;
 
       // Recarregar projetos
       await loadProjects();
@@ -174,13 +195,19 @@ export const usePreviewProjects = () => {
     try {
       console.log('Adding version to project:', projectId, versionData);
       
-      await dbOperations.addVersion(projectId, {
-        name: versionData.name,
-        description: versionData.description,
-        audio_url: versionData.audioUrl,
-        file_id: versionData.fileId,
-        recommended: versionData.recommended
-      });
+      const { error } = await supabase
+        .from('project_versions')
+        .insert([{
+          project_id: projectId,
+          name: versionData.name,
+          description: versionData.description,
+          audio_url: versionData.audioUrl,
+          file_id: versionData.fileId,
+          recommended: versionData.recommended,
+          version_id: `v${Date.now()}`
+        }]);
+
+      if (error) throw error;
 
       // Recarregar projetos
       await loadProjects();
@@ -202,7 +229,12 @@ export const usePreviewProjects = () => {
     try {
       console.log('Deleting version:', versionId);
       
-      await dbOperations.deleteVersion(versionId);
+      const { error } = await supabase
+        .from('project_versions')
+        .delete()
+        .eq('id', versionId);
+
+      if (error) throw error;
 
       // Recarregar projetos
       await loadProjects();
@@ -224,7 +256,7 @@ export const usePreviewProjects = () => {
     try {
       console.log('Deleting project:', projectId);
       
-      const { error } = await dbOperations.supabase
+      const { error } = await supabase
         .from('projects')
         .delete()
         .eq('id', projectId);

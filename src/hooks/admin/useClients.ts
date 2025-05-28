@@ -1,6 +1,6 @@
 
 import { useState, useEffect, useCallback } from 'react';
-import { dbOperations } from '@/lib/supabase/index';
+import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 
 export interface Client {
@@ -23,9 +23,14 @@ export const useClients = () => {
       setIsLoading(true);
       console.log('Loading clients from Supabase...');
       
-      const supabaseClients = await dbOperations.getClients();
+      const { data: supabaseClients, error } = await supabase
+        .from('clients')
+        .select('*')
+        .order('created_at', { ascending: false });
+
+      if (error) throw error;
       
-      const formattedClients: Client[] = supabaseClients.map(client => ({
+      const formattedClients: Client[] = (supabaseClients || []).map(client => ({
         id: client.id,
         name: client.name,
         email: client.email,
@@ -54,7 +59,18 @@ export const useClients = () => {
     try {
       console.log('Adding new client:', clientData);
       
-      await dbOperations.createClient(clientData);
+      const { data, error } = await supabase
+        .from('clients')
+        .insert([{
+          name: clientData.name,
+          email: clientData.email,
+          phone: clientData.phone,
+          company: clientData.company
+        }])
+        .select()
+        .single();
+
+      if (error) throw error;
 
       // Recarregar clientes
       await loadClients();
@@ -81,7 +97,7 @@ export const useClients = () => {
     try {
       console.log('Updating client:', clientId, updates);
       
-      const { error } = await dbOperations.supabase
+      const { error } = await supabase
         .from('clients')
         .update(updates)
         .eq('id', clientId);
@@ -113,7 +129,7 @@ export const useClients = () => {
     try {
       console.log('Deleting client:', clientId);
       
-      const { error } = await dbOperations.supabase
+      const { error } = await supabase
         .from('clients')
         .delete()
         .eq('id', clientId);
