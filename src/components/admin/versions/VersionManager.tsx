@@ -57,7 +57,16 @@ const VersionManager: React.FC<VersionManagerProps> = ({ projectId, projectTitle
     }
 
     const trackNumber = versions.length + 1;
-    const trackInfo = BandcampUtils.createTrackInfo(trackNumber);
+    const trackInfo = BandcampUtils.createTrackInfoFromUrl(formData.bandcampUrl);
+
+    if (!trackInfo) {
+      toast({
+        title: "Erro ao processar URL",
+        description: "Não foi possível extrair informações da URL do Bandcamp.",
+        variant: "destructive"
+      });
+      return;
+    }
 
     const newVersion: ProjectVersion = {
       id: Date.now().toString(),
@@ -201,19 +210,21 @@ const VersionManager: React.FC<VersionManagerProps> = ({ projectId, projectTitle
           </CardHeader>
           <CardContent>
             <div className="space-y-4">
-              {versions.filter(v => v.isRecommended).map((version) => (
-                <div key={version.id}>
-                  <h3 className="font-medium mb-2">{version.name}</h3>
-                  <div 
-                    dangerouslySetInnerHTML={{
-                      __html: BandcampUtils.generateEmbedHtml(
-                        BandcampUtils.createTrackInfo(version.trackNumber).albumId,
-                        version.trackNumber.toString()
-                      )
-                    }}
-                  />
-                </div>
-              ))}
+              {versions.filter(v => v.isRecommended).map((version) => {
+                const trackInfo = BandcampUtils.createTrackInfoFromUrl(version.bandcampUrl);
+                return (
+                  <div key={version.id}>
+                    <h3 className="font-medium mb-2">{version.name}</h3>
+                    {trackInfo && (
+                      <iframe
+                        src={trackInfo.embedUrl}
+                        style={{ border: 0, width: '100%', height: '42px' }}
+                        title={`Player ${version.name}`}
+                      />
+                    )}
+                  </div>
+                );
+              })}
             </div>
           </CardContent>
         </Card>
@@ -252,7 +263,7 @@ const VersionManager: React.FC<VersionManagerProps> = ({ projectId, projectTitle
               <Input
                 id="bandcampUrl"
                 name="bandcampUrl"
-                placeholder="https://harmonia-media.bandcamp.com/album/promocionais-harmonia-01?t=1"
+                placeholder="https://harmonia-media.bandcamp.com/track/nome-da-track"
                 value={formData.bandcampUrl}
                 onChange={handleChange}
               />
@@ -269,7 +280,7 @@ const VersionManager: React.FC<VersionManagerProps> = ({ projectId, projectTitle
               </Button>
             </div>
           </div>
-        </DialogContent>
+        </div>
       </Dialog>
     </div>
   );
