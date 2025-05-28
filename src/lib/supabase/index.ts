@@ -1,28 +1,7 @@
 
-import { createClient } from '@supabase/supabase-js';
+import { supabase } from '@/integrations/supabase/client';
 
-// Configuração centralizada do Supabase
-const supabaseUrl = 'https://ivueqxyuflxsiecqvmgt.supabase.co';
-const supabaseAnonKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Iml2dWVxeHl1Zmx4c2llY3F2bWd0Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDY3MjY0MzEsImV4cCI6MjA2MjMwMjQzMX0.db1UVta6PSPGokJOZozwqZ7AAs2jBljfWCdUR3LjIdM';
-
-export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
-  auth: {
-    persistSession: true,
-    autoRefreshToken: true,
-    detectSessionInUrl: true,
-    storageKey: 'harmonia-admin-auth',
-  },
-  global: {
-    fetch: (...args: Parameters<typeof fetch>) => {
-      return fetch(...args).catch(error => {
-        console.error('Supabase fetch error:', error);
-        throw error;
-      });
-    }
-  }
-});
-
-// Utilitários para operações do banco
+// Utilitários para operações do banco usando configuração unificada
 export const dbOperations = {
   // Projetos
   async createProject(projectData: any) {
@@ -242,4 +221,4 @@ export const clientAuth = {
   }
 };
 
-export default supabase;
+export { supabase };

@@ -1,19 +1,21 @@
-import React, { useState } from 'react';
+
+import React from 'react';
 import { useParams } from 'react-router-dom';
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
-import { Badge } from "@/components/ui/badge";
-import { ThumbsUp, MessageSquare, Music, Clock, Mail } from 'lucide-react';
 import { useClientPreview } from '@/hooks/useClientPreview';
+import { Card, CardContent, CardHeader } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Textarea } from '@/components/ui/textarea';
+import { AlertCircle, Music, CheckCircle2, Clock } from 'lucide-react';
+import { Alert, AlertDescription } from '@/components/ui/alert';
 import HarmoniaLogo from '@/components/ui/HarmoniaLogo';
+import { useState } from 'react';
 
 const ClientPreview: React.FC = () => {
   const { previewCode } = useParams<{ previewCode: string }>();
   const [email, setEmail] = useState('');
   const [feedback, setFeedback] = useState('');
-  const [showFeedbackForm, setShowFeedbackForm] = useState(false);
   
   const {
     project,
@@ -25,284 +27,265 @@ const ClientPreview: React.FC = () => {
     approveVersion
   } = useClientPreview(previewCode || '');
 
-  const handleAuthentication = (e: React.FormEvent) => {
+  const handleAuthentication = async (e: React.FormEvent) => {
     e.preventDefault();
     if (email.trim()) {
-      authenticateClient(email.trim());
+      await authenticateClient(email.trim());
     }
   };
 
-  const handleSubmitFeedback = async (e: React.FormEvent) => {
+  const handleFeedbackSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (feedback.trim()) {
       const success = await submitFeedback(feedback.trim(), email);
       if (success) {
         setFeedback('');
-        setShowFeedbackForm(false);
       }
     }
   };
 
-  const handleApproveVersion = async (versionId: string) => {
+  const handleApprove = async (versionId: string) => {
     await approveVersion(versionId, email);
   };
 
-  // Tela de loading
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-gray-900 via-purple-900 to-violet-800">
-        <div className="flex items-center justify-center min-h-screen">
-          <div className="text-center">
-            <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-white mx-auto mb-4"></div>
-            <h2 className="text-xl font-semibold text-white">Carregando prévia...</h2>
-          </div>
+      <div className="min-h-screen bg-gradient-to-br from-green-50 to-green-100 flex items-center justify-center">
+        <div className="text-center">
+          <HarmoniaLogo size="lg" />
+          <p className="mt-4 text-green-700">Carregando projeto...</p>
         </div>
       </div>
     );
   }
 
-  // Tela de autenticação
   if (!isAuthenticated) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-gray-900 via-purple-900 to-violet-800">
-        <div className="container mx-auto px-4 py-8">
-          {/* Logo e cabeçalho */}
-          <div className="text-center mb-8">
-            <div className="flex items-center justify-center mb-6">
-              <HarmoniaLogo size="lg" className="text-white" />
-            </div>
-            <h1 className="text-3xl font-bold text-white mb-2">Prévia Musical</h1>
-            <p className="text-gray-300">Acesse suas prévias musicais de forma segura</p>
-          </div>
-
-          {/* Formulário de autenticação */}
-          <div className="max-w-md mx-auto">
-            <Card className="bg-white/10 backdrop-blur-md border-white/20">
-              <CardHeader>
-                <CardTitle className="text-white flex items-center">
-                  <Mail className="mr-2 h-5 w-5" />
-                  Verificação de Acesso
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <form onSubmit={handleAuthentication} className="space-y-4">
-                  <div>
-                    <label className="block text-sm font-medium text-gray-200 mb-2">
-                      Email cadastrado no projeto
-                    </label>
-                    <Input
-                      type="email"
-                      value={email}
-                      onChange={(e) => setEmail(e.target.value)}
-                      placeholder="seu@email.com"
-                      className="bg-white/20 border-white/30 text-white placeholder-gray-300"
-                      required
-                    />
-                  </div>
-                  
-                  {authError && (
-                    <div className="bg-red-500/20 border border-red-500/30 rounded-md p-3">
-                      <p className="text-red-200 text-sm">{authError}</p>
-                    </div>
-                  )}
-                  
-                  <Button 
-                    type="submit" 
-                    className="w-full bg-green-600 hover:bg-green-700"
-                  >
-                    Acessar Prévias
-                  </Button>
-                </form>
-                
-                <div className="mt-4 text-center">
-                  <p className="text-xs text-gray-400">
-                    Use o email cadastrado no seu projeto para acessar as prévias musicais.
-                  </p>
-                </div>
-              </CardContent>
-            </Card>
-          </div>
-        </div>
+      <div className="min-h-screen bg-gradient-to-br from-green-50 to-green-100 flex items-center justify-center p-4">
+        <Card className="w-full max-w-md">
+          <CardHeader className="text-center">
+            <HarmoniaLogo size="md" className="mx-auto mb-4" />
+            <h1 className="text-2xl font-bold text-green-800">Acesso ao Projeto</h1>
+            <p className="text-green-600">Insira seu email para acessar as prévias musicais</p>
+          </CardHeader>
+          <CardContent>
+            <form onSubmit={handleAuthentication} className="space-y-4">
+              <div>
+                <Label htmlFor="email">Email</Label>
+                <Input
+                  id="email"
+                  type="email"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  placeholder="seu.email@exemplo.com"
+                  required
+                  className="mt-1"
+                />
+              </div>
+              
+              {authError && (
+                <Alert variant="destructive">
+                  <AlertCircle className="h-4 w-4" />
+                  <AlertDescription>{authError}</AlertDescription>
+                </Alert>
+              )}
+              
+              <Button type="submit" className="w-full bg-green-600 hover:bg-green-700">
+                Acessar Projeto
+              </Button>
+            </form>
+          </CardContent>
+        </Card>
       </div>
     );
   }
 
-  // Tela principal com as prévias
+  if (!project) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-green-50 to-green-100 flex items-center justify-center p-4">
+        <Card className="w-full max-w-md text-center">
+          <CardContent className="pt-6">
+            <HarmoniaLogo size="md" className="mx-auto mb-4" />
+            <AlertCircle className="mx-auto h-16 w-16 text-red-500 mb-4" />
+            <h2 className="text-xl font-bold text-gray-900 mb-2">Projeto não encontrado</h2>
+            <p className="text-gray-600">O projeto solicitado não foi encontrado ou não está disponível.</p>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
+
+  const getStatusIcon = (status: string) => {
+    switch (status) {
+      case 'waiting':
+        return <Clock className="h-5 w-5 text-yellow-500" />;
+      case 'feedback':
+        return <AlertCircle className="h-5 w-5 text-blue-500" />;
+      case 'approved':
+        return <CheckCircle2 className="h-5 w-5 text-green-500" />;
+      default:
+        return <Music className="h-5 w-5 text-gray-500" />;
+    }
+  };
+
+  const getStatusText = (status: string) => {
+    switch (status) {
+      case 'waiting':
+        return 'Aguardando feedback';
+      case 'feedback':
+        return 'Feedback enviado';
+      case 'approved':
+        return 'Projeto aprovado';
+      default:
+        return 'Status desconhecido';
+    }
+  };
+
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-900 via-purple-900 to-violet-800">
-      <div className="container mx-auto px-4 py-8">
-        {/* Header */}
-        <div className="text-center mb-8">
-          <div className="flex items-center justify-center mb-6">
-            <HarmoniaLogo size="lg" className="text-white" />
+    <div className="min-h-screen bg-gradient-to-br from-green-50 to-green-100">
+      {/* Header */}
+      <header className="bg-white shadow-sm border-b border-green-200">
+        <div className="max-w-4xl mx-auto px-4 py-4">
+          <div className="flex items-center justify-between">
+            <HarmoniaLogo size="md" />
+            <div className="flex items-center space-x-2">
+              {getStatusIcon(project.status)}
+              <span className="text-sm font-medium text-gray-700">
+                {getStatusText(project.status)}
+              </span>
+            </div>
           </div>
-          <h1 className="text-3xl font-bold text-white mb-2">{project?.title}</h1>
-          <p className="text-gray-300">Olá, {project?.clientName}! Aqui estão suas prévias musicais.</p>
         </div>
+      </header>
 
-        {/* Status do projeto */}
-        <div className="max-w-4xl mx-auto mb-8">
-          <Card className="bg-white/10 backdrop-blur-md border-white/20">
-            <CardContent className="p-6">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center">
-                  <Clock className="mr-3 h-5 w-5 text-gray-300" />
-                  <span className="text-white font-medium">Status do Projeto:</span>
-                </div>
-                <Badge 
-                  className={
-                    project?.status === 'approved' ? 'bg-green-500' :
-                    project?.status === 'feedback' ? 'bg-yellow-500' : 'bg-blue-500'
-                  }
-                >
-                  {project?.status === 'approved' ? 'Aprovado' :
-                   project?.status === 'feedback' ? 'Feedback Enviado' : 'Aguardando Avaliação'}
-                </Badge>
-              </div>
-              {project?.expirationDate && (
-                <p className="text-gray-300 text-sm mt-2">
-                  Prazo para avaliação: {project.expirationDate}
-                </p>
-              )}
-            </CardContent>
-          </Card>
-        </div>
+      {/* Main Content */}
+      <main className="max-w-4xl mx-auto px-4 py-8 space-y-6">
+        {/* Project Info */}
+        <Card>
+          <CardHeader>
+            <h1 className="text-2xl font-bold text-green-800">{project.title}</h1>
+            <p className="text-green-600">Cliente: {project.clientName}</p>
+            {project.expirationDate && (
+              <p className="text-sm text-gray-500">
+                Acesso válido até: {project.expirationDate}
+              </p>
+            )}
+          </CardHeader>
+        </Card>
 
-        {/* Versões musicais */}
-        <div className="max-w-4xl mx-auto space-y-6">
-          {project?.versions.map((version, index) => (
-            <Card key={version.id} className="bg-white/10 backdrop-blur-md border-white/20">
-              <CardHeader>
-                <div className="flex items-center justify-between">
-                  <CardTitle className="text-white flex items-center">
-                    <Music className="mr-2 h-5 w-5" />
-                    {version.name}
-                    {version.recommended && (
-                      <Badge className="ml-2 bg-yellow-500">Recomendada</Badge>
-                    )}
-                    {version.final && (
-                      <Badge className="ml-2 bg-green-500">Final</Badge>
-                    )}
-                  </CardTitle>
-                </div>
-              </CardHeader>
-              <CardContent>
-                <p className="text-gray-300 mb-4">{version.description}</p>
-                <p className="text-gray-400 text-sm mb-4">Adicionado em: {version.dateAdded}</p>
-                
-                {/* Player de áudio ou link */}
-                {version.audioUrl && (
-                  <div className="mb-4 p-4 bg-white/5 rounded-lg">
-                    {version.fileId ? (
-                      <div className="text-center">
-                        <p className="text-gray-300 mb-2">Arquivo hospedado no Google Drive</p>
-                        <Button
-                          onClick={() => window.open(`https://drive.google.com/file/d/${version.fileId}/view`, '_blank')}
-                          className="bg-blue-600 hover:bg-blue-700"
-                        >
-                          Ouvir no Google Drive
-                        </Button>
-                      </div>
-                    ) : (
+        {/* Versions List */}
+        {project.versions.length > 0 ? (
+          <div className="space-y-4">
+            <h2 className="text-xl font-semibold text-green-800">Versões Disponíveis</h2>
+            {project.versions.map((version) => (
+              <Card key={version.id} className={version.recommended ? 'ring-2 ring-green-500' : ''}>
+                <CardHeader>
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <h3 className="font-semibold text-green-800">{version.name}</h3>
+                      {version.recommended && (
+                        <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800 mt-1">
+                          Recomendada
+                        </span>
+                      )}
+                    </div>
+                    <span className="text-sm text-gray-500">{version.dateAdded}</span>
+                  </div>
+                  {version.description && (
+                    <p className="text-gray-600 text-sm">{version.description}</p>
+                  )}
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  {/* Audio Player */}
+                  {version.audioUrl && (
+                    <div className="bg-gray-50 p-4 rounded-lg">
                       <audio controls className="w-full">
                         <source src={version.audioUrl} type="audio/mpeg" />
                         Seu navegador não suporta o elemento de áudio.
                       </audio>
-                    )}
-                  </div>
-                )}
-                
-                {/* Ações para versões */}
-                {project?.status !== 'approved' && (
-                  <div className="flex gap-2">
-                    <Button
-                      onClick={() => handleApproveVersion(version.id)}
-                      className="bg-green-600 hover:bg-green-700"
-                    >
-                      <ThumbsUp className="mr-2 h-4 w-4" />
-                      Aprovar Esta Versão
-                    </Button>
-                  </div>
-                )}
-              </CardContent>
-            </Card>
-          ))}
-
-          {/* Área de feedback */}
-          {project?.status !== 'approved' && (
-            <Card className="bg-white/10 backdrop-blur-md border-white/20">
-              <CardHeader>
-                <CardTitle className="text-white flex items-center">
-                  <MessageSquare className="mr-2 h-5 w-5" />
-                  Feedback
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                {project?.feedback ? (
-                  <div className="mb-4">
-                    <h4 className="text-white font-medium mb-2">Seu feedback anterior:</h4>
-                    <div className="bg-white/5 p-3 rounded-lg">
-                      <p className="text-gray-300">{project.feedback}</p>
                     </div>
-                  </div>
-                ) : null}
-                
-                {!showFeedbackForm ? (
-                  <Button
-                    onClick={() => setShowFeedbackForm(true)}
-                    className="bg-purple-600 hover:bg-purple-700"
-                  >
-                    <MessageSquare className="mr-2 h-4 w-4" />
-                    Enviar Feedback
-                  </Button>
-                ) : (
-                  <form onSubmit={handleSubmitFeedback} className="space-y-4">
-                    <Textarea
-                      value={feedback}
-                      onChange={(e) => setFeedback(e.target.value)}
-                      placeholder="Compartilhe seus comentários, sugestões ou solicitações de ajustes..."
-                      className="bg-white/20 border-white/30 text-white placeholder-gray-300 min-h-[120px]"
-                      required
-                    />
-                    <div className="flex gap-2">
-                      <Button 
-                        type="submit" 
+                  )}
+                  
+                  {/* Version Actions */}
+                  {project.status === 'waiting' && (
+                    <div className="flex space-x-2">
+                      <Button
+                        onClick={() => handleApprove(version.id)}
                         className="bg-green-600 hover:bg-green-700"
                       >
-                        Enviar Feedback
-                      </Button>
-                      <Button 
-                        type="button"
-                        onClick={() => setShowFeedbackForm(false)}
-                        variant="outline"
-                        className="border-white/30 text-white hover:bg-white/10"
-                      >
-                        Cancelar
+                        <CheckCircle2 className="h-4 w-4 mr-2" />
+                        Aprovar Esta Versão
                       </Button>
                     </div>
-                  </form>
-                )}
-              </CardContent>
-            </Card>
-          )}
+                  )}
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+        ) : (
+          <Card>
+            <CardContent className="pt-6">
+              <div className="text-center">
+                <Music className="mx-auto h-12 w-12 text-gray-400 mb-4" />
+                <h3 className="text-lg font-medium text-gray-900 mb-2">Nenhuma versão disponível</h3>
+                <p className="text-gray-600">As versões do projeto ainda não foram adicionadas.</p>
+              </div>
+            </CardContent>
+          </Card>
+        )}
 
-          {/* Mensagem de aprovação */}
-          {project?.status === 'approved' && (
-            <Card className="bg-green-500/20 border-green-500/30">
-              <CardContent className="p-6 text-center">
-                <div className="text-green-300 mb-2">
-                  <ThumbsUp className="h-8 w-8 mx-auto mb-2" />
-                  <h3 className="text-xl font-bold">Projeto Aprovado!</h3>
+        {/* Feedback Section */}
+        {project.status !== 'approved' && (
+          <Card>
+            <CardHeader>
+              <h2 className="text-xl font-semibold text-green-800">Enviar Feedback</h2>
+              <p className="text-green-600">Compartilhe suas impressões sobre as versões apresentadas</p>
+            </CardHeader>
+            <CardContent>
+              <form onSubmit={handleFeedbackSubmit} className="space-y-4">
+                <div>
+                  <Label htmlFor="feedback">Suas observações</Label>
+                  <Textarea
+                    id="feedback"
+                    value={feedback}
+                    onChange={(e) => setFeedback(e.target.value)}
+                    placeholder="Descreva suas impressões, sugestões ou pedidos de ajustes..."
+                    rows={4}
+                    className="mt-1"
+                  />
                 </div>
-                <p className="text-green-200">
-                  Parabéns! Seu projeto foi aprovado e está sendo finalizado. 
-                  Em breve você receberá os arquivos finais.
-                </p>
-              </CardContent>
-            </Card>
-          )}
+                <Button type="submit" className="bg-green-600 hover:bg-green-700">
+                  Enviar Feedback
+                </Button>
+              </form>
+            </CardContent>
+          </Card>
+        )}
+
+        {/* Current Feedback */}
+        {project.feedback && (
+          <Card>
+            <CardHeader>
+              <h2 className="text-xl font-semibold text-green-800">Feedback Atual</h2>
+            </CardHeader>
+            <CardContent>
+              <div className="bg-blue-50 p-4 rounded-lg">
+                <p className="text-blue-800">{project.feedback}</p>
+              </div>
+            </CardContent>
+          </Card>
+        )}
+      </main>
+
+      {/* Footer */}
+      <footer className="bg-white border-t border-green-200 mt-12">
+        <div className="max-w-4xl mx-auto px-4 py-6">
+          <div className="text-center text-sm text-gray-600">
+            <HarmoniaLogo size="sm" className="mx-auto mb-2" />
+            <p>© 2024 harmonIA - Produção Musical Inteligente</p>
+          </div>
         </div>
-      </div>
+      </footer>
     </div>
   );
 };
