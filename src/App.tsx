@@ -1,5 +1,6 @@
+
 import React, { useState, useEffect } from 'react';
-import { Routes, Route, useLocation, BrowserRouter as Router } from 'react-router-dom';
+import { Routes, Route, useLocation } from 'react-router-dom';
 import ScrollToTop from './components/ScrollToTop';
 import ChatbotButton from './components/chatbot/ChatbotButton';
 
@@ -40,17 +41,6 @@ import ProjectDetailsPage from './pages/admin/ProjectDetailsPage';
 import ClientPreview from '@/pages/ClientPreview';
 
 const App: React.FC = () => {
-  return (
-    <Router>
-      <div className="min-h-screen bg-background">
-        <ScrollToTop />
-        <AppRoutes />
-      </div>
-    </Router>
-  );
-};
-
-const AppRoutes: React.FC = () => {
   const location = useLocation();
   const [showChatbot, setShowChatbot] = useState(true);
   
@@ -61,7 +51,8 @@ const AppRoutes: React.FC = () => {
   }, [location.pathname]);
   
   return (
-    <>
+    <div className="min-h-screen bg-background">
+      <ScrollToTop />
       <Routes>
         <Route path="/" element={<HomePage />} />
         <Route path="/sobre" element={<AboutPage />} />
@@ -112,7 +103,7 @@ const AppRoutes: React.FC = () => {
       </Routes>
       
       {showChatbot && <ChatbotButton />}
-    </>
+    </div>
   );
 };
 
