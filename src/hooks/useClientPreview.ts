@@ -43,7 +43,7 @@ export const useClientPreview = (previewCode: string) => {
 
       setIsAuthenticated(true);
       
-      // Transform project data
+      // Transform project data with proper type handling
       const transformedProject: PreviewProject = {
         id: data.id,
         title: data.title || 'Projeto harmonIA',
@@ -51,7 +51,14 @@ export const useClientPreview = (previewCode: string) => {
         status: data.status || 'waiting',
         expirationDate: data.expires_at ? new Date(data.expires_at).toLocaleDateString('pt-BR') : undefined,
         feedback: data.feedback,
-        versions: Array.isArray(data.versions) ? data.versions : []
+        versions: Array.isArray(data.versions) ? data.versions.map((version: any) => ({
+          id: version.id || `v${Date.now()}`,
+          name: version.name || 'Versão',
+          audioUrl: version.audioUrl,
+          description: version.description,
+          recommended: version.recommended || false,
+          dateAdded: version.dateAdded || new Date().toLocaleDateString('pt-BR')
+        })) : []
       };
       
       setProject(transformedProject);
