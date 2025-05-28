@@ -2,11 +2,6 @@
 import { useState } from 'react';
 import { useToast } from '@/hooks/use-toast';
 
-// Stub para contractAcceptanceLogger removido
-const logContractAcceptance = (data: any) => {
-  console.log('Contract acceptance logged:', data);
-};
-
 export const usePaymentHandler = () => {
   const { toast } = useToast();
   const [isProcessing, setIsProcessing] = useState(false);
@@ -14,8 +9,7 @@ export const usePaymentHandler = () => {
   const handlePayment = async (paymentData: any) => {
     setIsProcessing(true);
     try {
-      // Log contract acceptance
-      logContractAcceptance(paymentData);
+      console.log('Contract acceptance logged:', paymentData);
       
       toast({
         title: "Pagamento processado",

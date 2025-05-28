@@ -45,12 +45,10 @@ export const useCreateBriefingForm = ({ onSubmit, initialData }: UseCreateBriefi
     setIsSubmitting(true);
     
     try {
-      // Garantir que o telefone esteja formatado corretamente
       const formattedData = {
         ...data,
         phone: {
           ...data.phone,
-          // Garantir que fullNumber tenha o formato internacional
           fullNumber: data.phone.fullNumber.startsWith('+') 
             ? data.phone.fullNumber 
             : `+${data.phone.countryCode}${data.phone.nationalNumber}`

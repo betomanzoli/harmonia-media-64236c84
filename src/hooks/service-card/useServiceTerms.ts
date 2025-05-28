@@ -3,11 +3,6 @@ import { useState } from 'react';
 import { useToast } from '@/hooks/use-toast';
 import { useNavigate } from 'react-router-dom';
 
-// Stub para contractAcceptanceLogger removido
-const logTermsAcceptance = (data: any) => {
-  console.log('Terms acceptance logged:', data);
-};
-
 export const useServiceTerms = (title?: string) => {
   const { toast } = useToast();
   const navigate = useNavigate();
@@ -17,7 +12,7 @@ export const useServiceTerms = (title?: string) => {
 
   const acceptTerms = (serviceData: any) => {
     try {
-      logTermsAcceptance(serviceData);
+      console.log('Terms acceptance logged:', serviceData);
       setTermsAccepted(true);
       
       toast({
