@@ -280,7 +280,7 @@ const VersionManager: React.FC<VersionManagerProps> = ({ projectId, projectTitle
               </Button>
             </div>
           </div>
-        </div>
+        </DialogContent>
       </Dialog>
     </div>
   );
