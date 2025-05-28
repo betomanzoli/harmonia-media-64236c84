@@ -5,12 +5,11 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { Plus, Edit, Trash2, Upload, Eye, Clock } from 'lucide-react';
-import { Badge } from '@/components/ui/badge';
+import { Plus, Search } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import NewAdminLayout from '@/components/admin/layout/NewAdminLayout';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import ProjectCard from '@/components/admin/projects/ProjectCard';
 
 interface Project {
   id: string;
@@ -24,8 +23,39 @@ interface Project {
 
 const NewAdminProjects: React.FC = () => {
   const { toast } = useToast();
-  const [projects, setProjects] = useState<Project[]>([]);
+  const [projects, setProjects] = useState<Project[]>([
+    {
+      id: '1',
+      clientName: 'João Silva',
+      title: 'Música Personalizada - João Silva',
+      status: 'waiting',
+      versionsCount: 2,
+      createdAt: '15/01/2024',
+      lastActivity: '20/01/2024'
+    },
+    {
+      id: '2',
+      clientName: 'Maria Santos',
+      title: 'Trilha Sonora - Casamento',
+      status: 'feedback',
+      versionsCount: 1,
+      createdAt: '10/01/2024',
+      lastActivity: '18/01/2024'
+    },
+    {
+      id: '3',
+      clientName: 'Pedro Oliveira',
+      title: 'Jingle Comercial',
+      status: 'approved',
+      versionsCount: 3,
+      createdAt: '05/01/2024',
+      lastActivity: '15/01/2024'
+    }
+  ]);
+  
   const [showNewProjectDialog, setShowNewProjectDialog] = useState(false);
+  const [searchTerm, setSearchTerm] = useState('');
+  const [statusFilter, setStatusFilter] = useState('all');
   const [formData, setFormData] = useState({
     clientName: '',
     title: '',
@@ -37,22 +67,6 @@ const NewAdminProjects: React.FC = () => {
     { id: '2', name: 'Maria Santos' },
     { id: '3', name: 'Pedro Oliveira' }
   ];
-
-  const getStatusBadge = (status: string) => {
-    const statusConfig = {
-      waiting: { label: 'Aguardando', color: 'bg-yellow-500' },
-      feedback: { label: 'Feedback', color: 'bg-blue-500' },
-      approved: { label: 'Aprovado', color: 'bg-green-500' }
-    };
-
-    const config = statusConfig[status as keyof typeof statusConfig] || { label: status, color: 'bg-gray-500' };
-    
-    return (
-      <Badge className={`${config.color} text-white`}>
-        {config.label}
-      </Badge>
-    );
-  };
 
   const handleAddProject = () => {
     if (!formData.clientName || !formData.title) {
@@ -74,7 +88,7 @@ const NewAdminProjects: React.FC = () => {
       lastActivity: new Date().toLocaleDateString('pt-BR')
     };
 
-    setProjects([...projects, newProject]);
+    setProjects([newProject, ...projects]);
     
     toast({
       title: "Projeto criado",
@@ -89,80 +103,124 @@ const NewAdminProjects: React.FC = () => {
     setFormData(prev => ({ ...prev, [name]: value }));
   };
 
+  // Filter projects
+  const filteredProjects = projects.filter(project => {
+    const matchesSearch = project.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                         project.clientName.toLowerCase().includes(searchTerm.toLowerCase());
+    const matchesStatus = statusFilter === 'all' || project.status === statusFilter;
+    
+    return matchesSearch && matchesStatus;
+  });
+
+  const projectStats = {
+    total: projects.length,
+    waiting: projects.filter(p => p.status === 'waiting').length,
+    feedback: projects.filter(p => p.status === 'feedback').length,
+    approved: projects.filter(p => p.status === 'approved').length
+  };
+
   return (
     <NewAdminLayout>
       <div className="p-6 space-y-6">
+        
+        {/* Header */}
         <div className="flex justify-between items-center">
           <h1 className="text-3xl font-bold">Projetos</h1>
-          <Button onClick={() => setShowNewProjectDialog(true)}>
+          <Button onClick={() => setShowNewProjectDialog(true)} className="bg-harmonia-green hover:bg-harmonia-green/90">
             <Plus className="mr-2 h-4 w-4" />
             Novo Projeto
           </Button>
         </div>
 
+        {/* Stats Cards */}
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+          <Card>
+            <CardContent className="p-4">
+              <div className="text-2xl font-bold">{projectStats.total}</div>
+              <p className="text-gray-600">Total</p>
+            </CardContent>
+          </Card>
+          <Card>
+            <CardContent className="p-4">
+              <div className="text-2xl font-bold text-yellow-600">{projectStats.waiting}</div>
+              <p className="text-gray-600">Aguardando</p>
+            </CardContent>
+          </Card>
+          <Card>
+            <CardContent className="p-4">
+              <div className="text-2xl font-bold text-blue-600">{projectStats.feedback}</div>
+              <p className="text-gray-600">Feedback</p>
+            </CardContent>
+          </Card>
+          <Card>
+            <CardContent className="p-4">
+              <div className="text-2xl font-bold text-green-600">{projectStats.approved}</div>
+              <p className="text-gray-600">Aprovados</p>
+            </CardContent>
+          </Card>
+        </div>
+
+        {/* Filters */}
         <Card>
           <CardHeader>
-            <CardTitle>Lista de Projetos</CardTitle>
+            <CardTitle>Filtros</CardTitle>
           </CardHeader>
           <CardContent>
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Cliente</TableHead>
-                  <TableHead>Projeto</TableHead>
-                  <TableHead>Status</TableHead>
-                  <TableHead>Versões</TableHead>
-                  <TableHead>Criado</TableHead>
-                  <TableHead>Última Atividade</TableHead>
-                  <TableHead className="text-right">Ações</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {projects.length === 0 ? (
-                  <TableRow>
-                    <TableCell colSpan={7} className="h-24 text-center">
-                      Nenhum projeto criado ainda.
-                    </TableCell>
-                  </TableRow>
-                ) : (
-                  projects.map((project) => (
-                    <TableRow key={project.id}>
-                      <TableCell className="font-medium">{project.clientName}</TableCell>
-                      <TableCell>{project.title}</TableCell>
-                      <TableCell>{getStatusBadge(project.status)}</TableCell>
-                      <TableCell>
-                        <div className="flex items-center gap-1">
-                          <Upload className="w-4 h-4 text-gray-400" />
-                          {project.versionsCount}
-                        </div>
-                      </TableCell>
-                      <TableCell>{project.createdAt}</TableCell>
-                      <TableCell>
-                        <div className="flex items-center gap-1">
-                          <Clock className="w-4 h-4 text-gray-400" />
-                          {project.lastActivity}
-                        </div>
-                      </TableCell>
-                      <TableCell className="text-right">
-                        <div className="flex gap-2 justify-end">
-                          <Button variant="ghost" size="sm">
-                            <Eye className="h-4 w-4" />
-                          </Button>
-                          <Button variant="ghost" size="sm">
-                            <Edit className="h-4 w-4" />
-                          </Button>
-                          <Button variant="ghost" size="sm" className="text-red-600">
-                            <Trash2 className="h-4 w-4" />
-                          </Button>
-                        </div>
-                      </TableCell>
-                    </TableRow>
-                  ))
-                )}
-              </TableBody>
-            </Table>
+            <div className="flex gap-4">
+              <div className="flex-1">
+                <div className="relative">
+                  <Search className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
+                  <Input
+                    placeholder="Buscar por projeto ou cliente..."
+                    value={searchTerm}
+                    onChange={(e) => setSearchTerm(e.target.value)}
+                    className="pl-9"
+                  />
+                </div>
+              </div>
+              <div className="w-48">
+                <Select value={statusFilter} onValueChange={setStatusFilter}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Status" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">Todos os Status</SelectItem>
+                    <SelectItem value="waiting">Aguardando</SelectItem>
+                    <SelectItem value="feedback">Feedback</SelectItem>
+                    <SelectItem value="approved">Aprovado</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
           </CardContent>
         </Card>
+
+        {/* Projects Grid */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          {filteredProjects.length > 0 ? (
+            filteredProjects.map((project) => (
+              <ProjectCard key={project.id} project={project} />
+            ))
+          ) : (
+            <div className="col-span-full">
+              <Card>
+                <CardContent className="text-center py-12">
+                  <p className="text-gray-500 mb-4">
+                    {projects.length === 0 
+                      ? 'Nenhum projeto criado ainda.' 
+                      : 'Nenhum projeto encontrado com os filtros aplicados.'
+                    }
+                  </p>
+                  {projects.length === 0 && (
+                    <Button onClick={() => setShowNewProjectDialog(true)}>
+                      Criar Primeiro Projeto
+                    </Button>
+                  )}
+                </CardContent>
+              </Card>
+            </div>
+          )}
+        </div>
 
         {/* New Project Dialog */}
         <Dialog open={showNewProjectDialog} onOpenChange={setShowNewProjectDialog}>

@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Routes, Route, useLocation } from 'react-router-dom';
 import ScrollToTop from './components/ScrollToTop';
@@ -37,6 +36,8 @@ import NewAdminLogin from './pages/admin/NewAdminLogin';
 import NewAdminDashboard from './pages/admin/NewAdminDashboard';
 import NewAdminClients from './pages/admin/NewAdminClients';
 import NewAdminProjects from './pages/admin/NewAdminProjects';
+import ProjectDetailsPage from './pages/admin/ProjectDetailsPage';
+import ClientPreviewPage from './pages/admin/ClientPreviewPage';
 
 const App: React.FC = () => {
   return (
@@ -99,6 +100,10 @@ const AppRoutes: React.FC = () => {
         <Route path="/admin" element={<NewAdminDashboard />} />
         <Route path="/admin/clients" element={<NewAdminClients />} />
         <Route path="/admin/projects" element={<NewAdminProjects />} />
+        <Route path="/admin/projects/:projectId" element={<ProjectDetailsPage />} />
+        
+        {/* Client preview route */}
+        <Route path="/client-preview/:projectId" element={<ClientPreviewPage />} />
         
         {/* 404 route */}
         <Route path="*" element={<NotFoundPage />} />
