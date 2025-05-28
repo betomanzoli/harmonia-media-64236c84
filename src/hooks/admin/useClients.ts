@@ -9,17 +9,17 @@ export interface Client {
   email: string;
   phone?: string;
   company?: string;
-  created_at: string;
+  createdAt: string;
 }
 
 export const useClients = () => {
   const [clients, setClients] = useState<Client[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [isLoading, setIsLoading] = useState(true);
   const { toast } = useToast();
 
   const loadClients = async () => {
     try {
-      setLoading(true);
+      setIsLoading(true);
       const { data, error } = await supabase
         .from('clients')
         .select('*')
@@ -27,7 +27,16 @@ export const useClients = () => {
 
       if (error) throw error;
 
-      setClients(data || []);
+      const formattedClients = (data || []).map(client => ({
+        id: client.id,
+        name: client.name,
+        email: client.email,
+        phone: client.phone,
+        company: client.company,
+        createdAt: client.created_at
+      }));
+
+      setClients(formattedClients);
     } catch (error) {
       console.error('Error loading clients:', error);
       toast({
@@ -36,27 +45,41 @@ export const useClients = () => {
         variant: "destructive"
       });
     } finally {
-      setLoading(false);
+      setIsLoading(false);
     }
   };
 
-  const createClient = async (clientData: Omit<Client, 'id' | 'created_at'>) => {
+  const addClient = async (clientData: Omit<Client, 'id' | 'createdAt'>) => {
     try {
       const { data, error } = await supabase
         .from('clients')
-        .insert([clientData])
+        .insert([{
+          name: clientData.name,
+          email: clientData.email,
+          phone: clientData.phone,
+          company: clientData.company
+        }])
         .select()
         .single();
 
       if (error) throw error;
 
-      setClients(prev => [data, ...prev]);
+      const newClient: Client = {
+        id: data.id,
+        name: data.name,
+        email: data.email,
+        phone: data.phone,
+        company: data.company,
+        createdAt: data.created_at
+      };
+
+      setClients(prev => [newClient, ...prev]);
       toast({
         title: "Cliente criado",
         description: "Cliente criado com sucesso."
       });
 
-      return data;
+      return newClient;
     } catch (error) {
       console.error('Error creating client:', error);
       toast({
@@ -70,17 +93,32 @@ export const useClients = () => {
 
   const updateClient = async (id: string, updates: Partial<Client>) => {
     try {
+      const dbUpdates: any = {};
+      if (updates.name) dbUpdates.name = updates.name;
+      if (updates.email) dbUpdates.email = updates.email;
+      if (updates.phone !== undefined) dbUpdates.phone = updates.phone;
+      if (updates.company !== undefined) dbUpdates.company = updates.company;
+
       const { data, error } = await supabase
         .from('clients')
-        .update(updates)
+        .update(dbUpdates)
         .eq('id', id)
         .select()
         .single();
 
       if (error) throw error;
 
+      const updatedClient: Client = {
+        id: data.id,
+        name: data.name,
+        email: data.email,
+        phone: data.phone,
+        company: data.company,
+        createdAt: data.created_at
+      };
+
       setClients(prev => prev.map(client => 
-        client.id === id ? { ...client, ...data } : client
+        client.id === id ? updatedClient : client
       ));
 
       toast({
@@ -88,7 +126,7 @@ export const useClients = () => {
         description: "Cliente atualizado com sucesso."
       });
 
-      return data;
+      return updatedClient;
     } catch (error) {
       console.error('Error updating client:', error);
       toast({
@@ -133,8 +171,8 @@ export const useClients = () => {
 
   return {
     clients,
-    loading,
-    createClient,
+    isLoading,
+    addClient,
     updateClient,
     deleteClient,
     reloadClients: loadClients

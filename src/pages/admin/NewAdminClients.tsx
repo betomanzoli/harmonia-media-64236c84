@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -10,7 +9,7 @@ import NewAdminLayout from '@/components/admin/layout/NewAdminLayout';
 import { useClients, type Client } from '@/hooks/admin/useClients';
 
 const NewAdminClients: React.FC = () => {
-  const { clients, loading, createClient, updateClient, deleteClient } = useClients();
+  const { clients, isLoading, addClient, updateClient, deleteClient } = useClients();
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [editingClient, setEditingClient] = useState<Client | null>(null);
@@ -32,7 +31,7 @@ const NewAdminClients: React.FC = () => {
         resetForm();
       }
     } else {
-      const success = await createClient(formData);
+      const success = await addClient(formData);
       if (success) {
         setIsCreateDialogOpen(false);
         resetForm();
@@ -61,7 +60,7 @@ const NewAdminClients: React.FC = () => {
     setFormData({ name: '', email: '', phone: '', company: '' });
   };
 
-  if (loading) {
+  if (isLoading) {
     return (
       <NewAdminLayout>
         <div className="p-6 flex justify-center items-center h-64">
@@ -175,7 +174,7 @@ const NewAdminClients: React.FC = () => {
                           <p className="text-sm text-gray-500">{client.company}</p>
                         )}
                         <p className="text-xs text-gray-400 mt-2">
-                          Criado em: {new Date(client.created_at).toLocaleDateString('pt-BR')}
+                          Criado em: {new Date(client.createdAt).toLocaleDateString('pt-BR')}
                         </p>
                       </div>
                       <div className="flex gap-2">
@@ -203,7 +202,6 @@ const NewAdminClients: React.FC = () => {
           </CardContent>
         </Card>
 
-        {/* Dialog de Edição */}
         <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
           <DialogContent>
             <DialogHeader>
