@@ -298,7 +298,15 @@ export type Database = {
           id?: string
           project_id?: string | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "fk_feedback_project_id"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "projects"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       feedbacks: {
         Row: {
@@ -768,7 +776,15 @@ export type Database = {
           recommended?: boolean | null
           version_id?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "fk_project_versions_project_id"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "projects"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       projects: {
         Row: {

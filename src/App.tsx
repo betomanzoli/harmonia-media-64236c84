@@ -1,6 +1,5 @@
-
 import React, { useState, useEffect } from 'react';
-import { Routes, Route, useLocation } from 'react-router-dom';
+import { Routes, Route, useLocation, BrowserRouter as Router } from 'react-router-dom';
 import ScrollToTop from './components/ScrollToTop';
 import ChatbotButton from './components/chatbot/ChatbotButton';
 
@@ -38,14 +37,16 @@ import NewAdminDashboard from './pages/admin/NewAdminDashboard';
 import NewAdminClients from './pages/admin/NewAdminClients';
 import NewAdminProjects from './pages/admin/NewAdminProjects';
 import ProjectDetailsPage from './pages/admin/ProjectDetailsPage';
-import ClientPreviewPage from './pages/ClientPreviewPage';
+import ClientPreview from '@/pages/ClientPreview';
 
 const App: React.FC = () => {
   return (
-    <>
-      <ScrollToTop />
-      <AppRoutes />
-    </>
+    <Router>
+      <div className="min-h-screen bg-background">
+        <ScrollToTop />
+        <AppRoutes />
+      </div>
+    </Router>
   );
 };
 
@@ -104,7 +105,7 @@ const AppRoutes: React.FC = () => {
         <Route path="/admin/projects/:projectId" element={<ProjectDetailsPage />} />
         
         {/* Client preview route */}
-        <Route path="/client-preview/:projectId" element={<ClientPreviewPage />} />
+        <Route path="/client-preview/:previewCode" element={<ClientPreview />} />
         
         {/* 404 route */}
         <Route path="*" element={<NotFoundPage />} />
