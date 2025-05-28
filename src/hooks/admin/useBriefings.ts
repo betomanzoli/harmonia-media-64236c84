@@ -1,8 +1,6 @@
-
-import { useState, useCallback, useEffect } from 'react';
-import { createId } from '@paralleldrive/cuid2';
-import { supabase } from '@/lib/supabase';
+import { useState, useEffect } from 'react';
 import { useToast } from '@/hooks/use-toast';
+import { supabase } from '@/integrations/supabase/client';
 
 export interface Briefing {
   id: string;

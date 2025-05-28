@@ -1,202 +1,89 @@
 
-import React from "react";
-import { FormField, FormItem, FormLabel, FormControl, FormMessage, FormDescription } from "@/components/ui/form";
-import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
-import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
-import { Checkbox } from "@/components/ui/checkbox";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { BriefingSection, BriefingField } from "@/types/briefing";
-import { Label } from "@/components/ui/label";
+import React from 'react';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Textarea } from '@/components/ui/textarea';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+
+interface BriefingField {
+  id: string;
+  type: 'text' | 'textarea' | 'select' | 'radio';
+  label: string;
+  required?: boolean;
+  options?: string[];
+}
+
+interface BriefingSection {
+  id: string;
+  title: string;
+  fields: BriefingField[];
+}
 
 interface DynamicFormSectionProps {
   section: BriefingSection;
-  fields: BriefingField[];
-  form: any; // Use proper typing from react-hook-form if needed
+  values: Record<string, any>;
+  onChange: (fieldId: string, value: any) => void;
 }
 
-const DynamicFormSection: React.FC<DynamicFormSectionProps> = ({ section, fields, form }) => {
+const DynamicFormSection: React.FC<DynamicFormSectionProps> = ({
+  section,
+  values,
+  onChange
+}) => {
   return (
-    <div className="space-y-4">
-      <div className="mb-4">
-        <h3 className="text-lg font-semibold">{section.title}</h3>
-        {section.description && (
-          <p className="text-sm text-gray-400">{section.description}</p>
-        )}
-      </div>
-
-      {fields.map((field) => (
-        <RenderFormField 
-          key={field.id} 
-          field={field} 
-          form={form} 
-        />
-      ))}
-    </div>
-  );
-};
-
-interface RenderFormFieldProps {
-  field: BriefingField;
-  form: any;
-}
-
-const RenderFormField: React.FC<RenderFormFieldProps> = ({ field, form }) => {
-  // Parse the options string to an array if it exists, or use an empty array
-  const options = field.options ? 
-    (typeof field.options === 'string' ? JSON.parse(field.options as string) : field.options) : 
-    [];
-
-  switch (field.field_type) {
-    case 'text':
-      return (
-        <FormField
-          control={form.control}
-          name={field.field_key}
-          rules={{ required: field.is_required }}
-          render={({ field: formField }) => (
-            <FormItem>
-              <FormLabel>{field.field_name}</FormLabel>
-              <FormControl>
-                <Input 
-                  placeholder={field.placeholder || ''} 
-                  {...formField} 
-                  maxLength={field.max_length || undefined}
-                />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
-      );
-
-    case 'textarea':
-      return (
-        <FormField
-          control={form.control}
-          name={field.field_key}
-          rules={{ required: field.is_required }}
-          render={({ field: formField }) => (
-            <FormItem>
-              <FormLabel>{field.field_name}</FormLabel>
-              <FormControl>
-                <Textarea 
-                  placeholder={field.placeholder || ''} 
-                  {...formField} 
-                  maxLength={field.max_length || undefined}
-                />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
-      );
-
-    case 'select':
-      return (
-        <FormField
-          control={form.control}
-          name={field.field_key}
-          rules={{ required: field.is_required }}
-          render={({ field: formField }) => (
-            <FormItem>
-              <FormLabel>{field.field_name}</FormLabel>
-              <Select 
-                onValueChange={formField.onChange} 
-                defaultValue={formField.value}
+    <Card>
+      <CardHeader>
+        <CardTitle>{section.title}</CardTitle>
+      </CardHeader>
+      <CardContent className="space-y-4">
+        {section.fields.map((field) => (
+          <div key={field.id} className="space-y-2">
+            <Label htmlFor={field.id}>
+              {field.label}
+              {field.required && <span className="text-red-500">*</span>}
+            </Label>
+            
+            {field.type === 'text' && (
+              <Input
+                id={field.id}
+                value={values[field.id] || ''}
+                onChange={(e) => onChange(field.id, e.target.value)}
+                required={field.required}
+              />
+            )}
+            
+            {field.type === 'textarea' && (
+              <Textarea
+                id={field.id}
+                value={values[field.id] || ''}
+                onChange={(e) => onChange(field.id, e.target.value)}
+                required={field.required}
+              />
+            )}
+            
+            {field.type === 'select' && (
+              <Select
+                value={values[field.id] || ''}
+                onValueChange={(value) => onChange(field.id, value)}
               >
-                <FormControl>
-                  <SelectTrigger>
-                    <SelectValue placeholder={field.placeholder || "Selecione uma opção"} />
-                  </SelectTrigger>
-                </FormControl>
+                <SelectTrigger>
+                  <SelectValue placeholder="Selecione uma opção" />
+                </SelectTrigger>
                 <SelectContent>
-                  {options.map((option: any) => (
-                    <SelectItem key={option.value} value={option.value}>
-                      {option.label}
+                  {field.options?.map((option) => (
+                    <SelectItem key={option} value={option}>
+                      {option}
                     </SelectItem>
                   ))}
                 </SelectContent>
               </Select>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
-      );
-
-    case 'radio':
-      return (
-        <FormField
-          control={form.control}
-          name={field.field_key}
-          rules={{ required: field.is_required }}
-          render={({ field: formField }) => (
-            <FormItem className="space-y-3">
-              <FormLabel>{field.field_name}</FormLabel>
-              <FormControl>
-                <RadioGroup
-                  onValueChange={formField.onChange}
-                  defaultValue={formField.value}
-                  className="flex flex-col space-y-1"
-                >
-                  {options.map((option: any) => (
-                    <FormItem key={option.value} className="flex items-center space-x-3 space-y-0">
-                      <FormControl>
-                        <RadioGroupItem value={option.value} />
-                      </FormControl>
-                      <FormLabel className="font-normal">{option.label}</FormLabel>
-                    </FormItem>
-                  ))}
-                </RadioGroup>
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
-      );
-
-    case 'checkbox':
-      return (
-        <div className="space-y-3">
-          <Label>{field.field_name}</Label>
-          <div className="space-y-2">
-            {options.map((option: any) => (
-              <FormField
-                key={option.value}
-                control={form.control}
-                name={field.field_key}
-                render={({ field: formField }) => {
-                  return (
-                    <FormItem
-                      key={option.value}
-                      className="flex flex-row items-start space-x-3 space-y-0"
-                    >
-                      <FormControl>
-                        <Checkbox
-                          checked={formField.value?.includes(option.value)}
-                          onCheckedChange={(checked) => {
-                            return checked
-                              ? formField.onChange([...(formField.value || []), option.value])
-                              : formField.onChange(
-                                  formField.value?.filter((value: string) => value !== option.value) || []
-                                );
-                          }}
-                        />
-                      </FormControl>
-                      <FormLabel className="font-normal">{option.label}</FormLabel>
-                    </FormItem>
-                  );
-                }}
-              />
-            ))}
+            )}
           </div>
-          <FormMessage />
-        </div>
-      );
-
-    default:
-      return null;
-  }
+        ))}
+      </CardContent>
+    </Card>
+  );
 };
 
 export default DynamicFormSection;

@@ -1,115 +1,109 @@
-
 import React, { useEffect, useState } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
-import MusicPreviewSystem from '@/components/previews/MusicPreviewSystem';
-import { useToast } from '@/hooks/use-toast';
-import { checkPreviewAccessCookie } from '@/utils/authCookies';
-import { supabase } from '@/lib/supabase';
-import { Loader2 } from 'lucide-react';
+import { useParams } from 'react-router-dom';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { Music, Clock, CheckCircle, MessageSquare } from 'lucide-react';
+import { supabase } from '@/integrations/supabase/client';
+import { checkPreviewAccessCookie, setPreviewAccessCookie } from '@/utils/authCookies';
 
 const MusicPreviewPage: React.FC = () => {
-  const { projectId } = useParams<{ projectId: string }>();
-  const { toast } = useToast();
-  const navigate = useNavigate();
-  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const { previewCode } = useParams<{ previewCode: string }>();
+  const [project, setProject] = useState<any | null>(null);
   const [isLoading, setIsLoading] = useState(true);
-  const [checkComplete, setCheckComplete] = useState(false);
+  const [hasAccess, setHasAccess] = useState(false);
 
   useEffect(() => {
-    // Verificar autenticação
-    const checkAuth = async () => {
-      if (!projectId) {
-        setIsLoading(false);
-        setCheckComplete(true);
-        return;
-      }
+    const checkAccess = async () => {
+      if (!previewCode) return;
 
-      try {
-        // Log preview access for analytics and monitoring
-        console.log(`Cliente acessando prévia: ${projectId}, data: ${new Date().toISOString()}`);
-        
-        // 1. Verificar se há cookie de acesso
-        const hasAccessCookie = checkPreviewAccessCookie(projectId);
-        console.log("Has access cookie:", hasAccessCookie);
-        
-        // 2. Verificar se o usuário está logado no Supabase
-        const { data: { session } } = await supabase.auth.getSession();
-        const hasActiveSession = !!session;
-        console.log("Has active session:", hasActiveSession);
-        
-        // Se tiver cookie de acesso ou sessão ativa, permitir acesso
-        if (hasAccessCookie || hasActiveSession) {
-          console.log("Authentication successful, allowing access");
-          setIsAuthenticated(true);
-          window.scrollTo(0, 0);
-        } else {
-          // Redirecionar para página de autenticação
-          console.log("No authentication found, redirecting to auth page");
-          console.log("Navigation to:", `/auth/preview/${projectId}`);
-          navigate(`/auth/preview/${projectId}`);
+      setIsLoading(true);
+      const access = checkPreviewAccessCookie(previewCode);
+      setHasAccess(access);
+
+      if (access) {
+        try {
+          const { data, error } = await supabase
+            .from('projects')
+            .select('*')
+            .eq('preview_code', previewCode)
+            .single();
+
+          if (error) {
+            console.error('Error fetching project:', error);
+          } else {
+            setProject(data);
+          }
+        } catch (error) {
+          console.error('Error fetching project:', error);
+        } finally {
+          setIsLoading(false);
         }
-      } catch (error) {
-        console.error('Erro ao verificar autenticação:', error);
-        toast({
-          title: "Erro de acesso",
-          description: "Não foi possível verificar seu acesso à prévia.",
-          variant: "destructive"
-        });
-      } finally {
+      } else {
         setIsLoading(false);
-        setCheckComplete(true);
       }
     };
 
-    checkAuth();
-  }, [projectId, navigate, toast]);
+    checkAccess();
+  }, [previewCode]);
 
-  // The component should only render content once the check is complete
-  // This prevents flash of content before redirect
-  if (!checkComplete || isLoading) {
+  if (isLoading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-100">
-        <div className="flex flex-col items-center">
-          <Loader2 className="h-10 w-10 animate-spin text-harmonia-green" />
-          <p className="mt-4 text-gray-600">Carregando prévia...</p>
-        </div>
+      <div className="flex justify-center items-center h-screen">
+        <Clock className="mr-2 h-4 w-4 animate-spin" />
+        Carregando...
       </div>
     );
   }
 
-  if (!projectId) {
+  if (!hasAccess) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-100">
-        <div className="bg-white p-6 rounded-lg shadow-sm text-center">
-          <h2 className="text-2xl font-bold text-black mb-4">ID do projeto não encontrado</h2>
-          <p className="text-black">O código de prévia fornecido não é válido.</p>
-        </div>
+      <div className="flex justify-center items-center h-screen">
+        <Card>
+          <CardHeader>
+            <CardTitle>Acesso Negado</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <p>Você não tem permissão para acessar esta prévia.</p>
+            <Button onClick={() => window.location.href = `/music-preview-auth?previewCode=${previewCode}`}>
+              Solicitar Acesso
+            </Button>
+          </CardContent>
+        </Card>
       </div>
     );
   }
 
-  if (!isAuthenticated) {
-    // Este caso não deveria acontecer pois já redirecionamos para a página de autenticação
-    // mas mantemos como fallback
+  if (!project) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-100">
-        <div className="bg-white p-6 rounded-lg shadow-sm text-center">
-          <h2 className="text-2xl font-bold text-black mb-4">Acesso não autorizado</h2>
-          <p className="text-black mb-4">Por favor, faça login para acessar esta prévia.</p>
-          <button 
-            onClick={() => navigate(`/auth/preview/${projectId}`)}
-            className="bg-harmonia-green text-white px-4 py-2 rounded"
-          >
-            Fazer login
-          </button>
-        </div>
+      <div className="flex justify-center items-center h-screen">
+        <Card>
+          <CardHeader>
+            <CardTitle>Projeto Não Encontrado</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <p>O projeto com o código de prévia especificado não foi encontrado.</p>
+          </CardContent>
+        </Card>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gray-100 pt-8 pb-16">
-      <MusicPreviewSystem projectId={projectId} />
+    <div className="flex justify-center items-center h-screen">
+      <Card>
+        <CardHeader>
+          <CardTitle>Prévia Musical</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="space-y-4">
+            <p>Título: {project.title}</p>
+            <p>Status: {project.status}</p>
+            <Music className="mr-2 h-4 w-4" />
+            <CheckCircle className="mr-2 h-4 w-4" />
+            <MessageSquare className="mr-2 h-4 w-4" />
+          </div>
+        </CardContent>
+      </Card>
     </div>
   );
 };

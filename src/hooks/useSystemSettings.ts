@@ -1,7 +1,6 @@
-
 import { useState, useEffect } from 'react';
-import { supabase } from '@/lib/supabase';
 import { useToast } from '@/hooks/use-toast';
+import { supabase } from '@/integrations/supabase/client';
 
 // Interface para as configurações do sistema
 export interface SystemSettings {

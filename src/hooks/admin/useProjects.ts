@@ -35,7 +35,27 @@ export const useProjects = () => {
 
       if (error) throw error;
 
-      setProjects(data || []);
+      // Transform data to match Project interface
+      const formattedProjects: Project[] = (data || []).map(project => ({
+        id: project.id,
+        title: project.title,
+        description: project.description,
+        status: (['waiting', 'feedback', 'approved'].includes(project.status) 
+          ? project.status 
+          : 'waiting') as 'waiting' | 'feedback' | 'approved',
+        client_id: project.client_id,
+        client_name: project.client_name,
+        client_email: project.client_email,
+        client_phone: project.client_phone,
+        package_type: project.package_type,
+        preview_code: project.preview_code,
+        deadline: project.deadline,
+        created_at: project.created_at,
+        updated_at: project.updated_at,
+        expires_at: project.expires_at
+      }));
+
+      setProjects(formattedProjects);
     } catch (error) {
       console.error('Error loading projects:', error);
       toast({
@@ -61,13 +81,32 @@ export const useProjects = () => {
 
       if (error) throw error;
 
-      setProjects(prev => [data, ...prev]);
+      const newProject: Project = {
+        id: data.id,
+        title: data.title,
+        description: data.description,
+        status: (['waiting', 'feedback', 'approved'].includes(data.status) 
+          ? data.status 
+          : 'waiting') as 'waiting' | 'feedback' | 'approved',
+        client_id: data.client_id,
+        client_name: data.client_name,
+        client_email: data.client_email,
+        client_phone: data.client_phone,
+        package_type: data.package_type,
+        preview_code: data.preview_code,
+        deadline: data.deadline,
+        created_at: data.created_at,
+        updated_at: data.updated_at,
+        expires_at: data.expires_at
+      };
+
+      setProjects(prev => [newProject, ...prev]);
       toast({
         title: "Projeto criado",
         description: "Projeto criado com sucesso."
       });
 
-      return data;
+      return newProject;
     } catch (error) {
       console.error('Error creating project:', error);
       toast({
@@ -93,8 +132,27 @@ export const useProjects = () => {
 
       if (error) throw error;
 
+      const updatedProject: Project = {
+        id: data.id,
+        title: data.title,
+        description: data.description,
+        status: (['waiting', 'feedback', 'approved'].includes(data.status) 
+          ? data.status 
+          : 'waiting') as 'waiting' | 'feedback' | 'approved',
+        client_id: data.client_id,
+        client_name: data.client_name,
+        client_email: data.client_email,
+        client_phone: data.client_phone,
+        package_type: data.package_type,
+        preview_code: data.preview_code,
+        deadline: data.deadline,
+        created_at: data.created_at,
+        updated_at: data.updated_at,
+        expires_at: data.expires_at
+      };
+
       setProjects(prev => prev.map(project => 
-        project.id === id ? { ...project, ...data } : project
+        project.id === id ? updatedProject : project
       ));
 
       toast({
@@ -102,7 +160,7 @@ export const useProjects = () => {
         description: "Projeto atualizado com sucesso."
       });
 
-      return data;
+      return updatedProject;
     } catch (error) {
       console.error('Error updating project:', error);
       toast({
