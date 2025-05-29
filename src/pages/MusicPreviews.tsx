@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import Header from '@/components/Header';
@@ -10,7 +9,7 @@ import PreviewHeader from '@/components/previews/PreviewHeader';
 import PreviewInstructions from '@/components/previews/PreviewInstructions';
 import PreviewPlayerList from '@/components/previews/player/PreviewPlayerList';
 import PreviewNextSteps from '@/components/previews/PreviewNextSteps';
-import { usePreviewData } from '@/hooks/usePreviewData';
+import { usePreviewData } from '@/hooks/use-preview-data';
 import { notificationService } from '@/services/notificationService';
 
 const MusicPreviews: React.FC = () => {
@@ -53,7 +52,7 @@ const MusicPreviews: React.FC = () => {
     
     // Notify about feedback
     notificationService.notify('feedback_received', {
-      projectId: actualProjectId || previewId,
+      projectId: actualProjectId || previewId || '',
       clientName: projectData?.clientName || 'Cliente',
       message: feedback
     });
@@ -78,7 +77,7 @@ const MusicPreviews: React.FC = () => {
     
     // Notify about approval
     notificationService.notify('preview_approved', {
-      projectId: actualProjectId || previewId,
+      projectId: actualProjectId || previewId || '',
       clientName: projectData?.clientName || 'Cliente',
       versionId: selectedPreview
     });

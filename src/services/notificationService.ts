@@ -1,79 +1,49 @@
 
-import React from 'react';
+import { supabase } from '@/integrations/supabase/client';
 
-// Tipos de notificações que o sistema pode enviar
-export type NotificationType = 
-  | 'project_created' 
-  | 'project_updated' 
-  | 'preview_added' 
-  | 'preview_approved' 
-  | 'feedback_received'
-  | 'briefing_submitted'
-  | 'client_created';
-
-// Interface para os ouvintes de notificação
-interface NotificationListener {
-  type: NotificationType;
-  callback: (data: any) => void;
+interface NotificationData {
+  projectId: string;
+  clientName?: string;
+  message?: string;
+  versionId?: string;
 }
 
-// Classe para gerenciar as notificações do sistema
 class NotificationService {
-  private listeners: NotificationListener[] = [];
-
-  // Adiciona um ouvinte para um tipo específico de notificação
-  public subscribe(type: NotificationType, callback: (data: any) => void) {
-    this.listeners.push({ type, callback });
-    
-    // Retorna uma função para cancelar a inscrição
-    return () => {
-      this.listeners = this.listeners.filter(
-        listener => !(listener.type === type && listener.callback === callback)
-      );
-    };
+  async notify(type: 'feedback_received' | 'preview_approved' | 'project_updated', data: NotificationData) {
+    try {
+      console.log(`Notification [${type}]:`, data);
+      
+      // In a real implementation, this could:
+      // - Send emails via Supabase Edge Functions
+      // - Create admin notifications in the database
+      // - Send webhooks to external services
+      // - Update real-time subscriptions
+      
+      // For now, we'll just log and could extend later
+      await this.createAdminNotification(type, data);
+      
+      return true;
+    } catch (error) {
+      console.error('Error sending notification:', error);
+      return false;
+    }
   }
 
-  // Notifica todos os ouvintes que estão escutando um tipo específico de notificação
-  public notify(type: NotificationType, data: any) {
-    console.log(`Notificação enviada: ${type}`, data);
-    
-    this.listeners
-      .filter(listener => listener.type === type)
-      .forEach(listener => {
-        try {
-          listener.callback(data);
-        } catch (error) {
-          console.error(`Erro ao processar notificação ${type}:`, error);
-        }
-      });
-  }
-  
-  // Função para mostrar as estatísticas de notificação
-  public getStats() {
-    const countByType = this.listeners.reduce((acc, listener) => {
-      acc[listener.type] = (acc[listener.type] || 0) + 1;
-      return acc;
-    }, {} as Record<string, number>);
-    
-    return {
-      total: this.listeners.length,
-      byType: countByType
-    };
+  private async createAdminNotification(type: string, data: NotificationData) {
+    try {
+      // This could create a record in a notifications table
+      // For now, we'll just update the project with a timestamp
+      await supabase
+        .from('projects')
+        .update({ 
+          updated_at: new Date().toISOString()
+        })
+        .eq('id', data.projectId);
+        
+    } catch (error) {
+      console.error('Error creating admin notification:', error);
+    }
   }
 }
 
-// Exporta uma única instância do serviço de notificação
 export const notificationService = new NotificationService();
-
-// Hooks de utilidade para usar o sistema de notificação
-export const useNotificationSubscription = (type: NotificationType, callback: (data: any) => void) => {
-  React.useEffect(() => {
-    const unsubscribe = notificationService.subscribe(type, callback);
-    return unsubscribe;
-  }, [type, callback]);
-};
-
-// Função para enviar notificações de forma mais simples
-export const sendNotification = (type: NotificationType, data: any) => {
-  notificationService.notify(type, data);
-};
