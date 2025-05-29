@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { Routes, Route, useLocation } from 'react-router-dom';
 import ScrollToTop from './components/ScrollToTop';
@@ -27,7 +28,6 @@ import FeedbackConfirmation from './pages/FeedbackConfirmation';
 import QualificacaoPage from './pages/Qualificacao';
 import BriefingSuccess from './pages/BriefingSuccess';
 import BriefingComplete from './pages/BriefingComplete';
-import ClientDashboard from './pages/ClientDashboard';
 import FinalDeliveryPage from './pages/FinalDeliveryPage';
 import FAQ from './pages/FAQ';
 
@@ -72,8 +72,7 @@ const App: React.FC = () => {
         <Route path="/termos" element={<Terms />} />
         <Route path="/faq" element={<FAQ />} />
         
-        {/* Client Dashboard and Delivery Routes */}
-        <Route path="/client-dashboard" element={<ClientDashboard />} />
+        {/* Delivery Routes */}
         <Route path="/deliveries/:projectId" element={<FinalDeliveryPage />} />
         
         {/* Authentication routes */}
