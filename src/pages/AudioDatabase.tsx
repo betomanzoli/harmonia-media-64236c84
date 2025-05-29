@@ -5,6 +5,7 @@ import AudioTable from '@/components/audio-database/AudioTable';
 import IntegrationConfig from '@/components/audio-database/IntegrationConfig';
 import AddAudioSampleForm from '@/components/audio-database/AddAudioSampleForm';
 import { useAudioSamples } from '@/hooks/useAudioSamples';
+import WebhookUrlManager from '@/components/admin/integrations/WebhookUrlManager';
 import { Button } from '@/components/ui/button';
 import { ArrowLeft, FolderOpen } from 'lucide-react';
 import { Link } from 'react-router-dom';
@@ -55,8 +56,8 @@ const AudioDatabase: React.FC = () => {
       
       <Header getApiUrl={getApiUrl} />
       
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
-        <div>
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
+        <div className="lg:col-span-2">
           <IntegrationConfig
             webhookUrl={webhookUrl}
             setWebhookUrl={setWebhookUrl}
@@ -67,15 +68,12 @@ const AudioDatabase: React.FC = () => {
           />
         </div>
         <div>
-          <div className="space-y-4">
-            <h2 className="text-xl font-semibold">Configuração de Integração</h2>
-            <div className="p-4 border rounded bg-muted">
-              <h3 className="font-medium mb-2">Webhook de Áudios</h3>
-              <p className="text-sm text-muted-foreground">
-                Configure webhooks para notificações de novos áudios
-              </p>
-            </div>
-          </div>
+          <WebhookUrlManager 
+            title="Integração de Áudios" 
+            description="Configure o webhook para notificações de novos áudios"
+            serviceType="audio"
+            storageUrl={folderUrl}
+          />
         </div>
       </div>
       

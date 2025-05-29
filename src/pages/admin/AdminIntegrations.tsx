@@ -4,6 +4,7 @@ import AdminLayout from '@/components/admin/layout/AdminLayout';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import WebhookUrlManager from '@/components/admin/integrations/WebhookUrlManager';
 import N8nWorkflowGuide from '@/components/admin/guides/N8nWorkflowGuide';
 import N8nIntegrationGuide from '@/components/admin/guides/N8nIntegrationGuide';
 import { ArrowLeft } from 'lucide-react';
@@ -44,33 +45,18 @@ const AdminIntegrations: React.FC = () => {
 
           <TabsContent value="webhooks" className="space-y-6">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <Card>
-                <CardHeader>
-                  <CardTitle>Webhook de Leads</CardTitle>
-                  <CardDescription>
-                    Configure o endpoint para receber leads capturados em landing pages
-                  </CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <p className="text-muted-foreground">
-                    Configuração de webhook em desenvolvimento.
-                  </p>
-                </CardContent>
-              </Card>
+              <WebhookUrlManager 
+                title="Webhook de Leads"
+                description="Configure o endpoint para receber leads capturados em landing pages"
+                serviceType="leads"
+                storageUrl="https://humbrock.app.n8n.cloud/workflow/144"
+              />
               
-              <Card>
-                <CardHeader>
-                  <CardTitle>Webhook de Notificações</CardTitle>
-                  <CardDescription>
-                    Configure o endpoint para notificações de sistema
-                  </CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <p className="text-muted-foreground">
-                    Configuração de webhook em desenvolvimento.
-                  </p>
-                </CardContent>
-              </Card>
+              <WebhookUrlManager 
+                title="Webhook de Notificações"
+                description="Configure o endpoint para notificações de sistema"
+                serviceType="notifications"
+              />
             </div>
           </TabsContent>
 
