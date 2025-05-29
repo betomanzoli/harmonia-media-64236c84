@@ -29,7 +29,7 @@ const Process: React.FC = () => {
         
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mb-16">
           <ProcessStep icon={<Package className="w-8 h-8 text-harmonia-green" />} title="1. Escolha do Pacote" description="Selecione o plano que melhor atende suas necessidades de uso e orçamento." />
-          <ProcessStep icon={<CreditCard className="w-8 h-8 text-harmonia-green" />} title="2. Pagamento" description="Processo seguro com múltiplas formas de pagamento, com emissão de nota fiscal." />
+          <ProcessStep icon={<CreditCard className="w-8 h-8 text-harmonia-green" />} title="2. Pagamento" description="Processo seguro com múltiplas formas de pagamento." />
           <ProcessStep icon={<MessageSquare className="w-8 h-8 text-harmonia-green" />} title="3. Briefing Detalhado" description="Após o pagamento, compartilhe sua história em detalhes para orientar a composição." />
         </div>
         
