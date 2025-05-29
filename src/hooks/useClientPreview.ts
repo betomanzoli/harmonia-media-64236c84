@@ -11,13 +11,20 @@ export interface ClientPreviewData {
     name: string;
     audioUrl: string;
     recommended: boolean;
+    description?: string;
+    dateAdded: string;
   }>;
+  title: string;
+  expirationDate?: string;
+  feedback?: string;
 }
 
 export const useClientPreview = (previewCode: string) => {
   const [previewData, setPreviewData] = useState<ClientPreviewData | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [authError, setAuthError] = useState<string | null>(null);
 
   useEffect(() => {
     const loadPreviewData = async () => {
@@ -31,8 +38,20 @@ export const useClientPreview = (previewCode: string) => {
           clientName: 'João Silva',
           packageType: 'essencial',
           status: 'waiting',
-          versions: []
+          title: 'Projeto Musical - João Silva',
+          expirationDate: '20/02/2024',
+          versions: [
+            {
+              id: 'v1',
+              name: 'Versão 1',
+              audioUrl: 'https://example.com/audio1.mp3',
+              recommended: true,
+              description: 'Primeira versão do projeto',
+              dateAdded: '20/01/2024'
+            }
+          ]
         });
+        setIsAuthenticated(true);
       } catch (err) {
         setError('Não foi possível carregar os dados da prévia.');
       } finally {
@@ -45,10 +64,23 @@ export const useClientPreview = (previewCode: string) => {
     }
   }, [previewCode]);
 
-  const submitFeedback = async (feedback: string, approved: boolean) => {
+  const authenticateClient = async (email: string) => {
+    try {
+      // Mock authentication
+      console.log('Authenticating client:', email);
+      setIsAuthenticated(true);
+      setAuthError(null);
+      return true;
+    } catch (error) {
+      setAuthError('Erro na autenticação');
+      return false;
+    }
+  };
+
+  const submitFeedback = async (feedback: string, email: string) => {
     try {
       // Mock submit
-      console.log('Feedback submitted:', { feedback, approved });
+      console.log('Feedback submitted:', { feedback, email });
       return true;
     } catch (error) {
       console.error('Error submitting feedback:', error);
@@ -56,10 +88,32 @@ export const useClientPreview = (previewCode: string) => {
     }
   };
 
+  const approveVersion = async (versionId: string, email: string) => {
+    try {
+      // Mock approve
+      console.log('Version approved:', { versionId, email });
+      if (previewData) {
+        setPreviewData({
+          ...previewData,
+          status: 'approved'
+        });
+      }
+      return true;
+    } catch (error) {
+      console.error('Error approving version:', error);
+      return false;
+    }
+  };
+
   return {
+    project: previewData,
     previewData,
     isLoading,
     error,
-    submitFeedback
+    isAuthenticated,
+    authError,
+    authenticateClient,
+    submitFeedback,
+    approveVersion
   };
 };
