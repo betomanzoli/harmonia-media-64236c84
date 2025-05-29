@@ -1,241 +1,185 @@
 
 import React, { useState } from 'react';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { ArrowLeft, Search, Music, Clock, CheckCircle, MessageSquare } from 'lucide-react';
-import { Link } from 'react-router-dom';
-import { supabase } from '@/integrations/supabase/client';
-import { useToast } from '@/hooks/use-toast';
-
-interface Project {
-  id: string;
-  title: string;
-  status: 'waiting' | 'feedback' | 'approved';
-  client_name: string;
-  created_at: string;
-  client_email: string;
-}
+import Header from '@/components/Header';
+import Footer from '@/components/Footer';
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { useToast } from "@/hooks/use-toast";
+import { useNavigate } from 'react-router-dom';
+import { Search, Clock, Calendar, Loader2 } from 'lucide-react';
+import { usePreviewProjects, ProjectItem } from '@/hooks/admin/usePreviewProjects';
 
 const OrderTracking: React.FC = () => {
+  const [orderId, setOrderId] = useState('');
   const [email, setEmail] = useState('');
-  const [projects, setProjects] = useState<Project[]>([]);
-  const [loading, setLoading] = useState(false);
-  const [searched, setSearched] = useState(false);
+  const [isSearching, setIsSearching] = useState(false);
+  const [orderDetails, setOrderDetails] = useState<ProjectItem | null>(null);
   const { toast } = useToast();
-
-  const handleSearch = async () => {
-    if (!email) {
+  const navigate = useNavigate();
+  const { projects } = usePreviewProjects();
+  
+  const handleSearch = () => {
+    if (!orderId.trim()) {
       toast({
-        title: "Email necessário",
-        description: "Por favor, insira seu email para buscar seus projetos.",
+        title: "Código obrigatório",
+        description: "Por favor, informe o código do pedido.",
         variant: "destructive"
       });
       return;
     }
-
-    setLoading(true);
-    try {
-      const { data, error } = await supabase
-        .from('projects')
-        .select('*')
-        .eq('client_email', email)
-        .order('created_at', { ascending: false });
-
-      if (error) throw error;
-
-      const formattedProjects: Project[] = (data || []).map(project => ({
-        id: project.id,
-        title: project.title || 'Projeto harmonIA',
-        status: (['waiting', 'feedback', 'approved'].includes(project.status) 
-          ? project.status 
-          : 'waiting') as 'waiting' | 'feedback' | 'approved',
-        client_name: project.client_name || 'Cliente',
-        created_at: project.created_at,
-        client_email: project.client_email || ''
-      }));
-
-      setProjects(formattedProjects);
-      setSearched(true);
-
-      if (formattedProjects.length === 0) {
+    
+    setIsSearching(true);
+    
+    // Simular busca de pedido
+    setTimeout(() => {
+      const foundProject = projects.find(p => 
+        p.id.toLowerCase() === orderId.toLowerCase() && 
+        p.clientEmail.toLowerCase() === email.toLowerCase()
+      );
+      
+      if (foundProject) {
+        setOrderDetails(foundProject);
+      } else {
         toast({
-          title: "Nenhum projeto encontrado",
-          description: "Não encontramos projetos associados a este email.",
+          title: "Pedido não encontrado",
+          description: "Verifique o código e email informados e tente novamente.",
+          variant: "destructive"
         });
       }
-    } catch (error) {
-      console.error('Erro ao buscar projetos:', error);
-      toast({
-        title: "Erro na busca",
-        description: "Houve um erro ao buscar seus projetos. Tente novamente.",
-        variant: "destructive"
-      });
-    } finally {
-      setLoading(false);
-    }
+      
+      setIsSearching(false);
+    }, 1000);
   };
-
-  const getStatusIcon = (status: string) => {
-    switch (status) {
-      case 'waiting':
-        return <Clock className="h-5 w-5 text-yellow-500" />;
-      case 'feedback':
-        return <MessageSquare className="h-5 w-5 text-blue-500" />;
-      case 'approved':
-        return <CheckCircle className="h-5 w-5 text-green-500" />;
-      default:
-        return <Music className="h-5 w-5 text-gray-500" />;
-    }
-  };
-
+  
   const getStatusText = (status: string) => {
-    switch (status) {
+    switch(status) {
       case 'waiting':
         return 'Aguardando sua avaliação';
       case 'feedback':
-        return 'Feedback enviado - Em ajustes';
+        return 'Em ajustes conforme seu feedback';
       case 'approved':
-        return 'Projeto aprovado';
+        return 'Projeto aprovado - Finalização em andamento';
       default:
         return 'Em processamento';
     }
   };
-
+  
   return (
-    <div className="min-h-screen bg-gray-100">
-      <div className="container mx-auto py-8 px-4">
-        <div className="max-w-4xl mx-auto">
-          <Button 
-            variant="outline" 
-            asChild
-            className="mb-6"
-          >
-            <Link to="/">
-              <ArrowLeft className="h-4 w-4 mr-2" />
-              Voltar
-            </Link>
-          </Button>
-
-          <Card className="mb-6">
+    <div className="min-h-screen bg-background">
+      <Header />
+      <main className="pt-24 pb-20 px-6 md:px-10">
+        <div className="max-w-3xl mx-auto">
+          <h1 className="text-3xl font-bold mb-8 text-center">Acompanhar Pedido</h1>
+          
+          <Card className="mb-8">
             <CardHeader>
-              <CardTitle className="flex items-center">
-                <Search className="h-6 w-6 mr-2" />
-                Acompanhar Pedido
-              </CardTitle>
+              <CardTitle>Buscar Pedido</CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="flex gap-4">
-                <Input
-                  type="email"
-                  placeholder="Digite seu email para buscar seus projetos"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  className="flex-1"
-                  onKeyPress={(e) => e.key === 'Enter' && handleSearch()}
-                />
+              <div className="space-y-4">
+                <div>
+                  <Label htmlFor="order-id">Código do Pedido</Label>
+                  <Input 
+                    id="order-id" 
+                    placeholder="Ex: P0001" 
+                    value={orderId}
+                    onChange={(e) => setOrderId(e.target.value)}
+                  />
+                </div>
+                
+                <div>
+                  <Label htmlFor="email">Email</Label>
+                  <Input 
+                    id="email" 
+                    type="email" 
+                    placeholder="Seu email cadastrado no pedido" 
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                  />
+                </div>
+                
                 <Button 
-                  onClick={handleSearch}
-                  disabled={loading}
-                  className="bg-harmonia-green hover:bg-harmonia-green/90"
+                  onClick={handleSearch} 
+                  disabled={isSearching} 
+                  className="w-full"
                 >
-                  {loading ? "Buscando..." : "Buscar"}
+                  {isSearching ? (
+                    <>
+                      <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                      Buscando...
+                    </>
+                  ) : (
+                    <>
+                      <Search className="h-4 w-4 mr-2" />
+                      Buscar Pedido
+                    </>
+                  )}
                 </Button>
               </div>
             </CardContent>
           </Card>
-
-          {/* Results */}
-          {searched && (
-            <div className="space-y-4">
-              {projects.length > 0 ? (
-                <>
-                  <h2 className="text-xl font-bold mb-4">
-                    {projects.length} projeto(s) encontrado(s)
-                  </h2>
-                  {projects.map((project) => (
-                    <Card key={project.id}>
-                      <CardHeader>
-                        <CardTitle className="flex items-center justify-between">
-                          <span>{project.title}</span>
-                          <div className="flex items-center space-x-2">
-                            {getStatusIcon(project.status)}
-                            <span className="text-sm">{getStatusText(project.status)}</span>
-                          </div>
-                        </CardTitle>
-                      </CardHeader>
-                      <CardContent>
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                          <div>
-                            <label className="text-sm font-medium text-gray-600">Cliente</label>
-                            <p>{project.client_name}</p>
-                          </div>
-                          
-                          <div>
-                            <label className="text-sm font-medium text-gray-600">Data de Criação</label>
-                            <p>{new Date(project.created_at).toLocaleDateString('pt-BR')}</p>
-                          </div>
-
-                          <div className="md:col-span-2">
-                            <label className="text-sm font-medium text-gray-600">Status Atual</label>
-                            <p className="capitalize">{getStatusText(project.status)}</p>
-                          </div>
-                        </div>
-
-                        <div className="mt-4">
-                          <Button asChild variant="outline" className="w-full md:w-auto">
-                            <Link to={`/client-dashboard/${project.id}`}>
-                              Ver Detalhes Completos
-                            </Link>
-                          </Button>
-                        </div>
-
-                        {project.status === 'waiting' && (
-                          <div className="mt-4 p-4 bg-yellow-50 border border-yellow-200 rounded">
-                            <p className="text-yellow-800">
-                              Suas prévias musicais estão prontas para avaliação. 
-                              Em breve você receberá o link para acessá-las.
-                            </p>
-                          </div>
-                        )}
-
-                        {project.status === 'feedback' && (
-                          <div className="mt-4 p-4 bg-blue-50 border border-blue-200 rounded">
-                            <p className="text-blue-800">
-                              Recebemos seu feedback e estamos trabalhando nos ajustes solicitados.
-                            </p>
-                          </div>
-                        )}
-
-                        {project.status === 'approved' && (
-                          <div className="mt-4 p-4 bg-green-50 border border-green-200 rounded">
-                            <p className="text-green-800">
-                              Projeto aprovado! Estamos finalizando sua música.
-                            </p>
-                          </div>
-                        )}
-                      </CardContent>
-                    </Card>
-                  ))}
-                </>
-              ) : (
-                <Card>
-                  <CardContent className="text-center py-12">
-                    <Music className="h-12 w-12 mx-auto mb-4 text-gray-400" />
-                    <h3 className="text-lg font-medium mb-2">Nenhum projeto encontrado</h3>
-                    <p className="text-gray-600 mb-4">
-                      Não encontramos projetos associados ao email "{email}".
-                    </p>
-                    <p className="text-sm text-gray-500">
-                      Verifique se o email está correto ou entre em contato conosco.
-                    </p>
-                  </CardContent>
-                </Card>
-              )}
-            </div>
+          
+          {orderDetails && (
+            <Card>
+              <CardHeader>
+                <CardTitle>Detalhes do Pedido {orderDetails.id}</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-6">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                      <h3 className="text-sm font-medium text-gray-500">Cliente</h3>
+                      <p className="font-medium">{orderDetails.clientName}</p>
+                    </div>
+                    
+                    <div>
+                      <h3 className="text-sm font-medium text-gray-500">Email</h3>
+                      <p className="font-medium">{orderDetails.clientEmail}</p>
+                    </div>
+                  </div>
+                  
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                      <h3 className="text-sm font-medium text-gray-500">Pacote</h3>
+                      <p className="font-medium">{orderDetails.packageType}</p>
+                    </div>
+                    
+                    <div>
+                      <h3 className="text-sm font-medium text-gray-500">Data do Pedido</h3>
+                      <p className="flex items-center">
+                        <Calendar className="h-4 w-4 mr-2 text-gray-400" />
+                        {orderDetails.createdAt}
+                      </p>
+                    </div>
+                  </div>
+                  
+                  <div>
+                    <h3 className="text-sm font-medium text-gray-500">Status do Pedido</h3>
+                    <div className="flex items-center mt-1">
+                      <Clock className="h-4 w-4 mr-2 text-harmonia-green" />
+                      <span className="font-medium">{getStatusText(orderDetails.status)}</span>
+                    </div>
+                  </div>
+                  
+                  {orderDetails.status !== 'waiting' && (
+                    <div className="pt-4 border-t">
+                      <Button 
+                        onClick={() => navigate(`/preview/${orderDetails.id}`)} 
+                        className="w-full bg-harmonia-green hover:bg-harmonia-green/90"
+                      >
+                        Ver Prévias da Música
+                      </Button>
+                    </div>
+                  )}
+                </div>
+              </CardContent>
+            </Card>
           )}
         </div>
-      </div>
+      </main>
+      <Footer />
     </div>
   );
 };

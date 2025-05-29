@@ -1,92 +1,126 @@
 
-import React, { useState } from 'react';
-import NewAdminLayout from '@/components/admin/layout/NewAdminLayout';
-import AdminAuth from '@/components/admin/AdminAuth';
+import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { useProjects } from '@/hooks/admin/useProjects';
-import { Music, Users, Clock, CheckCircle, Plus, Eye } from 'lucide-react';
-import { Link } from 'react-router-dom';
+import { Users, FolderOpen, Clock, CheckCircle, Plus, TrendingUp } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
+import NewAdminLayout from '@/components/admin/layout/NewAdminLayout';
 
 const NewAdminDashboard: React.FC = () => {
-  const [isAuthenticated, setIsAuthenticated] = useState(false);
-  const { projects } = useProjects();
-
-  if (!isAuthenticated) {
-    return <AdminAuth onAuthenticated={() => setIsAuthenticated(true)} />;
-  }
+  const navigate = useNavigate();
 
   const stats = {
-    total: projects.length,
-    waiting: projects.filter(p => p.status === 'waiting').length,
-    feedback: projects.filter(p => p.status === 'feedback').length,
-    approved: projects.filter(p => p.status === 'approved').length,
-    clients: new Set(projects.map(p => p.client_email)).size
+    clients: 12,
+    projects: 8,
+    pending: 3,
+    completed: 5
   };
 
-  const recentProjects = projects.slice(0, 5);
+  const recentProjects = [
+    { id: '1', client: 'João Silva', title: 'Música Personalizada', status: 'waiting', date: '20/01/2024' },
+    { id: '2', client: 'Maria Santos', title: 'Trilha Sonora', status: 'feedback', date: '18/01/2024' },
+    { id: '3', client: 'Pedro Oliveira', title: 'Jingle Comercial', status: 'approved', date: '15/01/2024' }
+  ];
+
+  const handleNewClient = () => {
+    navigate('/admin/clients');
+  };
+
+  const handleNewProject = () => {
+    navigate('/admin/projects');
+  };
+
+  const getStatusColor = (status: string) => {
+    const colors = {
+      waiting: 'text-yellow-600',
+      feedback: 'text-blue-600',
+      approved: 'text-green-600'
+    };
+    return colors[status as keyof typeof colors] || 'text-gray-600';
+  };
+
+  const getStatusLabel = (status: string) => {
+    const labels = {
+      waiting: 'Aguardando',
+      feedback: 'Feedback',
+      approved: 'Aprovado'
+    };
+    return labels[status as keyof typeof labels] || status;
+  };
 
   return (
     <NewAdminLayout>
       <div className="p-6 space-y-6">
-        <div>
-          <h1 className="text-3xl font-bold">Dashboard</h1>
-          <p className="text-gray-600">Visão geral do sistema harmonIA</p>
+        
+        {/* Header */}
+        <div className="flex justify-between items-center">
+          <div>
+            <h1 className="text-3xl font-bold">Dashboard</h1>
+            <p className="text-gray-600">Visão geral dos projetos e clientes</p>
+          </div>
+          <div className="flex gap-2">
+            <Button 
+              onClick={handleNewClient} 
+              variant="outline"
+            >
+              <Plus className="mr-2 h-4 w-4" />
+              Novo Cliente
+            </Button>
+            <Button 
+              onClick={handleNewProject}
+              className="bg-harmonia-green hover:bg-harmonia-green/90"
+            >
+              <Plus className="mr-2 h-4 w-4" />
+              Novo Projeto
+            </Button>
+          </div>
         </div>
 
         {/* Stats Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
           <Card>
-            <CardContent className="p-4">
-              <div className="flex items-center space-x-2">
-                <Music className="h-8 w-8 text-harmonia-green" />
-                <div>
-                  <div className="text-2xl font-bold">{stats.total}</div>
-                  <p className="text-gray-600 text-sm">Total Projetos</p>
+            <CardContent className="p-6">
+              <div className="flex items-center">
+                <Users className="h-8 w-8 text-blue-600" />
+                <div className="ml-4">
+                  <p className="text-sm font-medium text-gray-600">Total Clientes</p>
+                  <p className="text-2xl font-bold">{stats.clients}</p>
                 </div>
               </div>
             </CardContent>
           </Card>
+
           <Card>
-            <CardContent className="p-4">
-              <div className="flex items-center space-x-2">
-                <Clock className="h-8 w-8 text-yellow-500" />
-                <div>
-                  <div className="text-2xl font-bold">{stats.waiting}</div>
-                  <p className="text-gray-600 text-sm">Aguardando</p>
+            <CardContent className="p-6">
+              <div className="flex items-center">
+                <FolderOpen className="h-8 w-8 text-purple-600" />
+                <div className="ml-4">
+                  <p className="text-sm font-medium text-gray-600">Total Projetos</p>
+                  <p className="text-2xl font-bold">{stats.projects}</p>
                 </div>
               </div>
             </CardContent>
           </Card>
+
           <Card>
-            <CardContent className="p-4">
-              <div className="flex items-center space-x-2">
-                <Music className="h-8 w-8 text-blue-500" />
-                <div>
-                  <div className="text-2xl font-bold">{stats.feedback}</div>
-                  <p className="text-gray-600 text-sm">Com Feedback</p>
+            <CardContent className="p-6">
+              <div className="flex items-center">
+                <Clock className="h-8 w-8 text-yellow-600" />
+                <div className="ml-4">
+                  <p className="text-sm font-medium text-gray-600">Pendentes</p>
+                  <p className="text-2xl font-bold">{stats.pending}</p>
                 </div>
               </div>
             </CardContent>
           </Card>
+
           <Card>
-            <CardContent className="p-4">
-              <div className="flex items-center space-x-2">
-                <CheckCircle className="h-8 w-8 text-green-500" />
-                <div>
-                  <div className="text-2xl font-bold">{stats.approved}</div>
-                  <p className="text-gray-600 text-sm">Aprovados</p>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-          <Card>
-            <CardContent className="p-4">
-              <div className="flex items-center space-x-2">
-                <Users className="h-8 w-8 text-purple-500" />
-                <div>
-                  <div className="text-2xl font-bold">{stats.clients}</div>
-                  <p className="text-gray-600 text-sm">Clientes</p>
+            <CardContent className="p-6">
+              <div className="flex items-center">
+                <CheckCircle className="h-8 w-8 text-green-600" />
+                <div className="ml-4">
+                  <p className="text-sm font-medium text-gray-600">Concluídos</p>
+                  <p className="text-2xl font-bold">{stats.completed}</p>
                 </div>
               </div>
             </CardContent>
@@ -94,64 +128,138 @@ const NewAdminDashboard: React.FC = () => {
         </div>
 
         {/* Quick Actions */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <Card>
+          <CardHeader>
+            <CardTitle>Ações Rápidas</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <Button 
+                onClick={() => navigate('/admin/clients')} 
+                variant="outline" 
+                className="h-20 flex flex-col"
+              >
+                <Users className="h-6 w-6 mb-2" />
+                Gerenciar Clientes
+              </Button>
+              
+              <Button 
+                onClick={() => navigate('/admin/projects')} 
+                variant="outline" 
+                className="h-20 flex flex-col"
+              >
+                <FolderOpen className="h-6 w-6 mb-2" />
+                Gerenciar Projetos
+              </Button>
+              
+              <Button 
+                onClick={handleNewProject}
+                variant="outline" 
+                className="h-20 flex flex-col bg-harmonia-green/10 border-harmonia-green text-harmonia-green hover:bg-harmonia-green hover:text-white"
+              >
+                <Plus className="h-6 w-6 mb-2" />
+                Novo Projeto
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Recent Projects */}
+        <Card>
+          <CardHeader>
+            <div className="flex justify-between items-center">
+              <CardTitle>Projetos Recentes</CardTitle>
+              <Button 
+                variant="ghost" 
+                onClick={() => navigate('/admin/projects')}
+              >
+                Ver Todos
+              </Button>
+            </div>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-4">
+              {recentProjects.map((project) => (
+                <div 
+                  key={project.id}
+                  className="flex items-center justify-between p-4 border rounded-lg hover:bg-gray-50 cursor-pointer"
+                  onClick={() => navigate(`/admin/projects/${project.id}`)}
+                >
+                  <div className="flex-1">
+                    <h4 className="font-medium">{project.title}</h4>
+                    <p className="text-sm text-gray-600">{project.client}</p>
+                  </div>
+                  <div className="text-right">
+                    <p className={`text-sm font-medium ${getStatusColor(project.status)}`}>
+                      {getStatusLabel(project.status)}
+                    </p>
+                    <p className="text-xs text-gray-500">{project.date}</p>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Performance Overview */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           <Card>
             <CardHeader>
-              <CardTitle>Ações Rápidas</CardTitle>
+              <CardTitle className="flex items-center">
+                <TrendingUp className="mr-2 h-5 w-5" />
+                Resumo do Mês
+              </CardTitle>
             </CardHeader>
-            <CardContent className="space-y-2">
-              <Button asChild className="w-full bg-harmonia-green hover:bg-harmonia-green/90">
-                <Link to="/admin">
-                  <Plus className="mr-2 h-4 w-4" />
-                  Novo Projeto
-                </Link>
-              </Button>
-              <Button asChild variant="outline" className="w-full">
-                <Link to="/admin">
-                  <Eye className="mr-2 h-4 w-4" />
-                  Ver Todos os Projetos
-                </Link>
-              </Button>
+            <CardContent>
+              <div className="space-y-3">
+                <div className="flex justify-between">
+                  <span className="text-gray-600">Novos Clientes</span>
+                  <span className="font-semibold">+3</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-gray-600">Projetos Iniciados</span>
+                  <span className="font-semibold">5</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-gray-600">Projetos Finalizados</span>
+                  <span className="font-semibold">4</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-gray-600">Taxa de Aprovação</span>
+                  <span className="font-semibold text-green-600">85%</span>
+                </div>
+              </div>
             </CardContent>
           </Card>
 
-          <Card className="md:col-span-2">
+          <Card>
             <CardHeader>
-              <CardTitle>Projetos Recentes</CardTitle>
+              <CardTitle>Status dos Projetos</CardTitle>
             </CardHeader>
             <CardContent>
-              {recentProjects.length > 0 ? (
-                <div className="space-y-3">
-                  {recentProjects.map((project) => (
-                    <div key={project.id} className="flex items-center justify-between p-3 border rounded">
-                      <div>
-                        <p className="font-medium">{project.title}</p>
-                        <p className="text-sm text-gray-600">{project.client_name}</p>
-                      </div>
-                      <div className="text-right">
-                        <div className={`px-2 py-1 rounded text-xs ${
-                          project.status === 'waiting' ? 'bg-yellow-100 text-yellow-800' :
-                          project.status === 'feedback' ? 'bg-blue-100 text-blue-800' :
-                          'bg-green-100 text-green-800'
-                        }`}>
-                          {project.status === 'waiting' ? 'Aguardando' :
-                           project.status === 'feedback' ? 'Feedback' : 'Aprovado'}
-                        </div>
-                      </div>
-                    </div>
-                  ))}
+              <div className="space-y-3">
+                <div className="flex justify-between items-center">
+                  <span className="text-gray-600">Aguardando Feedback</span>
+                  <div className="flex items-center">
+                    <div className="w-2 h-2 bg-yellow-500 rounded-full mr-2"></div>
+                    <span className="font-semibold">{stats.pending}</span>
+                  </div>
                 </div>
-              ) : (
-                <div className="text-center py-8 text-gray-500">
-                  <p>Nenhum projeto encontrado</p>
-                  <Button asChild className="mt-4 bg-harmonia-green hover:bg-harmonia-green/90">
-                    <Link to="/admin">
-                      <Plus className="mr-2 h-4 w-4" />
-                      Criar Primeiro Projeto
-                    </Link>
-                  </Button>
+                <div className="flex justify-between items-center">
+                  <span className="text-gray-600">Em Revisão</span>
+                  <div className="flex items-center">
+                    <div className="w-2 h-2 bg-blue-500 rounded-full mr-2"></div>
+                    <span className="font-semibold">2</span>
+                  </div>
                 </div>
-              )}
+                <div className="flex justify-between items-center">
+                  <span className="text-gray-600">Aprovados</span>
+                  <div className="flex items-center">
+                    <div className="w-2 h-2 bg-green-500 rounded-full mr-2"></div>
+                    <span className="font-semibold">{stats.completed}</span>
+                  </div>
+                </div>
+              </div>
             </CardContent>
           </Card>
         </div>
