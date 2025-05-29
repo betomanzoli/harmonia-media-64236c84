@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
@@ -32,7 +31,17 @@ const ClientDashboard: React.FC = () => {
           .single();
 
         if (error) throw error;
-        setProject(data);
+        
+        // Transform the data to match our Project interface
+        const transformedProject: Project = {
+          id: data.id,
+          title: data.title,
+          status: data.status as 'waiting' | 'feedback' | 'approved',
+          client_name: data.client_name,
+          created_at: data.created_at
+        };
+        
+        setProject(transformedProject);
       } catch (error) {
         console.error('Erro ao carregar projeto:', error);
       } finally {
