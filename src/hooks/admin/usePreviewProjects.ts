@@ -46,21 +46,39 @@ export const usePreviewProjects = () => {
 
       if (error) throw error;
 
-      const formattedProjects: ProjectItem[] = (data || []).map(project => ({
-        id: project.id,
-        clientName: project.client_name || 'Cliente sem nome',
-        clientEmail: project.client_email || '',
-        packageType: project.package_type || 'essencial',
-        createdAt: new Date(project.created_at).toLocaleDateString('pt-BR'),
-        status: project.status as 'waiting' | 'feedback' | 'approved',
-        versions: Array.isArray(project.versions) ? project.versions.length : 0,
-        previewUrl: `/client-preview/${project.preview_code}`,
-        expirationDate: project.expires_at ? new Date(project.expires_at).toLocaleDateString('pt-BR') : '',
-        lastActivityDate: new Date(project.updated_at || project.created_at).toLocaleDateString('pt-BR'),
-        description: project.description,
-        feedback: project.feedback,
-        versionsList: Array.isArray(project.versions) ? project.versions : []
-      }));
+      const formattedProjects: ProjectItem[] = (data || []).map(project => {
+        // Safely parse versions from JSON to VersionItem[]
+        let versionsList: VersionItem[] = [];
+        if (project.versions && Array.isArray(project.versions)) {
+          versionsList = (project.versions as any[]).map((version: any) => ({
+            id: version.id || '',
+            name: version.name || '',
+            description: version.description,
+            audioUrl: version.audioUrl || version.audio_url || '',
+            recommended: version.recommended || false,
+            dateAdded: version.dateAdded || version.date_added || new Date().toLocaleDateString('pt-BR'),
+            final: version.final || false,
+            fileId: version.fileId || version.file_id,
+            additionalLinks: version.additionalLinks || version.additional_links || []
+          }));
+        }
+
+        return {
+          id: project.id,
+          clientName: project.client_name || 'Cliente sem nome',
+          clientEmail: project.client_email || '',
+          packageType: project.package_type || 'essencial',
+          createdAt: new Date(project.created_at).toLocaleDateString('pt-BR'),
+          status: (project.status as 'waiting' | 'feedback' | 'approved') || 'waiting',
+          versions: versionsList.length,
+          previewUrl: `/client-preview/${project.preview_code}`,
+          expirationDate: project.expires_at ? new Date(project.expires_at).toLocaleDateString('pt-BR') : '',
+          lastActivityDate: new Date(project.updated_at || project.created_at).toLocaleDateString('pt-BR'),
+          description: project.description,
+          feedback: project.feedback,
+          versionsList
+        };
+      });
 
       setProjects(formattedProjects);
     } catch (error) {

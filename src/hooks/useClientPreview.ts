@@ -70,7 +70,7 @@ export const useClientPreview = (previewCode: string) => {
           projectId: project.id,
           clientName: project.client_name || 'Cliente',
           packageType: project.package_type || 'essencial',
-          status: project.status || 'waiting',
+          status: (project.status as 'waiting' | 'feedback' | 'approved') || 'waiting',
           title: project.title || 'Projeto Musical',
           expirationDate: project.expires_at ? new Date(project.expires_at).toLocaleDateString('pt-BR') : undefined,
           feedback: project.feedback,
