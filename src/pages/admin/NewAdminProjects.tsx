@@ -1,75 +1,75 @@
-
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react'; // Added useEffect
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Plus, Search } from 'lucide-react';
+import { Plus, Search, Loader2 } from 'lucide-react'; // Added Loader2
 import { useToast } from '@/hooks/use-toast';
 import NewAdminLayout from '@/components/admin/layout/NewAdminLayout';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import ProjectCard from '@/components/admin/projects/ProjectCard';
+import { useClients, type Client } from '@/hooks/admin/useClients'; // Import useClients hook and Client type
+import { useProjects, type Project } from '@/hooks/admin/useProjects'; // Import useProjects hook and Project type
 
-interface Project {
+// Define Project type for local state (might differ slightly from hook's Project type if needed)
+interface DisplayProject {
   id: string;
   clientName: string;
+  clientId?: string;
   title: string;
   status: 'waiting' | 'feedback' | 'approved';
-  versionsCount: number;
+  versionsCount: number; // Assuming this comes from project.versions.length
   createdAt: string;
   lastActivity: string;
 }
 
 const NewAdminProjects: React.FC = () => {
   const { toast } = useToast();
-  const [projects, setProjects] = useState<Project[]>([
-    {
-      id: '1',
-      clientName: 'João Silva',
-      title: 'Música Personalizada - João Silva',
-      status: 'waiting',
-      versionsCount: 2,
-      createdAt: '15/01/2024',
-      lastActivity: '20/01/2024'
-    },
-    {
-      id: '2',
-      clientName: 'Maria Santos',
-      title: 'Trilha Sonora - Casamento',
-      status: 'feedback',
-      versionsCount: 1,
-      createdAt: '10/01/2024',
-      lastActivity: '18/01/2024'
-    },
-    {
-      id: '3',
-      clientName: 'Pedro Oliveira',
-      title: 'Jingle Comercial',
-      status: 'approved',
-      versionsCount: 3,
-      createdAt: '05/01/2024',
-      lastActivity: '15/01/2024'
-    }
-  ]);
-  
+  const { clients, isLoading: clientsLoading, error: clientsError } = useClients(); // Use the clients hook
+  const { projects: fetchedProjects, loading: projectsLoading, createProject, reloadProjects } = useProjects(); // Use the projects hook
+
+  const [displayProjects, setDisplayProjects] = useState<DisplayProject[]>([]);
   const [showNewProjectDialog, setShowNewProjectDialog] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const [formData, setFormData] = useState({
-    clientName: '',
+    clientId: '', // Use clientId
     title: '',
     packageType: ''
   });
 
-  const mockClients = [
-    { id: '1', name: 'João Silva' },
-    { id: '2', name: 'Maria Santos' },
-    { id: '3', name: 'Pedro Oliveira' }
-  ];
+  // Transform fetched projects to display format when they load/change
+  useEffect(() => {
+    const formatted = (fetchedProjects || []).map(p => ({
+      id: p.id,
+      clientName: p.client_name || 'Cliente Desconhecido', // Use client_name from project data
+      clientId: p.client_id,
+      title: p.title,
+      status: p.status,
+      versionsCount: p.versions?.length || 0,
+      createdAt: new Date(p.created_at).toLocaleDateString('pt-BR'),
+      lastActivity: p.updated_at ? new Date(p.updated_at).toLocaleDateString('pt-BR') : new Date(p.created_at).toLocaleDateString('pt-BR')
+    }));
+    setDisplayProjects(formatted);
+  }, [fetchedProjects]);
 
-  const handleAddProject = () => {
-    if (!formData.clientName || !formData.title) {
+  // Handle client loading errors
+  useEffect(() => {
+    if (clientsError) {
+      toast({
+        title: "Erro ao carregar clientes",
+        description: clientsError.message || "Não foi possível buscar a lista de clientes.",
+        variant: "destructive"
+      });
+    }
+  }, [clientsError, toast]);
+
+  const handleAddProject = async () => {
+    const selectedClient = clients.find(c => c.id === formData.clientId);
+
+    if (!selectedClient || !formData.title) {
       toast({
         title: "Dados incompletos",
         description: "Cliente e título são campos obrigatórios.",
@@ -78,51 +78,63 @@ const NewAdminProjects: React.FC = () => {
       return;
     }
 
-    const newProject: Project = {
-      id: Date.now().toString(),
-      clientName: formData.clientName,
-      title: formData.title,
-      status: 'waiting',
-      versionsCount: 0,
-      createdAt: new Date().toLocaleDateString('pt-BR'),
-      lastActivity: new Date().toLocaleDateString('pt-BR')
-    };
+    setIsSubmitting(true);
+    try {
+      // Prepare data for createProject hook (matching its expected input)
+      const projectDataForHook = {
+        title: formData.title,
+        client_id: selectedClient.id,
+        client_name: selectedClient.name, // Include client name if needed by hook/table
+        client_email: selectedClient.email, // Include email if needed
+        package_type: formData.packageType,
+        status: 'waiting' as 'waiting', // Set initial status
+        // Add other necessary fields required by the 'projects' table
+      };
 
-    setProjects([newProject, ...projects]);
-    
-    toast({
-      title: "Projeto criado",
-      description: `O projeto "${formData.title}" foi criado com sucesso.`
-    });
+      const created = await createProject(projectDataForHook);
 
-    setShowNewProjectDialog(false);
-    setFormData({ clientName: '', title: '', packageType: '' });
+      if (created) {
+        toast({
+          title: "Projeto criado",
+          description: `O projeto "${formData.title}" para ${selectedClient.name} foi criado com sucesso.`
+        });
+        setShowNewProjectDialog(false);
+        setFormData({ clientId: '', title: '', packageType: '' }); // Reset form
+        // reloadProjects(); // Listener should handle this, but uncomment if needed
+      } else {
+        // Error toast is handled within the hook
+      }
+    } catch (error) {
+      // Error toast is handled within the hook
+      console.error("Error in handleAddProject:", error);
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   const handleChange = (name: string, value: string) => {
     setFormData(prev => ({ ...prev, [name]: value }));
   };
 
-  // Filter projects
-  const filteredProjects = projects.filter(project => {
+  // Filter projects based on displayProjects state
+  const filteredProjects = displayProjects.filter(project => {
     const matchesSearch = project.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
                          project.clientName.toLowerCase().includes(searchTerm.toLowerCase());
     const matchesStatus = statusFilter === 'all' || project.status === statusFilter;
-    
     return matchesSearch && matchesStatus;
   });
 
+  // Calculate stats based on displayProjects state
   const projectStats = {
-    total: projects.length,
-    waiting: projects.filter(p => p.status === 'waiting').length,
-    feedback: projects.filter(p => p.status === 'feedback').length,
-    approved: projects.filter(p => p.status === 'approved').length
+    total: displayProjects.length,
+    waiting: displayProjects.filter(p => p.status === 'waiting').length,
+    feedback: displayProjects.filter(p => p.status === 'feedback').length,
+    approved: displayProjects.filter(p => p.status === 'approved').length
   };
 
   return (
     <NewAdminLayout>
       <div className="p-6 space-y-6">
-        
         {/* Header */}
         <div className="flex justify-between items-center">
           <h1 className="text-3xl font-bold">Projetos</h1>
@@ -136,25 +148,25 @@ const NewAdminProjects: React.FC = () => {
         <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
           <Card>
             <CardContent className="p-4">
-              <div className="text-2xl font-bold">{projectStats.total}</div>
+              <div className="text-2xl font-bold">{projectsLoading ? <Loader2 className="h-6 w-6 animate-spin" /> : projectStats.total}</div>
               <p className="text-gray-600">Total</p>
             </CardContent>
           </Card>
           <Card>
             <CardContent className="p-4">
-              <div className="text-2xl font-bold text-yellow-600">{projectStats.waiting}</div>
+              <div className="text-2xl font-bold text-yellow-600">{projectsLoading ? <Loader2 className="h-6 w-6 animate-spin" /> : projectStats.waiting}</div>
               <p className="text-gray-600">Aguardando</p>
             </CardContent>
           </Card>
           <Card>
             <CardContent className="p-4">
-              <div className="text-2xl font-bold text-blue-600">{projectStats.feedback}</div>
+              <div className="text-2xl font-bold text-blue-600">{projectsLoading ? <Loader2 className="h-6 w-6 animate-spin" /> : projectStats.feedback}</div>
               <p className="text-gray-600">Feedback</p>
             </CardContent>
           </Card>
           <Card>
             <CardContent className="p-4">
-              <div className="text-2xl font-bold text-green-600">{projectStats.approved}</div>
+              <div className="text-2xl font-bold text-green-600">{projectsLoading ? <Loader2 className="h-6 w-6 animate-spin" /> : projectStats.approved}</div>
               <p className="text-gray-600">Aprovados</p>
             </CardContent>
           </Card>
@@ -197,21 +209,27 @@ const NewAdminProjects: React.FC = () => {
 
         {/* Projects Grid */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {filteredProjects.length > 0 ? (
+          {projectsLoading ? (
+            <div className="col-span-full flex justify-center items-center p-12">
+              <Loader2 className="h-8 w-8 animate-spin text-harmonia-green" />
+              <span className="ml-2">Carregando projetos...</span>
+            </div>
+          ) : filteredProjects.length > 0 ? (
             filteredProjects.map((project) => (
-              <ProjectCard key={project.id} project={project} />
+              // Assuming ProjectCard expects DisplayProject structure or adapt ProjectCard
+              <ProjectCard key={project.id} project={project as any} />
             ))
           ) : (
             <div className="col-span-full">
               <Card>
                 <CardContent className="text-center py-12">
                   <p className="text-gray-500 mb-4">
-                    {projects.length === 0 
-                      ? 'Nenhum projeto criado ainda.' 
+                    {displayProjects.length === 0
+                      ? 'Nenhum projeto criado ainda.'
                       : 'Nenhum projeto encontrado com os filtros aplicados.'
                     }
                   </p>
-                  {projects.length === 0 && (
+                  {displayProjects.length === 0 && (
                     <Button onClick={() => setShowNewProjectDialog(true)}>
                       Criar Primeiro Projeto
                     </Button>
@@ -230,19 +248,29 @@ const NewAdminProjects: React.FC = () => {
             </DialogHeader>
             <div className="space-y-4 pt-4">
               <div>
-                <Label htmlFor="clientName">Cliente</Label>
-                <Select onValueChange={(value) => handleChange('clientName', value)}>
+                <Label htmlFor="clientId">Cliente</Label>
+                <Select
+                  onValueChange={(value) => handleChange('clientId', value)}
+                  value={formData.clientId}
+                  disabled={clientsLoading}
+                >
                   <SelectTrigger>
-                    <SelectValue placeholder="Selecione um cliente" />
+                    <SelectValue placeholder={clientsLoading ? "Carregando clientes..." : "Selecione um cliente"} />
                   </SelectTrigger>
                   <SelectContent>
-                    {mockClients.map((client) => (
-                      <SelectItem key={client.id} value={client.name}>
+                    {!clientsLoading && clients.length === 0 && (
+                      <SelectItem value="no-clients" disabled>
+                        Nenhum cliente encontrado
+                      </SelectItem>
+                    )}
+                    {!clientsLoading && clients.map((client: Client) => (
+                      <SelectItem key={client.id} value={client.id}>
                         {client.name}
                       </SelectItem>
                     ))}
                   </SelectContent>
                 </Select>
+                {clientsError && <p className="text-red-500 text-xs mt-1">Erro ao carregar clientes.</p>}
               </div>
               <div>
                 <Label htmlFor="title">Título do Projeto</Label>
@@ -256,7 +284,10 @@ const NewAdminProjects: React.FC = () => {
               </div>
               <div>
                 <Label htmlFor="packageType">Tipo de Pacote</Label>
-                <Select onValueChange={(value) => handleChange('packageType', value)}>
+                <Select
+                  onValueChange={(value) => handleChange('packageType', value)}
+                  value={formData.packageType}
+                >
                   <SelectTrigger>
                     <SelectValue placeholder="Selecione o pacote" />
                   </SelectTrigger>
@@ -271,8 +302,13 @@ const NewAdminProjects: React.FC = () => {
                 <Button variant="outline" onClick={() => setShowNewProjectDialog(false)}>
                   Cancelar
                 </Button>
-                <Button onClick={handleAddProject} className="bg-harmonia-green hover:bg-harmonia-green/90">
-                  Criar Projeto
+                <Button
+                  onClick={handleAddProject}
+                  className="bg-harmonia-green hover:bg-harmonia-green/90"
+                  disabled={clientsLoading || !formData.clientId || isSubmitting}
+                >
+                  {isSubmitting ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
+                  {isSubmitting ? "Criando..." : "Criar Projeto"}
                 </Button>
               </div>
             </div>
@@ -284,3 +320,4 @@ const NewAdminProjects: React.FC = () => {
 };
 
 export default NewAdminProjects;
+
