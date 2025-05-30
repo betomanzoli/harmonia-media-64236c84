@@ -1,5 +1,5 @@
 
-import { usePreviewProject as useBasePreviewProject } from '@/hooks/usePreviewProject';
+import { usePreviewProject as useBasePreviewProject, PreviewVersion, MusicPreview } from '@/hooks/usePreviewProject';
 
 // Re-export types from the base hook
 export type { PreviewVersion, MusicPreview } from '@/hooks/usePreviewProject';
