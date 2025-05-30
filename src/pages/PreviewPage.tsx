@@ -143,7 +143,14 @@ const PreviewPage: React.FC = () => {
                   <GoogleDrivePreviewsList projectId={projectId} />
                 ) : (
                   <PreviewPlayerList 
-                    versions={projectData.previews || []}
+                    versions={projectData.previews?.map(preview => ({
+                      ...preview,
+                      description: preview.description || 'Versão musical',
+                      // Add Bandcamp support - check if audioUrl is a Bandcamp URL
+                      bandcampUrl: preview.audioUrl && preview.audioUrl.includes('bandcamp.com') 
+                        ? preview.audioUrl 
+                        : undefined
+                    })) || []}
                     selectedVersion={selectedPreview}
                     setSelectedVersion={setSelectedPreview}
                     isApproved={projectData.status === 'approved'}
