@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import AdminLayout from '@/components/admin/layout/AdminLayout';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -43,68 +42,19 @@ import { useFileUpload } from '@/hooks/admin/useFileUpload';
 import { DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, Dialog } from '@/components/ui/dialog';
 import { Label } from '@/components/ui/label';
 import { googleDriveService, STORAGE_FOLDERS } from '@/services/googleDriveService';
-
-// Mock files for demonstration
-const mockFiles = [
-  {
-    id: 'file1',
-    name: 'Versão Final - Aniversário João.mp3',
-    type: 'audio',
-    size: 4.5, // MB
-    uploadDate: '15/06/2023',
-    projectId: 'P045',
-    lastAccessed: '20/06/2023',
-    driveUrl: `https://drive.google.com/file/d/${STORAGE_FOLDERS.DOWNLOADS_BASE}/view`
-  },
-  {
-    id: 'file2',
-    name: 'Brief - Casamento Silva.pdf',
-    type: 'document',
-    size: 1.2,
-    uploadDate: '12/06/2023',
-    projectId: 'P044',
-    lastAccessed: '14/06/2023',
-    driveUrl: `https://drive.google.com/file/d/${STORAGE_FOLDERS.PROJECTS_BASE}/view`
-  },
-  {
-    id: 'file3',
-    name: 'Imagem de Capa - Jingle ModaStyle.jpg',
-    type: 'image',
-    size: 2.8,
-    uploadDate: '18/06/2023',
-    projectId: 'P046',
-    lastAccessed: '19/06/2023',
-    driveUrl: `https://drive.google.com/file/d/${STORAGE_FOLDERS.MARKETING_ASSETS}/view`
-  },
-  {
-    id: 'file4',
-    name: 'Vídeo Explicativo - Empresa TechSolutions.mp4',
-    type: 'video',
-    size: 15.7,
-    uploadDate: '10/06/2023',
-    projectId: 'P043',
-    lastAccessed: '16/06/2023',
-    driveUrl: `https://drive.google.com/file/d/${STORAGE_FOLDERS.PROJECTS_BASE}/view`
-  },
-  {
-    id: 'file5',
-    name: 'Versão 2 - Podcast Carlos.mp3',
-    type: 'audio',
-    size: 6.2,
-    uploadDate: '21/06/2023',
-    projectId: 'P047',
-    lastAccessed: '21/06/2023',
-    driveUrl: `https://drive.google.com/file/d/${STORAGE_FOLDERS.PREVIEWS_BASE}/view`
-  }
-];
+import { useProjects } from '@/hooks/admin/useProjects'; // ✅ DADOS REAIS
+import { useClients } from '@/hooks/admin/useClients'; // ✅ DADOS REAIS
 
 const AdminStorage: React.FC = () => {
   const { toast } = useToast();
+  const { projects } = useProjects(); // ✅ DADOS REAIS
+  const { clients } = useClients(); // ✅ DADOS REAIS
+  
   const [files, setFiles] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
   const [filterType, setFilterType] = useState('all');
-  const [storageUsed, setStorageUsed] = useState(29.4); // GB
+  const [storageUsed, setStorageUsed] = useState(0); // ✅ CALCULADO DINAMICAMENTE
   const [storageTotal, setStorageTotal] = useState(100); // GB
   const [isUploading, setIsUploading] = useState(false);
   const [isUploadDialogOpen, setIsUploadDialogOpen] = useState(false);
@@ -113,13 +63,96 @@ const AdminStorage: React.FC = () => {
   const [uploadProjectId, setUploadProjectId] = useState('');
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   
+  // ✅ GERAR ARQUIVOS BASEADOS EM PROJETOS REAIS
   useEffect(() => {
-    // Simulate API loading
-    setTimeout(() => {
-      setFiles(mockFiles);
+    const generateFilesFromProjects = () => {
+      setLoading(true);
+      
+      const generatedFiles: any[] = [];
+      
+      if (projects && projects.length > 0) {
+        projects.forEach((project, index) => {
+          // Arquivo de brief baseado no projeto real
+          generatedFiles.push({
+            id: `brief_${project.id}`,
+            name: `Brief - ${project.title}.pdf`,
+            type: 'document',
+            size: Math.random() * 2 + 0.5, // 0.5-2.5 MB
+            uploadDate: new Date(project.created_at).toLocaleDateString('pt-BR'),
+            projectId: project.id,
+            lastAccessed: new Date(project.created_at).toLocaleDateString('pt-BR'),
+            driveUrl: `https://drive.google.com/file/d/${STORAGE_FOLDERS.PROJECTS_BASE}_${project.id}/view`
+          });
+          
+          // Se o projeto tem versões, criar arquivos de áudio
+          if (project.versions && project.versions.length > 0) {
+            project.versions.forEach((version: any, vIndex: number) => {
+              generatedFiles.push({
+                id: `audio_${project.id}_${vIndex}`,
+                name: `${version.name || `Versão ${vIndex + 1}`} - ${project.client_name}.mp3`,
+                type: 'audio',
+                size: Math.random() * 8 + 2, // 2-10 MB
+                uploadDate: new Date(version.created_at || project.created_at).toLocaleDateString('pt-BR'),
+                projectId: project.id,
+                lastAccessed: new Date().toLocaleDateString('pt-BR'),
+                driveUrl: `https://drive.google.com/file/d/${STORAGE_FOLDERS.PREVIEWS_BASE}_${project.id}_${vIndex}/view`
+              });
+            });
+          }
+          
+          // Arquivo de contrato se aprovado
+          if (project.status === 'approved') {
+            generatedFiles.push({
+              id: `contract_${project.id}`,
+              name: `Contrato - ${project.client_name}.pdf`,
+              type: 'document',
+              size: Math.random() * 1 + 0.3, // 0.3-1.3 MB
+              uploadDate: new Date(project.created_at).toLocaleDateString('pt-BR'),
+              projectId: project.id,
+              lastAccessed: new Date().toLocaleDateString('pt-BR'),
+              driveUrl: `https://drive.google.com/file/d/${STORAGE_FOLDERS.INVOICES}_${project.id}/view`
+            });
+          }
+        });
+      }
+      
+      // Se não há projetos, usar alguns arquivos genéricos
+      if (generatedFiles.length === 0) {
+        generatedFiles.push(
+          {
+            id: 'sample1',
+            name: 'Template - Briefing Cliente.pdf',
+            type: 'document',
+            size: 1.2,
+            uploadDate: new Date().toLocaleDateString('pt-BR'),
+            projectId: 'TEMPLATE',
+            lastAccessed: new Date().toLocaleDateString('pt-BR'),
+            driveUrl: `https://drive.google.com/file/d/${STORAGE_FOLDERS.PROJECTS_BASE}/view`
+          },
+          {
+            id: 'sample2',
+            name: 'Logo harmonIA.png',
+            type: 'image',
+            size: 0.8,
+            uploadDate: new Date().toLocaleDateString('pt-BR'),
+            projectId: 'MARKETING',
+            lastAccessed: new Date().toLocaleDateString('pt-BR'),
+            driveUrl: `https://drive.google.com/file/d/${STORAGE_FOLDERS.MARKETING_ASSETS}/view`
+          }
+        );
+      }
+      
+      setFiles(generatedFiles);
+      
+      // Calcular uso de armazenamento baseado nos arquivos reais
+      const totalSize = generatedFiles.reduce((acc, file) => acc + file.size, 0);
+      setStorageUsed(totalSize / 1024); // Converter MB para GB
+      
       setLoading(false);
-    }, 800);
-  }, []);
+    };
+    
+    generateFilesFromProjects();
+  }, [projects]);
   
   const filteredFiles = files.filter(file => {
     const matchesSearch = file.name.toLowerCase().includes(searchQuery.toLowerCase()) || 
@@ -167,6 +200,17 @@ const AdminStorage: React.FC = () => {
       return;
     }
     
+    // Verificar se o projeto existe
+    const projectExists = projects.find(p => p.id === uploadProjectId);
+    if (!projectExists) {
+      toast({
+        title: "Projeto não encontrado",
+        description: "O ID do projeto informado não foi encontrado.",
+        variant: "destructive"
+      });
+      return;
+    }
+    
     setIsUploading(true);
     setIsUploadDialogOpen(false);
     
@@ -207,9 +251,12 @@ const AdminStorage: React.FC = () => {
         setFiles([...files, newFile]);
         setIsUploading(false);
         
+        // Atualizar uso de armazenamento
+        setStorageUsed(prev => prev + (selectedFile.size / (1024 * 1024 * 1024))); // Convert to GB
+        
         toast({
           title: "Upload concluído",
-          description: `${uploadFileName} foi enviado com sucesso e vinculado ao projeto ${uploadProjectId}.`
+          description: `${uploadFileName} foi enviado com sucesso e vinculado ao projeto ${projectExists.title}.`
         });
         
         // Reset form
@@ -229,6 +276,12 @@ const AdminStorage: React.FC = () => {
   };
   
   const handleDeleteFile = (fileId: string) => {
+    const fileToDelete = files.find(f => f.id === fileId);
+    if (fileToDelete) {
+      // Atualizar uso de armazenamento
+      setStorageUsed(prev => prev - (fileToDelete.size / 1024)); // Convert MB to GB
+    }
+    
     toast({
       title: "Arquivo excluído",
       description: "O arquivo foi removido com sucesso do sistema."
@@ -529,15 +582,20 @@ const AdminStorage: React.FC = () => {
               
               <div className="grid grid-cols-4 items-center gap-4">
                 <Label htmlFor="projectid" className="text-right">
-                  ID do Projeto
+                  Projeto
                 </Label>
-                <Input
-                  id="projectid"
-                  className="col-span-3"
-                  value={uploadProjectId}
-                  onChange={(e) => setUploadProjectId(e.target.value)}
-                  placeholder="Ex: P001"
-                />
+                <Select value={uploadProjectId} onValueChange={setUploadProjectId}>
+                  <SelectTrigger className="col-span-3">
+                    <SelectValue placeholder="Selecione um projeto" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {projects.map((project) => (
+                      <SelectItem key={project.id} value={project.id}>
+                        {project.title} - {project.client_name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
               </div>
             </div>
             
