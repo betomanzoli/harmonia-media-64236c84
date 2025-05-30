@@ -19,12 +19,18 @@ const PreviewPage: React.FC = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
   
-  // Safely extract projectId and ensure it's not the literal route parameter
-  const projectId = params.projectId && params.projectId !== ':projectId' ? params.projectId : undefined;
+  console.log('PreviewPage params:', params);
+  
+  // Get projectId from params
+  const projectId = params.projectId;
+  console.log('Using projectId:', projectId);
   
   const [selectedPreview, setSelectedPreview] = useState<string | null>(null);
   const [feedback, setFeedback] = useState('');
   const { projectData, setProjectData, isLoading } = usePreviewProject(projectId || '');
+  
+  console.log('Project data loaded:', projectData);
+  console.log('Is loading:', isLoading);
   
   const handleSubmitFeedback = () => {
     if (!selectedPreview) {
@@ -112,6 +118,9 @@ const PreviewPage: React.FC = () => {
     );
   }
   
+  console.log('Rendering with project data:', projectData);
+  console.log('Number of previews:', projectData.previews?.length || 0);
+  
   return (
     <div className="min-h-screen bg-white text-gray-900">
       <Header />
@@ -130,7 +139,7 @@ const PreviewPage: React.FC = () => {
           <Tabs defaultValue="versions" className="mb-10">
             <TabsList className="w-full mb-6">
               <TabsTrigger value="versions" className="flex-1 data-[state=active]:bg-harmonia-green">
-                Versões Propostas
+                Versões Propostas ({projectData.previews?.length || 0})
               </TabsTrigger>
               <TabsTrigger value="feedback" className="flex-1 data-[state=active]:bg-harmonia-green">
                 Enviar Feedback

@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -8,6 +9,7 @@ import { ArrowLeft, Plus, User, Mail, Phone, Calendar, ExternalLink } from 'luci
 import NewAdminLayout from '@/components/admin/layout/NewAdminLayout';
 import BandcampVersionCard from './BandcampVersionCard';
 import AddVersionDialog from '../shared/AddVersionDialog';
+import { supabase } from '@/integrations/supabase/client';
 
 interface BandcampVersion {
   id: string;
@@ -44,46 +46,71 @@ const ProjectDetailsPage: React.FC = () => {
   const [showAddVersionDialog, setShowAddVersionDialog] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
 
-  // Mock data - em produção viria do Supabase
+  // Load project from Supabase
   useEffect(() => {
-    const loadProject = () => {
+    const loadProject = async () => {
+      if (!projectId) return;
+      
       setIsLoading(true);
-      
-      // Simulação de dados do projeto
-      const mockProject: Project = {
-        id: projectId || '1',
-        clientName: 'João Silva',
-        title: 'Música Personalizada - João Silva',
-        status: 'waiting',
-        packageType: 'Premium',
-        createdAt: '15/01/2024',
-        expirationDate: '15/02/2024',
-        clientEmail: 'joao@email.com',
-        clientPhone: '+55 11 99999-9999',
-        versions: [
-          {
-            id: '1',
-            name: 'Versão 1 - Mix Inicial',
-            description: 'Primeira versão com arranjo básico',
-            embedUrl: 'https://bandcamp.com/EmbeddedPlayer/album=4290875691/size=small/bgcol=333333/linkcol=2ebd35/track=2755730140/transparent=true/',
-            bandcampUrl: 'https://harmonia-media.bandcamp.com/track/vozes-em-harmonia-ex-05',
-            final: false,
-            recommended: true,
-            dateAdded: '15/01/2024',
-            albumId: '4290875691',
-            trackId: '2755730140'
-          }
-        ]
-      };
-      
-      setProject(mockProject);
-      setIsLoading(false);
+      try {
+        // Load project data
+        const { data: projectData, error: projectError } = await supabase
+          .from('projects')
+          .select('*')
+          .eq('id', projectId)
+          .single();
+
+        if (projectError) throw projectError;
+
+        // Load project versions from project_versions table
+        const { data: versionsData, error: versionsError } = await supabase
+          .from('project_versions')
+          .select('*')
+          .eq('project_id', projectId)
+          .order('created_at', { ascending: false });
+
+        if (versionsError) throw versionsError;
+
+        // Transform versions to BandcampVersion format
+        const versions: BandcampVersion[] = (versionsData || []).map(version => ({
+          id: version.id,
+          name: version.name,
+          description: version.description,
+          embedUrl: version.audio_url || '',
+          bandcampUrl: version.audio_url || '',
+          final: false,
+          recommended: version.recommended || false,
+          dateAdded: new Date(version.created_at).toLocaleDateString('pt-BR'),
+        }));
+
+        const transformedProject: Project = {
+          id: projectData.id,
+          clientName: projectData.client_name || 'Cliente',
+          title: projectData.title || 'Projeto Musical',
+          status: (projectData.status as 'waiting' | 'feedback' | 'approved') || 'waiting',
+          packageType: projectData.package_type,
+          createdAt: new Date(projectData.created_at).toLocaleDateString('pt-BR'),
+          expirationDate: projectData.expires_at ? new Date(projectData.expires_at).toLocaleDateString('pt-BR') : undefined,
+          clientEmail: projectData.client_email,
+          clientPhone: projectData.client_phone,
+          versions
+        };
+        
+        setProject(transformedProject);
+      } catch (error) {
+        console.error('Error loading project:', error);
+        toast({
+          title: "Erro",
+          description: "Não foi possível carregar o projeto.",
+          variant: "destructive"
+        });
+      } finally {
+        setIsLoading(false);
+      }
     };
 
-    if (projectId) {
-      loadProject();
-    }
-  }, [projectId]);
+    loadProject();
+  }, [projectId, toast]);
 
   const handleAddVersion = async (formData: { 
     name: string; 
@@ -93,55 +120,98 @@ const ProjectDetailsPage: React.FC = () => {
     recommended: boolean;
     final?: boolean;
   }) => {
-    if (!project) return;
+    if (!project || !projectId) return;
 
     console.log('Adding version to project:', formData);
     
-    // Create a new BandcampVersion from the form data
-    const newVersion: BandcampVersion = {
-      id: Date.now().toString(), // Generate a simple ID
-      name: formData.name,
-      description: formData.description,
-      embedUrl: formData.audioUrl,
-      bandcampUrl: formData.audioUrl, // Use the same URL for both
-      final: formData.final || false,
-      recommended: formData.recommended,
-      dateAdded: new Date().toLocaleDateString('pt-BR'),
-    };
-    
-    setProject(prev => {
-      if (!prev) return null;
-      return {
-        ...prev,
-        versions: [...prev.versions, newVersion]
-      };
-    });
+    try {
+      // Insert version into project_versions table
+      const { data: versionData, error: versionError } = await supabase
+        .from('project_versions')
+        .insert([{
+          project_id: projectId,
+          name: formData.name,
+          description: formData.description,
+          audio_url: formData.audioUrl,
+          recommended: formData.recommended,
+          version_id: Date.now().toString()
+        }])
+        .select()
+        .single();
 
-    toast({
-      title: "Versão adicionada",
-      description: `${newVersion.name} foi adicionada ao projeto.`
-    });
+      if (versionError) throw versionError;
+
+      // Create new version for local state
+      const newVersion: BandcampVersion = {
+        id: versionData.id,
+        name: formData.name,
+        description: formData.description,
+        embedUrl: formData.audioUrl,
+        bandcampUrl: formData.audioUrl,
+        final: formData.final || false,
+        recommended: formData.recommended,
+        dateAdded: new Date(versionData.created_at).toLocaleDateString('pt-BR'),
+      };
+      
+      setProject(prev => {
+        if (!prev) return null;
+        return {
+          ...prev,
+          versions: [newVersion, ...prev.versions]
+        };
+      });
+
+      toast({
+        title: "Versão adicionada",
+        description: `${newVersion.name} foi adicionada ao projeto.`
+      });
+    } catch (error) {
+      console.error('Error adding version:', error);
+      toast({
+        title: "Erro",
+        description: "Não foi possível adicionar a versão.",
+        variant: "destructive"
+      });
+    }
   };
 
-  const handleDeleteVersion = (versionId: string) => {
+  const handleDeleteVersion = async (versionId: string) => {
     if (!project) return;
 
     const versionToDelete = project.versions.find(v => v.id === versionId);
     if (!versionToDelete) return;
 
-    setProject(prev => {
-      if (!prev) return null;
-      return {
-        ...prev,
-        versions: prev.versions.filter(v => v.id !== versionId)
-      };
-    });
+    try {
+      // Delete from database
+      const { error } = await supabase
+        .from('project_versions')
+        .delete()
+        .eq('id', versionId);
 
-    toast({
-      title: "Versão removida",
-      description: `${versionToDelete.name} foi removida do projeto.`,
-      variant: "destructive"
-    });
+      if (error) throw error;
+
+      // Update local state
+      setProject(prev => {
+        if (!prev) return null;
+        return {
+          ...prev,
+          versions: prev.versions.filter(v => v.id !== versionId)
+        };
+      });
+
+      toast({
+        title: "Versão removida",
+        description: `${versionToDelete.name} foi removida do projeto.`,
+        variant: "destructive"
+      });
+    } catch (error) {
+      console.error('Error deleting version:', error);
+      toast({
+        title: "Erro",
+        description: "Não foi possível remover a versão.",
+        variant: "destructive"
+      });
+    }
   };
 
   const getStatusBadge = (status: string) => {
