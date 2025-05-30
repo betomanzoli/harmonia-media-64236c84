@@ -1,23 +1,38 @@
 
-import { usePreviewProject as useBasePreviewProject, MusicPreview, PreviewProject as BasePreviewProject } from '@/hooks/usePreviewProject';
+import { usePreviewProject as useBasePreviewProject } from '@/hooks/usePreviewProject';
 
-// Extend the PreviewProject interface to include additional fields
-export interface PreviewProject extends BasePreviewProject {
+// Re-export types from the base hook
+export type { PreviewVersion, MusicPreview } from '@/hooks/usePreviewProject';
+
+// Extended interface for preview-specific functionality
+export interface PreviewProject {
+  projectTitle: string;
+  clientName: string;
+  status: 'waiting' | 'feedback' | 'approved';
+  packageType?: string;
+  createdAt?: string;
+  expiresAt?: string;
+  previews: PreviewVersion[];
+  feedbackHistory?: Array<{
+    id: string;
+    content: string;
+    created_at: string;
+  }>;
   useGoogleDrive?: boolean;
 }
 
-// Re-export the hook functionality with proper Supabase integration
+// Re-export the hook with proper typing
 export const usePreviewProject = (projectId: string | undefined) => {
   const baseHook = useBasePreviewProject(projectId);
   
-  // Return the baseHook with the proper type
-  return baseHook as {
-    projectData: PreviewProject | null;
-    setProjectData: React.Dispatch<React.SetStateAction<PreviewProject | null>>;
-    isLoading: boolean;
-    updateProjectStatus: (newStatus: 'approved' | 'feedback', comments: string) => Promise<boolean>;
+  // Transform the data to match PreviewProject interface
+  const projectData: PreviewProject | null = baseHook.projectData ? {
+    ...baseHook.projectData,
+    useGoogleDrive: false
+  } : null;
+  
+  return {
+    ...baseHook,
+    projectData
   };
 };
-
-// Re-export the MusicPreview type
-export type { MusicPreview };

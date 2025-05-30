@@ -119,7 +119,7 @@ const PreviewPage: React.FC = () => {
         <div className="max-w-4xl mx-auto">
           <PreviewHeader 
             projectData={{
-              projectTitle: projectData.projectTitle || projectData.clientName,
+              projectTitle: projectData.projectTitle,
               clientName: projectData.clientName,
               status: projectData.status
             }}

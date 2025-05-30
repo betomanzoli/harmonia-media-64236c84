@@ -2,11 +2,20 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 
-interface PreviewVersion {
+export interface PreviewVersion {
   id: string;
   title: string;
-  description?: string;
+  description: string; // Make required to match MusicPreview
   audioUrl: string;
+  recommended?: boolean;
+}
+
+export interface MusicPreview {
+  id: string;
+  title: string;
+  description: string;
+  audioUrl: string;
+  recommended?: boolean;
 }
 
 interface ProjectPreviewData {
@@ -60,8 +69,9 @@ export const usePreviewProject = (projectId?: string) => {
         const previews: PreviewVersion[] = (versions || []).map(version => ({
           id: version.id,
           title: version.name,
-          description: version.description,
-          audioUrl: version.audio_url || ''
+          description: version.description || 'Versão musical',
+          audioUrl: version.audio_url || '',
+          recommended: version.recommended || false
         }));
 
         // Load feedback history
@@ -95,8 +105,58 @@ export const usePreviewProject = (projectId?: string) => {
     loadProjectData();
   }, [projectId]);
 
+  const updateProjectStatus = async (newStatus: 'approved' | 'feedback', comments: string): Promise<boolean> => {
+    if (!projectId) return false;
+    
+    try {
+      const { error } = await supabase
+        .from('projects')
+        .update({ 
+          status: newStatus,
+          feedback: comments,
+          updated_at: new Date().toISOString()
+        })
+        .eq('id', projectId);
+
+      if (error) throw error;
+
+      // Update local state
+      setProjectData(prev => prev ? { ...prev, status: newStatus } : null);
+      return true;
+    } catch (error) {
+      console.error('Error updating project status:', error);
+      return false;
+    }
+  };
+
+  const submitFeedback = async (feedback: string): Promise<boolean> => {
+    if (!projectId) return false;
+    
+    try {
+      // Insert feedback
+      const { error: feedbackError } = await supabase
+        .from('feedback')
+        .insert([{
+          project_id: projectId,
+          content: feedback
+        }]);
+
+      if (feedbackError) throw feedbackError;
+
+      // Update project status
+      await updateProjectStatus('feedback', feedback);
+      return true;
+    } catch (error) {
+      console.error('Error submitting feedback:', error);
+      return false;
+    }
+  };
+
   return {
     projectData,
-    isLoading
+    setProjectData,
+    isLoading,
+    updateProjectStatus,
+    submitFeedback
   };
 };
