@@ -1,7 +1,8 @@
+
 import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import BandcampEmbedPlayer from './BandcampEmbedPlayer';
-import BandcampUtils from '@/components/admin/bandcamp/BandcampUtils';
+import { BandcampUtils } from '@/components/admin/bandcamp/BandcampUtils';
 
 const BandcampTestPlayer: React.FC = () => {
   const workingExamples = BandcampUtils.getWorkingExamples();

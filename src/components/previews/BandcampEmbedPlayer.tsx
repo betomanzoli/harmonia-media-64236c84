@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 
@@ -40,7 +41,6 @@ const BandcampEmbedPlayer: React.FC<BandcampEmbedPlayerProps> = ({
             title={title}
             onError={handleError}
             loading="lazy"
-            sandbox="allow-scripts allow-same-origin"
           />
           
           {/* Fallback link */}
