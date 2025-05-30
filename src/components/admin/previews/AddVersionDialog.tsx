@@ -1,20 +1,19 @@
-
 import React, { useState } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Plus, File, FilePlus, Trash } from "lucide-react";
 import AddVersionForm from './AddVersionForm';
-import { VersionItem } from '@/hooks/admin/usePreviewProjects';
+import { Version } from '@/hooks/admin/useVersions'; // ✅ CORRIGIDO
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Input } from '@/components/ui/input';
 
 interface AddVersionDialogProps {
   projectId: string;
-  onAddVersion: (newVersion: VersionItem) => void;
+  onAddVersion: (newVersion: Version) => void; // ✅ CORRIGIDO
   isOpen?: boolean;
   onOpenChange?: (open: boolean) => void;
-  onSubmit?: (version: VersionItem) => void;
+  onSubmit?: (version: Version) => void; // ✅ CORRIGIDO
   isFinalVersion?: boolean;
   packageType?: string;
 }
@@ -31,7 +30,7 @@ const AddVersionDialog: React.FC<AddVersionDialogProps> = ({
   const [localOpen, setLocalOpen] = useState(false);
   const [selectedTab, setSelectedTab] = useState<'single' | 'multiple'>('single');
   const [multipleVersions, setMultipleVersions] = useState([
-    { name: '', description: '', audioUrl: '', recommended: false }
+    { name: '', description: '', bandcamp_url: '', recommended: false } // ✅ CORRIGIDO
   ]);
 
   const isDialogOpen = isOpen !== undefined ? isOpen : localOpen;
@@ -44,7 +43,7 @@ const AddVersionDialog: React.FC<AddVersionDialogProps> = ({
     }
   };
   
-  const handleAddVersion = (version: VersionItem) => {
+  const handleAddVersion = (version: Version) => { // ✅ CORRIGIDO
     if (onSubmit) {
       onSubmit(version);
     } else if (onAddVersion) {
@@ -59,25 +58,23 @@ const AddVersionDialog: React.FC<AddVersionDialogProps> = ({
   };
 
   const handleAddMultipleVersions = () => {
-    const validVersions = multipleVersions.filter(v => v.name.trim() !== '' && v.audioUrl.trim() !== '');
+    const validVersions = multipleVersions.filter(v => v.name.trim() !== '' && v.bandcamp_url.trim() !== ''); // ✅ CORRIGIDO
     
     if (validVersions.length === 0) {
       return;
     }
 
     validVersions.forEach((versionData, index) => {
-      const version: VersionItem = {
-        id: `v${Date.now()}-${index}`,
+      const version: Omit<Version, 'id' | 'created_at' | 'updated_at'> = { // ✅ CORRIGIDO
+        project_id: projectId,
         name: versionData.name,
         description: versionData.description || '',
-        audioUrl: versionData.audioUrl,
-        recommended: versionData.recommended,
-        dateAdded: new Date().toLocaleDateString('pt-BR'),
-        final: isFinalVersion
+        bandcamp_url: versionData.bandcamp_url, // ✅ CORRIGIDO
+        recommended: versionData.recommended
       };
 
       if (onAddVersion) {
-        onAddVersion(version);
+        onAddVersion(version as Version); // ✅ CORRIGIDO
       }
     });
 
@@ -87,11 +84,11 @@ const AddVersionDialog: React.FC<AddVersionDialogProps> = ({
       setLocalOpen(false);
     }
     
-    setMultipleVersions([{ name: '', description: '', audioUrl: '', recommended: false }]);
+    setMultipleVersions([{ name: '', description: '', bandcamp_url: '', recommended: false }]); // ✅ CORRIGIDO
   };
   
   const addEmptyVersion = () => {
-    setMultipleVersions([...multipleVersions, { name: '', description: '', audioUrl: '', recommended: false }]);
+    setMultipleVersions([...multipleVersions, { name: '', description: '', bandcamp_url: '', recommended: false }]); // ✅ CORRIGIDO
   };
 
   const removeVersion = (index: number) => {
@@ -180,10 +177,10 @@ const AddVersionDialog: React.FC<AddVersionDialogProps> = ({
                     <div>
                       <label className="text-sm font-medium">URL do Áudio*</label>
                       <Input
-                        value={version.audioUrl}
-                        onChange={(e) => updateVersionField(index, 'audioUrl', e.target.value)}
+                        value={version.bandcamp_url} {/* ✅ CORRIGIDO */}
+                        onChange={(e) => updateVersionField(index, 'bandcamp_url', e.target.value)} {/* ✅ CORRIGIDO */}
                         className="bg-slate-700 mt-1"
-                        placeholder="https://drive.google.com/..."
+                        placeholder="https://harmonia-media.bandcamp.com/..."
                         required
                       />
                     </div>
