@@ -52,31 +52,35 @@ export const useProjects = () => {
 
       console.log('Raw data from Supabase:', data);
 
-      // Transform data to match Project interface
-      const formattedProjects: Project[] = (data || []).map(project => ({
-        id: project.id,
-        title: project.title,
-        description: project.description,
-        status: (['waiting', 'feedback', 'approved'].includes(project.status) 
-          ? project.status 
-          : 'waiting') as 'waiting' | 'feedback' | 'approved',
-        client_id: project.client_id,
-        client_name: project.client_name,
-        client_email: project.client_email,
-        client_phone: project.client_phone,
-        package_type: project.package_type,
-        preview_code: project.preview_code,
-        deadline: project.deadline,
-        created_at: project.created_at,
-        updated_at: project.updated_at,
-        expires_at: project.expires_at,
-        versions: project.project_versions || [] // Incluir versões
-      }));
+      // ✅ CORREÇÃO: Verificação robusta para lista vazia
+      const formattedProjects: Project[] = Array.isArray(data) 
+        ? data.map(project => ({
+            id: project.id,
+            title: project.title,
+            description: project.description,
+            status: (['waiting', 'feedback', 'approved'].includes(project.status) 
+              ? project.status 
+              : 'waiting') as 'waiting' | 'feedback' | 'approved',
+            client_id: project.client_id,
+            client_name: project.client_name,
+            client_email: project.client_email,
+            client_phone: project.client_phone,
+            package_type: project.package_type,
+            preview_code: project.preview_code,
+            deadline: project.deadline,
+            created_at: project.created_at,
+            updated_at: project.updated_at,
+            expires_at: project.expires_at,
+            versions: Array.isArray(project.project_versions) ? project.project_versions : []
+          }))
+        : []; // ✅ IMPORTANTE: Array vazio se data for null/undefined
 
       console.log('Formatted projects:', formattedProjects);
       setProjects(formattedProjects);
     } catch (error) {
       console.error('Error loading projects:', error);
+      // ✅ IMPORTANTE: Definir array vazio em caso de erro
+      setProjects([]);
       toast({
         title: "Erro ao carregar projetos",
         description: "Não foi possível carregar a lista de projetos.",
@@ -109,8 +113,10 @@ export const useProjects = () => {
 
       console.log('Project created successfully:', data);
 
-      // IMPORTANTE: Recarregar lista completa do banco
-      await loadProjects();
+      // ✅ CORREÇÃO: Timeout para evitar race condition
+      setTimeout(() => {
+        loadProjects();
+      }, 500);
 
       toast({
         title: "Projeto criado",
@@ -150,8 +156,10 @@ export const useProjects = () => {
 
       console.log('Project updated successfully:', data);
 
-      // IMPORTANTE: Recarregar lista completa do banco
-      await loadProjects();
+      // ✅ CORREÇÃO: Timeout para evitar race condition
+      setTimeout(() => {
+        loadProjects();
+      }, 500);
 
       toast({
         title: "Projeto atualizado",
@@ -186,8 +194,10 @@ export const useProjects = () => {
 
       console.log('Project deleted successfully');
 
-      // IMPORTANTE: Recarregar lista completa do banco
-      await loadProjects();
+      // ✅ CORREÇÃO: Timeout para evitar race condition
+      setTimeout(() => {
+        loadProjects();
+      }, 500);
 
       toast({
         title: "Projeto removido",
@@ -206,9 +216,11 @@ export const useProjects = () => {
     }
   };
 
-  // Listener para mudanças em tempo real
+  // ✅ CORREÇÃO: useEffect com timeout para evitar loop infinito
   useEffect(() => {
-    loadProjects();
+    const timeoutId = setTimeout(() => {
+      loadProjects();
+    }, 100);
 
     // Configurar listener para mudanças em tempo real
     const channel = supabase
@@ -222,16 +234,19 @@ export const useProjects = () => {
         },
         (payload) => {
           console.log('Real-time project change detected:', payload);
-          // Recarregar projetos quando houver mudanças
-          loadProjects();
+          // ✅ CORREÇÃO: Timeout para evitar múltiplos reloads
+          setTimeout(() => {
+            loadProjects();
+          }, 1000);
         }
       )
       .subscribe();
 
     return () => {
+      clearTimeout(timeoutId);
       supabase.removeChannel(channel);
     };
-  }, []);
+  }, []); // ✅ IMPORTANTE: Array vazio para evitar re-execução
 
   return {
     projects,
