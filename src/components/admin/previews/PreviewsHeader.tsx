@@ -1,34 +1,31 @@
-
 import React from 'react';
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { DollarSign, CreditCard, Users, Plus, BarChart4, Activity, Clock, ArrowUpRight } from 'lucide-react';
-import { usePreviewProjects } from '@/hooks/admin/usePreviewProjects';
+import { useProjects } from '@/hooks/admin/useProjects'; // ✅ CORRIGIDO
 
 interface PreviewsHeaderProps {
   scrollToNewForm: () => void;
 }
 
 const PreviewsHeader: React.FC<PreviewsHeaderProps> = ({ scrollToNewForm }) => {
-  // Use the hook to get actual data instead of hardcoded values
-  const { projects } = usePreviewProjects();
+  const { projects } = useProjects(); // ✅ CORRIGIDO
   
-  // Calculate dynamic stats based on the actual project data
+  // Calcular estatísticas dinâmicas baseadas nos dados reais do projeto
   const activeProjects = projects.filter(p => p.status === 'waiting' || p.status === 'feedback').length;
   const approvalRate = projects.length > 0 
     ? Math.round((projects.filter(p => p.status === 'approved').length / projects.length) * 100) 
     : 0;
     
-  // Get unique client IDs to count unique clients
-  // Using email as a unique identifier since clientId might not be available
-  const uniqueClients = [...new Set(projects.map(p => p.clientEmail))].length;
+  // Obter clientes únicos usando email como identificador único
+  const uniqueClients = [...new Set(projects.map(p => p.client_email))].length; // ✅ CORRIGIDO
   
-  // Total projects count
+  // Contagem total de projetos
   const totalProjects = projects.length;
   
-  // Calculate trend (compared to previous period)
-  // In a real app, this would compare with historical data
-  const projectsTrend = 12; // Placeholder value, should be calculated from historical data
+  // Calcular tendência (comparado ao período anterior)
+  // Em uma aplicação real, isso seria comparado com dados históricos
+  const projectsTrend = 12; // Valor placeholder, deveria ser calculado a partir de dados históricos
   
   const stats = [
     {
