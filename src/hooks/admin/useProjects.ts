@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
@@ -18,6 +17,7 @@ export interface Project {
   created_at: string;
   updated_at?: string;
   expires_at?: string;
+  versions?: any[]; // Para as versões
 }
 
 export const useProjects = () => {
@@ -28,12 +28,29 @@ export const useProjects = () => {
   const loadProjects = async () => {
     try {
       setLoading(true);
+      console.log('Loading projects from database...');
+      
       const { data, error } = await supabase
         .from('projects')
-        .select('*')
+        .select(`
+          *,
+          project_versions (
+            id,
+            name,
+            description,
+            bandcamp_url,
+            recommended,
+            created_at
+          )
+        `)
         .order('created_at', { ascending: false });
 
-      if (error) throw error;
+      if (error) {
+        console.error('Supabase error:', error);
+        throw error;
+      }
+
+      console.log('Raw data from Supabase:', data);
 
       // Transform data to match Project interface
       const formattedProjects: Project[] = (data || []).map(project => ({
@@ -52,9 +69,11 @@ export const useProjects = () => {
         deadline: project.deadline,
         created_at: project.created_at,
         updated_at: project.updated_at,
-        expires_at: project.expires_at
+        expires_at: project.expires_at,
+        versions: project.project_versions || [] // Incluir versões
       }));
 
+      console.log('Formatted projects:', formattedProjects);
       setProjects(formattedProjects);
     } catch (error) {
       console.error('Error loading projects:', error);
@@ -70,43 +89,35 @@ export const useProjects = () => {
 
   const createProject = async (projectData: Omit<Project, 'id' | 'created_at' | 'updated_at' | 'preview_code'>) => {
     try {
+      console.log('Creating project with data:', projectData);
+      
       const { data, error } = await supabase
         .from('projects')
         .insert([{
           ...projectData,
-          preview_code: Math.random().toString(36).substring(2, 14)
+          preview_code: Math.random().toString(36).substring(2, 14),
+          created_at: new Date().toISOString(),
+          updated_at: new Date().toISOString()
         }])
         .select()
         .single();
 
-      if (error) throw error;
+      if (error) {
+        console.error('Error creating project:', error);
+        throw error;
+      }
 
-      const newProject: Project = {
-        id: data.id,
-        title: data.title,
-        description: data.description,
-        status: (['waiting', 'feedback', 'approved'].includes(data.status) 
-          ? data.status 
-          : 'waiting') as 'waiting' | 'feedback' | 'approved',
-        client_id: data.client_id,
-        client_name: data.client_name,
-        client_email: data.client_email,
-        client_phone: data.client_phone,
-        package_type: data.package_type,
-        preview_code: data.preview_code,
-        deadline: data.deadline,
-        created_at: data.created_at,
-        updated_at: data.updated_at,
-        expires_at: data.expires_at
-      };
+      console.log('Project created successfully:', data);
 
-      setProjects(prev => [newProject, ...prev]);
+      // IMPORTANTE: Recarregar lista completa do banco
+      await loadProjects();
+
       toast({
         title: "Projeto criado",
         description: "Projeto criado com sucesso."
       });
 
-      return newProject;
+      return data;
     } catch (error) {
       console.error('Error creating project:', error);
       toast({
@@ -120,6 +131,8 @@ export const useProjects = () => {
 
   const updateProject = async (id: string, updates: Partial<Project>) => {
     try {
+      console.log('Updating project:', id, updates);
+      
       const { data, error } = await supabase
         .from('projects')
         .update({
@@ -130,37 +143,22 @@ export const useProjects = () => {
         .select()
         .single();
 
-      if (error) throw error;
+      if (error) {
+        console.error('Error updating project:', error);
+        throw error;
+      }
 
-      const updatedProject: Project = {
-        id: data.id,
-        title: data.title,
-        description: data.description,
-        status: (['waiting', 'feedback', 'approved'].includes(data.status) 
-          ? data.status 
-          : 'waiting') as 'waiting' | 'feedback' | 'approved',
-        client_id: data.client_id,
-        client_name: data.client_name,
-        client_email: data.client_email,
-        client_phone: data.client_phone,
-        package_type: data.package_type,
-        preview_code: data.preview_code,
-        deadline: data.deadline,
-        created_at: data.created_at,
-        updated_at: data.updated_at,
-        expires_at: data.expires_at
-      };
+      console.log('Project updated successfully:', data);
 
-      setProjects(prev => prev.map(project => 
-        project.id === id ? updatedProject : project
-      ));
+      // IMPORTANTE: Recarregar lista completa do banco
+      await loadProjects();
 
       toast({
         title: "Projeto atualizado",
         description: "Projeto atualizado com sucesso."
       });
 
-      return updatedProject;
+      return data;
     } catch (error) {
       console.error('Error updating project:', error);
       toast({
@@ -174,14 +172,23 @@ export const useProjects = () => {
 
   const deleteProject = async (id: string) => {
     try {
+      console.log('Deleting project:', id);
+      
       const { error } = await supabase
         .from('projects')
         .delete()
         .eq('id', id);
 
-      if (error) throw error;
+      if (error) {
+        console.error('Error deleting project:', error);
+        throw error;
+      }
 
-      setProjects(prev => prev.filter(project => project.id !== id));
+      console.log('Project deleted successfully');
+
+      // IMPORTANTE: Recarregar lista completa do banco
+      await loadProjects();
+
       toast({
         title: "Projeto removido",
         description: "Projeto removido com sucesso."
@@ -199,8 +206,31 @@ export const useProjects = () => {
     }
   };
 
+  // Listener para mudanças em tempo real
   useEffect(() => {
     loadProjects();
+
+    // Configurar listener para mudanças em tempo real
+    const channel = supabase
+      .channel('projects-changes')
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'projects'
+        },
+        (payload) => {
+          console.log('Real-time project change detected:', payload);
+          // Recarregar projetos quando houver mudanças
+          loadProjects();
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
   }, []);
 
   return {
