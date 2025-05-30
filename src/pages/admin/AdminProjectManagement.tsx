@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import AdminLayout from '@/components/admin/layout/AdminLayout';
 import ProjectPhases from '@/components/admin/projects/ProjectPhases';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -19,28 +19,8 @@ import { Link, useParams } from 'react-router-dom';
 import { useToast } from '@/hooks/use-toast';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
-
-const getProjectData = (projectId: string) => {
-  return {
-    id: projectId,
-    orderId: `HAR-2025-${projectId.padStart(4, '0')}`,
-    clientName: 'Maria Oliveira',
-    clientEmail: 'maria.oliveira@email.com',
-    packageType: 'Profissional' as const,
-    currentPhase: 'producao',
-    status: 'Em Andamento',
-    startDate: '05/04/2025',
-    deadlineDate: '19/04/2025',
-    notes: [
-      { id: '1', date: '05/04/2025', author: 'João Silva', content: 'Briefing recebido e analisado. Cliente solicitou ênfase em elementos acústicos.' },
-      { id: '2', date: '07/04/2025', author: 'Ana Costa', content: 'Iniciada a fase de composição. A estrutura principal da música está definida.' }
-    ],
-    interactions: [
-      { id: '1', date: '05/04/2025', type: 'email', description: 'Email de boas-vindas enviado' },
-      { id: '2', date: '06/04/2025', type: 'feedback', description: 'Cliente confirmou recebimento do email de boas-vindas' }
-    ]
-  };
-};
+import { supabase } from '@/integrations/supabase/client'; // ✅ SUPABASE REAL
+import { useProjects, Project } from '@/hooks/admin/useProjects'; // ✅ HOOKS REAIS
 
 const ProjectGuideDialog: React.FC = () => {
   return (
@@ -157,10 +137,75 @@ const ProjectGuideDialog: React.FC = () => {
 const AdminProjectManagement: React.FC = () => {
   const { projectId } = useParams<{ projectId: string }>();
   const { toast } = useToast();
-  const projectData = getProjectData(projectId || '0001');
   
+  // ✅ USAR DADOS REAIS DO SUPABASE
+  const [project, setProject] = useState<Project | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
   const [isUpdateLoading, setIsUpdateLoading] = useState(false);
   const [newNote, setNewNote] = useState('');
+  const [notes, setNotes] = useState<any[]>([]);
+
+  // ✅ CARREGAR PROJETO REAL DO SUPABASE
+  useEffect(() => {
+    const loadProject = async () => {
+      if (!projectId) {
+        setIsLoading(false);
+        return;
+      }
+
+      try {
+        setIsLoading(true);
+        console.log('🔍 Loading project for management:', projectId);
+        
+        const { data, error } = await supabase
+          .from('projects')
+          .select('*')
+          .eq('id', projectId)
+          .single();
+
+        if (error) {
+          console.error('❌ Error loading project:', error);
+          toast({
+            title: "Erro ao carregar projeto",
+            description: "Não foi possível carregar os dados do projeto.",
+            variant: "destructive"
+          });
+          return;
+        }
+
+        if (!data) {
+          console.log('⚠️ Project not found');
+          return;
+        }
+
+        console.log('✅ Project loaded for management:', data);
+        setProject(data);
+        
+        // Carregar notas do projeto (se houver tabela de notas)
+        // Por enquanto, usar notas mockadas baseadas no projeto real
+        setNotes([
+          { 
+            id: '1', 
+            date: new Date(data.created_at).toLocaleDateString('pt-BR'), 
+            author: 'Sistema', 
+            content: `Projeto criado para ${data.client_name}. Pacote: ${data.package_type}.` 
+          }
+        ]);
+        
+      } catch (error) {
+        console.error('💥 Error loading project:', error);
+        toast({
+          title: "Erro inesperado",
+          description: "Ocorreu um erro ao carregar o projeto.",
+          variant: "destructive"
+        });
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    loadProject();
+  }, [projectId, toast]);
   
   const handlePhaseAction = (phaseId: string, action: 'upload' | 'notify' | 'complete') => {
     setIsUpdateLoading(true);
@@ -185,8 +230,14 @@ const AdminProjectManagement: React.FC = () => {
     
     if (!newNote.trim()) return;
     
-    // In a real app, would call API here
-    console.log('Adding note:', newNote);
+    const newNoteObj = {
+      id: Date.now().toString(),
+      date: new Date().toLocaleDateString('pt-BR'),
+      author: 'Administrador', // Em produção, viria do usuário logado
+      content: newNote
+    };
+    
+    setNotes([...notes, newNoteObj]);
     setNewNote('');
     
     toast({
@@ -194,13 +245,47 @@ const AdminProjectManagement: React.FC = () => {
       description: 'A nota foi adicionada ao projeto com sucesso.',
     });
   };
+
+  if (isLoading) {
+    return (
+      <AdminLayout>
+        <div className="flex-1 p-8">
+          <div className="flex items-center justify-center h-64">
+            <div className="text-center">
+              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-harmonia-green mx-auto mb-4"></div>
+              <p>Carregando projeto...</p>
+            </div>
+          </div>
+        </div>
+      </AdminLayout>
+    );
+  }
+
+  if (!project) {
+    return (
+      <AdminLayout>
+        <div className="flex-1 p-8">
+          <div className="text-center">
+            <h2 className="text-xl font-semibold mb-2">Projeto não encontrado</h2>
+            <p className="text-gray-600 mb-4">O projeto solicitado não foi encontrado.</p>
+            <Link to="/admin/projects">
+              <Button>
+                <ArrowLeft className="w-4 h-4 mr-2" />
+                Voltar aos Projetos
+              </Button>
+            </Link>
+          </div>
+        </div>
+      </AdminLayout>
+    );
+  }
   
   return (
     <AdminLayout>
       <div className="flex-1 p-8">
         <div className="flex items-center justify-between mb-8">
           <div className="flex items-center gap-4">
-            <Link to="/admin-j28s7d1k/projects">
+            <Link to="/admin/projects">
               <Button variant="outline" size="sm" className="gap-2">
                 <ArrowLeft className="w-4 h-4" />
                 Voltar
@@ -208,8 +293,8 @@ const AdminProjectManagement: React.FC = () => {
             </Link>
             
             <div>
-              <h1 className="text-2xl font-bold">Gerenciamento de Projeto #{projectData.orderId}</h1>
-              <p className="text-gray-500">Cliente: {projectData.clientName} • Pacote: {projectData.packageType}</p>
+              <h1 className="text-2xl font-bold">Gerenciamento de Projeto #{project.id}</h1> {/* ✅ DADOS REAIS */}
+              <p className="text-gray-500">Cliente: {project.client_name} • Pacote: {project.package_type}</p> {/* ✅ DADOS REAIS */}
             </div>
           </div>
           
@@ -245,9 +330,9 @@ const AdminProjectManagement: React.FC = () => {
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           <div className="lg:col-span-2">
             <ProjectPhases 
-              projectId={projectData.id}
-              projectType={projectData.packageType}
-              currentPhase={projectData.currentPhase}
+              projectId={project.id}
+              projectType={project.package_type || 'essencial'}
+              currentPhase={project.status === 'waiting' ? 'previas' : project.status === 'feedback' ? 'avaliacao' : 'finalizacao'}
               onPhaseAction={handlePhaseAction}
             />
           </div>
@@ -263,18 +348,26 @@ const AdminProjectManagement: React.FC = () => {
                     <p className="text-sm text-gray-500">Status</p>
                     <div className="flex items-center gap-2">
                       <div className="w-2 h-2 rounded-full bg-harmonia-green"></div>
-                      <p className="font-medium">{projectData.status}</p>
+                      <p className="font-medium">{project.status === 'waiting' ? 'Aguardando' : project.status === 'feedback' ? 'Feedback' : 'Aprovado'}</p> {/* ✅ DADOS REAIS */}
                     </div>
                   </div>
                   
                   <div className="space-y-1">
-                    <p className="text-sm text-gray-500">ID do Pedido</p>
+                    <p className="text-sm text-gray-500">ID do Projeto</p>
                     <div className="flex items-center gap-2">
-                      <p className="font-medium">{projectData.orderId}</p>
+                      <p className="font-medium">{project.id}</p> {/* ✅ DADOS REAIS */}
                       <TooltipProvider>
                         <Tooltip>
                           <TooltipTrigger asChild>
-                            <Button variant="ghost" size="sm" className="h-6 w-6 p-0">
+                            <Button 
+                              variant="ghost" 
+                              size="sm" 
+                              className="h-6 w-6 p-0"
+                              onClick={() => {
+                                navigator.clipboard.writeText(project.id);
+                                toast({ title: "ID copiado!" });
+                              }}
+                            >
                               <Copy className="h-3 w-3" />
                             </Button>
                           </TooltipTrigger>
@@ -290,13 +383,13 @@ const AdminProjectManagement: React.FC = () => {
                 <div className="space-y-1">
                   <p className="text-sm text-gray-500">Cliente</p>
                   <div className="flex items-center justify-between">
-                    <p className="font-medium">{projectData.clientName}</p>
+                    <p className="font-medium">{project.client_name}</p> {/* ✅ DADOS REAIS */}
                     <Button variant="ghost" size="sm" className="h-7 px-2 text-xs">
                       <MessageSquare className="h-3 w-3 mr-1" />
                       Contatar
                     </Button>
                   </div>
-                  <p className="text-sm text-gray-500">{projectData.clientEmail}</p>
+                  <p className="text-sm text-gray-500">{project.client_email}</p> {/* ✅ DADOS REAIS */}
                 </div>
                 
                 <div className="flex justify-between items-center">
@@ -304,7 +397,7 @@ const AdminProjectManagement: React.FC = () => {
                     <p className="text-sm text-gray-500">Data de Início</p>
                     <div className="flex items-center gap-2">
                       <Calendar className="h-3 w-3 text-gray-500" />
-                      <p className="font-medium">{projectData.startDate}</p>
+                      <p className="font-medium">{new Date(project.created_at).toLocaleDateString('pt-BR')}</p> {/* ✅ DADOS REAIS */}
                     </div>
                   </div>
                   
@@ -312,7 +405,9 @@ const AdminProjectManagement: React.FC = () => {
                     <p className="text-sm text-gray-500">Prazo de Entrega</p>
                     <div className="flex items-center gap-2">
                       <Calendar className="h-3 w-3 text-amber-500" />
-                      <p className="font-medium text-amber-600">{projectData.deadlineDate}</p>
+                      <p className="font-medium text-amber-600">
+                        {project.expires_at ? new Date(project.expires_at).toLocaleDateString('pt-BR') : 'Não definido'} {/* ✅ DADOS REAIS */}
+                      </p>
                     </div>
                   </div>
                 </div>
@@ -346,7 +441,7 @@ const AdminProjectManagement: React.FC = () => {
                 <Separator />
                 
                 <div className="space-y-3 max-h-[300px] overflow-y-auto pr-2">
-                  {projectData.notes.map((note) => (
+                  {notes.map((note) => (
                     <div key={note.id} className="p-3 bg-gray-50 rounded-md border">
                       <div className="flex justify-between items-start mb-1">
                         <p className="font-medium text-sm">{note.author}</p>
