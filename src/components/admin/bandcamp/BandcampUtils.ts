@@ -1,5 +1,5 @@
 
-// Utility functions for Bandcamp integration - Corrected with proper IDs and colors
+// Utility functions for Bandcamp integration - Updated to accept full embed codes
 export interface BandcampTrackInfo {
   albumId: string;
   trackId: string;
@@ -9,112 +9,51 @@ export interface BandcampTrackInfo {
 
 export class BandcampUtils {
   private static readonly EMBED_BASE = 'https://bandcamp.com/EmbeddedPlayer';
-  private static readonly CORRECT_ALBUM_ID = '2774072802'; // harmonIA album ID
   
   /**
-   * Extract album and track IDs from Bandcamp track URL with corrected IDs
+   * Extract embed URL from full Bandcamp embed code
    */
-  static extractIds(url: string): { albumId: string; trackId: string } | null {
+  static extractEmbedFromCode(embedCode: string): string | null {
     try {
-      console.log('Extracting IDs from URL:', url);
+      console.log('Extracting embed URL from code:', embedCode);
       
-      // Pattern 1: Album track with ?t=trackId
-      const albumTrackMatch = url.match(/album\/([^/?]+).*?[\?&]t=(\d+)/);
-      if (albumTrackMatch) {
-        console.log('Found album track pattern:', albumTrackMatch);
-        return { 
-          albumId: this.CORRECT_ALBUM_ID,
-          trackId: albumTrackMatch[2] 
-        };
+      // Pattern to find src attribute in iframe
+      const srcMatch = embedCode.match(/src=["']([^"']+)["']/);
+      if (srcMatch) {
+        const embedUrl = srcMatch[1];
+        console.log('Found embed URL:', embedUrl);
+        return embedUrl;
       }
 
-      // Pattern 2: Individual track page - corrected mapping with working track IDs
-      const trackPageMatch = url.match(/track\/([^/?]+)/);
-      if (trackPageMatch) {
-        const trackSlug = trackPageMatch[1];
-        console.log('Found track slug:', trackSlug);
-        
-        // Corrected track mapping with working IDs from your examples
-        const trackMapping: { [key: string]: string } = {
-          'promocional-01': '3016958351', // Working track from Example 1
-          'promocional-02': '2283399235', // Working track from Example 2
-          'vozes-em-harmonia-ex-05': '3016958351',
-          'demo-track-02': '2283399235', 
-          'harmony-sample-03': '3016958351',
-          'promocional-03': '2283399235',
-          'sample-track-01': '3016958351',
-          'sample-track-02': '2283399235',
-          'harmonia-demo': '3016958351',
-          'mix-inicial': '2283399235',
-          'versao-final': '3016958351'
-        };
-        
-        const trackId = trackMapping[trackSlug];
-        if (trackId) {
-          console.log('Found track ID for slug:', trackSlug, '-> ID:', trackId);
-          return { 
-            albumId: this.CORRECT_ALBUM_ID, 
-            trackId 
-          };
-        } else {
-          console.log('Track slug not found in mapping, using default working track');
-          return { 
-            albumId: this.CORRECT_ALBUM_ID, 
-            trackId: '3016958351' // Default to working track
-          };
-        }
+      // If it's already just a URL, validate and return
+      if (embedCode.includes('bandcamp.com/EmbeddedPlayer')) {
+        console.log('Input is already an embed URL');
+        return embedCode.trim();
       }
 
-      // Pattern 3: Try to extract any track number from URL
-      const trackNumberMatch = url.match(/[\?&]t=(\d+)/);
-      if (trackNumberMatch) {
-        console.log('Found track number in URL:', trackNumberMatch[1]);
-        return { 
-          albumId: this.CORRECT_ALBUM_ID, 
-          trackId: trackNumberMatch[1] 
-        };
-      }
-
-      // Fallback - use working track
-      console.log('No pattern matched, using default working track');
-      return { 
-        albumId: this.CORRECT_ALBUM_ID, 
-        trackId: '3016958351' 
-      };
-
+      console.log('No valid embed URL found in code');
+      return null;
     } catch (error) {
-      console.error('Error extracting Bandcamp IDs:', error);
-      return { 
-        albumId: this.CORRECT_ALBUM_ID, 
-        trackId: '3016958351' 
-      };
+      console.error('Error extracting embed from code:', error);
+      return null;
     }
   }
 
   /**
-   * Extract track title from Bandcamp URL
+   * Extract track title from embed code or URL
    */
-  static extractTrackTitle(url: string): string {
+  static extractTrackTitle(input: string): string {
     try {
-      // Try to extract track name from URL
-      const trackMatch = url.match(/track\/([^/?]+)/);
+      // Try to extract from track parameter in embed URL
+      const trackMatch = input.match(/track=(\d+)/);
       if (trackMatch) {
-        const slug = trackMatch[1];
-        // Convert slug to readable title
-        return slug
-          .split('-')
-          .map(word => word.charAt(0).toUpperCase() + word.slice(1))
-          .join(' ');
+        return `Track ${trackMatch[1]}`;
       }
 
-      // Try to extract from album URL
-      const albumMatch = url.match(/album\/([^/?]+)/);
+      // Try to extract from album parameter
+      const albumMatch = input.match(/album=(\d+)/);
       if (albumMatch) {
-        const slug = albumMatch[1];
-        return slug
-          .split('-')
-          .map(word => word.charAt(0).toUpperCase() + word.slice(1))
-          .join(' ');
+        return `Album ${albumMatch[1]}`;
       }
 
       // Fallback to generic title
@@ -126,99 +65,93 @@ export class BandcampUtils {
   }
 
   /**
-   * Generate correct embed URL using the working format from your examples
+   * Validate if input contains valid Bandcamp embed
    */
-  static generateEmbedUrl(albumId: string, trackId: string): string {
-    // Use the exact format from your working examples with correct colors
-    const embedUrl = `${this.EMBED_BASE}/album=${albumId}/size=small/bgcol=ffffff/linkcol=2ebd35/track=${trackId}/transparent=true/`;
-    console.log('Generated embed URL:', embedUrl);
-    return embedUrl;
-  }
-
-  /**
-   * Generate direct working embed URLs for testing
-   */
-  static getWorkingExamples(): BandcampTrackInfo[] {
-    return [
-      {
-        albumId: this.CORRECT_ALBUM_ID,
-        trackId: '3016958351',
-        embedUrl: `${this.EMBED_BASE}/album=${this.CORRECT_ALBUM_ID}/size=small/bgcol=ffffff/linkcol=2ebd35/track=3016958351/transparent=true/`,
-        directUrl: 'https://harmonia-media.bandcamp.com/album/promocionais'
-      },
-      {
-        albumId: this.CORRECT_ALBUM_ID,
-        trackId: '2283399235',
-        embedUrl: `${this.EMBED_BASE}/album=${this.CORRECT_ALBUM_ID}/size=small/bgcol=ffffff/linkcol=2ebd35/track=2283399235/transparent=true/`,
-        directUrl: 'https://harmonia-media.bandcamp.com/album/promocionais'
-      }
-    ];
-  }
-
-  /**
-   * Create complete track info from a Bandcamp URL with corrected data
-   */
-  static createTrackInfoFromUrl(url: string): BandcampTrackInfo | null {
+  static isValidBandcampEmbed(input: string): boolean {
     try {
-      const ids = this.extractIds(url);
-      if (!ids) {
-        console.error('Failed to extract IDs from URL:', url);
-        return null;
-      }
-
-      console.log('Creating track info with corrected IDs:', ids);
-      const embedUrl = this.generateEmbedUrl(ids.albumId, ids.trackId);
-
-      return {
-        albumId: ids.albumId,
-        trackId: ids.trackId,
-        embedUrl: embedUrl,
-        directUrl: url
-      };
-    } catch (error) {
-      console.error('Error creating track info from URL:', url, error);
-      return null;
-    }
-  }
-
-  /**
-   * Validate Bandcamp URL
-   */
-  static isValidBandcampUrl(url: string): boolean {
-    try {
-      const patterns = [
-        /^https:\/\/[a-zA-Z0-9-]+\.bandcamp\.com\/album\/[a-zA-Z0-9-]+/,
-        /^https:\/\/[a-zA-Z0-9-]+\.bandcamp\.com\/track\/[a-zA-Z0-9-]+/,
-        /^https:\/\/[a-zA-Z0-9-]+\.bandcamp\.com\//
-      ];
+      // Check if it's an iframe with Bandcamp embed
+      const iframeMatch = input.includes('<iframe') && input.includes('bandcamp.com/EmbeddedPlayer');
       
-      const isValid = patterns.some(pattern => pattern.test(url));
-      console.log('URL validation result for', url, ':', isValid);
-      return isValid;
+      // Check if it's a direct Bandcamp embed URL
+      const urlMatch = input.includes('bandcamp.com/EmbeddedPlayer');
+      
+      return iframeMatch || urlMatch;
     } catch (error) {
-      console.error('Error validating Bandcamp URL:', url, error);
+      console.error('Error validating Bandcamp embed:', error);
       return false;
     }
   }
 
   /**
-   * Auto-generate embed from track link with corrected format
+   * Process embed input and return clean embed URL
    */
-  static autoGenerateEmbed(trackUrl: string): string | null {
+  static processEmbedInput(input: string): string | null {
     try {
-      console.log('Auto-generating embed for URL:', trackUrl);
-      const trackInfo = this.createTrackInfoFromUrl(trackUrl);
-      if (!trackInfo) {
-        console.error('Failed to create track info for auto-embed');
+      console.log('Processing embed input:', input);
+      
+      if (!this.isValidBandcampEmbed(input)) {
+        console.log('Invalid Bandcamp embed');
         return null;
       }
-      
-      console.log('Auto-generated embed URL:', trackInfo.embedUrl);
-      return trackInfo.embedUrl;
+
+      const embedUrl = this.extractEmbedFromCode(input);
+      if (!embedUrl) {
+        console.log('Could not extract embed URL');
+        return null;
+      }
+
+      console.log('Processed embed URL:', embedUrl);
+      return embedUrl;
     } catch (error) {
-      console.error('Error auto-generating embed:', error);
+      console.error('Error processing embed input:', error);
       return null;
     }
+  }
+
+  /**
+   * Create track info from embed code
+   */
+  static createTrackInfoFromEmbed(embedCode: string): BandcampTrackInfo | null {
+    try {
+      const embedUrl = this.processEmbedInput(embedCode);
+      if (!embedUrl) {
+        return null;
+      }
+
+      // Extract IDs for reference (optional)
+      const albumMatch = embedUrl.match(/album=(\d+)/);
+      const trackMatch = embedUrl.match(/track=(\d+)/);
+
+      return {
+        albumId: albumMatch ? albumMatch[1] : 'unknown',
+        trackId: trackMatch ? trackMatch[1] : 'unknown',
+        embedUrl: embedUrl,
+        directUrl: embedUrl // Could be enhanced to extract original Bandcamp URL
+      };
+    } catch (error) {
+      console.error('Error creating track info from embed:', error);
+      return null;
+    }
+  }
+
+  /**
+   * Generate working example embeds for testing
+   */
+  static getWorkingExamples(): BandcampTrackInfo[] {
+    return [
+      {
+        albumId: '2774072802',
+        trackId: '3016958351',
+        embedUrl: 'https://bandcamp.com/EmbeddedPlayer/album=2774072802/size=small/bgcol=ffffff/linkcol=2ebd35/track=3016958351/transparent=true/',
+        directUrl: 'https://harmonia-media.bandcamp.com/album/promocionais'
+      },
+      {
+        albumId: '2774072802',
+        trackId: '2283399235',
+        embedUrl: 'https://bandcamp.com/EmbeddedPlayer/album=2774072802/size=small/bgcol=ffffff/linkcol=2ebd35/track=2283399235/transparent=true/',
+        directUrl: 'https://harmonia-media.bandcamp.com/album/promocionais'
+      }
+    ];
   }
 }
 
