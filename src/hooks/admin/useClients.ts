@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
@@ -20,12 +19,19 @@ export const useClients = () => {
   const loadClients = async () => {
     try {
       setIsLoading(true);
+      console.log('Loading clients from database...');
+      
       const { data, error } = await supabase
         .from('clients')
         .select('*')
         .order('created_at', { ascending: false });
 
-      if (error) throw error;
+      if (error) {
+        console.error('Supabase error loading clients:', error);
+        throw error;
+      }
+
+      console.log('Raw clients data from Supabase:', data);
 
       const formattedClients = (data || []).map(client => ({
         id: client.id,
@@ -36,6 +42,7 @@ export const useClients = () => {
         createdAt: client.created_at
       }));
 
+      console.log('Formatted clients:', formattedClients);
       setClients(formattedClients);
     } catch (error) {
       console.error('Error loading clients:', error);
@@ -51,35 +58,36 @@ export const useClients = () => {
 
   const addClient = async (clientData: Omit<Client, 'id' | 'createdAt'>) => {
     try {
+      console.log('Creating client with data:', clientData);
+      
       const { data, error } = await supabase
         .from('clients')
         .insert([{
           name: clientData.name,
           email: clientData.email,
           phone: clientData.phone,
-          company: clientData.company
+          company: clientData.company,
+          created_at: new Date().toISOString()
         }])
         .select()
         .single();
 
-      if (error) throw error;
+      if (error) {
+        console.error('Error creating client:', error);
+        throw error;
+      }
 
-      const newClient: Client = {
-        id: data.id,
-        name: data.name,
-        email: data.email,
-        phone: data.phone,
-        company: data.company,
-        createdAt: data.created_at
-      };
+      console.log('Client created successfully:', data);
 
-      setClients(prev => [newClient, ...prev]);
+      // IMPORTANTE: Recarregar lista completa do banco
+      await loadClients();
+
       toast({
         title: "Cliente criado",
         description: "Cliente criado com sucesso."
       });
 
-      return newClient;
+      return data;
     } catch (error) {
       console.error('Error creating client:', error);
       toast({
@@ -93,11 +101,16 @@ export const useClients = () => {
 
   const updateClient = async (id: string, updates: Partial<Client>) => {
     try {
+      console.log('Updating client:', id, updates);
+      
       const dbUpdates: any = {};
       if (updates.name) dbUpdates.name = updates.name;
       if (updates.email) dbUpdates.email = updates.email;
       if (updates.phone !== undefined) dbUpdates.phone = updates.phone;
       if (updates.company !== undefined) dbUpdates.company = updates.company;
+      
+      // Sempre atualizar timestamp
+      dbUpdates.updated_at = new Date().toISOString();
 
       const { data, error } = await supabase
         .from('clients')
@@ -106,27 +119,22 @@ export const useClients = () => {
         .select()
         .single();
 
-      if (error) throw error;
+      if (error) {
+        console.error('Error updating client:', error);
+        throw error;
+      }
 
-      const updatedClient: Client = {
-        id: data.id,
-        name: data.name,
-        email: data.email,
-        phone: data.phone,
-        company: data.company,
-        createdAt: data.created_at
-      };
+      console.log('Client updated successfully:', data);
 
-      setClients(prev => prev.map(client => 
-        client.id === id ? updatedClient : client
-      ));
+      // IMPORTANTE: Recarregar lista completa do banco
+      await loadClients();
 
       toast({
         title: "Cliente atualizado",
         description: "Cliente atualizado com sucesso."
       });
 
-      return updatedClient;
+      return data;
     } catch (error) {
       console.error('Error updating client:', error);
       toast({
@@ -140,14 +148,23 @@ export const useClients = () => {
 
   const deleteClient = async (id: string) => {
     try {
+      console.log('Deleting client:', id);
+      
       const { error } = await supabase
         .from('clients')
         .delete()
         .eq('id', id);
 
-      if (error) throw error;
+      if (error) {
+        console.error('Error deleting client:', error);
+        throw error;
+      }
 
-      setClients(prev => prev.filter(client => client.id !== id));
+      console.log('Client deleted successfully');
+
+      // IMPORTANTE: Recarregar lista completa do banco
+      await loadClients();
+
       toast({
         title: "Cliente removido",
         description: "Cliente removido com sucesso."
@@ -165,8 +182,31 @@ export const useClients = () => {
     }
   };
 
+  // Listener para mudanças em tempo real
   useEffect(() => {
     loadClients();
+
+    // Configurar listener para mudanças em tempo real
+    const channel = supabase
+      .channel('clients-changes')
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'clients'
+        },
+        (payload) => {
+          console.log('Real-time client change detected:', payload);
+          // Recarregar clientes quando houver mudanças
+          loadClients();
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
   }, []);
 
   return {
