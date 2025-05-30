@@ -1,148 +1,117 @@
-import React, { createContext, useContext, useState, useCallback, useEffect } from 'react';
+import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { supabase } from '@/integrations/supabase/client';
-import { User } from '@supabase/supabase-js';
+import { Session, User } from '@supabase/supabase-js';
 
+// Define more specific types for auth status and user data
 type AuthStatus = 'loading' | 'authenticated' | 'unauthenticated';
 
 interface AuthContextType {
   authStatus: AuthStatus;
   user: User | null;
-  checkAuthStatus: () => void;
-  login: (username: string, password: string) => Promise<boolean>;
-  logout: () => void;
+  session: Session | null;
+  login: (email: string, password: string) => Promise<{ success: boolean; error?: string }>;
+  logout: () => Promise<{ error?: string }>;
 }
 
-const AuthContext = createContext<AuthContextType>({
-  authStatus: 'loading',
-  user: null,
-  checkAuthStatus: () => {},
-  login: async () => false,
-  logout: () => {},
-});
+const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
-export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const [authStatus, setAuthStatus] = useState<AuthStatus>('loading');
+export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
   const [user, setUser] = useState<User | null>(null);
+  const [session, setSession] = useState<Session | null>(null);
+  const [authStatus, setAuthStatus] = useState<AuthStatus>('loading');
 
-  // Check auth status on mount and listen for auth changes
   useEffect(() => {
-    checkAuthStatus();
-    
-    // Listen for auth state changes
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      async (event, session) => {
-        console.log('Auth state changed:', event, session?.user?.email);
-        
-        if (session?.user) {
-          setUser(session.user);
-          setAuthStatus('authenticated');
-        } else {
-          setUser(null);
-          setAuthStatus('unauthenticated');
-        }
-      }
-    );
-
-    return () => subscription.unsubscribe();
-  }, []);
-
-  const checkAuthStatus = useCallback(async () => {
-    try {
-      console.log('Checking auth status with Supabase...');
-      
-      // Get current session from Supabase
-      const { data: { session }, error } = await supabase.auth.getSession();
-      
-      if (error) {
-        console.error('Error checking auth status:', error);
-        setAuthStatus('unauthenticated');
-        setUser(null);
-        return;
-      }
-
-      if (session?.user) {
-        console.log('Valid session found for:', session.user.email);
-        setUser(session.user);
-        setAuthStatus('authenticated');
-      } else {
-        console.log('No valid session found');
-        setUser(null);
-        setAuthStatus('unauthenticated');
-      }
-    } catch (error) {
-      console.error('Auth check error:', error);
+    // Check initial session state
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      setSession(session);
+      setUser(session?.user ?? null);
+      setAuthStatus(session ? 'authenticated' : 'unauthenticated');
+      console.log('Initial session check:', session ? 'Authenticated' : 'Unauthenticated');
+    }).catch(error => {
+      console.error('Error getting initial session:', error);
       setAuthStatus('unauthenticated');
-      setUser(null);
-    }
+    });
+
+    // Listen for auth state changes (login, logout, token refresh)
+    const { data: authListener } = supabase.auth.onAuthStateChange((event, session) => {
+      console.log('Auth state changed:', event, session);
+      setSession(session);
+      setUser(session?.user ?? null);
+      setAuthStatus(session ? 'authenticated' : 'unauthenticated');
+    });
+
+    // Cleanup listener on unmount
+    return () => {
+      authListener?.subscription.unsubscribe();
+    };
   }, []);
 
-  const login = async (username: string, password: string): Promise<boolean> => {
-    console.log('Login attempt with Supabase:', username);
-    
+  const login = async (email: string, password: string): Promise<{ success: boolean; error?: string }> => {
+    setAuthStatus('loading');
+    console.log('Login attempt with:', email);
     try {
-      setAuthStatus('loading');
-      
-      // Use real Supabase authentication
-      const { data, error } = await supabase.auth.signInWithPassword({
-        email: username,
-        password: password,
-      });
-
+      const { error } = await supabase.auth.signInWithPassword({ email, password });
       if (error) {
         console.error('Supabase login error:', error.message);
         setAuthStatus('unauthenticated');
-        setUser(null);
-        return false;
+        return { success: false, error: error.message };
       }
-
-      if (data.session?.user) {
-        console.log('Login successful with Supabase:', data.session.user.email);
-        setUser(data.session.user);
-        setAuthStatus('authenticated');
-        return true;
-      }
-
-      console.log('Login failed: no session returned');
+      // onAuthStateChange will handle setting status to 'authenticated'
+      console.log('Supabase login successful (event will update state)');
+      return { success: true };
+    } catch (error: any) {
+      console.error('Login function error:', error);
       setAuthStatus('unauthenticated');
-      setUser(null);
-      return false;
-      
-    } catch (error) {
-      console.error('Login error:', error);
-      setAuthStatus('unauthenticated');
-      setUser(null);
-      return false;
+      return { success: false, error: error.message || 'An unexpected error occurred during login.' };
     }
   };
 
-  const logout = async () => {
-    console.log('Logging out from Supabase...');
-    
+  const logout = async (): Promise<{ error?: string }> => {
+    setAuthStatus('loading');
+    console.log('Logout attempt');
     try {
       const { error } = await supabase.auth.signOut();
-      
       if (error) {
-        console.error('Logout error:', error);
-      } else {
-        console.log('Logout successful');
+        console.error('Supabase logout error:', error.message);
+        // Even if logout fails, attempt to set state to unauthenticated
+        setAuthStatus('unauthenticated'); 
+        setUser(null);
+        setSession(null);
+        return { error: error.message };
       }
-      
-      // Clear state regardless of error
-      setUser(null);
+      // onAuthStateChange will handle setting status to 'unauthenticated'
+      console.log('Supabase logout successful (event will update state)');
+      return {};
+    } catch (error: any) {
+      console.error('Logout function error:', error);
       setAuthStatus('unauthenticated');
-      
-    } catch (error) {
-      console.error('Logout error:', error);
       setUser(null);
-      setAuthStatus('unauthenticated');
+      setSession(null);
+      return { error: error.message || 'An unexpected error occurred during logout.' };
     }
+  };
+
+  const value = {
+    authStatus,
+    user,
+    session,
+    login,
+    logout,
   };
 
   return (
-    <AuthContext.Provider value={{ authStatus, user, checkAuthStatus, login, logout }}>
+    <AuthContext.Provider value={value}>
       {children}
     </AuthContext.Provider>
   );
 };
 
-export const useAuth = () => useContext(AuthContext);
+// Custom hook to use the AuthContext
+export const useAuth = (): AuthContextType => {
+  const context = useContext(AuthContext);
+  if (context === undefined) {
+    throw new Error('useAuth must be used within an AuthProvider');
+  }
+  return context;
+};
+
