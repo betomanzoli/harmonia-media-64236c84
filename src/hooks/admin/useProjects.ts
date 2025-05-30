@@ -28,65 +28,87 @@ export const useProjects = () => {
   const loadProjects = async () => {
     try {
       setLoading(true);
-      console.log('Loading projects from database...');
+      console.log('🔍 Loading projects from database...');
       
+      // ✅ TESTE SIMPLES PRIMEIRO (sem JOIN)
       const { data, error } = await supabase
         .from('projects')
-        .select(`
-          *,
-          project_versions (
-            id,
-            name,
-            description,
-            bandcamp_url,
-            recommended,
-            created_at
-          )
-        `)
+        .select('*')
         .order('created_at', { ascending: false });
 
+      console.log('📊 Raw Supabase response:', { data, error });
+      console.log('📋 Data received from Supabase:', data);
+      console.log('📊 Number of projects from DB:', data?.length || 0);
+
       if (error) {
-        console.error('Supabase error:', error);
+        console.error('❌ Supabase error:', error);
+        setProjects([]);
+        toast({
+          title: "Erro ao carregar projetos",
+          description: `Erro Supabase: ${error.message}`,
+          variant: "destructive"
+        });
+        return;
+      }
+
+      if (!data) {
+        console.log('⚠️ No data returned from Supabase');
         setProjects([]);
         return;
       }
 
+      console.log('🔄 Starting data formatting...');
+
       const formattedProjects = Array.isArray(data) 
-        ? data.map(project => ({
-            id: project.id,
-            title: project.title,
-            description: project.description,
-            status: (['waiting', 'feedback', 'approved'].includes(project.status) 
-              ? project.status 
-              : 'waiting') as 'waiting' | 'feedback' | 'approved',
-            client_id: project.client_id,
-            client_name: project.client_name,
-            client_email: project.client_email,
-            client_phone: project.client_phone,
-            package_type: project.package_type,
-            preview_code: project.preview_code,
-            deadline: project.deadline,
-            created_at: project.created_at,
-            updated_at: project.updated_at,
-            expires_at: project.expires_at,
-            versions: Array.isArray(project.project_versions) ? project.project_versions : []
-          }))
+        ? data.map((project, index) => {
+            console.log(`🔄 Formatting project ${index + 1}:`, project);
+            return {
+              id: project.id,
+              title: project.title,
+              description: project.description,
+              status: (['waiting', 'feedback', 'approved'].includes(project.status) 
+                ? project.status 
+                : 'waiting') as 'waiting' | 'feedback' | 'approved',
+              client_id: project.client_id,
+              client_name: project.client_name,
+              client_email: project.client_email,
+              client_phone: project.client_phone,
+              package_type: project.package_type,
+              preview_code: project.preview_code,
+              deadline: project.deadline,
+              created_at: project.created_at,
+              updated_at: project.updated_at,
+              expires_at: project.expires_at,
+              versions: [] // ✅ Simplificado por enquanto
+            };
+          })
         : [];
 
-      console.log('Projects loaded successfully:', formattedProjects.length);
+      console.log('✅ Formatted projects:', formattedProjects);
+      console.log('📊 Formatted projects count:', formattedProjects.length);
+      console.log('🎯 Setting projects state...');
+      
       setProjects(formattedProjects);
+      console.log('✅ Projects state updated successfully');
       
     } catch (error) {
-      console.error('Error loading projects:', error);
+      console.error('💥 Error loading projects:', error);
       setProjects([]);
+      toast({
+        title: "Erro inesperado",
+        description: `Erro: ${error instanceof Error ? error.message : 'Erro desconhecido'}`,
+        variant: "destructive"
+      });
     } finally {
+      console.log('🏁 Setting loading to false...');
       setLoading(false);
+      console.log('✅ Loading state updated');
     }
   };
 
   const createProject = async (projectData: Omit<Project, 'id' | 'created_at' | 'updated_at' | 'preview_code'>) => {
     try {
-      console.log('Creating project with data:', projectData);
+      console.log('🆕 Creating project with data:', projectData);
       
       const { data, error } = await supabase
         .from('projects')
@@ -100,11 +122,14 @@ export const useProjects = () => {
         .single();
 
       if (error) {
-        console.error('Error creating project:', error);
+        console.error('❌ Error creating project:', error);
         throw error;
       }
 
-      console.log('Project created successfully:', data);
+      console.log('✅ Project created successfully:', data);
+      
+      // ✅ Recarregar projetos
+      console.log('🔄 Reloading projects after creation...');
       await loadProjects();
 
       toast({
@@ -114,7 +139,7 @@ export const useProjects = () => {
 
       return data;
     } catch (error) {
-      console.error('Error creating project:', error);
+      console.error('💥 Error creating project:', error);
       toast({
         title: "Erro ao criar projeto",
         description: "Não foi possível criar o projeto.",
@@ -126,6 +151,8 @@ export const useProjects = () => {
 
   const updateProject = async (id: string, updates: Partial<Project>) => {
     try {
+      console.log('🔄 Updating project:', id, updates);
+      
       const { data, error } = await supabase
         .from('projects')
         .update({
@@ -138,7 +165,9 @@ export const useProjects = () => {
 
       if (error) throw error;
 
+      console.log('✅ Project updated successfully:', data);
       await loadProjects();
+
       toast({
         title: "Projeto atualizado",
         description: "Projeto atualizado com sucesso."
@@ -146,7 +175,7 @@ export const useProjects = () => {
 
       return data;
     } catch (error) {
-      console.error('Error updating project:', error);
+      console.error('💥 Error updating project:', error);
       toast({
         title: "Erro ao atualizar projeto",
         description: "Não foi possível atualizar o projeto.",
@@ -158,6 +187,8 @@ export const useProjects = () => {
 
   const deleteProject = async (id: string) => {
     try {
+      console.log('🗑️ Deleting project:', id);
+      
       const { error } = await supabase
         .from('projects')
         .delete()
@@ -165,7 +196,9 @@ export const useProjects = () => {
 
       if (error) throw error;
 
+      console.log('✅ Project deleted successfully');
       await loadProjects();
+
       toast({
         title: "Projeto removido",
         description: "Projeto removido com sucesso."
@@ -173,7 +206,7 @@ export const useProjects = () => {
 
       return true;
     } catch (error) {
-      console.error('Error deleting project:', error);
+      console.error('💥 Error deleting project:', error);
       toast({
         title: "Erro ao remover projeto",
         description: "Não foi possível remover o projeto.",
@@ -184,9 +217,11 @@ export const useProjects = () => {
   };
 
   useEffect(() => {
+    console.log('🚀 useProjects useEffect triggered');
     let isMounted = true;
     
     const initializeProjects = async () => {
+      console.log('🔄 Initializing projects...');
       if (isMounted) {
         await loadProjects();
       }
@@ -195,9 +230,17 @@ export const useProjects = () => {
     initializeProjects();
 
     return () => {
+      console.log('🧹 useProjects cleanup');
       isMounted = false;
     };
   }, []);
+
+  // ✅ ADICIONE LOG FINAL
+  console.log('🏠 useProjects hook returning:', { 
+    projectsCount: projects.length, 
+    loading,
+    projects: projects.slice(0, 2) // Primeiros 2 para debug
+  });
 
   return {
     projects,
