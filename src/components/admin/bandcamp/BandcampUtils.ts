@@ -92,6 +92,40 @@ export class BandcampUtils {
   }
 
   /**
+   * Extract track title from Bandcamp URL
+   */
+  static extractTrackTitle(url: string): string {
+    try {
+      // Try to extract track name from URL
+      const trackMatch = url.match(/track\/([^/?]+)/);
+      if (trackMatch) {
+        const slug = trackMatch[1];
+        // Convert slug to readable title
+        return slug
+          .split('-')
+          .map(word => word.charAt(0).toUpperCase() + word.slice(1))
+          .join(' ');
+      }
+
+      // Try to extract from album URL
+      const albumMatch = url.match(/album\/([^/?]+)/);
+      if (albumMatch) {
+        const slug = albumMatch[1];
+        return slug
+          .split('-')
+          .map(word => word.charAt(0).toUpperCase() + word.slice(1))
+          .join(' ');
+      }
+
+      // Fallback to generic title
+      return 'Bandcamp Track';
+    } catch (error) {
+      console.error('Error extracting track title:', error);
+      return 'Bandcamp Track';
+    }
+  }
+
+  /**
    * Generate correct embed URL using the working format from your examples
    */
   static generateEmbedUrl(albumId: string, trackId: string): string {
