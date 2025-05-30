@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -7,7 +8,7 @@ import { useToast } from '@/hooks/use-toast';
 import { ArrowLeft, Plus, User, Mail, Phone, Calendar, ExternalLink } from 'lucide-react';
 import NewAdminLayout from '@/components/admin/layout/NewAdminLayout';
 import BandcampVersionCard from './BandcampVersionCard';
-import AddVersionDialog from '../shared/AddVersionDialog';
+import AddVersionDialog from './AddVersionDialog';
 
 interface BandcampVersion {
   id: string;
