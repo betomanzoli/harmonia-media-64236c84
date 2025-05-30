@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { Card, CardContent } from "@/components/ui/card";
-import { VersionItem } from '@/hooks/admin/usePreviewProjects';
+import { Version } from '@/hooks/admin/useVersions'; // ✅ CORRIGIDO
 import { Button } from "@/components/ui/button";
 import { Play, Pause, Trash2, CheckCircle, Copy, ExternalLink } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
@@ -8,7 +8,7 @@ import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, 
 import { useToast } from '@/hooks/use-toast';
 
 interface VersionCardProps {
-  version: VersionItem;
+  version: Version; // ✅ CORRIGIDO
   projectId: string;
   onDeleteVersion: (versionId: string) => void;
 }
@@ -19,36 +19,34 @@ const VersionCard: React.FC<VersionCardProps> = ({
   onDeleteVersion
 }) => {
   const [isPlaying, setIsPlaying] = useState(false);
-  const [audio] = useState(new Audio(version.audioUrl));
+  const [audio] = useState(new Audio(version.bandcamp_url || '')); // ✅ CORRIGIDO
   const { toast } = useToast();
 
   const handleTogglePlay = () => {
     if (isPlaying) {
       audio.pause();
     } else {
-      // If we have a fileId, open in Google Drive instead of playing locally
-      if (version.fileId) {
-        const driveUrl = `https://drive.google.com/file/d/${version.fileId}/view`;
-        window.open(driveUrl, '_blank');
+      // Se temos uma URL do Bandcamp, abrir em nova aba
+      if (version.bandcamp_url) { // ✅ CORRIGIDO
+        window.open(version.bandcamp_url, '_blank'); // ✅ CORRIGIDO
         toast({
-          title: "Abrindo no Google Drive",
-          description: "O áudio está sendo aberto no Google Drive em uma nova aba."
+          title: "Abrindo áudio",
+          description: "O áudio está sendo aberto em uma nova aba."
         });
         return;
       }
       
-      // Otherwise try to play the audio directly
+      // Caso contrário, tentar reproduzir diretamente
       audio.play().catch(error => {
         console.error('Erro ao reproduzir áudio:', error);
         toast({
           title: "Erro ao reproduzir",
-          description: "Não foi possível reproduzir o áudio. Tente abrir no Google Drive.",
+          description: "Não foi possível reproduzir o áudio. Tente abrir no navegador.",
           variant: "destructive"
         });
         
-        // If we have an audioUrl but playing failed, try to open in a new tab
-        if (version.audioUrl) {
-          window.open(version.audioUrl, '_blank');
+        if (version.bandcamp_url) { // ✅ CORRIGIDO
+          window.open(version.bandcamp_url, '_blank'); // ✅ CORRIGIDO
         }
       });
     }
@@ -80,7 +78,7 @@ const VersionCard: React.FC<VersionCardProps> = ({
   };
 
   return (
-    <Card className={`bg-white ${version.final ? 'border-green-500 border-2' : ''}`}>
+    <Card className={`bg-white ${version.recommended ? 'border-green-500 border-2' : ''}`}> {/* ✅ CORRIGIDO */}
       <CardContent className="p-4">
         <div className="flex flex-col sm:flex-row justify-between">
           <div className="flex-1">
@@ -92,11 +90,6 @@ const VersionCard: React.FC<VersionCardProps> = ({
                     Recomendada
                   </Badge>
                 )}
-                {version.final && (
-                  <Badge variant="secondary" className="bg-green-100 text-green-700">
-                    Final
-                  </Badge>
-                )}
               </div>
             </div>
             
@@ -104,33 +97,47 @@ const VersionCard: React.FC<VersionCardProps> = ({
               {version.description || "Sem descrição"}
             </p>
             
-            <div className="text-xs text-gray-500 mb-4">Adicionado em: {version.dateAdded}</div>
+            <div className="text-xs text-gray-500 mb-4">
+              Adicionado em: {new Date(version.created_at).toLocaleDateString('pt-BR')} {/* ✅ CORRIGIDO */}
+            </div>
             
-            {/* Additional links for final versions */}
-            {version.additionalLinks && version.additionalLinks.length > 0 && (
-              <div className="mt-2 space-y-2">
-                <h4 className="text-sm font-medium">Arquivos adicionais:</h4>
-                <div className="space-y-1">
-                  {version.additionalLinks.map((link, index) => (
-                    <div key={index} className="flex items-center justify-between bg-gray-50 p-2 rounded text-sm">
-                      <span className="font-medium">{link.label}</span>
-                      <div className="flex gap-1">
-                        <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => handleCopyLink(link.url)} title="Copiar link">
-                          <Copy className="h-3.5 w-3.5" />
-                        </Button>
-                        <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => window.open(link.url, '_blank')} title="Abrir link">
-                          <ExternalLink className="h-3.5 w-3.5" />
-                        </Button>
-                      </div>
-                    </div>
-                  ))}
+            {/* URL do áudio */}
+            {version.bandcamp_url && ( // ✅ CORRIGIDO
+              <div className="mt-2">
+                <div className="flex items-center justify-between bg-gray-50 p-2 rounded text-sm">
+                  <span className="font-medium">Áudio</span>
+                  <div className="flex gap-1">
+                    <Button 
+                      variant="ghost" 
+                      size="icon" 
+                      className="h-7 w-7" 
+                      onClick={() => handleCopyLink(version.bandcamp_url!)} // ✅ CORRIGIDO
+                      title="Copiar link"
+                    >
+                      <Copy className="h-3.5 w-3.5" />
+                    </Button>
+                    <Button 
+                      variant="ghost" 
+                      size="icon" 
+                      className="h-7 w-7" 
+                      onClick={() => window.open(version.bandcamp_url, '_blank')} // ✅ CORRIGIDO
+                      title="Abrir link"
+                    >
+                      <ExternalLink className="h-3.5 w-3.5" />
+                    </Button>
+                  </div>
                 </div>
               </div>
             )}
           </div>
           
           <div className="flex sm:flex-col gap-2 mt-4 sm:mt-0 sm:ml-4">
-            <Button variant="outline" size="sm" className={`${isPlaying ? 'bg-gray-100' : ''}`} onClick={handleTogglePlay}>
+            <Button 
+              variant="outline" 
+              size="sm" 
+              className={`${isPlaying ? 'bg-gray-100' : ''}`} 
+              onClick={handleTogglePlay}
+            >
               {isPlaying ? <Pause className="h-4 w-4 mr-2" /> : <Play className="h-4 w-4 mr-2" />}
               {isPlaying ? 'Pausar' : 'Ouvir'}
             </Button>
@@ -151,7 +158,10 @@ const VersionCard: React.FC<VersionCardProps> = ({
                 </AlertDialogHeader>
                 <AlertDialogFooter>
                   <AlertDialogCancel>Cancelar</AlertDialogCancel>
-                  <AlertDialogAction onClick={() => onDeleteVersion(version.id)} className="bg-red-600 hover:bg-red-700">
+                  <AlertDialogAction 
+                    onClick={() => onDeleteVersion(version.id)} 
+                    className="bg-red-600 hover:bg-red-700"
+                  >
                     Remover
                   </AlertDialogAction>
                 </AlertDialogFooter>
