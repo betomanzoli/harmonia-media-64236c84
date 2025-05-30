@@ -1,323 +1,295 @@
-import React, { useState, useEffect } from 'react'; // Added useEffect
+import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Plus, Search, Loader2 } from 'lucide-react'; // Added Loader2
+import { Badge } from '@/components/ui/badge';
+import { Plus, Search, Filter, MoreHorizontal, Eye, Edit, Trash2 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
-import NewAdminLayout from '@/components/admin/layout/NewAdminLayout';
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
-import ProjectCard from '@/components/admin/projects/ProjectCard';
-import { useClients, type Client } from '@/hooks/admin/useClients'; // Import useClients hook and Client type
-import { useProjects, type Project } from '@/hooks/admin/useProjects'; // Import useProjects hook and Project type
-
-// Define Project type for local state (might differ slightly from hook's Project type if needed)
-interface DisplayProject {
-  id: string;
-  clientName: string;
-  clientId?: string;
-  title: string;
-  status: 'waiting' | 'feedback' | 'approved';
-  versionsCount: number; // Assuming this comes from project.versions.length
-  createdAt: string;
-  lastActivity: string;
-}
+import { useProjects } from '@/hooks/admin/useProjects';
+import { useClients } from '@/hooks/admin/useClients';
 
 const NewAdminProjects: React.FC = () => {
+  const navigate = useNavigate();
   const { toast } = useToast();
-  const { clients, isLoading: clientsLoading, error: clientsError } = useClients(); // Use the clients hook
-  const { projects: fetchedProjects, loading: projectsLoading, createProject, reloadProjects } = useProjects(); // Use the projects hook
-
-  const [displayProjects, setDisplayProjects] = useState<DisplayProject[]>([]);
-  const [showNewProjectDialog, setShowNewProjectDialog] = useState(false);
+  const { projects, loading: projectsLoading, createProject } = useProjects();
+  const { clients, isLoading: clientsLoading } = useClients();
+  
+  const [showCreateForm, setShowCreateForm] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
-  const [statusFilter, setStatusFilter] = useState('all');
-  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [statusFilter, setStatusFilter] = useState<string>('all');
+  
   const [formData, setFormData] = useState({
-    clientId: '', // Use clientId
     title: '',
-    packageType: ''
+    description: '',
+    clientId: '',
+    packageType: 'essencial',
+    deadline: ''
   });
 
-  // Transform fetched projects to display format when they load/change
-  useEffect(() => {
-    const formatted = (fetchedProjects || []).map(p => ({
-      id: p.id,
-      clientName: p.client_name || 'Cliente Desconhecido', // Use client_name from project data
-      clientId: p.client_id,
-      title: p.title,
-      status: p.status,
-      versionsCount: p.versions?.length || 0,
-      createdAt: new Date(p.created_at).toLocaleDateString('pt-BR'),
-      lastActivity: p.updated_at ? new Date(p.updated_at).toLocaleDateString('pt-BR') : new Date(p.created_at).toLocaleDateString('pt-BR')
-    }));
-    setDisplayProjects(formatted);
-  }, [fetchedProjects]);
+  const handleInputChange = (field: string, value: string) => {
+    setFormData(prev => ({ ...prev, [field]: value }));
+  };
 
-  // Handle client loading errors
-  useEffect(() => {
-    if (clientsError) {
+  const handleCreateProject = async () => {
+    if (!formData.title || !formData.clientId) {
       toast({
-        title: "Erro ao carregar clientes",
-        description: clientsError.message || "Não foi possível buscar a lista de clientes.",
-        variant: "destructive"
-      });
-    }
-  }, [clientsError, toast]);
-
-  const handleAddProject = async () => {
-    const selectedClient = clients.find(c => c.id === formData.clientId);
-
-    if (!selectedClient || !formData.title) {
-      toast({
-        title: "Dados incompletos",
-        description: "Cliente e título são campos obrigatórios.",
+        title: "Campos obrigatórios",
+        description: "Título e cliente são obrigatórios.",
         variant: "destructive"
       });
       return;
     }
 
-    setIsSubmitting(true);
-    try {
-      // Prepare data for createProject hook (matching its expected input)
-      const projectDataForHook = {
-        title: formData.title,
-        client_id: selectedClient.id,
-        client_name: selectedClient.name, // Include client name if needed by hook/table
-        client_email: selectedClient.email, // Include email if needed
-        package_type: formData.packageType,
-        status: 'waiting' as 'waiting', // Set initial status
-        // Add other necessary fields required by the 'projects' table
-      };
+    const selectedClient = clients.find(c => c.id === formData.clientId);
+    if (!selectedClient) {
+      toast({
+        title: "Cliente não encontrado",
+        description: "Cliente selecionado não foi encontrado.",
+        variant: "destructive"
+      });
+      return;
+    }
 
-      const created = await createProject(projectDataForHook);
+    const projectData = {
+      title: formData.title,
+      description: formData.description,
+      client_id: formData.clientId,
+      client_name: selectedClient.name,
+      client_email: selectedClient.email,
+      package_type: formData.packageType,
+      status: 'waiting' as const,
+      deadline: formData.deadline || undefined,
+      expires_at: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString()
+    };
 
-      if (created) {
-        toast({
-          title: "Projeto criado",
-          description: `O projeto "${formData.title}" para ${selectedClient.name} foi criado com sucesso.`
-        });
-        setShowNewProjectDialog(false);
-        setFormData({ clientId: '', title: '', packageType: '' }); // Reset form
-        // reloadProjects(); // Listener should handle this, but uncomment if needed
-      } else {
-        // Error toast is handled within the hook
-      }
-    } catch (error) {
-      // Error toast is handled within the hook
-      console.error("Error in handleAddProject:", error);
-    } finally {
-      setIsSubmitting(false);
+    const newProject = await createProject(projectData);
+    
+    if (newProject) {
+      setShowCreateForm(false);
+      setFormData({
+        title: '',
+        description: '',
+        clientId: '',
+        packageType: 'essencial',
+        deadline: ''
+      });
+      
+      toast({
+        title: "Projeto criado",
+        description: "Projeto criado com sucesso!"
+      });
     }
   };
 
-  const handleChange = (name: string, value: string) => {
-    setFormData(prev => ({ ...prev, [name]: value }));
+  const getStatusBadge = (status: string) => {
+    switch (status) {
+      case 'waiting':
+        return <Badge variant="secondary" className="bg-yellow-100 text-yellow-800">Aguardando</Badge>;
+      case 'feedback':
+        return <Badge variant="secondary" className="bg-blue-100 text-blue-800">Feedback</Badge>;
+      case 'approved':
+        return <Badge variant="secondary" className="bg-green-100 text-green-800">Aprovado</Badge>;
+      default:
+        return <Badge variant="secondary">Desconhecido</Badge>;
+    }
   };
 
-  // Filter projects based on displayProjects state
-  const filteredProjects = displayProjects.filter(project => {
+  const filteredProjects = projects.filter(project => {
     const matchesSearch = project.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         project.clientName.toLowerCase().includes(searchTerm.toLowerCase());
+                         project.client_name?.toLowerCase().includes(searchTerm.toLowerCase());
     const matchesStatus = statusFilter === 'all' || project.status === statusFilter;
     return matchesSearch && matchesStatus;
   });
 
-  // Calculate stats based on displayProjects state
-  const projectStats = {
-    total: displayProjects.length,
-    waiting: displayProjects.filter(p => p.status === 'waiting').length,
-    feedback: displayProjects.filter(p => p.status === 'feedback').length,
-    approved: displayProjects.filter(p => p.status === 'approved').length
-  };
+  if (projectsLoading || clientsLoading) {
+    return (
+      <div className="p-6">
+        <div className="flex justify-center items-center py-8">
+          <div className="text-gray-500">Carregando projetos...</div>
+        </div>
+      </div>
+    );
+  }
 
   return (
-    <NewAdminLayout>
-      <div className="p-6 space-y-6">
-        {/* Header */}
-        <div className="flex justify-between items-center">
-          <h1 className="text-3xl font-bold">Projetos</h1>
-          <Button onClick={() => setShowNewProjectDialog(true)} className="bg-harmonia-green hover:bg-harmonia-green/90">
-            <Plus className="mr-2 h-4 w-4" />
-            Novo Projeto
-          </Button>
+    <div className="p-6 space-y-6">
+      {/* Header */}
+      <div className="flex justify-between items-center">
+        <div>
+          <h1 className="text-3xl font-bold text-gray-900">Gestão de Projetos Musicais</h1>
+          <p className="text-gray-600 mt-1">Gerencie todos os projetos de música personalizada</p>
         </div>
+        <Button 
+          onClick={() => setShowCreateForm(true)}
+          className="flex items-center gap-2"
+        >
+          <Plus className="h-4 w-4" />
+          Novo Projeto
+        </Button>
+      </div>
 
-        {/* Stats Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-          <Card>
-            <CardContent className="p-4">
-              <div className="text-2xl font-bold">{projectsLoading ? <Loader2 className="h-6 w-6 animate-spin" /> : projectStats.total}</div>
-              <p className="text-gray-600">Total</p>
-            </CardContent>
-          </Card>
-          <Card>
-            <CardContent className="p-4">
-              <div className="text-2xl font-bold text-yellow-600">{projectsLoading ? <Loader2 className="h-6 w-6 animate-spin" /> : projectStats.waiting}</div>
-              <p className="text-gray-600">Aguardando</p>
-            </CardContent>
-          </Card>
-          <Card>
-            <CardContent className="p-4">
-              <div className="text-2xl font-bold text-blue-600">{projectsLoading ? <Loader2 className="h-6 w-6 animate-spin" /> : projectStats.feedback}</div>
-              <p className="text-gray-600">Feedback</p>
-            </CardContent>
-          </Card>
-          <Card>
-            <CardContent className="p-4">
-              <div className="text-2xl font-bold text-green-600">{projectsLoading ? <Loader2 className="h-6 w-6 animate-spin" /> : projectStats.approved}</div>
-              <p className="text-gray-600">Aprovados</p>
-            </CardContent>
-          </Card>
-        </div>
-
-        {/* Filters */}
+      {/* Create Form Modal */}
+      {showCreateForm && (
         <Card>
           <CardHeader>
-            <CardTitle>Filtros</CardTitle>
+            <CardTitle>Criar Novo Projeto</CardTitle>
           </CardHeader>
-          <CardContent>
-            <div className="flex gap-4">
-              <div className="flex-1">
-                <div className="relative">
-                  <Search className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
-                  <Input
-                    placeholder="Buscar por projeto ou cliente..."
-                    value={searchTerm}
-                    onChange={(e) => setSearchTerm(e.target.value)}
-                    className="pl-9"
-                  />
-                </div>
-              </div>
-              <div className="w-48">
-                <Select value={statusFilter} onValueChange={setStatusFilter}>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Status" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="all">Todos os Status</SelectItem>
-                    <SelectItem value="waiting">Aguardando</SelectItem>
-                    <SelectItem value="feedback">Feedback</SelectItem>
-                    <SelectItem value="approved">Aprovado</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-
-        {/* Projects Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {projectsLoading ? (
-            <div className="col-span-full flex justify-center items-center p-12">
-              <Loader2 className="h-8 w-8 animate-spin text-harmonia-green" />
-              <span className="ml-2">Carregando projetos...</span>
-            </div>
-          ) : filteredProjects.length > 0 ? (
-            filteredProjects.map((project) => (
-              // Assuming ProjectCard expects DisplayProject structure or adapt ProjectCard
-              <ProjectCard key={project.id} project={project as any} />
-            ))
-          ) : (
-            <div className="col-span-full">
-              <Card>
-                <CardContent className="text-center py-12">
-                  <p className="text-gray-500 mb-4">
-                    {displayProjects.length === 0
-                      ? 'Nenhum projeto criado ainda.'
-                      : 'Nenhum projeto encontrado com os filtros aplicados.'
-                    }
-                  </p>
-                  {displayProjects.length === 0 && (
-                    <Button onClick={() => setShowNewProjectDialog(true)}>
-                      Criar Primeiro Projeto
-                    </Button>
-                  )}
-                </CardContent>
-              </Card>
-            </div>
-          )}
-        </div>
-
-        {/* New Project Dialog */}
-        <Dialog open={showNewProjectDialog} onOpenChange={setShowNewProjectDialog}>
-          <DialogContent>
-            <DialogHeader>
-              <DialogTitle>Criar Novo Projeto</DialogTitle>
-            </DialogHeader>
-            <div className="space-y-4 pt-4">
+          <CardContent className="space-y-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
-                <Label htmlFor="clientId">Cliente</Label>
-                <Select
-                  onValueChange={(value) => handleChange('clientId', value)}
-                  value={formData.clientId}
-                  disabled={clientsLoading}
-                >
+                <Label htmlFor="title">Título do Projeto *</Label>
+                <Input
+                  id="title"
+                  value={formData.title}
+                  onChange={(e) => handleInputChange('title', e.target.value)}
+                  placeholder="Ex: Música para Casamento"
+                />
+              </div>
+              
+              <div>
+                <Label htmlFor="client">Cliente *</Label>
+                <Select value={formData.clientId} onValueChange={(value) => handleInputChange('clientId', value)}>
                   <SelectTrigger>
-                    <SelectValue placeholder={clientsLoading ? "Carregando clientes..." : "Selecione um cliente"} />
+                    <SelectValue placeholder="Selecione um cliente" />
                   </SelectTrigger>
                   <SelectContent>
-                    {!clientsLoading && clients.length === 0 && (
-                      <SelectItem value="no-clients" disabled>
-                        Nenhum cliente encontrado
-                      </SelectItem>
-                    )}
-                    {!clientsLoading && clients.map((client: Client) => (
+                    {clients.map((client) => (
                       <SelectItem key={client.id} value={client.id}>
                         {client.name}
                       </SelectItem>
                     ))}
                   </SelectContent>
                 </Select>
-                {clientsError && <p className="text-red-500 text-xs mt-1">Erro ao carregar clientes.</p>}
               </div>
-              <div>
-                <Label htmlFor="title">Título do Projeto</Label>
-                <Input
-                  id="title"
-                  name="title"
-                  placeholder="Ex: Música de Aniversário - João"
-                  value={formData.title}
-                  onChange={(e) => handleChange('title', e.target.value)}
-                />
-              </div>
+              
               <div>
                 <Label htmlFor="packageType">Tipo de Pacote</Label>
-                <Select
-                  onValueChange={(value) => handleChange('packageType', value)}
-                  value={formData.packageType}
-                >
+                <Select value={formData.packageType} onValueChange={(value) => handleInputChange('packageType', value)}>
                   <SelectTrigger>
-                    <SelectValue placeholder="Selecione o pacote" />
+                    <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
                     <SelectItem value="essencial">Essencial</SelectItem>
-                    <SelectItem value="profissional">Profissional</SelectItem>
                     <SelectItem value="premium">Premium</SelectItem>
+                    <SelectItem value="completo">Completo</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
-              <div className="flex justify-end space-x-2 pt-4">
-                <Button variant="outline" onClick={() => setShowNewProjectDialog(false)}>
-                  Cancelar
-                </Button>
-                <Button
-                  onClick={handleAddProject}
-                  className="bg-harmonia-green hover:bg-harmonia-green/90"
-                  disabled={clientsLoading || !formData.clientId || isSubmitting}
-                >
-                  {isSubmitting ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
-                  {isSubmitting ? "Criando..." : "Criar Projeto"}
-                </Button>
+              
+              <div>
+                <Label htmlFor="deadline">Prazo (Opcional)</Label>
+                <Input
+                  id="deadline"
+                  type="date"
+                  value={formData.deadline}
+                  onChange={(e) => handleInputChange('deadline', e.target.value)}
+                />
               </div>
             </div>
-          </DialogContent>
-        </Dialog>
+            
+            <div>
+              <Label htmlFor="description">Descrição</Label>
+              <Textarea
+                id="description"
+                value={formData.description}
+                onChange={(e) => handleInputChange('description', e.target.value)}
+                placeholder="Descreva o projeto..."
+                rows={3}
+              />
+            </div>
+            
+            <div className="flex gap-3 pt-4">
+              <Button onClick={handleCreateProject}>
+                Criar Projeto
+              </Button>
+              <Button 
+                variant="outline" 
+                onClick={() => setShowCreateForm(false)}
+              >
+                Cancelar
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
+      {/* Filters */}
+      <div className="flex gap-4 items-center">
+        <div className="relative flex-1 max-w-sm">
+          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
+          <Input
+            placeholder="Buscar projetos..."
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            className="pl-10"
+          />
+        </div>
+        
+        <Select value={statusFilter} onValueChange={setStatusFilter}>
+          <SelectTrigger className="w-48">
+            <Filter className="h-4 w-4 mr-2" />
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">Todos os Status</SelectItem>
+            <SelectItem value="waiting">Aguardando</SelectItem>
+            <SelectItem value="feedback">Feedback</SelectItem>
+            <SelectItem value="approved">Aprovado</SelectItem>
+          </SelectContent>
+        </Select>
       </div>
-    </NewAdminLayout>
+
+      {/* Projects List */}
+      <div className="space-y-4">
+        {filteredProjects.length === 0 ? (
+          <Card>
+            <CardContent className="text-center py-8">
+              <p className="text-gray-500">Nenhum projeto encontrado</p>
+            </CardContent>
+          </Card>
+        ) : (
+          filteredProjects.map((project) => (
+            <Card key={project.id} className="hover:shadow-md transition-shadow">
+              <CardContent className="p-6">
+                <div className="flex items-center justify-between">
+                  <div className="flex-1">
+                    <div className="flex items-center gap-3 mb-2">
+                      <h3 className="text-lg font-semibold text-gray-900">{project.title}</h3>
+                      {getStatusBadge(project.status)}
+                    </div>
+                    <p className="text-gray-600 mb-2">{project.description}</p>
+                    <div className="flex items-center gap-4 text-sm text-gray-500">
+                      <span>Cliente: {project.client_name}</span>
+                      <span>Pacote: {project.package_type}</span>
+                      <span>Criado: {new Date(project.created_at).toLocaleDateString('pt-BR')}</span>
+                      {project.deadline && (
+                        <span>Prazo: {new Date(project.deadline).toLocaleDateString('pt-BR')}</span>
+                      )}
+                    </div>
+                  </div>
+                  
+                  <div className="flex items-center gap-2">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => navigate(`/admin/projects/${project.id}`)}
+                    >
+                      <Eye className="h-4 w-4 mr-1" />
+                      Ver Detalhes
+                    </Button>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          ))
+        )}
+      </div>
+    </div>
   );
 };
 
 export default NewAdminProjects;
-
