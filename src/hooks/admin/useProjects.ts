@@ -17,7 +17,7 @@ export interface Project {
   created_at: string;
   updated_at?: string;
   expires_at?: string;
-  versions?: any[]; // Para as versões
+  versions?: any[];
 }
 
 export const useProjects = () => {
@@ -47,13 +47,11 @@ export const useProjects = () => {
 
       if (error) {
         console.error('Supabase error:', error);
-        throw error;
+        setProjects([]);
+        return;
       }
 
-      console.log('Raw data from Supabase:', data);
-
-      // ✅ CORREÇÃO: Verificação robusta para lista vazia
-      const formattedProjects: Project[] = Array.isArray(data) 
+      const formattedProjects = Array.isArray(data) 
         ? data.map(project => ({
             id: project.id,
             title: project.title,
@@ -73,19 +71,14 @@ export const useProjects = () => {
             expires_at: project.expires_at,
             versions: Array.isArray(project.project_versions) ? project.project_versions : []
           }))
-        : []; // ✅ IMPORTANTE: Array vazio se data for null/undefined
+        : [];
 
-      console.log('Formatted projects:', formattedProjects);
+      console.log('Projects loaded successfully:', formattedProjects.length);
       setProjects(formattedProjects);
+      
     } catch (error) {
       console.error('Error loading projects:', error);
-      // ✅ IMPORTANTE: Definir array vazio em caso de erro
       setProjects([]);
-      toast({
-        title: "Erro ao carregar projetos",
-        description: "Não foi possível carregar a lista de projetos.",
-        variant: "destructive"
-      });
     } finally {
       setLoading(false);
     }
@@ -112,11 +105,7 @@ export const useProjects = () => {
       }
 
       console.log('Project created successfully:', data);
-
-      // ✅ CORREÇÃO: Timeout para evitar race condition
-      setTimeout(() => {
-        loadProjects();
-      }, 500);
+      await loadProjects();
 
       toast({
         title: "Projeto criado",
@@ -137,8 +126,6 @@ export const useProjects = () => {
 
   const updateProject = async (id: string, updates: Partial<Project>) => {
     try {
-      console.log('Updating project:', id, updates);
-      
       const { data, error } = await supabase
         .from('projects')
         .update({
@@ -149,18 +136,9 @@ export const useProjects = () => {
         .select()
         .single();
 
-      if (error) {
-        console.error('Error updating project:', error);
-        throw error;
-      }
+      if (error) throw error;
 
-      console.log('Project updated successfully:', data);
-
-      // ✅ CORREÇÃO: Timeout para evitar race condition
-      setTimeout(() => {
-        loadProjects();
-      }, 500);
-
+      await loadProjects();
       toast({
         title: "Projeto atualizado",
         description: "Projeto atualizado com sucesso."
@@ -180,25 +158,14 @@ export const useProjects = () => {
 
   const deleteProject = async (id: string) => {
     try {
-      console.log('Deleting project:', id);
-      
       const { error } = await supabase
         .from('projects')
         .delete()
         .eq('id', id);
 
-      if (error) {
-        console.error('Error deleting project:', error);
-        throw error;
-      }
+      if (error) throw error;
 
-      console.log('Project deleted successfully');
-
-      // ✅ CORREÇÃO: Timeout para evitar race condition
-      setTimeout(() => {
-        loadProjects();
-      }, 500);
-
+      await loadProjects();
       toast({
         title: "Projeto removido",
         description: "Projeto removido com sucesso."
@@ -216,37 +183,21 @@ export const useProjects = () => {
     }
   };
 
-  // ✅ CORREÇÃO: useEffect com timeout para evitar loop infinito
   useEffect(() => {
-    const timeoutId = setTimeout(() => {
-      loadProjects();
-    }, 100);
+    let isMounted = true;
+    
+    const initializeProjects = async () => {
+      if (isMounted) {
+        await loadProjects();
+      }
+    };
 
-    // Configurar listener para mudanças em tempo real
-    const channel = supabase
-      .channel('projects-changes')
-      .on(
-        'postgres_changes',
-        {
-          event: '*',
-          schema: 'public',
-          table: 'projects'
-        },
-        (payload) => {
-          console.log('Real-time project change detected:', payload);
-          // ✅ CORREÇÃO: Timeout para evitar múltiplos reloads
-          setTimeout(() => {
-            loadProjects();
-          }, 1000);
-        }
-      )
-      .subscribe();
+    initializeProjects();
 
     return () => {
-      clearTimeout(timeoutId);
-      supabase.removeChannel(channel);
+      isMounted = false;
     };
-  }, []); // ✅ IMPORTANTE: Array vazio para evitar re-execução
+  }, []);
 
   return {
     projects,
