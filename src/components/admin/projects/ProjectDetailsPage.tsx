@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -6,11 +7,34 @@ import { Badge } from '@/components/ui/badge';
 import { useToast } from '@/hooks/use-toast';
 import { ArrowLeft, Plus, User, Mail, Phone, Calendar, ExternalLink } from 'lucide-react';
 import NewAdminLayout from '@/components/admin/layout/NewAdminLayout';
-import { useProjects, Project } from '@/hooks/admin/useProjects'; // ✅ HOOK REAL
-import { useVersions, Version } from '@/hooks/admin/useVersions'; // ✅ HOOK REAL
-import { supabase } from '@/integrations/supabase/client'; // ✅ SUPABASE REAL
-import VersionCard from '@/components/admin/previews/VersionCard'; // ✅ COMPONENTE REAL
-import AddVersionDialog from '@/components/admin/previews/AddVersionDialog'; // ✅ COMPONENTE REAL
+import BandcampVersionCard from './BandcampVersionCard';
+import AddVersionDialog from './AddVersionDialog';
+
+interface BandcampVersion {
+  id: string;
+  name: string;
+  description?: string;
+  embedUrl: string;
+  bandcampUrl: string;
+  final?: boolean;
+  recommended?: boolean;
+  dateAdded: string;
+  albumId?: string;
+  trackId?: string;
+}
+
+interface Project {
+  id: string;
+  clientName: string;
+  title: string;
+  status: 'waiting' | 'feedback' | 'approved';
+  packageType?: string;
+  createdAt: string;
+  expirationDate?: string;
+  clientEmail?: string;
+  clientPhone?: string;
+  versions: BandcampVersion[];
+}
 
 const ProjectDetailsPage: React.FC = () => {
   const { projectId } = useParams<{ projectId: string }>();
@@ -20,91 +44,86 @@ const ProjectDetailsPage: React.FC = () => {
   const [project, setProject] = useState<Project | null>(null);
   const [showAddVersionDialog, setShowAddVersionDialog] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
-  
-  // ✅ USAR HOOKS REAIS:
-  const { versions, loading: versionsLoading, addVersion, deleteVersion } = useVersions(projectId);
 
-  // ✅ CARREGAR DADOS REAIS DO SUPABASE:
+  // Mock data - em produção viria do Supabase
   useEffect(() => {
-    const loadProject = async () => {
-      if (!projectId) {
-        setIsLoading(false);
-        return;
-      }
-
-      try {
-        setIsLoading(true);
-        console.log('🔍 Loading project:', projectId);
-        
-        const { data, error } = await supabase
-          .from('projects')
-          .select('*')
-          .eq('id', projectId)
-          .single();
-
-        if (error) {
-          console.error('❌ Error loading project:', error);
-          toast({
-            title: "Erro ao carregar projeto",
-            description: "Não foi possível carregar os dados do projeto.",
-            variant: "destructive"
-          });
-          return;
-        }
-
-        if (!data) {
-          console.log('⚠️ Project not found');
-          return;
-        }
-
-        console.log('✅ Project loaded:', data);
-        setProject(data);
-        
-      } catch (error) {
-        console.error('💥 Error loading project:', error);
-        toast({
-          title: "Erro inesperado",
-          description: "Ocorreu um erro ao carregar o projeto.",
-          variant: "destructive"
-        });
-      } finally {
-        setIsLoading(false);
-      }
+    const loadProject = () => {
+      setIsLoading(true);
+      
+      // Simulação de dados do projeto
+      const mockProject: Project = {
+        id: projectId || '1',
+        clientName: 'João Silva',
+        title: 'Música Personalizada - João Silva',
+        status: 'waiting',
+        packageType: 'Premium',
+        createdAt: '15/01/2024',
+        expirationDate: '15/02/2024',
+        clientEmail: 'joao@email.com',
+        clientPhone: '+55 11 99999-9999',
+        versions: [
+          {
+            id: '1',
+            name: 'Versão 1 - Mix Inicial',
+            description: 'Primeira versão com arranjo básico',
+            embedUrl: 'https://bandcamp.com/EmbeddedPlayer/album=4290875691/size=small/bgcol=333333/linkcol=2ebd35/track=2755730140/transparent=true/',
+            bandcampUrl: 'https://harmonia-media.bandcamp.com/track/vozes-em-harmonia-ex-05',
+            final: false,
+            recommended: true,
+            dateAdded: '15/01/2024',
+            albumId: '4290875691',
+            trackId: '2755730140'
+          }
+        ]
+      };
+      
+      setProject(mockProject);
+      setIsLoading(false);
     };
 
-    loadProject();
-  }, [projectId, toast]);
+    if (projectId) {
+      loadProject();
+    }
+  }, [projectId]);
 
-  const handleAddVersion = async (versionData: Omit<Version, 'id' | 'created_at' | 'updated_at'>) => {
+  const handleAddVersion = (newVersion: BandcampVersion) => {
     if (!project) return;
 
-    console.log('🆕 Adding version to project:', versionData);
+    console.log('Adding version to project:', newVersion);
     
-    const newVersion = await addVersion(versionData);
-    
-    if (newVersion) {
-      toast({
-        title: "Versão adicionada",
-        description: `${versionData.name} foi adicionada ao projeto.`
-      });
-    }
+    setProject(prev => {
+      if (!prev) return null;
+      return {
+        ...prev,
+        versions: [...prev.versions, newVersion]
+      };
+    });
+
+    toast({
+      title: "Versão adicionada",
+      description: `${newVersion.name} foi adicionada ao projeto.`
+    });
   };
 
-  const handleDeleteVersion = async (versionId: string) => {
+  const handleDeleteVersion = (versionId: string) => {
     if (!project) return;
 
-    const versionToDelete = versions.find(v => v.id === versionId);
+    const versionToDelete = project.versions.find(v => v.id === versionId);
     if (!versionToDelete) return;
 
-    const success = await deleteVersion(versionId);
-    
-    if (success) {
-      toast({
-        title: "Versão removida",
-        description: `${versionToDelete.name} foi removida do projeto.`,
-        variant: "destructive"
-      });
-    }
+    setProject(prev => {
+      if (!prev) return null;
+      return {
+        ...prev,
+        versions: prev.versions.filter(v => v.id !== versionId)
+      };
+    });
+
+    toast({
+      title: "Versão removida",
+      description: `${versionToDelete.name} foi removida do projeto.`,
+      variant: "destructive"
+    });
   };
 
   const getStatusBadge = (status: string) => {
@@ -124,16 +143,7 @@ const ProjectDetailsPage: React.FC = () => {
   };
 
   const copyClientPreviewLink = () => {
-    if (!project?.preview_code) {
-      toast({
-        title: "Erro",
-        description: "Preview code não encontrado.",
-        variant: "destructive"
-      });
-      return;
-    }
-
-    const previewUrl = `${window.location.origin}/client-preview/${project.preview_code}`; // ✅ USAR PREVIEW_CODE REAL
+    const previewUrl = `${window.location.origin}/client-preview/${projectId}`;
     navigator.clipboard.writeText(previewUrl).then(() => {
       toast({
         title: "Link copiado!",
@@ -189,7 +199,7 @@ const ProjectDetailsPage: React.FC = () => {
               Voltar
             </Button>
             <div>
-              <h1 className="text-3xl font-bold">{project.title}</h1> {/* ✅ DADOS REAIS */}
+              <h1 className="text-3xl font-bold">{project.title}</h1>
               <p className="text-gray-600">Gerenciamento do projeto</p>
             </div>
           </div>
@@ -209,18 +219,18 @@ const ProjectDetailsPage: React.FC = () => {
             <CardContent className="space-y-3">
               <div className="flex items-center">
                 <User className="w-4 h-4 mr-2 text-gray-400" />
-                <span>{project.client_name}</span> {/* ✅ DADOS REAIS */}
+                <span>{project.clientName}</span>
               </div>
-              {project.client_email && (
+              {project.clientEmail && (
                 <div className="flex items-center">
                   <Mail className="w-4 h-4 mr-2 text-gray-400" />
-                  <span>{project.client_email}</span> {/* ✅ DADOS REAIS */}
+                  <span>{project.clientEmail}</span>
                 </div>
               )}
-              {project.client_phone && (
+              {project.clientPhone && (
                 <div className="flex items-center">
                   <Phone className="w-4 h-4 mr-2 text-gray-400" />
-                  <span>{project.client_phone}</span> {/* ✅ DADOS REAIS */}
+                  <span>{project.clientPhone}</span>
                 </div>
               )}
             </CardContent>
@@ -234,23 +244,20 @@ const ProjectDetailsPage: React.FC = () => {
             <CardContent className="space-y-3">
               <div className="flex items-center">
                 <Calendar className="w-4 h-4 mr-2 text-gray-400" />
-                <span>Criado em: {new Date(project.created_at).toLocaleDateString('pt-BR')}</span> {/* ✅ DADOS REAIS */}
+                <span>Criado em: {project.createdAt}</span>
               </div>
-              {project.package_type && (
+              {project.packageType && (
                 <div>
-                  <span className="font-medium">Pacote:</span> {project.package_type} {/* ✅ DADOS REAIS */}
+                  <span className="font-medium">Pacote:</span> {project.packageType}
                 </div>
               )}
-              {project.expires_at && (
+              {project.expirationDate && (
                 <div>
-                  <span className="font-medium">Expira em:</span> {new Date(project.expires_at).toLocaleDateString('pt-BR')} {/* ✅ DADOS REAIS */}
+                  <span className="font-medium">Expira em:</span> {project.expirationDate}
                 </div>
               )}
               <div>
-                <span className="font-medium">Versões:</span> {versions.length} {/* ✅ DADOS REAIS */}
-              </div>
-              <div>
-                <span className="font-medium">Preview Code:</span> {project.preview_code} {/* ✅ DADOS REAIS */}
+                <span className="font-medium">Versões:</span> {project.versions.length}
               </div>
             </CardContent>
           </Card>
@@ -274,7 +281,6 @@ const ProjectDetailsPage: React.FC = () => {
               <Button
                 variant="outline"
                 onClick={copyClientPreviewLink}
-                disabled={!project.preview_code}
               >
                 <ExternalLink className="w-4 h-4 mr-2" />
                 Copiar Link Cliente
@@ -287,18 +293,13 @@ const ProjectDetailsPage: React.FC = () => {
         <div className="space-y-4">
           <div className="flex items-center justify-between">
             <h2 className="text-2xl font-bold">Versões do Projeto</h2>
-            <span className="text-gray-500">{versions.length} versões</span> {/* ✅ DADOS REAIS */}
+            <span className="text-gray-500">{project.versions.length} versões</span>
           </div>
           
-          {versionsLoading ? (
-            <div className="text-center py-8">
-              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-harmonia-green mx-auto mb-4"></div>
-              <p>Carregando versões...</p>
-            </div>
-          ) : versions.length > 0 ? (
+          {project.versions.length > 0 ? (
             <div className="space-y-4">
-              {versions.map((version) => (
-                <VersionCard
+              {project.versions.map((version) => (
+                <BandcampVersionCard
                   key={version.id}
                   version={version}
                   projectId={project.id}
@@ -328,7 +329,7 @@ const ProjectDetailsPage: React.FC = () => {
           onOpenChange={setShowAddVersionDialog}
           projectId={project.id}
           onAddVersion={handleAddVersion}
-          packageType={project.package_type}
+          packageType={project.packageType}
         />
       </div>
     </NewAdminLayout>
