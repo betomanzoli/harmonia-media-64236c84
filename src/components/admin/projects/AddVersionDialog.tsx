@@ -13,7 +13,7 @@ interface AddVersionDialogProps {
   isOpen: boolean;
   setIsOpen: (isOpen: boolean) => void;
   projectId: string;
-  onVersionAdded?: () => void; // ✅ Callback para recarregar versões
+  onVersionAdded?: () => void;
 }
 
 // ✅ FUNÇÃO MELHORADA PARA EXTRAIR URL DO BANDCAMP:
@@ -110,15 +110,14 @@ const AddVersionDialog: React.FC<AddVersionDialogProps> = ({
         throw new Error('Código ou URL inválido. Cole o código completo do iframe ou a URL do track.');
       }
 
-      // ✅ INSERIR SEM ESPECIFICAR ID (deixar auto-gerar):
+      // ✅ INSERIR SEM TIMESTAMPS MANUAIS (OPÇÃO 2):
       const insertData = {
         project_id: projectId,
         name: versionName,
         description: description || null,
-        bandcamp_url: embedUrl || fallbackUrl, // ✅ Usar campo correto
-        recommended: isRecommended,
-        created_at: new Date().toISOString(),
-        updated_at: new Date().toISOString()
+        bandcamp_url: embedUrl || fallbackUrl,
+        recommended: isRecommended
+        // ✅ SEM created_at e updated_at - deixar o Supabase gerar automaticamente
       };
 
       console.log('[Add Version] Insert data:', insertData);
