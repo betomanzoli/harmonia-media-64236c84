@@ -1,33 +1,33 @@
-import React, { useState, useEffect } from 'react'; // Added useEffect
+
+import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Plus, Search, Loader2 } from 'lucide-react'; // Added Loader2
+import { Plus, Search, Loader2 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import NewAdminLayout from '@/components/admin/layout/NewAdminLayout';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import ProjectCard from '@/components/admin/projects/ProjectCard';
-import { useClients, type Client } from '@/hooks/admin/useClients'; // Import useClients hook and Client type
-import { useProjects, type Project } from '@/hooks/admin/useProjects'; // Import useProjects hook and Project type
+import { useClients, type Client } from '@/hooks/admin/useClients';
+import { useProjects, type Project } from '@/hooks/admin/useProjects';
 
-// Define Project type for local state (might differ slightly from hook's Project type if needed)
 interface DisplayProject {
   id: string;
   clientName: string;
   clientId?: string;
   title: string;
   status: 'waiting' | 'feedback' | 'approved';
-  versionsCount: number; // Assuming this comes from project.versions.length
+  versionsCount: number;
   createdAt: string;
   lastActivity: string;
 }
 
 const NewAdminProjects: React.FC = () => {
   const { toast } = useToast();
-  const { clients, isLoading: clientsLoading, error: clientsError } = useClients(); // Use the clients hook
-  const { projects: fetchedProjects, loading: projectsLoading, createProject, reloadProjects } = useProjects(); // Use the projects hook
+  const { clients, isLoading: clientsLoading } = useClients();
+  const { projects: fetchedProjects, isLoading: projectsLoading, createProject } = useProjects();
 
   const [displayProjects, setDisplayProjects] = useState<DisplayProject[]>([]);
   const [showNewProjectDialog, setShowNewProjectDialog] = useState(false);
@@ -35,36 +35,24 @@ const NewAdminProjects: React.FC = () => {
   const [statusFilter, setStatusFilter] = useState('all');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [formData, setFormData] = useState({
-    clientId: '', // Use clientId
+    clientId: '',
     title: '',
     packageType: ''
   });
 
-  // Transform fetched projects to display format when they load/change
   useEffect(() => {
     const formatted = (fetchedProjects || []).map(p => ({
       id: p.id,
-      clientName: p.client_name || 'Cliente Desconhecido', // Use client_name from project data
-      clientId: p.client_id,
+      clientName: p.client_name || 'Cliente Desconhecido',
+      clientId: p.client_name,
       title: p.title,
       status: p.status,
       versionsCount: p.versions?.length || 0,
       createdAt: new Date(p.created_at).toLocaleDateString('pt-BR'),
-      lastActivity: p.updated_at ? new Date(p.updated_at).toLocaleDateString('pt-BR') : new Date(p.created_at).toLocaleDateString('pt-BR')
+      lastActivity: new Date(p.created_at).toLocaleDateString('pt-BR')
     }));
     setDisplayProjects(formatted);
   }, [fetchedProjects]);
-
-  // Handle client loading errors
-  useEffect(() => {
-    if (clientsError) {
-      toast({
-        title: "Erro ao carregar clientes",
-        description: clientsError.message || "Não foi possível buscar a lista de clientes.",
-        variant: "destructive"
-      });
-    }
-  }, [clientsError, toast]);
 
   const handleAddProject = async () => {
     const selectedClient = clients.find(c => c.id === formData.clientId);
@@ -80,32 +68,25 @@ const NewAdminProjects: React.FC = () => {
 
     setIsSubmitting(true);
     try {
-      // Prepare data for createProject hook (matching its expected input)
       const projectDataForHook = {
         title: formData.title,
-        client_id: selectedClient.id,
-        client_name: selectedClient.name, // Include client name if needed by hook/table
-        client_email: selectedClient.email, // Include email if needed
+        client_name: selectedClient.name,
+        client_email: selectedClient.email,
         package_type: formData.packageType,
-        status: 'waiting' as 'waiting', // Set initial status
-        // Add other necessary fields required by the 'projects' table
+        status: 'waiting' as 'waiting',
       };
 
-      const created = await createProject(projectDataForHook);
+      const result = await createProject(projectDataForHook);
 
-      if (created) {
+      if (result.success) {
         toast({
           title: "Projeto criado",
           description: `O projeto "${formData.title}" para ${selectedClient.name} foi criado com sucesso.`
         });
         setShowNewProjectDialog(false);
-        setFormData({ clientId: '', title: '', packageType: '' }); // Reset form
-        // reloadProjects(); // Listener should handle this, but uncomment if needed
-      } else {
-        // Error toast is handled within the hook
+        setFormData({ clientId: '', title: '', packageType: '' });
       }
     } catch (error) {
-      // Error toast is handled within the hook
       console.error("Error in handleAddProject:", error);
     } finally {
       setIsSubmitting(false);
@@ -116,7 +97,6 @@ const NewAdminProjects: React.FC = () => {
     setFormData(prev => ({ ...prev, [name]: value }));
   };
 
-  // Filter projects based on displayProjects state
   const filteredProjects = displayProjects.filter(project => {
     const matchesSearch = project.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
                          project.clientName.toLowerCase().includes(searchTerm.toLowerCase());
@@ -124,7 +104,6 @@ const NewAdminProjects: React.FC = () => {
     return matchesSearch && matchesStatus;
   });
 
-  // Calculate stats based on displayProjects state
   const projectStats = {
     total: displayProjects.length,
     waiting: displayProjects.filter(p => p.status === 'waiting').length,
@@ -216,7 +195,6 @@ const NewAdminProjects: React.FC = () => {
             </div>
           ) : filteredProjects.length > 0 ? (
             filteredProjects.map((project) => (
-              // Assuming ProjectCard expects DisplayProject structure or adapt ProjectCard
               <ProjectCard key={project.id} project={project as any} />
             ))
           ) : (
@@ -270,7 +248,6 @@ const NewAdminProjects: React.FC = () => {
                     ))}
                   </SelectContent>
                 </Select>
-                {clientsError && <p className="text-red-500 text-xs mt-1">Erro ao carregar clientes.</p>}
               </div>
               <div>
                 <Label htmlFor="title">Título do Projeto</Label>
@@ -320,4 +297,3 @@ const NewAdminProjects: React.FC = () => {
 };
 
 export default NewAdminProjects;
-

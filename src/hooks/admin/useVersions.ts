@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
@@ -7,10 +8,10 @@ export interface Version {
   project_id: string;
   name: string;
   description?: string;
-  bandcamp_url?: string;
+  audio_url?: string;
   recommended: boolean;
   created_at: string;
-  updated_at?: string;
+  version_id: string;
 }
 
 export const useVersions = (projectId?: string) => {
@@ -56,7 +57,7 @@ export const useVersions = (projectId?: string) => {
     }
   };
 
-  const addVersion = async (versionData: Omit<Version, 'id' | 'created_at' | 'updated_at'>) => {
+  const addVersion = async (versionData: Omit<Version, 'id' | 'created_at'>) => {
     try {
       console.log('Creating version with data:', versionData);
       
@@ -64,8 +65,7 @@ export const useVersions = (projectId?: string) => {
         .from('project_versions')
         .insert([{
           ...versionData,
-          created_at: new Date().toISOString(),
-          updated_at: new Date().toISOString()
+          created_at: new Date().toISOString()
         }])
         .select()
         .single();
@@ -99,10 +99,7 @@ export const useVersions = (projectId?: string) => {
     try {
       const { data, error } = await supabase
         .from('project_versions')
-        .update({
-          ...updates,
-          updated_at: new Date().toISOString()
-        })
+        .update(updates)
         .eq('id', id)
         .select()
         .single();
