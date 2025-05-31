@@ -3,7 +3,7 @@ import React from 'react';
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import { ThemeProvider } from '@/components/ui/theme-provider';
 import { Toaster } from '@/components/ui/toaster';
-import { AuthProvider } from '@/contexts/AuthContext';
+import { AuthContextProvider } from '@/contexts/AuthContext';
 import { AdminAuthProvider } from '@/components/admin/auth/AdminAuthProvider';
 import ScrollToTop from '@/components/ScrollToTop';
 
@@ -11,20 +11,23 @@ import ScrollToTop from '@/components/ScrollToTop';
 import Home from '@/pages/Home';
 import Services from '@/pages/Services';
 import Portfolio from '@/pages/Portfolio';
-import Contact from '@/pages/Contact';
+import ContactUs from '@/pages/ContactUs';
 import ThankYou from '@/pages/ThankYou';
-import Qualificacao from '@/pages/Qualificacao';
-import Briefing from '@/pages/Briefing';
+import AudioDatabase from '@/pages/AudioDatabase';
+import QualificationForm from '@/pages/QualificationForm';
+import BriefingForm from '@/pages/BriefingForm';
 import OrderTracking from '@/pages/OrderTracking';
-import Payment from '@/pages/Payment';
-import PaymentReturn from '@/pages/PaymentReturn';
+import PaymentPage from '@/pages/PaymentPage';
+import PaymentSuccess from '@/pages/PaymentSuccess';
+import PaymentError from '@/pages/PaymentError';
+import PaymentPending from '@/pages/PaymentPending';
 import Calculator from '@/pages/Calculator';
 import MusicPreviews from '@/pages/MusicPreviews';
 import PreviewPage from '@/pages/PreviewPage';
 import ClientPreview from '@/pages/ClientPreview';
 
 // Páginas admin
-import NewAdminLogin from '@/pages/admin/NewAdminLogin';
+import AdminLogin from '@/pages/admin/AdminLogin';
 import NewAdminDashboard from '@/pages/admin/NewAdminDashboard';
 import NewAdminProjects from '@/pages/admin/NewAdminProjects';
 import NewAdminClients from '@/pages/admin/NewAdminClients';
@@ -36,7 +39,7 @@ import ProtectedRoute from '@/components/admin/auth/ProtectedRoute';
 
 function App() {
   return (
-    <AuthProvider>
+    <AuthContextProvider>
       <ThemeProvider defaultTheme="light" storageKey="vite-ui-theme">
         <AdminAuthProvider>
           <Router>
@@ -46,14 +49,17 @@ function App() {
                 <Route path="/" element={<Home />} />
                 <Route path="/servicos" element={<Services />} />
                 <Route path="/portfolio" element={<Portfolio />} />
-                <Route path="/contato" element={<Contact />} />
+                <Route path="/contato" element={<ContactUs />} />
                 <Route path="/obrigado" element={<ThankYou />} />
-                <Route path="/qualificacao" element={<Qualificacao />} />
-                <Route path="/briefing" element={<Briefing />} />
+                <Route path="/qualificacao" element={<QualificationForm />} />
+                <Route path="/briefing" element={<BriefingForm />} />
                 <Route path="/acompanhar-pedido" element={<OrderTracking />} />
-                <Route path="/pagamento" element={<Payment />} />
-                <Route path="/pagamento/retorno" element={<PaymentReturn />} />
+                <Route path="/pagamento" element={<PaymentPage />} />
+                <Route path="/pagamento/sucesso" element={<PaymentSuccess />} />
+                <Route path="/pagamento/erro" element={<PaymentError />} />
+                <Route path="/pagamento/pendente" element={<PaymentPending />} />
                 <Route path="/calculadora" element={<Calculator />} />
+                <Route path="/audio-database" element={<AudioDatabase />} />
                 
                 {/* Rotas de preview */}
                 <Route path="/preview/:previewId" element={<MusicPreviews />} />
@@ -61,7 +67,7 @@ function App() {
                 <Route path="/client-preview/:previewCode" element={<ClientPreview />} />
                 
                 {/* Rotas admin */}
-                <Route path="/admin/login" element={<NewAdminLogin />} />
+                <Route path="/admin/login" element={<AdminLogin />} />
                 <Route path="/admin" element={
                   <ProtectedRoute>
                     <NewAdminDashboard />
@@ -98,7 +104,7 @@ function App() {
           </Router>
         </AdminAuthProvider>
       </ThemeProvider>
-    </AuthProvider>
+    </AuthContextProvider>
   );
 }
 
