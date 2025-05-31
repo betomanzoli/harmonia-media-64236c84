@@ -13,7 +13,7 @@ export class BandcampUtils {
         const trackId = this.generateIdFromName(trackName);
         
         // Para tracks individuais, precisamos também do album ID
-        const albumId = this.generateIdFromName('portfolio-mix-de-estilos'); // ID do álbum padrão
+        const albumId = this.generateIdFromName('portfolio-mix-de-estilos');
         return { albumId, trackId };
       }
       
@@ -32,7 +32,7 @@ export class BandcampUtils {
   }
   
   private static generateIdFromName(name: string): string {
-    // Usar IDs específicos conhecidos para o Bandcamp da harmonIA
+    // IDs conhecidos do Bandcamp da harmonIA
     const knownIds: { [key: string]: string } = {
       'pop-bai-o-pop-mainstream-bai-o': '3655073869',
       'portfolio-mix-de-estilos': '3897753197',
@@ -62,13 +62,10 @@ export class BandcampUtils {
       let embedUrl = 'https://bandcamp.com/EmbeddedPlayer/';
       
       if (albumId && trackId) {
-        // Para tracks específicos dentro de um álbum
         embedUrl += `album=${albumId}/size=small/bgcol=ffffff/linkcol=2ebd35/track=${trackId}/transparent=true/`;
       } else if (albumId) {
-        // Para álbum completo
         embedUrl += `album=${albumId}/size=small/bgcol=ffffff/linkcol=2ebd35/transparent=true/`;
       } else if (trackId) {
-        // Para track individual
         embedUrl += `track=${trackId}/size=small/bgcol=ffffff/linkcol=2ebd35/transparent=true/`;
       } else {
         return '';
