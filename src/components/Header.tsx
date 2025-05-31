@@ -2,7 +2,6 @@
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { Menu, X } from 'lucide-react';
-import HarmoniaLogo from './ui/HarmoniaLogo';
 
 const Header = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -17,7 +16,12 @@ const Header = () => {
         <div className="flex justify-between items-center py-4">
           {/* Logo */}
           <Link to="/" className="flex items-center">
-            <HarmoniaLogo size="md" showText={true} />
+            <div className="flex items-center">
+              <div className="w-10 h-10 bg-harmonia-green rounded-lg flex items-center justify-center mr-3">
+                <span className="text-white font-bold text-lg">hA</span>
+              </div>
+              <span className="text-xl font-bold text-gray-800">harmonIA</span>
+            </div>
           </Link>
 
           {/* Desktop Navigation */}

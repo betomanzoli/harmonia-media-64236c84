@@ -5,7 +5,7 @@ import { supabase } from '@/integrations/supabase/client';
 export interface PreviewVersion {
   id: string;
   title: string;
-  description: string; // Make required to match MusicPreview
+  description: string;
   audioUrl: string;
   recommended?: boolean;
 }
@@ -47,6 +47,8 @@ export const usePreviewProject = (projectId?: string) => {
       try {
         setIsLoading(true);
         
+        console.log('Loading project data for ID:', projectId);
+        
         // Load project data
         const { data: project, error: projectError } = await supabase
           .from('projects')
@@ -54,7 +56,12 @@ export const usePreviewProject = (projectId?: string) => {
           .eq('id', projectId)
           .single();
 
-        if (projectError) throw projectError;
+        if (projectError) {
+          console.error('Project error:', projectError);
+          throw projectError;
+        }
+
+        console.log('Project loaded:', project);
 
         // Load project versions
         const { data: versions, error: versionsError } = await supabase
@@ -63,7 +70,12 @@ export const usePreviewProject = (projectId?: string) => {
           .eq('project_id', projectId)
           .order('created_at', { ascending: false });
 
-        if (versionsError) throw versionsError;
+        if (versionsError) {
+          console.error('Versions error:', versionsError);
+          throw versionsError;
+        }
+
+        console.log('Versions loaded:', versions);
 
         // Transform versions to preview format
         const previews: PreviewVersion[] = (versions || []).map(version => ({
@@ -74,6 +86,8 @@ export const usePreviewProject = (projectId?: string) => {
           recommended: version.recommended || false
         }));
 
+        console.log('Transformed previews:', previews);
+
         // Load feedback history
         const { data: feedback, error: feedbackError } = await supabase
           .from('feedback')
@@ -81,7 +95,10 @@ export const usePreviewProject = (projectId?: string) => {
           .eq('project_id', projectId)
           .order('created_at', { ascending: false });
 
-        if (feedbackError) throw feedbackError;
+        if (feedbackError) {
+          console.error('Feedback error:', feedbackError);
+          // Don't throw here, feedback is optional
+        }
 
         setProjectData({
           projectTitle: project.title || 'Projeto Musical',
