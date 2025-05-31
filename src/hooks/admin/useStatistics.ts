@@ -1,6 +1,5 @@
+
 import { useState, useEffect } from 'react';
-import { useProjects } from '@/hooks/admin/useProjects';
-import { useClients } from '@/hooks/admin/useClients';
 
 // Types for statistics data
 interface CountsData {
@@ -26,9 +25,6 @@ interface Project {
 }
 
 export const useStatistics = () => {
-  const { projects } = useProjects(); // ✅ DADOS REAIS
-  const { clients } = useClients(); // ✅ DADOS REAIS
-  
   const [counts, setCounts] = useState<CountsData>({
     projects: 0,
     portfolio: 0,
@@ -47,30 +43,24 @@ export const useStatistics = () => {
   const [recentProjects, setRecentProjects] = useState<Project[]>([]);
   
   useEffect(() => {
+    // Fetch statistics from localStorage or API
     const fetchStatistics = () => {
       try {
-        // ✅ USAR DADOS REAIS DO SUPABASE
-        const totalProjects = projects.length;
-        const totalClients = clients.length;
-        
-        // Calcular estatísticas baseadas em dados reais
+        // Get projects data
+        const savedProjects = JSON.parse(localStorage.getItem('preview-projects') || '[]');
         const portfolioItems = JSON.parse(localStorage.getItem('portfolio-items') || '[]');
+        
+        // Calculate statistics
+        const totalProjects = savedProjects.length + 3; // Add some mock projects
         const totalPortfolio = portfolioItems.length;
+        const totalClients = Math.max(1, Math.floor(totalProjects * 0.8)); // Assume 80% of projects are from unique clients
+        const totalRevenue = totalProjects * 1500; // Average project value
         
-        // Calcular receita baseada em projetos reais
-        const averageProjectValue = 1500; // Valor médio por projeto
-        const totalRevenue = totalProjects * averageProjectValue;
+        setPendingProjects(Math.floor(totalProjects * 0.3));
+        setFeedbackProjects(Math.floor(totalProjects * 0.2));
+        setCompletedProjects(Math.floor(totalProjects * 0.5));
         
-        // Calcular status dos projetos baseado em dados reais
-        const pending = projects.filter(p => p.status === 'waiting').length;
-        const feedback = projects.filter(p => p.status === 'feedback').length;
-        const completed = projects.filter(p => p.status === 'approved').length;
-        
-        setPendingProjects(pending);
-        setFeedbackProjects(feedback);
-        setCompletedProjects(completed);
-        
-        // Set counts com dados reais
+        // Set counts
         setCounts({
           projects: totalProjects,
           portfolio: totalPortfolio,
@@ -78,127 +68,114 @@ export const useStatistics = () => {
           revenue: totalRevenue
         });
         
-        // Generate chart data baseado em dados reais
+        // Generate chart data
         generateChartData(totalProjects, totalRevenue, totalClients);
         
-        // Generate recent projects com dados reais
-        generateRecentProjects(projects);
+        // Generate recent projects
+        generateRecentProjects(savedProjects);
         
       } catch (error) {
         console.error('Error loading statistics:', error);
-        // Set fallback data apenas se não houver dados reais
-        if (projects.length === 0) {
-          setCounts({
-            projects: 0,
-            portfolio: 0,
-            clients: 0,
-            revenue: 0
-          });
-          
-          setPendingProjects(0);
-          setFeedbackProjects(0);
-          setCompletedProjects(0);
-          
-          generateChartData(0, 0, 0);
-          generateRecentProjects([]);
-        }
+        // Set fallback data
+        setCounts({
+          projects: 5,
+          portfolio: 3,
+          clients: 4,
+          revenue: 7500
+        });
+        
+        setPendingProjects(2);
+        setFeedbackProjects(1);
+        setCompletedProjects(2);
+        
+        generateChartData(5, 7500, 4);
+        generateRecentProjects([]);
       }
     };
     
     fetchStatistics();
-  }, [projects, clients]); // ✅ DEPENDÊNCIAS REAIS
+  }, []);
   
-  const generateChartData = (projectsCount: number, revenue: number, clientsCount: number) => {
+  const generateChartData = (projects: number, revenue: number, clients: number) => {
     const months = ['Jan', 'Fev', 'Mar', 'Abr', 'Mai', 'Jun'];
     
-    // Generate projects data baseado em dados reais
-    const projectsChartData = months.map((month, index) => {
-      if (projectsCount === 0) return { name: month, value: 0 };
-      
-      return {
-        name: month,
-        value: index === months.length - 1 
-          ? Math.floor(projectsCount * 0.4) // Mês atual com mais atividade
-          : Math.floor(Math.random() * Math.max(1, projectsCount * 0.2)) + (projectsCount > 0 ? 1 : 0)
-      };
-    });
+    // Generate projects data with random distribution
+    const projectsChartData = months.map((month, index) => ({
+      name: month,
+      value: index === months.length - 1 
+        ? Math.floor(projects * 0.3) 
+        : Math.floor(Math.random() * (projects * 0.2)) + 1
+    }));
     
-    // Generate revenue data baseado em dados reais
-    const revenueChartData = months.map((month, index) => {
-      if (revenue === 0) return { name: month, value: 0 };
-      
-      return {
-        name: month,
-        value: index === months.length - 1 
-          ? Math.floor(revenue * 0.4) 
-          : Math.floor(Math.random() * Math.max(1000, revenue * 0.2)) + (revenue > 0 ? 1000 : 0)
-      };
-    });
+    // Generate revenue data with random distribution
+    const revenueChartData = months.map((month, index) => ({
+      name: month,
+      value: index === months.length - 1 
+        ? Math.floor(revenue * 0.3) 
+        : Math.floor(Math.random() * (revenue * 0.2)) + 1000
+    }));
     
-    // Generate clients data baseado em dados reais
-    const clientsChartData = months.map((month, index) => {
-      if (clientsCount === 0) return { name: month, value: 0 };
-      
-      return {
-        name: month,
-        value: index === months.length - 1 
-          ? Math.floor(clientsCount * 0.4) 
-          : Math.floor(Math.random() * Math.max(1, clientsCount * 0.2)) + (clientsCount > 0 ? 1 : 0)
-      };
-    });
+    // Generate clients data with random distribution
+    const clientsChartData = months.map((month, index) => ({
+      name: month,
+      value: index === months.length - 1 
+        ? Math.floor(clients * 0.3) 
+        : Math.floor(Math.random() * (clients * 0.2)) + 1
+    }));
     
     setProjectsData(projectsChartData);
     setRevenueData(revenueChartData);
     setClientsData(clientsChartData);
   };
   
-  const generateRecentProjects = (realProjects: any[]) => {
-    // ✅ CONVERTER PROJETOS REAIS PARA O FORMATO CORRETO
-    const formattedProjects = realProjects.map((project: any) => {
-      // Mapear status do Supabase para status do dashboard
-      let status: 'pending' | 'feedback' | 'completed' = 'pending';
-      switch (project.status) {
-        case 'waiting':
-          status = 'pending';
-          break;
-        case 'feedback':
-          status = 'feedback';
-          break;
-        case 'approved':
-          status = 'completed';
-          break;
-        default:
-          status = 'pending';
-      }
-      
-      // Calcular valor baseado no tipo de pacote
-      let value = 'R$ 997,00'; // Valor padrão
-      switch (project.package_type) {
-        case 'essencial':
-          value = 'R$ 997,00';
-          break;
-        case 'profissional':
-          value = 'R$ 1.997,00';
-          break;
-        case 'premium':
-          value = 'R$ 2.997,00';
-          break;
-        default:
-          value = 'R$ 1.497,00';
-      }
-      
-      return {
-        id: project.id,
-        title: project.title,
-        client: project.client_name || 'Cliente',
-        status,
-        date: new Date(project.created_at).toLocaleDateString('pt-BR'),
-        value,
-        type: project.package_type || 'Essencial'
-      };
-    });
+  const generateRecentProjects = (savedProjects: any[]) => {
+    // Convert saved projects to the correct format
+    const formattedProjects = savedProjects.map((project: any) => ({
+      id: project.id || `PROJ-${Math.floor(Math.random() * 1000)}`,
+      title: project.title || `Projeto ${Math.floor(Math.random() * 100)}`,
+      client: project.clientName || 'Cliente',
+      status: project.status || (['pending', 'feedback', 'completed'] as const)[Math.floor(Math.random() * 3)],
+      date: project.createdAt || new Date().toLocaleDateString('pt-BR'),
+      value: `R$ ${(Math.floor(Math.random() * 2000) + 997).toLocaleString('pt-BR')}`,
+      type: project.packageType || (['Essencial', 'Profissional', 'Premium'])[Math.floor(Math.random() * 3)]
+    }));
     
-    // Ordenar por data (mais recentes primeiro) e pegar os primeiros 5
+    // Add some mock projects if there are not enough
+    if (formattedProjects.length < 5) {
+      const mockProjects = [
+        {
+          id: 'PROJ-001',
+          title: 'Música para Casamento',
+          client: 'João Silva',
+          status: 'completed' as const,
+          date: '10/04/2025',
+          value: 'R$ 1.997,00',
+          type: 'Profissional'
+        },
+        {
+          id: 'PROJ-002',
+          title: 'Jingle para Produto',
+          client: 'Maria Oliveira',
+          status: 'feedback' as const,
+          date: '15/04/2025',
+          value: 'R$ 2.997,00',
+          type: 'Premium'
+        },
+        {
+          id: 'PROJ-003',
+          title: 'Música de Aniversário',
+          client: 'Carlos Santos',
+          status: 'pending' as const,
+          date: '20/04/2025',
+          value: 'R$ 997,00',
+          type: 'Essencial'
+        }
+      ];
+      
+      formattedProjects.push(...mockProjects.slice(0, 5 - formattedProjects.length));
+    }
+    
+    // Sort by date (newest first) and take the first 5
     const sortedProjects = formattedProjects.sort((a, b) => {
       const dateA = new Date(a.date.split('/').reverse().join('-'));
       const dateB = new Date(b.date.split('/').reverse().join('-'));
