@@ -1,14 +1,13 @@
-
 import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Link } from 'react-router-dom';
 import { Eye, Send, Clock, FileCheck, MessageSquare, Loader2 } from 'lucide-react';
-import { ProjectItem } from '@/hooks/admin/usePreviewProjects';
+import { Project } from '@/hooks/admin/useProjects'; // ✅ CORRIGIDO
 
 interface ProjectsListCardProps {
-  projects: ProjectItem[];
+  projects: Project[]; // ✅ CORRIGIDO
   isLoading?: boolean;
 }
 
@@ -81,26 +80,26 @@ export const ProjectsListCard: React.FC<ProjectsListCardProps> = ({
                     <td className="px-4 py-3 whitespace-nowrap">
                       <div className="flex items-center">
                         {getStatusIcon(project.status)}
-                        <span className="ml-2 font-medium">{project.id}</span>
+                        <span className="ml-2 font-medium">{project.title}</span> {/* ✅ CORRIGIDO */}
                       </div>
                     </td>
                     <td className="px-4 py-3 whitespace-nowrap">
-                      <div>{project.clientName}</div>
-                      <div className="text-xs text-muted-foreground">{project.clientEmail}</div>
+                      <div>{project.client_name}</div> {/* ✅ CORRIGIDO */}
+                      <div className="text-xs text-muted-foreground">{project.client_email}</div> {/* ✅ CORRIGIDO */}
                     </td>
                     <td className="px-4 py-3 whitespace-nowrap">
                       {getStatusLabel(project.status)}
                     </td>
                     <td className="px-4 py-3 whitespace-nowrap text-sm">
-                      {project.createdAt}
+                      {new Date(project.created_at).toLocaleDateString('pt-BR')} {/* ✅ CORRIGIDO */}
                     </td>
                     <td className="px-4 py-3 whitespace-nowrap text-sm">
-                      {project.expirationDate}
+                      {project.expires_at ? new Date(project.expires_at).toLocaleDateString('pt-BR') : 'N/A'} {/* ✅ CORRIGIDO */}
                     </td>
                     <td className="px-4 py-3 whitespace-nowrap text-right text-sm">
                       <div className="flex justify-end gap-2">
                         <Button variant="outline" size="sm" asChild>
-                          <Link to={`/admin-j28s7d1k/previews/${project.id}`}>
+                          <Link to={`/admin/projects/${project.id}`}> {/* ✅ CORRIGIDO */}
                             <Eye className="h-3.5 w-3.5 mr-1" />
                             Ver
                           </Link>
