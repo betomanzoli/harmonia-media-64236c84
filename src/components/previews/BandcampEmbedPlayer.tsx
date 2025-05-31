@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React from 'react';
 
 interface BandcampEmbedPlayerProps {
   embedUrl: string;
@@ -11,86 +11,39 @@ const BandcampEmbedPlayer: React.FC<BandcampEmbedPlayerProps> = ({
   title = "Bandcamp Player",
   height = 152
 }) => {
-  const [isLoaded, setIsLoaded] = useState(false);
-  const [hasError, setHasError] = useState(false);
-
-  useEffect(() => {
-    setIsLoaded(false);
-    setHasError(false);
-  }, [embedUrl]);
-
   console.log('[BandcampPlayer] URL recebida:', embedUrl);
 
-  // ✅ VALIDAÇÃO RIGOROSA:
-  if (!embedUrl || !embedUrl.includes('bandcamp.com/EmbeddedPlayer')) {
-    console.log('[BandcampPlayer] URL inválida ou não é do Bandcamp:', embedUrl);
+  // ✅ VALIDAÇÃO ULTRA-SIMPLES:
+  if (!embedUrl) {
     return (
       <div className="p-4 bg-gray-100 rounded text-center">
-        <p className="text-gray-600">Player não disponível</p>
-        <p className="text-xs text-gray-400 break-all">URL inválida: {embedUrl}</p>
-        <p className="text-xs text-gray-500 mt-1">A URL deve conter 'bandcamp.com/EmbeddedPlayer'</p>
+        <p className="text-gray-600">Nenhuma URL fornecida</p>
       </div>
     );
   }
 
-  // ✅ CONFORME RESULTADO [3] - QUERY ALEATÓRIA PARA FORÇAR RELOAD:
-  const randomQuery = Math.floor(Math.random() * 10000);
-  const finalUrl = embedUrl.includes('?') 
-    ? `${embedUrl}&_reload=${randomQuery}` 
-    : `${embedUrl}?_reload=${randomQuery}`;
+  if (!embedUrl.includes('bandcamp.com')) {
+    return (
+      <div className="p-4 bg-gray-100 rounded text-center">
+        <p className="text-gray-600">URL não é do Bandcamp</p>
+        <p className="text-xs text-gray-400 break-all">URL: {embedUrl}</p>
+      </div>
+    );
+  }
 
-  console.log('[BandcampPlayer] URL final com query:', finalUrl);
-
+  // ✅ IFRAME ULTRA-SIMPLES (SEM SANDBOX):
   return (
     <div className="w-full border rounded-lg overflow-hidden bg-white">
-      {!isLoaded && !hasError && (
-        <div className="p-4 bg-gray-50 text-center">
-          <div className="animate-pulse">
-            <div className="h-4 bg-gray-300 rounded w-3/4 mx-auto mb-2"></div>
-            <div className="h-3 bg-gray-300 rounded w-1/2 mx-auto"></div>
-          </div>
-          <p className="text-gray-600 mt-2">Carregando player Bandcamp...</p>
-        </div>
-      )}
-      
       <iframe
         style={{ 
           border: 0, 
           width: '100%', 
-          height: `${height}px`,
-          display: hasError ? 'none' : 'block'
+          height: `${height}px`
         }}
-        src={finalUrl}
-        seamless
+        src={embedUrl}
         title={title}
-        loading="lazy"
-        sandbox="allow-scripts allow-same-origin allow-popups allow-forms"
-        allow="autoplay; encrypted-media; fullscreen"
-        onLoad={() => {
-          console.log('[BandcampPlayer] Carregado com sucesso');
-          setIsLoaded(true);
-        }}
-        onError={(e) => {
-          console.error('[BandcampPlayer] Erro ao carregar:', e);
-          setHasError(true);
-        }}
+        allowFullScreen
       />
-      
-      {hasError && (
-        <div className="p-4 bg-red-100 text-center">
-          <p className="text-red-600">Erro ao carregar player</p>
-          <p className="text-xs text-red-400 break-all">URL: {finalUrl}</p>
-          <button 
-            onClick={() => {
-              setHasError(false);
-              setIsLoaded(false);
-            }}
-            className="mt-2 px-3 py-1 bg-red-600 text-white rounded text-xs hover:bg-red-700"
-          >
-            Tentar novamente
-          </button>
-        </div>
-      )}
     </div>
   );
 };
