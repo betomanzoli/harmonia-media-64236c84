@@ -1,84 +1,37 @@
-
-import React, { useState } from 'react';
-import { Button } from '@/components/ui/button';
-import { ExternalLink, Play } from 'lucide-react';
-import { BandcampUtils } from '@/components/admin/bandcamp/BandcampUtils';
+import React from 'react';
 
 interface BandcampEmbedPlayerProps {
   embedUrl: string;
-  title: string;
-  fallbackUrl?: string;
-  className?: string;
+  title?: string;
+  height?: number;
 }
 
 const BandcampEmbedPlayer: React.FC<BandcampEmbedPlayerProps> = ({
   embedUrl,
-  title,
-  fallbackUrl,
-  className = ''
+  title = "Bandcamp Player",
+  height = 42
 }) => {
-  const [iframeError, setIframeError] = useState(false);
-
-  // Se a URL não é um embed, gerar automaticamente
-  const actualEmbedUrl = embedUrl.includes('EmbeddedPlayer') 
-    ? embedUrl 
-    : BandcampUtils.autoGenerateEmbed(embedUrl);
-
-  console.log('BandcampEmbedPlayer - Original URL:', embedUrl);
-  console.log('BandcampEmbedPlayer - Generated Embed URL:', actualEmbedUrl);
-
-  const handleIframeError = () => {
-    console.error('Iframe failed to load for URL:', actualEmbedUrl);
-    setIframeError(true);
-  };
-
-  const openInBandcamp = () => {
-    const urlToOpen = fallbackUrl || embedUrl;
-    window.open(urlToOpen, '_blank');
-  };
-
-  if (iframeError || !actualEmbedUrl) {
+  // Verifica se a URL é válida
+  if (!embedUrl || !embedUrl.includes('bandcamp.com')) {
     return (
-      <div className={`bg-gray-100 border rounded-lg p-6 text-center ${className}`}>
-        <div className="space-y-3">
-          <Play className="h-8 w-8 mx-auto text-gray-400" />
-          <p className="text-sm text-gray-600">Player não disponível</p>
-          <Button 
-            variant="outline" 
-            size="sm" 
-            onClick={openInBandcamp}
-            className="flex items-center gap-2"
-          >
-            <ExternalLink className="h-4 w-4" />
-            Abrir no Bandcamp
-          </Button>
-        </div>
+      <div className="p-4 bg-gray-100 rounded text-center">
+        <p className="text-gray-600">Player não disponível</p>
+        <p className="text-xs text-gray-400">URL inválida: {embedUrl}</p>
       </div>
     );
   }
 
   return (
-    <div className={`relative ${className}`}>
+    <div className="w-full">
       <iframe
-        style={{ border: 0, width: '100%', height: '120px' }}
-        src={actualEmbedUrl}
+        style={{ border: 0, width: '100%', height: `${height}px` }}
+        src={embedUrl}
         seamless
-        onError={handleIframeError}
         title={title}
-        allow="autoplay"
         loading="lazy"
+        sandbox="allow-scripts allow-same-origin"
+        allow="autoplay; encrypted-media"
       />
-      <div className="absolute top-2 right-2">
-        <Button
-          variant="ghost"
-          size="sm"
-          onClick={openInBandcamp}
-          className="h-6 w-6 p-0 bg-white/80 hover:bg-white"
-          title="Abrir no Bandcamp"
-        >
-          <ExternalLink className="h-3 w-3" />
-        </Button>
-      </div>
     </div>
   );
 };
