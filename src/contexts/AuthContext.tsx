@@ -27,7 +27,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const timeoutRef = useRef<NodeJS.Timeout | null>(null);
   const mountedRef = useRef(true);
 
-  // ✅ CORREÇÃO: useEffect mais robusto
   useEffect(() => {
     let subscription: any = null;
     
@@ -35,10 +34,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       try {
         console.log('🔄 Initializing auth...');
         
-        // Verificar sessão inicial
         await checkAuthStatus();
         
-        // Configurar listener apenas após verificação inicial
         const { data: { subscription: authSubscription } } = supabase.auth.onAuthStateChange(
           async (event, session) => {
             if (!mountedRef.current) return;
@@ -49,7 +46,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
               setUser(session.user);
               setAuthStatus('authenticated');
               
-              // ✅ FORÇAR REDIRECIONAMENTO APÓS LOGIN BEM-SUCEDIDO
               if (event === 'SIGNED_IN') {
                 console.log('🚀 Login successful, redirecting...');
                 setTimeout(() => {
@@ -91,7 +87,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     };
   }, []);
 
-  // ✅ CORREÇÃO: Timeout para evitar loading infinito
   useEffect(() => {
     if (timeoutRef.current) {
       clearTimeout(timeoutRef.current);
@@ -161,20 +156,42 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     try {
       setAuthStatus('loading');
       
-      // ✅ CORREÇÃO: Validação de entrada
       if (!username || !password) {
         console.error('❌ Email or password missing');
         setAuthStatus('unauthenticated');
         return false;
       }
 
+      // ✅ LOGS DETALHADOS ANTES DA CHAMADA:
+      console.log('📡 Supabase URL:', supabase.supabaseUrl);
+      console.log('🔑 Supabase Key exists:', !!supabase.supabaseKey);
+      console.log('📧 Email to login:', username.trim());
+      console.log('🔒 Password length:', password.length);
+
       const { data, error } = await supabase.auth.signInWithPassword({
         email: username.trim(),
         password: password,
       });
 
+      // ✅ LOGS DETALHADOS DA RESPOSTA:
+      console.log('📊 Full Supabase response:', {
+        data: data,
+        error: error,
+        session: data?.session,
+        user: data?.user,
+        hasSession: !!data?.session,
+        hasUser: !!data?.user,
+        userEmail: data?.user?.email,
+        userConfirmed: data?.user?.email_confirmed_at
+      });
+
       if (error) {
-        console.error('❌ Supabase login error:', error.message);
+        console.error('❌ Supabase error details:', {
+          message: error.message,
+          status: error.status,
+          name: error.name,
+          code: error.__isAuthError ? 'AUTH_ERROR' : 'OTHER_ERROR'
+        });
         if (mountedRef.current) {
           setAuthStatus('unauthenticated');
           setUser(null);
@@ -183,13 +200,18 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       }
 
       if (data.session?.user) {
-        console.log('✅ Login successful with Supabase:', data.session.user.email);
+        console.log('✅ Login successful:', {
+          email: data.session.user.email,
+          id: data.session.user.id,
+          confirmed_at: data.session.user.email_confirmed_at,
+          created_at: data.session.user.created_at
+        });
+        
         if (mountedRef.current) {
           setUser(data.session.user);
           setAuthStatus('authenticated');
         }
         
-        // ✅ CORREÇÃO: Redirecionamento forçado
         setTimeout(() => {
           if (mountedRef.current) {
             console.log('🚀 Forcing redirect to admin');
@@ -200,7 +222,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         return true;
       }
 
-      console.log('❌ Login failed: no session returned');
+      console.log('❌ No session returned despite no error');
+      console.log('📊 Data received but no session:', data);
       if (mountedRef.current) {
         setAuthStatus('unauthenticated');
         setUser(null);
@@ -208,7 +231,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       return false;
       
     } catch (error) {
-      console.error('💥 Login error:', error);
+      console.error('💥 Catch block error:', error);
       if (mountedRef.current) {
         setAuthStatus('unauthenticated');
         setUser(null);
@@ -232,13 +255,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     } catch (error) {
       console.error('💥 Logout error:', error);
     } finally {
-      // ✅ CORREÇÃO: Sempre limpar estado
       if (mountedRef.current) {
         setUser(null);
         setAuthStatus('unauthenticated');
       }
       
-      // Redirecionar para login
       setTimeout(() => {
         window.location.href = '/admin/login';
       }, 100);
