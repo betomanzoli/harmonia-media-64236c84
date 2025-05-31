@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Routes, Route, useLocation } from 'react-router-dom';
 import ScrollToTop from './components/ScrollToTop';
@@ -39,20 +38,24 @@ import NewAdminProjects from './pages/admin/NewAdminProjects';
 import ProjectDetailsPage from './pages/admin/ProjectDetailsPage';
 import ClientPreview from '@/pages/ClientPreview';
 
+// Import ProtectedRoute
+import ProtectedRoute from './components/admin/layout/ProtectedRoute'; // Ajuste o caminho se necessário
+
 const App: React.FC = () => {
   const location = useLocation();
   const [showChatbot, setShowChatbot] = useState(true);
-  
+
   // Check if current route is an admin route
   useEffect(() => {
-    const isAdminRoute = location.pathname.includes('/admin');
+    const isAdminRoute = location.pathname.startsWith('/admin'); // Use startsWith para ser mais preciso
     setShowChatbot(!isAdminRoute);
   }, [location.pathname]);
-  
+
   return (
     <div className="min-h-screen bg-background">
       <ScrollToTop />
       <Routes>
+        {/* Public Routes */}
         <Route path="/" element={<HomePage />} />
         <Route path="/sobre" element={<AboutPage />} />
         <Route path="/servicos" element={<ServicesPage />} />
@@ -71,38 +74,36 @@ const App: React.FC = () => {
         <Route path="/privacidade" element={<PrivacyPolicy />} />
         <Route path="/termos" element={<Terms />} />
         <Route path="/faq" element={<FAQ />} />
-        
-        {/* Delivery Routes */}
         <Route path="/deliveries/:projectId" element={<FinalDeliveryPage />} />
-        
-        {/* Authentication routes */}
         <Route path="/auth/preview/:projectId" element={<MusicPreviewAuth />} />
         <Route path="/auth/callback" element={<AuthCallback />} />
         <Route path="/auth-error" element={<AuthError />} />
-        
-        {/* Preview routes */}
         <Route path="/preview/:projectId" element={<PreviewPage />} />
         <Route path="/preview/:previewId" element={<MusicPreviews />} />
         <Route path="/feedback-confirmacao" element={<FeedbackConfirmation />} />
         <Route path="/como-funciona" element={<ServicesPage />} />
-        
-        {/* New simplified admin routes */}
-        <Route path="/admin/login" element={<NewAdminLogin />} />
-        <Route path="/admin" element={<NewAdminDashboard />} />
-        <Route path="/admin/clients" element={<NewAdminClients />} />
-        <Route path="/admin/projects" element={<NewAdminProjects />} />
-        <Route path="/admin/projects/:projectId" element={<ProjectDetailsPage />} />
-        
-        {/* Client preview route */}
         <Route path="/client-preview/:previewCode" element={<ClientPreview />} />
-        
+
+        {/* Admin Login Route (Public) */}
+        <Route path="/admin/login" element={<NewAdminLogin />} />
+
+        {/* Protected Admin Routes */}
+        <Route element={<ProtectedRoute />}>
+          <Route path="/admin" element={<NewAdminDashboard />} />
+          <Route path="/admin/clients" element={<NewAdminClients />} />
+          <Route path="/admin/projects" element={<NewAdminProjects />} />
+          <Route path="/admin/projects/:projectId" element={<ProjectDetailsPage />} />
+          {/* Adicione outras rotas admin protegidas aqui se necessário */}
+        </Route>
+
         {/* 404 route */}
         <Route path="*" element={<NotFoundPage />} />
       </Routes>
-      
+
       {showChatbot && <ChatbotButton />}
     </div>
   );
 };
 
 export default App;
+
