@@ -7,14 +7,17 @@ export class BandcampUtils {
     try {
       const url = new URL(bandcampUrl);
       
-      // Padrão para track: https://artist.bandcamp.com/track/song-name
+      // Para URLs como: https://harmonia-media.bandcamp.com/track/pop-bai-o-pop-mainstream-bai-o
       if (url.pathname.includes('/track/')) {
         const trackName = url.pathname.split('/track/')[1];
         const trackId = this.generateIdFromName(trackName);
-        return { trackId };
+        
+        // Para tracks individuais, precisamos também do album ID
+        const albumId = this.generateIdFromName('portfolio-mix-de-estilos'); // ID do álbum padrão
+        return { albumId, trackId };
       }
       
-      // Padrão para album: https://artist.bandcamp.com/album/album-name
+      // Para URLs de album: https://harmonia-media.bandcamp.com/album/album-name
       if (url.pathname.includes('/album/')) {
         const albumName = url.pathname.split('/album/')[1];
         const albumId = this.generateIdFromName(albumName);
@@ -29,6 +32,18 @@ export class BandcampUtils {
   }
   
   private static generateIdFromName(name: string): string {
+    // Usar IDs específicos conhecidos para o Bandcamp da harmonIA
+    const knownIds: { [key: string]: string } = {
+      'pop-bai-o-pop-mainstream-bai-o': '3655073869',
+      'portfolio-mix-de-estilos': '3897753197',
+      'portif-lio-mix-de-estilos': '3897753197'
+    };
+    
+    if (knownIds[name]) {
+      return knownIds[name];
+    }
+    
+    // Fallback para gerar ID baseado no nome
     let hash = 0;
     for (let i = 0; i < name.length; i++) {
       const char = name.charCodeAt(i);
@@ -42,20 +57,21 @@ export class BandcampUtils {
     if (!bandcampUrl) return '';
     
     try {
-      const url = new URL(bandcampUrl);
       const { albumId, trackId } = this.extractAlbumAndTrackIds(bandcampUrl);
       
       let embedUrl = 'https://bandcamp.com/EmbeddedPlayer/';
       
       if (albumId && trackId) {
-        embedUrl += `album=${albumId}/size=small/bgcol=333333/linkcol=2ebd35/track=${trackId}/transparent=true/`;
+        // Para tracks específicos dentro de um álbum
+        embedUrl += `album=${albumId}/size=small/bgcol=ffffff/linkcol=2ebd35/track=${trackId}/transparent=true/`;
       } else if (albumId) {
-        embedUrl += `album=${albumId}/size=small/bgcol=333333/linkcol=2ebd35/transparent=true/`;
+        // Para álbum completo
+        embedUrl += `album=${albumId}/size=small/bgcol=ffffff/linkcol=2ebd35/transparent=true/`;
       } else if (trackId) {
-        embedUrl += `track=${trackId}/size=small/bgcol=333333/linkcol=2ebd35/transparent=true/`;
+        // Para track individual
+        embedUrl += `track=${trackId}/size=small/bgcol=ffffff/linkcol=2ebd35/transparent=true/`;
       } else {
-        const pathHash = this.generateIdFromName(url.pathname);
-        embedUrl += `album=${pathHash}/size=small/bgcol=333333/linkcol=2ebd35/transparent=true/`;
+        return '';
       }
       
       return embedUrl;
@@ -83,14 +99,14 @@ export class BandcampUtils {
   static getWorkingExamples() {
     return [
       {
-        trackId: '123456789',
-        embedUrl: 'https://bandcamp.com/EmbeddedPlayer/track=123456789/size=small/bgcol=333333/linkcol=2ebd35/transparent=true/',
-        directUrl: 'https://example.bandcamp.com/track/example-song'
+        trackId: '3655073869',
+        embedUrl: 'https://bandcamp.com/EmbeddedPlayer/album=3897753197/size=small/bgcol=ffffff/linkcol=2ebd35/track=3655073869/transparent=true/',
+        directUrl: 'https://harmonia-media.bandcamp.com/track/pop-bai-o-pop-mainstream-bai-o'
       },
       {
-        trackId: '987654321',
-        embedUrl: 'https://bandcamp.com/EmbeddedPlayer/track=987654321/size=small/bgcol=333333/linkcol=2ebd35/transparent=true/',
-        directUrl: 'https://example.bandcamp.com/track/another-song'
+        albumId: '3897753197', 
+        embedUrl: 'https://bandcamp.com/EmbeddedPlayer/album=3897753197/size=small/bgcol=ffffff/linkcol=2ebd35/transparent=true/',
+        directUrl: 'https://harmonia-media.bandcamp.com/album/portif-lio-mix-de-estilos'
       }
     ];
   }

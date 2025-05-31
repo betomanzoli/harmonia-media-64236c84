@@ -7,6 +7,8 @@ import { Play, Pause, Trash2, Copy, ExternalLink } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 import { useToast } from '@/hooks/use-toast';
+import BandcampEmbedPlayer from '@/components/previews/BandcampEmbedPlayer';
+import { BandcampUtils } from '@/components/admin/bandcamp/BandcampUtils';
 
 interface VersionCardProps {
   version: Version;
@@ -20,47 +22,28 @@ const VersionCard: React.FC<VersionCardProps> = ({
   onDeleteVersion
 }) => {
   const [isPlaying, setIsPlaying] = useState(false);
-  const [audio] = useState(new Audio(version.audio_url || ''));
   const { toast } = useToast();
 
   const handleTogglePlay = () => {
-    if (isPlaying) {
-      audio.pause();
-    } else {
-      // Se temos uma URL do Bandcamp, abrir em nova aba
-      if (version.audio_url) {
-        window.open(version.audio_url, '_blank');
-        toast({
-          title: "Abrindo áudio",
-          description: "O áudio está sendo aberto em uma nova aba."
-        });
+    // Se temos uma URL do Bandcamp, gerar embed automaticamente
+    if (version.audio_url && BandcampUtils.validateBandcampUrl(version.audio_url)) {
+      const embedUrl = BandcampUtils.autoGenerateEmbed(version.audio_url);
+      if (embedUrl) {
+        // Player será mostrado via BandcampEmbedPlayer
+        setIsPlaying(!isPlaying);
         return;
       }
-      
-      // Caso contrário, tentar reproduzir diretamente
-      audio.play().catch(error => {
-        console.error('Erro ao reproduzir áudio:', error);
-        toast({
-          title: "Erro ao reproduzir",
-          description: "Não foi possível reproduzir o áudio. Tente abrir no navegador.",
-          variant: "destructive"
-        });
-        
-        if (version.audio_url) {
-          window.open(version.audio_url, '_blank');
-        }
+    }
+    
+    // Fallback para abrir diretamente
+    if (version.audio_url) {
+      window.open(version.audio_url, '_blank');
+      toast({
+        title: "Abrindo áudio",
+        description: "O áudio está sendo aberto em uma nova aba."
       });
     }
-    setIsPlaying(!isPlaying);
   };
-
-  React.useEffect(() => {
-    audio.addEventListener('ended', () => setIsPlaying(false));
-    return () => {
-      audio.removeEventListener('ended', () => setIsPlaying(false));
-      audio.pause();
-    };
-  }, [audio]);
 
   const handleCopyLink = (url: string) => {
     navigator.clipboard.writeText(url).then(() => {
@@ -77,6 +60,11 @@ const VersionCard: React.FC<VersionCardProps> = ({
       });
     });
   };
+
+  // Gerar embed do Bandcamp se disponível
+  const bandcampEmbedUrl = version.audio_url && BandcampUtils.validateBandcampUrl(version.audio_url) 
+    ? BandcampUtils.autoGenerateEmbed(version.audio_url) 
+    : null;
 
   return (
     <Card className={`bg-white ${version.recommended ? 'border-green-500 border-2' : ''}`}>
@@ -101,6 +89,18 @@ const VersionCard: React.FC<VersionCardProps> = ({
             <div className="text-xs text-gray-500 mb-4">
               Adicionado em: {new Date(version.created_at).toLocaleDateString('pt-BR')}
             </div>
+            
+            {/* Mostrar embed do Bandcamp se disponível */}
+            {bandcampEmbedUrl && (
+              <div className="mb-4">
+                <BandcampEmbedPlayer 
+                  embedUrl={bandcampEmbedUrl}
+                  title={version.name}
+                  fallbackUrl={version.audio_url}
+                  className="w-full"
+                />
+              </div>
+            )}
             
             {/* URL do áudio */}
             {version.audio_url && (
@@ -133,15 +133,17 @@ const VersionCard: React.FC<VersionCardProps> = ({
           </div>
           
           <div className="flex sm:flex-col gap-2 mt-4 sm:mt-0 sm:ml-4">
-            <Button 
-              variant="outline" 
-              size="sm" 
-              className={`${isPlaying ? 'bg-gray-100' : ''}`} 
-              onClick={handleTogglePlay}
-            >
-              {isPlaying ? <Pause className="h-4 w-4 mr-2" /> : <Play className="h-4 w-4 mr-2" />}
-              {isPlaying ? 'Pausar' : 'Ouvir'}
-            </Button>
+            {!bandcampEmbedUrl && (
+              <Button 
+                variant="outline" 
+                size="sm" 
+                className={`${isPlaying ? 'bg-gray-100' : ''}`} 
+                onClick={handleTogglePlay}
+              >
+                {isPlaying ? <Pause className="h-4 w-4 mr-2" /> : <Play className="h-4 w-4 mr-2" />}
+                {isPlaying ? 'Pausar' : 'Ouvir'}
+              </Button>
+            )}
             
             <AlertDialog>
               <AlertDialogTrigger asChild>
