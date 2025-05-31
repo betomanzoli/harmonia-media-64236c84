@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
@@ -8,7 +7,8 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { Label } from '@/components/ui/label';
 import { useToast } from '@/hooks/use-toast';
 import { BandcampUtils } from '@/components/admin/bandcamp/BandcampUtils';
-import { useProjects } from '@/hooks/admin/useProjects';
+import { useProjects } from '@/hooks/admin/useProjects'; // Assuming this hook handles adding versions
+import { Loader2 } from 'lucide-react';
 
 interface AddVersionDialogProps {
   isOpen: boolean;
@@ -31,7 +31,8 @@ const AddVersionDialog: React.FC<AddVersionDialogProps> = ({
   const [recommended, setRecommended] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const { toast } = useToast();
-  const { addVersionToProject } = useProjects();
+  // Assuming useProjects hook provides addVersionToProject function
+  const { addVersionToProject } = useProjects(); 
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -45,7 +46,8 @@ const AddVersionDialog: React.FC<AddVersionDialogProps> = ({
       return;
     }
 
-    if (!bandcampUrl.trim()) {
+    const trimmedUrl = bandcampUrl.trim();
+    if (!trimmedUrl) {
       toast({
         title: "URL obrigatória",
         description: "Por favor, informe a URL do Bandcamp.",
@@ -54,10 +56,10 @@ const AddVersionDialog: React.FC<AddVersionDialogProps> = ({
       return;
     }
 
-    if (!BandcampUtils.validateBandcampUrl(bandcampUrl)) {
+    if (!BandcampUtils.validateBandcampUrl(trimmedUrl)) {
       toast({
         title: "URL inválida",
-        description: "Por favor, informe uma URL válida do Bandcamp.",
+        description: "Por favor, informe uma URL válida do Bandcamp (ex: https://artista.bandcamp.com/track/nome-musica).",
         variant: "destructive"
       });
       return;
@@ -65,13 +67,32 @@ const AddVersionDialog: React.FC<AddVersionDialogProps> = ({
 
     setIsSubmitting(true);
 
+    // **Generate Embed URL**
+    const embedUrl = BandcampUtils.generateEmbedUrl(trimmedUrl);
+
+    if (!embedUrl) {
+      toast({
+        title: "Erro ao gerar embed",
+        description: "Não foi possível gerar o código de incorporação para esta URL. Verifique a URL e tente novamente.",
+        variant: "destructive"
+      });
+      setIsSubmitting(false);
+      return;
+    }
+
     try {
-      const result = await addVersionToProject(projectId, {
+      // **Prepare data with embed_url**
+      const versionData = {
         name: name.trim(),
         description: description.trim() || undefined,
-        audio_url: bandcampUrl.trim(),
+        embed_url: embedUrl, // <-- Save the generated embed URL
+        original_bandcamp_url: trimmedUrl, // <-- Optionally save the original URL for reference
         recommended
-      });
+      };
+
+      // **Call the hook to add the version** 
+      // (Ensure addVersionToProject in useProjects handles 'embed_url' and 'original_bandcamp_url')
+      const result = await addVersionToProject(projectId, versionData);
 
       if (result.success) {
         toast({
@@ -88,14 +109,14 @@ const AddVersionDialog: React.FC<AddVersionDialogProps> = ({
         // Fechar dialog
         onOpenChange(false);
 
-        // Callback para o componente pai
+        // Callback para o componente pai (se necessário)
         if (onAddVersion && result.version) {
           onAddVersion(result.version);
         }
       } else {
         toast({
           title: "Erro ao adicionar versão",
-          description: result.error || "Ocorreu um erro inesperado.",
+          description: result.error || "Ocorreu um erro inesperado ao salvar no banco.",
           variant: "destructive"
         });
       }
@@ -103,7 +124,7 @@ const AddVersionDialog: React.FC<AddVersionDialogProps> = ({
       console.error('Error adding version:', error);
       toast({
         title: "Erro ao adicionar versão",
-        description: "Ocorreu um erro inesperado. Tente novamente.",
+        description: "Ocorreu um erro inesperado. Verifique o console para mais detalhes.",
         variant: "destructive"
       });
     } finally {
@@ -145,13 +166,13 @@ const AddVersionDialog: React.FC<AddVersionDialogProps> = ({
             <Label htmlFor="bandcampUrl">URL do Bandcamp *</Label>
             <Input
               id="bandcampUrl"
-              placeholder="https://artist.bandcamp.com/track/song-name"
+              placeholder="https://artista.bandcamp.com/track/nome-musica"
               value={bandcampUrl}
               onChange={(e) => setBandcampUrl(e.target.value)}
               required
             />
             <p className="text-xs text-gray-500 mt-1">
-              URL da música no Bandcamp (será convertida automaticamente para embed)
+              Cole a URL da música ou álbum do Bandcamp aqui.
             </p>
           </div>
 
@@ -180,6 +201,7 @@ const AddVersionDialog: React.FC<AddVersionDialogProps> = ({
               disabled={isSubmitting}
               className="bg-harmonia-green hover:bg-harmonia-green/90"
             >
+              {isSubmitting ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
               {isSubmitting ? 'Adicionando...' : 'Adicionar Versão'}
             </Button>
           </div>
@@ -190,3 +212,4 @@ const AddVersionDialog: React.FC<AddVersionDialogProps> = ({
 };
 
 export default AddVersionDialog;
+
