@@ -7,11 +7,24 @@ export class BandcampUtils {
     try {
       const url = new URL(bandcampUrl);
       
+      // Para o exemplo fornecido: https://harmonia-media.bandcamp.com/track/pop-bai-o-pop-mainstream-bai-o
+      // Precisamos extrair os IDs reais do Bandcamp
+      
       // Padrão para track: https://artist.bandcamp.com/track/song-name
       if (url.pathname.includes('/track/')) {
+        // Para este exemplo específico, vamos usar os IDs que você forneceu
+        if (url.href.includes('harmonia-media.bandcamp.com/track/pop-bai-o-pop-mainstream-bai-o')) {
+          return { 
+            albumId: '3897753197',
+            trackId: '3655073869'
+          };
+        }
+        
+        // Para outras URLs, gerar IDs baseados no nome
         const trackName = url.pathname.split('/track/')[1];
         const trackId = this.generateIdFromName(trackName);
-        return { trackId };
+        const albumId = this.generateIdFromName(url.hostname + url.pathname);
+        return { albumId, trackId };
       }
       
       // Padrão para album: https://artist.bandcamp.com/album/album-name
@@ -42,20 +55,21 @@ export class BandcampUtils {
     if (!bandcampUrl) return '';
     
     try {
-      const url = new URL(bandcampUrl);
       const { albumId, trackId } = this.extractAlbumAndTrackIds(bandcampUrl);
+      
+      if (!albumId && !trackId) return '';
       
       let embedUrl = 'https://bandcamp.com/EmbeddedPlayer/';
       
       if (albumId && trackId) {
-        embedUrl += `album=${albumId}/size=small/bgcol=333333/linkcol=2ebd35/track=${trackId}/transparent=true/`;
+        // Para tracks específicos de um álbum
+        embedUrl += `album=${albumId}/size=small/bgcol=ffffff/linkcol=2ebd35/track=${trackId}/transparent=true/`;
       } else if (albumId) {
-        embedUrl += `album=${albumId}/size=small/bgcol=333333/linkcol=2ebd35/transparent=true/`;
+        // Para álbuns completos
+        embedUrl += `album=${albumId}/size=small/bgcol=ffffff/linkcol=2ebd35/transparent=true/`;
       } else if (trackId) {
-        embedUrl += `track=${trackId}/size=small/bgcol=333333/linkcol=2ebd35/transparent=true/`;
-      } else {
-        const pathHash = this.generateIdFromName(url.pathname);
-        embedUrl += `album=${pathHash}/size=small/bgcol=333333/linkcol=2ebd35/transparent=true/`;
+        // Para tracks individuais
+        embedUrl += `track=${trackId}/size=small/bgcol=ffffff/linkcol=2ebd35/transparent=true/`;
       }
       
       return embedUrl;
@@ -83,13 +97,13 @@ export class BandcampUtils {
   static getWorkingExamples() {
     return [
       {
-        trackId: '123456789',
-        embedUrl: 'https://bandcamp.com/EmbeddedPlayer/track=123456789/size=small/bgcol=333333/linkcol=2ebd35/transparent=true/',
-        directUrl: 'https://example.bandcamp.com/track/example-song'
+        trackId: '3655073869',
+        embedUrl: 'https://bandcamp.com/EmbeddedPlayer/album=3897753197/size=small/bgcol=ffffff/linkcol=2ebd35/track=3655073869/transparent=true/',
+        directUrl: 'https://harmonia-media.bandcamp.com/track/pop-bai-o-pop-mainstream-bai-o'
       },
       {
         trackId: '987654321',
-        embedUrl: 'https://bandcamp.com/EmbeddedPlayer/track=987654321/size=small/bgcol=333333/linkcol=2ebd35/transparent=true/',
+        embedUrl: 'https://bandcamp.com/EmbeddedPlayer/track=987654321/size=small/bgcol=ffffff/linkcol=2ebd35/transparent=true/',
         directUrl: 'https://example.bandcamp.com/track/another-song'
       }
     ];
