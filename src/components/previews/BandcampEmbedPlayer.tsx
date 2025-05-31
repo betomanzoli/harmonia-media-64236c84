@@ -19,17 +19,24 @@ const BandcampEmbedPlayer: React.FC<BandcampEmbedPlayerProps> = ({
     setHasError(false);
   }, [embedUrl]);
 
-  console.log('[BandcampPlayer] Rendering with URL:', embedUrl);
+  console.log('[BandcampPlayer] URL recebida:', embedUrl);
 
-  // ✅ VALIDAÇÃO MAIS RIGOROSA:
+  // ✅ VALIDAÇÃO MAIS ESPECÍFICA:
   if (!embedUrl || !embedUrl.includes('bandcamp.com/EmbeddedPlayer')) {
+    console.log('[BandcampPlayer] URL inválida:', embedUrl);
     return (
       <div className="p-4 bg-gray-100 rounded text-center">
         <p className="text-gray-600">Player não disponível</p>
-        <p className="text-xs text-gray-400">URL inválida: {embedUrl}</p>
+        <p className="text-xs text-gray-400 break-all">URL: {embedUrl}</p>
       </div>
     );
   }
+
+  // ✅ CONFORME RESULTADO [5] - ADICIONAR QUERY ALEATÓRIA:
+  const randomQuery = Math.floor(Math.random() * 10000);
+  const finalUrl = embedUrl.includes('?') 
+    ? `${embedUrl}&_reload=${randomQuery}` 
+    : `${embedUrl}?_reload=${randomQuery}`;
 
   return (
     <div className="w-full border rounded-lg overflow-hidden">
@@ -50,18 +57,18 @@ const BandcampEmbedPlayer: React.FC<BandcampEmbedPlayerProps> = ({
           height: `${height}px`,
           display: hasError ? 'none' : 'block'
         }}
-        src={embedUrl}
+        src={finalUrl}
         seamless
         title={title}
         loading="lazy"
         sandbox="allow-scripts allow-same-origin allow-popups allow-forms"
         allow="autoplay; encrypted-media; fullscreen"
         onLoad={() => {
-          console.log('[BandcampPlayer] Loaded successfully');
+          console.log('[BandcampPlayer] Carregado com sucesso');
           setIsLoaded(true);
         }}
         onError={(e) => {
-          console.error('[BandcampPlayer] Failed to load:', e);
+          console.error('[BandcampPlayer] Erro ao carregar:', e);
           setHasError(true);
         }}
       />
@@ -69,7 +76,7 @@ const BandcampEmbedPlayer: React.FC<BandcampEmbedPlayerProps> = ({
       {hasError && (
         <div className="p-4 bg-red-100 text-center">
           <p className="text-red-600">Erro ao carregar player</p>
-          <p className="text-xs text-red-400">Verifique se a URL está correta</p>
+          <p className="text-xs text-red-400 break-all">URL: {finalUrl}</p>
           <button 
             onClick={() => {
               setHasError(false);
