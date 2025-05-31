@@ -16,14 +16,13 @@ interface AddVersionDialogProps {
   onVersionAdded?: () => void;
 }
 
-// ✅ FUNÇÃO CORRIGIDA BASEADA NO RESULTADO [5]:
 const extractBandcampEmbedUrl = (input: string): string | null => {
   if (!input || typeof input !== 'string') return null;
   
   const trimmed = input.trim();
   
   try {
-    // Remover a tag <a> que causa problemas (conforme resultado [5])
+    // Remover a tag <a> que causa problemas
     const cleanInput = trimmed.replace(/<a[^>]*>.*?<\/a>/gi, '');
     
     // Extrair URL do src do iframe
@@ -66,11 +65,9 @@ const AddVersionDialog: React.FC<AddVersionDialogProps> = ({
   const [error, setError] = useState<string | null>(null);
   const { toast } = useToast();
 
-  // ✅ FUNÇÃO SIMPLES PARA FECHAR (SEM useCallback):
   const handleClose = () => {
     if (!isSubmitting) {
       setIsOpen(false);
-      // Reset form
       setVersionName('');
       setDescription('');
       setBandcampInput('');
@@ -103,36 +100,72 @@ const AddVersionDialog: React.FC<AddVersionDialogProps> = ({
         throw new Error('Código inválido. Cole o código iframe completo do Bandcamp.');
       }
 
+      // ✅ SOLUÇÃO 3: USAR UPSERT (RECOMENDADO)
+      // Gerar um version_id único baseado no timestamp
+      const versionId = `v_${Date.now()}_${Math.floor(Math.random() * 1000)}`;
+
       const insertData = {
         project_id: projectId,
+        version_id: versionId, // ✅ ADICIONAR version_id para satisfazer constraint UNIQUE
         name: versionName,
         description: description || null,
         bandcamp_url: embedUrl,
         recommended: isRecommended
       };
 
-      console.log('[Add Version] Dados para inserir:', insertData);
+      console.log('[Add Version] Dados para UPSERT:', insertData);
 
       const { data, error: insertError } = await supabase
         .from('project_versions')
-        .insert(insertData)
+        .upsert(insertData, { 
+          onConflict: 'project_id,version_id', // ✅ Usar a constraint UNIQUE existente
+          ignoreDuplicates: false 
+        })
         .select()
         .single();
 
       if (insertError) {
-        throw new Error(`Erro do banco: ${insertError.message}`);
-      }
+        console.error('[Add Version] Erro UPSERT:', insertError);
+        
+        // ✅ SOLUÇÃO 4: FALLBACK PARA INSERT SIMPLES SE UPSERT FALHAR
+        console.log('[Add Version] Tentando INSERT simples como fallback...');
+        
+        const fallbackData = {
+          project_id: projectId,
+          name: versionName,
+          description: description || null,
+          bandcamp_url: embedUrl,
+          recommended: isRecommended
+          // ✅ SEM version_id - deixar o banco gerar se possível
+        };
 
-      console.log('[Add Version] Sucesso:', data);
+        const { data: fallbackResult, error: fallbackError } = await supabase
+          .from('project_versions')
+          .insert(fallbackData)
+          .select()
+          .maybeSingle(); // ✅ maybeSingle() é mais seguro que single()
+
+        if (fallbackError) {
+          throw new Error(`Erro do banco: ${fallbackError.message}`);
+        }
+
+        console.log('[Add Version] Fallback INSERT bem-sucedido:', fallbackResult);
+      } else {
+        console.log('[Add Version] UPSERT bem-sucedido:', data);
+      }
 
       toast({
         title: "Versão adicionada",
         description: `"${versionName}" foi adicionada ao projeto.`
       });
 
-      // ✅ CALLBACK E CLOSE COM DELAY:
+      // ✅ CALLBACK E CLOSE COM TRATAMENTO DE ERRO:
       if (onVersionAdded) {
-        onVersionAdded();
+        try {
+          onVersionAdded();
+        } catch (callbackError) {
+          console.error('[Add Version] Erro no callback:', callbackError);
+        }
       }
       
       // Delay para evitar conflitos
@@ -141,7 +174,7 @@ const AddVersionDialog: React.FC<AddVersionDialogProps> = ({
       }, 500);
 
     } catch (err: any) {
-      console.error('[Add Version] Erro:', err);
+      console.error('[Add Version] Erro geral:', err);
       setError(err.message || 'Erro desconhecido');
       toast({
         title: "Erro ao adicionar",
@@ -213,7 +246,7 @@ const AddVersionDialog: React.FC<AddVersionDialogProps> = ({
               value={bandcampInput}
               onChange={(e) => setBandcampInput(e.target.value)}
               className="col-span-3 font-mono text-xs"
-              placeholder='Cole o código iframe COMPLETO do Bandcamp aqui (incluindo <iframe> e </iframe>)'
+              placeholder='Cole o código iframe COMPLETO do Bandcamp aqui'
               rows={6}
               disabled={isSubmitting}
             />
