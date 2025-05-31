@@ -10,7 +10,6 @@ export class BandcampUtils {
       // Padrão para track: https://artist.bandcamp.com/track/song-name
       if (url.pathname.includes('/track/')) {
         const trackName = url.pathname.split('/track/')[1];
-        // Simular ID baseado no nome da track para demonstração
         const trackId = this.generateIdFromName(trackName);
         return { trackId };
       }
@@ -30,12 +29,11 @@ export class BandcampUtils {
   }
   
   private static generateIdFromName(name: string): string {
-    // Gerar um ID único baseado no nome para demonstração
     let hash = 0;
     for (let i = 0; i < name.length; i++) {
       const char = name.charCodeAt(i);
       hash = ((hash << 5) - hash) + char;
-      hash = hash & hash; // Convert to 32bit integer
+      hash = hash & hash;
     }
     return Math.abs(hash).toString();
   }
@@ -56,7 +54,6 @@ export class BandcampUtils {
       } else if (trackId) {
         embedUrl += `track=${trackId}/size=small/bgcol=333333/linkcol=2ebd35/transparent=true/`;
       } else {
-        // Fallback: gerar embed básico
         const pathHash = this.generateIdFromName(url.pathname);
         embedUrl += `album=${pathHash}/size=small/bgcol=333333/linkcol=2ebd35/transparent=true/`;
       }
@@ -81,5 +78,20 @@ export class BandcampUtils {
     } catch {
       return false;
     }
+  }
+
+  static getWorkingExamples() {
+    return [
+      {
+        trackId: '123456789',
+        embedUrl: 'https://bandcamp.com/EmbeddedPlayer/track=123456789/size=small/bgcol=333333/linkcol=2ebd35/transparent=true/',
+        directUrl: 'https://example.bandcamp.com/track/example-song'
+      },
+      {
+        trackId: '987654321',
+        embedUrl: 'https://bandcamp.com/EmbeddedPlayer/track=987654321/size=small/bgcol=333333/linkcol=2ebd35/transparent=true/',
+        directUrl: 'https://example.bandcamp.com/track/another-song'
+      }
+    ];
   }
 }

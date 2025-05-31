@@ -1,332 +1,110 @@
+
 import React from 'react';
-import { useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
-import { Plus, Users, FolderOpen, Clock, CheckCircle, TrendingUp } from 'lucide-react';
-import { useClients } from '@/hooks/admin/useClients';
+import { Loader2 } from 'lucide-react';
+import NewAdminLayout from '@/components/admin/layout/NewAdminLayout';
 import { useProjects } from '@/hooks/admin/useProjects';
 
 const NewAdminDashboard: React.FC = () => {
-  const navigate = useNavigate();
-  const { clients, isLoading: clientsLoading } = useClients();
-  const { projects, loading: projectsLoading } = useProjects();
+  const { projects, isLoading } = useProjects();
 
-  // Calcular estatísticas reais baseadas nos dados do Supabase
   const stats = {
-    clients: clients.length,
-    projects: projects.length,
-    pending: projects.filter(p => p.status === 'waiting').length,
-    completed: projects.filter(p => p.status === 'approved').length
+    total: projects.length,
+    waiting: projects.filter(p => p.status === 'waiting').length,
+    feedback: projects.filter(p => p.status === 'feedback').length,
+    approved: projects.filter(p => p.status === 'approved').length
   };
-
-  // Projetos recentes reais (últimos 3)
-  const recentProjects = projects
-    .slice(0, 3)
-    .map(p => ({
-      id: p.id,
-      client: p.client_name || 'Cliente',
-      title: p.title,
-      status: p.status,
-      date: new Date(p.created_at).toLocaleDateString('pt-BR')
-    }));
-
-  const getStatusColor = (status: string) => {
-    const colors = {
-      waiting: 'text-yellow-600',
-      feedback: 'text-blue-600',
-      approved: 'text-green-600'
-    };
-    return colors[status as keyof typeof colors] || 'text-gray-600';
-  };
-
-  const getStatusLabel = (status: string) => {
-    const labels = {
-      waiting: 'Aguardando',
-      feedback: 'Feedback',
-      approved: 'Aprovado'
-    };
-    return labels[status as keyof typeof labels] || status;
-  };
-
-  const getStatusBadge = (status: string) => {
-    switch (status) {
-      case 'waiting':
-        return <Badge variant="secondary" className="bg-yellow-100 text-yellow-800">Aguardando</Badge>;
-      case 'feedback':
-        return <Badge variant="secondary" className="bg-blue-100 text-blue-800">Feedback</Badge>;
-      case 'approved':
-        return <Badge variant="secondary" className="bg-green-100 text-green-800">Aprovado</Badge>;
-      default:
-        return <Badge variant="secondary">Desconhecido</Badge>;
-    }
-  };
-
-  const handleNewClient = () => {
-    navigate('/admin/clients');
-  };
-
-  const handleNewProject = () => {
-    navigate('/admin/projects');
-  };
-
-  const isLoading = clientsLoading || projectsLoading;
 
   return (
-    <div className="p-6 space-y-6">
-      {/* Header */}
-      <div className="flex justify-between items-center">
-        <div>
-          <h1 className="text-3xl font-bold text-gray-900">Dashboard</h1>
-          <p className="text-gray-600 mt-1">Visão geral dos projetos e clientes</p>
+    <NewAdminLayout>
+      <div className="p-6 space-y-6">
+        <div className="flex justify-between items-center">
+          <h1 className="text-3xl font-bold">Dashboard</h1>
         </div>
-        <div className="flex gap-3">
-          <Button 
-            onClick={handleNewClient}
-            variant="outline"
-            className="flex items-center gap-2"
-          >
-            <Users className="h-4 w-4" />
-            Novo Cliente
-          </Button>
-          <Button 
-            onClick={handleNewProject}
-            className="flex items-center gap-2"
-          >
-            <Plus className="h-4 w-4" />
-            Novo Projeto
-          </Button>
-        </div>
-      </div>
 
-      {/* Loading State */}
-      {isLoading && (
-        <div className="flex justify-center items-center py-8">
-          <div className="text-gray-500">Carregando dados...</div>
-        </div>
-      )}
-
-      {/* Stats Cards */}
-      {!isLoading && (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Total Clientes</CardTitle>
-              <Users className="h-4 w-4 text-muted-foreground" />
+              <CardTitle className="text-sm font-medium">Total de Projetos</CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">{stats.clients}</div>
-              <p className="text-xs text-muted-foreground">
-                Clientes cadastrados
-              </p>
+              <div className="text-2xl font-bold">
+                {isLoading ? <Loader2 className="h-6 w-6 animate-spin" /> : stats.total}
+              </div>
             </CardContent>
           </Card>
 
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Total Projetos</CardTitle>
-              <FolderOpen className="h-4 w-4 text-muted-foreground" />
+              <CardTitle className="text-sm font-medium">Aguardando</CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">{stats.projects}</div>
-              <p className="text-xs text-muted-foreground">
-                Projetos criados
-              </p>
+              <div className="text-2xl font-bold text-yellow-600">
+                {isLoading ? <Loader2 className="h-6 w-6 animate-spin" /> : stats.waiting}
+              </div>
             </CardContent>
           </Card>
 
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Pendentes</CardTitle>
-              <Clock className="h-4 w-4 text-muted-foreground" />
+              <CardTitle className="text-sm font-medium">Com Feedback</CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">{stats.pending}</div>
-              <p className="text-xs text-muted-foreground">
-                Aguardando feedback
-              </p>
+              <div className="text-2xl font-bold text-blue-600">
+                {isLoading ? <Loader2 className="h-6 w-6 animate-spin" /> : stats.feedback}
+              </div>
             </CardContent>
           </Card>
 
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Concluídos</CardTitle>
-              <CheckCircle className="h-4 w-4 text-muted-foreground" />
+              <CardTitle className="text-sm font-medium">Aprovados</CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">{stats.completed}</div>
-              <p className="text-xs text-muted-foreground">
-                Projetos aprovados
-              </p>
+              <div className="text-2xl font-bold text-green-600">
+                {isLoading ? <Loader2 className="h-6 w-6 animate-spin" /> : stats.approved}
+              </div>
             </CardContent>
           </Card>
         </div>
-      )}
 
-      {/* Quick Actions */}
-      {!isLoading && (
         <Card>
           <CardHeader>
-            <CardTitle>Ações Rápidas</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              <Button 
-                onClick={() => navigate('/admin/clients')}
-                variant="outline" 
-                className="h-20 flex flex-col gap-2"
-              >
-                <Users className="h-6 w-6" />
-                <span>Gerenciar Clientes</span>
-              </Button>
-              
-              <Button 
-                onClick={() => navigate('/admin/projects')}
-                variant="outline" 
-                className="h-20 flex flex-col gap-2"
-              >
-                <FolderOpen className="h-6 w-6" />
-                <span>Gerenciar Projetos</span>
-              </Button>
-              
-              <Button 
-                onClick={handleNewProject}
-                variant="outline" 
-                className="h-20 flex flex-col gap-2"
-              >
-                <Plus className="h-6 w-6" />
-                <span>Novo Projeto</span>
-              </Button>
-            </div>
-          </CardContent>
-        </Card>
-      )}
-
-      {/* Recent Projects */}
-      {!isLoading && (
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between">
             <CardTitle>Projetos Recentes</CardTitle>
-            <Button 
-              onClick={() => navigate('/admin/projects')}
-              variant="outline"
-              size="sm"
-            >
-              Ver Todos
-            </Button>
           </CardHeader>
           <CardContent>
-            {recentProjects.length === 0 ? (
-              <div className="text-center py-8 text-gray-500">
-                <FolderOpen className="h-12 w-12 mx-auto mb-4 text-gray-300" />
-                <p>Nenhum projeto encontrado</p>
-                <Button 
-                  onClick={handleNewProject}
-                  className="mt-4"
-                >
-                  Criar Primeiro Projeto
-                </Button>
+            {isLoading ? (
+              <div className="flex justify-center py-8">
+                <Loader2 className="h-6 w-6 animate-spin" />
               </div>
-            ) : (
-              <div className="space-y-4">
-                {recentProjects.map((project) => (
-                  <div 
-                    key={project.id}
-                    className="flex items-center justify-between p-4 border rounded-lg hover:bg-gray-50 cursor-pointer"
-                    onClick={() => navigate(`/admin/projects/${project.id}`)}
-                  >
-                    <div className="flex-1">
-                      <div className="flex items-center gap-3">
-                        <div>
-                          <h3 className="font-medium text-gray-900">{project.title}</h3>
-                          <p className="text-sm text-gray-600">{project.client}</p>
-                        </div>
-                      </div>
+            ) : projects.length > 0 ? (
+              <div className="space-y-2">
+                {projects.slice(0, 5).map((project) => (
+                  <div key={project.id} className="flex justify-between items-center py-2 border-b">
+                    <div>
+                      <p className="font-medium">{project.title}</p>
+                      <p className="text-sm text-gray-600">{project.client_name}</p>
                     </div>
-                    <div className="flex items-center gap-3">
-                      {getStatusBadge(project.status)}
-                      <span className="text-sm text-gray-500">{project.date}</span>
+                    <div className="text-sm">
+                      <span className={`px-2 py-1 rounded text-xs ${
+                        project.status === 'approved' ? 'bg-green-100 text-green-800' :
+                        project.status === 'feedback' ? 'bg-blue-100 text-blue-800' :
+                        'bg-yellow-100 text-yellow-800'
+                      }`}>
+                        {project.status === 'approved' ? 'Aprovado' :
+                         project.status === 'feedback' ? 'Feedback' : 'Aguardando'}
+                      </span>
                     </div>
                   </div>
                 ))}
               </div>
+            ) : (
+              <p className="text-gray-500 text-center py-8">Nenhum projeto encontrado</p>
             )}
           </CardContent>
         </Card>
-      )}
-
-      {/* Performance Overview */}
-      {!isLoading && projects.length > 0 && (
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          <Card>
-            <CardHeader>
-              <CardTitle>Resumo do Mês</CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="flex items-center justify-between">
-                <span className="text-sm text-gray-600">Novos Clientes</span>
-                <span className="font-medium">+{clients.filter(c => {
-                  const created = new Date(c.createdAt);
-                  const now = new Date();
-                  const monthAgo = new Date(now.getFullYear(), now.getMonth(), 1);
-                  return created >= monthAgo;
-                }).length}</span>
-              </div>
-              
-              <div className="flex items-center justify-between">
-                <span className="text-sm text-gray-600">Projetos Iniciados</span>
-                <span className="font-medium">{projects.filter(p => {
-                  const created = new Date(p.created_at);
-                  const now = new Date();
-                  const monthAgo = new Date(now.getFullYear(), now.getMonth(), 1);
-                  return created >= monthAgo;
-                }).length}</span>
-              </div>
-              
-              <div className="flex items-center justify-between">
-                <span className="text-sm text-gray-600">Projetos Finalizados</span>
-                <span className="font-medium">{stats.completed}</span>
-              </div>
-              
-              <div className="flex items-center justify-between">
-                <span className="text-sm text-gray-600">Taxa de Aprovação</span>
-                <span className="font-medium">
-                  {stats.projects > 0 ? Math.round((stats.completed / stats.projects) * 100) : 0}%
-                </span>
-              </div>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader>
-              <CardTitle>Status dos Projetos</CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="flex items-center justify-between">
-                <span className="text-sm text-gray-600">Aguardando Feedback</span>
-                <Badge variant="secondary" className="bg-yellow-100 text-yellow-800">
-                  {stats.pending}
-                </Badge>
-              </div>
-              
-              <div className="flex items-center justify-between">
-                <span className="text-sm text-gray-600">Em Revisão</span>
-                <Badge variant="secondary" className="bg-blue-100 text-blue-800">
-                  {projects.filter(p => p.status === 'feedback').length}
-                </Badge>
-              </div>
-              
-              <div className="flex items-center justify-between">
-                <span className="text-sm text-gray-600">Aprovados</span>
-                <Badge variant="secondary" className="bg-green-100 text-green-800">
-                  {stats.completed}
-                </Badge>
-              </div>
-            </CardContent>
-          </Card>
-        </div>
-      )}
-    </div>
+      </div>
+    </NewAdminLayout>
   );
 };
 

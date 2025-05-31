@@ -1,18 +1,22 @@
+
 import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Plus, Users, Loader2, Pencil, Trash2 } from 'lucide-react';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import { Plus, Search, Loader2, Users, Building, Phone, Mail } from 'lucide-react';
+import { useToast } from '@/hooks/use-toast';
 import NewAdminLayout from '@/components/admin/layout/NewAdminLayout';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { useClients, type Client } from '@/hooks/admin/useClients';
 
 const NewAdminClients: React.FC = () => {
+  const { toast } = useToast();
   const { clients, isLoading, addClient, updateClient, deleteClient } = useClients();
-  const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
-  const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
-  const [editingClient, setEditingClient] = useState<Client | null>(null);
+
+  const [showNewClientDialog, setShowNewClientDialog] = useState(false);
+  const [searchTerm, setSearchTerm] = useState('');
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const [formData, setFormData] = useState({
     name: '',
     email: '',
@@ -20,244 +24,257 @@ const NewAdminClients: React.FC = () => {
     company: ''
   });
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    
-    if (editingClient) {
-      const success = await updateClient(editingClient.id, formData);
-      if (success) {
-        setIsEditDialogOpen(false);
-        setEditingClient(null);
-        resetForm();
-      }
-    } else {
-      const success = await addClient(formData);
-      if (success) {
-        setIsCreateDialogOpen(false);
-        resetForm();
-      }
+  const handleAddClient = async () => {
+    if (!formData.name || !formData.email) {
+      toast({
+        title: "Dados incompletos",
+        description: "Nome e email são campos obrigatórios.",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    setIsSubmitting(true);
+    try {
+      await addClient({
+        name: formData.name,
+        email: formData.email,
+        phone: formData.phone || undefined,
+        company: formData.company || undefined
+      });
+
+      toast({
+        title: "Cliente criado",
+        description: `O cliente ${formData.name} foi criado com sucesso.`
+      });
+      
+      setShowNewClientDialog(false);
+      setFormData({ name: '', email: '', phone: '', company: '' });
+    } catch (error) {
+      toast({
+        title: "Erro ao criar cliente",
+        description: "Não foi possível criar o cliente.",
+        variant: "destructive"
+      });
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
-  const handleEdit = (client: Client) => {
-    setEditingClient(client);
-    setFormData({
-      name: client.name,
-      email: client.email,
-      phone: client.phone || '',
-      company: client.company || ''
-    });
-    setIsEditDialogOpen(true);
+  const handleChange = (name: string, value: string) => {
+    setFormData(prev => ({ ...prev, [name]: value }));
   };
 
-  const handleDelete = async (id: string) => {
-    if (confirm('Tem certeza que deseja remover este cliente?')) {
-      await deleteClient(id);
-    }
-  };
+  const filteredClients = clients.filter(client => 
+    client.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    client.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    (client.company && client.company.toLowerCase().includes(searchTerm.toLowerCase()))
+  );
 
-  const resetForm = () => {
-    setFormData({ name: '', email: '', phone: '', company: '' });
+  const clientStats = {
+    total: clients.length,
+    withCompany: clients.filter(c => c.company).length,
+    withPhone: clients.filter(c => c.phone).length,
+    thisMonth: clients.filter(c => {
+      const clientDate = new Date(c.created_at);
+      const now = new Date();
+      return clientDate.getMonth() === now.getMonth() && clientDate.getFullYear() === now.getFullYear();
+    }).length
   };
-
-  if (isLoading) {
-    return (
-      <NewAdminLayout>
-        <div className="p-6 flex justify-center items-center h-64">
-          <Loader2 className="h-8 w-8 animate-spin text-harmonia-green" />
-          <span className="ml-2">Carregando clientes...</span>
-        </div>
-      </NewAdminLayout>
-    );
-  }
 
   return (
     <NewAdminLayout>
       <div className="p-6 space-y-6">
+        {/* Header */}
         <div className="flex justify-between items-center">
-          <div>
-            <h1 className="text-3xl font-bold">Clientes</h1>
-            <p className="text-gray-600">Gerencie seus clientes</p>
-          </div>
-          
-          <Dialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>
-            <DialogTrigger asChild>
-              <Button className="bg-harmonia-green hover:bg-harmonia-green/90">
-                <Plus className="mr-2 h-4 w-4" />
-                Novo Cliente
-              </Button>
-            </DialogTrigger>
-            <DialogContent>
-              <DialogHeader>
-                <DialogTitle>Criar Novo Cliente</DialogTitle>
-              </DialogHeader>
-              <form onSubmit={handleSubmit} className="space-y-4">
-                <div>
-                  <Label htmlFor="name">Nome *</Label>
-                  <Input
-                    id="name"
-                    value={formData.name}
-                    onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                    required
-                  />
-                </div>
-                <div>
-                  <Label htmlFor="email">E-mail *</Label>
-                  <Input
-                    id="email"
-                    type="email"
-                    value={formData.email}
-                    onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                    required
-                  />
-                </div>
-                <div>
-                  <Label htmlFor="phone">Telefone</Label>
-                  <Input
-                    id="phone"
-                    value={formData.phone}
-                    onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
-                  />
-                </div>
-                <div>
-                  <Label htmlFor="company">Empresa</Label>
-                  <Input
-                    id="company"
-                    value={formData.company}
-                    onChange={(e) => setFormData({ ...formData, company: e.target.value })}
-                  />
-                </div>
-                <div className="flex gap-2 pt-4">
-                  <Button type="submit" className="flex-1">Criar Cliente</Button>
-                  <Button 
-                    type="button" 
-                    variant="outline" 
-                    onClick={() => setIsCreateDialogOpen(false)}
-                  >
-                    Cancelar
-                  </Button>
-                </div>
-              </form>
-            </DialogContent>
-          </Dialog>
+          <h1 className="text-3xl font-bold">Clientes</h1>
+          <Button onClick={() => setShowNewClientDialog(true)} className="bg-harmonia-green hover:bg-harmonia-green/90">
+            <Plus className="mr-2 h-4 w-4" />
+            Novo Cliente
+          </Button>
         </div>
 
+        {/* Stats Cards */}
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+          <Card>
+            <CardContent className="p-4">
+              <div className="flex items-center">
+                <Users className="h-8 w-8 text-blue-600 mr-3" />
+                <div>
+                  <div className="text-2xl font-bold">{isLoading ? <Loader2 className="h-6 w-6 animate-spin" /> : clientStats.total}</div>
+                  <p className="text-gray-600">Total</p>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+          <Card>
+            <CardContent className="p-4">
+              <div className="flex items-center">
+                <Building className="h-8 w-8 text-green-600 mr-3" />
+                <div>
+                  <div className="text-2xl font-bold">{isLoading ? <Loader2 className="h-6 w-6 animate-spin" /> : clientStats.withCompany}</div>
+                  <p className="text-gray-600">Com Empresa</p>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+          <Card>
+            <CardContent className="p-4">
+              <div className="flex items-center">
+                <Phone className="h-8 w-8 text-purple-600 mr-3" />
+                <div>
+                  <div className="text-2xl font-bold">{isLoading ? <Loader2 className="h-6 w-6 animate-spin" /> : clientStats.withPhone}</div>
+                  <p className="text-gray-600">Com Telefone</p>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+          <Card>
+            <CardContent className="p-4">
+              <div className="flex items-center">
+                <Mail className="h-8 w-8 text-orange-600 mr-3" />
+                <div>
+                  <div className="text-2xl font-bold">{isLoading ? <Loader2 className="h-6 w-6 animate-spin" /> : clientStats.thisMonth}</div>
+                  <p className="text-gray-600">Este Mês</p>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+
+        {/* Search */}
         <Card>
           <CardHeader>
-            <CardTitle className="flex items-center">
-              <Users className="mr-2 h-5 w-5" />
-              Lista de Clientes ({clients.length})
-            </CardTitle>
+            <CardTitle>Buscar Clientes</CardTitle>
           </CardHeader>
           <CardContent>
-            {clients.length === 0 ? (
-              <div className="text-center py-8 text-gray-500">
-                <Users className="h-12 w-12 mx-auto mb-4 text-gray-400" />
-                <p>Nenhum cliente cadastrado</p>
-                <p className="text-sm">Clique em "Novo Cliente" para começar</p>
+            <div className="relative">
+              <Search className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
+              <Input
+                placeholder="Buscar por nome, email ou empresa..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="pl-9"
+              />
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Clients List */}
+        <Card>
+          <CardHeader>
+            <CardTitle>Lista de Clientes</CardTitle>
+          </CardHeader>
+          <CardContent>
+            {isLoading ? (
+              <div className="flex justify-center items-center p-12">
+                <Loader2 className="h-8 w-8 animate-spin text-harmonia-green" />
+                <span className="ml-2">Carregando clientes...</span>
               </div>
-            ) : (
+            ) : filteredClients.length > 0 ? (
               <div className="space-y-4">
-                {clients.map((client) => (
-                  <div 
-                    key={client.id} 
-                    className="border rounded-lg p-4 hover:bg-gray-50 transition-colors"
-                  >
+                {filteredClients.map((client: Client) => (
+                  <div key={client.id} className="border rounded-lg p-4 hover:bg-gray-50">
                     <div className="flex justify-between items-start">
                       <div className="flex-1">
-                        <h3 className="font-semibold">{client.name}</h3>
+                        <h3 className="font-semibold text-lg">{client.name}</h3>
                         <p className="text-gray-600">{client.email}</p>
                         {client.phone && (
-                          <p className="text-sm text-gray-500">{client.phone}</p>
+                          <p className="text-gray-500">{client.phone}</p>
                         )}
                         {client.company && (
-                          <p className="text-sm text-gray-500">{client.company}</p>
+                          <p className="text-blue-600 font-medium">{client.company}</p>
                         )}
-                        <p className="text-xs text-gray-400 mt-2">
-                          Criado em: {new Date(client.createdAt).toLocaleDateString('pt-BR')}
-                        </p>
                       </div>
-                      <div className="flex gap-2">
-                        <Button
-                          size="sm"
-                          variant="outline"
-                          onClick={() => handleEdit(client)}
-                        >
-                          <Pencil className="h-4 w-4" />
-                        </Button>
-                        <Button
-                          size="sm"
-                          variant="outline"
-                          onClick={() => handleDelete(client.id)}
-                          className="text-red-600 hover:text-red-700"
-                        >
-                          <Trash2 className="h-4 w-4" />
-                        </Button>
+                      <div className="text-right">
+                        <p className="text-sm text-gray-500">
+                          Cadastrado em: {new Date(client.created_at).toLocaleDateString('pt-BR')}
+                        </p>
                       </div>
                     </div>
                   </div>
                 ))}
               </div>
+            ) : (
+              <div className="text-center py-12">
+                <p className="text-gray-500 mb-4">
+                  {clients.length === 0
+                    ? 'Nenhum cliente cadastrado ainda.'
+                    : 'Nenhum cliente encontrado com os filtros aplicados.'
+                  }
+                </p>
+                {clients.length === 0 && (
+                  <Button onClick={() => setShowNewClientDialog(true)}>
+                    Cadastrar Primeiro Cliente
+                  </Button>
+                )}
+              </div>
             )}
           </CardContent>
         </Card>
 
-        <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
+        {/* New Client Dialog */}
+        <Dialog open={showNewClientDialog} onOpenChange={setShowNewClientDialog}>
           <DialogContent>
             <DialogHeader>
-              <DialogTitle>Editar Cliente</DialogTitle>
+              <DialogTitle>Cadastrar Novo Cliente</DialogTitle>
             </DialogHeader>
-            <form onSubmit={handleSubmit} className="space-y-4">
+            <div className="space-y-4 pt-4">
               <div>
-                <Label htmlFor="edit-name">Nome *</Label>
+                <Label htmlFor="name">Nome Completo</Label>
                 <Input
-                  id="edit-name"
+                  id="name"
+                  name="name"
+                  placeholder="Nome do cliente"
                   value={formData.name}
-                  onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                  required
+                  onChange={(e) => handleChange('name', e.target.value)}
                 />
               </div>
               <div>
-                <Label htmlFor="edit-email">E-mail *</Label>
+                <Label htmlFor="email">Email</Label>
                 <Input
-                  id="edit-email"
+                  id="email"
+                  name="email"
                   type="email"
+                  placeholder="email@exemplo.com"
                   value={formData.email}
-                  onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                  required
+                  onChange={(e) => handleChange('email', e.target.value)}
                 />
               </div>
               <div>
-                <Label htmlFor="edit-phone">Telefone</Label>
+                <Label htmlFor="phone">Telefone (opcional)</Label>
                 <Input
-                  id="edit-phone"
+                  id="phone"
+                  name="phone"
+                  placeholder="(11) 99999-9999"
                   value={formData.phone}
-                  onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
+                  onChange={(e) => handleChange('phone', e.target.value)}
                 />
               </div>
               <div>
-                <Label htmlFor="edit-company">Empresa</Label>
+                <Label htmlFor="company">Empresa (opcional)</Label>
                 <Input
-                  id="edit-company"
+                  id="company"
+                  name="company"
+                  placeholder="Nome da empresa"
                   value={formData.company}
-                  onChange={(e) => setFormData({ ...formData, company: e.target.value })}
+                  onChange={(e) => handleChange('company', e.target.value)}
                 />
               </div>
-              <div className="flex gap-2 pt-4">
-                <Button type="submit" className="flex-1">Salvar Alterações</Button>
-                <Button 
-                  type="button" 
-                  variant="outline" 
-                  onClick={() => {
-                    setIsEditDialogOpen(false);
-                    setEditingClient(null);
-                    resetForm();
-                  }}
-                >
+              <div className="flex justify-end space-x-2 pt-4">
+                <Button variant="outline" onClick={() => setShowNewClientDialog(false)}>
                   Cancelar
                 </Button>
+                <Button
+                  onClick={handleAddClient}
+                  className="bg-harmonia-green hover:bg-harmonia-green/90"
+                  disabled={!formData.name || !formData.email || isSubmitting}
+                >
+                  {isSubmitting ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
+                  {isSubmitting ? "Criando..." : "Criar Cliente"}
+                </Button>
               </div>
-            </form>
+            </div>
           </DialogContent>
         </Dialog>
       </div>

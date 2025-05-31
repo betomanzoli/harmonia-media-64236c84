@@ -35,7 +35,6 @@ export const useProjects = () => {
       setIsLoading(true);
       setError(null);
 
-      // Buscar projetos
       const { data: projectsData, error: projectsError } = await supabase
         .from('projects')
         .select('*')
@@ -43,7 +42,6 @@ export const useProjects = () => {
 
       if (projectsError) throw projectsError;
 
-      // Para cada projeto, buscar suas versões
       const projectsWithVersions = await Promise.all(
         (projectsData || []).map(async (project) => {
           const { data: versions, error: versionsError } = await supabase
@@ -58,6 +56,7 @@ export const useProjects = () => {
 
           return {
             ...project,
+            status: project.status as 'waiting' | 'feedback' | 'approved',
             versions: versions || []
           };
         })
@@ -91,14 +90,13 @@ export const useProjects = () => {
           ...projectData,
           status: projectData.status || 'waiting',
           created_at: new Date().toISOString(),
-          expires_at: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString() // 30 dias
+          expires_at: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString()
         }])
         .select()
         .single();
 
       if (error) throw error;
 
-      // Gerar preview_code
       if (newProject) {
         const previewCode = await generatePreviewLink(newProject.id);
         if (previewCode) {
@@ -139,13 +137,11 @@ export const useProjects = () => {
 
   const deleteProject = async (projectId: string) => {
     try {
-      // Primeiro deletar versões
       await supabase
         .from('project_versions')
         .delete()
         .eq('project_id', projectId);
 
-      // Depois deletar projeto
       const { error } = await supabase
         .from('projects')
         .delete()
