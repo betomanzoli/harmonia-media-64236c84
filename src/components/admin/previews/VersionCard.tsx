@@ -1,14 +1,15 @@
+
 import React, { useState } from "react";
 import { Card, CardContent } from "@/components/ui/card";
-import { Version } from '@/hooks/admin/useVersions'; // ✅ CORRIGIDO
+import { Version } from '@/hooks/admin/useVersions';
 import { Button } from "@/components/ui/button";
-import { Play, Pause, Trash2, CheckCircle, Copy, ExternalLink } from "lucide-react";
+import { Play, Pause, Trash2, Copy, ExternalLink } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 import { useToast } from '@/hooks/use-toast';
 
 interface VersionCardProps {
-  version: Version; // ✅ CORRIGIDO
+  version: Version;
   projectId: string;
   onDeleteVersion: (versionId: string) => void;
 }
@@ -19,7 +20,7 @@ const VersionCard: React.FC<VersionCardProps> = ({
   onDeleteVersion
 }) => {
   const [isPlaying, setIsPlaying] = useState(false);
-  const [audio] = useState(new Audio(version.bandcamp_url || '')); // ✅ CORRIGIDO
+  const [audio] = useState(new Audio(version.audio_url || ''));
   const { toast } = useToast();
 
   const handleTogglePlay = () => {
@@ -27,8 +28,8 @@ const VersionCard: React.FC<VersionCardProps> = ({
       audio.pause();
     } else {
       // Se temos uma URL do Bandcamp, abrir em nova aba
-      if (version.bandcamp_url) { // ✅ CORRIGIDO
-        window.open(version.bandcamp_url, '_blank'); // ✅ CORRIGIDO
+      if (version.audio_url) {
+        window.open(version.audio_url, '_blank');
         toast({
           title: "Abrindo áudio",
           description: "O áudio está sendo aberto em uma nova aba."
@@ -45,8 +46,8 @@ const VersionCard: React.FC<VersionCardProps> = ({
           variant: "destructive"
         });
         
-        if (version.bandcamp_url) { // ✅ CORRIGIDO
-          window.open(version.bandcamp_url, '_blank'); // ✅ CORRIGIDO
+        if (version.audio_url) {
+          window.open(version.audio_url, '_blank');
         }
       });
     }
@@ -78,7 +79,7 @@ const VersionCard: React.FC<VersionCardProps> = ({
   };
 
   return (
-    <Card className={`bg-white ${version.recommended ? 'border-green-500 border-2' : ''}`}> {/* ✅ CORRIGIDO */}
+    <Card className={`bg-white ${version.recommended ? 'border-green-500 border-2' : ''}`}>
       <CardContent className="p-4">
         <div className="flex flex-col sm:flex-row justify-between">
           <div className="flex-1">
@@ -98,11 +99,11 @@ const VersionCard: React.FC<VersionCardProps> = ({
             </p>
             
             <div className="text-xs text-gray-500 mb-4">
-              Adicionado em: {new Date(version.created_at).toLocaleDateString('pt-BR')} {/* ✅ CORRIGIDO */}
+              Adicionado em: {new Date(version.created_at).toLocaleDateString('pt-BR')}
             </div>
             
             {/* URL do áudio */}
-            {version.bandcamp_url && ( // ✅ CORRIGIDO
+            {version.audio_url && (
               <div className="mt-2">
                 <div className="flex items-center justify-between bg-gray-50 p-2 rounded text-sm">
                   <span className="font-medium">Áudio</span>
@@ -111,7 +112,7 @@ const VersionCard: React.FC<VersionCardProps> = ({
                       variant="ghost" 
                       size="icon" 
                       className="h-7 w-7" 
-                      onClick={() => handleCopyLink(version.bandcamp_url!)} // ✅ CORRIGIDO
+                      onClick={() => handleCopyLink(version.audio_url!)}
                       title="Copiar link"
                     >
                       <Copy className="h-3.5 w-3.5" />
@@ -120,7 +121,7 @@ const VersionCard: React.FC<VersionCardProps> = ({
                       variant="ghost" 
                       size="icon" 
                       className="h-7 w-7" 
-                      onClick={() => window.open(version.bandcamp_url, '_blank')} // ✅ CORRIGIDO
+                      onClick={() => window.open(version.audio_url, '_blank')}
                       title="Abrir link"
                     >
                       <ExternalLink className="h-3.5 w-3.5" />

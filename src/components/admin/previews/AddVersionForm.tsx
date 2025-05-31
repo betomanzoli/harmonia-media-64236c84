@@ -6,11 +6,11 @@ import { Textarea } from '@/components/ui/textarea';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { AlertCircle, RefreshCw, ExternalLink } from 'lucide-react';
-import { Version } from '@/hooks/admin/useVersions'; // ✅ CORRIGIDO
+import { Version } from '@/hooks/admin/useVersions';
 
 interface AddVersionFormProps {
   projectId: string;
-  onAddVersion: (version: Version) => void; // ✅ CORRIGIDO
+  onAddVersion: (version: Version) => void;
   onCancel: () => void;
   isFinalVersion?: boolean;
   packageType?: string;
@@ -26,7 +26,7 @@ const AddVersionForm: React.FC<AddVersionFormProps> = ({
   const [formData, setFormData] = useState({
     name: '',
     description: '',
-    bandcamp_url: '', // ✅ CORRIGIDO
+    audio_url: '',
     recommended: false
   });
   const [previewEmbed, setPreviewEmbed] = useState<string>('');
@@ -38,7 +38,7 @@ const AddVersionForm: React.FC<AddVersionFormProps> = ({
     const { name, value } = e.target;
     setFormData(prev => ({ ...prev, [name]: value }));
 
-    if (name === 'bandcamp_url' && value) { // ✅ CORRIGIDO
+    if (name === 'audio_url' && value) {
       setEmbedError('');
       
       if (value.includes('bandcamp.com')) {
@@ -56,7 +56,7 @@ const AddVersionForm: React.FC<AddVersionFormProps> = ({
         setUrlType('other');
         setPreviewEmbed('Preview: URL de áudio externa');
       }
-    } else if (name === 'bandcamp_url' && !value) { // ✅ CORRIGIDO
+    } else if (name === 'audio_url' && !value) {
       setPreviewEmbed('');
       setEmbedError('');
       setUrlType('bandcamp');
@@ -77,15 +77,16 @@ const AddVersionForm: React.FC<AddVersionFormProps> = ({
     setIsProcessing(true);
 
     try {
-      const versionData: Omit<Version, 'id' | 'created_at' | 'updated_at'> = { // ✅ CORRIGIDO
+      const versionData: Omit<Version, 'id' | 'created_at'> = {
         project_id: projectId,
         name: formData.name,
         description: formData.description,
-        bandcamp_url: formData.bandcamp_url, // ✅ CORRIGIDO
-        recommended: formData.recommended
+        audio_url: formData.audio_url,
+        recommended: formData.recommended,
+        version_id: `v_${Date.now()}`
       };
 
-      await onAddVersion(versionData as Version); // ✅ CORRIGIDO
+      await onAddVersion(versionData as Version);
     } catch (error) {
       console.error('Error adding version:', error);
     } finally {
@@ -118,18 +119,18 @@ const AddVersionForm: React.FC<AddVersionFormProps> = ({
   return (
     <form onSubmit={handleSubmit} className="space-y-6">
       <div>
-        <Label htmlFor="bandcamp_url">URL do Áudio</Label> {/* ✅ CORRIGIDO */}
+        <Label htmlFor="audio_url">URL do Áudio</Label>
         <Input
-          id="bandcamp_url"
-          name="bandcamp_url" // ✅ CORRIGIDO
-          placeholder={getUrlPlaceholder()}
-          value={formData.bandcamp_url} // ✅ CORRIGIDO
+          id="audio_url"
+          name="audio_url"
+          placeholder="https://harmonia-media.bandcamp.com/track/nome-da-track"
+          value={formData.audio_url}
           onChange={handleChange}
           className="mt-1"
           required
         />
         <p className="text-xs text-gray-500 mt-1">
-          {getUrlHelperText()}
+          Cole a URL completa do track no Bandcamp
         </p>
         
         <div className="flex gap-2 mt-2">
@@ -160,7 +161,7 @@ const AddVersionForm: React.FC<AddVersionFormProps> = ({
         </div>
       </div>
 
-      {formData.bandcamp_url && ( // ✅ CORRIGIDO
+      {formData.audio_url && (
         <div className="border rounded p-4 bg-gray-50">
           <Label className="text-sm font-medium mb-2 block">Prévia:</Label>
           {embedError ? (
@@ -176,7 +177,7 @@ const AddVersionForm: React.FC<AddVersionFormProps> = ({
                 variant="outline"
                 size="sm"
                 className="mt-2"
-                onClick={() => window.open(formData.bandcamp_url, '_blank')} // ✅ CORRIGIDO
+                onClick={() => window.open(formData.audio_url, '_blank')}
               >
                 <ExternalLink className="mr-2 h-4 w-4" />
                 Abrir URL
@@ -234,7 +235,7 @@ const AddVersionForm: React.FC<AddVersionFormProps> = ({
         <Button 
           type="submit" 
           className="bg-harmonia-green hover:bg-harmonia-green/90"
-          disabled={isProcessing || !formData.name || !formData.bandcamp_url} // ✅ CORRIGIDO
+          disabled={isProcessing || !formData.name || !formData.audio_url}
         >
           {isProcessing ? (
             <>

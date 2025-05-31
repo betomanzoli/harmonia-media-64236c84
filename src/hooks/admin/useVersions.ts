@@ -64,7 +64,12 @@ export const useVersions = (projectId?: string) => {
       const { data, error } = await supabase
         .from('project_versions')
         .insert([{
-          ...versionData,
+          project_id: versionData.project_id,
+          name: versionData.name,
+          description: versionData.description,
+          audio_url: versionData.audio_url,
+          recommended: versionData.recommended,
+          version_id: versionData.version_id,
           created_at: new Date().toISOString()
         }])
         .select()

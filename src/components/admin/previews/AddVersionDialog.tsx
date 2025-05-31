@@ -2,7 +2,7 @@
 import React, { useState } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import { Plus, File, FilePlus, Trash } from "lucide-react";
+import { Plus, FilePlus, Trash } from "lucide-react";
 import AddVersionForm from './AddVersionForm';
 import { Version } from '@/hooks/admin/useVersions';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
@@ -31,7 +31,7 @@ const AddVersionDialog: React.FC<AddVersionDialogProps> = ({
   const [localOpen, setLocalOpen] = useState(false);
   const [selectedTab, setSelectedTab] = useState<'single' | 'multiple'>('single');
   const [multipleVersions, setMultipleVersions] = useState([
-    { name: '', description: '', bandcamp_url: '', recommended: false }
+    { name: '', description: '', audio_url: '', recommended: false }
   ]);
 
   const isDialogOpen = isOpen !== undefined ? isOpen : localOpen;
@@ -59,19 +59,20 @@ const AddVersionDialog: React.FC<AddVersionDialogProps> = ({
   };
 
   const handleAddMultipleVersions = () => {
-    const validVersions = multipleVersions.filter(v => v.name.trim() !== '' && v.bandcamp_url.trim() !== '');
+    const validVersions = multipleVersions.filter(v => v.name.trim() !== '' && v.audio_url.trim() !== '');
     
     if (validVersions.length === 0) {
       return;
     }
 
     validVersions.forEach((versionData, index) => {
-      const version: Omit<Version, 'id' | 'created_at' | 'updated_at'> = {
+      const version: Omit<Version, 'id' | 'created_at'> = {
         project_id: projectId,
         name: versionData.name,
         description: versionData.description || '',
-        bandcamp_url: versionData.bandcamp_url,
-        recommended: versionData.recommended
+        audio_url: versionData.audio_url,
+        recommended: versionData.recommended,
+        version_id: `v_${Date.now()}_${index}`
       };
 
       if (onAddVersion) {
@@ -85,11 +86,11 @@ const AddVersionDialog: React.FC<AddVersionDialogProps> = ({
       setLocalOpen(false);
     }
     
-    setMultipleVersions([{ name: '', description: '', bandcamp_url: '', recommended: false }]);
+    setMultipleVersions([{ name: '', description: '', audio_url: '', recommended: false }]);
   };
   
   const addEmptyVersion = () => {
-    setMultipleVersions([...multipleVersions, { name: '', description: '', bandcamp_url: '', recommended: false }]);
+    setMultipleVersions([...multipleVersions, { name: '', description: '', audio_url: '', recommended: false }]);
   };
 
   const removeVersion = (index: number) => {
@@ -178,8 +179,8 @@ const AddVersionDialog: React.FC<AddVersionDialogProps> = ({
                     <div>
                       <label className="text-sm font-medium">URL do Áudio*</label>
                       <Input
-                        value={version.bandcamp_url}
-                        onChange={(e) => updateVersionField(index, 'bandcamp_url', e.target.value)}
+                        value={version.audio_url}
+                        onChange={(e) => updateVersionField(index, 'audio_url', e.target.value)}
                         className="bg-slate-700 mt-1"
                         placeholder="https://harmonia-media.bandcamp.com/..."
                         required
