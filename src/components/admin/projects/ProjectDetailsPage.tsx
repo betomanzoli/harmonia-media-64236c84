@@ -9,46 +9,121 @@ import { ArrowLeft, Plus, User, Mail, Phone, Calendar, ExternalLink } from 'luci
 import NewAdminLayout from '@/components/admin/layout/NewAdminLayout';
 import BandcampVersionCard from './BandcampVersionCard';
 import AddVersionDialog from './AddVersionDialog';
-import { useProjects } from '@/hooks/admin/useProjects';
+
+interface BandcampVersion {
+  id: string;
+  name: string;
+  description?: string;
+  embedUrl: string;
+  bandcampUrl: string;
+  final?: boolean;
+  recommended?: boolean;
+  dateAdded: string;
+  albumId?: string;
+  trackId?: string;
+}
+
+interface Project {
+  id: string;
+  clientName: string;
+  title: string;
+  status: 'waiting' | 'feedback' | 'approved';
+  packageType?: string;
+  createdAt: string;
+  expirationDate?: string;
+  clientEmail?: string;
+  clientPhone?: string;
+  versions: BandcampVersion[];
+}
 
 const ProjectDetailsPage: React.FC = () => {
   const { projectId } = useParams<{ projectId: string }>();
   const navigate = useNavigate();
   const { toast } = useToast();
-  const { projects, isLoading, loadProjects, deleteVersion } = useProjects();
   
+  const [project, setProject] = useState<Project | null>(null);
   const [showAddVersionDialog, setShowAddVersionDialog] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
 
-  const project = projects.find(p => p.id === projectId);
-
+  // Mock data - em produção viria do Supabase
   useEffect(() => {
-    if (!isLoading && !project && projectId) {
-      // Recarregar projetos se não encontrou
-      loadProjects();
-    }
-  }, [projectId, project, isLoading, loadProjects]);
+    const loadProject = () => {
+      setIsLoading(true);
+      
+      // Simulação de dados do projeto
+      const mockProject: Project = {
+        id: projectId || '1',
+        clientName: 'João Silva',
+        title: 'Música Personalizada - João Silva',
+        status: 'waiting',
+        packageType: 'Premium',
+        createdAt: '15/01/2024',
+        expirationDate: '15/02/2024',
+        clientEmail: 'joao@email.com',
+        clientPhone: '+55 11 99999-9999',
+        versions: [
+          {
+            id: '1',
+            name: 'Versão 1 - Mix Inicial',
+            description: 'Primeira versão com arranjo básico',
+            embedUrl: 'https://bandcamp.com/EmbeddedPlayer/album=4290875691/size=small/bgcol=333333/linkcol=2ebd35/track=2755730140/transparent=true/',
+            bandcampUrl: 'https://harmonia-media.bandcamp.com/track/vozes-em-harmonia-ex-05',
+            final: false,
+            recommended: true,
+            dateAdded: '15/01/2024',
+            albumId: '4290875691',
+            trackId: '2755730140'
+          }
+        ]
+      };
+      
+      setProject(mockProject);
+      setIsLoading(false);
+    };
 
-  const handleDeleteVersion = async (versionId: string) => {
+    if (projectId) {
+      loadProject();
+    }
+  }, [projectId]);
+
+  const handleAddVersion = (newVersion: BandcampVersion) => {
+    if (!project) return;
+
+    console.log('Adding version to project:', newVersion);
+    
+    setProject(prev => {
+      if (!prev) return null;
+      return {
+        ...prev,
+        versions: [...prev.versions, newVersion]
+      };
+    });
+
+    toast({
+      title: "Versão adicionada",
+      description: `${newVersion.name} foi adicionada ao projeto.`
+    });
+  };
+
+  const handleDeleteVersion = (versionId: string) => {
     if (!project) return;
 
     const versionToDelete = project.versions.find(v => v.id === versionId);
     if (!versionToDelete) return;
 
-    const result = await deleteVersion(versionId);
-    
-    if (result.success) {
-      toast({
-        title: "Versão removida",
-        description: `${versionToDelete.name} foi removida do projeto.`,
-        variant: "destructive"
-      });
-    } else {
-      toast({
-        title: "Erro ao remover versão",
-        description: result.error || "Ocorreu um erro inesperado.",
-        variant: "destructive"
-      });
-    }
+    setProject(prev => {
+      if (!prev) return null;
+      return {
+        ...prev,
+        versions: prev.versions.filter(v => v.id !== versionId)
+      };
+    });
+
+    toast({
+      title: "Versão removida",
+      description: `${versionToDelete.name} foi removida do projeto.`,
+      variant: "destructive"
+    });
   };
 
   const getStatusBadge = (status: string) => {
@@ -68,16 +143,7 @@ const ProjectDetailsPage: React.FC = () => {
   };
 
   const copyClientPreviewLink = () => {
-    if (!project?.preview_code) {
-      toast({
-        title: "Link não disponível",
-        description: "O link de prévia ainda não foi gerado para este projeto.",
-        variant: "destructive"
-      });
-      return;
-    }
-
-    const previewUrl = `${window.location.origin}/client-preview/${project.preview_code}`;
+    const previewUrl = `${window.location.origin}/client-preview/${projectId}`;
     navigator.clipboard.writeText(previewUrl).then(() => {
       toast({
         title: "Link copiado!",
@@ -153,18 +219,18 @@ const ProjectDetailsPage: React.FC = () => {
             <CardContent className="space-y-3">
               <div className="flex items-center">
                 <User className="w-4 h-4 mr-2 text-gray-400" />
-                <span>{project.client_name}</span>
+                <span>{project.clientName}</span>
               </div>
-              {project.client_email && (
+              {project.clientEmail && (
                 <div className="flex items-center">
                   <Mail className="w-4 h-4 mr-2 text-gray-400" />
-                  <span>{project.client_email}</span>
+                  <span>{project.clientEmail}</span>
                 </div>
               )}
-              {project.client_phone && (
+              {project.clientPhone && (
                 <div className="flex items-center">
                   <Phone className="w-4 h-4 mr-2 text-gray-400" />
-                  <span>{project.client_phone}</span>
+                  <span>{project.clientPhone}</span>
                 </div>
               )}
             </CardContent>
@@ -178,16 +244,16 @@ const ProjectDetailsPage: React.FC = () => {
             <CardContent className="space-y-3">
               <div className="flex items-center">
                 <Calendar className="w-4 h-4 mr-2 text-gray-400" />
-                <span>Criado em: {new Date(project.created_at).toLocaleDateString('pt-BR')}</span>
+                <span>Criado em: {project.createdAt}</span>
               </div>
-              {project.package_type && (
+              {project.packageType && (
                 <div>
-                  <span className="font-medium">Pacote:</span> {project.package_type}
+                  <span className="font-medium">Pacote:</span> {project.packageType}
                 </div>
               )}
-              {project.expires_at && (
+              {project.expirationDate && (
                 <div>
-                  <span className="font-medium">Expira em:</span> {new Date(project.expires_at).toLocaleDateString('pt-BR')}
+                  <span className="font-medium">Expira em:</span> {project.expirationDate}
                 </div>
               )}
               <div>
@@ -235,16 +301,7 @@ const ProjectDetailsPage: React.FC = () => {
               {project.versions.map((version) => (
                 <BandcampVersionCard
                   key={version.id}
-                  version={{
-                    id: version.id,
-                    name: version.name,
-                    description: version.description,
-                    embedUrl: version.audio_url || '',
-                    bandcampUrl: version.audio_url || '',
-                    final: false,
-                    recommended: version.recommended,
-                    dateAdded: new Date(version.created_at).toLocaleDateString('pt-BR')
-                  }}
+                  version={version}
                   projectId={project.id}
                   onDeleteVersion={handleDeleteVersion}
                 />
@@ -271,7 +328,8 @@ const ProjectDetailsPage: React.FC = () => {
           isOpen={showAddVersionDialog}
           onOpenChange={setShowAddVersionDialog}
           projectId={project.id}
-          packageType={project.package_type}
+          onAddVersion={handleAddVersion}
+          packageType={project.packageType}
         />
       </div>
     </NewAdminLayout>
