@@ -1,119 +1,130 @@
-import React from 'react';
+import React, { useState } from 'react';
+import { Card, CardContent } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
+import { Copy, Trash2, CheckCircle, Loader2 } from 'lucide-react';
+import { useToast } from '@/hooks/use-toast';
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
 import BandcampEmbedPlayer from '@/components/previews/BandcampEmbedPlayer';
-import { Music, Calendar, Star } from 'lucide-react';
 
-interface BandcampVersionCardProps {
-  version: {
-    id?: string;
-    name: string;
-    description?: string;
-    bandcamp_url?: string;
-    recommended?: boolean;
-    created_at?: string;
-  };
-  onEdit?: (version: any) => void;
-  onDelete?: (versionId: string) => void;
+interface BandcampVersion {
+  id: string;
+  name: string;
+  description?: string;
+  embed_url: string;
+  original_bandcamp_url?: string;
+  final?: boolean;
+  recommended?: boolean;
+  created_at: string;
 }
 
-const BandcampVersionCard: React.FC<BandcampVersionCardProps> = ({ 
-  version, 
-  onEdit, 
-  onDelete 
+interface BandcampVersionCardProps {
+  version: BandcampVersion;
+  projectId: string;
+  onDeleteVersion: (versionId: string) => void;
+}
+
+const BandcampVersionCard: React.FC<BandcampVersionCardProps> = ({
+  version,
+  projectId,
+  onDeleteVersion
 }) => {
-  const formatDate = (dateString?: string): string => {
-    if (!dateString) return '--';
-    try {
-      return new Date(dateString).toLocaleDateString('pt-BR', {
-        day: '2-digit',
-        month: '2-digit',
-        year: 'numeric',
-        hour: '2-digit',
-        minute: '2-digit'
+  const { toast } = useToast();
+  const [isPlayerLoaded, setIsPlayerLoaded] = useState(false);
+
+  const handleCopyLink = () => {
+    const linkToCopy = version.original_bandcamp_url || version.embed_url;
+    navigator.clipboard.writeText(linkToCopy).then(() => {
+      toast({
+        title: "Link copiado!",
+        description: "O link foi copiado para a área de transferência."
       });
-    } catch {
-      return '--';
-    }
+    }).catch(err => {
+      console.error('Erro ao copiar link:', err);
+      toast({
+        title: "Erro",
+        description: "Não foi possível copiar o link.",
+        variant: "destructive"
+      });
+    });
   };
 
   return (
-    <div className="border rounded-lg p-4 bg-white shadow-sm hover:shadow-md transition-shadow">
-      {/* Header da Versão */}
-      <div className="flex items-start justify-between mb-3">
-        <div className="flex items-center gap-2 flex-1">
-          <Music className="h-4 w-4 text-harmonia-green flex-shrink-0" />
-          <h3 className="font-semibold text-lg text-gray-900 leading-tight">
-            {version.name}
-          </h3>
-          {version.recommended && (
-            <div className="flex items-center gap-1 px-2 py-1 bg-green-100 text-green-700 rounded-full">
-              <Star className="h-3 w-3 fill-current" />
-              <span className="text-xs font-medium">Recomendada</span>
-            </div>
-          )}
-        </div>
-        
-        {/* Ações (se fornecidas) */}
-        {(onEdit || onDelete) && (
-          <div className="flex gap-1 ml-2">
-            {onEdit && (
-              <button
-                onClick={() => onEdit(version)}
-                className="p-1 text-gray-400 hover:text-gray-600 rounded"
-                title="Editar versão"
-              >
-                <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
-                </svg>
-              </button>
+    <Card className="w-full">
+      <CardContent className="p-4">
+        {/* Header */}
+        <div className="flex items-center justify-between mb-3">
+          <div className="flex items-center gap-2">
+            <h3 className="font-semibold text-lg">{version.name}</h3>
+            {version.recommended && (
+              <Badge variant="secondary" className="bg-green-100 text-green-700">
+                Recomendada
+              </Badge>
             )}
-            {onDelete && version.id && (
-              <button
-                onClick={() => onDelete(version.id!)}
-                className="p-1 text-gray-400 hover:text-red-600 rounded"
-                title="Excluir versão"
-              >
-                <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                </svg>
-              </button>
+            {version.final && (
+              <Badge variant="secondary" className="bg-blue-100 text-blue-700">
+                Final
+              </Badge>
             )}
           </div>
+        </div>
+
+        {version.description && (
+          <p className="text-sm text-gray-600 mb-3">{version.description}</p>
         )}
-      </div>
 
-      {/* Descrição */}
-      {version.description && (
-        <div className="text-sm text-gray-600 mb-3 leading-relaxed">
-          {version.description}
-        </div>
-      )}
+        <p className="text-xs text-gray-400 mb-4">
+          Adicionado em: {new Date(version.created_at).toLocaleDateString('pt-BR')}
+        </p>
 
-      {/* Player Bandcamp */}
-      {version.bandcamp_url ? (
-        <div className="mb-3">
-          <div className="flex items-center gap-2 mb-2">
-            <h4 className="text-sm font-medium text-gray-700">Player:</h4>
-            <div className="flex-1 h-px bg-gray-200"></div>
-          </div>
+        {/* ✅ PLAYER BANDCAMP SEM LINK EXTERNO */}
+        <div className="mb-4">
           <BandcampEmbedPlayer 
-            embedUrl={version.bandcamp_url} 
-            title={`Player - ${version.name}`}
-            height={152}
+            embedUrl={version.embed_url}
+            title={version.name}
           />
         </div>
-      ) : (
-        <div className="mb-3 p-3 bg-gray-50 rounded-lg text-center">
-          <Music className="h-6 w-6 text-gray-400 mx-auto mb-1" />
-          <p className="text-sm text-gray-500">Player não disponível</p>
-        </div>
-      )}
 
-      {/* Footer com Data */}
-      <div className="flex items-center gap-1 text-xs text-gray-400 pt-2 border-t border-gray-100">
-        <Calendar className="h-3 w-3" />
-        <span>Adicionada em: {formatDate(version.created_at)}</span>
-      </div>
-    </div>
+        {/* Actions */}
+        <div className="flex gap-2">
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={handleCopyLink}
+            className="flex items-center gap-2"
+          >
+            <Copy className="h-4 w-4" />
+            Copiar Link
+          </Button>
+
+          <AlertDialog>
+            <AlertDialogTrigger asChild>
+              <Button variant="outline" size="sm" className="text-red-600 hover:text-red-700">
+                <Trash2 className="h-4 w-4 mr-2" />
+                Remover
+              </Button>
+            </AlertDialogTrigger>
+            <AlertDialogContent>
+              <AlertDialogHeader>
+                <AlertDialogTitle>Remover versão</AlertDialogTitle>
+                <AlertDialogDescription>
+                  Tem certeza que deseja remover "{version.name}"? Esta ação não pode ser desfeita.
+                </AlertDialogDescription>
+              </AlertDialogHeader>
+              <AlertDialogFooter>
+                <AlertDialogCancel>Cancelar</AlertDialogCancel>
+                <AlertDialogAction
+                  onClick={() => onDeleteVersion(version.id)}
+                  className="bg-red-600 hover:bg-red-700"
+                >
+                  Remover
+                </AlertDialogAction>
+              </AlertDialogFooter>
+            </AlertDialogContent>
+          </AlertDialog>
+        </div>
+      </CardContent>
+    </Card>
   );
 };
 
