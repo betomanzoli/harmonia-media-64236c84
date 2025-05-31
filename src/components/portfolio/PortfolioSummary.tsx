@@ -36,8 +36,6 @@ const PortfolioSummary: React.FC = () => {
           <span className="text-xs bg-harmonia-green/20 text-harmonia-green px-2 py-1 rounded-full">Country</span>
           <span className="text-xs bg-harmonia-green/20 text-harmonia-green px-2 py-1 rounded-full">Gospel</span>
           <span className="text-xs bg-harmonia-green/20 text-harmonia-green px-2 py-1 rounded-full">Metal</span>
-          <span className="text-xs bg-harmonia-green/20 text-harmonia-green px-2 py-1 rounded-full">Funk</span>
-          <span className="text-xs bg-harmonia-green/20 text-harmonia-green px-2 py-1 rounded-full">Pagode</span>
         </div>
       </div>
       <div>

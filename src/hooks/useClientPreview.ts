@@ -10,7 +10,7 @@ export interface ClientPreviewData {
   versions: Array<{
     id: string;
     name: string;
-    bandcampUrl?: string;
+    audioUrl: string;
     recommended: boolean;
     description?: string;
     dateAdded: string;
@@ -32,42 +32,35 @@ export const useClientPreview = (previewCode: string) => {
       if (!previewCode) return;
       
       setIsLoading(true);
-      setError(null);
-      
       try {
-        // Buscar projeto pelo preview_code
         const { data: project, error: projectError } = await supabase
           .from('projects')
           .select('*')
           .eq('preview_code', previewCode)
-          .maybeSingle();
+          .single();
 
         if (projectError) {
-          console.error('Error fetching project:', projectError);
-          setError('Erro ao carregar projeto');
+          if (projectError.code === 'PGRST116') {
+            setError('Projeto não encontrado.');
+          } else {
+            throw projectError;
+          }
           return;
         }
 
-        if (!project) {
-          setError('Preview não encontrado');
-          return;
-        }
-
-        // Buscar versões do projeto
+        // Load project versions
         const { data: versions, error: versionsError } = await supabase
           .from('project_versions')
           .select('*')
           .eq('project_id', project.id)
           .order('created_at', { ascending: false });
 
-        if (versionsError) {
-          console.error('Error fetching versions:', versionsError);
-        }
+        if (versionsError) throw versionsError;
 
         const formattedVersions = (versions || []).map(version => ({
           id: version.id,
           name: version.name,
-          bandcampUrl: version.audio_url || '',
+          audioUrl: version.audio_url || '',
           recommended: version.recommended || false,
           description: version.description,
           dateAdded: new Date(version.created_at).toLocaleDateString('pt-BR')
@@ -98,14 +91,21 @@ export const useClientPreview = (previewCode: string) => {
 
   const authenticateClient = async (email: string) => {
     try {
+      // Basic email validation
       if (!email || !email.includes('@')) {
         setAuthError('Email inválido');
         return false;
       }
 
-      setIsAuthenticated(true);
-      setAuthError(null);
-      return true;
+      // Check if email matches project client email
+      if (previewData && previewData.clientName) {
+        setIsAuthenticated(true);
+        setAuthError(null);
+        return true;
+      }
+
+      setAuthError('Email não autorizado para este projeto');
+      return false;
     } catch (error) {
       setAuthError('Erro na autenticação');
       return false;
@@ -116,7 +116,21 @@ export const useClientPreview = (previewCode: string) => {
     if (!previewData) return false;
 
     try {
-      const { error } = await supabase
+      // Append feedback to history
+      const { error } = await supabase.rpc('append_feedback', {
+        project_id: previewData.projectId,
+        new_entry: {
+          content: feedback,
+          email: email,
+          timestamp: new Date().toISOString(),
+          type: 'feedback'
+        }
+      });
+
+      if (error) throw error;
+
+      // Update project status
+      await supabase
         .from('projects')
         .update({ 
           status: 'feedback',
@@ -124,14 +138,6 @@ export const useClientPreview = (previewCode: string) => {
           updated_at: new Date().toISOString()
         })
         .eq('id', previewData.projectId);
-
-      if (error) throw error;
-
-      setPreviewData(prev => prev ? {
-        ...prev,
-        status: 'feedback',
-        feedback: feedback
-      } : null);
 
       return true;
     } catch (error) {
@@ -144,6 +150,19 @@ export const useClientPreview = (previewCode: string) => {
     if (!previewData) return false;
 
     try {
+      // Append approval to history
+      await supabase.rpc('append_feedback', {
+        project_id: previewData.projectId,
+        new_entry: {
+          content: `Versão ${versionId} aprovada`,
+          email: email,
+          timestamp: new Date().toISOString(),
+          type: 'approval',
+          version_id: versionId
+        }
+      });
+
+      // Update project status
       const { error } = await supabase
         .from('projects')
         .update({ 

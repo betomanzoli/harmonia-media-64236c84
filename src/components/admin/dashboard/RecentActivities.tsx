@@ -1,8 +1,9 @@
+
 import React, { useEffect, useState } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
 import { cn } from "@/lib/utils";
-import { useProjects } from '@/hooks/admin/useProjects'; // ✅ CORRIGIDO
+import { usePreviewProjects } from '@/hooks/admin/usePreviewProjects';
 
 interface Activity {
   id: number;
@@ -66,7 +67,7 @@ const RecentActivities: React.FC<RecentActivitiesProps> = ({
   showTitle = true,
   className
 }) => {
-  const { projects } = useProjects(); // ✅ CORRIGIDO
+  const { projects } = usePreviewProjects();
   const [activities, setActivities] = useState<Activity[]>([]);
 
   // Gerar atividades baseadas nos projetos atuais do sistema
@@ -83,39 +84,41 @@ const RecentActivities: React.FC<RecentActivitiesProps> = ({
     if (projects && projects.length > 0) {
       projects.forEach(project => {
         // Atividade para projeto adicionado
-        const createdAt = new Date(project.created_at); // ✅ CORRIGIDO
-        const formattedCreationDate = createdAt.toLocaleDateString('pt-BR'); // ✅ CORRIGIDO
+        const createdAt = project.createdAt ? new Date(project.createdAt) : new Date();
+        const formattedCreationDate = project.createdAt 
+          ? (typeof project.createdAt === 'string' ? project.createdAt : new Date(project.createdAt).toLocaleDateString('pt-BR'))
+          : new Date().toLocaleDateString('pt-BR');
 
         generatedActivities.push({
           id: id++,
           timestamp: formattedCreationDate,
-          description: `Novo projeto criado: "${project.client_name || 'Cliente'}" - ${project.package_type || 'Projeto de Música'}`, // ✅ CORRIGIDO
+          description: `Novo projeto criado: "${project.clientName || 'Cliente'}" - ${project.packageType || 'Projeto de Música'}`,
           type: 'order_received'
         });
 
         // Atividade para versões adicionadas
-        if (project.versions && project.versions.length > 0) { // ✅ CORRIGIDO
-          const latestVersion = project.versions[project.versions.length - 1]; // ✅ CORRIGIDO
+        if (project.versionsList && project.versionsList.length > 0) {
+          const latestVersion = project.versionsList[project.versionsList.length - 1];
           const versionDate = new Date(createdAt);
           versionDate.setDate(versionDate.getDate() + 1);
           
           generatedActivities.push({
             id: id++,
-            timestamp: new Date(latestVersion.created_at || versionDate).toLocaleDateString('pt-BR'), // ✅ CORRIGIDO
-            description: `Nova versão adicionada: "${latestVersion.name}" para o projeto de ${project.client_name || 'Cliente'}`, // ✅ CORRIGIDO
+            timestamp: latestVersion.dateAdded || versionDate.toLocaleDateString('pt-BR'),
+            description: `Nova versão adicionada: "${latestVersion.name}" para o projeto de ${project.clientName || 'Cliente'}`,
             type: 'audio_added'
           });
         }
 
         // Atividade para feedback recebido
-        if (project.status === 'feedback') {
+        if (project.status === 'feedback' && project.feedback) {
           const feedbackDate = new Date(createdAt);
           feedbackDate.setDate(feedbackDate.getDate() + 2);
           
           generatedActivities.push({
             id: id++,
-            timestamp: feedbackDate.toLocaleDateString('pt-BR'),
-            description: `Feedback recebido: ${project.client_name || 'Cliente'} comentou sobre o projeto`, // ✅ CORRIGIDO
+            timestamp: project.lastActivityDate || feedbackDate.toLocaleDateString('pt-BR'),
+            description: `Feedback recebido: ${project.clientName || 'Cliente'} comentou sobre o projeto`,
             type: 'feedback_received'
           });
         }
@@ -127,15 +130,15 @@ const RecentActivities: React.FC<RecentActivitiesProps> = ({
           
           generatedActivities.push({
             id: id++,
-            timestamp: approvedDate.toLocaleDateString('pt-BR'),
-            description: `Projeto aprovado: ${project.client_name || 'Cliente'} aprovou a prévia final`, // ✅ CORRIGIDO
+            timestamp: project.lastActivityDate || approvedDate.toLocaleDateString('pt-BR'),
+            description: `Projeto aprovado: ${project.clientName || 'Cliente'} aprovou a prévia final`,
             type: 'project_updated'
           });
         }
       });
     }
 
-    // Se não tiver atividades suficientes, adicione algumas atividades de exemplo
+    // Se não tiver atividades suficientes, adicione algumas atividades de exemplo para encher
     if (generatedActivities.length < maxItems) {
       const sampleActivities: Activity[] = [
         {
@@ -171,12 +174,13 @@ const RecentActivities: React.FC<RecentActivitiesProps> = ({
 
     // Ordenar por timestamp (mais recentes primeiro)
     const sortedActivities = generatedActivities.sort((a, b) => {
+      // Tentar converter para timestamps, se falhar, ordenar por string
       try {
-        const dateA = new Date(a.timestamp.split('/').reverse().join('-'));
-        const dateB = new Date(b.timestamp.split('/').reverse().join('-'));
+        const dateA = new Date(a.timestamp.split(',')[0].split('/').reverse().join('-'));
+        const dateB = new Date(b.timestamp.split(',')[0].split('/').reverse().join('-'));
         return dateB.getTime() - dateA.getTime();
       } catch (e) {
-        return 0;
+        return 0; // Se não conseguir converter, não alterar a ordem
       }
     });
 

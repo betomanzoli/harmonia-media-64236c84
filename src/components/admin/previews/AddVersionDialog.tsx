@@ -2,19 +2,19 @@
 import React, { useState } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import { Plus, FilePlus, Trash } from "lucide-react";
+import { Plus, File, FilePlus, Trash } from "lucide-react";
 import AddVersionForm from './AddVersionForm';
-import { Version } from '@/hooks/admin/useVersions';
+import { VersionItem } from '@/hooks/admin/usePreviewProjects';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Input } from '@/components/ui/input';
 
 interface AddVersionDialogProps {
   projectId: string;
-  onAddVersion: (newVersion: Version) => void;
+  onAddVersion: (newVersion: VersionItem) => void;
   isOpen?: boolean;
   onOpenChange?: (open: boolean) => void;
-  onSubmit?: (version: Version) => void;
+  onSubmit?: (version: VersionItem) => void;
   isFinalVersion?: boolean;
   packageType?: string;
 }
@@ -31,7 +31,7 @@ const AddVersionDialog: React.FC<AddVersionDialogProps> = ({
   const [localOpen, setLocalOpen] = useState(false);
   const [selectedTab, setSelectedTab] = useState<'single' | 'multiple'>('single');
   const [multipleVersions, setMultipleVersions] = useState([
-    { name: '', description: '', audio_url: '', recommended: false }
+    { name: '', description: '', audioUrl: '', recommended: false }
   ]);
 
   const isDialogOpen = isOpen !== undefined ? isOpen : localOpen;
@@ -44,7 +44,7 @@ const AddVersionDialog: React.FC<AddVersionDialogProps> = ({
     }
   };
   
-  const handleAddVersion = (version: Version) => {
+  const handleAddVersion = (version: VersionItem) => {
     if (onSubmit) {
       onSubmit(version);
     } else if (onAddVersion) {
@@ -59,24 +59,25 @@ const AddVersionDialog: React.FC<AddVersionDialogProps> = ({
   };
 
   const handleAddMultipleVersions = () => {
-    const validVersions = multipleVersions.filter(v => v.name.trim() !== '' && v.audio_url.trim() !== '');
+    const validVersions = multipleVersions.filter(v => v.name.trim() !== '' && v.audioUrl.trim() !== '');
     
     if (validVersions.length === 0) {
       return;
     }
 
     validVersions.forEach((versionData, index) => {
-      const version: Omit<Version, 'id' | 'created_at'> = {
-        project_id: projectId,
+      const version: VersionItem = {
+        id: `v${Date.now()}-${index}`,
         name: versionData.name,
         description: versionData.description || '',
-        audio_url: versionData.audio_url,
+        audioUrl: versionData.audioUrl,
         recommended: versionData.recommended,
-        version_id: `v_${Date.now()}_${index}`
+        dateAdded: new Date().toLocaleDateString('pt-BR'),
+        final: isFinalVersion
       };
 
       if (onAddVersion) {
-        onAddVersion(version as Version);
+        onAddVersion(version);
       }
     });
 
@@ -86,11 +87,11 @@ const AddVersionDialog: React.FC<AddVersionDialogProps> = ({
       setLocalOpen(false);
     }
     
-    setMultipleVersions([{ name: '', description: '', audio_url: '', recommended: false }]);
+    setMultipleVersions([{ name: '', description: '', audioUrl: '', recommended: false }]);
   };
   
   const addEmptyVersion = () => {
-    setMultipleVersions([...multipleVersions, { name: '', description: '', audio_url: '', recommended: false }]);
+    setMultipleVersions([...multipleVersions, { name: '', description: '', audioUrl: '', recommended: false }]);
   };
 
   const removeVersion = (index: number) => {
@@ -179,10 +180,10 @@ const AddVersionDialog: React.FC<AddVersionDialogProps> = ({
                     <div>
                       <label className="text-sm font-medium">URL do Áudio*</label>
                       <Input
-                        value={version.audio_url}
-                        onChange={(e) => updateVersionField(index, 'audio_url', e.target.value)}
+                        value={version.audioUrl}
+                        onChange={(e) => updateVersionField(index, 'audioUrl', e.target.value)}
                         className="bg-slate-700 mt-1"
-                        placeholder="https://harmonia-media.bandcamp.com/..."
+                        placeholder="https://drive.google.com/..."
                         required
                       />
                     </div>

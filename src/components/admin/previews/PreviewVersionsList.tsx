@@ -1,12 +1,13 @@
+
 import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Version } from '@/hooks/admin/useVersions'; // ✅ CORRIGIDO
+import { VersionItem } from '@/hooks/admin/usePreviewProjects';
 import VersionCard from './VersionCard';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 
 export interface PreviewVersionsListProps {
-  versions: Version[]; // ✅ CORRIGIDO
+  versions: VersionItem[];
   projectId: string;
   onDeleteVersion: (versionId: string) => void;
 }
@@ -18,8 +19,8 @@ const PreviewVersionsList: React.FC<PreviewVersionsListProps> = ({
 }) => {
   const [activeTab, setActiveTab] = useState('all');
 
-  const finalVersions = versions.filter(v => v.recommended); // ✅ CORRIGIDO (usando recommended como proxy para final)
-  const regularVersions = versions.filter(v => !v.recommended); // ✅ CORRIGIDO
+  const finalVersions = versions.filter(v => v.final);
+  const regularVersions = versions.filter(v => !v.final);
   
   const displayVersions = activeTab === 'all' 
     ? versions 
@@ -35,7 +36,7 @@ const PreviewVersionsList: React.FC<PreviewVersionsListProps> = ({
           <div className="flex items-center gap-2">
             {finalVersions.length > 0 && (
               <Badge variant="outline" className="bg-green-100 text-green-800 hover:bg-green-200">
-                {finalVersions.length} recomendada{finalVersions.length > 1 ? 's' : ''}
+                {finalVersions.length} final
               </Badge>
             )}
           </div>
@@ -49,7 +50,7 @@ const PreviewVersionsList: React.FC<PreviewVersionsListProps> = ({
                 <TabsList className="grid grid-cols-3 w-full max-w-xs">
                   <TabsTrigger value="all">Todas</TabsTrigger>
                   <TabsTrigger value="regular">Prévias</TabsTrigger>
-                  <TabsTrigger value="final">Recomendadas</TabsTrigger>
+                  <TabsTrigger value="final">Finais</TabsTrigger>
                 </TabsList>
               </Tabs>
             )}

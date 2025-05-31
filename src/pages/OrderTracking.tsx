@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
@@ -8,16 +9,16 @@ import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
 import { useNavigate } from 'react-router-dom';
 import { Search, Clock, Calendar, Loader2 } from 'lucide-react';
-import { useProjects, Project } from '@/hooks/admin/useProjects'; // ✅ CORRIGIDO
+import { usePreviewProjects, ProjectItem } from '@/hooks/admin/usePreviewProjects';
 
 const OrderTracking: React.FC = () => {
   const [orderId, setOrderId] = useState('');
   const [email, setEmail] = useState('');
   const [isSearching, setIsSearching] = useState(false);
-  const [orderDetails, setOrderDetails] = useState<Project | null>(null); // ✅ CORRIGIDO
+  const [orderDetails, setOrderDetails] = useState<ProjectItem | null>(null);
   const { toast } = useToast();
   const navigate = useNavigate();
-  const { projects } = useProjects(); // ✅ CORRIGIDO
+  const { projects } = usePreviewProjects();
   
   const handleSearch = () => {
     if (!orderId.trim()) {
@@ -35,7 +36,7 @@ const OrderTracking: React.FC = () => {
     setTimeout(() => {
       const foundProject = projects.find(p => 
         p.id.toLowerCase() === orderId.toLowerCase() && 
-        p.client_email?.toLowerCase() === email.toLowerCase() // ✅ CORRIGIDO
+        p.clientEmail.toLowerCase() === email.toLowerCase()
       );
       
       if (foundProject) {
@@ -130,26 +131,26 @@ const OrderTracking: React.FC = () => {
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div>
                       <h3 className="text-sm font-medium text-gray-500">Cliente</h3>
-                      <p className="font-medium">{orderDetails.client_name}</p> {/* ✅ CORRIGIDO */}
+                      <p className="font-medium">{orderDetails.clientName}</p>
                     </div>
                     
                     <div>
                       <h3 className="text-sm font-medium text-gray-500">Email</h3>
-                      <p className="font-medium">{orderDetails.client_email}</p> {/* ✅ CORRIGIDO */}
+                      <p className="font-medium">{orderDetails.clientEmail}</p>
                     </div>
                   </div>
                   
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div>
                       <h3 className="text-sm font-medium text-gray-500">Pacote</h3>
-                      <p className="font-medium">{orderDetails.package_type}</p> {/* ✅ CORRIGIDO */}
+                      <p className="font-medium">{orderDetails.packageType}</p>
                     </div>
                     
                     <div>
                       <h3 className="text-sm font-medium text-gray-500">Data do Pedido</h3>
                       <p className="flex items-center">
                         <Calendar className="h-4 w-4 mr-2 text-gray-400" />
-                        {new Date(orderDetails.created_at).toLocaleDateString('pt-BR')} {/* ✅ CORRIGIDO */}
+                        {orderDetails.createdAt}
                       </p>
                     </div>
                   </div>
@@ -165,7 +166,7 @@ const OrderTracking: React.FC = () => {
                   {orderDetails.status !== 'waiting' && (
                     <div className="pt-4 border-t">
                       <Button 
-                        onClick={() => navigate(`/client-preview/${orderDetails.preview_code}`)} // ✅ CORRIGIDO
+                        onClick={() => navigate(`/preview/${orderDetails.id}`)} 
                         className="w-full bg-harmonia-green hover:bg-harmonia-green/90"
                       >
                         Ver Prévias da Música

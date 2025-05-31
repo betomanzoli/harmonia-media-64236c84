@@ -3,19 +3,20 @@ import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 
-export interface Version {
+export interface ProjectVersion {
   id: string;
   project_id: string;
+  version_id: string;
   name: string;
   description?: string;
   audio_url?: string;
-  recommended: boolean;
+  file_id?: string;
+  recommended?: boolean;
   created_at: string;
-  version_id: string;
 }
 
 export const useVersions = (projectId?: string) => {
-  const [versions, setVersions] = useState<Version[]>([]);
+  const [versions, setVersions] = useState<ProjectVersion[]>([]);
   const [loading, setLoading] = useState(true);
   const { toast } = useToast();
 
@@ -28,25 +29,17 @@ export const useVersions = (projectId?: string) => {
 
     try {
       setLoading(true);
-      console.log('Loading versions for project:', projectId);
-      
       const { data, error } = await supabase
         .from('project_versions')
         .select('*')
         .eq('project_id', projectId)
         .order('created_at', { ascending: false });
 
-      if (error) {
-        console.error('Supabase error loading versions:', error);
-        throw error;
-      }
+      if (error) throw error;
 
-      console.log('Versions loaded:', data);
       setVersions(data || []);
-      
     } catch (error) {
       console.error('Error loading versions:', error);
-      setVersions([]);
       toast({
         title: "Erro ao carregar versões",
         description: "Não foi possível carregar as versões do projeto.",
@@ -57,35 +50,20 @@ export const useVersions = (projectId?: string) => {
     }
   };
 
-  const addVersion = async (versionData: Omit<Version, 'id' | 'created_at'>) => {
+  const createVersion = async (versionData: Omit<ProjectVersion, 'id' | 'created_at'>) => {
     try {
-      console.log('Creating version with data:', versionData);
-      
       const { data, error } = await supabase
         .from('project_versions')
-        .insert([{
-          project_id: versionData.project_id,
-          name: versionData.name,
-          description: versionData.description,
-          audio_url: versionData.audio_url,
-          recommended: versionData.recommended,
-          version_id: versionData.version_id,
-          created_at: new Date().toISOString()
-        }])
+        .insert([versionData])
         .select()
         .single();
 
-      if (error) {
-        console.error('Error creating version:', error);
-        throw error;
-      }
+      if (error) throw error;
 
-      console.log('Version created successfully:', data);
-      await loadVersions();
-
+      setVersions(prev => [data, ...prev]);
       toast({
         title: "Versão criada",
-        description: "Nova versão adicionada com sucesso."
+        description: "Versão criada com sucesso."
       });
 
       return data;
@@ -100,7 +78,7 @@ export const useVersions = (projectId?: string) => {
     }
   };
 
-  const updateVersion = async (id: string, updates: Partial<Version>) => {
+  const updateVersion = async (id: string, updates: Partial<ProjectVersion>) => {
     try {
       const { data, error } = await supabase
         .from('project_versions')
@@ -111,7 +89,10 @@ export const useVersions = (projectId?: string) => {
 
       if (error) throw error;
 
-      await loadVersions();
+      setVersions(prev => prev.map(version => 
+        version.id === id ? { ...version, ...data } : version
+      ));
+
       toast({
         title: "Versão atualizada",
         description: "Versão atualizada com sucesso."
@@ -138,7 +119,7 @@ export const useVersions = (projectId?: string) => {
 
       if (error) throw error;
 
-      await loadVersions();
+      setVersions(prev => prev.filter(version => version.id !== id));
       toast({
         title: "Versão removida",
         description: "Versão removida com sucesso."
@@ -157,25 +138,13 @@ export const useVersions = (projectId?: string) => {
   };
 
   useEffect(() => {
-    let isMounted = true;
-    
-    const initializeVersions = async () => {
-      if (isMounted) {
-        await loadVersions();
-      }
-    };
-
-    initializeVersions();
-
-    return () => {
-      isMounted = false;
-    };
+    loadVersions();
   }, [projectId]);
 
   return {
     versions,
     loading,
-    addVersion,
+    createVersion,
     updateVersion,
     deleteVersion,
     reloadVersions: loadVersions

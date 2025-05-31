@@ -1,15 +1,14 @@
+
 import React, { useState } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Checkbox } from '@/components/ui/checkbox';
-import { Label } from '@/components/ui/label';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { AlertCircle, RefreshCw, ExternalLink } from 'lucide-react';
-import { useToast } from '@/hooks/use-toast';
-import { BandcampUtils } from '@/components/admin/bandcamp/BandcampUtils';
-import { useProjects } from '@/hooks/admin/useProjects';
+import BandcampUtils from '../bandcamp/BandcampUtils';
 
 interface AddVersionDialogProps {
   isOpen: boolean;
@@ -45,8 +44,6 @@ const AddVersionDialog: React.FC<AddVersionDialogProps> = ({
   const [previewEmbed, setPreviewEmbed] = useState<string>('');
   const [embedError, setEmbedError] = useState<string>('');
   const [urlType, setUrlType] = useState<'bandcamp' | 'drive' | 'other'>('bandcamp');
-  const { toast } = useToast();
-  const { projects } = useProjects();
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
@@ -59,11 +56,17 @@ const AddVersionDialog: React.FC<AddVersionDialogProps> = ({
       if (value.includes('bandcamp.com')) {
         setUrlType('bandcamp');
         try {
-          if (BandcampUtils.validateBandcampUrl(value)) {
+          if (BandcampUtils.isValidBandcampUrl(value)) {
             const embedUrl = BandcampUtils.autoGenerateEmbed(value);
             if (embedUrl) {
               setPreviewEmbed(embedUrl);
               console.log('Bandcamp preview generated:', embedUrl);
+              
+              // Auto-fill name if empty
+              if (!formData.name) {
+                const autoTitle = BandcampUtils.extractTrackTitle(value);
+                setFormData(prev => ({ ...prev, name: autoTitle }));
+              }
             } else {
               setEmbedError('Não foi possível gerar preview do embed do Bandcamp');
             }
@@ -168,13 +171,13 @@ const AddVersionDialog: React.FC<AddVersionDialogProps> = ({
             <Input
               id="audioUrl"
               name="audioUrl"
-              placeholder="https://harmonia-media.bandcamp.com/track/nome-da-track"
+              placeholder={getUrlPlaceholder()}
               value={formData.audioUrl}
               onChange={handleChange}
               className="mt-1"
             />
             <p className="text-xs text-gray-500 mt-1">
-              Cole a URL completa do track no Bandcamp
+              {getUrlHelperText()}
             </p>
             
             {/* Botões de tipo de URL */}
