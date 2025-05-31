@@ -146,10 +146,10 @@ const PreviewPage: React.FC = () => {
                     versions={projectData.previews?.map(preview => ({
                       ...preview,
                       description: preview.description || 'Versão musical',
-                      // Add Bandcamp support - check if audioUrl is a Bandcamp URL
-                      bandcampUrl: preview.audioUrl && preview.audioUrl.includes('bandcamp.com') 
+                      // Check if audioUrl is a Bandcamp embed URL
+                      bandcampUrl: preview.audioUrl && preview.audioUrl.includes('bandcamp.com/EmbeddedPlayer') 
                         ? preview.audioUrl 
-                        : undefined
+                        : (preview.audioUrl && preview.audioUrl.includes('bandcamp.com') ? preview.audioUrl : undefined)
                     })) || []}
                     selectedVersion={selectedPreview}
                     setSelectedVersion={setSelectedPreview}

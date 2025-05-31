@@ -1,87 +1,122 @@
-import React, { useState, useEffect } from 'react';
-import { Link, useLocation } from 'react-router-dom';
+
+import React, { useState } from 'react';
+import { Link } from 'react-router-dom';
 import { Menu, X } from 'lucide-react';
-import { Button } from "@/components/ui/button";
-import Logo from './Logo';
-const Header: React.FC = () => {
+import HarmoniaLogo from './ui/HarmoniaLogo';
+
+const Header = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
-  const [isScrolled, setIsScrolled] = useState(false);
-  const location = useLocation();
-  useEffect(() => {
-    const handleScroll = () => {
-      setIsScrolled(window.scrollY > 10);
-    };
-    window.addEventListener('scroll', handleScroll);
-    return () => window.removeEventListener('scroll', handleScroll);
-  }, []);
-  useEffect(() => {
-    // Close mobile menu when route changes
-    setIsMenuOpen(false);
-  }, [location.pathname]);
+
   const toggleMenu = () => {
     setIsMenuOpen(!isMenuOpen);
   };
-  const isActive = (path: string) => {
-    return location.pathname === path;
-  };
-  const isAdminRoute = location.pathname.includes('admin-j28s7d1k');
-  if (isAdminRoute) {
-    return null;
-  }
-  return <header className="fixed w-full top-0 z-50 bg-slate-900 border-b border-slate-800">
-      <div className="container mx-auto flex justify-between items-center py-3 px-4">
-        {/* Logo on the left */}
-        <Link to="/" className="text-white">
-          <Logo />
-        </Link>
 
-        {/* Desktop Navigation moved to the right */}
-        <div className="flex items-center">
-          <nav className="hidden md:flex items-center space-x-6">
-            <Link to="/" className={`text-sm ${isActive('/') ? 'text-harmonia-green' : 'text-gray-300 hover:text-white'}`}>
+  return (
+    <header className="fixed top-0 left-0 right-0 bg-white/95 backdrop-blur-sm border-b border-gray-200 z-50">
+      <div className="max-w-7xl mx-auto px-6 md:px-10">
+        <div className="flex justify-between items-center py-4">
+          {/* Logo */}
+          <Link to="/" className="flex items-center">
+            <HarmoniaLogo size="md" showText={true} />
+          </Link>
+
+          {/* Desktop Navigation */}
+          <nav className="hidden md:flex space-x-8">
+            <Link 
+              to="/" 
+              className="text-gray-700 hover:text-harmonia-green transition-colors"
+            >
               Início
             </Link>
-            <Link to="/portfolio" className={`text-sm ${isActive('/portfolio') ? 'text-harmonia-green' : 'text-gray-300 hover:text-white'}`}>
-              Portfólio
-            </Link>
-            <Link to="/servicos" className={`text-sm ${isActive('/servicos') ? 'text-harmonia-green' : 'text-gray-300 hover:text-white'}`}>
+            <Link 
+              to="/servicos" 
+              className="text-gray-700 hover:text-harmonia-green transition-colors"
+            >
               Serviços
             </Link>
-            
-            <Link to="/contato" className={`text-sm ${isActive('/contato') ? 'text-harmonia-green' : 'text-gray-300 hover:text-white'}`}>
+            <Link 
+              to="/portfolio" 
+              className="text-gray-700 hover:text-harmonia-green transition-colors"
+            >
+              Portfólio
+            </Link>
+            <Link 
+              to="/contato" 
+              className="text-gray-700 hover:text-harmonia-green transition-colors"
+            >
               Contato
             </Link>
           </nav>
 
-          {/* Mobile Menu Button */}
-          <div className="md:hidden flex items-center">
-            <Button variant="ghost" size="sm" className="text-gray-200 hover:text-white" onClick={toggleMenu}>
-              {isMenuOpen ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
-            </Button>
+          {/* CTA Button */}
+          <div className="hidden md:block">
+            <Link 
+              to="/briefing" 
+              className="bg-harmonia-green hover:bg-harmonia-green/90 text-white px-6 py-2 rounded-md transition-colors"
+            >
+              Começar Projeto
+            </Link>
           </div>
+
+          {/* Mobile Menu Button */}
+          <button
+            className="md:hidden p-2"
+            onClick={toggleMenu}
+            aria-label="Toggle menu"
+          >
+            {isMenuOpen ? (
+              <X className="h-6 w-6 text-gray-700" />
+            ) : (
+              <Menu className="h-6 w-6 text-gray-700" />
+            )}
+          </button>
         </div>
 
         {/* Mobile Navigation */}
-        {isMenuOpen && <div className="md:hidden bg-background border border-border rounded-lg shadow-lg mt-2 p-4">
+        {isMenuOpen && (
+          <div className="md:hidden py-4 border-t border-gray-200">
             <nav className="flex flex-col space-y-4">
-              <Link to="/" className={`text-sm ${isActive('/') ? 'text-harmonia-green' : 'text-gray-300 hover:text-white'}`} onClick={() => setIsMenuOpen(false)}>
+              <Link 
+                to="/" 
+                className="text-gray-700 hover:text-harmonia-green transition-colors py-2"
+                onClick={() => setIsMenuOpen(false)}
+              >
                 Início
               </Link>
-              <Link to="/portfolio" className={`text-sm ${isActive('/portfolio') ? 'text-harmonia-green' : 'text-gray-300 hover:text-white'}`} onClick={() => setIsMenuOpen(false)}>
-                Portfólio
-              </Link>
-              <Link to="/servicos" className={`text-sm ${isActive('/servicos') ? 'text-harmonia-green' : 'text-gray-300 hover:text-white'}`} onClick={() => setIsMenuOpen(false)}>
+              <Link 
+                to="/servicos" 
+                className="text-gray-700 hover:text-harmonia-green transition-colors py-2"
+                onClick={() => setIsMenuOpen(false)}
+              >
                 Serviços
               </Link>
-              <Link to="/briefing" className={`text-sm ${isActive('/briefing') ? 'text-harmonia-green' : 'text-gray-300 hover:text-white'}`} onClick={() => setIsMenuOpen(false)}>
-                Briefing
+              <Link 
+                to="/portfolio" 
+                className="text-gray-700 hover:text-harmonia-green transition-colors py-2"
+                onClick={() => setIsMenuOpen(false)}
+              >
+                Portfólio
               </Link>
-              <Link to="/contato" className={`text-sm ${isActive('/contato') ? 'text-harmonia-green' : 'text-gray-300 hover:text-white'}`} onClick={() => setIsMenuOpen(false)}>
+              <Link 
+                to="/contato" 
+                className="text-gray-700 hover:text-harmonia-green transition-colors py-2"
+                onClick={() => setIsMenuOpen(false)}
+              >
                 Contato
               </Link>
+              <Link 
+                to="/briefing" 
+                className="bg-harmonia-green hover:bg-harmonia-green/90 text-white px-6 py-2 rounded-md transition-colors inline-block text-center mt-4"
+                onClick={() => setIsMenuOpen(false)}
+              >
+                Começar Projeto
+              </Link>
             </nav>
-          </div>}
+          </div>
+        )}
       </div>
-    </header>;
+    </header>
+  );
 };
+
 export default Header;
