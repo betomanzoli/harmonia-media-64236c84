@@ -1,23 +1,21 @@
-
 import React, { useState } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Copy, ExternalLink, Trash2, CheckCircle } from 'lucide-react';
+import { Copy, ExternalLink, Trash2, CheckCircle, Loader2 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
 
+// Interface atualizada para refletir os dados esperados (incluindo embed_url)
 interface BandcampVersion {
   id: string;
   name: string;
   description?: string;
-  embedUrl: string;
-  bandcampUrl: string;
+  embed_url: string; // <-- Espera receber a URL de embed
+  original_bandcamp_url?: string; // <-- URL original para referência/botão
   final?: boolean;
   recommended?: boolean;
-  dateAdded: string;
-  albumId?: string;
-  trackId?: string;
+  created_at: string; // ou Date
 }
 
 interface BandcampVersionCardProps {
@@ -34,8 +32,11 @@ const BandcampVersionCard: React.FC<BandcampVersionCardProps> = ({
   const { toast } = useToast();
   const [isPlayerLoaded, setIsPlayerLoaded] = useState(false);
 
+  // Usa a URL original para copiar e abrir no Bandcamp, se disponível
+  const bandcampLink = version.original_bandcamp_url || version.embed_url; 
+
   const handleCopyLink = () => {
-    navigator.clipboard.writeText(version.bandcampUrl).then(() => {
+    navigator.clipboard.writeText(bandcampLink).then(() => {
       toast({
         title: "Link copiado!",
         description: "O link do Bandcamp foi copiado para a área de transferência."
@@ -51,11 +52,14 @@ const BandcampVersionCard: React.FC<BandcampVersionCardProps> = ({
   };
 
   const handleOpenBandcamp = () => {
-    window.open(version.bandcampUrl, '_blank');
+    window.open(bandcampLink, '_blank');
   };
 
   const copyClientPreviewLink = () => {
-    const previewUrl = `${window.location.origin}/client-preview/${projectId}`;
+    // Assume que a lógica para obter o preview_code está no componente pai ou contexto
+    // Aqui, apenas montamos a URL baseada no projectId para simplificar
+    // Idealmente, buscaria o preview_code associado ao projeto
+    const previewUrl = `${window.location.origin}/client-preview/${projectId}`; // Ajustar se o previewCode for diferente do projectId
     navigator.clipboard.writeText(previewUrl).then(() => {
       toast({
         title: "Link de prévia copiado!",
@@ -94,38 +98,42 @@ const BandcampVersionCard: React.FC<BandcampVersionCardProps> = ({
               )}
               
               <div className="text-xs text-gray-500">
-                Adicionado em: {version.dateAdded}
-                {version.trackId && (
-                  <span className="ml-2">• Track #{version.trackId}</span>
-                )}
+                Adicionado em: {new Date(version.created_at).toLocaleDateString('pt-BR')}
               </div>
             </div>
           </div>
 
-          {/* Bandcamp Player */}
-          <div className="relative">
-            <iframe
-              src={version.embedUrl}
-              seamless
-              style={{ border: 0, width: '100%', height: '120px' }}
-              title={`Bandcamp Player: ${version.name}`}
-              className="rounded"
-              onLoad={() => setIsPlayerLoaded(true)}
-            />
+          {/* Bandcamp Player - Usa embed_url */}
+          <div className="relative min-h-[120px]"> {/* Garante altura mínima */}
             {!isPlayerLoaded && (
-              <div className="absolute inset-0 bg-gray-100 rounded flex items-center justify-center">
-                <div className="text-gray-500 text-sm">Carregando player do Bandcamp...</div>
+              <div className="absolute inset-0 bg-gray-100 rounded flex items-center justify-center z-0">
+                <Loader2 className="h-6 w-6 animate-spin text-gray-400 mr-2" />
+                <span className="text-gray-500 text-sm">Carregando player...</span>
               </div>
             )}
+            <iframe
+              src={version.embed_url} // <-- USA A URL DE EMBED AQUI
+              seamless
+              style={{ border: 0, width: '100%', height: '120px' }} 
+              title={`Bandcamp Player: ${version.name}`}
+              className={`rounded transition-opacity duration-300 ${isPlayerLoaded ? 'opacity-100 z-10 relative' : 'opacity-0'}`}
+              onLoad={() => setIsPlayerLoaded(true)}
+              onError={() => {
+                // Opcional: Lidar com erro de carregamento do iframe
+                console.error("Erro ao carregar iframe do Bandcamp para:", version.embed_url);
+                setIsPlayerLoaded(true); // Para remover o loader mesmo em caso de erro
+              }}
+            />
           </div>
 
           {/* Actions */}
-          <div className="flex flex-wrap gap-2">
+          <div className="flex flex-wrap gap-2 items-center">
             <Button
               variant="outline"
               size="sm"
               onClick={handleOpenBandcamp}
               className="text-gray-600"
+              disabled={!bandcampLink} // Desabilita se não houver link
             >
               <ExternalLink className="h-4 w-4 mr-1" />
               Abrir no Bandcamp
@@ -136,12 +144,14 @@ const BandcampVersionCard: React.FC<BandcampVersionCardProps> = ({
               size="sm"
               onClick={handleCopyLink}
               className="text-gray-600"
+              disabled={!bandcampLink}
             >
               <Copy className="h-4 w-4 mr-1" />
               Copiar Link
             </Button>
 
-            <Button
+            {/* O botão de copiar link cliente pode fazer mais sentido na página de detalhes do projeto */}
+            {/* <Button
               variant="outline"
               size="sm"
               onClick={copyClientPreviewLink}
@@ -149,14 +159,14 @@ const BandcampVersionCard: React.FC<BandcampVersionCardProps> = ({
             >
               <Copy className="h-4 w-4 mr-1" />
               Link Cliente
-            </Button>
+            </Button> */}
             
             <AlertDialog>
               <AlertDialogTrigger asChild>
                 <Button
                   variant="ghost"
                   size="sm"
-                  className="text-red-600 hover:text-red-700 hover:bg-red-50 ml-auto"
+                  className="text-red-600 hover:text-red-700 hover:bg-red-50 ml-auto" // ml-auto para empurrar para a direita
                 >
                   <Trash2 className="h-4 w-4 mr-1" />
                   Remover
@@ -182,20 +192,6 @@ const BandcampVersionCard: React.FC<BandcampVersionCardProps> = ({
             </AlertDialog>
           </div>
 
-          {/* Debug Info (apenas em desenvolvimento) */}
-          {process.env.NODE_ENV === 'development' && (
-            <details className="text-xs text-gray-400 mt-2">
-              <summary className="cursor-pointer">Debug Info</summary>
-              <pre className="mt-1 p-2 bg-gray-100 rounded text-xs overflow-auto">
-                {JSON.stringify({
-                  embedUrl: version.embedUrl,
-                  albumId: version.albumId,
-                  trackId: version.trackId
-                }, null, 2)}
-              </pre>
-            </details>
-          )}
-
         </div>
       </CardContent>
     </Card>
@@ -203,3 +199,4 @@ const BandcampVersionCard: React.FC<BandcampVersionCardProps> = ({
 };
 
 export default BandcampVersionCard;
+
