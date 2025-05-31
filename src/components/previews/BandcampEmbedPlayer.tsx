@@ -1,64 +1,79 @@
 
-import React from 'react';
-import { Card, CardContent } from '@/components/ui/card';
+import React, { useState } from 'react';
+import { Button } from '@/components/ui/button';
+import { ExternalLink, Play } from 'lucide-react';
+import { BandcampUtils } from '@/components/admin/bandcamp/BandcampUtils';
 
 interface BandcampEmbedPlayerProps {
   embedUrl: string;
-  title?: string;
+  title: string;
   fallbackUrl?: string;
   className?: string;
 }
 
 const BandcampEmbedPlayer: React.FC<BandcampEmbedPlayerProps> = ({
   embedUrl,
-  title = "Bandcamp Audio",
+  title,
   fallbackUrl,
-  className = ""
+  className = ''
 }) => {
-  const handleError = () => {
-    console.error('Bandcamp embed failed to load:', embedUrl);
-    if (fallbackUrl) {
-      window.open(fallbackUrl, '_blank');
-    }
+  const [iframeError, setIframeError] = useState(false);
+
+  // Gerar embed dinâmico se a URL não for um embed
+  const actualEmbedUrl = embedUrl.includes('EmbeddedPlayer') 
+    ? embedUrl 
+    : BandcampUtils.autoGenerateEmbed(embedUrl);
+
+  const handleIframeError = () => {
+    setIframeError(true);
   };
 
-  return (
-    <Card className={`bg-white ${className}`}>
-      <CardContent className="p-4">
-        {title && (
-          <h4 className="text-sm font-medium text-gray-700 mb-3">{title}</h4>
-        )}
-        
-        <div className="relative">
-          <iframe
-            style={{ 
-              border: 0, 
-              width: '100%', 
-              height: '42px' 
-            }}
-            src={embedUrl}
-            seamless
-            title={title}
-            onError={handleError}
-            loading="lazy"
-          />
-          
-          {/* Fallback link */}
-          {fallbackUrl && (
-            <div className="mt-2">
-              <a 
-                href={fallbackUrl} 
-                target="_blank" 
-                rel="noopener noreferrer"
-                className="text-xs text-blue-600 hover:text-blue-800 underline"
-              >
-                Abrir no Bandcamp
-              </a>
-            </div>
-          )}
+  const openInBandcamp = () => {
+    const urlToOpen = fallbackUrl || embedUrl;
+    window.open(urlToOpen, '_blank');
+  };
+
+  if (iframeError || !actualEmbedUrl) {
+    return (
+      <div className={`bg-gray-100 border rounded-lg p-6 text-center ${className}`}>
+        <div className="space-y-3">
+          <Play className="h-8 w-8 mx-auto text-gray-400" />
+          <p className="text-sm text-gray-600">Player não disponível</p>
+          <Button 
+            variant="outline" 
+            size="sm" 
+            onClick={openInBandcamp}
+            className="flex items-center gap-2"
+          >
+            <ExternalLink className="h-4 w-4" />
+            Abrir no Bandcamp
+          </Button>
         </div>
-      </CardContent>
-    </Card>
+      </div>
+    );
+  }
+
+  return (
+    <div className={`relative ${className}`}>
+      <iframe
+        style={{ border: 0, width: '100%', height: '120px' }}
+        src={actualEmbedUrl}
+        seamless
+        onError={handleIframeError}
+        title={title}
+        allow="autoplay"
+      />
+      <div className="absolute top-2 right-2">
+        <Button
+          variant="ghost"
+          size="sm"
+          onClick={openInBandcamp}
+          className="h-6 w-6 p-0 bg-white/80 hover:bg-white"
+        >
+          <ExternalLink className="h-3 w-3" />
+        </Button>
+      </div>
+    </div>
   );
 };
 
