@@ -13,24 +13,36 @@ const BandcampEmbedPlayer: React.FC<BandcampEmbedPlayerProps> = ({
   const [playerLoaded, setPlayerLoaded] = useState(false);
   const [playerError, setPlayerError] = useState(false);
 
-  console.log('[BandcampPlayer] URL recebida:', embedUrl);
+  console.log('[BandcampPlayer] Props recebidas:', { embedUrl, title });
 
   useEffect(() => {
-    if (!embedUrl || !embedUrl.includes('bandcamp.com/EmbeddedPlayer')) {
-      console.log('[BandcampPlayer] URL inválida:', embedUrl);
+    if (!embedUrl) {
+      console.log('[BandcampPlayer] Nenhuma URL fornecida');
+      setPlayerError(true);
+      return;
+    }
+
+    if (!embedUrl.includes('bandcamp.com/EmbeddedPlayer')) {
+      console.log('[BandcampPlayer] URL não é um player Bandcamp:', embedUrl);
       setPlayerError(true);
       return;
     }
 
     if (containerRef.current) {
-      // ✅ CONFORME RESULTADO [8] - GARANTIR HTTPS:
+      // ✅ CONFORME RESULTADO [11] - QUERY ALEATÓRIA PARA FORÇAR RELOAD:
+      const randomQuery = Math.floor(Math.random() * 1000);
       let finalUrl = embedUrl;
+      
+      // Garantir HTTPS
       if (embedUrl.startsWith('http://')) {
         finalUrl = embedUrl.replace('http://', 'https://');
       }
       if (!finalUrl.startsWith('http')) {
         finalUrl = 'https:' + finalUrl;
       }
+      
+      // Adicionar query aleatória
+      finalUrl += (finalUrl.includes('?') ? '&' : '?') + 'ignore=' + randomQuery;
 
       // ✅ CONFORME RESULTADO [5] - USAR dangerouslySetInnerHTML:
       const iframeHTML = `
@@ -44,10 +56,10 @@ const BandcampEmbedPlayer: React.FC<BandcampEmbedPlayerProps> = ({
         ></iframe>
       `;
 
-      console.log('[BandcampPlayer] Inserindo iframe:', finalUrl);
+      console.log('[BandcampPlayer] Inserindo iframe com URL:', finalUrl);
       containerRef.current.innerHTML = iframeHTML;
       
-      // Verificar se carregou após 3 segundos
+      // Verificar se carregou
       setTimeout(() => {
         const iframe = containerRef.current?.querySelector('iframe');
         if (iframe) {
@@ -61,21 +73,22 @@ const BandcampEmbedPlayer: React.FC<BandcampEmbedPlayerProps> = ({
     }
   }, [embedUrl, title]);
 
-  // ✅ VALIDAÇÃO INICIAL:
+  // ✅ VALIDAÇÃO COM MENSAGENS ESPECÍFICAS:
   if (!embedUrl) {
     return (
       <div className="p-4 bg-gray-100 rounded text-center">
         <p className="text-gray-600">Nenhuma URL fornecida</p>
+        <p className="text-xs text-gray-400">embedUrl está vazio ou undefined</p>
       </div>
     );
   }
 
   if (!embedUrl.includes('bandcamp.com/EmbeddedPlayer')) {
     return (
-      <div className="p-4 bg-gray-100 rounded text-center">
-        <p className="text-gray-600">URL não é um player Bandcamp válido</p>
-        <p className="text-xs text-gray-400 break-all mt-1">URL: {embedUrl}</p>
-        <p className="text-xs text-gray-500 mt-1">Deve conter 'bandcamp.com/EmbeddedPlayer'</p>
+      <div className="p-4 bg-yellow-100 rounded text-center">
+        <p className="text-yellow-700">URL não é um player Bandcamp válido</p>
+        <p className="text-xs text-yellow-600 break-all mt-1">URL: {embedUrl}</p>
+        <p className="text-xs text-yellow-500 mt-1">Deve conter 'bandcamp.com/EmbeddedPlayer'</p>
       </div>
     );
   }
