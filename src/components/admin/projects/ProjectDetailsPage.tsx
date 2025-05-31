@@ -85,10 +85,29 @@ const ProjectDetailsPage: React.FC = () => {
     }
   }, [projectId]);
 
-  const handleAddVersion = (newVersion: BandcampVersion) => {
+  const handleAddVersion = async (formData: { 
+    name: string; 
+    description: string; 
+    audioUrl: string;
+    fileId?: string;
+    recommended: boolean;
+    final?: boolean;
+  }) => {
     if (!project) return;
 
-    console.log('Adding version to project:', newVersion);
+    console.log('Adding version to project:', formData);
+    
+    // Create a new BandcampVersion from the form data
+    const newVersion: BandcampVersion = {
+      id: Date.now().toString(), // Generate a simple ID
+      name: formData.name,
+      description: formData.description,
+      embedUrl: formData.audioUrl,
+      bandcampUrl: formData.audioUrl, // Use the same URL for both
+      final: formData.final || false,
+      recommended: formData.recommended,
+      dateAdded: new Date().toLocaleDateString('pt-BR'),
+    };
     
     setProject(prev => {
       if (!prev) return null;
