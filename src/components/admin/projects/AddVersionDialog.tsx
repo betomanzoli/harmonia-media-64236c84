@@ -7,61 +7,64 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Checkbox } from '@/components/ui/checkbox';
 import { useToast } from '@/hooks/use-toast';
-import { Loader2 } from 'lucide-react';
+import { Loader2, X } from 'lucide-react';
 
 interface AddVersionDialogProps {
   isOpen: boolean;
   setIsOpen: (isOpen: boolean) => void;
   projectId: string;
+  onVersionAdded?: () => void; // ✅ Callback para recarregar versões
 }
 
-// **Improved Helper Function v4 with Debug Logs**
+// ✅ FUNÇÃO MELHORADA PARA EXTRAIR URL DO BANDCAMP:
 const extractBandcampData = (input: string): { embedUrl: string | null; fallbackUrl: string | null } => {
-  console.log('[Bandcamp Extract Debug] Raw Input:', input); // Log raw input
+  console.log('[Bandcamp Extract] Input:', input);
+  
   if (!input || typeof input !== 'string') {
-    console.log('[Bandcamp Extract Debug] Input is null or not a string.');
     return { embedUrl: null, fallbackUrl: null };
   }
 
   const trimmedInput = input.trim();
-  console.log('[Bandcamp Extract Debug] Trimmed Input:', trimmedInput);
-
-  // 1. Check if the input is *just* the EmbeddedPlayer URL
+  
+  // 1. Se é URL direta do EmbeddedPlayer
   if (trimmedInput.startsWith('https://bandcamp.com/EmbeddedPlayer/')) {
-    console.log('[Bandcamp Extract Debug] Input identified as direct Embed URL.');
+    console.log('[Bandcamp Extract] Direct embed URL found');
     return { embedUrl: trimmedInput, fallbackUrl: null };
   }
-
-  // 2. Try to extract from full <iframe> code (more lenient regex)
-  const iframeSrcMatch = trimmedInput.match(/<iframe.*?src\s*=\s*["'](https?:\/\/bandcamp\.com\/EmbeddedPlayer\/[^"']+?)["']/i);
-  const embedUrl = iframeSrcMatch && iframeSrcMatch[1] ? iframeSrcMatch[1] : null;
-  console.log('[Bandcamp Extract Debug] iframeSrcMatch Result:', iframeSrcMatch);
-  console.log('[Bandcamp Extract Debug] Extracted embedUrl:', embedUrl);
-
-  // 3. Try to extract fallback URL from <a> tag within the iframe code
-  let fallbackUrl: string | null = null;
-  if (embedUrl) { // Only look for fallback if we found an iframe
-    const fallbackMatch = trimmedInput.match(/<a.*?href\s*=\s*["'](https?:\/\/[^"']+?)["']/i);
-    fallbackUrl = fallbackMatch && fallbackMatch[1] ? fallbackMatch[1] : null;
-    console.log('[Bandcamp Extract Debug] fallbackMatch Result:', fallbackMatch);
-    console.log('[Bandcamp Extract Debug] Extracted fallbackUrl:', fallbackUrl);
-  } else {
-     console.log('[Bandcamp Extract Debug] No embedUrl found from iframe, skipping fallback search.');
+  
+  // 2. Extrair de iframe (regex mais robusta)
+  const iframeRegex = /<iframe[^>]*src=["']([^"']*bandcamp\.com\/EmbeddedPlayer\/[^"']*)["'][^>]*>/i;
+  const iframeMatch = trimmedInput.match(iframeRegex);
+  
+  if (iframeMatch && iframeMatch[1]) {
+    console.log('[Bandcamp Extract] Iframe embed URL found:', iframeMatch[1]);
+    
+    // Extrair URL de fallback do href
+    const hrefRegex = /<a[^>]*href=["']([^"']*harmonia-media\.bandcamp\.com[^"']*)["'][^>]*>/i;
+    const hrefMatch = trimmedInput.match(hrefRegex);
+    
+    return { 
+      embedUrl: iframeMatch[1], 
+      fallbackUrl: hrefMatch ? hrefMatch[1] : null 
+    };
   }
-
-  // If we found an embedUrl via iframe extraction, return it
-  if (embedUrl) {
-     console.log('[Bandcamp Extract Debug] Returning data extracted from iframe.');
-    return { embedUrl, fallbackUrl };
+  
+  // 3. Se é URL normal do Bandcamp, tentar converter
+  if (trimmedInput.includes('harmonia-media.bandcamp.com/track/')) {
+    console.log('[Bandcamp Extract] Track URL found, but no embed code');
+    return { embedUrl: null, fallbackUrl: trimmedInput };
   }
-
-  // 4. If it wasn't the direct URL and wasn't a valid iframe, return null
-  console.log('[Bandcamp Extract Debug] No valid embed URL found.');
+  
+  console.log('[Bandcamp Extract] No valid URL found');
   return { embedUrl: null, fallbackUrl: null };
 };
 
-
-const AddVersionDialog: React.FC<AddVersionDialogProps> = ({ isOpen, setIsOpen, projectId }) => {
+const AddVersionDialog: React.FC<AddVersionDialogProps> = ({ 
+  isOpen, 
+  setIsOpen, 
+  projectId, 
+  onVersionAdded 
+}) => {
   const [versionName, setVersionName] = useState('');
   const [description, setDescription] = useState('');
   const [bandcampInput, setBandcampInput] = useState('');
@@ -70,49 +73,89 @@ const AddVersionDialog: React.FC<AddVersionDialogProps> = ({ isOpen, setIsOpen, 
   const [error, setError] = useState<string | null>(null);
   const { toast } = useToast();
 
-  const handleAddVersion = async () => {
-    if (!versionName || !bandcampInput) {
-      setError('Nome da versão e Código/URL Bandcamp são obrigatórios.');
-      toast({ title: "Campos obrigatórios", description: "Nome da versão e Código/URL Bandcamp são necessários.", variant: "destructive" });
-      return;
-    }
-
-    setIsSubmitting(true);
-    setError(null);
-
-    console.log('[Bandcamp Extract Debug] Calling extractBandcampData with:', bandcampInput);
-    const { embedUrl, fallbackUrl } = extractBandcampData(bandcampInput);
-
-    if (!embedUrl) {
-      setError('Código ou URL inválido. Cole o código <iframe...> completo ou apenas a URL https://bandcamp.com/EmbeddedPlayer/... Verifique o console do navegador para detalhes.');
-      toast({ title: "Entrada Inválida", description: "Não foi possível extrair a URL do player. Verifique o console (F12).", variant: "destructive" });
-      setIsSubmitting(false);
-      return;
-    }
-
-    try {
-      const { data, error: insertError } = await supabase.from('project_versions').insert({
-        project_id: projectId,
-        name: versionName,
-        description: description || null,
-        original_bandcamp_url: fallbackUrl,
-        embed_url: embedUrl,
-        recommended: isRecommended,
-      }).select().single();
-
-      if (insertError) throw insertError;
-
-      toast({ title: "Versão adicionada", description: `"${versionName}" foi adicionada ao projeto.` });
+  // ✅ FUNÇÃO PARA FECHAR MODAL FORÇADAMENTE:
+  const handleClose = () => {
+    if (!isSubmitting) {
       setIsOpen(false);
       setVersionName('');
       setDescription('');
       setBandcampInput('');
       setIsRecommended(false);
+      setError(null);
+    }
+  };
+
+  const handleAddVersion = async () => {
+    if (!versionName || !bandcampInput) {
+      setError('Nome da versão e Código/URL Bandcamp são obrigatórios.');
+      toast({ 
+        title: "Campos obrigatórios", 
+        description: "Nome da versão e Código/URL Bandcamp são necessários.", 
+        variant: "destructive" 
+      });
+      return;
+    }
+
+    setIsSubmitting(true);
+    setError(null);
+    
+    try {
+      console.log('[Add Version] Starting process...');
+      console.log('[Add Version] Project ID:', projectId);
+      console.log('[Add Version] Version Name:', versionName);
+      
+      const { embedUrl, fallbackUrl } = extractBandcampData(bandcampInput);
+      
+      if (!embedUrl && !fallbackUrl) {
+        throw new Error('Código ou URL inválido. Cole o código completo do iframe ou a URL do track.');
+      }
+
+      // ✅ INSERIR SEM ESPECIFICAR ID (deixar auto-gerar):
+      const insertData = {
+        project_id: projectId,
+        name: versionName,
+        description: description || null,
+        bandcamp_url: embedUrl || fallbackUrl, // ✅ Usar campo correto
+        recommended: isRecommended,
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString()
+      };
+
+      console.log('[Add Version] Insert data:', insertData);
+
+      const { data, error: insertError } = await supabase
+        .from('project_versions')
+        .insert(insertData)
+        .select()
+        .single();
+
+      if (insertError) {
+        console.error('[Add Version] Supabase error:', insertError);
+        throw new Error(`Erro do banco: ${insertError.message}`);
+      }
+
+      console.log('[Add Version] Success:', data);
+
+      toast({ 
+        title: "Versão adicionada", 
+        description: `"${versionName}" foi adicionada ao projeto.` 
+      });
+
+      // ✅ RECARREGAR VERSÕES E FECHAR MODAL:
+      if (onVersionAdded) {
+        onVersionAdded();
+      }
+      
+      handleClose();
 
     } catch (err: any) {
-      console.error("Error adding version:", err);
-      setError(`Erro ao adicionar versão: ${err.message}`);
-      toast({ title: "Erro ao adicionar", description: `Não foi possível adicionar a versão. ${err.message}`, variant: "destructive" });
+      console.error('[Add Version] Error:', err);
+      setError(err.message || 'Erro desconhecido');
+      toast({ 
+        title: "Erro ao adicionar", 
+        description: err.message || 'Não foi possível adicionar a versão.', 
+        variant: "destructive" 
+      });
     } finally {
       setIsSubmitting(false);
     }
@@ -120,26 +163,41 @@ const AddVersionDialog: React.FC<AddVersionDialogProps> = ({ isOpen, setIsOpen, 
 
   return (
     <Dialog open={isOpen} onOpenChange={setIsOpen}>
-      <DialogContent className="sm:max-w-[480px]">
+      <DialogContent className="sm:max-w-[600px] max-h-[80vh] overflow-y-auto">
         <DialogHeader>
-          <DialogTitle>Adicionar Nova Versão</DialogTitle>
+          <div className="flex items-center justify-between">
+            <DialogTitle>Adicionar Nova Versão</DialogTitle>
+            {/* ✅ BOTÃO X PARA FECHAR FORÇADAMENTE: */}
+            <Button 
+              variant="ghost" 
+              size="sm" 
+              onClick={handleClose}
+              disabled={isSubmitting}
+              className="h-6 w-6 p-0"
+            >
+              <X className="h-4 w-4" />
+            </Button>
+          </div>
           <DialogDescription>
-            Insira os detalhes da nova versão. Cole o código de incorporação completo do Bandcamp OU apenas a URL do player.
+            Insira os detalhes da nova versão. Cole o código de incorporação completo do Bandcamp OU apenas a URL do track.
           </DialogDescription>
         </DialogHeader>
+
         <div className="grid gap-4 py-4">
           <div className="grid grid-cols-4 items-center gap-4">
-            <Label htmlFor="versionName" className="text-right">
+            <Label htmlFor="name" className="text-right">
               Nome da Versão *
             </Label>
             <Input
-              id="versionName"
+              id="name"
               value={versionName}
               onChange={(e) => setVersionName(e.target.value)}
               className="col-span-3"
               placeholder="Ex: Versão 1 - Mix Inicial"
+              disabled={isSubmitting}
             />
           </div>
+
           <div className="grid grid-cols-4 items-center gap-4">
             <Label htmlFor="description" className="text-right">
               Descrição
@@ -151,44 +209,71 @@ const AddVersionDialog: React.FC<AddVersionDialogProps> = ({ isOpen, setIsOpen, 
               className="col-span-3"
               placeholder="(Opcional) Breve descrição da versão..."
               rows={2}
+              disabled={isSubmitting}
             />
           </div>
-          <div className="grid grid-cols-4 items-center gap-4">
-            <Label htmlFor="bandcampInput" className="text-right">
+
+          <div className="grid grid-cols-4 items-start gap-4">
+            <Label htmlFor="bandcamp" className="text-right pt-2">
               Código/URL Bandcamp *
             </Label>
             <Textarea
-              id="bandcampInput"
+              id="bandcamp"
               value={bandcampInput}
               onChange={(e) => setBandcampInput(e.target.value)}
               className="col-span-3 font-mono text-xs"
-              placeholder='Cole o código <iframe...> OU a URL https://bandcamp.com/EmbeddedPlayer/...'
+              placeholder='Cole o código iframe OU a URL https://harmonia-media.bandcamp.com/track/...'
               rows={4}
+              disabled={isSubmitting}
             />
           </div>
+
           <div className="grid grid-cols-4 items-center gap-4">
-            <div className="col-start-2 col-span-3 flex items-center space-x-2">
+            <div></div>
+            <div className="col-span-3 flex items-center space-x-2">
               <Checkbox
-                id="isRecommended"
+                id="recommended"
                 checked={isRecommended}
                 onCheckedChange={(checked) => setIsRecommended(checked as boolean)}
+                disabled={isSubmitting}
               />
-              <Label htmlFor="isRecommended" className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
+              <Label htmlFor="recommended">
                 Marcar como versão recomendada
               </Label>
             </div>
           </div>
+
           {error && (
-            <p className="col-span-4 text-center text-sm text-red-600">{error}</p>
+            <div className="grid grid-cols-4 gap-4">
+              <div></div>
+              <div className="col-span-3 text-sm text-red-600 bg-red-50 p-2 rounded">
+                {error}
+              </div>
+            </div>
           )}
         </div>
+
         <DialogFooter>
-          <Button variant="outline" onClick={() => setIsOpen(false)} disabled={isSubmitting}>
+          <Button 
+            variant="outline" 
+            onClick={handleClose} 
+            disabled={isSubmitting}
+          >
             Cancelar
           </Button>
-          <Button onClick={handleAddVersion} disabled={isSubmitting}>
-            {isSubmitting ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
-            {isSubmitting ? 'Adicionando...' : 'Adicionar Versão'}
+          <Button 
+            onClick={handleAddVersion} 
+            disabled={isSubmitting || !versionName || !bandcampInput}
+            className="bg-harmonia-green hover:bg-harmonia-green/90"
+          >
+            {isSubmitting ? (
+              <>
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                Adicionando...
+              </>
+            ) : (
+              'Adicionar Versão'
+            )}
           </Button>
         </DialogFooter>
       </DialogContent>
@@ -197,4 +282,3 @@ const AddVersionDialog: React.FC<AddVersionDialogProps> = ({ isOpen, setIsOpen, 
 };
 
 export default AddVersionDialog;
-
