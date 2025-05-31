@@ -16,30 +16,46 @@ interface AddVersionDialogProps {
   onVersionAdded?: () => void;
 }
 
-// Função robusta para extrair o embedUrl do Bandcamp
+// ✅ FUNÇÃO CORRIGIDA PARA EXTRAIR URL DO BANDCAMP:
 const extractBandcampEmbedUrl = (input: string): string | null => {
   if (!input || typeof input !== 'string') return null;
+  
   const trimmed = input.trim();
-
-  // Se for embed direto
-  if (trimmed.startsWith('https://bandcamp.com/EmbeddedPlayer/')) {
-    return trimmed.startsWith('http') ? trimmed : 'https:' + trimmed;
-  }
-
-  // Extrair de iframe
+  console.log('[Extract] Input:', trimmed);
+  
   try {
-    const iframeMatch = trimmed.match(/<iframe[^>]*src=["']([^"']+)["'][^>]*>/i);
+    // 1. Se é URL direta do EmbeddedPlayer
+    if (trimmed.startsWith('https://bandcamp.com/EmbeddedPlayer/')) {
+      console.log('[Extract] Direct embed URL found');
+      return trimmed;
+    }
+    
+    // 2. Extrair de iframe - REGEX MAIS PRECISA
+    const iframeMatch = trimmed.match(/<iframe[^>]*src=["']([^"']*bandcamp\.com\/EmbeddedPlayer\/[^"']*)["'][^>]*>/i);
     if (iframeMatch && iframeMatch[1]) {
       let url = iframeMatch[1];
-      if (!url.startsWith('http')) url = 'https:' + url;
+      // Garantir que tem protocolo
+      if (!url.startsWith('http')) {
+        url = 'https:' + url;
+      }
+      console.log('[Extract] Iframe URL extracted:', url);
       return url;
     }
-  } catch (e) {
-    // Continua
+    
+    // 3. Buscar qualquer URL que contenha EmbeddedPlayer
+    const embedMatch = trimmed.match(/(https?:\/\/[^"'\s]*bandcamp\.com\/EmbeddedPlayer\/[^"'\s]*)/i);
+    if (embedMatch) {
+      console.log('[Extract] Embedded URL found:', embedMatch[1]);
+      return embedMatch[1];
+    }
+    
+    console.log('[Extract] No valid URL found');
+    return null;
+    
+  } catch (error) {
+    console.error('[Extract] Error:', error);
+    return null;
   }
-
-  // Se for link de track, retorna null (não é embed)
-  return null;
 };
 
 const AddVersionDialog: React.FC<AddVersionDialogProps> = ({
@@ -82,13 +98,16 @@ const AddVersionDialog: React.FC<AddVersionDialogProps> = ({
     setError(null);
 
     try {
+      console.log('[Add Version] Processing input:', bandcampInput);
+      
       const embedUrl = extractBandcampEmbedUrl(bandcampInput);
+      console.log('[Add Version] Extracted URL:', embedUrl);
 
       if (!embedUrl) {
         throw new Error('Código ou URL inválido. Cole o código completo do iframe do Bandcamp.');
       }
 
-      // Inserção simplificada, sem timestamps manuais
+      // ✅ INSERÇÃO SIMPLIFICADA:
       const insertData = {
         project_id: projectId,
         name: versionName,
@@ -97,6 +116,8 @@ const AddVersionDialog: React.FC<AddVersionDialogProps> = ({
         recommended: isRecommended
       };
 
+      console.log('[Add Version] Insert data:', insertData);
+
       const { data, error: insertError } = await supabase
         .from('project_versions')
         .insert(insertData)
@@ -104,8 +125,11 @@ const AddVersionDialog: React.FC<AddVersionDialogProps> = ({
         .single();
 
       if (insertError) {
+        console.error('[Add Version] Supabase error:', insertError);
         throw new Error(`Erro do banco: ${insertError.message}`);
       }
+
+      console.log('[Add Version] Success:', data);
 
       toast({
         title: "Versão adicionada",
@@ -116,6 +140,7 @@ const AddVersionDialog: React.FC<AddVersionDialogProps> = ({
       handleClose();
 
     } catch (err: any) {
+      console.error('[Add Version] Error:', err);
       setError(err.message || 'Erro desconhecido');
       toast({
         title: "Erro ao adicionar",
@@ -187,7 +212,7 @@ const AddVersionDialog: React.FC<AddVersionDialogProps> = ({
               value={bandcampInput}
               onChange={(e) => setBandcampInput(e.target.value)}
               className="col-span-3 font-mono text-xs"
-              placeholder='Cole o código iframe do Bandcamp aqui'
+              placeholder='Cole o código iframe completo do Bandcamp aqui'
               rows={4}
               disabled={isSubmitting}
             />
