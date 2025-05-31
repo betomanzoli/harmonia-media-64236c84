@@ -1,19 +1,18 @@
-import React, { useState } from 'react';
+import React from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Copy, Trash2, CheckCircle, Loader2 } from 'lucide-react';
+import { Copy, Trash2 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
-import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
 import BandcampEmbedPlayer from '@/components/previews/BandcampEmbedPlayer';
 
 interface BandcampVersion {
   id: string;
   name: string;
   description?: string;
-  embed_url: string;
+  embed_url?: string; // ✅ Campo correto do schema
+  bandcamp_url?: string; // ✅ Campo alternativo
   original_bandcamp_url?: string;
-  final?: boolean;
   recommended?: boolean;
   created_at: string;
 }
@@ -21,7 +20,7 @@ interface BandcampVersion {
 interface BandcampVersionCardProps {
   version: BandcampVersion;
   projectId: string;
-  onDeleteVersion: (versionId: string) => void;
+  onDeleteVersion?: (versionId: string) => void;
 }
 
 const BandcampVersionCard: React.FC<BandcampVersionCardProps> = ({
@@ -30,23 +29,41 @@ const BandcampVersionCard: React.FC<BandcampVersionCardProps> = ({
   onDeleteVersion
 }) => {
   const { toast } = useToast();
-  const [isPlayerLoaded, setIsPlayerLoaded] = useState(false);
+
+  // ✅ BUSCAR URL EM MÚLTIPLOS CAMPOS:
+  const embedUrl = version.embed_url || version.bandcamp_url || '';
+  
+  console.log('[BandcampVersionCard] Version data:', {
+    id: version.id,
+    name: version.name,
+    embed_url: version.embed_url,
+    bandcamp_url: version.bandcamp_url,
+    finalEmbedUrl: embedUrl
+  });
 
   const handleCopyLink = () => {
-    const linkToCopy = version.original_bandcamp_url || version.embed_url;
-    navigator.clipboard.writeText(linkToCopy).then(() => {
-      toast({
-        title: "Link copiado!",
-        description: "O link foi copiado para a área de transferência."
+    const linkToCopy = version.original_bandcamp_url || embedUrl;
+    if (linkToCopy) {
+      navigator.clipboard.writeText(linkToCopy).then(() => {
+        toast({
+          title: "Link copiado!",
+          description: "O link foi copiado para a área de transferência."
+        });
+      }).catch(err => {
+        console.error('Erro ao copiar link:', err);
+        toast({
+          title: "Erro",
+          description: "Não foi possível copiar o link.",
+          variant: "destructive"
+        });
       });
-    }).catch(err => {
-      console.error('Erro ao copiar link:', err);
-      toast({
-        title: "Erro",
-        description: "Não foi possível copiar o link.",
-        variant: "destructive"
-      });
-    });
+    }
+  };
+
+  const handleDelete = () => {
+    if (onDeleteVersion) {
+      onDeleteVersion(version.id);
+    }
   };
 
   return (
@@ -61,11 +78,6 @@ const BandcampVersionCard: React.FC<BandcampVersionCardProps> = ({
                 Recomendada
               </Badge>
             )}
-            {version.final && (
-              <Badge variant="secondary" className="bg-blue-100 text-blue-700">
-                Final
-              </Badge>
-            )}
           </div>
         </div>
 
@@ -77,12 +89,22 @@ const BandcampVersionCard: React.FC<BandcampVersionCardProps> = ({
           Adicionado em: {new Date(version.created_at).toLocaleDateString('pt-BR')}
         </p>
 
-        {/* ✅ PLAYER BANDCAMP SEM LINK EXTERNO */}
+        {/* ✅ PLAYER BANDCAMP COM DEBUG */}
         <div className="mb-4">
-          <BandcampEmbedPlayer 
-            embedUrl={version.embed_url}
-            title={version.name}
-          />
+          {embedUrl ? (
+            <BandcampEmbedPlayer 
+              embedUrl={embedUrl}
+              title={version.name}
+            />
+          ) : (
+            <div className="p-4 bg-yellow-50 rounded text-center border border-yellow-200">
+              <p className="text-yellow-700">Nenhuma URL de player encontrada</p>
+              <p className="text-xs text-yellow-600 mt-1">
+                embed_url: {version.embed_url || 'null'}<br/>
+                bandcamp_url: {version.bandcamp_url || 'null'}
+              </p>
+            </div>
+          )}
         </div>
 
         {/* Actions */}
@@ -92,36 +114,23 @@ const BandcampVersionCard: React.FC<BandcampVersionCardProps> = ({
             size="sm"
             onClick={handleCopyLink}
             className="flex items-center gap-2"
+            disabled={!embedUrl}
           >
             <Copy className="h-4 w-4" />
             Copiar Link
           </Button>
 
-          <AlertDialog>
-            <AlertDialogTrigger asChild>
-              <Button variant="outline" size="sm" className="text-red-600 hover:text-red-700">
-                <Trash2 className="h-4 w-4 mr-2" />
-                Remover
-              </Button>
-            </AlertDialogTrigger>
-            <AlertDialogContent>
-              <AlertDialogHeader>
-                <AlertDialogTitle>Remover versão</AlertDialogTitle>
-                <AlertDialogDescription>
-                  Tem certeza que deseja remover "{version.name}"? Esta ação não pode ser desfeita.
-                </AlertDialogDescription>
-              </AlertDialogHeader>
-              <AlertDialogFooter>
-                <AlertDialogCancel>Cancelar</AlertDialogCancel>
-                <AlertDialogAction
-                  onClick={() => onDeleteVersion(version.id)}
-                  className="bg-red-600 hover:bg-red-700"
-                >
-                  Remover
-                </AlertDialogAction>
-              </AlertDialogFooter>
-            </AlertDialogContent>
-          </AlertDialog>
+          {onDeleteVersion && (
+            <Button 
+              variant="outline" 
+              size="sm" 
+              className="text-red-600 hover:text-red-700"
+              onClick={handleDelete}
+            >
+              <Trash2 className="h-4 w-4 mr-2" />
+              Remover
+            </Button>
+          )}
         </div>
       </CardContent>
     </Card>
