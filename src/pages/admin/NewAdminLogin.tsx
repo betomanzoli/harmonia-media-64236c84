@@ -5,7 +5,7 @@ import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Label } from '@/components/ui/label';
 import { useToast } from '@/hooks/use-toast';
-import { useAuth } from '@/contexts/AuthContext'; // ✅ ADICIONAR IMPORT
+import { supabase } from '@/integrations/supabase/client'; // ✅ IMPORT DIRETO DO SUPABASE
 import { Lock, User, Music } from 'lucide-react';
 
 const NewAdminLogin: React.FC = () => {
@@ -14,17 +14,15 @@ const NewAdminLogin: React.FC = () => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const navigate = useNavigate();
   const { toast } = useToast();
-  const { login } = useAuth(); // ✅ USAR HOOK REAL
 
-  const handleSubmit = async (e: React.FormEvent) => { // ✅ ASYNC
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsSubmitting(true);
     
-    // ✅ TRY-CATCH PARA RESOLVER PROBLEMAS:
     try {
-      console.log('🔑 Login attempt started');
+      console.log('🔑 Direct Supabase login attempt');
       
-      // Ignorar erros ethereum que aparecem no console
+      // Ignorar erros ethereum
       window.addEventListener('error', (error) => {
         if (error.message && error.message.includes('ethereum')) {
           console.log('⚠️ Ignoring ethereum error:', error.message);
@@ -46,67 +44,73 @@ const NewAdminLogin: React.FC = () => {
       
       console.log('📧 Email:', username);
       console.log('🔒 Password length:', password.length);
+      console.log('📡 Supabase URL:', supabase.supabaseUrl);
       
-      // ✅ USAR SUPABASE REAL EM VEZ DE SIMULAÇÃO:
-      const success = await login(username, password);
-      console.log('✅ Login result:', success);
-      
-      if (success) {
-        console.log('🚀 Login successful, redirecting...');
+      // ✅ BYPASS AUTHCONTEXT - USAR SUPABASE DIRETO:
+      const { data, error } = await supabase.auth.signInWithPassword({
+        email: username.trim(),
+        password: password,
+      });
+
+      console.log('📊 Direct Supabase response:', {
+        data: data,
+        error: error,
+        session: data?.session,
+        user: data?.user,
+        hasSession: !!data?.session,
+        hasUser: !!data?.user
+      });
+
+      if (error) {
+        console.error('❌ Direct Supabase error:', {
+          message: error.message,
+          status: error.status,
+          name: error.name
+        });
+        
+        toast({
+          title: "Erro de autenticação",
+          description: error.message || "Email ou senha incorretos.",
+          variant: "destructive"
+        });
+        setIsSubmitting(false);
+        return;
+      }
+
+      if (data.session?.user) {
+        console.log('✅ Direct login successful:', {
+          email: data.session.user.email,
+          id: data.session.user.id,
+          confirmed: data.session.user.email_confirmed_at
+        });
+        
         toast({
           title: "Login realizado com sucesso",
           description: "Bem-vindo ao painel administrativo.",
         });
         
-        // ✅ REDIRECIONAMENTO FORÇADO MÚLTIPLO:
-        setTimeout(() => {
-          navigate('/admin/projects');
-          window.location.href = '/admin/projects';
-        }, 100);
-        
+        // ✅ REDIRECIONAMENTO DIRETO SEM AUTHCONTEXT:
+        console.log('🚀 Redirecting to admin...');
         setTimeout(() => {
           window.location.href = '/admin/projects';
         }, 500);
         
       } else {
-        console.log('❌ Login failed, trying again...');
-        
-        // ✅ SEGUNDA TENTATIVA (BUG CONHECIDO SUPABASE):
-        setTimeout(async () => {
-          const secondAttempt = await login(username, password);
-          console.log('✅ Second attempt result:', secondAttempt);
-          
-          if (secondAttempt) {
-            toast({
-              title: "Login realizado com sucesso",
-              description: "Bem-vindo ao painel administrativo.",
-            });
-            window.location.href = '/admin/projects';
-          } else {
-            toast({
-              title: "Erro de autenticação",
-              description: "Email ou senha incorretos. Verifique suas credenciais.",
-              variant: "destructive"
-            });
-          }
-        }, 1000);
+        console.log('❌ No session returned despite no error');
+        toast({
+          title: "Erro de autenticação",
+          description: "Não foi possível fazer login. Tente novamente.",
+          variant: "destructive"
+        });
       }
       
     } catch (error) {
-      console.error('💥 Login error caught:', error);
-      
+      console.error('💥 Direct login error:', error);
       toast({
         title: "Erro inesperado",
-        description: "Ocorreu um erro durante o login. Tente novamente.",
+        description: "Ocorreu um erro durante o login.",
         variant: "destructive"
       });
-      
-      // ✅ TENTATIVA DE REDIRECIONAMENTO MESMO COM ERRO:
-      console.log('🚨 Attempting emergency redirect...');
-      setTimeout(() => {
-        window.location.href = '/admin/projects';
-      }, 2000);
-      
     } finally {
       setIsSubmitting(false);
     }
@@ -134,9 +138,9 @@ const NewAdminLogin: React.FC = () => {
                   <User className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
                   <Input
                     id="username"
-                    type="email" // ✅ TIPO EMAIL
+                    type="email"
                     className="pl-9"
-                    placeholder="admin"
+                    placeholder="contato@harmonia.media"
                     value={username}
                     onChange={(e) => setUsername(e.target.value)}
                     required
