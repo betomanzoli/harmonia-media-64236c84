@@ -60,7 +60,7 @@ const LoginForm: React.FC<LoginFormProps> = ({
           name="email"
           value={email}
           onChange={onEmailChange}
-          placeholder="betomanzoli@gmail.com"
+          placeholder="admin"
           required
           disabled={loading || success}
           autoComplete="email"
