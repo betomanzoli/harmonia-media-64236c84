@@ -7,6 +7,8 @@ import { Play, Pause, Trash2, Copy, ExternalLink } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 import { useToast } from '@/hooks/use-toast';
+import BandcampEmbedPlayer from '@/components/previews/BandcampEmbedPlayer';
+import { BandcampUtils } from '@/components/admin/bandcamp/BandcampUtils';
 
 interface VersionCardProps {
   version: Version;
@@ -19,48 +21,7 @@ const VersionCard: React.FC<VersionCardProps> = ({
   projectId,
   onDeleteVersion
 }) => {
-  const [isPlaying, setIsPlaying] = useState(false);
-  const [audio] = useState(new Audio(version.audio_url || ''));
   const { toast } = useToast();
-
-  const handleTogglePlay = () => {
-    if (isPlaying) {
-      audio.pause();
-    } else {
-      // Se temos uma URL do Bandcamp, abrir em nova aba
-      if (version.audio_url) {
-        window.open(version.audio_url, '_blank');
-        toast({
-          title: "Abrindo áudio",
-          description: "O áudio está sendo aberto em uma nova aba."
-        });
-        return;
-      }
-      
-      // Caso contrário, tentar reproduzir diretamente
-      audio.play().catch(error => {
-        console.error('Erro ao reproduzir áudio:', error);
-        toast({
-          title: "Erro ao reproduzir",
-          description: "Não foi possível reproduzir o áudio. Tente abrir no navegador.",
-          variant: "destructive"
-        });
-        
-        if (version.audio_url) {
-          window.open(version.audio_url, '_blank');
-        }
-      });
-    }
-    setIsPlaying(!isPlaying);
-  };
-
-  React.useEffect(() => {
-    audio.addEventListener('ended', () => setIsPlaying(false));
-    return () => {
-      audio.removeEventListener('ended', () => setIsPlaying(false));
-      audio.pause();
-    };
-  }, [audio]);
 
   const handleCopyLink = (url: string) => {
     navigator.clipboard.writeText(url).then(() => {
@@ -77,6 +38,9 @@ const VersionCard: React.FC<VersionCardProps> = ({
       });
     });
   };
+
+  // Verificar se é URL do Bandcamp
+  const isBandcampUrl = version.audio_url && BandcampUtils.validateBandcampUrl(version.audio_url);
 
   return (
     <Card className={`bg-white ${version.recommended ? 'border-green-500 border-2' : ''}`}>
@@ -102,47 +66,48 @@ const VersionCard: React.FC<VersionCardProps> = ({
               Adicionado em: {new Date(version.created_at).toLocaleDateString('pt-BR')}
             </div>
             
-            {/* URL do áudio */}
+            {/* Player do Bandcamp ou link do áudio */}
             {version.audio_url && (
               <div className="mt-2">
-                <div className="flex items-center justify-between bg-gray-50 p-2 rounded text-sm">
-                  <span className="font-medium">Áudio</span>
-                  <div className="flex gap-1">
-                    <Button 
-                      variant="ghost" 
-                      size="icon" 
-                      className="h-7 w-7" 
-                      onClick={() => handleCopyLink(version.audio_url!)}
-                      title="Copiar link"
-                    >
-                      <Copy className="h-3.5 w-3.5" />
-                    </Button>
-                    <Button 
-                      variant="ghost" 
-                      size="icon" 
-                      className="h-7 w-7" 
-                      onClick={() => window.open(version.audio_url, '_blank')}
-                      title="Abrir link"
-                    >
-                      <ExternalLink className="h-3.5 w-3.5" />
-                    </Button>
+                {isBandcampUrl ? (
+                  <div className="mb-4">
+                    <BandcampEmbedPlayer
+                      embedUrl={version.audio_url}
+                      title={version.name}
+                      fallbackUrl={version.audio_url}
+                      className="w-full"
+                    />
                   </div>
-                </div>
+                ) : (
+                  <div className="flex items-center justify-between bg-gray-50 p-2 rounded text-sm">
+                    <span className="font-medium">Áudio</span>
+                    <div className="flex gap-1">
+                      <Button 
+                        variant="ghost" 
+                        size="icon" 
+                        className="h-7 w-7" 
+                        onClick={() => handleCopyLink(version.audio_url!)}
+                        title="Copiar link"
+                      >
+                        <Copy className="h-3.5 w-3.5" />
+                      </Button>
+                      <Button 
+                        variant="ghost" 
+                        size="icon" 
+                        className="h-7 w-7" 
+                        onClick={() => window.open(version.audio_url, '_blank')}
+                        title="Abrir link"
+                      >
+                        <ExternalLink className="h-3.5 w-3.5" />
+                      </Button>
+                    </div>
+                  </div>
+                )}
               </div>
             )}
           </div>
           
           <div className="flex sm:flex-col gap-2 mt-4 sm:mt-0 sm:ml-4">
-            <Button 
-              variant="outline" 
-              size="sm" 
-              className={`${isPlaying ? 'bg-gray-100' : ''}`} 
-              onClick={handleTogglePlay}
-            >
-              {isPlaying ? <Pause className="h-4 w-4 mr-2" /> : <Play className="h-4 w-4 mr-2" />}
-              {isPlaying ? 'Pausar' : 'Ouvir'}
-            </Button>
-            
             <AlertDialog>
               <AlertDialogTrigger asChild>
                 <Button variant="ghost" size="sm" className="text-red-600 hover:text-red-700 hover:bg-red-50">

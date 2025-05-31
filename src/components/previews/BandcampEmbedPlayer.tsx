@@ -19,12 +19,16 @@ const BandcampEmbedPlayer: React.FC<BandcampEmbedPlayerProps> = ({
 }) => {
   const [iframeError, setIframeError] = useState(false);
 
-  // Gerar embed dinâmico se a URL não for um embed
+  // Se a URL não é um embed, gerar automaticamente
   const actualEmbedUrl = embedUrl.includes('EmbeddedPlayer') 
     ? embedUrl 
     : BandcampUtils.autoGenerateEmbed(embedUrl);
 
+  console.log('BandcampEmbedPlayer - Original URL:', embedUrl);
+  console.log('BandcampEmbedPlayer - Generated Embed URL:', actualEmbedUrl);
+
   const handleIframeError = () => {
+    console.error('Iframe failed to load for URL:', actualEmbedUrl);
     setIframeError(true);
   };
 
@@ -62,6 +66,7 @@ const BandcampEmbedPlayer: React.FC<BandcampEmbedPlayerProps> = ({
         onError={handleIframeError}
         title={title}
         allow="autoplay"
+        loading="lazy"
       />
       <div className="absolute top-2 right-2">
         <Button
@@ -69,6 +74,7 @@ const BandcampEmbedPlayer: React.FC<BandcampEmbedPlayerProps> = ({
           size="sm"
           onClick={openInBandcamp}
           className="h-6 w-6 p-0 bg-white/80 hover:bg-white"
+          title="Abrir no Bandcamp"
         >
           <ExternalLink className="h-3 w-3" />
         </Button>
