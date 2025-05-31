@@ -136,7 +136,7 @@ const NewAdminLogin: React.FC = () => {
                     id="username"
                     type="email" // ✅ TIPO EMAIL
                     className="pl-9"
-                    placeholder="betomanzoli@gmail.com"
+                    placeholder="admin"
                     value={username}
                     onChange={(e) => setUsername(e.target.value)}
                     required
