@@ -37,18 +37,15 @@ const PreviewVersionCard: React.FC<PreviewVersionCardProps> = ({
   const [isPlaying, setIsPlaying] = useState(false);
   const [isMuted, setIsMuted] = useState(false);
 
-  // Check if the audioUrl is a Bandcamp embed URL
-  const isBandcampEmbed = version.audioUrl && version.audioUrl.includes('bandcamp.com/EmbeddedPlayer');
+  // Check if this version has a Bandcamp URL and generate embed
+  const bandcampEmbedUrl = version.bandcampUrl ? BandcampUtils.autoGenerateEmbed(version.bandcampUrl) : null;
   
   const handlePlay = (e: React.MouseEvent) => {
     e.stopPropagation();
     
-    // If we have a Bandcamp embed, extract original URL if possible or open embed
-    if (isBandcampEmbed || version.bandcampUrl) {
-      const urlToOpen = version.bandcampUrl || version.audioUrl;
-      if (urlToOpen) {
-        window.open(urlToOpen, '_blank');
-      }
+    // If we have a Bandcamp URL, open it directly
+    if (version.bandcampUrl) {
+      window.open(version.bandcampUrl, '_blank');
       return;
     }
     
@@ -90,10 +87,10 @@ const PreviewVersionCard: React.FC<PreviewVersionCardProps> = ({
         <p className="text-sm text-black mb-4">{version.description}</p>
         
         {/* Show Bandcamp embed if available */}
-        {isBandcampEmbed && (
+        {bandcampEmbedUrl && (
           <div className="mb-4">
             <BandcampEmbedPlayer 
-              embedUrl={version.audioUrl}
+              embedUrl={bandcampEmbedUrl}
               title="Preview Audio"
               fallbackUrl={version.bandcampUrl}
               className="bg-white border"
@@ -105,19 +102,16 @@ const PreviewVersionCard: React.FC<PreviewVersionCardProps> = ({
           <div className="flex space-x-2">
             <Button variant="outline" size="sm" onClick={handlePlay} className="flex items-center">
               <Play className="h-4 w-4 mr-1" />
-              {isBandcampEmbed || version.bandcampUrl ? 'Abrir' : 'Ouvir'}
+              {version.bandcampUrl ? 'Abrir' : 'Ouvir'}
             </Button>
             
-            {(isBandcampEmbed || version.bandcampUrl) && (
+            {version.bandcampUrl && (
               <Button 
                 variant="ghost" 
                 size="icon" 
                 onClick={(e) => {
                   e.stopPropagation();
-                  const urlToOpen = version.bandcampUrl || version.audioUrl;
-                  if (urlToOpen) {
-                    window.open(urlToOpen, '_blank');
-                  }
+                  window.open(version.bandcampUrl, '_blank');
                 }}
                 className="h-8 w-8"
                 title="Abrir no Bandcamp"
@@ -126,7 +120,7 @@ const PreviewVersionCard: React.FC<PreviewVersionCardProps> = ({
               </Button>
             )}
             
-            {!isBandcampEmbed && !version.bandcampUrl && (
+            {!version.bandcampUrl && (
               <Button variant="ghost" size="icon" onClick={toggleMute} className="h-8 w-8">
                 {isMuted ? <VolumeX className="h-4 w-4" /> : <Volume2 className="h-4 w-4" />}
               </Button>
