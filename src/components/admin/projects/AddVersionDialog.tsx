@@ -34,7 +34,7 @@ const AddVersionDialog: React.FC<AddVersionDialogProps> = ({
   const { toast } = useToast();
 
   const handleSubmit = async () => {
-    if (!versionName || !bandcampInput) {
+    if (!versionName.trim() || !bandcampInput.trim()) {
       toast({
         title: "Erro",
         description: "Preencha todos os campos obrigatórios",
@@ -46,31 +46,54 @@ const AddVersionDialog: React.FC<AddVersionDialogProps> = ({
     setIsSubmitting(true);
 
     try {
-      console.log('[AddVersion] Processando input:', bandcampInput);
+      console.log('[AddVersion] Iniciando processamento:', {
+        projectId,
+        versionName,
+        bandcampInput: bandcampInput.substring(0, 100) + '...'
+      });
       
-      // Usar a função de processamento melhorada
+      // Processar o input do Bandcamp
       const processedData = BandcampUtils.processInput(bandcampInput);
       console.log('[AddVersion] Dados processados:', processedData);
       
-      if (!processedData.embedUrl && !processedData.originalUrl) {
-        throw new Error('Não foi possível processar o código/URL fornecido. Verifique se é um código iframe válido do Bandcamp ou uma URL direta.');
+      // Determinar a URL de áudio a ser usada
+      let audioUrl = '';
+      let embedUrl = '';
+      let originalUrl = '';
+      
+      if (processedData.embedUrl) {
+        audioUrl = processedData.embedUrl;
+        embedUrl = processedData.embedUrl;
+      }
+      
+      if (processedData.originalUrl) {
+        originalUrl = processedData.originalUrl;
+        // Se não temos embed, usar a URL original como áudio
+        if (!audioUrl) {
+          audioUrl = processedData.originalUrl;
+        }
+      }
+      
+      // Se ainda não temos URL de áudio, usar o input original
+      if (!audioUrl) {
+        audioUrl = bandcampInput.trim();
       }
 
-      // Preparar dados para inserção com múltiplos campos
+      // Preparar dados para inserção
       const insertData = {
         project_id: projectId,
-        name: versionName,
-        description: description || null,
-        embed_url: processedData.embedUrl,
-        bandcamp_url: processedData.originalUrl || processedData.embedUrl,
-        original_bandcamp_url: bandcampInput,
-        audio_url: processedData.originalUrl || processedData.embedUrl,
-        recommended: isRecommended,
-        version_id: `v_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`
+        name: versionName.trim(),
+        description: description.trim() || null,
+        audio_url: audioUrl,
+        embed_url: embedUrl || null,
+        bandcamp_url: originalUrl || audioUrl,
+        original_bandcamp_url: bandcampInput.trim(),
+        recommended: isRecommended
       };
 
       console.log('[AddVersion] Dados para inserir:', insertData);
 
+      // Inserir no banco de dados
       const { data, error } = await supabase
         .from('project_versions')
         .insert(insertData)
@@ -79,14 +102,14 @@ const AddVersionDialog: React.FC<AddVersionDialogProps> = ({
 
       if (error) {
         console.error('[AddVersion] Erro do Supabase:', error);
-        throw error;
+        throw new Error(`Erro ao salvar no banco: ${error.message}`);
       }
 
       console.log('[AddVersion] Versão inserida com sucesso:', data);
 
       toast({
         title: "Sucesso",
-        description: "Versão adicionada com sucesso"
+        description: `Versão "${versionName}" adicionada com sucesso`
       });
 
       // Reset form
@@ -96,7 +119,9 @@ const AddVersionDialog: React.FC<AddVersionDialogProps> = ({
       setIsRecommended(false);
       setIsOpen(false);
 
+      // Chamar callback para recarregar dados
       if (onVersionAdded) {
+        console.log('[AddVersion] Chamando callback onVersionAdded');
         onVersionAdded();
       }
 
@@ -122,8 +147,8 @@ const AddVersionDialog: React.FC<AddVersionDialogProps> = ({
     }
   };
 
-  const handleRecommendedChange = (checked: boolean | "indeterminate") => {
-    setIsRecommended(checked === true);
+  const handleRecommendedChange = (checked: boolean) => {
+    setIsRecommended(checked);
   };
 
   return (
@@ -194,7 +219,7 @@ const AddVersionDialog: React.FC<AddVersionDialogProps> = ({
           </Button>
           <Button
             onClick={handleSubmit}
-            disabled={isSubmitting || !versionName || !bandcampInput}
+            disabled={isSubmitting || !versionName.trim() || !bandcampInput.trim()}
           >
             {isSubmitting ? (
               <>
