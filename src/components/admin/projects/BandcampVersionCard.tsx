@@ -32,11 +32,13 @@ const BandcampVersionCard: React.FC<BandcampVersionCardProps> = ({
 }) => {
   const { toast } = useToast();
 
+  console.log('[BandcampVersionCard] Renderizando versão:', version.id, version.name);
+
   // Buscar a melhor URL disponível em ordem de prioridade
   const embedUrl = version.embed_url || version.bandcamp_url || version.audio_url || '';
   const originalUrl = version.bandcamp_url || version.audio_url || version.original_bandcamp_url || '';
   
-  console.log('[BandcampVersionCard] Version data:', {
+  console.log('[BandcampVersionCard] URLs processadas:', {
     id: version.id,
     name: version.name,
     embed_url: version.embed_url,
@@ -78,99 +80,114 @@ const BandcampVersionCard: React.FC<BandcampVersionCardProps> = ({
     }
   };
 
-  return (
-    <Card className="w-full">
-      <CardContent className="p-4">
-        {/* Header */}
-        <div className="flex items-center justify-between mb-3">
-          <div className="flex items-center gap-2">
-            <h3 className="font-semibold text-lg">{version.name}</h3>
-            {version.recommended && (
-              <Badge variant="secondary" className="bg-green-100 text-green-700">
-                Recomendada
-              </Badge>
+  try {
+    return (
+      <Card className="w-full">
+        <CardContent className="p-4">
+          {/* Header */}
+          <div className="flex items-center justify-between mb-3">
+            <div className="flex items-center gap-2">
+              <h3 className="font-semibold text-lg">{version.name}</h3>
+              {version.recommended && (
+                <Badge variant="secondary" className="bg-green-100 text-green-700">
+                  Recomendada
+                </Badge>
+              )}
+            </div>
+          </div>
+
+          {version.description && (
+            <p className="text-sm text-gray-600 mb-3">{version.description}</p>
+          )}
+
+          <p className="text-xs text-gray-400 mb-4">
+            Adicionado em: {new Date(version.created_at).toLocaleDateString('pt-BR')}
+          </p>
+
+          {/* Player Bandcamp */}
+          <div className="mb-4">
+            {embedUrl ? (
+              <div>
+                <p className="text-xs text-gray-500 mb-2">🎵 Tentando carregar player...</p>
+                <BandcampEmbedPlayer 
+                  embedUrl={embedUrl}
+                  title={version.name}
+                  fallbackUrl={originalUrl}
+                />
+              </div>
+            ) : (
+              <div className="p-4 bg-red-50 rounded text-center border border-red-200">
+                <p className="text-red-700 font-medium">❌ Nenhuma URL válida encontrada</p>
+                <div className="text-xs text-red-600 mt-2 space-y-1">
+                  <p>embed_url: {version.embed_url || 'null'}</p>
+                  <p>bandcamp_url: {version.bandcamp_url || 'null'}</p>
+                  <p>audio_url: {version.audio_url || 'null'}</p>
+                  <p>original_bandcamp_url: {version.original_bandcamp_url || 'null'}</p>
+                </div>
+              </div>
             )}
           </div>
-        </div>
 
-        {version.description && (
-          <p className="text-sm text-gray-600 mb-3">{version.description}</p>
-        )}
-
-        <p className="text-xs text-gray-400 mb-4">
-          Adicionado em: {new Date(version.created_at).toLocaleDateString('pt-BR')}
-        </p>
-
-        {/* Player Bandcamp */}
-        <div className="mb-4">
-          {embedUrl ? (
-            <BandcampEmbedPlayer 
-              embedUrl={embedUrl}
-              title={version.name}
-              fallbackUrl={originalUrl}
-            />
-          ) : (
-            <div className="p-4 bg-red-50 rounded text-center border border-red-200">
-              <p className="text-red-700 font-medium">❌ Nenhuma URL válida encontrada</p>
-              <div className="text-xs text-red-600 mt-2 space-y-1">
-                <p>embed_url: {version.embed_url || 'null'}</p>
-                <p>bandcamp_url: {version.bandcamp_url || 'null'}</p>
-                <p>audio_url: {version.audio_url || 'null'}</p>
-                <p>original_bandcamp_url: {version.original_bandcamp_url || 'null'}</p>
-              </div>
+          {/* URLs Debug Info */}
+          <div className="mb-4 p-3 bg-gray-50 rounded text-xs">
+            <p className="font-medium mb-2">URLs disponíveis:</p>
+            <div className="space-y-1">
+              <p><strong>Embed:</strong> {embedUrl || 'N/A'}</p>
+              <p><strong>Original:</strong> {originalUrl || 'N/A'}</p>
             </div>
-          )}
-        </div>
-
-        {/* URLs Debug Info */}
-        <div className="mb-4 p-3 bg-gray-50 rounded text-xs">
-          <p className="font-medium mb-2">URLs disponíveis:</p>
-          <div className="space-y-1">
-            <p><strong>Embed:</strong> {embedUrl || 'N/A'}</p>
-            <p><strong>Original:</strong> {originalUrl || 'N/A'}</p>
           </div>
-        </div>
 
-        {/* Actions */}
-        <div className="flex gap-2">
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={handleCopyLink}
-            className="flex items-center gap-2"
-            disabled={!embedUrl && !originalUrl}
-          >
-            <Copy className="h-4 w-4" />
-            Copiar Link
-          </Button>
-
-          {originalUrl && (
+          {/* Actions */}
+          <div className="flex gap-2">
             <Button
               variant="outline"
               size="sm"
-              onClick={handleOpenOriginal}
+              onClick={handleCopyLink}
               className="flex items-center gap-2"
+              disabled={!embedUrl && !originalUrl}
             >
-              <ExternalLink className="h-4 w-4" />
-              Abrir no Bandcamp
+              <Copy className="h-4 w-4" />
+              Copiar Link
             </Button>
-          )}
 
-          {onDeleteVersion && (
-            <Button 
-              variant="outline" 
-              size="sm" 
-              className="text-red-600 hover:text-red-700"
-              onClick={handleDelete}
-            >
-              <Trash2 className="h-4 w-4 mr-2" />
-              Remover
-            </Button>
-          )}
-        </div>
-      </CardContent>
-    </Card>
-  );
+            {originalUrl && (
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={handleOpenOriginal}
+                className="flex items-center gap-2"
+              >
+                <ExternalLink className="h-4 w-4" />
+                Abrir no Bandcamp
+              </Button>
+            )}
+
+            {onDeleteVersion && (
+              <Button 
+                variant="outline" 
+                size="sm" 
+                className="text-red-600 hover:text-red-700"
+                onClick={handleDelete}
+              >
+                <Trash2 className="h-4 w-4 mr-2" />
+                Remover
+              </Button>
+            )}
+          </div>
+        </CardContent>
+      </Card>
+    );
+  } catch (error) {
+    console.error('[BandcampVersionCard] Erro no render:', error);
+    return (
+      <Card className="w-full border-red-200">
+        <CardContent className="p-4">
+          <p className="text-red-600">Erro ao carregar versão: {version.name}</p>
+          <p className="text-xs text-gray-500 mt-2">ID: {version.id}</p>
+        </CardContent>
+      </Card>
+    );
+  }
 };
 
 export default BandcampVersionCard;

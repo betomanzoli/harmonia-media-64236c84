@@ -18,11 +18,13 @@ const BandcampEmbedPlayer: React.FC<BandcampEmbedPlayerProps> = ({
   const [playerLoaded, setPlayerLoaded] = useState(false);
   const [hasError, setHasError] = useState(false);
 
-  console.log('[BandcampPlayer] Props recebidas:', { embedUrl, title, fallbackUrl });
+  console.log('[BandcampPlayer] Iniciando render:', { embedUrl, title, fallbackUrl });
 
   useEffect(() => {
+    console.log('[BandcampPlayer] useEffect executado:', { embedUrl });
+    
     if (!embedUrl) {
-      console.log('[BandcampPlayer] URL vazia');
+      console.log('[BandcampPlayer] URL vazia, abortando');
       return;
     }
 
@@ -34,6 +36,7 @@ const BandcampEmbedPlayer: React.FC<BandcampEmbedPlayerProps> = ({
     }
 
     if (containerRef.current) {
+      console.log('[BandcampPlayer] Container encontrado, criando iframe');
       setHasError(false);
       setPlayerLoaded(false);
       
@@ -54,31 +57,40 @@ const BandcampEmbedPlayer: React.FC<BandcampEmbedPlayerProps> = ({
       const separator = finalUrl.includes('?') ? '&' : '?';
       finalUrl += `${separator}t=${Date.now()}`;
 
-      const iframeHTML = `
-        <iframe 
-          style="border: 0; width: 100%; height: 152px;" 
-          src="${finalUrl}" 
-          seamless
-          allowfullscreen
-          allow="autoplay; encrypted-media"
-          title="${title}"
-          onload="console.log('Iframe carregado')"
-          onerror="console.error('Erro no iframe')"
-        ></iframe>
-      `;
+      try {
+        const iframeHTML = `
+          <iframe 
+            style="border: 0; width: 100%; height: 152px;" 
+            src="${finalUrl}" 
+            seamless
+            allowfullscreen
+            allow="autoplay; encrypted-media"
+            title="${title}"
+            onload="console.log('Iframe carregado com sucesso')"
+            onerror="console.error('Erro no iframe:', event)"
+          ></iframe>
+        `;
 
-      console.log('[BandcampPlayer] Inserindo iframe com URL:', finalUrl);
-      containerRef.current.innerHTML = iframeHTML;
-      
-      // Simular carregamento
-      setTimeout(() => {
-        setPlayerLoaded(true);
-        console.log('[BandcampPlayer] Player marcado como carregado');
-      }, 2000);
+        console.log('[BandcampPlayer] Inserindo iframe HTML:', finalUrl);
+        containerRef.current.innerHTML = iframeHTML;
+        
+        // Simular carregamento
+        setTimeout(() => {
+          console.log('[BandcampPlayer] Marcando player como carregado');
+          setPlayerLoaded(true);
+        }, 2000);
+        
+      } catch (error) {
+        console.error('[BandcampPlayer] Erro ao criar iframe:', error);
+        setHasError(true);
+      }
+    } else {
+      console.warn('[BandcampPlayer] Container não encontrado');
     }
   }, [embedUrl, title]);
 
   if (!embedUrl) {
+    console.log('[BandcampPlayer] Renderizando: URL vazia');
     return (
       <div className={`p-4 bg-gray-100 rounded text-center ${className}`}>
         <p className="text-gray-600">Nenhuma URL de embed fornecida</p>
@@ -87,6 +99,7 @@ const BandcampEmbedPlayer: React.FC<BandcampEmbedPlayerProps> = ({
   }
 
   if (hasError || !embedUrl.includes('bandcamp.com')) {
+    console.log('[BandcampPlayer] Renderizando: Erro ou URL inválida');
     return (
       <div className={`p-4 bg-yellow-100 rounded text-center ${className}`}>
         <p className="text-yellow-700">URL inválida para player do Bandcamp</p>
@@ -104,6 +117,8 @@ const BandcampEmbedPlayer: React.FC<BandcampEmbedPlayerProps> = ({
       </div>
     );
   }
+
+  console.log('[BandcampPlayer] Renderizando: Player normal');
 
   return (
     <div className={`w-full border rounded overflow-hidden bg-white ${className}`}>
