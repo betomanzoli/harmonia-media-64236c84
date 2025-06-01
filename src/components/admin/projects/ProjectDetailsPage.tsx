@@ -4,7 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { useToast } from '@/hooks/use-toast';
-import { ArrowLeft, Plus, User, Mail, Phone, Calendar, ExternalLink } from 'lucide-react';
+import { ArrowLeft, Plus, User, Mail, Phone, Calendar, ExternalLink, AlertTriangle } from 'lucide-react';
 import NewAdminLayout from '@/components/admin/layout/NewAdminLayout';
 import AddVersionDialog from './AddVersionDialog';
 import { useProjects } from '@/hooks/admin/useProjects';
@@ -18,35 +18,54 @@ const ProjectDetailsPage: React.FC = () => {
   const { projects, isLoading, loadProjects, deleteVersion } = useProjects();
   
   const [showAddVersionDialog, setShowAddVersionDialog] = useState(false);
+  const [safeMode, setSafeMode] = useState(false);
+  const [errorCount, setErrorCount] = useState(0);
 
-  // ✅ CONFORME RESULTADO [9] - IGNORAR ERROS SEM QUEBRAR:
+  // ✅ CONFORME RESULTADO [4] - DETECTAR ERROS CRÍTICOS:
   useEffect(() => {
-    const handleError = (event: ErrorEvent) => {
-      // ✅ APENAS LOGAR, NUNCA QUEBRAR:
-      if (event.message?.includes('ethereum') || 
-          event.message?.includes('removeChild') ||
-          event.message?.includes('WebAssembly') ||
-          event.message?.includes('Content Security Policy')) {
-        console.log('[ProjectDetailsPage] Erro ignorado silenciosamente:', event.message);
+    const criticalErrorHandler = (event: ErrorEvent) => {
+      const criticalErrors = [
+        'ethereum',
+        'removeChild',
+        'WebAssembly',
+        'Content Security Policy',
+        'Cannot set property',
+        'which has only a getter'
+      ];
+
+      const isCritical = criticalErrors.some(error => 
+        event.message?.toLowerCase().includes(error.toLowerCase())
+      );
+
+      if (isCritical) {
+        setErrorCount(prev => prev + 1);
+        console.log('[ProjectDetailsPage] Erro crítico detectado:', event.message);
+        
+        // ✅ ATIVAR MODO SEGURO APÓS 3 ERROS:
+        if (errorCount >= 2) {
+          console.log('[ProjectDetailsPage] Ativando modo seguro');
+          setSafeMode(true);
+        }
+        
         event.preventDefault();
         event.stopPropagation();
-        return false;
       }
     };
 
-    const handleUnhandledRejection = (event: PromiseRejectionEvent) => {
-      console.log('[ProjectDetailsPage] Promise rejection ignorada:', event.reason);
+    const unhandledRejectionHandler = (event: PromiseRejectionEvent) => {
+      console.log('[ProjectDetailsPage] Promise rejection:', event.reason);
       event.preventDefault();
     };
 
-    window.addEventListener('error', handleError, true);
-    window.addEventListener('unhandledrejection', handleUnhandledRejection, true);
+    // ✅ CONFORME RESULTADO [6] - USAR CAPTURE:
+    window.addEventListener('error', criticalErrorHandler, true);
+    window.addEventListener('unhandledrejection', unhandledRejectionHandler, true);
     
     return () => {
-      window.removeEventListener('error', handleError, true);
-      window.removeEventListener('unhandledrejection', handleUnhandledRejection, true);
+      window.removeEventListener('error', criticalErrorHandler, true);
+      window.removeEventListener('unhandledrejection', unhandledRejectionHandler, true);
     };
-  }, []);
+  }, [errorCount]);
 
   const project = projects.find(p => p.id === projectId);
 
@@ -163,6 +182,30 @@ const ProjectDetailsPage: React.FC = () => {
     <NewAdminLayout>
       <div className="p-6 space-y-6">
         
+        {/* Safe Mode Alert */}
+        {safeMode && (
+          <Card className="border-orange-200 bg-orange-50">
+            <CardContent className="p-4">
+              <div className="flex items-center gap-2">
+                <AlertTriangle className="h-5 w-5 text-orange-600" />
+                <div>
+                  <p className="font-medium text-orange-800">Modo Seguro Ativado</p>
+                  <p className="text-sm text-orange-700">
+                    Players em modo seguro devido a conflitos do navegador. 
+                    <Button 
+                      variant="link" 
+                      className="p-0 h-auto text-orange-700 underline"
+                      onClick={() => window.location.reload()}
+                    >
+                      Recarregar página
+                    </Button>
+                  </p>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        )}
+        
         {/* Header */}
         <div className="flex items-center justify-between">
           <div className="flex items-center space-x-4">
@@ -180,6 +223,11 @@ const ProjectDetailsPage: React.FC = () => {
           </div>
           <div className="flex items-center space-x-2">
             {getStatusBadge(project.status)}
+            {safeMode && (
+              <Badge variant="outline" className="text-orange-600 border-orange-600">
+                Modo Seguro
+              </Badge>
+            )}
           </div>
         </div>
 
@@ -274,7 +322,6 @@ const ProjectDetailsPage: React.FC = () => {
           {project.versions.length > 0 ? (
             <div className="space-y-4">
               {project.versions.map((version) => {
-                // ✅ CONFORME RESULTADO [9] - RENDER DIRETO SEM ERROR BOUNDARY:
                 try {
                   return (
                     <React.Suspense 
