@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -7,9 +6,57 @@ import { Badge } from '@/components/ui/badge';
 import { useToast } from '@/hooks/use-toast';
 import { ArrowLeft, Plus, User, Mail, Phone, Calendar, ExternalLink } from 'lucide-react';
 import NewAdminLayout from '@/components/admin/layout/NewAdminLayout';
-import BandcampVersionCard from './BandcampVersionCard';
 import AddVersionDialog from './AddVersionDialog';
 import { useProjects } from '@/hooks/admin/useProjects';
+
+// ✅ LAZY LOAD PARA EVITAR PROBLEMAS:
+const BandcampVersionCard = React.lazy(() => import('./BandcampVersionCard'));
+
+// ✅ ERROR BOUNDARY PARA ISOLAR CRASHES:
+class ProjectErrorBoundary extends React.Component<
+  { children: React.ReactNode },
+  { hasError: boolean; error?: Error }
+> {
+  constructor(props: { children: React.ReactNode }) {
+    super(props);
+    this.state = { hasError: false };
+  }
+
+  static getDerivedStateFromError(error: Error) {
+    console.error('[ProjectErrorBoundary] Erro capturado:', error);
+    return { hasError: true, error };
+  }
+
+  componentDidCatch(error: Error, errorInfo: React.ErrorInfo) {
+    console.error('[ProjectErrorBoundary] Detalhes:', error, errorInfo);
+    
+    // ✅ IGNORAR ERROS ETHEREUM:
+    if (error.message?.includes('ethereum') || error.message?.includes('crypto')) {
+      console.log('[ProjectErrorBoundary] Erro ethereum ignorado');
+      this.setState({ hasError: false });
+      return;
+    }
+  }
+
+  render() {
+    if (this.state.hasError) {
+      return (
+        <Card className="p-4 border-red-200">
+          <p className="text-red-600">Erro ao carregar componente</p>
+          <Button 
+            onClick={() => this.setState({ hasError: false })}
+            className="mt-2"
+            size="sm"
+          >
+            Tentar novamente
+          </Button>
+        </Card>
+      );
+    }
+
+    return this.props.children;
+  }
+}
 
 const ProjectDetailsPage: React.FC = () => {
   const { projectId } = useParams<{ projectId: string }>();
@@ -18,18 +65,28 @@ const ProjectDetailsPage: React.FC = () => {
   const { projects, isLoading, loadProjects, deleteVersion } = useProjects();
   
   const [showAddVersionDialog, setShowAddVersionDialog] = useState(false);
+  const [safeMode, setSafeMode] = useState(false);
 
-  console.log('[ProjectDetailsPage] Render iniciado:', { projectId, isLoading, projectsCount: projects.length });
+  // ✅ DETECTAR PROBLEMAS E ATIVAR MODO SEGURO:
+  useEffect(() => {
+    const handleError = (event: ErrorEvent) => {
+      if (event.message?.includes('ethereum') || 
+          event.message?.includes('removeChild') ||
+          event.message?.includes('WebAssembly')) {
+        console.log('[ProjectDetailsPage] Erro detectado, ativando modo seguro');
+        setSafeMode(true);
+        event.preventDefault();
+      }
+    };
+
+    window.addEventListener('error', handleError);
+    return () => window.removeEventListener('error', handleError);
+  }, []);
 
   const project = projects.find(p => p.id === projectId);
-  
-  console.log('[ProjectDetailsPage] Projeto encontrado:', project ? 'SIM' : 'NÃO', project?.id);
 
   useEffect(() => {
-    console.log('[ProjectDetailsPage] useEffect executado:', { projectId, project: !!project, isLoading });
-    
     if (!isLoading && !project && projectId) {
-      console.log('[ProjectDetailsPage] Recarregando projetos...');
       loadProjects();
     }
   }, [projectId, project, isLoading, loadProjects]);
@@ -37,21 +94,30 @@ const ProjectDetailsPage: React.FC = () => {
   const handleDeleteVersion = async (versionId: string) => {
     if (!project) return;
 
-    const versionToDelete = project.versions.find(v => v.id === versionId);
-    if (!versionToDelete) return;
+    try {
+      const versionToDelete = project.versions.find(v => v.id === versionId);
+      if (!versionToDelete) return;
 
-    const result = await deleteVersion(versionId);
-    
-    if (result.success) {
+      const result = await deleteVersion(versionId);
+      
+      if (result.success) {
+        toast({
+          title: "Versão removida",
+          description: `${versionToDelete.name} foi removida do projeto.`,
+          variant: "destructive"
+        });
+      } else {
+        toast({
+          title: "Erro ao remover versão",
+          description: result.error || "Ocorreu um erro inesperado.",
+          variant: "destructive"
+        });
+      }
+    } catch (error) {
+      console.error('[ProjectDetailsPage] Erro ao deletar:', error);
       toast({
-        title: "Versão removida",
-        description: `${versionToDelete.name} foi removida do projeto.`,
-        variant: "destructive"
-      });
-    } else {
-      toast({
-        title: "Erro ao remover versão",
-        description: result.error || "Ocorreu um erro inesperado.",
+        title: "Erro",
+        description: "Não foi possível remover a versão.",
         variant: "destructive"
       });
     }
@@ -74,28 +140,29 @@ const ProjectDetailsPage: React.FC = () => {
   };
 
   const copyClientPreviewLink = () => {
-    if (!project?.preview_code) {
-      toast({
-        title: "Link não disponível",
-        description: "O link de prévia ainda não foi gerado para este projeto.",
-        variant: "destructive"
-      });
-      return;
-    }
+    try {
+      if (!project?.preview_code) {
+        toast({
+          title: "Link não disponível",
+          description: "O link de prévia ainda não foi gerado para este projeto.",
+          variant: "destructive"
+        });
+        return;
+      }
 
-    const previewUrl = `${window.location.origin}/client-preview/${project.preview_code}`;
-    navigator.clipboard.writeText(previewUrl).then(() => {
-      toast({
-        title: "Link copiado!",
-        description: "Link da prévia para o cliente foi copiado."
+      const previewUrl = `${window.location.origin}/client-preview/${project.preview_code}`;
+      navigator.clipboard.writeText(previewUrl).then(() => {
+        toast({
+          title: "Link copiado!",
+          description: "Link da prévia para o cliente foi copiado."
+        });
       });
-    });
+    } catch (error) {
+      console.error('[ProjectDetailsPage] Erro ao copiar link:', error);
+    }
   };
 
-  console.log('[ProjectDetailsPage] Estado antes do render:', { isLoading, project: !!project });
-
   if (isLoading) {
-    console.log('[ProjectDetailsPage] Renderizando loading...');
     return (
       <NewAdminLayout>
         <div className="p-6">
@@ -111,7 +178,6 @@ const ProjectDetailsPage: React.FC = () => {
   }
 
   if (!project) {
-    console.log('[ProjectDetailsPage] Projeto não encontrado, renderizando erro...');
     return (
       <NewAdminLayout>
         <div className="p-6">
@@ -128,8 +194,7 @@ const ProjectDetailsPage: React.FC = () => {
     );
   }
 
-  console.log('[ProjectDetailsPage] Renderizando projeto:', project.id, 'Versões:', project.versions.length);
-
+  // ✅ RENDER COM ISOLAMENTO TOTAL:
   try {
     return (
       <NewAdminLayout>
@@ -152,6 +217,11 @@ const ProjectDetailsPage: React.FC = () => {
             </div>
             <div className="flex items-center space-x-2">
               {getStatusBadge(project.status)}
+              {safeMode && (
+                <Badge variant="outline" className="text-orange-600">
+                  Modo Seguro
+                </Badge>
+              )}
             </div>
           </div>
 
@@ -232,6 +302,16 @@ const ProjectDetailsPage: React.FC = () => {
                   <ExternalLink className="w-4 h-4 mr-2" />
                   Copiar Link Cliente
                 </Button>
+
+                {safeMode && (
+                  <Button
+                    variant="outline"
+                    onClick={() => window.location.reload()}
+                    className="text-orange-600"
+                  >
+                    Recarregar Página
+                  </Button>
+                )}
               </div>
             </CardContent>
           </Card>
@@ -246,32 +326,43 @@ const ProjectDetailsPage: React.FC = () => {
             {project.versions.length > 0 ? (
               <div className="space-y-4">
                 {project.versions.map((version, index) => {
-                  console.log(`[ProjectDetailsPage] Renderizando versão ${index}:`, version.id, version.name);
-                  
                   try {
                     return (
-                      <BandcampVersionCard
-                        key={version.id}
-                        version={{
-                          id: version.id,
-                          name: version.name,
-                          description: version.description,
-                          embed_url: version.audio_url || '',
-                          bandcamp_url: version.audio_url || '',
-                          original_bandcamp_url: version.audio_url || '',
-                          audio_url: version.audio_url || '',
-                          recommended: version.recommended,
-                          created_at: version.created_at
-                        }}
-                        projectId={project.id}
-                        onDeleteVersion={handleDeleteVersion}
-                      />
+                      <ProjectErrorBoundary key={version.id}>
+                        <React.Suspense 
+                          fallback={
+                            <Card className="p-4">
+                              <div className="animate-pulse">
+                                <div className="h-4 bg-gray-300 rounded w-3/4 mb-2"></div>
+                                <div className="h-20 bg-gray-300 rounded"></div>
+                              </div>
+                            </Card>
+                          }
+                        >
+                          <BandcampVersionCard
+                            version={{
+                              id: version.id,
+                              name: version.name,
+                              description: version.description,
+                              embed_url: version.audio_url || '',
+                              bandcamp_url: version.audio_url || '',
+                              original_bandcamp_url: version.audio_url || '',
+                              audio_url: version.audio_url || '',
+                              recommended: version.recommended,
+                              created_at: version.created_at
+                            }}
+                            projectId={project.id}
+                            onDeleteVersion={handleDeleteVersion}
+                          />
+                        </React.Suspense>
+                      </ProjectErrorBoundary>
                     );
                   } catch (error) {
-                    console.error(`[ProjectDetailsPage] Erro ao renderizar versão ${version.id}:`, error);
+                    console.error(`[ProjectDetailsPage] Erro na versão ${version.id}:`, error);
                     return (
                       <Card key={version.id} className="p-4 border-red-200">
                         <p className="text-red-600">Erro ao carregar versão: {version.name}</p>
+                        <p className="text-xs text-gray-500 mt-1">ID: {version.id}</p>
                       </Card>
                     );
                   }
@@ -294,28 +385,38 @@ const ProjectDetailsPage: React.FC = () => {
           </div>
 
           {/* Add Version Dialog */}
-          <AddVersionDialog
-            isOpen={showAddVersionDialog}
-            setIsOpen={setShowAddVersionDialog}
-            projectId={project.id}
-            packageType={project.package_type}
-            onVersionAdded={loadProjects}
-          />
+          <ProjectErrorBoundary>
+            <AddVersionDialog
+              isOpen={showAddVersionDialog}
+              setIsOpen={setShowAddVersionDialog}
+              projectId={project.id}
+              packageType={project.package_type}
+              onVersionAdded={loadProjects}
+            />
+          </ProjectErrorBoundary>
         </div>
       </NewAdminLayout>
     );
   } catch (error) {
-    console.error('[ProjectDetailsPage] Erro geral no render:', error);
+    console.error('[ProjectDetailsPage] Erro crítico:', error);
     return (
       <NewAdminLayout>
         <div className="p-6">
           <div className="text-center">
             <h2 className="text-xl font-semibold mb-2 text-red-600">Erro na página</h2>
             <p className="text-gray-600 mb-4">Ocorreu um erro ao carregar a página do projeto.</p>
-            <Button onClick={() => navigate('/admin/projects')}>
-              <ArrowLeft className="w-4 h-4 mr-2" />
-              Voltar aos Projetos
-            </Button>
+            <div className="space-x-2">
+              <Button onClick={() => navigate('/admin/projects')}>
+                <ArrowLeft className="w-4 h-4 mr-2" />
+                Voltar aos Projetos
+              </Button>
+              <Button 
+                variant="outline"
+                onClick={() => window.location.reload()}
+              >
+                Recarregar Página
+              </Button>
+            </div>
           </div>
         </div>
       </NewAdminLayout>
