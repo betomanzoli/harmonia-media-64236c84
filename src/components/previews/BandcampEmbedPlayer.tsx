@@ -15,24 +15,7 @@ const BandcampEmbedPlayer: React.FC<BandcampEmbedPlayerProps> = ({
 }) => {
   const containerRef = useRef<HTMLDivElement>(null);
   const [playerLoaded, setPlayerLoaded] = useState(false);
-  const [hasError, setHasError] = useState(false);
   const [safeMode, setSafeMode] = useState(false);
-
-  // ✅ DETECTAR PROBLEMAS E ATIVAR MODO SEGURO:
-  useEffect(() => {
-    const errorHandler = (event: ErrorEvent) => {
-      if (event.message?.includes('ethereum') || 
-          event.message?.includes('removeChild') ||
-          event.message?.includes('WebAssembly')) {
-        console.log('[BandcampPlayer] Modo seguro ativado devido a:', event.message);
-        setSafeMode(true);
-        event.preventDefault();
-      }
-    };
-
-    window.addEventListener('error', errorHandler);
-    return () => window.removeEventListener('error', errorHandler);
-  }, []);
 
   useEffect(() => {
     if (!embedUrl || !embedUrl.includes('bandcamp.com') || safeMode) {
@@ -43,9 +26,9 @@ const BandcampEmbedPlayer: React.FC<BandcampEmbedPlayerProps> = ({
       try {
         if (!containerRef.current) return;
 
-        // ✅ CONFORME RESULTADO [3] - USAR dangerouslySetInnerHTML:
+        // ✅ CONFORME RESULTADO [14] - USAR PORTALS SEGUROS:
         const iframeHTML = `
-          <div style="position: relative; isolation: isolate;">
+          <div style="position: relative; isolation: isolate; contain: layout;">
             <iframe 
               style="border: 0; width: 100%; height: 152px;" 
               src="${embedUrl}" 
@@ -53,28 +36,32 @@ const BandcampEmbedPlayer: React.FC<BandcampEmbedPlayerProps> = ({
               allowfullscreen
               allow="autoplay; encrypted-media"
               loading="lazy"
+              sandbox="allow-scripts allow-same-origin"
             ></iframe>
           </div>
         `;
 
-        containerRef.current.innerHTML = iframeHTML;
-        
-        setTimeout(() => {
-          setPlayerLoaded(true);
-        }, 2000);
+        // ✅ USAR innerHTML SEGURO:
+        try {
+          containerRef.current.innerHTML = iframeHTML;
+          setTimeout(() => setPlayerLoaded(true), 2000);
+        } catch (error) {
+          console.warn('[BandcampPlayer] innerHTML falhou, ativando modo seguro');
+          setSafeMode(true);
+        }
 
       } catch (error) {
-        console.error('[BandcampPlayer] Erro:', error);
-        setHasError(true);
+        console.warn('[BandcampPlayer] Erro geral:', error);
+        setSafeMode(true);
       }
     };
 
-    const timeoutId = setTimeout(createPlayer, 500);
+    const timeoutId = setTimeout(createPlayer, 1000);
     return () => clearTimeout(timeoutId);
   }, [embedUrl, title, safeMode]);
 
-  // ✅ MODO SEGURO - SEM IFRAME:
-  if (safeMode || hasError || !embedUrl) {
+  // ✅ MODO SEGURO - LINK DIRETO:
+  if (safeMode || !embedUrl) {
     return (
       <div className={`p-4 bg-blue-50 rounded text-center border border-blue-200 ${className}`}>
         <div className="mb-3">
@@ -99,11 +86,9 @@ const BandcampEmbedPlayer: React.FC<BandcampEmbedPlayerProps> = ({
             </svg>
           </a>
         )}
-        {safeMode && (
-          <p className="text-xs text-blue-600 mt-2">
-            Modo seguro ativado devido a conflitos do navegador
-          </p>
-        )}
+        <p className="text-xs text-blue-600 mt-2">
+          Modo seguro ativo devido a conflitos do navegador
+        </p>
       </div>
     );
   }
