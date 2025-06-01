@@ -1,7 +1,23 @@
-
-import { useState, useEffect } from 'react';
+// src/hooks/admin/useProjects_with_history.ts
+import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { generatePreviewLink } from '@/utils/previewLinkUtils';
+import { logProjectHistory } from '@/utils/historyLogger'; // Import history logger
+import { useAuth } from '@/contexts/AuthContext'; // Import useAuth to get user ID
+
+// Interfaces atualizadas (garanta que correspondem à sua tabela)
+export interface ProjectVersion {
+  id: string;
+  project_id: string;
+  name: string;
+  description?: string;
+  embed_url?: string; // <-- Campo para URL de embed gerada
+  audio_url?: string; // <-- Campo legado ou URL original
+  original_bandcamp_url?: string; // <-- Campo opcional para URL original
+  recommended: boolean;
+  final?: boolean;
+  created_at: string;
+}
 
 export interface Project {
   id: string;
@@ -12,41 +28,38 @@ export interface Project {
   status: 'waiting' | 'feedback' | 'approved';
   package_type?: string;
   created_at: string;
+  updated_at?: string;
   expires_at?: string;
   preview_code?: string;
   feedback?: string;
-  versions: Array<{
-    id: string;
-    name: string;
-    description?: string;
-    audio_url?: string;
-    recommended: boolean;
-    created_at: string;
-  }>;
+  versions: ProjectVersion[]; // <-- Usa a interface atualizada
 }
 
 export const useProjects = () => {
+  const { user } = useAuth(); // Pega o usuário logado do contexto
   const [projects, setProjects] = useState<Project[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  const loadProjects = async () => {
+  const loadProjects = useCallback(async () => {
     try {
       setIsLoading(true);
       setError(null);
 
+      // Carrega projetos
       const { data: projectsData, error: projectsError } = await supabase
         .from('projects')
-        .select('*')
+        .select('*') // Seleciona todas as colunas do projeto
         .order('created_at', { ascending: false });
 
       if (projectsError) throw projectsError;
 
+      // Carrega versões para cada projeto
       const projectsWithVersions = await Promise.all(
         (projectsData || []).map(async (project) => {
           const { data: versions, error: versionsError } = await supabase
             .from('project_versions')
-            .select('*')
+            .select('*') // Seleciona todas as colunas da versão
             .eq('project_id', project.id)
             .order('created_at', { ascending: false });
 
@@ -57,23 +70,48 @@ export const useProjects = () => {
           return {
             ...project,
             status: project.status as 'waiting' | 'feedback' | 'approved',
-            versions: versions || []
+            versions: (versions || []) as ProjectVersion[] // Cast para a interface correta
           };
         })
       );
-
+      console.log("[useProjects] Projetos carregados com versões:", projectsWithVersions); // Debug
       setProjects(projectsWithVersions);
-    } catch (err) {
+    } catch (err: any) {
       console.error('Error loading projects:', err);
-      setError('Erro ao carregar projetos');
+      setError(`Erro ao carregar projetos: ${err.message}`);
     } finally {
       setIsLoading(false);
     }
-  };
+  }, []);
 
   useEffect(() => {
     loadProjects();
-  }, []);
+
+    // Configura listener para mudanças na tabela de projetos
+    const projectListener = supabase
+      .channel('public:projects')
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'projects' }, payload => {
+        console.log('Project change received!', payload);
+        loadProjects(); // Recarrega tudo ao detectar mudança em projetos
+      })
+      .subscribe();
+
+    // Configura listener para mudanças na tabela de versões
+    const versionListener = supabase
+      .channel('public:project_versions')
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'project_versions' }, payload => {
+        console.log('Version change received!', payload);
+        loadProjects(); // Recarrega tudo ao detectar mudança em versões
+      })
+      .subscribe();
+
+    // Limpa listeners ao desmontar
+    return () => {
+      supabase.removeChannel(projectListener);
+      supabase.removeChannel(versionListener);
+    };
+
+  }, [loadProjects]);
 
   const createProject = async (projectData: {
     title: string;
@@ -89,78 +127,120 @@ export const useProjects = () => {
         .insert([{
           ...projectData,
           status: projectData.status || 'waiting',
-          created_at: new Date().toISOString(),
-          expires_at: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString()
+          // created_at é gerenciado pelo Supabase (default now())
+          // updated_at será null inicialmente
+          expires_at: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString() // Exemplo: expira em 30 dias
         }])
         .select()
         .single();
 
       if (error) throw error;
 
+      // Gera preview code após criar o projeto
       if (newProject) {
         const previewCode = await generatePreviewLink(newProject.id);
         if (previewCode) {
-          await supabase
+          const { error: updateError } = await supabase
             .from('projects')
             .update({ preview_code: previewCode })
             .eq('id', newProject.id);
+          if (updateError) {
+            console.warn('Failed to update project with preview code:', updateError);
+          }
+          // Registrar histórico APÓS sucesso
+          await logProjectHistory(newProject.id, 'project_created', {
+            title: newProject.title,
+            client: projectData.client_name
+          }, user?.id); // Passa o ID do usuário admin
         }
       }
 
-      await loadProjects();
+      // loadProjects() será chamado pelo listener, não precisa chamar aqui
       return { success: true, project: newProject };
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error creating project:', error);
-      return { success: false, error: 'Erro ao criar projeto' };
+      return { success: false, error: `Erro ao criar projeto: ${error.message}` };
     }
   };
 
-  const updateProject = async (projectId: string, updates: Partial<Project>) => {
+  const updateProject = async (projectId: string, updates: Partial<Omit<Project, 'versions' | 'id'>>) => {
     try {
       const { error } = await supabase
         .from('projects')
         .update({
           ...updates,
-          updated_at: new Date().toISOString()
+          updated_at: new Date().toISOString() // Atualiza timestamp
         })
         .eq('id', projectId);
 
       if (error) throw error;
 
-      await loadProjects();
+      // Registrar histórico APÓS sucesso
+      await logProjectHistory(projectId, 'project_updated', {
+        fields: Object.keys(updates)
+      }, user?.id);
+
+      // loadProjects() será chamado pelo listener
       return { success: true };
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error updating project:', error);
-      return { success: false, error: 'Erro ao atualizar projeto' };
+      return { success: false, error: `Erro ao atualizar projeto: ${error.message}` };
     }
   };
 
   const deleteProject = async (projectId: string) => {
     try {
-      await supabase
+      // Opcional: buscar dados do projeto ANTES de deletar para log
+      const { data: projectData } = await supabase.from('projects').select('title').eq('id', projectId).single();
+
+      // 1. Deleta versões associadas (importante por causa da FK)
+      const { error: versionsError } = await supabase
         .from('project_versions')
         .delete()
         .eq('project_id', projectId);
 
-      const { error } = await supabase
+      // Não lançar erro se não houver versões, mas logar se for outro erro
+      if (versionsError && versionsError.code !== 'PGRST116') { // PGRST116 = no rows found
+         console.warn('Error deleting project versions (but proceeding):', versionsError);
+      }
+
+      // 2. Deleta o histórico associado (se existir)
+      const { error: historyError } = await supabase
+         .from('project_history')
+         .delete()
+         .eq('project_id', projectId);
+      if (historyError && historyError.code !== 'PGRST116') {
+          console.warn('Could not delete project history:', historyError);
+      }
+
+      // 3. Deleta o projeto
+      const { error: projectError } = await supabase
         .from('projects')
         .delete()
         .eq('id', projectId);
 
-      if (error) throw error;
+      if (projectError) throw projectError;
 
-      await loadProjects();
+      // Registrar histórico APÓS sucesso
+      await logProjectHistory(projectId, 'project_deleted', {
+        title: projectData?.title || 'N/A'
+      }, user?.id);
+
+      // loadProjects() será chamado pelo listener
       return { success: true };
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error deleting project:', error);
-      return { success: false, error: 'Erro ao deletar projeto' };
+      return { success: false, error: `Erro ao deletar projeto: ${error.message}` };
     }
   };
 
+  // Função atualizada para aceitar embed_url e original_bandcamp_url
   const addVersionToProject = async (projectId: string, versionData: {
     name: string;
     description?: string;
-    audio_url: string;
+    audio_url?: string; // Pode ser a URL original ou a de embed se não houver campo específico
+    embed_url?: string; // Idealmente, usar este campo
+    original_bandcamp_url?: string;
     recommended?: boolean;
   }) => {
     try {
@@ -168,26 +248,35 @@ export const useProjects = () => {
         .from('project_versions')
         .insert([{
           project_id: projectId,
-          version_id: `v_${Date.now()}`,
+          // id é gerado automaticamente pelo Supabase (UUID)
           ...versionData,
           recommended: versionData.recommended || false,
-          created_at: new Date().toISOString()
+          // created_at é gerenciado pelo Supabase
         }])
         .select()
         .single();
 
       if (error) throw error;
 
-      await loadProjects();
-      return { success: true, version: newVersion };
-    } catch (error) {
+      // Registrar histórico APÓS sucesso
+      await logProjectHistory(projectId, 'version_added', {
+        versionName: newVersion.name,
+        recommended: versionData.recommended
+      }, user?.id);
+
+      // loadProjects() será chamado pelo listener
+      return { success: true, version: newVersion as ProjectVersion };
+    } catch (error: any) {
       console.error('Error adding version:', error);
-      return { success: false, error: 'Erro ao adicionar versão' };
+      return { success: false, error: `Erro ao adicionar versão: ${error.message}` };
     }
   };
 
-  const deleteVersion = async (versionId: string) => {
+  const deleteVersion = async (versionId: string, projectId: string) => {
     try {
+      // Opcional: buscar nome da versão ANTES de deletar para log
+      const { data: versionData } = await supabase.from('project_versions').select('name').eq('id', versionId).single();
+
       const { error } = await supabase
         .from('project_versions')
         .delete()
@@ -195,11 +284,17 @@ export const useProjects = () => {
 
       if (error) throw error;
 
-      await loadProjects();
+      // Registrar histórico APÓS sucesso
+      await logProjectHistory(projectId, 'version_deleted', {
+        versionName: versionData?.name || 'N/A',
+        versionId: versionId
+      }, user?.id);
+
+      // loadProjects() será chamado pelo listener
       return { success: true };
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error deleting version:', error);
-      return { success: false, error: 'Erro ao deletar versão' };
+      return { success: false, error: `Erro ao deletar versão: ${error.message}` };
     }
   };
 
@@ -207,7 +302,7 @@ export const useProjects = () => {
     projects,
     isLoading,
     error,
-    loadProjects,
+    loadProjects, // Expor para recarga manual se necessário
     createProject,
     updateProject,
     deleteProject,
@@ -215,3 +310,4 @@ export const useProjects = () => {
     deleteVersion
   };
 };
+
