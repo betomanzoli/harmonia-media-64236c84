@@ -24,9 +24,12 @@ const NewAdminLogin: React.FC = () => {
     }
   }, [authStatus, user, navigate, mounted]);
 
-  const handleSuccess = () => {
-    console.log('🎉 Login success callback triggered');
+  const handleAuthenticate = async (email: string, password: string): Promise<boolean> => {
+    console.log('🎉 Authentication callback triggered');
+    // The actual authentication logic is handled by the AuthContext
+    // This is just a callback for when authentication succeeds
     navigate('/admin/projects', { replace: true });
+    return true;
   };
 
   if (!mounted) {
@@ -62,7 +65,7 @@ const NewAdminLogin: React.FC = () => {
 
   return (
     <div className="min-h-screen bg-slate-900">
-      <AdminLoginContainer onSuccess={handleSuccess} />
+      <AdminLoginContainer onAuthenticate={handleAuthenticate} />
     </div>
   );
 };
