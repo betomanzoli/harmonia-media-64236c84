@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -34,7 +33,6 @@ const BandcampVersionCard: React.FC<BandcampVersionCardProps> = ({
 
   console.log('[BandcampVersionCard] Renderizando versão de forma segura:', version.id, version.name);
 
-  // Buscar a melhor URL disponível em ordem de prioridade
   const embedUrl = version.embed_url || version.bandcamp_url || version.audio_url || '';
   const originalUrl = version.bandcamp_url || version.audio_url || version.original_bandcamp_url || '';
   
@@ -45,26 +43,25 @@ const BandcampVersionCard: React.FC<BandcampVersionCardProps> = ({
     finalOriginalUrl: originalUrl
   });
 
-  const handleCopyLink = () => {
+  // ✅ HANDLERS COM TRY-CATCH PARA EVITAR CRASHES:
+  const handleCopyLink = async () => {
     try {
       const linkToCopy = originalUrl || embedUrl;
       if (linkToCopy) {
-        navigator.clipboard.writeText(linkToCopy).then(() => {
-          toast({
-            title: "Link copiado!",
-            description: "O link foi copiado para a área de transferência."
-          });
-        }).catch(err => {
-          console.error('Erro ao copiar link:', err);
-          toast({
-            title: "Erro",
-            description: "Não foi possível copiar o link.",
-            variant: "destructive"
-          });
+        await navigator.clipboard.writeText(linkToCopy);
+        toast({
+          title: "Link copiado!",
+          description: "O link foi copiado para a área de transferência."
         });
       }
     } catch (error) {
       console.error('[BandcampVersionCard] Erro ao copiar link:', error);
+      // ✅ FALLBACK SILENCIOSO:
+      toast({
+        title: "Erro",
+        description: "Não foi possível copiar o link.",
+        variant: "destructive"
+      });
     }
   };
 
@@ -75,6 +72,12 @@ const BandcampVersionCard: React.FC<BandcampVersionCardProps> = ({
       }
     } catch (error) {
       console.error('[BandcampVersionCard] Erro ao deletar:', error);
+      // ✅ NÃO QUEBRAR A INTERFACE:
+      toast({
+        title: "Erro",
+        description: "Não foi possível remover a versão.",
+        variant: "destructive"
+      });
     }
   };
 
@@ -85,14 +88,15 @@ const BandcampVersionCard: React.FC<BandcampVersionCardProps> = ({
       }
     } catch (error) {
       console.error('[BandcampVersionCard] Erro ao abrir URL:', error);
+      // ✅ FALLBACK SILENCIOSO
     }
   };
 
+  // ✅ RENDER COM ERROR BOUNDARY IMPLÍCITO:
   try {
     return (
       <Card className="w-full">
         <CardContent className="p-4">
-          {/* Header */}
           <div className="flex items-center justify-between mb-3">
             <div className="flex items-center gap-2">
               <h3 className="font-semibold text-lg">{version.name}</h3>
@@ -112,8 +116,8 @@ const BandcampVersionCard: React.FC<BandcampVersionCardProps> = ({
             Adicionado em: {new Date(version.created_at).toLocaleDateString('pt-BR')}
           </p>
 
-          {/* Player Bandcamp */}
-          <div className="mb-4">
+          {/* ✅ PLAYER COM ISOLAMENTO: */}
+          <div className="mb-4" style={{ isolation: 'isolate' }}>
             {embedUrl ? (
               <div>
                 <p className="text-xs text-gray-500 mb-2">🎵 Player Bandcamp</p>
@@ -130,7 +134,6 @@ const BandcampVersionCard: React.FC<BandcampVersionCardProps> = ({
             )}
           </div>
 
-          {/* Actions */}
           <div className="flex gap-2">
             <Button
               variant="outline"
@@ -171,12 +174,21 @@ const BandcampVersionCard: React.FC<BandcampVersionCardProps> = ({
       </Card>
     );
   } catch (error) {
-    console.error('[BandcampVersionCard] Erro no render:', error);
+    console.error('[BandcampVersionCard] Erro crítico no render:', error);
+    // ✅ FALLBACK SEGURO PARA EVITAR TELA PRETA:
     return (
       <Card className="w-full border-red-200">
         <CardContent className="p-4">
           <p className="text-red-600">Erro ao carregar versão: {version.name}</p>
           <p className="text-xs text-gray-500 mt-2">ID: {version.id}</p>
+          <Button 
+            variant="outline" 
+            size="sm" 
+            onClick={() => window.location.reload()}
+            className="mt-2"
+          >
+            Recarregar página
+          </Button>
         </CardContent>
       </Card>
     );
