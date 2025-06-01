@@ -65,38 +65,82 @@ export type Database = {
           },
         ]
       }
+      project_history: {
+        Row: {
+          action_type: string | null
+          created_at: string | null
+          details: Json | null
+          id: string
+          project_id: string
+        }
+        Insert: {
+          action_type?: string | null
+          created_at?: string | null
+          details?: Json | null
+          id?: string
+          project_id?: string
+        }
+        Update: {
+          action_type?: string | null
+          created_at?: string | null
+          details?: Json | null
+          id?: string
+          project_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "project_history_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "projects"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       project_versions: {
         Row: {
           audio_url: string | null
+          bandcamp_url: string | null
           created_at: string | null
           description: string | null
+          embed_url: string | null
           file_id: string | null
           id: string
           name: string
+          original_bandcamp_url: string | null
           project_id: string
           recommended: boolean | null
+          updated_at: string | null
           version_id: string
         }
         Insert: {
           audio_url?: string | null
+          bandcamp_url?: string | null
           created_at?: string | null
           description?: string | null
+          embed_url?: string | null
           file_id?: string | null
           id?: string
           name: string
+          original_bandcamp_url?: string | null
           project_id: string
           recommended?: boolean | null
-          version_id: string
+          updated_at?: string | null
+          version_id?: string
         }
         Update: {
           audio_url?: string | null
+          bandcamp_url?: string | null
           created_at?: string | null
           description?: string | null
+          embed_url?: string | null
           file_id?: string | null
           id?: string
           name?: string
+          original_bandcamp_url?: string | null
           project_id?: string
           recommended?: boolean | null
+          updated_at?: string | null
           version_id?: string
         }
         Relationships: [

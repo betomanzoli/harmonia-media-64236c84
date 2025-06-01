@@ -1,33 +1,109 @@
 
 export class BandcampUtils {
   
+  // Função principal para processar qualquer tipo de input do Bandcamp
+  static processInput(input: string): { embedUrl: string | null; originalUrl: string | null } {
+    if (!input || !input.trim()) {
+      return { embedUrl: null, originalUrl: null };
+    }
+
+    const trimmedInput = input.trim();
+    
+    // Caso 1: Input é um iframe completo
+    if (trimmedInput.includes('<iframe') && trimmedInput.includes('bandcamp.com')) {
+      const embedUrl = this.extractEmbedFromIframe(trimmedInput);
+      const originalUrl = this.extractOriginalUrlFromIframe(trimmedInput);
+      return { embedUrl, originalUrl };
+    }
+    
+    // Caso 2: Input é uma URL de embed direta
+    if (trimmedInput.includes('bandcamp.com/EmbeddedPlayer/')) {
+      return { embedUrl: trimmedInput, originalUrl: null };
+    }
+    
+    // Caso 3: Input é uma URL direta do Bandcamp
+    if (this.validateBandcampUrl(trimmedInput)) {
+      const embedUrl = this.generateEmbedUrl(trimmedInput);
+      return { embedUrl, originalUrl: trimmedInput };
+    }
+    
+    return { embedUrl: null, originalUrl: null };
+  }
+  
+  static extractEmbedFromIframe(iframeCode: string): string | null {
+    try {
+      const srcMatch = iframeCode.match(/src=["']([^"']*bandcamp\.com[^"']*)["']/i);
+      if (srcMatch && srcMatch[1]) {
+        let url = srcMatch[1];
+        
+        // Garantir protocolo HTTPS
+        if (!url.startsWith('http')) {
+          url = 'https:' + url;
+        }
+        if (url.startsWith('http://')) {
+          url = url.replace('http://', 'https://');
+        }
+        
+        return url;
+      }
+    } catch (error) {
+      console.error('[BandcampUtils] Erro ao extrair embed do iframe:', error);
+    }
+    return null;
+  }
+  
+  static extractOriginalUrlFromIframe(iframeCode: string): string | null {
+    try {
+      // Buscar por href dentro do iframe
+      const hrefMatch = iframeCode.match(/href=["']([^"']*harmonia-media\.bandcamp\.com[^"']*)["']/i);
+      if (hrefMatch && hrefMatch[1]) {
+        return hrefMatch[1];
+      }
+    } catch (error) {
+      console.error('[BandcampUtils] Erro ao extrair URL original:', error);
+    }
+    return null;
+  }
+  
   static extractAlbumAndTrackIds(bandcampUrl: string): { albumId?: string; trackId?: string } {
     if (!bandcampUrl) return {};
     
     try {
       const url = new URL(bandcampUrl);
       
-      // Para o exemplo fornecido: https://harmonia-media.bandcamp.com/track/pop-bai-o-pop-mainstream-bai-o
-      // Precisamos extrair os IDs reais do Bandcamp
-      
-      // Padrão para track: https://artist.bandcamp.com/track/song-name
-      if (url.pathname.includes('/track/')) {
-        // Para este exemplo específico, vamos usar os IDs que você forneceu
-        if (url.href.includes('harmonia-media.bandcamp.com/track/pop-bai-o-pop-mainstream-bai-o')) {
-          return { 
-            albumId: '3897753197',
-            trackId: '3655073869'
-          };
+      // Mapeamento específico para URLs conhecidas
+      const knownMappings = {
+        'harmonia-media.bandcamp.com/track/pop-bai-o-pop-mainstream-bai-o': {
+          albumId: '3897753197',
+          trackId: '3655073869'
+        },
+        'harmonia-media.bandcamp.com/track/electro-choro-choro-eletr-nico': {
+          albumId: '3897753197',
+          trackId: '3191459927'
+        },
+        'harmonia-media.bandcamp.com/track/afrobeat-drill-afrobeat-drill': {
+          albumId: '3897753197',
+          trackId: '2783860379'
+        },
+        'harmonia-media.bandcamp.com/track/a-magia-da-sua-m-sica-ex-02': {
+          albumId: '2774072802',
+          trackId: '625081110'
         }
-        
-        // Para outras URLs, gerar IDs baseados no nome
+      };
+      
+      const urlKey = url.hostname + url.pathname;
+      if (knownMappings[urlKey]) {
+        return knownMappings[urlKey];
+      }
+      
+      // Fallback: gerar IDs baseados no nome
+      if (url.pathname.includes('/track/')) {
         const trackName = url.pathname.split('/track/')[1];
         const trackId = this.generateIdFromName(trackName);
         const albumId = this.generateIdFromName(url.hostname + url.pathname);
         return { albumId, trackId };
       }
       
-      // Padrão para album: https://artist.bandcamp.com/album/album-name
       if (url.pathname.includes('/album/')) {
         const albumName = url.pathname.split('/album/')[1];
         const albumId = this.generateIdFromName(albumName);
@@ -62,13 +138,10 @@ export class BandcampUtils {
       let embedUrl = 'https://bandcamp.com/EmbeddedPlayer/';
       
       if (albumId && trackId) {
-        // Para tracks específicos de um álbum
         embedUrl += `album=${albumId}/size=small/bgcol=ffffff/linkcol=2ebd35/track=${trackId}/transparent=true/`;
       } else if (albumId) {
-        // Para álbuns completos
         embedUrl += `album=${albumId}/size=small/bgcol=ffffff/linkcol=2ebd35/transparent=true/`;
       } else if (trackId) {
-        // Para tracks individuais
         embedUrl += `track=${trackId}/size=small/bgcol=ffffff/linkcol=2ebd35/transparent=true/`;
       }
       
@@ -102,9 +175,9 @@ export class BandcampUtils {
         directUrl: 'https://harmonia-media.bandcamp.com/track/pop-bai-o-pop-mainstream-bai-o'
       },
       {
-        trackId: '987654321',
-        embedUrl: 'https://bandcamp.com/EmbeddedPlayer/track=987654321/size=small/bgcol=ffffff/linkcol=2ebd35/transparent=true/',
-        directUrl: 'https://example.bandcamp.com/track/another-song'
+        trackId: '3191459927',
+        embedUrl: 'https://bandcamp.com/EmbeddedPlayer/album=3897753197/size=small/bgcol=ffffff/linkcol=2ebd35/track=3191459927/transparent=true/',
+        directUrl: 'https://harmonia-media.bandcamp.com/track/electro-choro-choro-eletr-nico'
       }
     ];
   }

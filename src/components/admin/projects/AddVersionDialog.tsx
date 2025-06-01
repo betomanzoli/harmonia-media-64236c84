@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
@@ -8,6 +9,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Checkbox } from '@/components/ui/checkbox';
 import { useToast } from '@/hooks/use-toast';
 import { Loader2 } from 'lucide-react';
+import { BandcampUtils } from '@/components/admin/bandcamp/BandcampUtils';
 
 interface AddVersionDialogProps {
   isOpen: boolean;
@@ -15,42 +17,6 @@ interface AddVersionDialogProps {
   projectId: string;
   onVersionAdded?: () => void;
 }
-
-// ✅ FUNÇÃO ULTRA-ROBUSTA PARA EXTRAIR URL:
-const extractEmbedUrl = (input: string): string | null => {
-  console.log('[Extract] Input recebido:', input);
-  
-  if (!input) {
-    console.log('[Extract] Input vazio');
-    return null;
-  }
-  
-  try {
-    // Buscar src do iframe com regex mais flexível
-    const srcMatch = input.match(/src=["']([^"']*bandcamp\.com[^"']*)["']/i);
-    if (srcMatch && srcMatch[1]) {
-      let url = srcMatch[1];
-      
-      // Garantir protocolo HTTPS
-      if (!url.startsWith('http')) {
-        url = 'https:' + url;
-      }
-      if (url.startsWith('http://')) {
-        url = url.replace('http://', 'https://');
-      }
-      
-      console.log('[Extract] URL extraída:', url);
-      return url;
-    }
-    
-    console.log('[Extract] Nenhuma URL encontrada no input');
-    return null;
-    
-  } catch (error) {
-    console.error('[Extract] Erro:', error);
-    return null;
-  }
-};
 
 const AddVersionDialog: React.FC<AddVersionDialogProps> = ({
   isOpen,
@@ -78,22 +44,27 @@ const AddVersionDialog: React.FC<AddVersionDialogProps> = ({
     setIsSubmitting(true);
 
     try {
-      const embedUrl = extractEmbedUrl(bandcampInput);
-      console.log('[AddVersion] URL extraída para salvar:', embedUrl);
+      console.log('[AddVersion] Processando input:', bandcampInput);
       
-      if (!embedUrl) {
-        throw new Error('Não foi possível extrair a URL do player do código fornecido');
+      // Usar a nova função de processamento
+      const processedData = BandcampUtils.processInput(bandcampInput);
+      console.log('[AddVersion] Dados processados:', processedData);
+      
+      if (!processedData.embedUrl) {
+        throw new Error('Não foi possível processar o código/URL fornecido. Verifique se é um código iframe válido do Bandcamp ou uma URL direta.');
       }
 
-      // ✅ INSERÇÃO EM MÚLTIPLAS COLUNAS PARA GARANTIR COMPATIBILIDADE:
+      // Preparar dados para inserção com múltiplos campos
       const insertData = {
         project_id: projectId,
         name: versionName,
         description: description || null,
-        embed_url: embedUrl,           // ✅ Campo principal
-        bandcamp_url: embedUrl,        // ✅ Campo alternativo
-        original_bandcamp_url: bandcampInput, // ✅ Código original
-        recommended: isRecommended
+        embed_url: processedData.embedUrl,
+        bandcamp_url: processedData.originalUrl || processedData.embedUrl,
+        original_bandcamp_url: bandcampInput,
+        audio_url: processedData.originalUrl || processedData.embedUrl,
+        recommended: isRecommended,
+        version_id: `v_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`
       };
 
       console.log('[AddVersion] Dados para inserir:', insertData);
@@ -116,7 +87,7 @@ const AddVersionDialog: React.FC<AddVersionDialogProps> = ({
         description: "Versão adicionada com sucesso"
       });
 
-      // Reset e fechar
+      // Reset form
       setVersionName('');
       setDescription('');
       setBandcampInput('');
@@ -139,13 +110,23 @@ const AddVersionDialog: React.FC<AddVersionDialogProps> = ({
     }
   };
 
+  const handleClose = () => {
+    if (!isSubmitting) {
+      setVersionName('');
+      setDescription('');
+      setBandcampInput('');
+      setIsRecommended(false);
+      setIsOpen(false);
+    }
+  };
+
   return (
-    <Dialog open={isOpen} onOpenChange={setIsOpen}>
+    <Dialog open={isOpen} onOpenChange={handleClose}>
       <DialogContent className="max-w-lg">
         <DialogHeader>
           <DialogTitle>Adicionar Nova Versão</DialogTitle>
           <DialogDescription>
-            Cole o código iframe completo do Bandcamp
+            Cole o código iframe completo do Bandcamp ou a URL direta da música
           </DialogDescription>
         </DialogHeader>
 
@@ -172,15 +153,18 @@ const AddVersionDialog: React.FC<AddVersionDialogProps> = ({
           </div>
 
           <div>
-            <Label>Código Bandcamp *</Label>
+            <Label>Código Bandcamp / URL *</Label>
             <Textarea
               value={bandcampInput}
               onChange={(e) => setBandcampInput(e.target.value)}
-              placeholder="Cole o código iframe aqui"
+              placeholder="Cole aqui o código iframe completo ou a URL direta do Bandcamp"
               rows={4}
               className="font-mono text-xs"
               disabled={isSubmitting}
             />
+            <p className="text-xs text-gray-500 mt-1">
+              Aceita: código iframe completo, URL direta da música, ou URL de embed
+            </p>
           </div>
 
           <div className="flex items-center space-x-2">
@@ -197,7 +181,7 @@ const AddVersionDialog: React.FC<AddVersionDialogProps> = ({
         <DialogFooter>
           <Button
             variant="outline"
-            onClick={() => setIsOpen(false)}
+            onClick={handleClose}
             disabled={isSubmitting}
           >
             Cancelar

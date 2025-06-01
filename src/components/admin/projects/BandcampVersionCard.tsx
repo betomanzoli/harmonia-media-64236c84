@@ -1,8 +1,9 @@
+
 import React from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Copy, Trash2 } from 'lucide-react';
+import { Copy, Trash2, ExternalLink } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import BandcampEmbedPlayer from '@/components/previews/BandcampEmbedPlayer';
 
@@ -10,9 +11,10 @@ interface BandcampVersion {
   id: string;
   name: string;
   description?: string;
-  embed_url?: string; // ✅ Campo correto do schema
-  bandcamp_url?: string; // ✅ Campo alternativo
+  embed_url?: string;
+  bandcamp_url?: string;
   original_bandcamp_url?: string;
+  audio_url?: string;
   recommended?: boolean;
   created_at: string;
 }
@@ -30,19 +32,23 @@ const BandcampVersionCard: React.FC<BandcampVersionCardProps> = ({
 }) => {
   const { toast } = useToast();
 
-  // ✅ BUSCAR URL EM MÚLTIPLOS CAMPOS:
-  const embedUrl = version.embed_url || version.bandcamp_url || '';
+  // Buscar a melhor URL disponível em ordem de prioridade
+  const embedUrl = version.embed_url || version.bandcamp_url || version.audio_url || '';
+  const originalUrl = version.bandcamp_url || version.audio_url || version.original_bandcamp_url || '';
   
   console.log('[BandcampVersionCard] Version data:', {
     id: version.id,
     name: version.name,
     embed_url: version.embed_url,
     bandcamp_url: version.bandcamp_url,
-    finalEmbedUrl: embedUrl
+    audio_url: version.audio_url,
+    original_bandcamp_url: version.original_bandcamp_url,
+    finalEmbedUrl: embedUrl,
+    finalOriginalUrl: originalUrl
   });
 
   const handleCopyLink = () => {
-    const linkToCopy = version.original_bandcamp_url || embedUrl;
+    const linkToCopy = originalUrl || embedUrl;
     if (linkToCopy) {
       navigator.clipboard.writeText(linkToCopy).then(() => {
         toast({
@@ -63,6 +69,12 @@ const BandcampVersionCard: React.FC<BandcampVersionCardProps> = ({
   const handleDelete = () => {
     if (onDeleteVersion) {
       onDeleteVersion(version.id);
+    }
+  };
+
+  const handleOpenOriginal = () => {
+    if (originalUrl) {
+      window.open(originalUrl, '_blank', 'noopener,noreferrer');
     }
   };
 
@@ -89,22 +101,34 @@ const BandcampVersionCard: React.FC<BandcampVersionCardProps> = ({
           Adicionado em: {new Date(version.created_at).toLocaleDateString('pt-BR')}
         </p>
 
-        {/* ✅ PLAYER BANDCAMP COM DEBUG */}
+        {/* Player Bandcamp */}
         <div className="mb-4">
           {embedUrl ? (
             <BandcampEmbedPlayer 
               embedUrl={embedUrl}
               title={version.name}
+              fallbackUrl={originalUrl}
             />
           ) : (
-            <div className="p-4 bg-yellow-50 rounded text-center border border-yellow-200">
-              <p className="text-yellow-700">Nenhuma URL de player encontrada</p>
-              <p className="text-xs text-yellow-600 mt-1">
-                embed_url: {version.embed_url || 'null'}<br/>
-                bandcamp_url: {version.bandcamp_url || 'null'}
-              </p>
+            <div className="p-4 bg-red-50 rounded text-center border border-red-200">
+              <p className="text-red-700 font-medium">❌ Nenhuma URL válida encontrada</p>
+              <div className="text-xs text-red-600 mt-2 space-y-1">
+                <p>embed_url: {version.embed_url || 'null'}</p>
+                <p>bandcamp_url: {version.bandcamp_url || 'null'}</p>
+                <p>audio_url: {version.audio_url || 'null'}</p>
+                <p>original_bandcamp_url: {version.original_bandcamp_url || 'null'}</p>
+              </div>
             </div>
           )}
+        </div>
+
+        {/* URLs Debug Info */}
+        <div className="mb-4 p-3 bg-gray-50 rounded text-xs">
+          <p className="font-medium mb-2">URLs disponíveis:</p>
+          <div className="space-y-1">
+            <p><strong>Embed:</strong> {embedUrl || 'N/A'}</p>
+            <p><strong>Original:</strong> {originalUrl || 'N/A'}</p>
+          </div>
         </div>
 
         {/* Actions */}
@@ -114,11 +138,23 @@ const BandcampVersionCard: React.FC<BandcampVersionCardProps> = ({
             size="sm"
             onClick={handleCopyLink}
             className="flex items-center gap-2"
-            disabled={!embedUrl}
+            disabled={!embedUrl && !originalUrl}
           >
             <Copy className="h-4 w-4" />
             Copiar Link
           </Button>
+
+          {originalUrl && (
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={handleOpenOriginal}
+              className="flex items-center gap-2"
+            >
+              <ExternalLink className="h-4 w-4" />
+              Abrir no Bandcamp
+            </Button>
+          )}
 
           {onDeleteVersion && (
             <Button 

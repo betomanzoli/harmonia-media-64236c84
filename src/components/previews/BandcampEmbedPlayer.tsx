@@ -1,47 +1,59 @@
+
 import React, { useEffect, useRef, useState } from 'react';
 
 interface BandcampEmbedPlayerProps {
   embedUrl: string;
   title: string;
+  fallbackUrl?: string;
+  className?: string;
 }
 
 const BandcampEmbedPlayer: React.FC<BandcampEmbedPlayerProps> = ({
   embedUrl,
-  title
+  title,
+  fallbackUrl,
+  className = ""
 }) => {
   const containerRef = useRef<HTMLDivElement>(null);
   const [playerLoaded, setPlayerLoaded] = useState(false);
+  const [hasError, setHasError] = useState(false);
 
-  console.log('[BandcampPlayer] Props recebidas:', { embedUrl, title });
+  console.log('[BandcampPlayer] Props recebidas:', { embedUrl, title, fallbackUrl });
 
   useEffect(() => {
-    if (!embedUrl || !embedUrl.includes('bandcamp.com')) {
-      console.log('[BandcampPlayer] URL inválida:', embedUrl);
+    if (!embedUrl) {
+      console.log('[BandcampPlayer] URL vazia');
+      return;
+    }
+
+    // Validar se é uma URL do Bandcamp
+    if (!embedUrl.includes('bandcamp.com')) {
+      console.log('[BandcampPlayer] URL não é do Bandcamp:', embedUrl);
+      setHasError(true);
       return;
     }
 
     if (containerRef.current) {
-      // ✅ CONFORME RESULTADO [4] - QUERY ALEATÓRIA PARA NEXT.JS:
-      const randomQuery = Math.floor(Math.random() * 1000);
+      setHasError(false);
+      setPlayerLoaded(false);
+      
       let finalUrl = embedUrl;
       
       // Garantir HTTPS
       if (!finalUrl.startsWith('https://')) {
-        finalUrl = finalUrl.replace('http://', 'https://');
-        if (!finalUrl.startsWith('http')) {
+        if (finalUrl.startsWith('http://')) {
+          finalUrl = finalUrl.replace('http://', 'https://');
+        } else if (finalUrl.startsWith('//')) {
           finalUrl = 'https:' + finalUrl;
+        } else if (!finalUrl.startsWith('http')) {
+          finalUrl = 'https://' + finalUrl;
         }
       }
       
-      // ✅ CONFORME RESULTADO [3] - ADICIONAR # NO FINAL:
-      if (!finalUrl.endsWith('#')) {
-        finalUrl += '#';
-      }
-      
-      // Adicionar query aleatória
-      finalUrl += '?ignore=' + randomQuery;
+      // Adicionar query aleatória para evitar cache
+      const separator = finalUrl.includes('?') ? '&' : '?';
+      finalUrl += `${separator}t=${Date.now()}`;
 
-      // ✅ CONFORME RESULTADO [7] - USAR dangerouslySetInnerHTML:
       const iframeHTML = `
         <iframe 
           style="border: 0; width: 100%; height: 152px;" 
@@ -50,12 +62,15 @@ const BandcampEmbedPlayer: React.FC<BandcampEmbedPlayerProps> = ({
           allowfullscreen
           allow="autoplay; encrypted-media"
           title="${title}"
+          onload="console.log('Iframe carregado')"
+          onerror="console.error('Erro no iframe')"
         ></iframe>
       `;
 
       console.log('[BandcampPlayer] Inserindo iframe com URL:', finalUrl);
       containerRef.current.innerHTML = iframeHTML;
       
+      // Simular carregamento
       setTimeout(() => {
         setPlayerLoaded(true);
         console.log('[BandcampPlayer] Player marcado como carregado');
@@ -65,25 +80,45 @@ const BandcampEmbedPlayer: React.FC<BandcampEmbedPlayerProps> = ({
 
   if (!embedUrl) {
     return (
-      <div className="p-4 bg-gray-100 rounded text-center">
-        <p className="text-gray-600">Nenhuma URL fornecida</p>
+      <div className={`p-4 bg-gray-100 rounded text-center ${className}`}>
+        <p className="text-gray-600">Nenhuma URL de embed fornecida</p>
       </div>
     );
   }
 
-  if (!embedUrl.includes('bandcamp.com')) {
+  if (hasError || !embedUrl.includes('bandcamp.com')) {
     return (
-      <div className="p-4 bg-yellow-100 rounded text-center">
-        <p className="text-yellow-700">URL não é do Bandcamp</p>
+      <div className={`p-4 bg-yellow-100 rounded text-center ${className}`}>
+        <p className="text-yellow-700">URL inválida para player do Bandcamp</p>
         <p className="text-xs text-yellow-600 break-all mt-1">URL: {embedUrl}</p>
+        {fallbackUrl && (
+          <a 
+            href={fallbackUrl} 
+            target="_blank" 
+            rel="noopener noreferrer"
+            className="text-blue-600 underline text-sm mt-2 block"
+          >
+            Abrir no Bandcamp
+          </a>
+        )}
       </div>
     );
   }
 
   return (
-    <div className="w-full border rounded overflow-hidden bg-white">
-      <div className="p-2 bg-gray-50 text-xs text-gray-600 border-b">
-        🎵 Player Bandcamp
+    <div className={`w-full border rounded overflow-hidden bg-white ${className}`}>
+      <div className="p-2 bg-gray-50 text-xs text-gray-600 border-b flex justify-between items-center">
+        <span>🎵 Player Bandcamp</span>
+        {fallbackUrl && (
+          <a 
+            href={fallbackUrl} 
+            target="_blank" 
+            rel="noopener noreferrer"
+            className="text-blue-600 underline"
+          >
+            Abrir original
+          </a>
+        )}
       </div>
       
       <div 
