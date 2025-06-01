@@ -32,51 +32,59 @@ const BandcampVersionCard: React.FC<BandcampVersionCardProps> = ({
 }) => {
   const { toast } = useToast();
 
-  console.log('[BandcampVersionCard] Renderizando versão:', version.id, version.name);
+  console.log('[BandcampVersionCard] Renderizando versão de forma segura:', version.id, version.name);
 
   // Buscar a melhor URL disponível em ordem de prioridade
   const embedUrl = version.embed_url || version.bandcamp_url || version.audio_url || '';
   const originalUrl = version.bandcamp_url || version.audio_url || version.original_bandcamp_url || '';
   
-  console.log('[BandcampVersionCard] URLs processadas:', {
+  console.log('[BandcampVersionCard] URLs processadas de forma segura:', {
     id: version.id,
     name: version.name,
-    embed_url: version.embed_url,
-    bandcamp_url: version.bandcamp_url,
-    audio_url: version.audio_url,
-    original_bandcamp_url: version.original_bandcamp_url,
     finalEmbedUrl: embedUrl,
     finalOriginalUrl: originalUrl
   });
 
   const handleCopyLink = () => {
-    const linkToCopy = originalUrl || embedUrl;
-    if (linkToCopy) {
-      navigator.clipboard.writeText(linkToCopy).then(() => {
-        toast({
-          title: "Link copiado!",
-          description: "O link foi copiado para a área de transferência."
+    try {
+      const linkToCopy = originalUrl || embedUrl;
+      if (linkToCopy) {
+        navigator.clipboard.writeText(linkToCopy).then(() => {
+          toast({
+            title: "Link copiado!",
+            description: "O link foi copiado para a área de transferência."
+          });
+        }).catch(err => {
+          console.error('Erro ao copiar link:', err);
+          toast({
+            title: "Erro",
+            description: "Não foi possível copiar o link.",
+            variant: "destructive"
+          });
         });
-      }).catch(err => {
-        console.error('Erro ao copiar link:', err);
-        toast({
-          title: "Erro",
-          description: "Não foi possível copiar o link.",
-          variant: "destructive"
-        });
-      });
+      }
+    } catch (error) {
+      console.error('[BandcampVersionCard] Erro ao copiar link:', error);
     }
   };
 
   const handleDelete = () => {
-    if (onDeleteVersion) {
-      onDeleteVersion(version.id);
+    try {
+      if (onDeleteVersion) {
+        onDeleteVersion(version.id);
+      }
+    } catch (error) {
+      console.error('[BandcampVersionCard] Erro ao deletar:', error);
     }
   };
 
   const handleOpenOriginal = () => {
-    if (originalUrl) {
-      window.open(originalUrl, '_blank', 'noopener,noreferrer');
+    try {
+      if (originalUrl) {
+        window.open(originalUrl, '_blank', 'noopener,noreferrer');
+      }
+    } catch (error) {
+      console.error('[BandcampVersionCard] Erro ao abrir URL:', error);
     }
   };
 
@@ -108,7 +116,7 @@ const BandcampVersionCard: React.FC<BandcampVersionCardProps> = ({
           <div className="mb-4">
             {embedUrl ? (
               <div>
-                <p className="text-xs text-gray-500 mb-2">🎵 Tentando carregar player...</p>
+                <p className="text-xs text-gray-500 mb-2">🎵 Player Bandcamp</p>
                 <BandcampEmbedPlayer 
                   embedUrl={embedUrl}
                   title={version.name}
@@ -118,23 +126,8 @@ const BandcampVersionCard: React.FC<BandcampVersionCardProps> = ({
             ) : (
               <div className="p-4 bg-red-50 rounded text-center border border-red-200">
                 <p className="text-red-700 font-medium">❌ Nenhuma URL válida encontrada</p>
-                <div className="text-xs text-red-600 mt-2 space-y-1">
-                  <p>embed_url: {version.embed_url || 'null'}</p>
-                  <p>bandcamp_url: {version.bandcamp_url || 'null'}</p>
-                  <p>audio_url: {version.audio_url || 'null'}</p>
-                  <p>original_bandcamp_url: {version.original_bandcamp_url || 'null'}</p>
-                </div>
               </div>
             )}
-          </div>
-
-          {/* URLs Debug Info */}
-          <div className="mb-4 p-3 bg-gray-50 rounded text-xs">
-            <p className="font-medium mb-2">URLs disponíveis:</p>
-            <div className="space-y-1">
-              <p><strong>Embed:</strong> {embedUrl || 'N/A'}</p>
-              <p><strong>Original:</strong> {originalUrl || 'N/A'}</p>
-            </div>
           </div>
 
           {/* Actions */}
