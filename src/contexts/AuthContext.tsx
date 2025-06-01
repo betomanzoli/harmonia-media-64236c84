@@ -1,3 +1,4 @@
+
 import React, { createContext, useContext, useState, useCallback, useEffect, useRef } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { User } from '@supabase/supabase-js';
@@ -163,8 +164,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       }
 
       // ✅ LOGS DETALHADOS ANTES DA CHAMADA:
-      console.log('📡 Supabase URL:', supabase.supabaseUrl);
-      console.log('🔑 Supabase Key exists:', !!supabase.supabaseKey);
+      console.log('📡 Attempting login...');
       console.log('📧 Email to login:', username.trim());
       console.log('🔒 Password length:', password.length);
 
@@ -190,7 +190,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           message: error.message,
           status: error.status,
           name: error.name,
-          code: error.__isAuthError ? 'AUTH_ERROR' : 'OTHER_ERROR'
+          code: 'AUTH_ERROR'
         });
         if (mountedRef.current) {
           setAuthStatus('unauthenticated');

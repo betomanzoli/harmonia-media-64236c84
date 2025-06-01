@@ -16,6 +16,7 @@ interface AddVersionDialogProps {
   setIsOpen: (isOpen: boolean) => void;
   projectId: string;
   onVersionAdded?: () => void;
+  packageType?: string;
 }
 
 const AddVersionDialog: React.FC<AddVersionDialogProps> = ({
@@ -23,6 +24,7 @@ const AddVersionDialog: React.FC<AddVersionDialogProps> = ({
   setIsOpen,
   projectId,
   onVersionAdded,
+  packageType
 }) => {
   const [versionName, setVersionName] = useState('');
   const [description, setDescription] = useState('');
@@ -46,11 +48,11 @@ const AddVersionDialog: React.FC<AddVersionDialogProps> = ({
     try {
       console.log('[AddVersion] Processando input:', bandcampInput);
       
-      // Usar a nova função de processamento
+      // Usar a função de processamento melhorada
       const processedData = BandcampUtils.processInput(bandcampInput);
       console.log('[AddVersion] Dados processados:', processedData);
       
-      if (!processedData.embedUrl) {
+      if (!processedData.embedUrl && !processedData.originalUrl) {
         throw new Error('Não foi possível processar o código/URL fornecido. Verifique se é um código iframe válido do Bandcamp ou uma URL direta.');
       }
 
@@ -120,6 +122,10 @@ const AddVersionDialog: React.FC<AddVersionDialogProps> = ({
     }
   };
 
+  const handleRecommendedChange = (checked: boolean | "indeterminate") => {
+    setIsRecommended(checked === true);
+  };
+
   return (
     <Dialog open={isOpen} onOpenChange={handleClose}>
       <DialogContent className="max-w-lg">
@@ -171,7 +177,7 @@ const AddVersionDialog: React.FC<AddVersionDialogProps> = ({
             <Checkbox
               id="recommended"
               checked={isRecommended}
-              onCheckedChange={setIsRecommended}
+              onCheckedChange={handleRecommendedChange}
               disabled={isSubmitting}
             />
             <Label htmlFor="recommended">Versão recomendada</Label>

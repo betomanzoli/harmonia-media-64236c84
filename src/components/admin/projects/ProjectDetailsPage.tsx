@@ -239,11 +239,12 @@ const ProjectDetailsPage: React.FC = () => {
                     id: version.id,
                     name: version.name,
                     description: version.description,
-                    embedUrl: version.audio_url || '',
-                    bandcampUrl: version.audio_url || '',
-                    final: false,
+                    embed_url: version.audio_url || '',
+                    bandcamp_url: version.audio_url || '',
+                    original_bandcamp_url: version.audio_url || '',
+                    audio_url: version.audio_url || '',
                     recommended: version.recommended,
-                    dateAdded: new Date(version.created_at).toLocaleDateString('pt-BR')
+                    created_at: version.created_at
                   }}
                   projectId={project.id}
                   onDeleteVersion={handleDeleteVersion}
@@ -269,9 +270,10 @@ const ProjectDetailsPage: React.FC = () => {
         {/* Add Version Dialog */}
         <AddVersionDialog
           isOpen={showAddVersionDialog}
-          onOpenChange={setShowAddVersionDialog}
+          setIsOpen={setShowAddVersionDialog}
           projectId={project.id}
           packageType={project.package_type}
+          onVersionAdded={loadProjects}
         />
       </div>
     </NewAdminLayout>
