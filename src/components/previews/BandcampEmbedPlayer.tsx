@@ -1,4 +1,3 @@
-
 import React, { useEffect, useRef, useState } from 'react';
 
 interface BandcampEmbedPlayerProps {
@@ -17,6 +16,7 @@ const BandcampEmbedPlayer: React.FC<BandcampEmbedPlayerProps> = ({
   const containerRef = useRef<HTMLDivElement>(null);
   const [playerLoaded, setPlayerLoaded] = useState(false);
   const [hasError, setHasError] = useState(false);
+  const iframeRef = useRef<HTMLIFrameElement | null>(null); // ✅ REF PARA IFRAME
 
   console.log('[BandcampPlayer] Iniciando render seguro:', { embedUrl, title });
 
@@ -28,14 +28,12 @@ const BandcampEmbedPlayer: React.FC<BandcampEmbedPlayerProps> = ({
       return;
     }
 
-    // Validar se é uma URL do Bandcamp
     if (!embedUrl.includes('bandcamp.com')) {
       console.log('[BandcampPlayer] URL não é do Bandcamp:', embedUrl);
       setHasError(true);
       return;
     }
 
-    // Função segura para criar iframe
     const createSafeIframe = () => {
       try {
         if (!containerRef.current) {
@@ -49,7 +47,6 @@ const BandcampEmbedPlayer: React.FC<BandcampEmbedPlayerProps> = ({
         
         let finalUrl = embedUrl;
         
-        // Garantir HTTPS
         if (!finalUrl.startsWith('https://')) {
           if (finalUrl.startsWith('http://')) {
             finalUrl = finalUrl.replace('http://', 'https://');
@@ -60,18 +57,17 @@ const BandcampEmbedPlayer: React.FC<BandcampEmbedPlayerProps> = ({
           }
         }
 
-        // Limpar container de forma segura
+        // ✅ CLEANUP SEGURO SEM LOOP:
         const container = containerRef.current;
-        while (container.firstChild) {
+        if (container && container.firstChild) {
           try {
-            container.removeChild(container.firstChild);
+            container.innerHTML = ''; // ✅ MAIS SEGURO QUE removeChild
           } catch (error) {
-            console.warn('[BandcampPlayer] Erro ao remover child, continuando...', error);
-            break;
+            console.warn('[BandcampPlayer] Erro ao limpar container:', error);
           }
         }
 
-        // Criar iframe usando createElement (mais seguro)
+        // ✅ CRIAR IFRAME COM REFERÊNCIA:
         const iframe = document.createElement('iframe');
         iframe.style.border = '0';
         iframe.style.width = '100%';
@@ -82,18 +78,23 @@ const BandcampEmbedPlayer: React.FC<BandcampEmbedPlayerProps> = ({
         iframe.setAttribute('allowfullscreen', 'true');
         iframe.setAttribute('allow', 'autoplay; encrypted-media');
 
-        // Event listeners seguros
-        iframe.onload = () => {
+        // ✅ EVENT LISTENERS COM CLEANUP:
+        const handleLoad = () => {
           console.log('[BandcampPlayer] Iframe carregado com sucesso');
           setPlayerLoaded(true);
         };
 
-        iframe.onerror = (error) => {
+        const handleError = (error: any) => {
           console.error('[BandcampPlayer] Erro no iframe:', error);
           setHasError(true);
         };
 
-        // Inserir iframe de forma segura
+        iframe.addEventListener('load', handleLoad);
+        iframe.addEventListener('error', handleError);
+
+        // ✅ SALVAR REFERÊNCIA PARA CLEANUP:
+        iframeRef.current = iframe;
+
         try {
           container.appendChild(iframe);
           console.log('[BandcampPlayer] Iframe inserido com sucesso');
@@ -108,25 +109,29 @@ const BandcampEmbedPlayer: React.FC<BandcampEmbedPlayerProps> = ({
       }
     };
 
-    // Usar timeout para evitar conflitos
     const timeoutId = setTimeout(createSafeIframe, 100);
 
-    // Cleanup function
+    // ✅ CLEANUP MELHORADO:
     return () => {
       clearTimeout(timeoutId);
+      
+      // ✅ REMOVER EVENT LISTENERS:
+      if (iframeRef.current) {
+        try {
+          iframeRef.current.removeEventListener('load', () => {});
+          iframeRef.current.removeEventListener('error', () => {});
+          iframeRef.current = null;
+        } catch (error) {
+          console.warn('[BandcampPlayer] Erro ao remover listeners:', error);
+        }
+      }
+      
+      // ✅ CLEANUP SEGURO DO CONTAINER:
       if (containerRef.current) {
         try {
-          const container = containerRef.current;
-          while (container.firstChild) {
-            try {
-              container.removeChild(container.firstChild);
-            } catch (error) {
-              console.warn('[BandcampPlayer] Erro no cleanup, continuando...', error);
-              break;
-            }
-          }
+          containerRef.current.innerHTML = '';
         } catch (error) {
-          console.warn('[BandcampPlayer] Erro no cleanup geral:', error);
+          console.warn('[BandcampPlayer] Erro no cleanup final:', error);
         }
       }
     };
