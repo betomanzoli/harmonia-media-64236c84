@@ -16,24 +16,38 @@ interface AddVersionDialogProps {
   onVersionAdded?: () => void;
 }
 
-// ✅ FUNÇÃO ULTRA-SIMPLIFICADA PARA EXTRAIR URL:
+// ✅ FUNÇÃO ULTRA-ROBUSTA PARA EXTRAIR URL:
 const extractEmbedUrl = (input: string): string | null => {
-  if (!input) return null;
+  console.log('[Extract] Input recebido:', input);
+  
+  if (!input) {
+    console.log('[Extract] Input vazio');
+    return null;
+  }
   
   try {
-    // Buscar src do iframe
-    const srcMatch = input.match(/src=["']([^"']*bandcamp\.com\/EmbeddedPlayer[^"']*)["']/i);
+    // Buscar src do iframe com regex mais flexível
+    const srcMatch = input.match(/src=["']([^"']*bandcamp\.com[^"']*)["']/i);
     if (srcMatch && srcMatch[1]) {
       let url = srcMatch[1];
+      
       // Garantir protocolo HTTPS
       if (!url.startsWith('http')) {
         url = 'https:' + url;
       }
+      if (url.startsWith('http://')) {
+        url = url.replace('http://', 'https://');
+      }
+      
+      console.log('[Extract] URL extraída:', url);
       return url;
     }
+    
+    console.log('[Extract] Nenhuma URL encontrada no input');
     return null;
+    
   } catch (error) {
-    console.error('Extract error:', error);
+    console.error('[Extract] Erro:', error);
     return null;
   }
 };
@@ -65,25 +79,37 @@ const AddVersionDialog: React.FC<AddVersionDialogProps> = ({
 
     try {
       const embedUrl = extractEmbedUrl(bandcampInput);
+      console.log('[AddVersion] URL extraída para salvar:', embedUrl);
       
       if (!embedUrl) {
-        throw new Error('Código iframe inválido');
+        throw new Error('Não foi possível extrair a URL do player do código fornecido');
       }
 
-      // ✅ INSERÇÃO ULTRA-SIMPLES:
-      const { error } = await supabase
+      // ✅ INSERÇÃO EM MÚLTIPLAS COLUNAS PARA GARANTIR COMPATIBILIDADE:
+      const insertData = {
+        project_id: projectId,
+        name: versionName,
+        description: description || null,
+        embed_url: embedUrl,           // ✅ Campo principal
+        bandcamp_url: embedUrl,        // ✅ Campo alternativo
+        original_bandcamp_url: bandcampInput, // ✅ Código original
+        recommended: isRecommended
+      };
+
+      console.log('[AddVersion] Dados para inserir:', insertData);
+
+      const { data, error } = await supabase
         .from('project_versions')
-        .insert({
-          project_id: projectId,
-          name: versionName,
-          description: description || null,
-          embed_url: embedUrl,
-          recommended: isRecommended
-        });
+        .insert(insertData)
+        .select()
+        .single();
 
       if (error) {
+        console.error('[AddVersion] Erro do Supabase:', error);
         throw error;
       }
+
+      console.log('[AddVersion] Versão inserida com sucesso:', data);
 
       toast({
         title: "Sucesso",
@@ -102,7 +128,7 @@ const AddVersionDialog: React.FC<AddVersionDialogProps> = ({
       }
 
     } catch (error: any) {
-      console.error('Error:', error);
+      console.error('[AddVersion] Erro geral:', error);
       toast({
         title: "Erro",
         description: error.message || 'Erro ao adicionar versão',
