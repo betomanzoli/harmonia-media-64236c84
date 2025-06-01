@@ -1,291 +1,354 @@
+
 import React, { useState, useEffect } from 'react';
 import { useParams } from 'react-router-dom';
-import { useClientPreview } from '@/hooks/useClientPreview_fixed'; // <-- Use o hook corrigido
-import { useToast } from '@/hooks/use-toast';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Textarea } from '@/components/ui/textarea';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Loader2, AlertTriangle, Send, ThumbsUp, Lock } from 'lucide-react';
-import BandcampEmbedPlayer from '@/components/previews/BandcampEmbedPlayer_fixed'; // <-- Use o player corrigido
-import PublicHeader from '@/components/layout/PublicHeader'; // <-- Importar Header (ajuste o caminho)
-import PublicFooter from '@/components/layout/PublicFooter'; // <-- Importar Footer (ajuste o caminho)
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import { Textarea } from '@/components/ui/textarea';
+import { useToast } from '@/hooks/use-toast';
+import BandcampEmbedPlayer from '@/components/previews/BandcampEmbedPlayer';
+import { useClientPreview } from '@/hooks/useClientPreview';
+import { Heart, MessageCircle, ThumbsUp, ThumbsDown, Send, Loader2 } from 'lucide-react';
 
-const ClientPreviewPage: React.FC = () => {
+const ClientPreview: React.FC = () => {
   const { previewCode } = useParams<{ previewCode: string }>();
   const { toast } = useToast();
-  const {
-    previewData,
-    isLoading,
-    error,
-    isAuthenticated,
-    isAuthenticating,
-    authError,
-    authenticateClient,
-    submitFeedback,
-    approveProject,
-    reloadPreviewData
-  } = useClientPreview(previewCode);
+  const { previewData, isLoading, error, submitFeedback, approveVersion } = useClientPreview(previewCode || '');
+  
+  const [selectedVersion, setSelectedVersion] = useState<string | null>(null);
+  const [feedback, setFeedback] = useState('');
+  const [submittingFeedback, setSubmittingFeedback] = useState(false);
+  const [clientEmail, setClientEmail] = useState('');
 
-  const [clientEmailInput, setClientEmailInput] = useState('');
-  const [feedbackText, setFeedbackText] = useState('');
-  const [isSubmitting, setIsSubmitting] = useState(false);
-
-  const handleAuthentication = async (e: React.FormEvent) => {
-    e.preventDefault();
-    await authenticateClient(clientEmailInput);
-  };
+  useEffect(() => {
+    if (previewData && previewData.versions.length > 0) {
+      // Selecionar a primeira versão recomendada ou a primeira disponível
+      const recommendedVersion = previewData.versions.find(v => v.recommended);
+      setSelectedVersion(recommendedVersion?.id || previewData.versions[0].id);
+    }
+  }, [previewData]);
 
   const handleSubmitFeedback = async () => {
-    if (!feedbackText.trim()) {
-      toast({ title: "Feedback Vazio", description: "Por favor, escreva seu feedback.", variant: "destructive" });
+    if (!feedback.trim()) {
+      toast({
+        title: "Feedback necessário",
+        description: "Por favor, escreva seu feedback antes de enviar.",
+        variant: "destructive"
+      });
       return;
     }
-    setIsSubmitting(true);
-    const result = await submitFeedback(feedbackText);
-    if (result.success) {
-      toast({ title: "Feedback Enviado!", description: "Obrigado! Seu feedback foi registrado." });
-      setFeedbackText(''); // Limpa o campo
-    } else {
-      toast({ title: "Erro ao Enviar", description: result.error || "Não foi possível enviar o feedback.", variant: "destructive" });
+
+    if (!clientEmail.trim()) {
+      toast({
+        title: "Email necessário",
+        description: "Por favor, informe seu email.",
+        variant: "destructive"
+      });
+      return;
     }
-    setIsSubmitting(false);
+
+    setSubmittingFeedback(true);
+    
+    try {
+      const success = await submitFeedback(feedback, clientEmail);
+      if (success) {
+        toast({
+          title: "Feedback enviado!",
+          description: "Seu feedback foi enviado com sucesso. Nossa equipe analisará suas sugestões."
+        });
+        setFeedback('');
+      } else {
+        toast({
+          title: "Erro ao enviar feedback",
+          description: "Não foi possível enviar seu feedback. Tente novamente.",
+          variant: "destructive"
+        });
+      }
+    } catch (error) {
+      toast({
+        title: "Erro ao enviar feedback",
+        description: "Ocorreu um erro inesperado. Tente novamente.",
+        variant: "destructive"
+      });
+    } finally {
+      setSubmittingFeedback(false);
+    }
   };
 
-  const handleApproveProject = async () => {
-    setIsSubmitting(true);
-    const result = await approveProject();
-    if (result.success) {
-      toast({ title: "Projeto Aprovado!", description: "Obrigado! Sua aprovação foi registrada." });
-    } else {
-      toast({ title: "Erro ao Aprovar", description: result.error || "Não foi possível aprovar o projeto.", variant: "destructive" });
+  const handleApproveVersion = async () => {
+    if (!selectedVersion) {
+      toast({
+        title: "Versão não selecionada",
+        description: "Por favor, selecione uma versão antes de aprovar.",
+        variant: "destructive"
+      });
+      return;
     }
-    setIsSubmitting(false);
+
+    if (!clientEmail.trim()) {
+      toast({
+        title: "Email necessário",
+        description: "Por favor, informe seu email.",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    setSubmittingFeedback(true);
+    
+    try {
+      const success = await approveVersion(selectedVersion, clientEmail);
+      if (success) {
+        toast({
+          title: "Versão aprovada!",
+          description: "Sua aprovação foi registrada. Em breve você receberá os arquivos finais."
+        });
+      } else {
+        toast({
+          title: "Erro ao aprovar",
+          description: "Não foi possível registrar sua aprovação. Tente novamente.",
+          variant: "destructive"
+        });
+      }
+    } catch (error) {
+      toast({
+        title: "Erro ao aprovar",
+        description: "Ocorreu um erro inesperado. Tente novamente.",
+        variant: "destructive"
+      });
+    } finally {
+      setSubmittingFeedback(false);
+    }
   };
 
   const getStatusBadge = (status: string) => {
     switch (status) {
-      case 'waiting': return <Badge className="bg-yellow-100 text-yellow-800">Aguardando Avaliação</Badge>;
-      case 'feedback': return <Badge className="bg-blue-100 text-blue-800">Feedback Recebido</Badge>;
-      case 'approved': return <Badge className="bg-green-100 text-green-800">Aprovado</Badge>;
-      default: return <Badge variant="secondary">{status}</Badge>;
+      case 'waiting':
+        return <Badge className="bg-yellow-100 text-yellow-800">Aguardando Avaliação</Badge>;
+      case 'feedback':
+        return <Badge className="bg-blue-100 text-blue-800">Feedback Recebido</Badge>;
+      case 'approved':
+        return <Badge className="bg-green-100 text-green-800">Aprovado</Badge>;
+      default:
+        return <Badge variant="secondary">Status Desconhecido</Badge>;
     }
   };
 
-  // --- Renderização --- 
-
   if (isLoading) {
     return (
-      <div className="min-h-screen flex flex-col">
-        <PublicHeader />
-        <div className="flex-grow flex items-center justify-center bg-gray-50">
-          <div className="text-center">
-            <Loader2 className="h-12 w-12 animate-spin text-harmonia-green mx-auto mb-4" />
-            <p className="text-gray-600">Carregando prévia...</p>
-          </div>
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="text-center">
+          <Loader2 className="h-12 w-12 animate-spin text-blue-600 mx-auto mb-4" />
+          <p className="text-gray-600">Carregando preview...</p>
         </div>
-        <PublicFooter />
       </div>
     );
   }
 
-  if (error) {
+  if (error || !previewData) {
     return (
-      <div className="min-h-screen flex flex-col">
-        <PublicHeader />
-        <div className="flex-grow flex items-center justify-center bg-gray-50 p-4">
-          <Card className="max-w-md w-full">
-            <CardHeader>
-              <CardTitle className="text-center text-red-600">Erro ao Carregar</CardTitle>
-            </CardHeader>
-            <CardContent className="text-center">
-              <AlertTriangle className="h-10 w-10 text-red-500 mx-auto mb-3" />
-              <p className="text-gray-700">{error}</p>
-              <Button variant="link" onClick={reloadPreviewData} className="mt-4">Tentar novamente</Button>
-            </CardContent>
-          </Card>
-        </div>
-        <PublicFooter />
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <Card className="max-w-md mx-auto">
+          <CardContent className="text-center py-8">
+            <h2 className="text-xl font-semibold text-gray-900 mb-2">Preview não encontrado</h2>
+            <p className="text-gray-600">{error || 'O link que você acessou não é válido ou expirou.'}</p>
+          </CardContent>
+        </Card>
       </div>
     );
   }
 
-  // --- Tela de Autenticação (se não autenticado) --- 
-  if (!isAuthenticated) {
-    return (
-      <div className="min-h-screen flex flex-col">
-        <PublicHeader />
-        <div className="flex-grow flex items-center justify-center bg-gradient-to-br from-gray-50 to-gray-100 p-4">
-          <Card className="max-w-md w-full shadow-lg">
-            <CardHeader className="text-center">
-              <Lock className="h-8 w-8 mx-auto text-harmonia-green mb-2" />
-              <CardTitle>Acesso Restrito</CardTitle>
-              <CardDescription>Para visualizar esta prévia, por favor, confirme seu email.</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <form onSubmit={handleAuthentication} className="space-y-4">
-                <div>
-                  <label htmlFor="clientEmail" className="block text-sm font-medium text-gray-700 mb-1">Seu Email</label>
-                  <Input
-                    id="clientEmail"
-                    type="email"
-                    placeholder="Digite o email associado a este projeto"
-                    value={clientEmailInput}
-                    onChange={(e) => setClientEmailInput(e.target.value)}
-                    required
-                    className="w-full"
-                  />
-                </div>
-                {authError && (
-                  <p className="text-sm text-red-600 text-center">{authError}</p>
-                )}
-                <Button type="submit" className="w-full bg-harmonia-green hover:bg-harmonia-green/90" disabled={isAuthenticating}>
-                  {isAuthenticating ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : null}
-                  {isAuthenticating ? 'Verificando...' : 'Acessar Prévia'}
-                </Button>
-              </form>
-            </CardContent>
-          </Card>
-        </div>
-        <PublicFooter />
-      </div>
-    );
-  }
-
-  // --- Conteúdo da Prévia (se autenticado) --- 
-  if (!previewData) {
-     // Caso raro, mas para segurança
-     return <div>Erro inesperado: Dados da prévia não disponíveis após autenticação.</div>;
-  }
+  const selectedVersionData = previewData.versions.find(v => v.id === selectedVersion);
 
   return (
-    <div className="min-h-screen flex flex-col bg-gray-50">
-      <PublicHeader />
-      <main className="flex-grow container mx-auto py-8 px-4">
-        {/* Informações do Projeto */}
-        <Card className="mb-6 shadow-sm">
+    <div className="min-h-screen bg-gray-50">
+      <div className="max-w-4xl mx-auto py-8 px-4">
+        {/* Header */}
+        <Card className="mb-6">
           <CardHeader>
-            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2">
+            <div className="flex justify-between items-start">
               <div>
-                <CardTitle className="text-2xl font-bold text-gray-800">{previewData.title}</CardTitle>
-                <CardDescription className="mt-1">Cliente: {previewData.clientName}</CardDescription>
+                <CardTitle className="text-2xl font-bold text-gray-900">{previewData.title}</CardTitle>
+                <p className="text-gray-600 mt-1">Cliente: {previewData.clientName}</p>
+                <p className="text-sm text-gray-500 mt-1">Pacote: {previewData.packageType}</p>
               </div>
               {getStatusBadge(previewData.status)}
             </div>
           </CardHeader>
         </Card>
 
-        {/* Mensagens de Status */}
+        {/* Status Messages */}
         {previewData.status === 'approved' && (
-          <Card className="mb-6 border-green-300 bg-green-50 text-green-800">
-            <CardContent className="p-4 flex items-center gap-2">
-              <ThumbsUp className="h-5 w-5 flex-shrink-0" />
-              <p className="font-medium">Este projeto foi aprovado! Entraremos em contato em breve com os arquivos finais.</p>
+          <Card className="mb-6 border-green-200 bg-green-50">
+            <CardContent className="py-4">
+              <div className="flex items-center text-green-800">
+                <ThumbsUp className="h-5 w-5 mr-2" />
+                <span className="font-medium">Projeto aprovado! Em breve você receberá os arquivos finais.</span>
+              </div>
             </CardContent>
           </Card>
         )}
+
         {previewData.status === 'feedback' && (
-          <Card className="mb-6 border-blue-300 bg-blue-50 text-blue-800">
-            <CardContent className="p-4 flex items-center gap-2">
-              <Send className="h-5 w-5 flex-shrink-0" />
-              <p className="font-medium">Feedback recebido. Nossa equipe analisará suas sugestões.</p>
+          <Card className="mb-6 border-blue-200 bg-blue-50">
+            <CardContent className="py-4">
+              <div className="flex items-center text-blue-800">
+                <MessageCircle className="h-5 w-5 mr-2" />
+                <span className="font-medium">Feedback recebido! Nossa equipe está trabalhando nas modificações.</span>
+              </div>
             </CardContent>
           </Card>
         )}
 
-        {/* Abas: Versões e Feedback */}
-        <Tabs defaultValue="versions" className="w-full">
-          <TabsList className="grid w-full grid-cols-2 mb-4">
-            <TabsTrigger value="versions">Versões Propostas ({previewData.versions.length})</TabsTrigger>
-            <TabsTrigger value="feedback" disabled={previewData.status === 'approved'}>Enviar Feedback / Aprovar</TabsTrigger>
-          </TabsList>
+        {/* Email Input */}
+        {!clientEmail && (
+          <Card className="mb-6">
+            <CardHeader>
+              <CardTitle>Informe seu email</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="flex gap-3">
+                <input
+                  type="email"
+                  placeholder="Seu email para identificação"
+                  value={clientEmail}
+                  onChange={(e) => setClientEmail(e.target.value)}
+                  className="flex-1 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                />
+                <Button onClick={() => toast({ title: "Email confirmado!" })}>
+                  Confirmar
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
+        )}
 
-          {/* Conteúdo Aba Versões */}
-          <TabsContent value="versions">
+        {/* Versions */}
+        <div className="space-y-6">
+          <h2 className="text-xl font-bold text-gray-900">Versões Disponíveis ({previewData.versions.length})</h2>
+          
+          {previewData.versions.length === 0 ? (
             <Card>
-              <CardHeader>
-                <CardTitle>Avaliação de Prévias Musicais</CardTitle>
-                <CardDescription>Abaixo você encontrará as versões musicais para avaliação. Ouça cada uma delas e escolha sua favorita ou envie um feedback para ajustes.</CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                {previewData.versions.length === 0 ? (
-                  <p className="text-center text-gray-500 py-4">Nenhuma versão disponível no momento.</p>
-                ) : (
-                  previewData.versions.map((version) => (
-                    <div key={version.id} className="border rounded-lg p-4 bg-white">
-                      <div className="flex justify-between items-start mb-3">
-                        <h3 className="font-semibold text-lg text-gray-800">{version.name}</h3>
-                        {version.recommended && <Badge className="bg-yellow-100 text-yellow-800">Recomendada</Badge>}
-                      </div>
-                      {version.description && <p className="text-sm text-gray-600 mb-3">{version.description}</p>}
+              <CardContent className="text-center py-8">
+                <p className="text-gray-500">Nenhuma versão disponível ainda.</p>
+                <p className="text-sm text-gray-400 mt-2">As versões aparecerão aqui quando estiverem prontas.</p>
+              </CardContent>
+            </Card>
+          ) : (
+            previewData.versions.map((version) => (
+              <Card 
+                key={version.id} 
+                className={`cursor-pointer transition-all ${
+                  selectedVersion === version.id 
+                    ? 'ring-2 ring-blue-500 border-blue-200' 
+                    : 'hover:border-gray-300'
+                } ${version.recommended ? 'border-yellow-400' : ''}`}
+                onClick={() => setSelectedVersion(version.id)}
+              >
+                <CardHeader>
+                  <div className="flex justify-between items-start">
+                    <div>
+                      <CardTitle className="text-lg flex items-center gap-2">
+                        {version.name}
+                        {selectedVersion === version.id && (
+                          <Badge className="bg-blue-100 text-blue-800">Selecionada</Badge>
+                        )}
+                      </CardTitle>
+                      {version.description && (
+                        <p className="text-gray-600 mt-1">{version.description}</p>
+                      )}
+                      <p className="text-sm text-gray-500 mt-1">Adicionada em: {version.dateAdded}</p>
+                    </div>
+                    {version.recommended && (
+                      <Badge className="bg-yellow-100 text-yellow-800">Recomendada</Badge>
+                    )}
+                  </div>
+                </CardHeader>
+                <CardContent>
+                  {/* Bandcamp Player */}
+                  {version.bandcampUrl && (
+                    <div className="mb-4">
                       <BandcampEmbedPlayer
-                        embedUrl={version.embed_url} // <-- Passa a embed_url
+                        embedUrl={version.bandcampUrl}
                         title={version.name}
+                        fallbackUrl={version.bandcampUrl}
+                        className="w-full"
                       />
                     </div>
-                  ))
-                )}
-              </CardContent>
-            </Card>
-          </TabsContent>
+                  )}
+                </CardContent>
+              </Card>
+            ))
+          )}
+        </div>
 
-          {/* Conteúdo Aba Feedback */}
-          <TabsContent value="feedback">
-            <Card>
-              <CardHeader>
-                <CardTitle>Seu Feedback ou Aprovação</CardTitle>
-                <CardDescription>Use o espaço abaixo para detalhar os ajustes desejados ou aprove o projeto se estiver satisfeito.</CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <Textarea
-                  placeholder="Escreva aqui suas observações, sugestões ou pedidos de ajustes..."
-                  value={feedbackText}
-                  onChange={(e) => setFeedbackText(e.target.value)}
-                  rows={5}
-                  disabled={isSubmitting || previewData.status === 'approved'}
-                />
-                <div className="flex flex-col sm:flex-row gap-3">
-                  <Button
-                    onClick={handleSubmitFeedback}
-                    disabled={isSubmitting || !feedbackText.trim() || previewData.status === 'approved'}
-                    className="flex-1 bg-blue-600 hover:bg-blue-700"
-                  >
-                    {isSubmitting ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : <Send className="h-4 w-4 mr-2" />}
-                    Enviar Feedback
-                  </Button>
-                  <Button
-                    onClick={handleApproveProject}
-                    disabled={isSubmitting || previewData.status === 'approved'}
-                    className="flex-1 bg-green-600 hover:bg-green-700"
-                  >
-                    {isSubmitting ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : <ThumbsUp className="h-4 w-4 mr-2" />}
-                    Aprovar Projeto
-                  </Button>
-                </div>
-              </CardContent>
-            </Card>
-          </TabsContent>
-        </Tabs>
-
-        {/* Próximos Passos (Exemplo) */}
-        <Card className="mt-8">
+        {/* Feedback Section */}
+        {previewData.versions.length > 0 && clientEmail && previewData.status !== 'approved' && (
+          <Card className="mt-8">
             <CardHeader>
-                <CardTitle>Próximos Passos</CardTitle>
+              <CardTitle>Avaliação da Versão</CardTitle>
+              {selectedVersionData && (
+                <p className="text-sm text-gray-600">
+                  Versão selecionada: {selectedVersionData.name}
+                </p>
+              )}
             </CardHeader>
-            <CardContent className="space-y-2 text-sm text-gray-700">
-                <p>1. Avalie as versões disponíveis e ouça a que mais lhe agrada.</p>
-                <p>2. Envie seu feedback detalhado ou aprove o projeto diretamente.</p>
-                <p>3. Compartilhe suas impressões ou solicite ajustes, se necessário.</p>
+            <CardContent className="space-y-4">
+              <Textarea
+                placeholder="Escreva seu feedback sobre a versão selecionada..."
+                value={feedback}
+                onChange={(e) => setFeedback(e.target.value)}
+                rows={4}
+              />
+              
+              <div className="flex gap-3">
+                <Button
+                  onClick={handleSubmitFeedback}
+                  disabled={submittingFeedback || !selectedVersion}
+                  className="flex items-center gap-2 bg-blue-600 hover:bg-blue-700"
+                >
+                  {submittingFeedback ? (
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                  ) : (
+                    <Send className="h-4 w-4" />
+                  )}
+                  Enviar Feedback
+                </Button>
+                
+                <Button
+                  onClick={handleApproveVersion}
+                  disabled={submittingFeedback || !selectedVersion}
+                  className="flex items-center gap-2 bg-green-600 hover:bg-green-700"
+                >
+                  {submittingFeedback ? (
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                  ) : (
+                    <ThumbsUp className="h-4 w-4" />
+                  )}
+                  Aprovar Versão
+                </Button>
+              </div>
             </CardContent>
-        </Card>
+          </Card>
+        )}
 
-      </main>
-      <PublicFooter />
+        {/* Footer */}
+        <Card className="mt-8">
+          <CardContent className="text-center py-6">
+            <p className="text-sm text-gray-500">
+              {previewData.expirationDate 
+                ? `Este preview expira em: ${previewData.expirationDate}`
+                : 'Preview sem data de expiração'
+              }
+            </p>
+            <p className="text-xs text-gray-400 mt-2">
+              Powered by harmonIA.media
+            </p>
+          </CardContent>
+        </Card>
+      </div>
     </div>
   );
 };
 
-export default ClientPreviewPage;
-
+export default ClientPreview;
