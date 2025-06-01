@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Routes, Route, useLocation } from 'react-router-dom';
 import ScrollToTop from './components/ScrollToTop';
 import ChatbotButton from './components/chatbot/ChatbotButton';
+import { applyDOMPatches } from './utils/domPatches'; // ✅ IMPORT ADICIONADO
 
 // Import pages
 import HomePage from './pages/HomePage';
@@ -39,15 +40,25 @@ import ProjectDetailsPage from './pages/admin/ProjectDetailsPage';
 import ClientPreview from '@/pages/ClientPreview';
 
 // Import ProtectedRoute
-import ProtectedRoute from './components/admin/layout/ProtectedRoute'; // Ajuste o caminho se necessário
+import ProtectedRoute from './components/admin/layout/ProtectedRoute';
 
 const App: React.FC = () => {
   const location = useLocation();
   const [showChatbot, setShowChatbot] = useState(true);
 
+  // ✅ APLICAR PATCHES DOM PARA PREVENIR TELA PRETA:
+  useEffect(() => {
+    try {
+      applyDOMPatches();
+      console.log('[App] DOM patches aplicados com sucesso');
+    } catch (error) {
+      console.warn('[App] Erro ao aplicar DOM patches:', error);
+    }
+  }, []); // ✅ EXECUTAR APENAS UMA VEZ
+
   // Check if current route is an admin route
   useEffect(() => {
-    const isAdminRoute = location.pathname.startsWith('/admin'); // Use startsWith para ser mais preciso
+    const isAdminRoute = location.pathname.startsWith('/admin');
     setShowChatbot(!isAdminRoute);
   }, [location.pathname]);
 
@@ -93,7 +104,6 @@ const App: React.FC = () => {
           <Route path="/admin/clients" element={<NewAdminClients />} />
           <Route path="/admin/projects" element={<NewAdminProjects />} />
           <Route path="/admin/projects/:projectId" element={<ProjectDetailsPage />} />
-          {/* Adicione outras rotas admin protegidas aqui se necessário */}
         </Route>
 
         {/* 404 route */}
@@ -106,4 +116,3 @@ const App: React.FC = () => {
 };
 
 export default App;
-
