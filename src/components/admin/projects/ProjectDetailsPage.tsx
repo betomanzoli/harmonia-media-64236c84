@@ -11,82 +11,6 @@ import { useProjects } from '@/hooks/admin/useProjects';
 
 const BandcampVersionCard = React.lazy(() => import('./BandcampVersionCard'));
 
-// ✅ ERROR BOUNDARY MAIS INTELIGENTE (CONFORME RESULTADO [9]):
-class SmartErrorBoundary extends React.Component<
-  { children: React.ReactNode },
-  { hasError: boolean; error?: Error; retryCount: number }
-> {
-  constructor(props: { children: React.ReactNode }) {
-    super(props);
-    this.state = { hasError: false, retryCount: 0 };
-  }
-
-  static getDerivedStateFromError(error: Error) {
-    console.error('[SmartErrorBoundary] Erro capturado:', error);
-    
-    // ✅ IGNORAR ERROS ESPECÍFICOS QUE NÃO QUEBRAM O PLAYER:
-    const ignorableErrors = [
-      'ethereum',
-      'crypto',
-      'removeChild',
-      'WebAssembly',
-      'Content Security Policy',
-      'CORS',
-      'Failed to fetch'
-    ];
-    
-    const shouldIgnore = ignorableErrors.some(keyword => 
-      error.message?.toLowerCase().includes(keyword.toLowerCase()) ||
-      error.stack?.toLowerCase().includes(keyword.toLowerCase())
-    );
-    
-    if (shouldIgnore) {
-      console.log('[SmartErrorBoundary] Erro ignorado:', error.message);
-      return { hasError: false }; // ✅ NÃO QUEBRAR POR ESSES ERROS
-    }
-    
-    return { hasError: true, error };
-  }
-
-  componentDidCatch(error: Error, errorInfo: React.ErrorInfo) {
-    console.error('[SmartErrorBoundary] Detalhes:', error, errorInfo);
-    
-    // ✅ CONFORME RESULTADO [8] - CLEANUP AUTOMÁTICO:
-    setTimeout(() => {
-      if (this.state.retryCount < 3) {
-        console.log('[SmartErrorBoundary] Auto-retry:', this.state.retryCount + 1);
-        this.setState({ 
-          hasError: false, 
-          retryCount: this.state.retryCount + 1 
-        });
-      }
-    }, 2000);
-  }
-
-  render() {
-    if (this.state.hasError && this.state.retryCount >= 3) {
-      return (
-        <Card className="p-4 border-yellow-200">
-          <p className="text-yellow-700">Componente com problema</p>
-          <p className="text-xs text-gray-500 mt-1">
-            Erro: {this.state.error?.message}
-          </p>
-          <Button 
-            onClick={() => this.setState({ hasError: false, retryCount: 0 })}
-            className="mt-2"
-            size="sm"
-            variant="outline"
-          >
-            Tentar novamente
-          </Button>
-        </Card>
-      );
-    }
-
-    return this.props.children;
-  }
-}
-
 const ProjectDetailsPage: React.FC = () => {
   const { projectId } = useParams<{ projectId: string }>();
   const navigate = useNavigate();
@@ -95,15 +19,17 @@ const ProjectDetailsPage: React.FC = () => {
   
   const [showAddVersionDialog, setShowAddVersionDialog] = useState(false);
 
-  // ✅ CONFORME RESULTADO [8] - CLEANUP DE EVENT LISTENERS:
+  // ✅ CONFORME RESULTADO [9] - IGNORAR ERROS SEM QUEBRAR:
   useEffect(() => {
     const handleError = (event: ErrorEvent) => {
-      // ✅ APENAS LOGAR, NÃO QUEBRAR:
+      // ✅ APENAS LOGAR, NUNCA QUEBRAR:
       if (event.message?.includes('ethereum') || 
           event.message?.includes('removeChild') ||
-          event.message?.includes('WebAssembly')) {
-        console.log('[ProjectDetailsPage] Erro ignorado:', event.message);
+          event.message?.includes('WebAssembly') ||
+          event.message?.includes('Content Security Policy')) {
+        console.log('[ProjectDetailsPage] Erro ignorado silenciosamente:', event.message);
         event.preventDefault();
+        event.stopPropagation();
         return false;
       }
     };
@@ -113,13 +39,12 @@ const ProjectDetailsPage: React.FC = () => {
       event.preventDefault();
     };
 
-    window.addEventListener('error', handleError);
-    window.addEventListener('unhandledrejection', handleUnhandledRejection);
+    window.addEventListener('error', handleError, true);
+    window.addEventListener('unhandledrejection', handleUnhandledRejection, true);
     
-    // ✅ CLEANUP ADEQUADO:
     return () => {
-      window.removeEventListener('error', handleError);
-      window.removeEventListener('unhandledrejection', handleUnhandledRejection);
+      window.removeEventListener('error', handleError, true);
+      window.removeEventListener('unhandledrejection', handleUnhandledRejection, true);
     };
   }, []);
 
@@ -348,36 +273,48 @@ const ProjectDetailsPage: React.FC = () => {
           
           {project.versions.length > 0 ? (
             <div className="space-y-4">
-              {project.versions.map((version) => (
-                <SmartErrorBoundary key={version.id}>
-                  <React.Suspense 
-                    fallback={
-                      <Card className="p-4">
-                        <div className="animate-pulse">
-                          <div className="h-4 bg-gray-300 rounded w-3/4 mb-2"></div>
-                          <div className="h-20 bg-gray-300 rounded"></div>
-                        </div>
-                      </Card>
-                    }
-                  >
-                    <BandcampVersionCard
-                      version={{
-                        id: version.id,
-                        name: version.name,
-                        description: version.description,
-                        embed_url: version.audio_url || '',
-                        bandcamp_url: version.audio_url || '',
-                        original_bandcamp_url: version.audio_url || '',
-                        audio_url: version.audio_url || '',
-                        recommended: version.recommended,
-                        created_at: version.created_at
-                      }}
-                      projectId={project.id}
-                      onDeleteVersion={handleDeleteVersion}
-                    />
-                  </React.Suspense>
-                </SmartErrorBoundary>
-              ))}
+              {project.versions.map((version) => {
+                // ✅ CONFORME RESULTADO [9] - RENDER DIRETO SEM ERROR BOUNDARY:
+                try {
+                  return (
+                    <React.Suspense 
+                      key={version.id}
+                      fallback={
+                        <Card className="p-4">
+                          <div className="animate-pulse">
+                            <div className="h-4 bg-gray-300 rounded w-3/4 mb-2"></div>
+                            <div className="h-20 bg-gray-300 rounded"></div>
+                          </div>
+                        </Card>
+                      }
+                    >
+                      <BandcampVersionCard
+                        version={{
+                          id: version.id,
+                          name: version.name,
+                          description: version.description,
+                          embed_url: version.audio_url || '',
+                          bandcamp_url: version.audio_url || '',
+                          original_bandcamp_url: version.audio_url || '',
+                          audio_url: version.audio_url || '',
+                          recommended: version.recommended,
+                          created_at: version.created_at
+                        }}
+                        projectId={project.id}
+                        onDeleteVersion={handleDeleteVersion}
+                      />
+                    </React.Suspense>
+                  );
+                } catch (error) {
+                  console.error(`[ProjectDetailsPage] Erro na versão ${version.id}:`, error);
+                  return (
+                    <Card key={version.id} className="p-4 border-yellow-200">
+                      <p className="text-yellow-700">Versão com problema: {version.name}</p>
+                      <p className="text-xs text-gray-500 mt-1">ID: {version.id}</p>
+                    </Card>
+                  );
+                }
+              })}
             </div>
           ) : (
             <Card>
