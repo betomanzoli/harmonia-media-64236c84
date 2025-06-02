@@ -4,11 +4,11 @@ import { useParams } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Input } from '@/components/ui/input'; // Use Input from shadcn
+import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { useToast } from '@/hooks/use-toast';
 import BandcampEmbedPlayer from '@/components/previews/BandcampEmbedPlayer';
-import { useClientPreview, ClientPreviewVersion } from '@/hooks/useClientPreview_v3'; // <-- Use the corrected hook and interface
+import { useClientPreview, ClientPreviewVersion } from '@/hooks/useClientPreview';
 import { ThumbsUp, Send, Loader2, AlertCircle, CheckCircle, Info } from 'lucide-react';
 
 const ClientPreview: React.FC = () => {
@@ -24,7 +24,7 @@ const ClientPreview: React.FC = () => {
     authenticateClient,
     submitFeedback,
     approveVersion
-  } = useClientPreview(previewCode); // <-- Use the corrected hook
+  } = useClientPreview(previewCode);
 
   const [clientEmailInput, setClientEmailInput] = useState('');
   const [selectedVersionId, setSelectedVersionId] = useState<string | null>(null);
@@ -45,7 +45,6 @@ const ClientPreview: React.FC = () => {
       return;
     }
     await authenticateClient(clientEmailInput);
-    // Error/Success messages are handled by the hook's state (authError, isAuthenticated)
   };
 
   const handleSubmitFeedback = async () => {
@@ -59,7 +58,7 @@ const ClientPreview: React.FC = () => {
     }
 
     const selectedVersion = previewData?.versions.find(v => v.id === selectedVersionId);
-    if (!selectedVersion) return; // Should not happen if selectedVersionId is set
+    if (!selectedVersion) return;
 
     setIsSubmitting(true);
     const result = await submitFeedback(feedbackText, selectedVersionId, selectedVersion.name);
@@ -67,7 +66,7 @@ const ClientPreview: React.FC = () => {
 
     if (result.success) {
       toast({ title: "Feedback enviado!", description: "Obrigado! Seu feedback foi registrado." });
-      setFeedbackText(''); // Clear textarea
+      setFeedbackText('');
     } else {
       toast({ title: "Erro ao enviar", description: result.error || "Não foi possível enviar seu feedback.", variant: "destructive" });
     }
@@ -206,14 +205,13 @@ const ClientPreview: React.FC = () => {
                 </div>
               </CardHeader>
               <CardContent>
-                {/* Bandcamp Player - Ensure consistent size via className or style */} 
                 {(version.embed_url || version.audio_url) && (
                   <div className="mb-2 bg-gray-100 p-2 rounded">
                     <BandcampEmbedPlayer
-                      embedUrl={version.embed_url || version.audio_url!} // Use embed_url first
+                      embedUrl={version.embed_url || version.audio_url!}
                       title={version.name}
-                      fallbackUrl={version.original_bandcamp_url || version.audio_url} // Provide fallback
-                      className="w-full h-32 md:h-28" // **Standardized Height**
+                      fallbackUrl={version.original_bandcamp_url || version.audio_url}
+                      className="w-full h-32 md:h-28"
                     />
                   </div>
                 )}
@@ -223,7 +221,7 @@ const ClientPreview: React.FC = () => {
         )}
       </div>
 
-      {/* Feedback/Approval Section (only if versions exist and not already approved) */} 
+      {/* Feedback/Approval Section */}
       {previewData.versions.length > 0 && previewData.status !== 'approved' && (
         <Card className="mt-8 shadow-sm">
           <CardHeader>
@@ -308,7 +306,6 @@ const ClientPreview: React.FC = () => {
             </CardContent>
           </Card>
         ) : (
-          // Render main content only after authentication
           renderAuthenticatedContent()
         )}
 
@@ -329,4 +326,3 @@ const ClientPreview: React.FC = () => {
 };
 
 export default ClientPreview;
-
