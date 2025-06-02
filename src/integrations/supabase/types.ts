@@ -67,25 +67,28 @@ export type Database = {
       }
       project_history: {
         Row: {
-          action_type: string | null
-          created_at: string | null
+          action_type: string
+          created_at: string
           details: Json | null
-          id: string
+          id: number
           project_id: string
+          user_id: string | null
         }
         Insert: {
-          action_type?: string | null
-          created_at?: string | null
+          action_type: string
+          created_at?: string
           details?: Json | null
-          id?: string
-          project_id?: string
+          id?: number
+          project_id: string
+          user_id?: string | null
         }
         Update: {
-          action_type?: string | null
-          created_at?: string | null
+          action_type?: string
+          created_at?: string
           details?: Json | null
-          id?: string
+          id?: number
           project_id?: string
+          user_id?: string | null
         }
         Relationships: [
           {
