@@ -175,7 +175,7 @@ const AddVersionDialog: React.FC<AddVersionDialogProps> = ({
             <Checkbox
               id="recommended"
               checked={isRecommended}
-              onCheckedChange={setIsRecommended}
+              onCheckedChange={(checked) => setIsRecommended(checked === true)}
               disabled={isSubmitting}
             />
             <Label htmlFor="recommended">Versão recomendada</Label>
