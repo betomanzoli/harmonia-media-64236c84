@@ -3,7 +3,7 @@ import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Eye, Link as LinkIcon, Clock, User, Music, Trash2, Loader2 } from 'lucide-react'; // Added LinkIcon and Trash2
+import { Eye, Link as LinkIcon, Clock, User, Music, Trash2 } from 'lucide-react'; // Added LinkIcon and Trash2
 import { useNavigate } from 'react-router-dom';
 import { useToast } from '@/hooks/use-toast';
 import { Project } from '@/hooks/admin/useProjects'; // Import the full Project interface
@@ -139,3 +139,4 @@ const ProjectCard: React.FC<ProjectCardProps> = ({ project, onDelete }) => {
 };
 
 export default ProjectCard;
+

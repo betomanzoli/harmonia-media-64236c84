@@ -4,7 +4,7 @@ import Header from '@/components/Header';
 import Footer from '@/components/Footer';
 import Portfolio from '@/components/Portfolio';
 import { Button } from "@/components/ui/button";
-import { ArrowLeft, Phone } from 'lucide-react';
+import { ArrowLeft, Phone, Music } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { siteConfig } from '@/config/site';
 
@@ -41,13 +41,22 @@ const PortfolioPage: React.FC = () => {
               para atender aos desejos e necessidades de nossos clientes.
             </p>
             
-            <div className="flex justify-center mt-6">
+            <div className="flex flex-col sm:flex-row gap-4 justify-center mt-6">
               <Button 
                 onClick={handleWhatsAppContact}
                 className="bg-green-600 hover:bg-green-700 text-white flex items-center gap-2"
               >
                 <Phone className="w-4 h-4" />
                 Fale conosco pelo WhatsApp para exemplos
+              </Button>
+              
+              <Button 
+                variant="outline"
+                onClick={() => window.open('https://harmonia-media.bandcamp.com/', '_blank')}
+                className="flex items-center gap-2"
+              >
+                <Music className="w-4 h-4" />
+                Ouça no Bandcamp
               </Button>
             </div>
           </div>

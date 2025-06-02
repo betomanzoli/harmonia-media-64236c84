@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -90,12 +91,6 @@ const NewAdminProjects: React.FC = () => {
     } finally {
       setIsSubmitting(false);
     }
-  };
-
-  const handleDeleteProject = async (projectId: string) => {
-    // Implementação temporária para satisfazer a interface
-    console.log('Delete project:', projectId);
-    return { success: true };
   };
 
   const handleChange = (name: string, value: string) => {
@@ -200,11 +195,7 @@ const NewAdminProjects: React.FC = () => {
             </div>
           ) : filteredProjects.length > 0 ? (
             filteredProjects.map((project) => (
-              <ProjectCard 
-                key={project.id} 
-                project={project as any} 
-                onDelete={handleDeleteProject}
-              />
+              <ProjectCard key={project.id} project={project as any} />
             ))
           ) : (
             <div className="col-span-full">

@@ -1,9 +1,9 @@
-
+// src/hooks/useClientPreview_v3.ts
 import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
-import { logProjectHistory } from '@/utils/historyLogger';
+import { logProjectHistory } from '@/utils/historyLogger'; // Import history logger
 
-// Interfaces
+// Interfaces atualizadas
 export interface ClientPreviewVersion {
   id: string;
   name: string;
@@ -12,6 +12,7 @@ export interface ClientPreviewVersion {
   audio_url?: string;
   original_bandcamp_url?: string;
   recommended: boolean;
+  final?: boolean;
   created_at: string;
 }
 
@@ -25,7 +26,7 @@ export interface ClientPreviewData {
   title: string;
   expirationDate?: string;
   feedback?: string;
-  approved_version_id?: string;
+  approved_version_id?: string; // <-- Novo campo para armazenar ID da versão aprovada
 }
 
 export const useClientPreview = (previewCode: string | undefined) => {
@@ -52,7 +53,7 @@ export const useClientPreview = (previewCode: string | undefined) => {
     try {
       const { data: project, error: projectError } = await supabase
         .from('projects')
-        .select('id, title, client_name, client_email, package_type, status, expires_at, feedback')
+        .select('id, title, client_name, client_email, package_type, status, expires_at, feedback, approved_version_id') // <-- Inclui approved_version_id
         .eq('preview_code', previewCode)
         .maybeSingle();
 
@@ -79,6 +80,7 @@ export const useClientPreview = (previewCode: string | undefined) => {
         title: project.title || 'Projeto Musical',
         expirationDate: project.expires_at ? new Date(project.expires_at).toLocaleDateString('pt-BR') : undefined,
         feedback: project.feedback,
+        approved_version_id: project.approved_version_id, // <-- Carrega ID aprovado
         versions: []
       });
 
@@ -101,7 +103,7 @@ export const useClientPreview = (previewCode: string | undefined) => {
     try {
       const { data: versions, error: versionsError } = await supabase
         .from('project_versions')
-        .select('id, name, description, embed_url, audio_url, original_bandcamp_url, recommended, created_at')
+        .select('id, name, description, embed_url, audio_url, original_bandcamp_url, recommended, final, created_at')
         .eq('project_id', previewData.projectId)
         .order('created_at', { ascending: false });
 
@@ -156,6 +158,7 @@ export const useClientPreview = (previewCode: string | undefined) => {
     }
   };
 
+  // **Função de Feedback CORRIGIDA para incluir versão**
   const submitFeedback = async (feedbackText: string, versionId: string, versionName: string) => {
     if (!previewData || !isAuthenticated) {
       return { success: false, error: 'Autenticação necessária ou dados não carregados.' };
@@ -168,6 +171,7 @@ export const useClientPreview = (previewCode: string | undefined) => {
     }
 
     try {
+      // Adiciona informação da versão ao feedback
       const feedbackWithVersion = `Feedback sobre a versão "${versionName}" (ID: ${versionId}):
 
 ${feedbackText.trim()}`;
@@ -176,14 +180,15 @@ ${feedbackText.trim()}`;
         .from('projects')
         .update({
           status: 'feedback',
-          feedback: feedbackWithVersion,
-          updated_at: new Date().toISOString()
+          feedback: feedbackWithVersion, // Salva o feedback com info da versão
+          updated_at: new Date().toISOString(),
+          approved_version_id: null // Limpa aprovação anterior se houver
         })
         .eq('id', previewData.projectId);
 
       if (error) throw error;
 
-      setPreviewData(prev => prev ? { ...prev, status: 'feedback', feedback: feedbackWithVersion } : null);
+      setPreviewData(prev => prev ? { ...prev, status: 'feedback', feedback: feedbackWithVersion, approved_version_id: null } : null);
 
       await logProjectHistory(previewData.projectId, 'feedback_received', {
         clientName: previewData.clientName,
@@ -199,6 +204,7 @@ ${feedbackText.trim()}`;
     }
   };
 
+  // **Função de Aprovação CORRIGIDA para incluir versão**
   const approveVersion = async (versionId: string, versionName: string) => {
     if (!previewData || !isAuthenticated) {
       return { success: false, error: 'Autenticação necessária ou dados não carregados.' };
@@ -214,14 +220,15 @@ ${feedbackText.trim()}`;
         .from('projects')
         .update({
           status: 'approved',
-          feedback: approvalFeedback,
+          feedback: approvalFeedback, // Define um feedback padrão de aprovação
+          approved_version_id: versionId, // <-- Salva o ID da versão aprovada
           updated_at: new Date().toISOString()
         })
         .eq('id', previewData.projectId);
 
       if (error) throw error;
 
-      setPreviewData(prev => prev ? { ...prev, status: 'approved', feedback: approvalFeedback } : null);
+      setPreviewData(prev => prev ? { ...prev, status: 'approved', feedback: approvalFeedback, approved_version_id: versionId } : null);
 
       await logProjectHistory(previewData.projectId, 'project_approved', {
         clientName: previewData.clientName,
@@ -249,3 +256,4 @@ ${feedbackText.trim()}`;
     reloadPreviewData: loadPreviewData
   };
 };
+

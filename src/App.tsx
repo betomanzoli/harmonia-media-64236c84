@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Routes, Route, useLocation } from 'react-router-dom';
 import ScrollToTop from './components/ScrollToTop';
 import ChatbotButton from './components/chatbot/ChatbotButton';
-import { applyDomPatches } from './utils/domPatches'; // ✅ CORRIGIDO: applyDomPatches
+import { applyDOMPatches } from './utils/domPatches'; // ✅ IMPORT ADICIONADO
 
 // Import pages
 import HomePage from './pages/HomePage';
@@ -49,7 +49,7 @@ const App: React.FC = () => {
   // ✅ APLICAR PATCHES DOM PARA PREVENIR TELA PRETA:
   useEffect(() => {
     try {
-      applyDomPatches(); // ✅ CORRIGIDO: applyDomPatches
+      applyDOMPatches();
       console.log('[App] DOM patches aplicados com sucesso');
     } catch (error) {
       console.warn('[App] Erro ao aplicar DOM patches:', error);
