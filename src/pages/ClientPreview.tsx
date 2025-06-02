@@ -1,3 +1,4 @@
+
 // src/pages/ClientPreview_v3.tsx
 import React, { useState, useEffect } from 'react';
 import { useParams } from 'react-router-dom';
@@ -8,7 +9,7 @@ import { Input } from '@/components/ui/input'; // Use Input from shadcn
 import { Textarea } from '@/components/ui/textarea';
 import { useToast } from '@/hooks/use-toast';
 import BandcampEmbedPlayer from '@/components/previews/BandcampEmbedPlayer';
-import { useClientPreview, ClientPreviewVersion } from '@/hooks/useClientPreview_v3'; // <-- Use the corrected hook and interface
+import { useClientPreview, ClientPreviewVersion } from '@/hooks/useClientPreview'; // <-- Fixed import path
 import { ThumbsUp, Send, Loader2, AlertCircle, CheckCircle, Info } from 'lucide-react';
 
 const ClientPreview: React.FC = () => {
@@ -329,4 +330,3 @@ const ClientPreview: React.FC = () => {
 };
 
 export default ClientPreview;
-
