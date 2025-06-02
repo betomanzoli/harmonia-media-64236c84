@@ -55,7 +55,7 @@ const PortfolioTabs: React.FC<PortfolioTabsProps> = ({
               title={example.title}
               description={example.description}
               beforeUrl={example.audioUrl}
-              afterUrl={example.comparisonUrl || ''}
+              afterUrl={example.audioUrl} {/* Usando audioUrl temporariamente até ter comparisonUrl */}
             />
           ))}
         </TabsContent>
