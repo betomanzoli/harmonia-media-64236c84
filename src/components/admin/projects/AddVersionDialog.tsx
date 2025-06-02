@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
@@ -17,12 +18,10 @@ interface AddVersionDialogProps {
   packageType?: string;
 }
 
-// ✅ FUNÇÃO SEGURA PARA EXTRAIR URL:
 const extractBandcampUrl = (input: string): string | null => {
   if (!input) return null;
   
   try {
-    // Buscar src do iframe
     const srcMatch = input.match(/src=["']([^"']*bandcamp\.com[^"']*)["']/i);
     if (srcMatch && srcMatch[1]) {
       let url = srcMatch[1];
@@ -32,7 +31,6 @@ const extractBandcampUrl = (input: string): string | null => {
       return url;
     }
     
-    // Se é URL direta
     if (input.includes('bandcamp.com')) {
       return input.trim();
     }
@@ -94,7 +92,6 @@ const AddVersionDialog: React.FC<AddVersionDialogProps> = ({
         description: `Versão "${versionName}" adicionada com sucesso`
       });
 
-      // Reset
       setVersionName('');
       setDescription('');
       setBandcampInput('');
@@ -125,6 +122,10 @@ const AddVersionDialog: React.FC<AddVersionDialogProps> = ({
       setIsRecommended(false);
       setIsOpen(false);
     }
+  };
+
+  const handleRecommendedChange = (checked: boolean | 'indeterminate') => {
+    setIsRecommended(checked === true);
   };
 
   return (
@@ -175,7 +176,7 @@ const AddVersionDialog: React.FC<AddVersionDialogProps> = ({
             <Checkbox
               id="recommended"
               checked={isRecommended}
-              onCheckedChange={setIsRecommended}
+              onCheckedChange={handleRecommendedChange}
               disabled={isSubmitting}
             />
             <Label htmlFor="recommended">Versão recomendada</Label>
