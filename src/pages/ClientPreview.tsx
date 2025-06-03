@@ -12,7 +12,7 @@ import BandcampEmbedPlayer from '@/components/previews/BandcampEmbedPlayer';
 import PublicLayout from '@/layouts/PublicLayout';
 import Logo from '@/components/Logo';
 // Use the hook that supports private links
-import { useClientPreview, ClientPreviewVersion } from '@/hooks/useClientPreview_with_private_link'; 
+import { useClientPreview, ClientPreviewVersion } from '@/hooks/useClientPreview'; 
 import { ThumbsUp, Send, Loader2, AlertCircle, CheckCircle, Info, ExternalLink, Music } from 'lucide-react';
 
 const ClientPreview: React.FC = () => {
