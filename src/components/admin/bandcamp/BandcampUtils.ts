@@ -2,32 +2,37 @@
 export class BandcampUtils {
   
   // Função principal para processar qualquer tipo de input do Bandcamp
-  static processInput(input: string): { embedUrl: string | null; originalUrl: string | null } {
+  static processInput(input: string): { embedUrl: string | null; originalUrl: string | null; isPrivateLink: boolean } {
     if (!input || !input.trim()) {
-      return { embedUrl: null, originalUrl: null };
+      return { embedUrl: null, originalUrl: null, isPrivateLink: false };
     }
 
     const trimmedInput = input.trim();
+    
+    // Verificar se é um link privado
+    if (trimmedInput.includes('bandcamp.com/private/') || trimmedInput.includes('/private/')) {
+      return { embedUrl: null, originalUrl: trimmedInput, isPrivateLink: true };
+    }
     
     // Caso 1: Input é um iframe completo
     if (trimmedInput.includes('<iframe') && trimmedInput.includes('bandcamp.com')) {
       const embedUrl = this.extractEmbedFromIframe(trimmedInput);
       const originalUrl = this.extractOriginalUrlFromIframe(trimmedInput);
-      return { embedUrl, originalUrl };
+      return { embedUrl, originalUrl, isPrivateLink: false };
     }
     
     // Caso 2: Input é uma URL de embed direta
     if (trimmedInput.includes('bandcamp.com/EmbeddedPlayer/')) {
-      return { embedUrl: trimmedInput, originalUrl: null };
+      return { embedUrl: trimmedInput, originalUrl: null, isPrivateLink: false };
     }
     
     // Caso 3: Input é uma URL direta do Bandcamp
     if (this.validateBandcampUrl(trimmedInput)) {
       const embedUrl = this.generateEmbedUrl(trimmedInput);
-      return { embedUrl, originalUrl: trimmedInput };
+      return { embedUrl, originalUrl: trimmedInput, isPrivateLink: false };
     }
     
-    return { embedUrl: null, originalUrl: null };
+    return { embedUrl: null, originalUrl: null, isPrivateLink: false };
   }
   
   static extractEmbedFromIframe(iframeCode: string): string | null {
@@ -55,7 +60,7 @@ export class BandcampUtils {
   static extractOriginalUrlFromIframe(iframeCode: string): string | null {
     try {
       // Buscar por href dentro do iframe
-      const hrefMatch = iframeCode.match(/href=["']([^"']*harmonia-media\.bandcamp\.com[^"']*)["']/i);
+      const hrefMatch = iframeCode.match(/href=["']([^"']*bandcamp\.com[^"']*)["']/i);
       if (hrefMatch && hrefMatch[1]) {
         return hrefMatch[1];
       }

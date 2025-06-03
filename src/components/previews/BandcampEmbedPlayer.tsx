@@ -1,3 +1,4 @@
+
 import React, { useEffect, useRef, useState } from 'react';
 
 interface BandcampEmbedPlayerProps {
@@ -13,55 +14,20 @@ const BandcampEmbedPlayer: React.FC<BandcampEmbedPlayerProps> = ({
   fallbackUrl,
   className = ""
 }) => {
-  const containerRef = useRef<HTMLDivElement>(null);
   const [playerLoaded, setPlayerLoaded] = useState(false);
-  const [safeMode, setSafeMode] = useState(false);
+  const [hasError, setHasError] = useState(false);
 
   useEffect(() => {
-    if (!embedUrl || !embedUrl.includes('bandcamp.com') || safeMode) {
-      return;
-    }
+    // Adicionar delay para evitar problemas de DOM
+    const timer = setTimeout(() => {
+      setPlayerLoaded(true);
+    }, 100);
 
-    const createPlayer = () => {
-      try {
-        if (!containerRef.current) return;
+    return () => clearTimeout(timer);
+  }, [embedUrl]);
 
-        // ✅ CONFORME RESULTADO [14] - USAR PORTALS SEGUROS:
-        const iframeHTML = `
-          <div style="position: relative; isolation: isolate; contain: layout;">
-            <iframe 
-              style="border: 0; width: 100%; height: 152px;" 
-              src="${embedUrl}" 
-              title="${title}"
-              allowfullscreen
-              allow="autoplay; encrypted-media"
-              loading="lazy"
-              sandbox="allow-scripts allow-same-origin"
-            ></iframe>
-          </div>
-        `;
-
-        // ✅ USAR innerHTML SEGURO:
-        try {
-          containerRef.current.innerHTML = iframeHTML;
-          setTimeout(() => setPlayerLoaded(true), 2000);
-        } catch (error) {
-          console.warn('[BandcampPlayer] innerHTML falhou, ativando modo seguro');
-          setSafeMode(true);
-        }
-
-      } catch (error) {
-        console.warn('[BandcampPlayer] Erro geral:', error);
-        setSafeMode(true);
-      }
-    };
-
-    const timeoutId = setTimeout(createPlayer, 1000);
-    return () => clearTimeout(timeoutId);
-  }, [embedUrl, title, safeMode]);
-
-  // ✅ MODO SEGURO - LINK DIRETO:
-  if (safeMode || !embedUrl) {
+  // Se não há URL válida, mostrar fallback
+  if (!embedUrl || !embedUrl.includes('bandcamp.com') || hasError) {
     return (
       <div className={`p-4 bg-blue-50 rounded text-center border border-blue-200 ${className}`}>
         <div className="mb-3">
@@ -71,7 +37,7 @@ const BandcampEmbedPlayer: React.FC<BandcampEmbedPlayerProps> = ({
           <h3 className="font-medium text-blue-900">{title}</h3>
         </div>
         <p className="text-sm text-blue-700 mb-3">
-          🎵 Player Bandcamp (Modo Seguro)
+          🎵 Player Bandcamp
         </p>
         {(fallbackUrl || embedUrl) && (
           <a 
@@ -86,9 +52,6 @@ const BandcampEmbedPlayer: React.FC<BandcampEmbedPlayerProps> = ({
             </svg>
           </a>
         )}
-        <p className="text-xs text-blue-600 mt-2">
-          Modo seguro ativo devido a conflitos do navegador
-        </p>
       </div>
     );
   }
@@ -99,12 +62,18 @@ const BandcampEmbedPlayer: React.FC<BandcampEmbedPlayerProps> = ({
         🎵 Player Bandcamp
       </div>
       
-      <div 
-        ref={containerRef}
-        className="w-full bg-gray-100"
-        style={{ minHeight: '152px', isolation: 'isolate' }}
-      >
-        {!playerLoaded && (
+      <div className="w-full bg-gray-100" style={{ minHeight: '152px' }}>
+        {playerLoaded ? (
+          <iframe 
+            src={embedUrl}
+            style={{ border: 0, width: '100%', height: '152px' }} 
+            title={title}
+            allowFullScreen
+            allow="autoplay; encrypted-media"
+            loading="lazy"
+            onError={() => setHasError(true)}
+          />
+        ) : (
           <div className="flex items-center justify-center h-full p-4">
             <div className="text-center">
               <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-blue-600 mx-auto mb-2"></div>

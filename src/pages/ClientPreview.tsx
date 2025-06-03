@@ -1,4 +1,3 @@
-
 // src/pages/ClientPreview.tsx
 import React, { useState, useEffect } from 'react';
 import { useParams } from 'react-router-dom';
@@ -355,27 +354,27 @@ const ClientPreview: React.FC = () => {
               
               {/* Project title with gradient similar to Hero */}
               <h1 className="text-4xl md:text-6xl font-bold bg-gradient-to-r from-white via-gray-100 to-gray-300 bg-clip-text text-transparent mb-6">
-                {previewData.title}
+                {previewData?.title}
               </h1>
               
               <div className="flex flex-col sm:flex-row items-center justify-center gap-6 text-lg">
                 <span className="flex items-center gap-2">
                   <span className="text-harmonia-green font-semibold">Cliente:</span> 
-                  <span className="text-gray-300">{previewData.clientName}</span>
+                  <span className="text-gray-300">{previewData?.clientName}</span>
                 </span>
-                {previewData.packageType && (
+                {previewData?.packageType && (
                   <span className="flex items-center gap-2">
                     <span className="text-harmonia-green font-semibold">Pacote:</span> 
                     <span className="text-gray-300">{previewData.packageType}</span>
                   </span>
                 )}
-                {getStatusBadge(previewData.status)}
+                {previewData && getStatusBadge(previewData.status)}
               </div>
             </div>
           </div>
         </div>
 
-        {/* Authentication Gate */} 
+        {/* Authentication Gate or Main Content */} 
         {!isAuthenticated ? (
           <div className="container mx-auto px-4 py-12 max-w-md">
             <Card className="shadow-2xl border-gray-700 bg-gray-900">
@@ -419,7 +418,7 @@ const ClientPreview: React.FC = () => {
               <Logo />
             </div>
             <p className="mb-4 text-gray-300">
-              {previewData.expirationDate
+              {previewData?.expirationDate
                 ? `Esta prévia expira em: ${previewData.expirationDate}`
                 : 'Prévia sem data de expiração definida.'}
             </p>

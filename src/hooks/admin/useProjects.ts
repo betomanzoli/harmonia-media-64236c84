@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { generatePreviewLink } from '@/utils/previewLinkUtils';
@@ -161,6 +160,9 @@ export const useProjects = () => {
     name: string;
     description?: string;
     audio_url: string;
+    embed_url?: string;
+    bandcamp_private_url?: string;
+    original_bandcamp_url?: string;
     recommended?: boolean;
   }) => {
     try {
@@ -168,8 +170,12 @@ export const useProjects = () => {
         .from('project_versions')
         .insert([{
           project_id: projectId,
-          version_id: `v_${Date.now()}`,
-          ...versionData,
+          name: versionData.name,
+          description: versionData.description,
+          audio_url: versionData.audio_url,
+          embed_url: versionData.embed_url,
+          bandcamp_private_url: versionData.bandcamp_private_url,
+          original_bandcamp_url: versionData.original_bandcamp_url,
           recommended: versionData.recommended || false,
           created_at: new Date().toISOString()
         }])
@@ -180,9 +186,9 @@ export const useProjects = () => {
 
       await loadProjects();
       return { success: true, version: newVersion };
-    } catch (error) {
-      console.error('Error adding version:', error);
-      return { success: false, error: 'Erro ao adicionar versão' };
+    } catch (error: any) {
+      console.error("Error adding version:", error);
+      return { success: false, error: error.message || 'Erro ao adicionar versão' };
     }
   };
 
