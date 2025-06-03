@@ -103,6 +103,7 @@ export type Database = {
       project_versions: {
         Row: {
           audio_url: string | null
+          bandcamp_private_url: string | null
           bandcamp_url: string | null
           created_at: string | null
           description: string | null
@@ -118,6 +119,7 @@ export type Database = {
         }
         Insert: {
           audio_url?: string | null
+          bandcamp_private_url?: string | null
           bandcamp_url?: string | null
           created_at?: string | null
           description?: string | null
@@ -133,6 +135,7 @@ export type Database = {
         }
         Update: {
           audio_url?: string | null
+          bandcamp_private_url?: string | null
           bandcamp_url?: string | null
           created_at?: string | null
           description?: string | null
