@@ -1,7 +1,7 @@
 // src/hooks/useClientPreview.ts
 import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
-import { ProjectVersion } from './admin/useProjects_with_private_link'; // Import updated interface
+import { ProjectVersion } from './admin/useProjects'; // Import updated interface
 import { logProjectHistory } from '@/utils/historyLogger';
 
 // Interface for the data returned by the hook
