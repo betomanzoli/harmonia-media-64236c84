@@ -123,12 +123,15 @@ export const useProjects = () => {
     }
   };
 
-  const updateProject = async (projectId: string, updates: Partial<Project>) => {
+  const updateProject = async (projectId: string, updates: Partial<Omit<Project, 'versions'>>) => {
     try {
+      // Remove versions from updates as it should be handled separately
+      const { versions, ...safeUpdates } = updates as any;
+      
       const { error } = await supabase
         .from('projects')
         .update({
-          ...updates,
+          ...safeUpdates,
           updated_at: new Date().toISOString()
         })
         .eq('id', projectId);

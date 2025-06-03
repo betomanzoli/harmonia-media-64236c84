@@ -84,7 +84,7 @@ export const useClientPreview = (previewCode: string | undefined) => {
         versions: (versionsData || []) as ClientPreviewVersion[],
         expirationDate: project.expires_at ? new Date(project.expires_at).toLocaleDateString('pt-BR') : null,
         feedback: project.feedback,
-        approved_version_id: project.approved_version_id,
+        approved_version_id: project.approved_version_id || null,
       };
 
       setPreviewData(formattedData);
