@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react'; // Added useEffect
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -26,8 +27,8 @@ interface DisplayProject {
 
 const NewAdminProjects: React.FC = () => {
   const { toast } = useToast();
-  const { clients, isLoading: clientsLoading, error: clientsError } = useClients(); // Use the clients hook
-  const { projects: fetchedProjects, loading: projectsLoading, createProject, reloadProjects } = useProjects(); // Use the projects hook
+  const { clients, isLoading: clientsLoading } = useClients(); // Use the clients hook
+  const { projects: fetchedProjects, isLoading: projectsLoading, createProject } = useProjects(); // Use the projects hook
 
   const [displayProjects, setDisplayProjects] = useState<DisplayProject[]>([]);
   const [showNewProjectDialog, setShowNewProjectDialog] = useState(false);
@@ -54,17 +55,6 @@ const NewAdminProjects: React.FC = () => {
     }));
     setDisplayProjects(formatted);
   }, [fetchedProjects]);
-
-  // Handle client loading errors
-  useEffect(() => {
-    if (clientsError) {
-      toast({
-        title: "Erro ao carregar clientes",
-        description: clientsError.message || "Não foi possível buscar a lista de clientes.",
-        variant: "destructive"
-      });
-    }
-  }, [clientsError, toast]);
 
   const handleAddProject = async () => {
     const selectedClient = clients.find(c => c.id === formData.clientId);
@@ -270,7 +260,6 @@ const NewAdminProjects: React.FC = () => {
                     ))}
                   </SelectContent>
                 </Select>
-                {clientsError && <p className="text-red-500 text-xs mt-1">Erro ao carregar clientes.</p>}
               </div>
               <div>
                 <Label htmlFor="title">Título do Projeto</Label>
@@ -320,4 +309,3 @@ const NewAdminProjects: React.FC = () => {
 };
 
 export default NewAdminProjects;
-

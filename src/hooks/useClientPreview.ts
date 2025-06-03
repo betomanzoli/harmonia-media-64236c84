@@ -1,3 +1,4 @@
+
 // src/hooks/useClientPreview.ts
 import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
@@ -207,4 +208,3 @@ export const useClientPreview = (previewCode: string | undefined) => {
     approveVersion
   };
 };
-

@@ -1,6 +1,19 @@
+
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { generatePreviewLink } from '@/utils/previewLinkUtils';
+
+export interface ProjectVersion {
+  id: string;
+  name: string;
+  description?: string;
+  audio_url?: string;
+  embed_url?: string;
+  bandcamp_private_url?: string;
+  original_bandcamp_url?: string;
+  recommended: boolean;
+  created_at: string;
+}
 
 export interface Project {
   id: string;
@@ -8,20 +21,16 @@ export interface Project {
   client_name: string;
   client_email?: string;
   client_phone?: string;
+  client_id?: string;
   status: 'waiting' | 'feedback' | 'approved';
   package_type?: string;
   created_at: string;
+  updated_at?: string;
   expires_at?: string;
   preview_code?: string;
   feedback?: string;
-  versions: Array<{
-    id: string;
-    name: string;
-    description?: string;
-    audio_url?: string;
-    recommended: boolean;
-    created_at: string;
-  }>;
+  approved_version_id?: string;
+  versions: ProjectVersion[];
 }
 
 export const useProjects = () => {
