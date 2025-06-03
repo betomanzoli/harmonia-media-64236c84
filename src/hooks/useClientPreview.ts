@@ -1,4 +1,3 @@
-
 // src/hooks/useClientPreview_v3.ts
 import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
@@ -26,6 +25,7 @@ export interface ClientPreviewData {
   title: string;
   expirationDate?: string;
   feedback?: string;
+  approved_version_id?: string; // ✅ ADDED MISSING PROPERTY
 }
 
 export const useClientPreview = (previewCode: string | undefined) => {

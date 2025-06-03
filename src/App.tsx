@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Routes, Route, useLocation } from 'react-router-dom';
 import ScrollToTop from './components/ScrollToTop';
 import ChatbotButton from './components/chatbot/ChatbotButton';
-import { applyDOMPatches } from './utils/domPatches'; // ✅ IMPORT ADICIONADO
+import applyDOMPatches from './utils/domPatches'; // ✅ FIXED IMPORT
 
 // Import pages
 import HomePage from './pages/HomePage';

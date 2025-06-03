@@ -1,4 +1,3 @@
-
 // src/pages/ClientPreview_v3.tsx
 import React, { useState, useEffect } from 'react';
 import { useParams } from 'react-router-dom';
@@ -151,16 +150,6 @@ const ClientPreview: React.FC = () => {
                    <p className="text-sm">Versão "{previewData.versions.find(v => v.id === previewData.approved_version_id)?.name || 'ID: '+previewData.approved_version_id}" foi selecionada. Em breve você receberá os arquivos finais.</p>
                 )}
               </div>
-            </div>
-          </CardContent>
-        </Card>
-      )}
-      {previewData.status === 'feedback' && (
-        <Card className="mb-6 border-blue-200 bg-blue-50">
-          <CardContent className="py-4">
-            <div className="flex items-center text-blue-800">
-              <Info className="h-5 w-5 mr-2 flex-shrink-0" />
-              <span className="font-medium">Feedback recebido! Nossa equipe está analisando suas sugestões.</span>
             </div>
           </CardContent>
         </Card>
