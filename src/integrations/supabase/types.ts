@@ -161,6 +161,7 @@ export type Database = {
       }
       projects: {
         Row: {
+          approved_version_id: string | null
           client_email: string | null
           client_id: string | null
           client_name: string | null
@@ -183,6 +184,7 @@ export type Database = {
           versions: Json | null
         }
         Insert: {
+          approved_version_id?: string | null
           client_email?: string | null
           client_id?: string | null
           client_name?: string | null
@@ -205,6 +207,7 @@ export type Database = {
           versions?: Json | null
         }
         Update: {
+          approved_version_id?: string | null
           client_email?: string | null
           client_id?: string | null
           client_name?: string | null
@@ -227,6 +230,13 @@ export type Database = {
           versions?: Json | null
         }
         Relationships: [
+          {
+            foreignKeyName: "projects_approved_version_id_fkey"
+            columns: ["approved_version_id"]
+            isOneToOne: false
+            referencedRelation: "project_versions"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "projects_client_id_fkey"
             columns: ["client_id"]
