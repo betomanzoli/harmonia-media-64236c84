@@ -9,6 +9,7 @@ import { ArrowLeft, Plus, User, Mail, Phone, Calendar, ExternalLink } from 'luci
 import NewAdminLayout from '@/components/admin/layout/NewAdminLayout';
 import BandcampVersionCard from './BandcampVersionCard';
 import AddVersionDialog from './AddVersionDialog';
+import ProjectHistory from './ProjectHistory';
 import { useProjects } from '@/hooks/admin/useProjects';
 
 const ProjectDetailsPage: React.FC = () => {
@@ -223,6 +224,9 @@ const ProjectDetailsPage: React.FC = () => {
           </CardContent>
         </Card>
 
+        {/* Project History */}
+        <ProjectHistory projectId={project.id} />
+
         {/* Versions */}
         <div className="space-y-4">
           <div className="flex items-center justify-between">
@@ -246,7 +250,7 @@ const ProjectDetailsPage: React.FC = () => {
                     dateAdded: new Date(version.created_at).toLocaleDateString('pt-BR')
                   }}
                   projectId={project.id}
-                  onDeleteVersion={handleDeleteVersion}
+                  onDeleteVersion={deleteVersion}
                 />
               ))}
             </div>
