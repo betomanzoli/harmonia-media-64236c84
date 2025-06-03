@@ -1,15 +1,16 @@
-// src/pages/ClientPreview_v3.tsx
+// src/pages/ClientPreview.tsx
 import React, { useState, useEffect } from 'react';
 import { useParams } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Input } from '@/components/ui/input'; // Use Input from shadcn
+import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { useToast } from '@/hooks/use-toast';
 import BandcampEmbedPlayer from '@/components/previews/BandcampEmbedPlayer';
-import { useClientPreview, ClientPreviewVersion } from '@/hooks/useClientPreview'; // <-- Fixed import path
-import { ThumbsUp, Send, Loader2, AlertCircle, CheckCircle, Info } from 'lucide-react';
+// Use the hook that supports private links
+import { useClientPreview, ClientPreviewVersion } from '@/hooks/useClientPreview_with_private_link'; 
+import { ThumbsUp, Send, Loader2, AlertCircle, CheckCircle, Info, ExternalLink, Music } from 'lucide-react';
 
 const ClientPreview: React.FC = () => {
   const { previewCode } = useParams<{ previewCode: string }>();
@@ -24,14 +25,14 @@ const ClientPreview: React.FC = () => {
     authenticateClient,
     submitFeedback,
     approveVersion
-  } = useClientPreview(previewCode); // <-- Use the corrected hook
+  } = useClientPreview(previewCode);
 
   const [clientEmailInput, setClientEmailInput] = useState('');
   const [selectedVersionId, setSelectedVersionId] = useState<string | null>(null);
   const [feedbackText, setFeedbackText] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  // Auto-select recommended or first version when data loads *after* authentication
+  // Auto-select recommended or first version
   useEffect(() => {
     if (isAuthenticated && previewData && previewData.versions.length > 0 && !selectedVersionId) {
       const recommendedVersion = previewData.versions.find(v => v.recommended);
@@ -45,7 +46,6 @@ const ClientPreview: React.FC = () => {
       return;
     }
     await authenticateClient(clientEmailInput);
-    // Error/Success messages are handled by the hook's state (authError, isAuthenticated)
   };
 
   const handleSubmitFeedback = async () => {
@@ -59,7 +59,7 @@ const ClientPreview: React.FC = () => {
     }
 
     const selectedVersion = previewData?.versions.find(v => v.id === selectedVersionId);
-    if (!selectedVersion) return; // Should not happen if selectedVersionId is set
+    if (!selectedVersion) return;
 
     setIsSubmitting(true);
     const result = await submitFeedback(feedbackText, selectedVersionId, selectedVersion.name);
@@ -67,7 +67,7 @@ const ClientPreview: React.FC = () => {
 
     if (result.success) {
       toast({ title: "Feedback enviado!", description: "Obrigado! Seu feedback foi registrado." });
-      setFeedbackText(''); // Clear textarea
+      setFeedbackText('');
     } else {
       toast({ title: "Erro ao enviar", description: result.error || "Não foi possível enviar seu feedback.", variant: "destructive" });
     }
@@ -102,9 +102,13 @@ const ClientPreview: React.FC = () => {
     }
   };
 
+  const handleOpenPrivateLink = (url: string) => {
+    window.open(url, '_blank', 'noopener,noreferrer,width=1000,height=700');
+  };
+
   // --- Render Logic ---
 
-  if (isLoading && !previewData) { // Show initial loading only before project data is fetched
+  if (isLoading && !previewData) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <div className="text-center">
@@ -115,7 +119,7 @@ const ClientPreview: React.FC = () => {
     );
   }
 
-  if (error) { // Show general errors (invalid code, expired, etc.)
+  if (error) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <Card className="max-w-md mx-auto shadow-lg">
@@ -131,129 +135,184 @@ const ClientPreview: React.FC = () => {
     );
   }
 
-  if (!previewData) { // Should not happen if error is not set, but good fallback
+  if (!previewData) {
      return <div className="min-h-screen bg-gray-50 flex items-center justify-center"><p>Não foi possível carregar os dados.</p></div>;
   }
 
   // --- Authenticated View ---
-  const renderAuthenticatedContent = () => (
-    <>
-      {/* Status Messages */}
-      {previewData.status === 'approved' && (
-        <Card className="mb-6 border-green-200 bg-green-50">
-          <CardContent className="py-4">
-            <div className="flex items-center text-green-800">
-              <CheckCircle className="h-5 w-5 mr-2 flex-shrink-0" />
-              <div>
-                <span className="font-medium">Projeto Aprovado!</span>
-                {previewData.approved_version_id && (
-                   <p className="text-sm">Versão "{previewData.versions.find(v => v.id === previewData.approved_version_id)?.name || 'ID: '+previewData.approved_version_id}" foi selecionada. Em breve você receberá os arquivos finais.</p>
-                )}
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-      )}
+  const renderAuthenticatedContent = () => {
+    const selectedVersionData = previewData?.versions.find(v => v.id === selectedVersionId);
+    const isSelectedVersionPrivate = !!selectedVersionData?.bandcamp_private_url;
 
-      {/* Versions List */}
-      <div className="space-y-6">
-        <h2 className="text-xl font-semibold text-gray-900">Versões Disponíveis ({previewData.versions.length})</h2>
-        {isLoading && <p className="text-sm text-gray-500 flex items-center"><Loader2 className="h-4 w-4 animate-spin mr-2"/> Carregando versões...</p>}
-        {previewData.versions.length === 0 && !isLoading ? (
-          <Card>
-            <CardContent className="text-center py-8">
-              <p className="text-gray-500">Nenhuma versão disponível no momento.</p>
-            </CardContent>
-          </Card>
-        ) : (
-          previewData.versions.map((version) => (
-            <Card
-              key={version.id}
-              className={`cursor-pointer transition-all overflow-hidden ${
-                selectedVersionId === version.id
-                  ? 'ring-2 ring-blue-500 border-blue-300'
-                  : 'hover:border-gray-300'
-              } ${version.recommended ? 'border-yellow-400 hover:border-yellow-500' : ''}`}
-              onClick={() => setSelectedVersionId(version.id)}
-            >
-              <CardHeader className="pb-3">
-                <div className="flex justify-between items-start gap-2">
-                  <div>
-                    <CardTitle className="text-lg flex items-center gap-2">
-                      {version.name}
-                      {selectedVersionId === version.id && (
-                        <Badge className="bg-blue-100 text-blue-800 text-xs">Selecionada</Badge>
-                      )}
-                    </CardTitle>
-                    {version.description && (
-                      <p className="text-gray-600 mt-1 text-sm">{version.description}</p>
-                    )}
-                    <p className="text-xs text-gray-500 mt-1">Adicionada em: {new Date(version.created_at).toLocaleDateString('pt-BR')}</p>
-                  </div>
-                  {version.recommended && (
-                    <Badge className="bg-yellow-100 text-yellow-800 text-xs whitespace-nowrap">Recomendada</Badge>
+    return (
+      <>
+        {/* Status Messages */}
+        {previewData.status === 'approved' && (
+          <Card className="mb-6 border-green-200 bg-green-50">
+            <CardContent className="py-4">
+              <div className="flex items-center text-green-800">
+                <CheckCircle className="h-5 w-5 mr-2 flex-shrink-0" />
+                <div>
+                  <span className="font-medium">Projeto Aprovado!</span>
+                  {previewData.approved_version_id && (
+                     <p className="text-sm">Versão "{previewData.versions.find(v => v.id === previewData.approved_version_id)?.name || 'ID: '+previewData.approved_version_id}" foi selecionada. Em breve você receberá os arquivos finais.</p>
                   )}
                 </div>
-              </CardHeader>
-              <CardContent>
-                {/* Bandcamp Player - Ensure consistent size via className or style */} 
-                {(version.embed_url || version.audio_url) && (
-                  <div className="mb-2 bg-gray-100 p-2 rounded">
-                    <BandcampEmbedPlayer
-                      embedUrl={version.embed_url || version.audio_url!} // Use embed_url first
-                      title={version.name}
-                      fallbackUrl={version.original_bandcamp_url || version.audio_url} // Provide fallback
-                      className="w-full h-32 md:h-28" // **Standardized Height**
-                    />
-                  </div>
-                )}
+              </div>
+            </CardContent>
+          </Card>
+        )}
+        {previewData.status === 'feedback' && (
+          <Card className="mb-6 border-blue-200 bg-blue-50">
+            <CardContent className="py-4">
+              <div className="flex items-center text-blue-800">
+                <Info className="h-5 w-5 mr-2 flex-shrink-0" />
+                <span className="font-medium">Feedback recebido! Nossa equipe está analisando suas sugestões.</span>
+              </div>
+            </CardContent>
+          </Card>
+        )}
+
+        {/* Versions List */}
+        <div className="space-y-6">
+          <h2 className="text-xl font-semibold text-gray-900">Versões Disponíveis ({previewData.versions.length})</h2>
+          {isLoading && <p className="text-sm text-gray-500 flex items-center"><Loader2 className="h-4 w-4 animate-spin mr-2"/> Carregando versões...</p>}
+          {previewData.versions.length === 0 && !isLoading ? (
+            <Card>
+              <CardContent className="text-center py-8">
+                <p className="text-gray-500">Nenhuma versão disponível no momento.</p>
               </CardContent>
             </Card>
-          ))
-        )}
-      </div>
+          ) : (
+            previewData.versions.map((version) => {
+              const isPrivate = !!version.bandcamp_private_url;
+              const isSelected = selectedVersionId === version.id;
 
-      {/* Feedback/Approval Section (only if versions exist and not already approved) */} 
-      {previewData.versions.length > 0 && previewData.status !== 'approved' && (
-        <Card className="mt-8 shadow-sm">
-          <CardHeader>
-            <CardTitle>Sua Avaliação</CardTitle>
-            <CardDescription>
-              Selecione uma versão acima e envie seu feedback ou aprove-a diretamente.
-              {selectedVersionId && ` Versão selecionada: "${previewData.versions.find(v=>v.id === selectedVersionId)?.name}"`}
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <Textarea
-              placeholder="Escreva seu feedback sobre a versão selecionada..."
-              value={feedbackText}
-              onChange={(e) => setFeedbackText(e.target.value)}
-              rows={4}
-              disabled={isSubmitting || !selectedVersionId}
-            />
-            <div className="flex flex-col sm:flex-row gap-3">
-              <Button
-                onClick={handleSubmitFeedback}
-                disabled={isSubmitting || !selectedVersionId || !feedbackText.trim()}
-                className="flex-1 bg-blue-600 hover:bg-blue-700"
-              >
-                {isSubmitting ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : <Send className="h-4 w-4 mr-2" />}
-                Enviar Feedback da Versão Selecionada
-              </Button>
-              <Button
-                onClick={handleApproveVersion}
+              return (
+                <Card
+                  key={version.id}
+                  className={`cursor-pointer transition-all overflow-hidden ${
+                    isSelected
+                      ? 'ring-2 ring-blue-500 border-blue-300'
+                      : 'hover:border-gray-300'
+                  } ${version.recommended ? 'border-yellow-400 hover:border-yellow-500' : ''}`}
+                  onClick={() => setSelectedVersionId(version.id)}
+                >
+                  <CardHeader className="pb-3">
+                    <div className="flex justify-between items-start gap-2">
+                      <div>
+                        <CardTitle className="text-lg flex items-center gap-2 flex-wrap">
+                          {version.name}
+                          {isSelected && (
+                            <Badge className="bg-blue-100 text-blue-800 text-xs">Selecionada</Badge>
+                          )}
+                          {isPrivate && (
+                             <Badge variant="outline" className="text-xs">Link Privado</Badge>
+                          )}
+                        </CardTitle>
+                        {version.description && (
+                          <p className="text-gray-600 mt-1 text-sm break-words">{version.description}</p>
+                        )}
+                        <p className="text-xs text-gray-500 mt-1">Adicionada em: {new Date(version.created_at).toLocaleDateString('pt-BR')}</p>
+                      </div>
+                      {version.recommended && (
+                        <Badge className="bg-yellow-100 text-yellow-800 text-xs whitespace-nowrap">Recomendada</Badge>
+                      )}
+                    </div>
+                  </CardHeader>
+                  <CardContent>
+                    {/* Player ou Botão de Link Privado */}
+                    {isPrivate ? (
+                      <div className="p-4 bg-blue-50 rounded border border-blue-200 flex flex-col items-center justify-center text-center min-h-[100px]">
+                        <Music className="w-6 h-6 text-blue-600 mb-2" />
+                        <p className="text-blue-800 text-sm font-medium mb-3">Esta versão usa um link privado. Clique abaixo para ouvir no Bandcamp.</p>
+                        <Button 
+                          onClick={(e) => { 
+                            e.stopPropagation(); // Evita selecionar o card ao clicar no botão
+                            handleOpenPrivateLink(version.bandcamp_private_url!)
+                          }}
+                          size="sm"
+                          variant="secondary"
+                        >
+                          <ExternalLink className="h-4 w-4 mr-2" />
+                          Abrir Link Privado
+                        </Button>
+                      </div>
+                    ) : (version.embed_url || version.audio_url) ? (
+                      <div className="mb-2 bg-gray-100 p-2 rounded">
+                        <BandcampEmbedPlayer
+                          embedUrl={version.embed_url || version.audio_url!} 
+                          title={version.name}
+                          fallbackUrl={version.original_bandcamp_url || version.audio_url}
+                          className="w-full h-32 md:h-28"
+                        />
+                      </div>
+                    ) : (
+                       <div className="p-4 bg-gray-100 rounded text-center border">
+                         <p className="text-gray-600 font-medium">⚠️ Nenhuma URL de áudio encontrada.</p>
+                       </div>
+                    )}
+                  </CardContent>
+                </Card>
+              );
+            })
+          )}
+        </div>
+
+        {/* Feedback/Approval Section */}
+        {previewData.versions.length > 0 && previewData.status !== 'approved' && (
+          <Card className="mt-8 shadow-sm">
+            <CardHeader>
+              <CardTitle>Sua Avaliação</CardTitle>
+              <CardDescription>
+                Selecione uma versão acima e envie seu feedback ou aprove-a diretamente.
+                {selectedVersionId && ` Versão selecionada: "${previewData.versions.find(v=>v.id === selectedVersionId)?.name}"`}
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              {/* Instrução para Link Privado */}
+              {isSelectedVersionPrivate && (
+                <div className="p-3 bg-yellow-50 border border-yellow-200 rounded-md text-sm text-yellow-800 flex items-start gap-2">
+                  <Info className="w-5 h-5 mt-0.5 flex-shrink-0" />
+                  <span>
+                    <span className="font-semibold">Importante:</span> Como esta versão usa um link privado com múltiplas faixas, por favor, mencione o <span className="font-semibold">nome da faixa específica</span> que você está avaliando ou aprovando no campo de feedback abaixo.
+                  </span>
+                </div>
+              )}
+              <Textarea
+                placeholder={isSelectedVersionPrivate 
+                  ? "Escreva seu feedback sobre a versão selecionada (não esqueça de mencionar a faixa específica)..." 
+                  : "Escreva seu feedback sobre a versão selecionada..."
+                }
+                value={feedbackText}
+                onChange={(e) => setFeedbackText(e.target.value)}
+                rows={4}
                 disabled={isSubmitting || !selectedVersionId}
-                className="flex-1 bg-green-600 hover:bg-green-700"
-              >
-                {isSubmitting ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : <ThumbsUp className="h-4 w-4 mr-2" />}
-                Aprovar Versão Selecionada
-              </Button>
-            </div>
-          </CardContent>
-        </Card>
-      )}
-    </>
-  );
+              />
+              <div className="flex flex-col sm:flex-row gap-3">
+                <Button
+                  onClick={handleSubmitFeedback}
+                  disabled={isSubmitting || !selectedVersionId || !feedbackText.trim()}
+                  className="flex-1 bg-blue-600 hover:bg-blue-700"
+                >
+                  {isSubmitting ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : <Send className="h-4 w-4 mr-2" />}
+                  Enviar Feedback da Versão Selecionada
+                </Button>
+                <Button
+                  onClick={handleApproveVersion}
+                  disabled={isSubmitting || !selectedVersionId}
+                  className="flex-1 bg-green-600 hover:bg-green-700"
+                >
+                  {isSubmitting ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : <ThumbsUp className="h-4 w-4 mr-2" />}
+                  Aprovar Versão Selecionada
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
+        )}
+      </>
+    );
+  };
 
   // --- Render Main Structure ---
   return (
@@ -298,7 +357,6 @@ const ClientPreview: React.FC = () => {
             </CardContent>
           </Card>
         ) : (
-          // Render main content only after authentication
           renderAuthenticatedContent()
         )}
 
@@ -319,3 +377,4 @@ const ClientPreview: React.FC = () => {
 };
 
 export default ClientPreview;
+
