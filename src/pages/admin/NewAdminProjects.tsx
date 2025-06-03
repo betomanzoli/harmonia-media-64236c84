@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -27,7 +26,7 @@ interface DisplayProject {
 const NewAdminProjects: React.FC = () => {
   const { toast } = useToast();
   const { clients, isLoading: clientsLoading } = useClients();
-  const { projects: fetchedProjects, isLoading: projectsLoading, createProject } = useProjects();
+  const { projects: fetchedProjects, isLoading: projectsLoading, createProject, deleteProject } = useProjects();
 
   const [displayProjects, setDisplayProjects] = useState<DisplayProject[]>([]);
   const [showNewProjectDialog, setShowNewProjectDialog] = useState(false);
@@ -195,7 +194,11 @@ const NewAdminProjects: React.FC = () => {
             </div>
           ) : filteredProjects.length > 0 ? (
             filteredProjects.map((project) => (
-              <ProjectCard key={project.id} project={project as any} />
+              <ProjectCard 
+                key={project.id} 
+                project={project as any} 
+                onDelete={deleteProject}
+              />
             ))
           ) : (
             <div className="col-span-full">
