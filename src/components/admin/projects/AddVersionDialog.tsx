@@ -1,278 +1,192 @@
-// src/components/admin/projects/AddVersionDialog.tsx
-import React, { useState, useEffect } from 'react';
-import { supabase } from '@/integrations/supabase/client';
+
+import React, { useState } from 'react';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Checkbox } from '@/components/ui/checkbox';
+import { Label } from '@/components/ui/label';
 import { useToast } from '@/hooks/use-toast';
-import { Loader2, AlertTriangle } from 'lucide-react';
+import { BandcampUtils } from '@/components/admin/bandcamp/BandcampUtils';
+import { useProjects } from '@/hooks/admin/useProjects';
 
 interface AddVersionDialogProps {
   isOpen: boolean;
-  setIsOpen: (isOpen: boolean) => void;
+  onOpenChange: (open: boolean) => void;
   projectId: string;
-  onVersionAdded?: () => void;
+  onAddVersion?: (version: any) => void;
   packageType?: string;
 }
 
-// Função segura para extrair URL de embed/pública
-const extractBandcampEmbedUrl = (input: string): string | null => {
-  if (!input || input.includes('bandcamp.com/private/')) return null; // Ignora links privados
-  try {
-    const srcMatch = input.match(/src=["']([^"']*(?:bandcamp\.com|bcbits\.com)[^"']*)["']/i);
-    if (srcMatch && srcMatch[1]) {
-      let url = srcMatch[1];
-      // Garante HTTPS e remove parâmetros desnecessários (ex: size, bgcol, etc.)
-      const urlObj = new URL(url.startsWith('http') ? url : 'https://' + url);
-      urlObj.search = ''; // Limpa query params
-      return urlObj.toString();
-    }
-    // Se for URL direta pública
-    if (input.includes('bandcamp.com') || input.includes('bcbits.com')) {
-      const urlObj = new URL(input.trim().startsWith('http') ? input.trim() : 'https://' + input.trim());
-      // Verifica se não é um link privado disfarçado
-      if (!urlObj.pathname.includes('/private/')) {
-         urlObj.search = ''; // Limpa query params
-         return urlObj.toString();
-      }
-    }
-    return null;
-  } catch (error) {
-    console.error('[ExtractEmbedURL] Erro:', error);
-    return null;
-  }
-};
-
-// Função para validar link privado
-const validateBandcampPrivateUrl = (input: string): string | null => {
-  if (!input) return null;
-  const trimmedInput = input.trim();
-  if (trimmedInput.startsWith('https://bandcamp.com/private/')) {
-    try {
-      // Tenta criar uma URL para validar o formato básico
-      new URL(trimmedInput);
-      return trimmedInput;
-    } catch (e) {
-      return null; // Formato inválido
-    }
-  }
-  return null;
-};
-
 const AddVersionDialog: React.FC<AddVersionDialogProps> = ({
   isOpen,
-  setIsOpen,
+  onOpenChange,
   projectId,
-  onVersionAdded,
+  onAddVersion,
+  packageType
 }) => {
-  const [versionName, setVersionName] = useState('');
+  const [name, setName] = useState('');
   const [description, setDescription] = useState('');
-  const [bandcampEmbedInput, setBandcampEmbedInput] = useState('');
-  const [bandcampPrivateUrl, setBandcampPrivateUrl] = useState('');
-  const [isRecommended, setIsRecommended] = useState(false);
+  const [bandcampUrl, setBandcampUrl] = useState('');
+  const [recommended, setRecommended] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const { toast } = useToast();
+  const { addVersionToProject } = useProjects();
 
-  // Limpa um campo quando o outro é preenchido
-  useEffect(() => {
-    if (bandcampEmbedInput) {
-      setBandcampPrivateUrl('');
-    }
-  }, [bandcampEmbedInput]);
-
-  useEffect(() => {
-    if (bandcampPrivateUrl) {
-      setBandcampEmbedInput('');
-    }
-  }, [bandcampPrivateUrl]);
-
-  const handleSubmit = async () => {
-    if (!versionName.trim()) {
-      toast({ title: "Erro", description: "O nome da versão é obrigatório.", variant: "destructive" });
-      return;
-    }
-    if (!bandcampEmbedInput.trim() && !bandcampPrivateUrl.trim()) {
-      toast({ title: "Erro", description: "Forneça o Código/URL de Embed OU o Link Privado.", variant: "destructive" });
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    if (!name.trim()) {
+      toast({
+        title: "Nome obrigatório",
+        description: "Por favor, informe o nome da versão.",
+        variant: "destructive"
+      });
       return;
     }
 
-    let embedUrl: string | null = null;
-    let privateUrl: string | null = null;
-    let originalUrl: string | undefined = undefined;
+    if (!bandcampUrl.trim()) {
+      toast({
+        title: "URL obrigatória",
+        description: "Por favor, informe a URL do Bandcamp.",
+        variant: "destructive"
+      });
+      return;
+    }
 
-    if (bandcampEmbedInput.trim()) {
-      embedUrl = extractBandcampEmbedUrl(bandcampEmbedInput);
-      if (!embedUrl) {
-        toast({ title: "Erro", description: "Código/URL de Embed inválido. Verifique o formato.", variant: "destructive" });
-        return;
-      }
-      originalUrl = bandcampEmbedInput.trim(); // Guarda o input original para referência
-    } else if (bandcampPrivateUrl.trim()) {
-      privateUrl = validateBandcampPrivateUrl(bandcampPrivateUrl);
-      if (!privateUrl) {
-        toast({ title: "Erro", description: "Link Privado inválido. Deve começar com https://bandcamp.com/private/...", variant: "destructive" });
-        return;
-      }
+    if (!BandcampUtils.validateBandcampUrl(bandcampUrl)) {
+      toast({
+        title: "URL inválida",
+        description: "Por favor, informe uma URL válida do Bandcamp.",
+        variant: "destructive"
+      });
+      return;
     }
 
     setIsSubmitting(true);
 
     try {
-      const insertData = {
-        project_id: projectId,
-        name: versionName.trim(),
-        description: description.trim() || null,
-        embed_url: embedUrl, // Pode ser null se for link privado
-        bandcamp_private_url: privateUrl, // Pode ser null se for embed
-        original_bandcamp_url: originalUrl, // Guarda o input original do embed/url público
-        recommended: isRecommended,
-      };
+      const result = await addVersionToProject(projectId, {
+        name: name.trim(),
+        description: description.trim() || undefined,
+        audio_url: bandcampUrl.trim(),
+        recommended
+      });
 
-      const { error } = await supabase
-        .from('project_versions')
-        .insert(insertData);
+      if (result.success) {
+        toast({
+          title: "Versão adicionada",
+          description: `${name} foi adicionada ao projeto com sucesso.`
+        });
 
-      if (error) throw error;
+        // Limpar formulário
+        setName('');
+        setDescription('');
+        setBandcampUrl('');
+        setRecommended(false);
+        
+        // Fechar dialog
+        onOpenChange(false);
 
-      toast({ title: "Sucesso", description: `Versão "${versionName}" adicionada com sucesso` });
-
-      // Reset form
-      setVersionName('');
-      setDescription('');
-      setBandcampEmbedInput('');
-      setBandcampPrivateUrl('');
-      setIsRecommended(false);
-      setIsOpen(false);
-
-      if (onVersionAdded) {
-        onVersionAdded();
+        // Callback para o componente pai
+        if (onAddVersion && result.version) {
+          onAddVersion(result.version);
+        }
+      } else {
+        toast({
+          title: "Erro ao adicionar versão",
+          description: result.error || "Ocorreu um erro inesperado.",
+          variant: "destructive"
+        });
       }
-
-    } catch (error: any) {
-      console.error('[AddVersion] Erro:', error);
-      toast({ title: "Erro ao Adicionar", description: error.message || 'Não foi possível adicionar a versão.', variant: "destructive" });
+    } catch (error) {
+      console.error('Error adding version:', error);
+      toast({
+        title: "Erro ao adicionar versão",
+        description: "Ocorreu um erro inesperado. Tente novamente.",
+        variant: "destructive"
+      });
     } finally {
       setIsSubmitting(false);
     }
   };
 
-  const handleClose = () => {
-    if (!isSubmitting) {
-      setVersionName('');
-      setDescription('');
-      setBandcampEmbedInput('');
-      setBandcampPrivateUrl('');
-      setIsRecommended(false);
-      setIsOpen(false);
-    }
-  };
-
   return (
-    <Dialog open={isOpen} onOpenChange={handleClose}>
-      <DialogContent className="max-w-lg">
+    <Dialog open={isOpen} onOpenChange={onOpenChange}>
+      <DialogContent className="sm:max-w-[500px]">
         <DialogHeader>
           <DialogTitle>Adicionar Nova Versão</DialogTitle>
-          <DialogDescription>
-            Preencha os detalhes da versão. Use o campo de Embed/URL OU o campo de Link Privado.
-          </DialogDescription>
         </DialogHeader>
-
-        <div className="space-y-4 py-4">
+        
+        <form onSubmit={handleSubmit} className="space-y-4">
           <div>
-            <Label htmlFor="versionName">Nome da Versão *</Label>
+            <Label htmlFor="name">Nome da Versão *</Label>
             <Input
-              id="versionName"
-              value={versionName}
-              onChange={(e) => setVersionName(e.target.value)}
-              placeholder="Ex: Versão Master 1, Mixagem Preliminar 2"
-              disabled={isSubmitting}
+              id="name"
+              placeholder="Ex: Versão 1 - Mix Inicial"
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+              required
             />
           </div>
 
           <div>
-            <Label htmlFor="description">Descrição (Opcional)</Label>
+            <Label htmlFor="description">Descrição</Label>
             <Textarea
               id="description"
+              placeholder="Descrição opcional da versão..."
               value={description}
               onChange={(e) => setDescription(e.target.value)}
-              placeholder="Alguma observação sobre esta versão?"
-              rows={2}
-              disabled={isSubmitting}
-            />
-          </div>
-
-          {/* Campo para Embed/URL Pública */}
-          <div>
-            <Label htmlFor="bandcampEmbed">Código de Embed / URL Pública</Label>
-            <Textarea
-              id="bandcampEmbed"
-              value={bandcampEmbedInput}
-              onChange={(e) => setBandcampEmbedInput(e.target.value)}
-              placeholder="Cole o código <iframe> ou a URL pública da faixa/álbum"
               rows={3}
-              className="font-mono text-xs"
-              disabled={isSubmitting || !!bandcampPrivateUrl} // Desabilita se link privado estiver preenchido
             />
-             <p className="text-xs text-muted-foreground mt-1">Use este campo para players incorporados.</p>
           </div>
 
-          <div className="text-center text-sm text-muted-foreground font-medium">OU</div>
-
-          {/* Campo para Link Privado */}
           <div>
-            <Label htmlFor="bandcampPrivate">Link Privado Bandcamp</Label>
+            <Label htmlFor="bandcampUrl">URL do Bandcamp *</Label>
             <Input
-              id="bandcampPrivate"
-              type="url"
-              value={bandcampPrivateUrl}
-              onChange={(e) => setBandcampPrivateUrl(e.target.value)}
-              placeholder="https://bandcamp.com/private/..."
-              disabled={isSubmitting || !!bandcampEmbedInput} // Desabilita se embed/url estiver preenchido
+              id="bandcampUrl"
+              placeholder="https://artist.bandcamp.com/track/song-name"
+              value={bandcampUrl}
+              onChange={(e) => setBandcampUrl(e.target.value)}
+              required
             />
-            <p className="text-xs text-muted-foreground mt-1">Use este campo para links privados que abrem a página do Bandcamp.</p>
+            <p className="text-xs text-gray-500 mt-1">
+              URL da música no Bandcamp (será convertida automaticamente para embed)
+            </p>
           </div>
 
-          {/* Checkbox Recomendada */}
-          <div className="flex items-center space-x-2 pt-2">
+          <div className="flex items-center space-x-2">
             <Checkbox
               id="recommended"
-              checked={isRecommended}
-              onCheckedChange={(checked) => setIsRecommended(Boolean(checked))}
-              disabled={isSubmitting}
+              checked={recommended}
+              onCheckedChange={(checked) => setRecommended(checked as boolean)}
             />
-            <Label htmlFor="recommended">Marcar como versão recomendada</Label>
+            <Label htmlFor="recommended" className="text-sm">
+              Marcar como versão recomendada
+            </Label>
           </div>
-        </div>
 
-        <DialogFooter>
-          <Button
-            variant="outline"
-            onClick={handleClose}
-            disabled={isSubmitting}
-          >
-            Cancelar
-          </Button>
-          <Button
-            onClick={handleSubmit}
-            disabled={isSubmitting || !versionName.trim() || (!bandcampEmbedInput.trim() && !bandcampPrivateUrl.trim())}
-          >
-            {isSubmitting ? (
-              <>
-                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                Adicionando...
-              </>
-            ) : (
-              'Adicionar Versão'
-            )}
-          </Button>
-        </DialogFooter>
+          <div className="flex justify-end gap-3 pt-4">
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => onOpenChange(false)}
+              disabled={isSubmitting}
+            >
+              Cancelar
+            </Button>
+            <Button
+              type="submit"
+              disabled={isSubmitting}
+              className="bg-harmonia-green hover:bg-harmonia-green/90"
+            >
+              {isSubmitting ? 'Adicionando...' : 'Adicionar Versão'}
+            </Button>
+          </div>
+        </form>
       </DialogContent>
     </Dialog>
   );
 };
 
 export default AddVersionDialog;
-
