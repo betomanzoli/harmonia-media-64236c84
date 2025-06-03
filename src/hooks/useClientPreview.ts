@@ -1,31 +1,27 @@
-// src/hooks/useClientPreview_v3.ts
+// src/hooks/useClientPreview.ts
 import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
-import { logProjectHistory } from '@/utils/historyLogger'; // Import history logger
+import { ProjectVersion } from './admin/useProjects_with_private_link'; // Import updated interface
+import { logProjectHistory } from '@/utils/historyLogger';
 
-// Interfaces atualizadas
-export interface ClientPreviewVersion {
-  id: string;
-  name: string;
-  description?: string;
-  embed_url?: string;
-  audio_url?: string;
-  original_bandcamp_url?: string;
-  recommended: boolean;
-  created_at: string;
-}
-
+// Interface for the data returned by the hook
 export interface ClientPreviewData {
   projectId: string;
+  title: string;
   clientName: string;
-  clientEmail: string;
-  packageType: string;
+  clientEmail: string; // Email is required for authentication
+  packageType?: string | null;
   status: 'waiting' | 'feedback' | 'approved';
   versions: ClientPreviewVersion[];
-  title: string;
-  expirationDate?: string;
-  feedback?: string;
-  approved_version_id?: string; // ✅ ADDED MISSING PROPERTY
+  expirationDate?: string | null; // Formatted expiration date
+  feedback?: string | null;
+  approved_version_id?: string | null;
+}
+
+// Interface for versions specific to client preview (includes private link)
+export interface ClientPreviewVersion extends Omit<ProjectVersion, 'project_id'> {
+  // Inherits id, name, description, embed_url, audio_url, original_bandcamp_url,
+  // bandcamp_private_url, recommended, final, created_at
 }
 
 export const useClientPreview = (previewCode: string | undefined) => {
@@ -36,206 +32,166 @@ export const useClientPreview = (previewCode: string | undefined) => {
   const [isAuthenticating, setIsAuthenticating] = useState(false);
   const [authError, setAuthError] = useState<string | null>(null);
 
-  const loadPreviewData = useCallback(async () => {
+  const fetchPreviewData = useCallback(async () => {
     if (!previewCode) {
-      setError('Código de prévia inválido.');
+      setError("Código de prévia inválido.");
       setIsLoading(false);
       return;
     }
 
     setIsLoading(true);
     setError(null);
-    setAuthError(null);
-    setIsAuthenticated(false);
-    setPreviewData(null);
 
     try {
+      // 1. Find project by preview_code
       const { data: project, error: projectError } = await supabase
         .from('projects')
-        .select('id, title, client_name, client_email, package_type, status, expires_at, feedback')
+        .select('*') // Select all project fields
         .eq('preview_code', previewCode)
-        .maybeSingle();
+        .single();
 
-      if (projectError) throw projectError;
-
-      if (!project) {
-        setError('Prévia não encontrada ou código inválido.');
-        setIsLoading(false);
-        return;
+      if (projectError || !project) {
+        throw new Error(projectError?.message || "Código de prévia não encontrado ou inválido.");
       }
 
+      // Check expiration
       if (project.expires_at && new Date(project.expires_at) < new Date()) {
-        setError('Esta prévia expirou.');
-        setIsLoading(false);
-        return;
+        throw new Error("Este link de prévia expirou.");
       }
 
-      setPreviewData({
-        projectId: project.id,
-        clientName: project.client_name || 'Cliente',
-        clientEmail: project.client_email || '',
-        packageType: project.package_type || 'essencial',
-        status: (project.status as 'waiting' | 'feedback' | 'approved') || 'waiting',
-        title: project.title || 'Projeto Musical',
-        expirationDate: project.expires_at ? new Date(project.expires_at).toLocaleDateString('pt-BR') : undefined,
-        feedback: project.feedback,
-        versions: []
-      });
-
-    } catch (err: any) {
-      console.error('Error loading preview project data:', err);
-      setError(`Não foi possível carregar os dados da prévia: ${err.message}`);
-    } finally {
-      setIsLoading(false);
-    }
-  }, [previewCode]);
-
-  useEffect(() => {
-    loadPreviewData();
-  }, [loadPreviewData]);
-
-  const loadVersions = async () => {
-    if (!previewData || !isAuthenticated) return;
-
-    setIsLoading(true);
-    try {
-      const { data: versions, error: versionsError } = await supabase
+      // 2. Fetch versions for this project (including the new private link field)
+      const { data: versionsData, error: versionsError } = await supabase
         .from('project_versions')
-        .select('id, name, description, embed_url, audio_url, original_bandcamp_url, recommended, created_at')
-        .eq('project_id', previewData.projectId)
+        .select('*') // Select all version fields
+        .eq('project_id', project.id)
         .order('created_at', { ascending: false });
 
       if (versionsError) {
-        console.error('Error fetching versions:', versionsError);
-        setError('Erro ao carregar versões.');
-        return;
+        console.error("Error fetching versions:", versionsError);
+        // Don't throw, maybe show a partial view? Or throw? Let's throw for now.
+        throw new Error("Erro ao carregar as versões do projeto.");
       }
 
-      setPreviewData(prev => prev ? {
-        ...prev,
-        versions: (versions || []) as ClientPreviewVersion[]
-      } : null);
+      // Format data for the hook's return value
+      const formattedData: ClientPreviewData = {
+        projectId: project.id,
+        title: project.title,
+        clientName: project.client_name,
+        clientEmail: project.client_email, // Store the expected email
+        packageType: project.package_type,
+        status: project.status as 'waiting' | 'feedback' | 'approved',
+        versions: (versionsData || []) as ClientPreviewVersion[],
+        expirationDate: project.expires_at ? new Date(project.expires_at).toLocaleDateString('pt-BR') : null,
+        feedback: project.feedback,
+        approved_version_id: project.approved_version_id,
+      };
+
+      setPreviewData(formattedData);
 
     } catch (err: any) {
-      console.error('Error loading versions:', err);
-      setError(`Erro ao carregar versões: ${err.message}`);
+      console.error("Error in fetchPreviewData:", err);
+      setError(err.message || "Ocorreu um erro desconhecido.");
     } finally {
-      setIsLoading(false);
+      setIsLoading(false); // Loading finished even if only project data loaded (auth needed for versions)
     }
-  };
+  }, [previewCode]);
 
+  // Fetch initial project data (without versions initially shown)
+  useEffect(() => {
+    fetchPreviewData();
+  }, [fetchPreviewData]);
+
+  // --- Authentication ---
   const authenticateClient = async (emailInput: string) => {
+    if (!previewData) {
+      setAuthError("Dados do projeto não carregados.");
+      return;
+    }
+    if (!previewData.clientEmail) {
+        setAuthError("Email do cliente não configurado para este projeto."); // Security check
+        return;
+    }
+
     setIsAuthenticating(true);
     setAuthError(null);
-    try {
-      if (!previewData || !previewData.clientEmail) {
-        setAuthError('Não foi possível verificar o email. Dados do projeto incompletos.');
-        setIsAuthenticated(false);
-        return false;
-      }
 
-      const formattedEmailInput = emailInput.trim().toLowerCase();
-      const formattedStoredEmail = previewData.clientEmail.trim().toLowerCase();
-
-      if (formattedEmailInput === formattedStoredEmail) {
-        setIsAuthenticated(true);
-        await loadVersions();
-        return true;
-      } else {
-        setAuthError('Email não corresponde ao cadastrado para este projeto.');
-        setIsAuthenticated(false);
-        return false;
-      }
-    } catch (error) {
-      console.error('Authentication error:', error);
-      setAuthError('Ocorreu um erro durante a autenticação.');
+    // Simple email comparison (case-insensitive)
+    if (emailInput.trim().toLowerCase() === previewData.clientEmail.toLowerCase()) {
+      setIsAuthenticated(true);
+      // Optionally fetch versions again here if they weren't fetched initially
+      // or simply allow the UI to display the already fetched versions.
+    } else {
+      setAuthError("Email incorreto. Verifique o email fornecido.");
       setIsAuthenticated(false);
-      return false;
-    } finally {
-      setIsAuthenticating(false);
     }
+    setIsAuthenticating(false);
   };
 
-  // **Função de Feedback CORRIGIDA para incluir versão**
+  // --- Actions (Feedback / Approval) ---
   const submitFeedback = async (feedbackText: string, versionId: string, versionName: string) => {
-    if (!previewData || !isAuthenticated) {
-      return { success: false, error: 'Autenticação necessária ou dados não carregados.' };
-    }
-    if (!feedbackText || feedbackText.trim().length === 0) {
-      return { success: false, error: 'O campo de feedback não pode estar vazio.' };
-    }
-    if (!versionId) {
-       return { success: false, error: 'Nenhuma versão selecionada para o feedback.' };
-    }
+    if (!isAuthenticated || !previewData) return { success: false, error: "Não autenticado." };
 
     try {
-      // Adiciona informação da versão ao feedback
-      const feedbackWithVersion = `Feedback sobre a versão "${versionName}" (ID: ${versionId}):
-
-${feedbackText.trim()}`;
-
-      const { error } = await supabase
+      // Update project status and feedback field
+      const { error: updateError } = await supabase
         .from('projects')
         .update({
-          status: 'feedback',
-          feedback: feedbackWithVersion, // Salva o feedback com info da versão
-          updated_at: new Date().toISOString()
+          feedback: feedbackText,
+          status: 'feedback', // Set status to feedback
+          updated_at: new Date().toISOString(),
+          approved_version_id: null // Clear approval if giving new feedback
         })
         .eq('id', previewData.projectId);
 
-      if (error) throw error;
+      if (updateError) throw updateError;
 
-      setPreviewData(prev => prev ? { ...prev, status: 'feedback', feedback: feedbackWithVersion } : null);
-
-      await logProjectHistory(previewData.projectId, 'feedback_received', {
-        clientName: previewData.clientName,
+      // Log history
+      await logProjectHistory(previewData.projectId, 'client_feedback_received', {
         versionId: versionId,
         versionName: versionName,
-        feedbackLength: feedbackText.trim().length
-      });
+        feedbackSnippet: feedbackText.substring(0, 50) + (feedbackText.length > 50 ? '...' : '')
+      }); // No user ID for client actions
+
+      // Update local state to reflect change immediately
+      setPreviewData(prev => prev ? { ...prev, status: 'feedback', feedback: feedbackText, approved_version_id: null } : null);
 
       return { success: true };
     } catch (error: any) {
-      console.error('Error submitting feedback:', error);
-      return { success: false, error: `Erro ao enviar feedback: ${error.message}` };
+      console.error("Error submitting feedback:", error);
+      return { success: false, error: error.message || "Erro ao enviar feedback." };
     }
   };
 
-  // **Função de Aprovação CORRIGIDA para incluir versão**
   const approveVersion = async (versionId: string, versionName: string) => {
-    if (!previewData || !isAuthenticated) {
-      return { success: false, error: 'Autenticação necessária ou dados não carregados.' };
-    }
-     if (!versionId) {
-       return { success: false, error: 'Nenhuma versão selecionada para aprovação.' };
-    }
+    if (!isAuthenticated || !previewData) return { success: false, error: "Não autenticado." };
 
     try {
-      const approvalFeedback = `Versão "${versionName}" (ID: ${versionId}) aprovada pelo cliente.`;
-
-      const { error } = await supabase
+      // Update project status and approved version ID
+      const { error: updateError } = await supabase
         .from('projects')
         .update({
           status: 'approved',
-          feedback: approvalFeedback, // Define um feedback padrão de aprovação
+          approved_version_id: versionId,
+          feedback: `Versão "${versionName}" aprovada pelo cliente.`, // Add an approval note to feedback
           updated_at: new Date().toISOString()
         })
         .eq('id', previewData.projectId);
 
-      if (error) throw error;
+      if (updateError) throw updateError;
 
-      setPreviewData(prev => prev ? { ...prev, status: 'approved', feedback: approvalFeedback } : null);
-
-      await logProjectHistory(previewData.projectId, 'project_approved', {
-        clientName: previewData.clientName,
+      // Log history
+      await logProjectHistory(previewData.projectId, 'client_version_approved', {
         versionId: versionId,
         versionName: versionName
-      });
+      }); // No user ID for client actions
+
+      // Update local state
+      setPreviewData(prev => prev ? { ...prev, status: 'approved', approved_version_id: versionId, feedback: `Versão "${versionName}" aprovada pelo cliente.` } : null);
 
       return { success: true };
     } catch (error: any) {
-      console.error('Error approving project:', error);
-      return { success: false, error: `Erro ao aprovar projeto: ${error.message}` };
+      console.error("Error approving version:", error);
+      return { success: false, error: error.message || "Erro ao aprovar versão." };
     }
   };
 
@@ -248,7 +204,7 @@ ${feedbackText.trim()}`;
     authError,
     authenticateClient,
     submitFeedback,
-    approveVersion,
-    reloadPreviewData: loadPreviewData
+    approveVersion
   };
 };
+
