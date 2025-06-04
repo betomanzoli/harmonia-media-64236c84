@@ -58,7 +58,7 @@ const PackageSelector: React.FC<PackageSelectorProps> = ({
           <div className="grid gap-1.5">
             <Label htmlFor="premium" className="font-medium">Pacote Premium - R${packagePrices.premium}</Label>
             <p className="text-sm text-gray-400">
-              Melhor opção para empresas e projetos corporativos. Inclui composição totalmente personalizada, revisões ilimitadas (até aprovação), cessão total dos direitos autorais, cinco versões para escolha, registro na Biblioteca Nacional, certificado blockchain, consultoria de 30 minutos, entrega prioritária, suporte VIP por WhatsApp, partitura em formato MusicXML.
+              Melhor opção para empresas e projetos corporativos. Inclui composição totalmente personalizada, revisões ilimitadas (até aprovação)*, cessão total dos direitos autorais, cinco versões para escolha, registro na Biblioteca Nacional, consultoria de 30 minutos, entrega prioritária, suporte VIP por WhatsApp, partitura em formato MusicXML.
             </p>
           </div>
         </div>

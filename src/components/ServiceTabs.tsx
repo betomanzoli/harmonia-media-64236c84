@@ -65,11 +65,10 @@ const ServiceTabs: React.FC<ServiceTabsProps> = ({ activeTab, setActiveTab }) =>
           description="Melhor opção para empresas e projetos corporativos."
           features={[
             "Composição totalmente personalizada",
-            "Revisões ilimitadas (até aprovação)",
+            "Revisões ilimitadas (até aprovação)*",
             "Cessão total dos direitos autorais",
             "Cinco versões para escolha",
             "Registro na Biblioteca Nacional",
-            "Certificado blockchain",
             "Consultoria de 30 minutos",
             "Entrega prioritária",
             "Suporte VIP por WhatsApp",
@@ -122,11 +121,10 @@ const ServiceTabs: React.FC<ServiceTabsProps> = ({ activeTab, setActiveTab }) =>
           description="Melhor opção para empresas e projetos corporativos."
           features={[
             "Composição totalmente personalizada",
-            "Revisões ilimitadas (até aprovação)",
+            "Revisões ilimitadas (até aprovação)*",
             "Cessão total dos direitos autorais",
             "Cinco versões para escolha",
             "Registro na Biblioteca Nacional",
-            "Certificado blockchain",
             "Consultoria de 30 minutos",
             "Entrega prioritária",
             "Suporte VIP por WhatsApp",

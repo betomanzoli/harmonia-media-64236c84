@@ -150,7 +150,7 @@ const Packages: React.FC = () => {
                   </li>
                   <li className="flex items-start">
                     <Check className="h-5 w-5 text-green-500 mr-2 flex-shrink-0 mt-0.5" />
-                    <span>Revisões ilimitadas (até aprovação)</span>
+                    <span>Revisões ilimitadas (até aprovação)*</span>
                   </li>
                   <li className="flex items-start">
                     <Check className="h-5 w-5 text-green-500 mr-2 flex-shrink-0 mt-0.5" />
@@ -163,10 +163,6 @@ const Packages: React.FC = () => {
                   <li className="flex items-start">
                     <Check className="h-5 w-5 text-green-500 mr-2 flex-shrink-0 mt-0.5" />
                     <span>Registro na Biblioteca Nacional</span>
-                  </li>
-                  <li className="flex items-start">
-                    <Check className="h-5 w-5 text-green-500 mr-2 flex-shrink-0 mt-0.5" />
-                    <span>Certificado blockchain</span>
                   </li>
                   <li className="flex items-start">
                     <Check className="h-5 w-5 text-green-500 mr-2 flex-shrink-0 mt-0.5" />
@@ -214,6 +210,10 @@ const Packages: React.FC = () => {
                   <li className="flex items-start">
                     <AlertCircle className="h-4 w-4 text-orange-500 mr-2 mt-0.5" />
                     <span>Para projetos com necessidades específicas, entre em contato para um orçamento personalizado.</span>
+                  </li>
+                  <li className="flex items-start">
+                    <AlertCircle className="h-4 w-4 text-orange-500 mr-2 mt-0.5" />
+                    <span>* As revisões ilimitadas do Pacote Premium são válidas por 30 dias após a primeira entrega.</span>
                   </li>
                 </ul>
               </div>
