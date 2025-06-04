@@ -1,7 +1,7 @@
 
 import React from 'react';
 import Logo from './Logo';
-import { MessageCircle, Mail, Shield, ChevronUp, Clock, FileCheck, Music, Package, DollarSign, HelpCircle } from 'lucide-react';
+import { MessageCircle, Mail, Shield, ChevronUp, Clock, FileCheck, Music, Package, DollarSign, HelpCircle, Instagram } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useNavigate } from 'react-router-dom';
 import { siteConfig } from '@/config/site';
@@ -23,6 +23,10 @@ const Footer: React.FC = () => {
 
   const handleEmailContact = () => {
     window.open(`mailto:${siteConfig.contact.email}`, '_blank');
+  };
+
+  const handleInstagramClick = () => {
+    window.open('https://instagram.com/harmonia.media', '_blank');
   };
 
   const handlePaymentClick = () => {
@@ -116,6 +120,13 @@ const Footer: React.FC = () => {
               >
                 <Mail className="w-5 h-5 text-harmonia-green shrink-0" />
                 <span>{siteConfig.contact.email}</span>
+              </div>
+              <div 
+                className="flex gap-2 text-gray-400 cursor-pointer hover:text-harmonia-green transition-colors"
+                onClick={handleInstagramClick}
+              >
+                <Instagram className="w-5 h-5 text-harmonia-green shrink-0" />
+                <span>@harmonia.media</span>
               </div>
             </div>
             

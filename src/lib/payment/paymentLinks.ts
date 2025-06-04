@@ -1,4 +1,3 @@
-
 /**
  * Payment links for different packages and discount codes
  */
@@ -53,7 +52,17 @@ export const packagePaymentLinks: Record<string, PackagePaymentLinks> = {
 
 // Extra services payment links (for future implementation)
 export const extraServicePaymentLinks: Record<string, PaymentLinkData> = {
-  // Map each service ID to its payment link
+  // New Multiestilo services
+  'Multiestilo': {
+    url: 'https://mpago.la/23WDA5a',
+    preferenceId: '178571987-5ed445de-ebe1-47d0-aaa8-1bb544bc5c88'
+  },
+  'Multiestilo+': {
+    url: 'https://mpago.la/21iE6Zp',
+    preferenceId: '178571987-2be0a4e2-5c8e-4e64-b554-d4068d18d23a'
+  },
+  
+  // Existing services
   'Revisão Extra': {
     url: 'https://mpago.la/23WDA5a',
     preferenceId: '178571987-5ed445de-ebe1-47d0-aaa8-1bb544bc5c88'
@@ -75,11 +84,11 @@ export const extraServicePaymentLinks: Record<string, PaymentLinkData> = {
     preferenceId: '178571987-2be0a4e2-5c8e-4e64-b554-d4068d18d23a'
   },
   'Entrega Expressa': {
-    url: 'https://mpago.la/2bJ7gs5',  // Updated to R$149 payment link
+    url: 'https://mpago.la/2bJ7gs5',
     preferenceId: '178571987-a6e460f7-4f43-4010-b1ec-fe7789090467'
   },
   'Partituras MusicXML/PDF': {
-    url: 'https://mpago.la/2bJ7gs5',  // Updated to R$149 payment link
+    url: 'https://mpago.la/2bJ7gs5',
     preferenceId: '178571987-a6e460f7-4f43-4010-b1ec-fe7789090467'
   },
   'Composição sem IA (letra)': {
@@ -87,14 +96,15 @@ export const extraServicePaymentLinks: Record<string, PaymentLinkData> = {
     preferenceId: '178571987-d2c262a6-0251-40cb-99ed-37415eb90c1d'
   },
   'Composição sem IA (letra + melodia)': {
-    url: 'https://mpago.li/1gjwJZY', // Updated to R$1499 payment link
+    url: 'https://mpago.li/1gjwJZY',
     preferenceId: '178571987-1b5c6c1a-2c8b-4c9a-b67c-07519f43382f'
   },
   'Composição sem IA (letra + melodia + gravação)': {
     url: 'https://wa.me/5511920585072?text=Olá,%20tenho%20interesse%20no%20serviço%20de%20Composição%20sem%20IA%20completa%20(letra%20+%20melodia%20+%20gravação).%20Poderia%20me%20dar%20mais%20informações?',
     preferenceId: 'whatsapp-contact'
   },
-  // IDs de serviço legados
+  
+  // Legacy service IDs
   'service79': {
     url: 'https://mpago.la/23WDA5a',
     preferenceId: '178571987-5ed445de-ebe1-47d0-aaa8-1bb544bc5c88'

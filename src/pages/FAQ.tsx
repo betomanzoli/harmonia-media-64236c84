@@ -41,6 +41,14 @@ const FAQ: React.FC = () => {
       answer: "Não. Por ética e respeito aos direitos autorais, não usamos vozes de artistas famosos. Prezamos pela originalidade e legalidade."
     },
     {
+      question: "Posso pedir uma música em múltiplos estilos no mesmo pacote?",
+      answer: "Sim! Oferecemos o \"Pacote Multiestilo\" como serviço extra:\nPacote Essencial/Profissional/Premium: R$ 79 por estilo adicional (3 versões do mesmo texto em novo estilo)"
+    },
+    {
+      question: "Como funciona o \"Pacote Multiestilo\"?",
+      answer: "É ideal para quem quer:\nTestar a mesma letra em diferentes gêneros (ex: pop, sertanejo, rock)\nTer versões alternativas para ocasiões específicas (ex: versão acústica para cerimônia, versão animada para festa)\nComparar abordagens criativas\n\nPasso a passo:\nEscolha o pacote base (Essencial/Profissional/Premium)\nNos informe quantos \"Multiestilos\" quiser (enviamos o link de pagamento específico)\nReceba versões independentes (cada estilo é uma música separada)"
+    },
+    {
       question: "Como recebo minha música?",
       answer: "Você recebe o áudio em alta qualidade, a letra e um certificado digital de autoria, tudo por e-mail ou área do cliente. Nos pacotes Profissional e Premium, também pode receber stems separados, documentação de similaridade e, no Premium, registro em blockchain e na Biblioteca Nacional."
     },
