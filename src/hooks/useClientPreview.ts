@@ -17,6 +17,7 @@ export interface ClientPreviewData {
   expirationDate?: string | null; // Formatted expiration date
   feedback?: string | null;
   approved_version_id?: string | null;
+  adminMessage?: string | null; // Mensagem do admin quando voltar para aguardando
 }
 
 // Interface for versions specific to client preview (includes private link)
@@ -73,6 +74,25 @@ export const useClientPreview = (previewCode: string | undefined) => {
         throw new Error("Erro ao carregar as versões do projeto.");
       }
 
+      // 3. Fetch latest admin message if project status is waiting
+      let adminMessage = null;
+      if (project.status === 'waiting') {
+        const { data: historyData, error: historyError } = await supabase
+          .from('project_history')
+          .select('details')
+          .eq('project_id', project.id)
+          .eq('action_type', 'status_changed_to_waiting')
+          .order('created_at', { ascending: false })
+          .limit(1);
+
+        if (!historyError && historyData && historyData.length > 0) {
+          const details = historyData[0].details as any;
+          if (details?.messageForClient) {
+            adminMessage = details.messageForClient;
+          }
+        }
+      }
+
       // Format data for the hook's return value
       const formattedData: ClientPreviewData = {
         projectId: project.id,
@@ -85,6 +105,7 @@ export const useClientPreview = (previewCode: string | undefined) => {
         expirationDate: project.expires_at ? new Date(project.expires_at).toLocaleDateString('pt-BR') : null,
         feedback: project.feedback,
         approved_version_id: (project as any).approved_version_id || null, // Cast to any to handle missing type
+        adminMessage: adminMessage
       };
 
       setPreviewData(formattedData);
@@ -171,7 +192,7 @@ export const useClientPreview = (previewCode: string | undefined) => {
       }); // No user ID for client actions
 
       // Update local state to reflect change immediately
-      setPreviewData(prev => prev ? { ...prev, status: 'feedback', feedback: updatedFeedback, approved_version_id: null } : null);
+      setPreviewData(prev => prev ? { ...prev, status: 'feedback', feedback: updatedFeedback, approved_version_id: null, adminMessage: null } : null);
 
       return { success: true };
     } catch (error: any) {
@@ -222,7 +243,7 @@ export const useClientPreview = (previewCode: string | undefined) => {
       }); // No user ID for client actions
 
       // Update local state
-      setPreviewData(prev => prev ? { ...prev, status: 'approved', approved_version_id: versionId, feedback: updatedFeedback } : null);
+      setPreviewData(prev => prev ? { ...prev, status: 'approved', approved_version_id: versionId, feedback: updatedFeedback, adminMessage: null } : null);
 
       return { success: true };
     } catch (error: any) {

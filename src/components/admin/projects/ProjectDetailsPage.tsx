@@ -9,6 +9,7 @@ import NewAdminLayout from '@/components/admin/layout/NewAdminLayout';
 import BandcampVersionCard from './BandcampVersionCard';
 import AddVersionDialog from './AddVersionDialog';
 import ProjectHistory from './ProjectHistory';
+import BackToWaitingDialog from './BackToWaitingDialog';
 import { useProjects } from '@/hooks/admin/useProjects';
 import { logProjectHistory } from '@/utils/historyLogger';
 
@@ -19,6 +20,8 @@ const ProjectDetailsPage: React.FC = () => {
   const { projects, isLoading, loadProjects, deleteVersion, updateProject } = useProjects();
   
   const [showAddVersionDialog, setShowAddVersionDialog] = useState(false);
+  const [showBackToWaitingDialog, setShowBackToWaitingDialog] = useState(false);
+  const [isUpdatingStatus, setIsUpdatingStatus] = useState(false);
 
   const project = projects.find(p => p.id === projectId);
 
@@ -52,8 +55,10 @@ const ProjectDetailsPage: React.FC = () => {
     }
   };
 
-  const handleBackToWaiting = async () => {
+  const handleBackToWaiting = async (reason: string) => {
     if (!project) return;
+
+    setIsUpdatingStatus(true);
 
     const result = await updateProject(project.id, {
       status: 'waiting',
@@ -61,16 +66,20 @@ const ProjectDetailsPage: React.FC = () => {
     });
 
     if (result.success) {
-      // Registrar no histórico
+      // Registrar no histórico com a justificativa
       await logProjectHistory(project.id, 'status_changed_to_waiting', {
         previousStatus: project.status,
-        reason: 'Admin reset status to allow new feedback'
+        reason: reason,
+        adminAction: true,
+        messageForClient: `Projeto retornado para avaliação: ${reason}`
       });
 
       toast({
         title: "Status atualizado",
         description: "Projeto voltou para status 'Aguardando'. Cliente pode enviar novo feedback.",
       });
+
+      setShowBackToWaitingDialog(false);
     } else {
       toast({
         title: "Erro ao atualizar status",
@@ -78,6 +87,8 @@ const ProjectDetailsPage: React.FC = () => {
         variant: "destructive"
       });
     }
+
+    setIsUpdatingStatus(false);
   };
 
   const getStatusBadge = (status: string) => {
@@ -253,11 +264,12 @@ const ProjectDetailsPage: React.FC = () => {
               {project.status !== 'waiting' && (
                 <Button
                   variant="outline"
-                  onClick={handleBackToWaiting}
+                  onClick={() => setShowBackToWaitingDialog(true)}
                   className="border-blue-500 text-blue-500 hover:bg-blue-50"
+                  disabled={isUpdatingStatus}
                 >
                   <RotateCcw className="w-4 h-4 mr-2" />
-                  Voltar para Aguardando
+                  {isUpdatingStatus ? 'Atualizando...' : 'Voltar para Aguardando'}
                 </Button>
               )}
             </div>
@@ -316,6 +328,14 @@ const ProjectDetailsPage: React.FC = () => {
           onOpenChange={setShowAddVersionDialog}
           projectId={project.id}
           packageType={project.package_type}
+        />
+
+        {/* Back to Waiting Dialog */}
+        <BackToWaitingDialog
+          isOpen={showBackToWaitingDialog}
+          onOpenChange={setShowBackToWaitingDialog}
+          onConfirm={handleBackToWaiting}
+          isLoading={isUpdatingStatus}
         />
       </div>
     </NewAdminLayout>
