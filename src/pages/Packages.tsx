@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import Header from '@/components/Header';
@@ -6,16 +5,12 @@ import Footer from '@/components/Footer';
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Check, Info, AlertCircle } from 'lucide-react';
-
 const Packages: React.FC = () => {
   const navigate = useNavigate();
-
   const handleSelectPackage = (packageId: string) => {
     navigate(`/pagamento/${packageId}`);
   };
-
-  return (
-    <div className="min-h-screen bg-background text-foreground">
+  return <div className="min-h-screen bg-background text-foreground">
       <Header />
       <main className="pt-24 pb-20 px-6 md:px-10">
         <div className="max-w-6xl mx-auto">
@@ -67,10 +62,7 @@ const Packages: React.FC = () => {
                 </ul>
               </CardContent>
               <CardFooter>
-                <Button 
-                  className="w-full" 
-                  onClick={() => handleSelectPackage('essencial')}
-                >
+                <Button className="w-full" onClick={() => handleSelectPackage('essencial')}>
                   Selecionar
                 </Button>
               </CardFooter>
@@ -125,11 +117,7 @@ const Packages: React.FC = () => {
                 </ul>
               </CardContent>
               <CardFooter>
-                <Button 
-                  variant="default" 
-                  className="w-full bg-harmonia-green hover:bg-harmonia-green/90" 
-                  onClick={() => handleSelectPackage('profissional')}
-                >
+                <Button variant="default" className="w-full bg-harmonia-green hover:bg-harmonia-green/90" onClick={() => handleSelectPackage('profissional')}>
                   Selecionar
                 </Button>
               </CardFooter>
@@ -183,17 +171,14 @@ const Packages: React.FC = () => {
                 </ul>
               </CardContent>
               <CardFooter>
-                <Button 
-                  className="w-full" 
-                  onClick={() => handleSelectPackage('premium')}
-                >
+                <Button className="w-full" onClick={() => handleSelectPackage('premium')}>
                   Selecionar
                 </Button>
               </CardFooter>
             </Card>
           </div>
           
-          <div className="bg-gray-50 p-6 rounded-lg">
+          <div className="p-6 rounded-lg bg-zinc-900">
             <div className="flex items-start">
               <Info className="h-5 w-5 text-blue-500 mr-2 mt-1" />
               <div>
@@ -222,8 +207,6 @@ const Packages: React.FC = () => {
         </div>
       </main>
       <Footer />
-    </div>
-  );
+    </div>;
 };
-
 export default Packages;
