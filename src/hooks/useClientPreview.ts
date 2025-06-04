@@ -133,11 +133,27 @@ export const useClientPreview = (previewCode: string | undefined) => {
     if (!isAuthenticated || !previewData) return { success: false, error: "Não autenticado." };
 
     try {
+      // Buscar o feedback atual do projeto para preservar histórico
+      const { data: currentProject, error: fetchError } = await supabase
+        .from('projects')
+        .select('feedback')
+        .eq('id', previewData.projectId)
+        .single();
+
+      if (fetchError) throw fetchError;
+
+      // Criar novo feedback preservando o anterior (se existir)
+      let updatedFeedback = feedbackText;
+      if (currentProject?.feedback && currentProject.feedback.trim() !== '') {
+        // Se já existe feedback, adicionar o novo como uma continuação
+        updatedFeedback = `${currentProject.feedback}\n\n--- Novo Feedback ---\n${feedbackText}`;
+      }
+
       // Update project status and feedback field
       const { error: updateError } = await supabase
         .from('projects')
         .update({
-          feedback: feedbackText,
+          feedback: updatedFeedback,
           status: 'feedback', // Set status to feedback
           updated_at: new Date().toISOString(),
           approved_version_id: null // Clear approval if giving new feedback
@@ -150,11 +166,12 @@ export const useClientPreview = (previewCode: string | undefined) => {
       await logProjectHistory(previewData.projectId, 'client_feedback_received', {
         versionId: versionId,
         versionName: versionName,
-        feedbackSnippet: feedbackText.substring(0, 50) + (feedbackText.length > 50 ? '...' : '')
+        feedbackSnippet: feedbackText.substring(0, 50) + (feedbackText.length > 50 ? '...' : ''),
+        isAdditionalFeedback: currentProject?.feedback ? true : false
       }); // No user ID for client actions
 
       // Update local state to reflect change immediately
-      setPreviewData(prev => prev ? { ...prev, status: 'feedback', feedback: feedbackText, approved_version_id: null } : null);
+      setPreviewData(prev => prev ? { ...prev, status: 'feedback', feedback: updatedFeedback, approved_version_id: null } : null);
 
       return { success: true };
     } catch (error: any) {
@@ -167,13 +184,31 @@ export const useClientPreview = (previewCode: string | undefined) => {
     if (!isAuthenticated || !previewData) return { success: false, error: "Não autenticado." };
 
     try {
+      // Buscar o feedback atual do projeto para preservar
+      const { data: currentProject, error: fetchError } = await supabase
+        .from('projects')
+        .select('feedback')
+        .eq('id', previewData.projectId)
+        .single();
+
+      if (fetchError) throw fetchError;
+
+      // Criar mensagem de aprovação preservando feedback anterior
+      const approvalMessage = `Versão "${versionName}" aprovada pelo cliente.`;
+      let updatedFeedback = approvalMessage;
+      
+      if (currentProject?.feedback && currentProject.feedback.trim() !== '') {
+        // Se já existe feedback, adicionar a aprovação como continuação
+        updatedFeedback = `${currentProject.feedback}\n\n--- Aprovação ---\n${approvalMessage}`;
+      }
+
       // Update project status and approved version ID
       const { error: updateError } = await supabase
         .from('projects')
         .update({
           status: 'approved',
           approved_version_id: versionId,
-          feedback: `Versão "${versionName}" aprovada pelo cliente.`, // Add an approval note to feedback
+          feedback: updatedFeedback,
           updated_at: new Date().toISOString()
         })
         .eq('id', previewData.projectId);
@@ -187,7 +222,7 @@ export const useClientPreview = (previewCode: string | undefined) => {
       }); // No user ID for client actions
 
       // Update local state
-      setPreviewData(prev => prev ? { ...prev, status: 'approved', approved_version_id: versionId, feedback: `Versão "${versionName}" aprovada pelo cliente.` } : null);
+      setPreviewData(prev => prev ? { ...prev, status: 'approved', approved_version_id: versionId, feedback: updatedFeedback } : null);
 
       return { success: true };
     } catch (error: any) {

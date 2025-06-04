@@ -1,22 +1,22 @@
-
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { useToast } from '@/hooks/use-toast';
-import { ArrowLeft, Plus, User, Mail, Phone, Calendar, ExternalLink } from 'lucide-react';
+import { ArrowLeft, Plus, User, Mail, Phone, Calendar, ExternalLink, RotateCcw } from 'lucide-react';
 import NewAdminLayout from '@/components/admin/layout/NewAdminLayout';
 import BandcampVersionCard from './BandcampVersionCard';
 import AddVersionDialog from './AddVersionDialog';
 import ProjectHistory from './ProjectHistory';
 import { useProjects } from '@/hooks/admin/useProjects';
+import { logProjectHistory } from '@/utils/historyLogger';
 
 const ProjectDetailsPage: React.FC = () => {
   const { projectId } = useParams<{ projectId: string }>();
   const navigate = useNavigate();
   const { toast } = useToast();
-  const { projects, isLoading, loadProjects, deleteVersion } = useProjects();
+  const { projects, isLoading, loadProjects, deleteVersion, updateProject } = useProjects();
   
   const [showAddVersionDialog, setShowAddVersionDialog] = useState(false);
 
@@ -46,6 +46,34 @@ const ProjectDetailsPage: React.FC = () => {
     } else {
       toast({
         title: "Erro ao remover versão",
+        description: result.error || "Ocorreu um erro inesperado.",
+        variant: "destructive"
+      });
+    }
+  };
+
+  const handleBackToWaiting = async () => {
+    if (!project) return;
+
+    const result = await updateProject(project.id, {
+      status: 'waiting',
+      approved_version_id: null // Limpar aprovação anterior se existir
+    });
+
+    if (result.success) {
+      // Registrar no histórico
+      await logProjectHistory(project.id, 'status_changed_to_waiting', {
+        previousStatus: project.status,
+        reason: 'Admin reset status to allow new feedback'
+      });
+
+      toast({
+        title: "Status atualizado",
+        description: "Projeto voltou para status 'Aguardando'. Cliente pode enviar novo feedback.",
+      });
+    } else {
+      toast({
+        title: "Erro ao atualizar status",
         description: result.error || "Ocorreu um erro inesperado.",
         variant: "destructive"
       });
@@ -220,6 +248,18 @@ const ProjectDetailsPage: React.FC = () => {
                 <ExternalLink className="w-4 h-4 mr-2" />
                 Copiar Link Cliente
               </Button>
+
+              {/* Botão para voltar ao status de aguardando - só aparece se não estiver aguardando */}
+              {project.status !== 'waiting' && (
+                <Button
+                  variant="outline"
+                  onClick={handleBackToWaiting}
+                  className="border-blue-500 text-blue-500 hover:bg-blue-50"
+                >
+                  <RotateCcw className="w-4 h-4 mr-2" />
+                  Voltar para Aguardando
+                </Button>
+              )}
             </div>
           </CardContent>
         </Card>
