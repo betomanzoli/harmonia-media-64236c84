@@ -2,7 +2,8 @@ import React, { useState, useEffect } from 'react';
 import { Routes, Route, useLocation } from 'react-router-dom';
 import ScrollToTop from './components/ScrollToTop';
 import ChatbotButton from './components/chatbot/ChatbotButton';
-import applyDOMPatches from './utils/domPatches'; // ✅ FIXED IMPORT
+import GlobalBandcampPlayer from './components/GlobalBandcampPlayer';
+import applyDOMPatches from './utils/domPatches';
 
 // Import pages
 import HomePage from './pages/HomePage';
@@ -45,6 +46,7 @@ import ProtectedRoute from './components/admin/layout/ProtectedRoute';
 const App: React.FC = () => {
   const location = useLocation();
   const [showChatbot, setShowChatbot] = useState(true);
+  const [showBandcampPlayer, setShowBandcampPlayer] = useState(true);
 
   // ✅ APLICAR PATCHES DOM PARA PREVENIR TELA PRETA:
   useEffect(() => {
@@ -60,6 +62,7 @@ const App: React.FC = () => {
   useEffect(() => {
     const isAdminRoute = location.pathname.startsWith('/admin');
     setShowChatbot(!isAdminRoute);
+    setShowBandcampPlayer(!isAdminRoute);
   }, [location.pathname]);
 
   return (
@@ -111,6 +114,7 @@ const App: React.FC = () => {
       </Routes>
 
       {showChatbot && <ChatbotButton />}
+      {showBandcampPlayer && <GlobalBandcampPlayer />}
     </div>
   );
 };
