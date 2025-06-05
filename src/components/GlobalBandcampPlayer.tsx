@@ -56,8 +56,8 @@ const GlobalBandcampPlayer: React.FC = () => {
         {!isMinimized && (
           <div className="w-80">
             <iframe 
-              style={{ border: 0, width: '100%', height: '42px' }} 
-              src="https://bandcamp.com/EmbeddedPlayer/album=2774072802/size=small/bgcol=ffffff/linkcol=2ebd35/transparent=true/" 
+              style={{ border: 0, width: '100%', height: '120px' }} 
+              src="https://bandcamp.com/EmbeddedPlayer/album=2774072802/size=large/bgcol=ffffff/linkcol=2ebd35/tracklist=false/artwork=small/transparent=true/" 
               seamless
               title="Promocionais - harmonIA by harmonIA"
             >
