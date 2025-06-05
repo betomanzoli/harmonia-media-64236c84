@@ -4,7 +4,7 @@ import Header from '@/components/Header';
 import Footer from '@/components/Footer';
 import Portfolio from '@/components/Portfolio';
 import { Button } from "@/components/ui/button";
-import { ArrowLeft, Phone } from 'lucide-react';
+import { ArrowLeft, Phone, ExternalLink } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { siteConfig } from '@/config/site';
 
@@ -16,6 +16,10 @@ const PortfolioPage: React.FC = () => {
     const message = "Olá! Gostaria de conhecer mais sobre suas músicas personalizadas.";
     const whatsappUrl = `https://wa.me/${phoneNumber}?text=${encodeURIComponent(message)}`;
     window.open(whatsappUrl, '_blank');
+  };
+
+  const handleBandcampVisit = () => {
+    window.open('https://harmonia-media.bandcamp.com/', '_blank');
   };
 
   return (
@@ -50,30 +54,123 @@ const PortfolioPage: React.FC = () => {
                 Fale conosco pelo WhatsApp para exemplos
               </Button>
               
-              <div className="flex flex-col lg:flex-row gap-6 justify-center items-start mt-6">
-                <div className="text-center">
-                  <h3 className="text-lg font-semibold mb-3">Promocionais</h3>
-                  <iframe 
-                    style={{ border: 0, width: '400px', height: '472px' }} 
-                    src="https://bandcamp.com/EmbeddedPlayer/album=2774072802/size=large/bgcol=ffffff/linkcol=2ebd35/artwork=small/transparent=true/" 
-                    seamless
-                    title="Promocionais by harmonIA"
-                  >
-                    <a href="https://harmonia-media.bandcamp.com/album/promocionais">Promocionais by harmonIA</a>
-                  </iframe>
+              {/* Músicas à Venda */}
+              <div className="mt-8">
+                <h2 className="text-2xl font-bold mb-6">Músicas à Venda</h2>
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 justify-items-center">
+                  <div className="text-center">
+                    <h3 className="text-lg font-semibold mb-3">Diversos (Músicas à VENDA)</h3>
+                    <iframe 
+                      style={{ border: 0, width: '350px', height: '350px' }} 
+                      src="https://bandcamp.com/EmbeddedPlayer/album=2246667846/size=large/bgcol=ffffff/linkcol=2ebd35/minimal=true/transparent=true/" 
+                      seamless
+                      title="Diversos (Músicas à VENDA) by harmonIA"
+                    >
+                      <a href="https://harmonia-media.bandcamp.com/album/diversos-m-sicas-venda">Diversos (Músicas à VENDA) by harmonIA</a>
+                    </iframe>
+                  </div>
+                  
+                  <div className="text-center">
+                    <h3 className="text-lg font-semibold mb-3">Músicas em Temas (À VENDA)</h3>
+                    <iframe 
+                      style={{ border: 0, width: '350px', height: '350px' }} 
+                      src="https://bandcamp.com/EmbeddedPlayer/album=2818510847/size=large/bgcol=ffffff/linkcol=2ebd35/minimal=true/transparent=true/" 
+                      seamless
+                      title="Músicas em Temas (À VENDA) by harmonIA"
+                    >
+                      <a href="https://harmonia-media.bandcamp.com/album/m-sicas-em-temas-venda">Músicas em Temas (À VENDA) by harmonIA</a>
+                    </iframe>
+                  </div>
+                  
+                  <div className="text-center">
+                    <h3 className="text-lg font-semibold mb-3">Mix de Estilos 01 (Músicas à VENDA)</h3>
+                    <iframe 
+                      style={{ border: 0, width: '350px', height: '350px' }} 
+                      src="https://bandcamp.com/EmbeddedPlayer/album=3897753197/size=large/bgcol=ffffff/linkcol=2ebd35/minimal=true/transparent=true/" 
+                      seamless
+                      title="Mix de Estilos 01 (Músicas à VENDA) by harmonIA"
+                    >
+                      <a href="https://harmonia-media.bandcamp.com/album/mix-de-estilos-01-m-sicas-venda">Mix de Estilos 01 (Músicas à VENDA) by harmonIA</a>
+                    </iframe>
+                  </div>
+                  
+                  <div className="text-center">
+                    <h3 className="text-lg font-semibold mb-3">Mix de Estilos 02 (Músicas à VENDA)</h3>
+                    <iframe 
+                      style={{ border: 0, width: '350px', height: '350px' }} 
+                      src="https://bandcamp.com/EmbeddedPlayer/album=1726603412/size=large/bgcol=ffffff/linkcol=2ebd35/minimal=true/transparent=true/" 
+                      seamless
+                      title="Mix de Estilos 02 (Músicas à VENDA) by harmonIA"
+                    >
+                      <a href="https://harmonia-media.bandcamp.com/album/mix-de-estilos-02-m-sicas-venda">Mix de Estilos 02 (Músicas à VENDA) by harmonIA</a>
+                    </iframe>
+                  </div>
+                  
+                  <div className="text-center">
+                    <h3 className="text-lg font-semibold mb-3">Mix de Estilos 03 (Músicas À VENDA)</h3>
+                    <iframe 
+                      style={{ border: 0, width: '350px', height: '350px' }} 
+                      src="https://bandcamp.com/EmbeddedPlayer/album=1687402368/size=large/bgcol=ffffff/linkcol=2ebd35/minimal=true/transparent=true/" 
+                      seamless
+                      title="Mix de Estilos 03 (Músicas À VENDA) by harmonIA"
+                    >
+                      <a href="https://harmonia-media.bandcamp.com/album/mix-de-estilos-03-m-sicas-venda">Mix de Estilos 03 (Músicas À VENDA) by harmonIA</a>
+                    </iframe>
+                  </div>
                 </div>
-                
-                <div className="text-center">
-                  <h3 className="text-lg font-semibold mb-3">Mix de Estilos</h3>
-                  <iframe 
-                    style={{ border: 0, width: '400px', height: '472px' }} 
-                    src="https://bandcamp.com/EmbeddedPlayer/album=3897753197/size=large/bgcol=ffffff/linkcol=2ebd35/artwork=small/transparent=true/" 
-                    seamless
-                    title="Portifólio (Mix de Estilos) by harmonIA"
-                  >
-                    <a href="https://harmonia-media.bandcamp.com/album/portif-lio-mix-de-estilos">Portifólio (Mix de Estilos) by harmonIA</a>
-                  </iframe>
+              </div>
+
+              {/* Promocionais */}
+              <div className="mt-12">
+                <h2 className="text-2xl font-bold mb-6">Promocionais</h2>
+                <div className="flex flex-wrap gap-6 justify-center">
+                  <div className="text-center">
+                    <h3 className="text-lg font-semibold mb-3">Promocionais (Estilos 01)</h3>
+                    <iframe 
+                      style={{ border: 0, width: '170px', height: '170px' }} 
+                      src="https://bandcamp.com/EmbeddedPlayer/album=3450186390/size=large/bgcol=ffffff/linkcol=2ebd35/minimal=true/transparent=true/" 
+                      seamless
+                      title="Promocionais (Estilos 01) by harmonIA"
+                    >
+                      <a href="https://harmonia-media.bandcamp.com/album/promocionais-estilos-01">Promocionais (Estilos 01) by harmonIA</a>
+                    </iframe>
+                  </div>
+                  
+                  <div className="text-center">
+                    <h3 className="text-lg font-semibold mb-3">Promocionais (Estilos 02)</h3>
+                    <iframe 
+                      style={{ border: 0, width: '170px', height: '170px' }} 
+                      src="https://bandcamp.com/EmbeddedPlayer/album=3158747959/size=large/bgcol=ffffff/linkcol=2ebd35/minimal=true/transparent=true/" 
+                      seamless
+                      title="Promocionais (Estilos 02) by harmonIA"
+                    >
+                      <a href="https://harmonia-media.bandcamp.com/album/promocionais-estilos-02">Promocionais (Estilos 02) by harmonIA</a>
+                    </iframe>
+                  </div>
+                  
+                  <div className="text-center">
+                    <h3 className="text-lg font-semibold mb-3">Promocionais - harmonIA</h3>
+                    <iframe 
+                      style={{ border: 0, width: '170px', height: '170px' }} 
+                      src="https://bandcamp.com/EmbeddedPlayer/album=2774072802/size=large/bgcol=ffffff/linkcol=2ebd35/minimal=true/transparent=true/" 
+                      seamless
+                      title="Promocionais - harmonIA by harmonIA"
+                    >
+                      <a href="https://harmonia-media.bandcamp.com/album/promocionais-harmonia">Promocionais - harmonIA by harmonIA</a>
+                    </iframe>
+                  </div>
                 </div>
+              </div>
+
+              {/* Botão para o Bandcamp */}
+              <div className="mt-8">
+                <Button 
+                  onClick={handleBandcampVisit}
+                  className="bg-blue-600 hover:bg-blue-700 text-white flex items-center gap-2 mx-auto"
+                >
+                  <ExternalLink className="w-4 h-4" />
+                  Visite nosso Bandcamp
+                </Button>
               </div>
             </div>
           </div>
