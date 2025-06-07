@@ -4,7 +4,7 @@ import { useNavigate } from 'react-router-dom';
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
 import { Button } from "@/components/ui/button";
-import { ArrowLeft, ExternalLink, Check, AlertCircle } from 'lucide-react';
+import { ArrowLeft, ExternalLink, Check, AlertCircle, Zap } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 
@@ -13,12 +13,31 @@ const Briefing: React.FC = () => {
 
   const packages = [
     {
+      name: 'Pacote Express',
+      price: 'R$ 79,00',
+      description: 'Para quem quer resultados rápidos.',
+      features: [
+        'COM LETRA: 6 versões da SUA letra em estilos diferentes',
+        'SEM LETRA: 3 letras diferentes + 2 versões de cada',
+        'Arquivos de áudio em MP3',
+        'Baseado em 1 briefing simples',
+        'Prazo: 2-3 dias úteis',
+        'Uso pessoal não-comercial',
+        'Ideal para presentes e testes'
+      ],
+      formUrl: 'https://forms.office.com/r/xZcAd8xgrN',
+      color: 'border-yellow-200 hover:border-yellow-300',
+      icon: Zap,
+      iconColor: 'text-yellow-500'
+    },
+    {
       name: 'Pacote Essencial',
       price: 'R$ 219,00',
-      description: 'Ideal para presentes emocionais rápidos.',
+      description: 'Ideal para presentes emocionais.',
       features: [
         'Composição musical única',
         'Uma revisão gratuita',
+        'Masterização',
         'Uso exclusivamente pessoal',
         'Entrega digital em até 7 dias',
         'Suporte por e-mail',
@@ -39,7 +58,7 @@ const Briefing: React.FC = () => {
         'Três versões para escolha',
         'Entrega em até 5 dias',
         'Suporte prioritário',
-        'Masterização básica IA',
+        'Masterização IA',
         'Stems separados (vocais + instrumentação)'
       ],
       formUrl: 'https://forms.cloud.microsoft.com/r/vvd6cq6i2a',
@@ -56,7 +75,7 @@ const Briefing: React.FC = () => {
         'Cessão total dos direitos autorais',
         'Cinco versões para escolha',
         'Registro na Biblioteca Nacional',
-        'Certificado blockchain',
+        'Masterização IA',
         'Consultoria de 30 minutos',
         'Entrega prioritária',
         'Suporte VIP por WhatsApp',
@@ -99,7 +118,7 @@ const Briefing: React.FC = () => {
             </Alert>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-12">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-12">
             {packages.map((pkg) => (
               <Card key={pkg.name} className={`relative ${pkg.color} transition-colors`}>
                 {pkg.popular && (
@@ -111,7 +130,10 @@ const Briefing: React.FC = () => {
                 )}
                 
                 <CardHeader className="text-center">
-                  <CardTitle className="text-xl font-bold">{pkg.name}</CardTitle>
+                  <CardTitle className="text-xl font-bold flex items-center justify-center gap-2">
+                    {pkg.icon && <pkg.icon className={`h-5 w-5 ${pkg.iconColor || ''}`} />}
+                    {pkg.name}
+                  </CardTitle>
                   <div className="text-3xl font-bold text-harmonia-green mb-2">{pkg.price}</div>
                   <p className="text-gray-600">{pkg.description}</p>
                 </CardHeader>
