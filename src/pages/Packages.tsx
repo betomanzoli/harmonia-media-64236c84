@@ -1,16 +1,21 @@
+
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
-import { Check, Info, AlertCircle } from 'lucide-react';
+import { Check, Info, AlertCircle, Zap } from 'lucide-react';
+
 const Packages: React.FC = () => {
   const navigate = useNavigate();
+
   const handleSelectPackage = (packageId: string) => {
     navigate(`/pagamento/${packageId}`);
   };
-  return <div className="min-h-screen bg-background text-foreground">
+
+  return (
+    <div className="min-h-screen bg-background text-foreground">
       <Header />
       <main className="pt-24 pb-20 px-6 md:px-10">
         <div className="max-w-6xl mx-auto">
@@ -21,7 +26,56 @@ const Packages: React.FC = () => {
             </p>
           </div>
           
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mb-12">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8 mb-12">
+            {/* Pacote Express */}
+            <Card className="border-2 hover:border-harmonia-green/70 transition-all duration-300">
+              <CardHeader>
+                <div className="flex items-center gap-2">
+                  <Zap className="h-5 w-5 text-yellow-500" />
+                  <CardTitle className="text-xl">Pacote Express</CardTitle>
+                </div>
+                <CardDescription>Para quem quer resultados rápidos</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="text-3xl font-bold mb-6">R$ 79,00</div>
+                <ul className="space-y-2">
+                  <li className="flex items-start">
+                    <Check className="h-5 w-5 text-green-500 mr-2 flex-shrink-0 mt-0.5" />
+                    <span><strong>COM LETRA:</strong> 6 versões da SUA letra em estilos diferentes</span>
+                  </li>
+                  <li className="flex items-start">
+                    <Check className="h-5 w-5 text-green-500 mr-2 flex-shrink-0 mt-0.5" />
+                    <span><strong>SEM LETRA:</strong> 3 letras diferentes + 2 versões de cada</span>
+                  </li>
+                  <li className="flex items-start">
+                    <Check className="h-5 w-5 text-green-500 mr-2 flex-shrink-0 mt-0.5" />
+                    <span>Arquivos de áudio em MP3</span>
+                  </li>
+                  <li className="flex items-start">
+                    <Check className="h-5 w-5 text-green-500 mr-2 flex-shrink-0 mt-0.5" />
+                    <span>Baseado em 1 briefing simples</span>
+                  </li>
+                  <li className="flex items-start">
+                    <Check className="h-5 w-5 text-green-500 mr-2 flex-shrink-0 mt-0.5" />
+                    <span>Prazo: 2-3 dias úteis</span>
+                  </li>
+                  <li className="flex items-start">
+                    <Check className="h-5 w-5 text-green-500 mr-2 flex-shrink-0 mt-0.5" />
+                    <span>Uso pessoal não-comercial</span>
+                  </li>
+                  <li className="flex items-start">
+                    <Check className="h-5 w-5 text-green-500 mr-2 flex-shrink-0 mt-0.5" />
+                    <span>Ideal para presentes e testes</span>
+                  </li>
+                </ul>
+              </CardContent>
+              <CardFooter>
+                <Button className="w-full" onClick={() => handleSelectPackage('express')}>
+                  Contratar Express
+                </Button>
+              </CardFooter>
+            </Card>
+
             {/* Pacote Essencial */}
             <Card className="border-2 hover:border-harmonia-green/70 transition-all duration-300">
               <CardHeader>
@@ -200,6 +254,10 @@ const Packages: React.FC = () => {
                     <AlertCircle className="h-4 w-4 text-orange-500 mr-2 mt-0.5" />
                     <span>* As revisões ilimitadas do Pacote Premium são válidas por 30 dias após a primeira entrega.</span>
                   </li>
+                  <li className="flex items-start">
+                    <AlertCircle className="h-4 w-4 text-orange-500 mr-2 mt-0.5" />
+                    <span>O Pacote Express é para uso pessoal não-comercial. Para uso comercial, considere os outros pacotes.</span>
+                  </li>
                 </ul>
               </div>
             </div>
@@ -207,6 +265,8 @@ const Packages: React.FC = () => {
         </div>
       </main>
       <Footer />
-    </div>;
+    </div>
+  );
 };
+
 export default Packages;

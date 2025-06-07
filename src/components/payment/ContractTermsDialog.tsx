@@ -7,7 +7,7 @@ import { Label } from "@/components/ui/label";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { ContractContent } from '@/components/service-card/ContractDetails';
 
-export type PackageId = 'essencial' | 'premium' | 'profissional';
+export type PackageId = 'essencial' | 'premium' | 'profissional' | 'express';
 
 interface ContractTermsDialogProps {
   open: boolean;
@@ -31,6 +31,8 @@ const ContractTermsDialog: React.FC<ContractTermsDialogProps> = ({
   // Obter o contrato específico para o pacote selecionado
   const getContractHtml = () => {
     switch(packageId) {
+      case 'express':
+        return ContractContent.getExpressContract();
       case 'essencial':
         return ContractContent.getEssencialContract();
       case 'premium':

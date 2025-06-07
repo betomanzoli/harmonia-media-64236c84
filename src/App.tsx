@@ -83,6 +83,10 @@ const App: React.FC = () => {
         <Route path="/pacotes" element={<Packages />} />
         <Route path="/pagamento" element={<Payment />} />
         <Route path="/pagamento/:packageId" element={<Payment />} />
+        <Route path="/pagamento/express" element={<Payment />} />
+        <Route path="/pagamento/essencial" element={<Payment />} />
+        <Route path="/pagamento/profissional" element={<Payment />} />
+        <Route path="/pagamento/premium" element={<Payment />} />
         <Route path="/pagamento-retorno" element={<PaymentReturn />} />
         <Route path="/acompanhar-pedido" element={<OrderTracking />} />
         <Route path="/privacidade" element={<PrivacyPolicy />} />

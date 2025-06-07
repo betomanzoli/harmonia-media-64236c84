@@ -1,5 +1,5 @@
 
-export type PackageId = 'essencial' | 'premium' | 'profissional';
+export type PackageId = 'essencial' | 'premium' | 'profissional' | 'express';
 
 export interface PackageDetails {
   id: PackageId;
@@ -77,11 +77,43 @@ export const getPackageDetails = (packageId: PackageId): PackageDetails => {
           'Stems separados (vocais + instrumentação)'
         ]
       };
+    
+    case 'express':
+      return {
+        id: 'express',
+        name: 'Pacote Express',
+        price: 79,
+        description: 'Para quem quer resultados rápidos',
+        features: [
+          'COM LETRA: 6 versões da SUA letra em estilos diferentes',
+          'SEM LETRA: 3 letras diferentes + 2 versões de cada',
+          'Arquivos de áudio em MP3',
+          'Baseado em 1 briefing simples',
+          'Prazo: 2-3 dias úteis',
+          'Uso pessoal não-comercial',
+          'Ideal para presentes e testes'
+        ]
+      };
   }
 };
 
 // Add packageData object for direct access to all packages
 export const packageData: Record<PackageId, PackageInfo> = {
+  express: {
+    id: 'express',
+    name: 'Pacote Express',
+    price: 'R$ 79,00',
+    description: 'Para quem quer resultados rápidos.',
+    features: [
+      'COM LETRA: 6 versões da SUA letra em estilos diferentes',
+      'SEM LETRA: 3 letras diferentes + 2 versões de cada',
+      'Arquivos de áudio em MP3',
+      'Baseado em 1 briefing simples',
+      'Prazo: 2-3 dias úteis',
+      'Uso pessoal não-comercial',
+      'Ideal para presentes e testes'
+    ]
+  },
   essencial: {
     id: 'essencial',
     name: 'Pacote Essencial',

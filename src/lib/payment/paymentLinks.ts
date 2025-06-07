@@ -1,3 +1,4 @@
+
 /**
  * Payment links for different packages and discount codes
  */
@@ -15,6 +16,12 @@ export interface PackagePaymentLinks {
 
 // Main packages payment links
 export const packagePaymentLinks: Record<string, PackagePaymentLinks> = {
+  'express': {
+    standard: {
+      url: 'https://mpago.la/23WDA5a',
+      preferenceId: '178571987-5ed445de-ebe1-47d0-aaa8-1bb544bc5c88'
+    }
+  },
   'essencial': {
     standard: {
       url: 'https://mpago.la/2C16Zhc',

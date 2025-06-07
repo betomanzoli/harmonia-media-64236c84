@@ -1,7 +1,7 @@
 
 import React from 'react';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
-import { Gift, Briefcase, Building } from 'lucide-react';
+import { Gift, Briefcase, Building, Zap } from 'lucide-react';
 import ServiceCard from './ServiceCard';
 import { siteConfig } from "@/config/site";
 
@@ -13,9 +13,12 @@ interface ServiceTabsProps {
 const ServiceTabs: React.FC<ServiceTabsProps> = ({ activeTab, setActiveTab }) => {
   return (
     <Tabs defaultValue="todos" className="w-full" onValueChange={setActiveTab}>
-      <TabsList className="grid grid-cols-4 max-w-md mx-auto mb-10">
+      <TabsList className="grid grid-cols-5 max-w-2xl mx-auto mb-10">
         <TabsTrigger value="todos" className="data-[state=active]:bg-harmonia-green">
-          Todos os Serviços
+          Todos
+        </TabsTrigger>
+        <TabsTrigger value="express" className="data-[state=active]:bg-harmonia-green">
+          <Zap className="w-4 h-4 mr-1" /> Express
         </TabsTrigger>
         <TabsTrigger value="presentes" className="data-[state=active]:bg-harmonia-green">
           <Gift className="w-4 h-4 mr-1" /> Presentes
@@ -28,7 +31,21 @@ const ServiceTabs: React.FC<ServiceTabsProps> = ({ activeTab, setActiveTab }) =>
         </TabsTrigger>
       </TabsList>
 
-      <TabsContent value="todos" className="grid grid-cols-1 md:grid-cols-3 gap-6">
+      <TabsContent value="todos" className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+        <ServiceCard 
+          title="Pacote Express" 
+          price="R$ 79,00"
+          description="Para quem quer resultados rápidos."
+          features={[
+            "COM LETRA: 6 versões da SUA letra em estilos diferentes",
+            "SEM LETRA: 3 letras diferentes + 2 versões de cada",
+            "Arquivos de áudio em MP3",
+            "Baseado em 1 briefing simples",
+            "Prazo: 2-3 dias úteis",
+            "Uso pessoal não-comercial",
+            "Ideal para presentes e testes"
+          ]}
+        />
         <ServiceCard 
           title="Pacote Essencial" 
           price="R$ 219,00"
@@ -77,7 +94,39 @@ const ServiceTabs: React.FC<ServiceTabsProps> = ({ activeTab, setActiveTab }) =>
         />
       </TabsContent>
 
+      <TabsContent value="express" className="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <ServiceCard 
+          title="Pacote Express" 
+          price="R$ 79,00"
+          description="Para quem quer resultados rápidos."
+          features={[
+            "COM LETRA: 6 versões da SUA letra em estilos diferentes",
+            "SEM LETRA: 3 letras diferentes + 2 versões de cada",
+            "Arquivos de áudio em MP3",
+            "Baseado em 1 briefing simples",
+            "Prazo: 2-3 dias úteis",
+            "Uso pessoal não-comercial",
+            "Ideal para presentes e testes"
+          ]}
+          recommended={true}
+        />
+      </TabsContent>
+
       <TabsContent value="presentes" className="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <ServiceCard 
+          title="Pacote Express" 
+          price="R$ 79,00"
+          description="Para quem quer resultados rápidos."
+          features={[
+            "COM LETRA: 6 versões da SUA letra em estilos diferentes",
+            "SEM LETRA: 3 letras diferentes + 2 versões de cada",
+            "Arquivos de áudio em MP3",
+            "Baseado em 1 briefing simples",
+            "Prazo: 2-3 dias úteis",
+            "Uso pessoal não-comercial",
+            "Ideal para presentes e testes"
+          ]}
+        />
         <ServiceCard 
           title="Pacote Essencial" 
           price="R$ 219,00"

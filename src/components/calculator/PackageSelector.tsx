@@ -2,11 +2,13 @@
 import React from 'react';
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Label } from "@/components/ui/label";
+import { Zap } from 'lucide-react';
 
 interface PackageSelectorProps {
   selectedPackage: string;
   setSelectedPackage: (value: string) => void;
   packagePrices?: {
+    express: number;
     essential: number;
     professional: number;
     premium: number;
@@ -17,6 +19,7 @@ const PackageSelector: React.FC<PackageSelectorProps> = ({
   selectedPackage, 
   setSelectedPackage,
   packagePrices = {
+    express: 79,
     essential: 219,
     professional: 479,
     premium: 969
@@ -30,6 +33,19 @@ const PackageSelector: React.FC<PackageSelectorProps> = ({
         onValueChange={setSelectedPackage}
         className="grid gap-4"
       >
+        <div className="flex items-start space-x-2 border border-border rounded-lg p-4 hover:border-harmonia-green/50 transition-colors">
+          <RadioGroupItem value="express" id="express" className="mt-1" />
+          <div className="grid gap-1.5">
+            <Label htmlFor="express" className="font-medium flex items-center gap-2">
+              <Zap className="h-4 w-4 text-yellow-500" />
+              Pacote Express - R${packagePrices.express}
+            </Label>
+            <p className="text-sm text-gray-400">
+              Para quem quer resultados rápidos. COM LETRA: 6 versões da sua letra em estilos diferentes. SEM LETRA: 3 letras diferentes + 2 versões de cada. Arquivos MP3, briefing simples, prazo 2-3 dias úteis, uso pessoal.
+            </p>
+          </div>
+        </div>
+        
         <div className="flex items-start space-x-2 border border-border rounded-lg p-4 hover:border-harmonia-green/50 transition-colors">
           <RadioGroupItem value="essential" id="essential" className="mt-1" />
           <div className="grid gap-1.5">
