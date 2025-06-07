@@ -1,3 +1,4 @@
+
 /**
  * Payment links for different packages and discount codes
  */
@@ -83,8 +84,8 @@ export const extraServicePaymentLinks: Record<string, PaymentLinkData> = {
     preferenceId: '178571987-2bd0e019-e98c-42a6-a7fb-e8858fe13f78'
   },
   'Masterização Premium': {
-    url: 'https://mpago.la/2bJ7gs5',
-    preferenceId: '178571987-a6e460f7-4f43-4010-b1ec-fe7789090467'
+    url: 'https://mpago.la/21iE6Zp',
+    preferenceId: '178571987-2be0a4e2-5c8e-4e64-b554-d4068d18d23a'
   },
   'Stems Separados': {
     url: 'https://mpago.la/21iE6Zp',
@@ -95,8 +96,8 @@ export const extraServicePaymentLinks: Record<string, PaymentLinkData> = {
     preferenceId: '178571987-a6e460f7-4f43-4010-b1ec-fe7789090467'
   },
   'Partituras MusicXML/PDF': {
-    url: 'https://mpago.la/2bJ7gs5',
-    preferenceId: '178571987-a6e460f7-4f43-4010-b1ec-fe7789090467'
+    url: 'https://mpago.la/21iE6Zp',
+    preferenceId: '178571987-2be0a4e2-5c8e-4e64-b554-d4068d18d23a'
   },
   'Composição sem IA (letra)': {
     url: 'https://mpago.la/2grZyHu',

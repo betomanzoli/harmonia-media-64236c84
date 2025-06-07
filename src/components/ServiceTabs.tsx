@@ -53,6 +53,7 @@ const ServiceTabs: React.FC<ServiceTabsProps> = ({ activeTab, setActiveTab }) =>
           features={[
             "Composição musical única",
             "Uma revisão gratuita",
+            "Masterização",
             "Uso exclusivamente pessoal",
             "Entrega digital em até 7 dias",
             "Suporte por e-mail",
@@ -134,6 +135,7 @@ const ServiceTabs: React.FC<ServiceTabsProps> = ({ activeTab, setActiveTab }) =>
           features={[
             "Composição musical única",
             "Uma revisão gratuita",
+            "Masterização",
             "Uso exclusivamente pessoal",
             "Entrega digital em até 7 dias",
             "Suporte por e-mail",

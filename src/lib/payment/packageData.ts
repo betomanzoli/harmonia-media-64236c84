@@ -32,6 +32,7 @@ export const getPackageDetails = (packageId: PackageId): PackageDetails => {
         features: [
           'Composição musical única',
           'Uma revisão gratuita',
+          'Masterização',
           'Uso exclusivamente pessoal',
           'Entrega digital em até 7 dias',
           'Suporte por e-mail',
@@ -122,6 +123,7 @@ export const packageData: Record<PackageId, PackageInfo> = {
     features: [
       'Composição musical única',
       'Uma revisão gratuita',
+      'Masterização',
       'Uso exclusivamente pessoal',
       'Entrega digital em até 7 dias',
       'Suporte por e-mail',

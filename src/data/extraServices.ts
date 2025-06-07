@@ -1,3 +1,4 @@
+
 import { Music2, FileText, Volume2, Clock, FileMusic, UserCheck, Headphones, Archive, Edit, Users, Shuffle } from 'lucide-react';
 
 export const extraServicesData = [
@@ -64,7 +65,7 @@ export const extraServicesData = [
   {
     id: 'Masterização Premium',
     title: 'Masterização Premium',
-    price: 149,
+    price: 129,
     description: 'Melhore a qualidade sonora com masterização avançada.',
     features: [
       'Masterização profissional',
@@ -100,7 +101,7 @@ export const extraServicesData = [
   {
     id: 'Partituras MusicXML/PDF',
     title: 'Partituras MusicXML/PDF',
-    price: 149,
+    price: 129,
     description: 'Receba a partitura completa da sua música para músicos e bandas.',
     features: [
       'Partitura em PDF e MusicXML',
