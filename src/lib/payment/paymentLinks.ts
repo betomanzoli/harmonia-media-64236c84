@@ -1,4 +1,3 @@
-
 /**
  * Payment links for different packages and discount codes
  */
@@ -59,21 +58,22 @@ export const packagePaymentLinks: Record<string, PackagePaymentLinks> = {
 
 // Extra services payment links (for future implementation)
 export const extraServicePaymentLinks: Record<string, PaymentLinkData> = {
-  // New Multiestilo services
+  // New Multiestilo services (updated prices and links)
   'Multiestilo': {
-    url: 'https://mpago.la/23WDA5a',
-    preferenceId: '178571987-5ed445de-ebe1-47d0-aaa8-1bb544bc5c88'
+    url: 'https://mpago.la/2U3Nji4',
+    preferenceId: '178571987-30d650b9-f635-4bd5-a0f6-faf4d16c9fff'
   },
   'Multiestilo+': {
-    url: 'https://mpago.la/21iE6Zp',
-    preferenceId: '178571987-2be0a4e2-5c8e-4e64-b554-d4068d18d23a'
-  },
-  
-  // Existing services
-  'Revisão Extra': {
     url: 'https://mpago.la/23WDA5a',
     preferenceId: '178571987-5ed445de-ebe1-47d0-aaa8-1bb544bc5c88'
   },
+  
+  // Updated Revisão Extra service
+  'Revisão Extra': {
+    url: 'https://mpago.la/2U3Nji4',
+    preferenceId: '178571987-30d650b9-f635-4bd5-a0f6-faf4d16c9fff'
+  },
+  
   'Registro na BN (Letra)': {
     url: 'https://mpago.la/113Dotr',
     preferenceId: '178571987-266f5eb5-3e03-4083-82d9-690fbb1b2951'
@@ -111,10 +111,10 @@ export const extraServicePaymentLinks: Record<string, PaymentLinkData> = {
     preferenceId: 'whatsapp-contact'
   },
   
-  // Legacy service IDs
+  // Legacy service IDs (keep unchanged for compatibility)
   'service79': {
-    url: 'https://mpago.la/23WDA5a',
-    preferenceId: '178571987-5ed445de-ebe1-47d0-aaa8-1bb544bc5c88'
+    url: 'https://mpago.la/2U3Nji4',
+    preferenceId: '178571987-30d650b9-f635-4bd5-a0f6-faf4d16c9fff'
   },
   'service99': {
     url: 'https://mpago.la/113Dotr',

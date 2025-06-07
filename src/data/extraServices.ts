@@ -1,11 +1,10 @@
-
 import { Music2, FileText, Volume2, Clock, FileMusic, UserCheck, Headphones, Archive, Edit, Users, Shuffle } from 'lucide-react';
 
 export const extraServicesData = [
   {
     id: 'Multiestilo',
     title: 'Multiestilo',
-    price: 79,
+    price: 59,
     description: 'Crie a mesma letra em estilos diferentes para diferentes ocasiões.',
     features: [
       'Prazo: Até 3 dias úteis após a solicitação',
@@ -17,7 +16,7 @@ export const extraServicesData = [
   {
     id: 'Multiestilo+',
     title: 'Multiestilo+',
-    price: 129,
+    price: 79,
     description: 'Versão premium com mais opções e maior personalização musical.',
     features: [
       'Prazo: Até 3 dias úteis após a solicitação',
@@ -29,7 +28,7 @@ export const extraServicesData = [
   {
     id: 'Revisão Extra',
     title: 'Revisão Extra',
-    price: 79,
+    price: 59,
     description: 'Solicite ajustes extras na letra ou melodia da sua música.',
     features: [
       'Alterações na letra ou melodia',
