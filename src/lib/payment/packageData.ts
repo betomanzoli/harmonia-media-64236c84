@@ -28,7 +28,7 @@ export const getPackageDetails = (packageId: PackageId): PackageDetails => {
         id: 'essencial',
         name: 'Pacote Essencial',
         price: 219,
-        description: 'Ideal para presentes emocionais rápidos',
+        description: 'Ideal para presentes emocionais',
         features: [
           'Composição musical única',
           'Uma revisão gratuita',
@@ -53,6 +53,7 @@ export const getPackageDetails = (packageId: PackageId): PackageDetails => {
           'Cessão total dos direitos autorais',
           'Cinco versões para escolha',
           'Registro na Biblioteca Nacional',
+          'Masterização IA',
           'Consultoria de 30 minutos',
           'Entrega prioritária',
           'Suporte VIP por WhatsApp',
@@ -74,7 +75,7 @@ export const getPackageDetails = (packageId: PackageId): PackageDetails => {
           'Três versões para escolha',
           'Entrega em até 5 dias',
           'Suporte prioritário',
-          'Masterização básica IA',
+          'Masterização IA',
           'Stems separados (vocais + instrumentação)'
         ]
       };
@@ -119,7 +120,7 @@ export const packageData: Record<PackageId, PackageInfo> = {
     id: 'essencial',
     name: 'Pacote Essencial',
     price: 'R$ 219,00',
-    description: 'Ideal para presentes emocionais rápidos.',
+    description: 'Ideal para presentes emocionais.',
     features: [
       'Composição musical única',
       'Uma revisão gratuita',
@@ -142,6 +143,7 @@ export const packageData: Record<PackageId, PackageInfo> = {
       'Cessão total dos direitos autorais',
       'Cinco versões para escolha',
       'Registro na Biblioteca Nacional',
+      'Masterização IA',
       'Consultoria de 30 minutos',
       'Entrega prioritária',
       'Suporte VIP por WhatsApp',
@@ -161,7 +163,7 @@ export const packageData: Record<PackageId, PackageInfo> = {
       'Três versões para escolha',
       'Entrega em até 5 dias',
       'Suporte prioritário',
-      'Masterização básica IA',
+      'Masterização IA',
       'Stems separados (vocais + instrumentação)'
     ]
   }

@@ -4,7 +4,7 @@ import Header from '@/components/Header';
 import Footer from '@/components/Footer';
 import Portfolio from '@/components/Portfolio';
 import { Button } from "@/components/ui/button";
-import { ArrowLeft, Phone, ExternalLink } from 'lucide-react';
+import { ArrowLeft, Phone, ExternalLink, MessageCircle } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { siteConfig } from '@/config/site';
 
@@ -14,6 +14,13 @@ const PortfolioPage: React.FC = () => {
   const handleWhatsAppContact = () => {
     const phoneNumber = siteConfig.contact.whatsapp;
     const message = "Olá! Gostaria de conhecer mais sobre suas músicas personalizadas.";
+    const whatsappUrl = `https://wa.me/${phoneNumber}?text=${encodeURIComponent(message)}`;
+    window.open(whatsappUrl, '_blank');
+  };
+
+  const handlePurchaseContact = () => {
+    const phoneNumber = siteConfig.contact.whatsapp;
+    const message = "Olá! Me interessei por uma música do portfólio. Gostaria de saber sobre formas de pagamento alternativas (PIX, transferência, etc).";
     const whatsappUrl = `https://wa.me/${phoneNumber}?text=${encodeURIComponent(message)}`;
     window.open(whatsappUrl, '_blank');
   };
@@ -53,6 +60,22 @@ const PortfolioPage: React.FC = () => {
                 <Phone className="w-4 h-4" />
                 Fale conosco pelo WhatsApp para exemplos
               </Button>
+              
+              {/* Seção de interesse em músicas */}
+              <div className="mt-8 p-6 bg-card border border-border rounded-lg">
+                <h2 className="text-xl font-bold mb-4">Se interessou por uma música?</h2>
+                <p className="text-gray-400 mb-4">
+                  Entre em contato conosco! Oferecemos opções de pagamento alternativas como PIX e transferência bancária, 
+                  além do Bandcamp que aceita cartões internacionais.
+                </p>
+                <Button 
+                  onClick={handlePurchaseContact}
+                  className="bg-harmonia-green hover:bg-harmonia-green/90 text-black flex items-center gap-2"
+                >
+                  <MessageCircle className="w-4 h-4" />
+                  Quero comprar uma música
+                </Button>
+              </div>
               
               {/* Músicas à Venda */}
               <div className="mt-8">

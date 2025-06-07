@@ -1,4 +1,5 @@
 
+
 /**
  * Payment links for different packages and discount codes
  */
@@ -83,7 +84,7 @@ export const extraServicePaymentLinks: Record<string, PaymentLinkData> = {
     url: 'https://mpago.la/1Fyqdcw',
     preferenceId: '178571987-2bd0e019-e98c-42a6-a7fb-e8858fe13f78'
   },
-  'Masterização Premium': {
+  'Masterização IA': {
     url: 'https://mpago.la/21iE6Zp',
     preferenceId: '178571987-2be0a4e2-5c8e-4e64-b554-d4068d18d23a'
   },

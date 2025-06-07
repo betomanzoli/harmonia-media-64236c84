@@ -1,4 +1,5 @@
 
+
 import { Music2, FileText, Volume2, Clock, FileMusic, UserCheck, Headphones, Archive, Edit, Users, Shuffle } from 'lucide-react';
 
 export const extraServicesData = [
@@ -63,8 +64,8 @@ export const extraServicesData = [
     icon: UserCheck
   },
   {
-    id: 'Masterização Premium',
-    title: 'Masterização Premium',
+    id: 'Masterização IA',
+    title: 'Masterização IA',
     price: 129,
     description: 'Melhore a qualidade sonora com masterização avançada.',
     features: [
